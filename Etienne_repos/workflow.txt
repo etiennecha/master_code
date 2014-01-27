@@ -1,0 +1,18 @@
+VIM:
+http://wiki.python.org/moin/Vim
+http://vim.wikia.com/wiki/Keep_your_vimrc_file_clean
+http://vim.wikia.com/wiki/Restore_screen_size_and_position
+http://stackoverflow.com/questions/158968/changing-vim-indentation-behavior-by-file-type
+http://www.vim.org/scripts/script.php?script_id=790
+
+VIM LEARNING:
+http://bullium.com/support/vim.html
+
+VIM WINDOWS:
+http://vimdoc.sourceforge.net/htmldoc/windows.html
+
+UBUNTU:
+https://help.ubuntu.com/community/UsingTheTerminal
+
+QGIS:
+http://qgis.spatialthoughts.com/2012/03/using-tabular-data-in-qgis.html
