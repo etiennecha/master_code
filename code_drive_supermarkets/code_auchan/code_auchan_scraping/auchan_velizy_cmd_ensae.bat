@@ -1,0 +1,1 @@
+\\ulysse\users\echamayou\Etienne\Python\Ppython\App\python.exe \\ulysse\users\echamayou\Bureau\Etienne_work\Code\code_drive_supermarkets\code_auchan\code_auchan_scraping\dl_auchan_velizy_daily.py >> \\ulysse\users\echamayou\Bureau\Etienne_work\Data\data_drive_supermarkets\data_auchan\data_source\data_json_auchan_velizy\log.txt
