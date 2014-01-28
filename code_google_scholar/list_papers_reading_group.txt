@@ -1,0 +1,143 @@
+1939_Hall Hitch_Price theory and business behavior.pdf
+1956_Strotz_Myopia and inconsistency in dynamic utility maximization.pdf
+1968_Phelps Pollak_On second-best national saving and game-equilibrium growth.pdf
+1971_Kahneman Tversky_Belief in the law of small numbers.pdf
+1973_Peleg Yaari_On the existence of a consistent course of action when tastes are changing.pdf
+1974_Kahneman Tversky_Judgment under uncertainty Heuristics and biases.pdf
+1976_Lucas_Econometric policy evaluation A critique.pdf
+1978_Jaynes_Equilibria in monopolistically competitive insurance markets.pdf
+1979_Kahneman Tversky_Prospect theory An analysis of decision under risk.pdf
+1979_Smallwood Conlisk_Product quality in markets where consumers are imperfeclty informed.pdf
+1980_Okun_Rational-expectations-with-misperceptions as a theory of the business cycle.pdf
+1980_Thaler_Toward a positive theory of consumer choice.pdf
+1980_Varian_A model of sales.pdf
+1986_Kahneman Knetsch Thaler_Fairness as a contrainst on profit seeking Entitlements in the market.pdf
+1986_Milgrom Roberts_Relying on the information of interested parties.pdf
+1988_Samuelson Zeckhauser_Status quo bias in decision making.pdf
+1989_Stahl_Oligopolistic pricing with sequential consumer search.pdf
+1990_Negungadi_Recall and consumer consideration sets Influencing choice without altering brand evaluations.pdf
+1991_Ausubel_The failure of competition in the credit car market.pdf
+1991_Dow_Search decisions with limited memory.pdf
+1991_Kahneman Tversky_Loss aversion in riskless choice a reference-dependent model.pdf
+1992_Kahneman Tversky_Advances in prospect theory Cumulative representation of uncertainty.pdf
+1992_Ritov Baron_Status quo and omission biases.pdf
+1992_Tversky Shafir-Choice under conflict The dynamics of deferred decision.pdf
+1993_Rubinstein_On price recognition and computational complexity in a monopolistic model.pdf
+1994_Fershtman Fishman_The perverse effect of wage and price control in search markets.pdf
+1995_Ellison Fudenberg_Word-of-mouth communication and social learning.pdf
+1995_Klemperer_Competition when consumers have switching costs An overview with applications to undistrial organisations macroeconomics and international trade.pdf
+1996_Armstrong _Nonlinear pricing with imperfectly informed customers.pdf
+1997_Jolls_Contracts as bilateral commitments.pdf
+1997_Laibson_Golden eggs and hyperbolic discounting.pdf
+1997_Piccione Rubinstein_On the interpretation of decision problems with imperfect recall.pdf
+1998_Camerer_Prospect theory in the wild.pdf
+1998_Osborne Rubinstein_Games with procedurally rational players.pdf
+1998_Rabin_Psychology and economics.pdf
+1998_Zhang Markman_Overcoming the early entrant advantage The role of alignable and nonalignable differences.pdf
+1999_Ausubel_ Adverse selection in the credit card market.pdf
+1999_ODonoghue Rabin_Incentives for procrastinators.pdf
+1999_Rabin_Psychology and economics.pdf
+2000_Courty Li_Sequential screening.pdf
+2000_Iyengar Lepper_When choice is demotivating Can one desire too much of a good thing.pdf
+2000_Villeneuve_The consequence for monopolistic insurance firm of evaluating risk better than customers.pdf
+2001_Dekel Lipman Rustichini_Representing preferences with a unique subjective state space Corr.pdf
+2001_Dekel Lipman Rustichini_Representing preferences with a unique subjective state space.pdf
+2001_Gilboa Schmeidler_A theory of case-based decisions.pdf
+2001_Gul Pesendorfer_Temptation and self-control.pdf
+2002_Frederick Loewenstein ODonoghue_Time discounting and time prefrence A critical review.pdf
+2002_Kareev_On the misperception of variability.pdf
+2002_Rabin_A perspective on psychology and economics.pdf
+2003_Anderson _The psychology of doing nothing.pdf
+2003_Bar-Gill_Seduction by plastic.pdf
+2003_Loewenstein ODonoghue Rabin_Projection bias in predicting future utility.pdf
+2003_Miravete_Choosing the wrong calling plan Ignorance and learning.pdf
+2003_Osborne Rubinstein_Sampling equilibrium with an application to strategic voting.pdf
+2003_Piccione Rubinstein_Modelling the economic interaction of agents with diverse abilities to recognise equilibrium patterns.pdf
+2003_Rubinstein_Economics and psychology The case of hyperbolic discounting.pdf
+2003_Zauberman_The intertemporal dynamics of consumer lock-in.pdf
+2004_Bar-Gill Ben-Shahar_The law of duress and the economics of credible threats.pdf
+2004_Botti Iyengar_The psychological pleasure and pain of choosing When people prefer choosing at the cost of subsequent outcome satisfaction.PDF
+2004_DellaVigna Malmedier_Contact design and self-control.pdf
+2004_Gul Pesendorfer_Self control and the theory of consumption.pdf
+2005_Ellison_Add on pricing.pdf
+2005_Esteban Miyagawa_Optimal menus of menus with self-control preferences.pdf
+2005_Esteban Miyagawa_Temptation self-control and competitive non-linear pricing.pdf
+2005_Eyster Rabin_Cursed Equilibrium.pdf
+2005_Heidhues Koszegi_The impact of consumer loss aversion on pricing.pdf
+2005_Jehiel_Analogy based expectation equilibrium.pdf
+2005_Koszegi_On the feasibility of market solutions to self-control problems.pdf
+2005_Masatlioglu Ok_Rational choice with status quob bias.pdf
+2005_Plott Zeiler_The willingness to pay-willigness to accept gap.pdf
+2005_Uthemann_Competitive screening of consumers with non-common priors.pdf
+2006_Ashraf Karlan Yin _Tying Odysseus to the mast.pdf
+2006_DellaVigna Malmedier_Paying not to go to the gym.pdf
+2006_Eliaz spiegler_Contracting with diversely naive agents.pdf
+2006_Ellisson_Bounded rationality in industrial organisation.pdf
+2006_Gabaix Laibson Moloche Weinberg_Costly information acquisition experimental analysis of a boundedly rational model.pdf
+2006_Gabaix Laibson_Shrouded attributes consumer myopia and information suppression in competitive markets.pdf
+2006_Hossain Morgan_Shrouded attributes and information suppression Evidence from field experiments.pdf
+2006_Koszegi Rabin_A model of reference-dependent preferences.pdf
+2006_Rubinstein_Comments on behavioral economics.pdf
+2006_Spiegler_Competition over agents with boundedly rational expectations.pdf
+2006_Spiegler_The market for quacks.pdf
+2006_Stewart Chater Brown_Decision by sampling.pdf
+2007_Carlin_Strategic complexity in retail financial markets.pdf
+2007_Huberman Iyengar Jiang_Defined contribution pension plans Determinants of participation and contributions rates.pdf
+2007_Sandroni Squintani_Overconfidence insurance and paternalism.pdf
+2008_Armstrong _Interactions between competition and consumer policy.pdf
+2008_Dean_Status quo bias in large and small sample.pdf
+2008_Eliaz Spiegler_Consumer optimism and price discrimination.PDF
+2008_Esponda_Behavioral equilibrium in economies with adverse selection.pdf
+2008_Gottlieb_Competition over time-inconsistent customers.pdf
+2008_Iyengar Kamenica_Choice proliferation simplicity seeking and asset allocation.pdf
+2008_Jehiel Koessler_Revisiting games of incomplete information with analogy-based expectations.pdf
+2008_Kamenica_Contextual inference in markets On the informational content of product lines.pdf
+2008_Landier Thesmar_Financial contracting with optimistic entrepreneurs.pdf
+2008_Meyer Muthaly_New measures and a new model for television network loyalty.pdf
+2008_Rubinstein Spiegler_Money pumps in the market.pdf
+2009_Armstrong Vickers Zhou _Consumer protection and the incentive to become informed.pdf
+2009_Carroll Choi Laibson Madrian Metrick_Optimal defaults and active decisions.pdf
+2009_Chatterjee Krishna_A dual self representation for stochastic temptation.pdf
+2009_Choi Laibson Madrian Metrick_Reinforcement learning and savings behavior.pdf
+2009_Dekel Lipman Rustichini_Temptation-driven preferences.pdf
+2009_DellaVigna_Psychology and economics evidence from the field.pdf
+2009_Ellison Ellison_Search obfuscation and price elasticities on the internet.pdf
+2009_Ellison Wolitzky_A search cost model of obfuscation.pdf
+2009_Grubb_Selling to overconfident consumers.pdf
+2009_Heidhues Koszegi_Futile attempts at self-control.pdf
+2009_Mariotti Mazini_Choice over time.pdf
+2009_Ok Ortoleva Riella_Theory of product differentiation in the presence of attraction effet.pdf
+2009_Piccione Spiegler_Price competition under limited comparability.pdf
+2009_Szech_Price and quality competition with bounded rational consumers.pdf
+2009_Tirole_Cognition and incomplete contracts.pdf
+2009_Zhou_Reference dependence and market competition.pdf
+2010_Courty Pagliero_Price variation antagonism and firm pricing policies.pdf
+2010_Heidhues Koszegi_Exploiting naivete about self-control in the credit market.pdf
+2010_Heidhues Koszegi_Regular pricing and sales.pdf
+2010_Isoni Loomes Sugden_The willingness to pay-willigness to accept gap.pdf
+2010_Karle Peitz_Pricing and information disclosure in markets with loss-averse consumers.pdf
+2010_Koszegi_Utility from anticipation and personal equilibrium.pdf
+2010_Radner Radunskaya Sundararajan_Dynamic pricing of network goods with boundedly rational consumers.pdf
+2010_Scheibehenne Greifender Todd_Can there ever be too many options.pdf
+2010_Spiegler_But cant we get the same thing with a standard model Rationalizing bounded-rationality models.pdf
+2010_Spiegler_Monopoly pricing when consumers are antagonized by unexpected price increases.pdf
+2010_Wilson_Ordered search and equilibrium obfuscation.pdf
+2011_Abeler Gotte Falk Huffman_Reference points and effort provision.pdf
+2011_Eliaz Spiegler_Consideration sets and competitive marketing.pdf
+2011_Eliaz Spiegler_On the strategic use of attention grabbers.pdf
+2011_Kamenica Mullainathan Thaler_Helping consumers know themselves.pdf
+2011_Kosfeld Schuwer_Add-on pricing naive consumers and the hidden welfare costs of education.pdf
+2011_Mimra_On equilibria in insurance markets with asymmetric information.pdf
+2011_Pope Schweitze_Is Tiger Woods loss averse.pdf
+2011_Wang_Informative advertising consumer search and transparency policy.pdf
+2012_Bordalo Gennaioli Shleifer _Salience theory of choice under risk.pdf
+2012_Chioveanu Zhou_Price competition with consumer confusion.pdf
+2012_Dahremoller Fels_Product lines product design and limited attention.pdf
+2012_Dekel Lipman_Costly self-control and random self-indulgence.pdf
+2012_Fryer Levitt List Sadoff_Enhancing teacher incentives with loss aversion.pdf
+2012_Galperty_Commitment flexibility and optimal screening of time inconsistency.pdf
+2012_Koszegi Heidhues_The market for deceptive products.pdf
+2012_Peitz_Inderst_Informing consumers about their own preferences.pdf
+2012_Spinnewijn_Insurance and perceptions How to screen optimists and pessimists.pdf
+2013_Bordalo Gennaioli Shleifer _ Salience and Consumer Choice.pdf
+2013_Ivanov_Information revelation in competitive markets.pdf

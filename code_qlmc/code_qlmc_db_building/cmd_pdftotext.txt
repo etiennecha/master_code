@@ -1,0 +1,2 @@
+cd \\ulysse\users\echamayou\Bureau\Distribution\Comparateur_QLMC\convert_pdf_to_txt
+W:\Etienne\Python\Ppython\modules\pdf\pdftotext.exe QLMC_releves_juin_2012.pdf
