@@ -1,2 +1,0 @@
-\\ulysse\users\echamayou\Etienne\Python\Ppython\App\python.exe \\ulysse\users\echamayou\Etienne\Python_mydocs\Scrapping_Auchan\auchan_velizy_daily_dl_test.py > \\ulysse\users\echamayou\Etienne\Python_mydocs\Scrapping_Auchan\auchan_velizy_json\log.txt
-
