@@ -77,9 +77,11 @@ if __name__=="__main__":
   # u'Statut de la commune STATUT_2010': R/C/I/B (Type en plus précis)
   # u'Population municipale 2007 POP_MUN_2007' Pop commune
   
-  pd_df_insee = pd.read_csv(path_data + folder_built_csv + r'/master_insee_output.csv', encoding = 'utf-8')
+  pd_df_insee = pd.read_csv(path_data + folder_built_csv + r'/master_insee_output.csv',
+                            encoding = 'utf-8',
+                            dtype = str)
   ls_no_match = []
-  pd_df_insee[u'Département - Commune CODGEO'] = pd_df_insee[u'Département - Commune CODGEO'].astype(str)
+  # pd_df_insee[u'Département - Commune CODGEO'] = pd_df_insee[u'Département - Commune CODGEO'].astype(str)
   ls_insee_data_codes_geo = list(pd_df_insee[u'Département - Commune CODGEO'])
   for station_id, station_info in master_price['dict_info'].iteritems():
     if 'code_geo' in station_info.keys():

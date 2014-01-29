@@ -59,7 +59,9 @@ if __name__=="__main__":
     # # # CAUTION: stats.nanmean first compute with 0 instead of nan then adjusts : imprecision...
     # # scipy.stats.nanmean(matrix_np_prices_ma_cl[:,:i], axis= 1) -\
                           # # scipy.stats.nanmean(matrix_np_prices_ma_cl[:,i:], axis= 1))
-  # np_ar_mean_diffs = np.ma.array(ls_mean_diffs, fill_value=0).filled() # fill with np.nan generates pbm with argmax
+  # np_ar_mean_diffs = np.ma.array(ls_mean_diffs, fill_value=0).filled()
+  # # fill with np.nan generates pbm with argmax
+
   # np_ar_mean_diffs = np_ar_mean_diffs.T
   # np_ar_diffs_maxs = np.nanmax(np.abs(np_ar_mean_diffs), axis = 1)
   # np_ar_diffs_argmaxs = np.nanargmax(np.abs(np_ar_mean_diffs), axis = 1)
