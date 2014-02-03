@@ -11,16 +11,6 @@ import statsmodels.api as sm
 from decimal import *
 from collections import Counter
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from matplotlib.collections import PatchCollection
-import matplotlib.font_manager as fm
-# import fiona
-import shapefile
-from mpl_toolkits.basemap import Basemap
-from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
-from shapely.prepared import prep
-from descartes import PolygonPatch
-from pysal.esda.mapclassify import Natural_Breaks as nb
 
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
@@ -31,38 +21,6 @@ def enc_stock_json(database, chemin):
     json.dump(database, fichier)
 
 # GENERIC
-
-def get_field_as_list(id, field, master_price):
-  """
-  Returns a list with field info per period: [info_per_1, info_per_2, info_per_3...]
-  Reminder: Field info is a list of lists: [(info, period),(info, period)...]
-  Starts with None if no info at beginning
-  """
-  field_index = 0
-  if not master_price['dict_info'][id][field]:
-    # fill with None if no info at all for the field
-    list_result = [None for i in range(len(master_price['dates']))]
-  else:
-    period_index = master_price['dict_info'][id][field][field_index][1]
-    # initiate list_result, fill with None if no info at beginning
-    if period_index == 0:
-      list_result = []
-    else:
-      list_result = [None for i in range(period_index)]
-    # fill list_results with relevant field info
-    while period_index < len(master_price['dates']):
-      if field_index < len(master_price['dict_info'][id][field]) - 1:
-        # before the last change: compare periods
-        if period_index < master_price['dict_info'][id][field][field_index + 1][1]:
-          list_result.append(master_price['dict_info'][id][field][field_index][0])
-        else:
-          field_index += 1
-          list_result.append(master_price['dict_info'][id][field][field_index][0])
-      else:
-        # after the last change: fill with last info given
-        list_result.append(master_price['dict_info'][id][field][-1][0])
-      period_index += 1
-  return list_result
 
 def get_latest_info(id, field, master_info):
   # TODO: enrich for categorical variables ?
@@ -248,122 +206,3 @@ if __name__=="__main__":
   # http://pandas.pydata.org/pandas-docs/dev/groupby.html
   # http://stackoverflow.com/questions/17926273/how-to-count-distinct-values-in-a-column-of-a-pandas-group-by-object
   # Corsica as 2A/2B here
-  
-  # #####################
-  # MAPS
-  # #####################
-  
-  # TODO: beware with highway / corsica
-  # TODO: build price stats to allow static display on maps
-  # TODO: always do map + tables in pandas (by region maybe instead of dpt)
-  # TODO: compare with zagaz data when possible (i.e. no price)
-  
-  # TODO: heatmap population (by dpt)
-  # TODO: heatmap nb gas stations (by dpt)
-  # TODO: heatmap price level (by dpt... try to include corsica?)
-  # TODO: heatmap price dispersion (?)
-  # TODO: heatmap supermarket penetration
-  # TODO: heatmap concentration i.e. average distance between stations or such a stat
-  # TODO: heatmap concentration i.e. nb of monopolies / duopolies (distinguish supermarkets vs. not)
-    
-  # TODO: scatter scatter gas stations
-  # TODO: scatter brand changes
-  # TODO: scatter bad reporting / stations disappearing reappearing
-  # TODO: scatter promotions
-  
-  # France
-  x1 = -5.
-  x2 = 9.
-  y1 = 42.
-  y2 = 52.
-  
-  # Lambert conformal for France (as suggested by IGN... check WGS84 though?)
-  m_france =  Basemap(resolution='i',
-                      projection='lcc',
-                      ellps = 'WGS84',
-                      lat_1 = 44.,
-                      lat_2 = 49.,
-                      lat_0 = 46.5,
-                      lon_0 = 3,
-                      llcrnrlat=y1,
-                      urcrnrlat=y2,
-                      llcrnrlon=x1,
-                      urcrnrlon=x2)
-  
-  path_commune = r'\data_maps\GEOFLA_COM_WGS84'
-  # m_france.readshapefile(path_data + path_commune + '\COMMUNE', 'communes_fr', color = 'none', zorder=2)
-  # m_france.communes_fr_info[0]
-  # m_france.communes_fr[0]
-  # ls_map_codes_geo = [commune['INSEE_COM'] for commune in m_france.communes_fr_info]
-  # ms_map_insee_pbm = [code_geo for code_geo in ls_insee_data_codes_geo if code_geo not in ls_map_codes_geo]
-  # # no issue: essentially Paris/Lyon/Marseille and DOM/TOM
-  
-  path_dpt = r'\data_maps\GEOFLA_DPT_WGS84'
-  m_france.readshapefile(path_data + path_dpt + '\DEPARTEMENT', 'dpts_fr', color = 'none', zorder = 2)
-  # Can be several polygons per dpt...
-  
-  # TODO: create dataframe with info by dpt
-  # TODO: create categories and labels
-  # TODO: plot with colour bar
-  
-  dict_all_dpt_info = {}
-  for i, dict_dpt_info in enumerate(m_france.dpts_fr_info):
-    if (dict_dpt_info['CODE_DEPT'] in dict_all_dpt_info) and \
-       (Polygon(m_france.dpts_fr[i]).area < dict_all_dpt_info[dict_dpt_info['CODE_DEPT']]['poly'].area):
-      pass
-    else:
-      dict_all_dpt_info[dict_dpt_info['CODE_DEPT']] = dict_dpt_info
-      dict_all_dpt_info[dict_dpt_info['CODE_DEPT']]['poly'] = Polygon(m_france.dpts_fr[i])
-  
-  pd_df_dpts = pd.DataFrame(dict_all_dpt_info).T                                                        
-  # areas computed from biggest polygon (for density computation)
-  pd_df_dpts['area'] = pd_df_dpts['poly'].map(lambda x: x.area)
-  # population computed from cities (for density computation)
-  pd_df_pop = pd_df_insee[[u'Département DEP', 'Population municipale 2007 POP_MUN_2007']].\
-                            groupby([u'Département DEP'], sort = True).sum()
-  pd_df_dpts = pd_df_dpts.join(pd_df_pop)          
-  
-  # could take merge approach  + test with zagaz
-  pd_df_dpts['dpt_nb_stations'] = np.nan
-  grouped_dpt = pd_df_master_info.groupby('dpt')
-  for dpt, group in grouped_dpt:
-    pd_df_dpts['dpt_nb_stations'].ix[dpt] = len(group)
-  
-  # density (different definitions)
-  pd_df_dpts['density_area'] = pd_df_dpts['dpt_nb_stations'] / pd_df_dpts['area']
-  pd_df_dpts['density_pop'] = pd_df_dpts['dpt_nb_stations'] / pd_df_dpts['Population municipale 2007 POP_MUN_2007']
-  
-  from matplotlib import colors
-  
-  for density_field in ('density_area', 'density_pop'):
-    # Easier to work with NaN values when classifying
-    pd_df_dpts.replace(to_replace={density_field: {0: np.nan}}, inplace=True)
-    # Calculate Jenks natural breaks for density
-    breaks = nb(pd_df_dpts[pd_df_dpts[density_field].notnull()][density_field].values, initial=300, k=5)
-    # The notnull method lets us match indices when joining
-    jb = pd.DataFrame({'jenks_bins': breaks.yb}, index=pd_df_dpts[pd_df_dpts[density_field].notnull()].index)
-    pd_df_dpts = pd_df_dpts.join(jb)
-    pd_df_dpts.jenks_bins.fillna(-1, inplace=True)
-    
-    fig, ax = plt.subplots()
-    m_france.drawcountries()
-    m_france.drawcoastlines()
-    pd_df_dpts['patches'] = pd_df_dpts['poly'].map(lambda x: PolygonPatch(x,
-                                                                          fc='#555555',
-                                                                          ec='#787878', 
-                                                                          lw=.25, 
-                                                                          alpha=.9,
-                                                                          zorder=4))
-    cmap = plt.get_cmap('Blues')
-    norm = colors.Normalize()
-    pc = PatchCollection(pd_df_dpts['patches'], match_original=True)
-    pc.set_facecolor(cmap(norm(pd_df_dpts['jenks_bins'].values)))
-    ax.add_collection(pc)
-    # ax.add_collection(PatchCollection(pd_df_dpts['patches'].values, match_original=True))
-    plt.title(density_field)
-    plt.tight_layout()
-    # this will set the image width to 722px at 100dpi
-    plt.savefig(path_data + r'\data_maps\graphs\gasoline_%s.png' %density_field , dpi=700)
-    plt.close()
-    plt.clf()
-    del(pd_df_dpts['jenks_bins'])

@@ -57,6 +57,14 @@ soup = BeautifulSoup(data)
 # href_search = soup.find('div', {'id':'buttonPS', 'class':'btnRadio'}).a['href']
 href_search  = soup.find('form', {'action': re.compile('/recherche.*'), 'method' : 'post'})['action']
 
+ps_profession = u'ophtalmologiste'
+ps_profession_label = u'Ophtalmologiste'
+ps_localisation = u'75'
+
+ps_profession = u'medecin-generaliste'
+ps_profession_label = u'Médecin généraliste'
+ps_localisation = u'75001'
+
 dict_search_params = {'type':'ps',
                       'ps_nom':'',
                       'es_nom':'',
