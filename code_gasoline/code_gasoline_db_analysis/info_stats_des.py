@@ -20,8 +20,6 @@ def enc_stock_json(database, chemin):
   with open(chemin, 'w') as fichier:
     json.dump(database, fichier)
 
-# GENERIC
-
 def get_latest_info(id, field, master_info):
   # TODO: enrich for categorical variables ?
   list_info = [elt for elt in master_info[id][field]]
@@ -47,23 +45,128 @@ def get_str_no_accent_up(line):
   return line
 
 if __name__=="__main__":
-  # path_data: data folder at different locations at CREST vs. HOME
-  # could do the same for path_code if necessary (import etc).
   if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
     path_data = r'W:\Bureau\Etienne_work\Data'
   else:
     path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
-  # structure of the data folder should be the same
+  
   folder_built_master_json = r'\data_gasoline\data_built\data_json_gasoline\master_diesel'
   folder_source_brand = r'\data_gasoline\data_source\data_stations\data_brands'
   folder_built_csv = r'\data_gasoline\data_built\data_csv_gasoline'
   folder_dpts_regions = r'\data_insee\Regions_departements'
   
-  master_price = dec_json(path_data + folder_built_master_json + r'\master_price')
-  master_info = dec_json(path_data + folder_built_master_json + r'\master_info_for_output')
-  list_list_competitors = dec_json(path_data + folder_built_master_json + r'\list_list_competitors')
-  list_tuple_competitors = dec_json(path_data + folder_built_master_json + r'\list_tuple_competitors')
+  master_price = dec_json(path_data + folder_built_master_json + r'\master_price_diesel')
+  master_info = dec_json(path_data + folder_built_master_json + r'\master_info_diesel_for_output')
+  ls_ls_competitors = dec_json(path_data + folder_built_master_json + r'\list_list_competitors')
+  ls_tuple_competitors = dec_json(path_data + folder_built_master_json + r'\list_tuple_competitors')
   dict_dpts_regions = dec_json(path_data + folder_dpts_regions + r'\dict_dpts_regions')
+  dict_brands = dec_json(path_data + folder_source_brand + r'\dict_brands')
+
+  # #####################
+  # IMPORT INSEE DATA
+  # #####################
+  
+  pd_df_insee = pd.read_csv(path_data + folder_built_csv + r'/master_insee_output.csv',
+                            encoding = 'utf-8',
+                            dtype= str)
+  # excludes dom tom
+  pd_df_insee = pd_df_insee[~pd_df_insee[u'Département - Commune CODGEO'].str.contains('^97')]
+  pd_df_insee['Population municipale 2007 POP_MUN_2007'] = \
+    pd_df_insee['Population municipale 2007 POP_MUN_2007'].apply(lambda x: float(x))
+  
+  # #####################
+  # MARKET DEFINITIONS
+  # #####################
+  
+  pd_df_insee['id_code_geo'] = pd_df_insee[u'Département - Commune CODGEO']
+  pd_df_insee = pd_df_insee.set_index('id_code_geo')
+  dict_markets_insee = {}
+  dict_markets_au = {}
+  dict_markets_uu = {}
+  # some stations don't have code_geo (short spells which are not in master_info)
+  for id_station, info_station in master_price['dict_info'].items():
+    if 'code_geo' in info_station:
+      dict_markets_insee.setdefault(info_station['code_geo'], []).append(id_station)
+      station_uu = pd_df_insee.ix[info_station['code_geo']][u"Code géographique de l'unité urbaine UU2010"]
+      dict_markets_uu.setdefault(station_uu, []).append(station_id)
+      station_au = pd_df_insee.ix[info_station['code_geo']][u'Code AU2010']
+      dict_markets_au.setdefault(station_au, []).append(station_id)
+  
+  # #####################
+  # BRAND CHANGES
+  # #####################
+
+  dict_comp_total_access = {}
+  dict_comp_total_access_short = {}
+  for indiv_ind, indiv_id in enumerate(master_price['ids']):
+    station_info = master_price['dict_info'][indiv_id]
+    if station_info['brand']:
+      # generalize to all (single) brand changes ?
+      if 'TOTAL_ACCESS' in [dict_brands[get_str_no_accent_up(brand)][0] \
+                              for (brand, day_ind) in station_info['brand']]:
+        if ls_ls_competitors[indiv_ind]:
+          for (competitor_id, competitor_distance) in ls_ls_competitors[indiv_ind]:
+            dict_comp_total_access.setdefault(competitor_id, []).append((indiv_id, competitor_distance))
+  for indiv_id, list_stations in dict_comp_total_access.items():
+    dict_comp_total_access[indiv_id] = sorted(list_stations, key = lambda x: x[1])
+    dict_comp_total_access_short[indiv_id] = dict_comp_total_access[indiv_id][0:2]
+  
+  # #########
+  # SERVICES 
+  # #########
+
+  ls_services = [service for indiv_id, indiv_info in master_info.items()\
+                   if indiv_info['services'][-1] for service in indiv_info['services'][-1]]
+  ls_services = list(set(ls_services))
+  for indiv_id, indiv_info in master_info.items():
+    if indiv_info['services'][-1]:
+      ls_station_services = [0 for i in ls_services]
+      for service in indiv_info['services'][-1]:
+        service_ind = ls_services.index(service)
+        ls_station_services[service_ind] = 1
+    else:
+      ls_station_services = [None for i in ls_services]
+    master_info[indiv_id]['list_service_dummies'] = ls_station_services
+  
+  # #####################
+  # INFO DATAFRAME
+  # #####################
+  
+  ls_rows = []
+  for i, id in enumerate(master_price['ids']):
+    city = master_price['dict_info'][id]['city']
+    if city:
+      city = city.replace(',',' ')
+    code_geo = master_price['dict_info'][id].get('code_geo')
+    code_geo_ardts = master_price['dict_info'][id].get('code_geo_ardts')
+    location_x, location_y, hours, highway = None, None, None, None
+    ls_service_dummies = [None for i in ls_services]
+    if master_info.get(id):
+      if master_info[id]['gps'][-1]:
+        location_x = master_info[id]['gps'][-1][0]
+        location_y = master_info[id]['gps'][-1][1]
+      if master_info[id]['hours'][-1]:
+        hours = master_info[id]['hours'][-1].replace(',', ' ')
+      highway = master_info[id]['highway'][-1]
+      ls_service_dummies = master_info[id]['list_service_dummies']
+      ta_id_1, ta_dist_1, ta_id_2, ta_dist_2 = None, None, None, None
+      if id in dict_comp_total_access and len(dict_comp_total_access[id]) >= 1:
+        ta_id_1 = dict_comp_total_access[id][0][0]
+        ta_dist_1 = dict_comp_total_access[id][0][1]
+      if id in dict_comp_total_access and len(dict_comp_total_access[id]) == 2:
+        ta_id_2 = dict_comp_total_access[id][1][0]
+        ta_dist_2 = dict_comp_total_access[id][1][1]   
+    row = [id, city, code_geo, code_geo_ardts, location_x, location_y, highway, hours] +\
+          ls_service_dummies + [ta_id_1, ta_dist_1, ta_id_2, ta_dist_2]
+    ls_rows.append(row)
+  header = ['id', 'city', 'code_geo', 'code_geo_ardts', 'location_x', 'location_y', 'highway', 'hours'] +\
+           ls_services + ['ta_id_1', 'ta_dist_1', 'ta_id_2', 'ta_dist_2']
+  pd_df_master_info = pd.DataFrame([list(i) for i in zip(*ls_rows)], header).T
+   
+  pd_df_master_info['dpt'] = pd_df_master_info['code_geo'].map(lambda x: x[:2] if x else None)
+  # http://pandas.pydata.org/pandas-docs/dev/groupby.html
+  # http://stackoverflow.com/questions/17926273/how-to-count-distinct-values-in-a-column-of-a-pandas-group-by-object
+  # Corsica as 2A/2B here
   
   # #################################
   # OPENING DAYS, HOURS AND SERVICES
@@ -82,127 +185,3 @@ if __name__=="__main__":
   # Date of change unknown so kinda impossible to check an effect... (rather would come from price)
   # TODO: check most standard service patterns... scarce services ... brand specificities...
   
-  # #####################
-  # IMPORT INSEE DATA
-  # #####################
-  
-  pd_df_insee = pd.read_csv(path_data + folder_built_csv + r'/master_insee_output.csv',\
-                              encoding = 'utf-8', dtype= str)
-  ls_no_match = []
-  pd_df_insee[u'Département - Commune CODGEO'] = pd_df_insee[u'Département - Commune CODGEO'].astype(str)
-  ls_insee_data_codes_geo = list(pd_df_insee[u'Département - Commune CODGEO'])
-  for station_id, station_info in master_price['dict_info'].iteritems():
-    if 'code_geo' in station_info.keys():
-      if (station_info['code_geo'] not in ls_insee_data_codes_geo) and\
-         (station_info['code_geo_ardts'] not in ls_insee_data_codes_geo):
-			  ls_no_match.append((station_id, station_info['code_geo']))
-  # exclude dom tom
-  pd_df_insee = pd_df_insee[~pd_df_insee[u'Département - Commune CODGEO'].str.contains('^97')]
-  pd_df_insee['Population municipale 2007 POP_MUN_2007'] =\
-    pd_df_insee['Population municipale 2007 POP_MUN_2007'].astype(float)
-  
-  # #####################
-  # MARKET DEFINITIONS
-  # #####################
-  
-  pd_df_insee['id_code_geo'] = pd_df_insee[u'Département - Commune CODGEO']
-  pd_df_insee = pd_df_insee.set_index('id_code_geo')
-  dict_markets_insee = {}
-  dict_markets_au = {}
-  dict_markets_uu = {}
-  # some stations don't have code_geo (short spells which are not in master_info)
-  for id_station, info_station in master_price['dict_info'].iteritems():
-    if 'code_geo' in info_station:
-      dict_markets_insee.setdefault(info_station['code_geo'], []).append(id_station)
-      station_uu = pd_df_insee.ix[info_station['code_geo']][u"Code géographique de l'unité urbaine UU2010"]
-      dict_markets_uu.setdefault(station_uu, []).append(station_id)
-      station_au = pd_df_insee.ix[info_station['code_geo']][u'Code AU2010']
-      dict_markets_au.setdefault(station_au, []).append(station_id)
-  
-  # #####################
-  # BRAND CHANGES
-  # #####################
-  
-  dict_brands = dec_json(path_data + folder_source_brand + r'\dict_brands')
-  # Check that all brands are in dict_brands
-  for id, station in master_price['dict_info'].iteritems():
-    for brand in station['brand']:
-      if get_str_no_accent_up(brand[0]) not in dict_brands:
-        print 'Not in dict_brands:', get_str_no_accent_up(brand[0])
-  # enc_stock_json(dict_brands, path_data + folder_source_brand + r'\dict_brands')
-  
-  # TODO: put it after brand fixing for consistency (if needed ???)
-  dict_comp_total_access = {}
-  dict_comp_total_access_short = {}
-  for i, id in enumerate(master_price['ids']):
-    station_info = master_price['dict_info'][id]
-    if station_info['brand']:
-      # generalize to all (single) brand changes ?
-      if 'TOTAL_ACCESS' in [dict_brands[get_str_no_accent_up(brand)][0] \
-                              for (brand, day_ind) in station_info['brand']]:
-        if list_list_competitors[i]:
-          for (indiv_id, indiv_distance) in list_list_competitors[i]:
-            dict_comp_total_access.setdefault(indiv_id, []).append((id, indiv_distance))
-  for id, list_stations in dict_comp_total_access.iteritems():
-    dict_comp_total_access[id] = sorted(list_stations, key = lambda x: x[1])
-    dict_comp_total_access_short[id] = dict_comp_total_access[id][0:2]
-  
-  # #########
-  # SERVICES 
-  # #########
-  
-  set_services = set()
-  for id, station in master_info.iteritems():
-    if station['services'][-1]:
-      for service in station['services'][-1]:
-        set_services.add(service)
-  list_services = list(set_services)
-  for id, station in master_info.iteritems():
-    if station['services'][-1] is not None:
-      list_station_services = [0 for i in range(len(list_services))]
-      for service in station['services'][-1]:
-        service_ind = list_services.index(service)
-        list_station_services[service_ind] = 1
-    else:
-      list_station_services = [None for i in range(len(list_services))]
-    master_info[id]['list_service_dummies'] = list_station_services
-  
-  # #####################
-  # INFO DATAFRAME
-  # #####################
-  
-  list_rows = []
-  for i, id in enumerate(master_price['ids']):
-    city = master_price['dict_info'][id]['city']
-    if city:
-      city = city.replace(',',' ')
-    code_geo = master_price['dict_info'][id].get('code_geo')
-    code_geo_ardts = master_price['dict_info'][id].get('code_geo_ardts')
-    location_x, location_y, hours, highway = None, None, None, None
-    list_service_dummies = [None for i in range(len(list_services))]
-    if master_info.get(id):
-      if master_info[id]['gps'][-1]:
-        location_x = master_info[id]['gps'][-1][0]
-        location_y = master_info[id]['gps'][-1][1]
-      if master_info[id]['hours'][-1]:
-        hours = master_info[id]['hours'][-1].replace(',', ' ')
-      highway = master_info[id]['highway'][-1]
-      list_service_dummies = master_info[id]['list_service_dummies']
-      ta_id_1, ta_dist_1, ta_id_2, ta_dist_2 = None, None, None, None
-      if id in dict_comp_total_access and len(dict_comp_total_access[id]) >= 1:
-        ta_id_1 = dict_comp_total_access[id][0][0]
-        ta_dist_1 = dict_comp_total_access[id][0][1]
-      if id in dict_comp_total_access and len(dict_comp_total_access[id]) == 2:
-        ta_id_2 = dict_comp_total_access[id][1][0]
-        ta_dist_2 = dict_comp_total_access[id][1][1]   
-    row = [id, city, code_geo, code_geo_ardts, location_x, location_y, highway, hours] +\
-          list_service_dummies + [ta_id_1, ta_dist_1, ta_id_2, ta_dist_2]
-    list_rows.append(row)
-  header = ['id', 'city', 'code_geo', 'code_geo_ardts', 'location_x', 'location_y', 'highway', 'hours'] +\
-           list_services + ['ta_id_1', 'ta_dist_1', 'ta_id_2', 'ta_dist_2']
-  pd_df_master_info = pd.DataFrame([list(i) for i in zip(*list_rows)], header).T
-  
-  pd_df_master_info['dpt'] = pd_df_master_info['code_geo'].map(lambda x: x[:2] if x else None)
-  # http://pandas.pydata.org/pandas-docs/dev/groupby.html
-  # http://stackoverflow.com/questions/17926273/how-to-count-distinct-values-in-a-column-of-a-pandas-group-by-object
-  # Corsica as 2A/2B here

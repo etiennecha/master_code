@@ -10,6 +10,8 @@ import pprint
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
 
 def ls_to_clean(ls_to_clean):
   ls_to_clean = map(lambda x: x.replace(u'&gt;', u'').replace(u'&nbsp;',u'').strip(), ls_to_clean)
@@ -26,8 +28,8 @@ def dec_json(chemin):
 path_physicians = r'\\ulysse\users\echamayou\Bureau\Etienne_work\Data\data_ameli'
 # path_physicians = r'C:\Users\etna\Desktop\Etienne_work\Data\data_ameli'
 
-ls_ls_physicians = dec_json(path_physicians + r'\ls_ls_physicians')
-dict_physicians = dec_json(path_physicians + r'\dict_physicians')
+ls_ls_physicians = dec_json(path_physicians + r'\ls_ls_ophtalmologiste_75')
+dict_physicians = dec_json(path_physicians + r'\dict_ophtalmologiste_75')
 
 # [ls_address_name, ls_places, ls_infos, ls_actes]
 
@@ -149,6 +151,42 @@ print pd_df_stats_ard[['mean','25%', '50%', '75%', 'count']].corr()
 #plt.scatter(pd_df_stats_ard['count'], pd_df_stats_ard['mean'])
 #plt.scatter(pd_df_stats_ard['count'], pd_df_stats_ard['50%'])
 
+# COMPANY CREATION DATE
+dict_results = dec_json(path_physicians + r'\societe_dict_ophtalmo')
+ls_no_result = dec_json(path_physicians + r'\societe_ls_no_result_ophtalmo')
+
+dict_societe_physicians = {}
+for id_physician, info_physician in dict_results.items():
+  if u'médecin' in info_physician[2][0]:
+    dict_societe_physicians[id_physician] = info_physician[:2] +\
+                                            [[elt.strip() if elt else elt for elt in info_physician[3]]]
+  else:
+    dict_results[id_physician][2] = [elt.strip() if elt else elt\
+                                      for elt in info_physician[2][0].replace('\n', '').split(';')]
+    dict_results[id_physician][3] = [elt.strip() if elt else elt for elt in info_physician[3]]
+    print '\n', id_physician
+    pprint.pprint(dict_results[id_physician])
+
+pd_df_physicians['immatriculation'] = None
+for id_physician, info_physician in dict_societe_physicians.items():
+  len_info_ste = len(info_physician[2])
+  ls_titles = [info_physician[2][i] for i in range(len_info_ste) if i%2 == 0]
+  ls_contents = [info_physician[2][i] for i in range(len_info_ste) if i%2 != 0]
+  dict_info_ste = dict(zip(ls_titles, ls_contents))
+  dict_societe_physicians[id_physician][2] = dict_info_ste 
+  # print id_physician, dict_info_ste.get('Immatriculation')
+  pd_df_physicians.ix[id_physician, 'immatriculation'] = dict_info_ste.get('Immatriculation')
+pd_df_physicians['immatriculation'] =\
+  pd_df_physicians['immatriculation'].apply(lambda x: float(x[-4:]) if x else None)
+
+# TODO: clean 
+# Some info wrong: 1900 => 2000 after verification with other site
+pd_df_physicians['immatriculation'][pd_df_physicians['immatriculation'] == 1900] = 2000
+# Misses 5
+pd_df_physicians['zip_city'][pd_df_physicians['zip_city'].str.startswith('75116')] = '75016 PARIS'
+df_temp = pd_df_physicians[~pd_df_physicians['zip_city'].str.contains('CEDEX')]
+formula = 'Consultation ~ C(zip_city) + immatriculation + C(convention)'
+res01 = smf.ols(formula = formula, data = df_temp).fit()
 #TODO: represent homogeneity within ardts
 
 # CHECK OSM ROUTE SERVICE : http://wiki.openstreetmap.org/wiki/OpenRouteService

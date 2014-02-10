@@ -19,6 +19,7 @@ from descartes import PolygonPatch
 from generic_master_info import *
 # import fiona
 from pysal.esda.mapclassify import Natural_Breaks as nb
+from matplotlib import colors
 
 if __name__=="__main__":
   if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
@@ -35,8 +36,8 @@ if __name__=="__main__":
   
   master_price = dec_json(path_data + folder_built_master_json + r'\master_price_diesel')
   master_info = dec_json(path_data + folder_built_master_json + r'\master_info_diesel_for_output')
-  list_list_competitors = dec_json(path_data + folder_built_master_json + r'\list_list_competitors')
-  list_tuple_competitors = dec_json(path_data + folder_built_master_json + r'\list_tuple_competitors')
+  ls_ls_competitors = dec_json(path_data + folder_built_master_json + r'\list_list_competitors')
+  ls_tuple_competitors = dec_json(path_data + folder_built_master_json + r'\list_tuple_competitors')
   dict_dpts_regions = dec_json(path_data + folder_dpts_regions + r'\dict_dpts_regions')
   dict_brands = dec_json(path_data + folder_source_brands + r'\dict_brands')
   # TODO: Update with new master info
@@ -58,9 +59,9 @@ if __name__=="__main__":
 			  ls_no_match.append((station_id, station_info['code_geo']))
   # exclude dom tom
   pd_df_insee = pd_df_insee[~pd_df_insee[u'Département - Commune CODGEO'].str.contains('^97')]
-  pd_df_insee['Population municipale 2007 POP_MUN_2007'] =\
-    pd_df_insee['Population municipale 2007 POP_MUN_2007'].astype(float)
-  
+  pd_df_insee['Population municipale 2007 POP_MUN_2007'] = \
+    pd_df_insee['Population municipale 2007 POP_MUN_2007'].apply(lambda x: float(x))
+
   # #####################
   # MARKET DEFINITIONS
   # #####################
@@ -86,44 +87,41 @@ if __name__=="__main__":
   # TODO: put it after brand fixing for consistency (if needed ???)
   dict_comp_total_access = {}
   dict_comp_total_access_short = {}
-  for i, id in enumerate(master_price['ids']):
-    station_info = master_price['dict_info'][id]
+  for indiv_ind, indiv_id in enumerate(master_price['ids']):
+    station_info = master_price['dict_info'][indiv_id]
     if station_info['brand']:
       # generalize to all (single) brand changes ?
       if 'TOTAL_ACCESS' in [dict_brands[get_str_no_accent_up(brand)][0] \
                               for (brand, day_ind) in station_info['brand']]:
-        if list_list_competitors[i]:
-          for (indiv_id, indiv_distance) in list_list_competitors[i]:
-            dict_comp_total_access.setdefault(indiv_id, []).append((id, indiv_distance))
-  for id, list_stations in dict_comp_total_access.iteritems():
-    dict_comp_total_access[id] = sorted(list_stations, key = lambda x: x[1])
-    dict_comp_total_access_short[id] = dict_comp_total_access[id][0:2]
+        if ls_ls_competitors[indiv_ind]:
+          for (competitor_id, competitor_distance) in ls_ls_competitors[indiv_ind]:
+            dict_comp_total_access.setdefault(competitor_id, []).append((indiv_id, competitor_distance))
+  for indiv_id, list_stations in dict_comp_total_access.items():
+    dict_comp_total_access[indiv_id] = sorted(list_stations, key = lambda x: x[1])
+    dict_comp_total_access_short[indiv_id] = dict_comp_total_access[indiv_id][0:2]
   
   # #########
   # SERVICES 
   # #########
-  
-  set_services = set()
-  for id, station in master_info.iteritems():
-    if station['services'][-1]:
-      for service in station['services'][-1]:
-        set_services.add(service)
-  list_services = list(set_services)
-  for id, station in master_info.iteritems():
-    if station['services'][-1] is not None:
-      list_station_services = [0 for i in range(len(list_services))]
-      for service in station['services'][-1]:
-        service_ind = list_services.index(service)
-        list_station_services[service_ind] = 1
+
+  ls_services = [service for indiv_id, indiv_info in master_info.items()\
+                   if indiv_info['services'][-1] for service in indiv_info['services'][-1]]
+  ls_services = list(set(ls_services))
+  for indiv_id, indiv_info in master_info.items():
+    if indiv_info['services'][-1]:
+      ls_station_services = [0 for i in ls_services]
+      for service in indiv_info['services'][-1]:
+        service_ind = ls_services.index(service)
+        ls_station_services[service_ind] = 1
     else:
-      list_station_services = [None for i in range(len(list_services))]
-    master_info[id]['list_service_dummies'] = list_station_services
+      ls_station_services = [None for i in ls_services]
+    master_info[indiv_id]['list_service_dummies'] = ls_station_services
   
   # #####################
   # INFO DATAFRAME
   # #####################
   
-  list_rows = []
+  ls_rows = []
   for i, id in enumerate(master_price['ids']):
     city = master_price['dict_info'][id]['city']
     if city:
@@ -131,7 +129,7 @@ if __name__=="__main__":
     code_geo = master_price['dict_info'][id].get('code_geo')
     code_geo_ardts = master_price['dict_info'][id].get('code_geo_ardts')
     location_x, location_y, hours, highway = None, None, None, None
-    list_service_dummies = [None for i in range(len(list_services))]
+    ls_service_dummies = [None for i in ls_services]
     if master_info.get(id):
       if master_info[id]['gps'][-1]:
         location_x = master_info[id]['gps'][-1][0]
@@ -139,7 +137,7 @@ if __name__=="__main__":
       if master_info[id]['hours'][-1]:
         hours = master_info[id]['hours'][-1].replace(',', ' ')
       highway = master_info[id]['highway'][-1]
-      list_service_dummies = master_info[id]['list_service_dummies']
+      ls_service_dummies = master_info[id]['list_service_dummies']
       ta_id_1, ta_dist_1, ta_id_2, ta_dist_2 = None, None, None, None
       if id in dict_comp_total_access and len(dict_comp_total_access[id]) >= 1:
         ta_id_1 = dict_comp_total_access[id][0][0]
@@ -148,11 +146,11 @@ if __name__=="__main__":
         ta_id_2 = dict_comp_total_access[id][1][0]
         ta_dist_2 = dict_comp_total_access[id][1][1]   
     row = [id, city, code_geo, code_geo_ardts, location_x, location_y, highway, hours] +\
-          list_service_dummies + [ta_id_1, ta_dist_1, ta_id_2, ta_dist_2]
-    list_rows.append(row)
+          ls_service_dummies + [ta_id_1, ta_dist_1, ta_id_2, ta_dist_2]
+    ls_rows.append(row)
   header = ['id', 'city', 'code_geo', 'code_geo_ardts', 'location_x', 'location_y', 'highway', 'hours'] +\
-           list_services + ['ta_id_1', 'ta_dist_1', 'ta_id_2', 'ta_dist_2']
-  pd_df_master_info = pd.DataFrame([list(i) for i in zip(*list_rows)], header).T
+           ls_services + ['ta_id_1', 'ta_dist_1', 'ta_id_2', 'ta_dist_2']
+  pd_df_master_info = pd.DataFrame([list(i) for i in zip(*ls_rows)], header).T
   
   pd_df_master_info['dpt'] = pd_df_master_info['code_geo'].map(lambda x: x[:2] if x else None)
   # http://pandas.pydata.org/pandas-docs/dev/groupby.html
@@ -189,7 +187,8 @@ if __name__=="__main__":
   for indiv_id, gas_station in master_info_temp.items():
     if indiv_id in master_price['dict_info']:
       indiv_info = master_price['dict_info'][indiv_id]
-      ls_brands = [x[0] for x in itertools.groupby([get_str_no_accent_up(brand[0]) for brand in indiv_info['brand']])]
+      ls_brands = [x[0] for x in itertools.groupby([get_str_no_accent_up(brand[0])\
+                     for brand in indiv_info['brand']])]
       if 'TOTAL ACCESS' in ls_brands and 'ELF' in ls_brands:
         gps = gas_station['gps'][-1]
         if gps:
@@ -216,12 +215,16 @@ if __name__=="__main__":
                         [station.y for station in df_gas_stations[df_gas_stations['chge']=='no']['point']],
                         3, marker = 'o', lw=0, facecolor = '#339966', edgecolor = 'w', alpha = 0.5,
                         antialiased = True, zorder = 2)
-  dev = m_route.scatter([station.x for station in df_gas_stations[df_gas_stations['chge']=='other_access']['point']],
-                        [station.y for station in df_gas_stations[df_gas_stations['chge']=='other_access']['point']],
+  dev = m_route.scatter([station.x for station\
+                           in df_gas_stations[df_gas_stations['chge']=='other_access']['point']],
+                        [station.y for station\
+                           in df_gas_stations[df_gas_stations['chge']=='other_access']['point']],
                         3, marker = 'D', lw=0, facecolor = '#3366CC', edgecolor = 'w', alpha = 0.6,
                         antialiased = True, zorder = 3)
-  dev = m_route.scatter([station.x for station in df_gas_stations[df_gas_stations['chge']=='elf_access']['point']],
-                        [station.y for station in df_gas_stations[df_gas_stations['chge']=='elf_access']['point']],
+  dev = m_route.scatter([station.x for station\
+                           in df_gas_stations[df_gas_stations['chge']=='elf_access']['point']],
+                        [station.y for station\
+                           in df_gas_stations[df_gas_stations['chge']=='elf_access']['point']],
                         3, marker = 'D', lw=0, facecolor = '#CC0000', edgecolor = 'w', alpha = 0.6,
                         antialiased = True, zorder = 3)
   
@@ -314,9 +317,8 @@ if __name__=="__main__":
   
   # density (different definitions)
   pd_df_dpts['density_area'] = pd_df_dpts['dpt_nb_stations'] / pd_df_dpts['area']
-  pd_df_dpts['density_pop'] = pd_df_dpts['dpt_nb_stations'] / pd_df_dpts['Population municipale 2007 POP_MUN_2007']
-  
-  from matplotlib import colors
+  pd_df_dpts['density_pop'] = pd_df_dpts['dpt_nb_stations'] /\
+                                pd_df_dpts['Population municipale 2007 POP_MUN_2007']
   
   for density_field in ('density_area', 'density_pop'):
     # Easier to work with NaN values when classifying

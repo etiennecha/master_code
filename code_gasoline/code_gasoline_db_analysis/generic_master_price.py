@@ -38,11 +38,14 @@ def get_num_ls_ls_nan(ls_ls_prices):
 def fill_prices_using_dates_nan(ls_ls_prices, ls_ls_dates, ls_master_dates):
   """
   Fills list of prices using next available price if the later was set on the current date (or previously)
+
+  Verify: 
   ind_test = master_price['ids'].index('3410005')
-  pd_df_temp = pd.DataFrame(zip(*[master_price['diesel_date'][ind_test], master_price['diesel_price'][ind_test]]), index = master_price['dates'])
+  pd_df_temp = pd.DataFrame(zip(*[master_price['diesel_date'][ind_test],\
+                                  master_price['diesel_price'][ind_test]]),\
+                            index = master_price['dates'])
   print pd_df_temp.to_string()
   """
-  # TODO: check result with pandas
   set_corrections = set()
   ls_errors = []
   for indiv_ind, ls_prices in enumerate(ls_ls_prices):
@@ -50,7 +53,8 @@ def fill_prices_using_dates_nan(ls_ls_prices, ls_ls_dates, ls_master_dates):
       if price != price:
         relative_day = 0
         while (day_ind + relative_day < len(ls_master_dates)-1) and\
-              (ls_ls_prices[indiv_ind][day_ind + relative_day] != ls_ls_prices[indiv_ind][day_ind + relative_day]):
+              (ls_ls_prices[indiv_ind][day_ind + relative_day] !=\
+               ls_ls_prices[indiv_ind][day_ind + relative_day]):
           relative_day += 1
         next_valid_date = ls_ls_dates[indiv_ind][day_ind + relative_day]
         # if next_valid_date is not None (end of series full of None)
@@ -69,8 +73,10 @@ def fill_prices_using_dates_nan(ls_ls_prices, ls_ls_dates, ls_master_dates):
   return (ls_ls_prices, list(set_corrections), ls_errors)
 
 def fill_short_gaps_nan(ls_ls_prices, lim):
-  """ Fills price series with last available price if len of missing spell below lim """
-  # TODO: check result with pandas (should leave beg/end nan untouched)
+  """
+  Fills price series with last available price if len of missing spell below lim
+  Beginning and end missing values are not filled
+  """
   set_corrections = set()
   for indiv_ind, ls_prices in enumerate(ls_ls_prices):
     day_ind = 0
@@ -112,7 +118,7 @@ def get_abnormal_price_values_nan(ls_ls_prices, lower_bound, upper_bound):
   return ls_abnormal_prices
 
 def format_ls_abnormal_prices_nan(ls_abnormal_prices, ls_master_ids, ls_master_dates):
-  """ Some formatting (May drop...) """
+  """ Some formatting (may drop) """
   ls_abnormal_prices_formatted = []
   for indiv_ind, price, ls_day_inds in ls_abnormal_prices:
     indiv_id = ls_master_ids[indiv_ind]
@@ -121,6 +127,7 @@ def format_ls_abnormal_prices_nan(ls_abnormal_prices, ls_master_ids, ls_master_d
   return ls_abnormal_prices_formatted
 
 def expand_corrections_list(ls_corrections, ls_master_dates):
+  """  Format manual correction list """
   ls_corrections_expanded = []
   for id_indiv, price, ls_day_dates in ls_corrections:
     if len(ls_day_dates) == 1:
@@ -155,7 +162,8 @@ def correct_abnormal_price_variations_nan(ls_ls_prices, var_lim):
     last_price_day_ind = 0
     for day_ind, price in enumerate(ls_prices[1:], start=1):
       if np.abs(price - ls_ls_prices[indiv_ind][day_ind-1]) > var_lim:
-        if (np.abs(last_price_var) > var_lim) and (last_price_var*(price - ls_ls_prices[indiv_ind][day_ind-1]) < 0):
+        if (np.abs(last_price_var) > var_lim) and\
+           (last_price_var*(price - ls_ls_prices[indiv_ind][day_ind-1]) < 0):
           for i in range(last_price_day_ind, day_ind + 1):
             ls_ls_prices[indiv_ind][i] = ls_ls_prices[indiv_ind][last_price_day_ind - 1]
           ls_suspects_opposit.append((indiv_ind, day_ind))
@@ -196,7 +204,6 @@ def get_price_durations_nan(ls_ls_prices):
   return ls_ls_price_durations
 
 def correct_abnormal_price_durations_nan(ls_ls_prices, ls_ls_price_durations, duration):
-  # Check result with pandas
   set_duration_corrections = set()
   for indiv_ind, ls_price_durations in enumerate(ls_ls_price_durations):
     for price, ls_day_inds in ls_price_durations:

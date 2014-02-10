@@ -22,11 +22,6 @@ def build_master_addresses(dict_ls_addresses):
   # soft correction and elimination of duplicates
   for indiv_id, ls_addresses in dict_ls_addresses.iteritems():
     ls_addresses_corr = [tuple(map(str_corr_low_std, address)) for address in ls_addresses if address]
-    # second condition is not a real condition (always true) but adds current address to set
-    # set_str_addresses_corr = set()
-    # ls_addresses_corr = [tup_address for tup_address in ls_addresses_corr\
-                          # if (''.join(tup_address) not in set_str_addresses_corr) and\
-                             # (not set_str_addresses_corr.add(''.join(tup_address)))]
     ls_addresses_corr = list(set(ls_addresses_corr))
     dict_ls_addresses_corr[indiv_id] = ls_addresses_corr
   # elimination of duplicates after standardization (keep softly corrected addresses though
@@ -44,14 +39,6 @@ def build_master_addresses(dict_ls_addresses):
         dict_addresses_std.setdefault(tup_address_std, []).append(tup_address_cor)
       master_addresses[indiv_id] = [sorted(v, key=lambda x: x[1], reverse=True)[0][0]\
                                       for k,v in dict_addresses_std.items()]
-        # ls_std_addresses = [map(str_corr_low_std_noacc, address) for address in ls_addresses_corr]
-        # ls_std_addresses = [((stre[0], city[0]), stre[1] + city[1]) for stre, city in ls_std_addresses]
-        # ls_std_addresses = sorted(ls_std_addresses, key=lambda x: x[1], reverse=True)
-        # set_str_addresses_std = set()
-        # ls_addresses_ind = [address_ind for address_ind, tup_address in enumerate(ls_std_addresses)\
-                              # if (tup_address not in set_str_addresses_std) and\
-                                 # (not set_str_addresses_std.add(tup_address))]
-        # ls_addresses_final = [ls_addresses_corr[address_ind] for address_ind in ls_addresses_ind]
     else:
       master_addresses[indiv_id] = ls_addresses_corr
   return master_addresses
@@ -77,42 +64,35 @@ if __name__=="__main__":
   master_price = dec_json(path_data + folder_built_master_json + r'\master_diesel\master_price_diesel')
   master_info = dec_json(path_data + folder_built_master_json + r'\master_diesel\master_info_diesel_raw')
   ls_series = ['diesel_price', 'diesel_date']
-  # master_price = dec_json(path_data + folder_built_master_json + r'\master_gas\master_price_gas')
-  # master_info = dec_json(path_data + folder_built_master_json + r'\master_gas\master_info_gas_raw')
-  # ls_series = ['sp95_price', 'sp95_date', 'e10_price', 'e10_date']
-  
+  #master_price = dec_json(path_data + folder_built_master_json + r'\master_gas\master_price_gas')
+  #master_info = dec_json(path_data + folder_built_master_json + r'\master_gas\master_info_gas_raw')
+  #ls_series = ['sp95_price', 'sp95_date', 'e10_price', 'e10_date']
   
   # Build master_addresses (addresses corrected for html pbms and somewhat stdized)
-  dict_addresses = {}
-  for indiv_id, station in master_info.iteritems():
-    dict_addresses[indiv_id] = [station['address'][i] for i in (5, 3, 4, 0) if station['address'][i]]
+  dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0) if indiv_info['address'][i]]\
+                      for (indiv_id, indiv_info) in master_info.items()}
   master_addresses = build_master_addresses(dict_addresses)
-  # Some corrections by hand
   master_addresses['15400003'] = [(u'zone industrielle du sedour', u'15400 riom-\xc8s-montagnes')]
-  master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')] # should be dropped... mistake
-  
-  # Check stations left with several addresses
-  ls_multi_addresses = []
-  for indiv_indiv_id, indiv_info in master_addresses.iteritems():
-    if len(indiv_info) > 1:
-      ls_multi_addresses.append(indiv_indiv_id)
-  print 'Multi addresses after harmonization:', len(ls_multi_addresses), 'out of', len(master_addresses)
-  
-  # Check zip from station address vs. zip from indiv_id (and absence of address)
-  ls_no_address = []
-  ls_several_zip = []
-  for indiv_indiv_id, indiv_info in master_addresses.iteritems():
-    if indiv_info:
-      zip_from_address = re.match('([0-9]{5,5}) (.*)', indiv_info[0][1]).group(1)
-      zip_from_indiv_id = indiv_indiv_id[:-3]
-      if len(zip_from_indiv_id) == 4:
-        zip_from_indiv_id = '0%s' %zip_from_indiv_id
-      if zip_from_address != zip_from_indiv_id:
-        ls_several_zip.append((indiv_indiv_id, zip_from_indiv_id, zip_from_address))
+  master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')] # TODO: check/clean
+
+  # Check zip from station address vs. zip from indiv_id (break if zip code not found in address)
+  dict_describe_addresses = {}
+  for indiv_id, ls_addresses in master_addresses.items():
+    zip_indiv_id = indiv_id[:-3].rjust(5, '0')
+    ls_zip_address = [re.match('([0-9]{5})\s.*', address[1]).group(1).rjust(5, '0')\
+                        for address in ls_addresses if re.match('([0-9]{5})\s.*', address[1])] 
+    if not ls_addresses:
+      dict_describe_addresses.setdefault('No_address', []).append(indiv_id)
     else:
-      ls_no_address.append(indiv_indiv_id)
-  print 'No address hence no address zip code', len(ls_no_address)
-  print 'Different address and indiv_id zip codes', len(ls_several_zip)
+      if len(ls_addresses) > 1:
+        dict_describe_addresses.setdefault('Multi_address', []).append(indiv_id)
+      if len(ls_addresses) != len(ls_zip_address):
+        dict_describe_addresses.setdefault('No_zip_address', []).append(indiv_id)
+      if any(zip_address != zip_indiv_id for zip_address in ls_zip_address):
+        dict_describe_addresses.setdefault('Several_zip', []).append(indiv_id)
+  print 'Issues with addresses / zip codes:'
+  for k, v in dict_describe_addresses.items():
+    print k, len(v)
   
   # ####################
   # MATCHING VS. INSEE:
@@ -134,10 +114,8 @@ if __name__=="__main__":
   correspondence = [row.split(';') for row in correspondence]
   
   # Corrections: standardize insee codes to 5 chars (zip assumed to be ok)
-  for i, (commune, zip_code, department, insee_code) in enumerate(correspondence):
-    if len(insee_code) == 4:
-      insee_code = '0%s' %insee_code
-      correspondence[i] = (commune, zip_code, department, insee_code)
+  correspondence = [(commune, zip_code, department, insee_code.rjust(5, '0'))\
+                      for(commune, zip_code, department, insee_code) in correspondence]
   # Generate dict (key: zip code) with correspondence file
   dict_corr_zip_insee = {}
   for (city, zip_code, department, insee_code) in correspondence:
@@ -152,7 +130,6 @@ if __name__=="__main__":
   for indiv_id, ls_addresses in master_addresses.iteritems():
     if ls_addresses:
       for address in ls_addresses:
-        # address = ls_addresses[0]
         zip_and_city = re.match('([0-9]{5,5}) (.*)', address[1])
         zip_code = zip_and_city.group(1)
         city = zip_and_city.group(2)
@@ -265,7 +242,7 @@ if __name__=="__main__":
       # keep track for checking (only master_info)
       ls_duplicate_corrected.append((indiv_id_1, indiv_id_2))
   
-  # Delete info-less stations
+  # Delete info-less stations (TODO: function)
   list_garbage = ['39700002', '39700004', '78150008', '85210005', '85210006',\
                   '51400005', '51400006', '94170003', '34400014']
   for indiv_id in list_garbage:
@@ -285,33 +262,31 @@ if __name__=="__main__":
   
   # Build dict_zip (used for duplicate detection)
   dict_zip_master = {}
-  for indiv_id, ls_indiv_addresses in master_addresses.iteritems():
-    if ls_indiv_addresses:
-      for address in ls_indiv_addresses:
-        zip_and_city = re.match('([0-9]{5,5}) (.*)', address[1])
-        zip_code = zip_and_city.group(1)
-        if zip_code in dict_zip_master:
-          list_zip_indiv_ids = [station[0] for station in dict_zip_master[zip_code]]
-          if indiv_id not in list_zip_indiv_ids:
-            dict_zip_master[zip_code].append((indiv_id, address))
-        else:
-          dict_zip_master[zip_code] = [(indiv_id, address)]
+  for indiv_id, ls_addresses in master_addresses.items():
+    for address in ls_addresses:
+      zip_and_city = re.match('([0-9]{5,5}) (.*)', address[1])
+      zip_code = zip_and_city.group(1)
+      if zip_code in dict_zip_master:
+        list_zip_indiv_ids = [station[0] for station in dict_zip_master[zip_code]]
+        if indiv_id not in list_zip_indiv_ids:
+          dict_zip_master[zip_code].append((indiv_id, address))
+      else:
+        dict_zip_master[zip_code] = [(indiv_id, address)]
   
   # Build dict_corr_dpt_insee (to be used for duplicate detection)
   dict_insee_master = {}
-  for indiv_id, ls_indiv_addresses in master_addresses.iteritems():
-    if ls_indiv_addresses:
-      for address in ls_indiv_addresses:
-        zip_and_city = re.match('([0-9]{5,5}) (.*)', address[1])
-        zip_code = zip_and_city.group(1)
-        dpt = zip_and_city.group(1)[:2]
-        city = zip_and_city.group(2)
-        if dpt in dict_insee_master:
-          list_dpt_indiv_ids = [station[0] for station in dict_insee_master[dpt]]
-          if indiv_id not in list_dpt_indiv_ids:
-            dict_insee_master[dpt].append((indiv_id, zip_code, city, address))
-        else:
-          dict_insee_master[dpt] = [(indiv_id, zip_code, city, address)]
+  for indiv_id, ls_addresses in master_addresses.iteritems():
+    for address in ls_addresses:
+      zip_and_city = re.match('([0-9]{5,5}) (.*)', address[1])
+      zip_code = zip_and_city.group(1)
+      dpt = zip_and_city.group(1)[:2]
+      city = zip_and_city.group(2)
+      if dpt in dict_insee_master:
+        list_dpt_indiv_ids = [station[0] for station in dict_insee_master[dpt]]
+        if indiv_id not in list_dpt_indiv_ids:
+          dict_insee_master[dpt].append((indiv_id, zip_code, city, address))
+      else:
+        dict_insee_master[dpt] = [(indiv_id, zip_code, city, address)]
   
   # Check stations' activity record
   # TODO: May not want to run with sp95/e10 => need to adapt
@@ -371,38 +346,89 @@ if __name__=="__main__":
   # BRAND INFO (master_price)
   # ##########################
   
-  # TODO: May not want to run with sp95/e10 => need to adapt
+  # Harmonizes brands (softly though so far)
+  for indiv_id, indiv_info in master_price['dict_info'].items():
+    if indiv_info['brand']:
+      master_price['dict_info'][indiv_id]['brand'] = [[get_str_no_accent_up(brand), day_ind]\
+                                                         for brand, day_ind in indiv_info['brand']]
   
-  # Adapt brand info to prices
-  ls_ls_price_durations = get_price_durations_nan(master_price[series])
-  # ls_ls_price_variations = get_price_variations_nan(ls_ls_price_durations)
-  ls_start_end, ls_none, ls_ls_dilettante =  get_overview_reporting_nan(master_price[series],
-                                                                        ls_ls_price_durations,
-                                                                        master_price['dates'],
-                                                                        master_price['missing_dates'])
+  # Resets brand starting date consistent with price series
   ls_to_be_chged = []
   for i, (start, end) in enumerate(ls_start_end):
     if start != master_price['dict_info'][master_price['ids'][i]]['brand'][0][1]:
       ls_to_be_chged.append(i)
       if start:
         master_price['dict_info'][master_price['ids'][i]]['brand'][0][1] = start
-  # for indiv_ind in ls_to_be_chged:
-	  # print indiv_ind,\
-          # ls_start_end[indiv_ind],\
-          # master_price['dict_info'][master_price['ids'][indiv_ind]]['brand']
+ 
+  #for indiv_ind in ls_to_be_chged:
+  #  print indiv_ind, ls_start_end[indiv_ind],\
+  #        master_price['dict_info'][master_price['ids'][indiv_ind]]['brand']
+  #
+  ## Brand change visual check
+  #for indiv_id, indiv_info in master_price['dict_info'].items():
+  #  if len(indiv_info['brand']) > 1:
+  #    print indiv_id, indiv_info['brand']
+ 
+  series = 'diesel_price'
+  master_np_prices = np.array(master_price['diesel_price'], dtype = np.float32)
+  matrix_np_prices_ma = np.ma.masked_array(master_np_prices, np.isnan(master_np_prices))
+  ar_period_mean_prices = np.mean(matrix_np_prices_ma, axis = 0)
+  # Resets Total Access brand change based on change in price
+  window_limit = 20
+  ls_mean_diffs = []
+  matrix_np_prices_ma_cl = matrix_np_prices_ma - ar_period_mean_prices
+  for i in range(window_limit, len(master_price['dates']) - window_limit):
+    ls_mean_diffs.append(np.nansum(matrix_np_prices_ma_cl[:,:i], axis = 1)/\
+                           np.sum(~np.isnan(matrix_np_prices_ma_cl[:,:i]), axis =1)-
+                         np.nansum(matrix_np_prices_ma_cl[:,i:], axis = 1)/\
+                           np.sum(~np.isnan(matrix_np_prices_ma_cl[:,i:]), axis =1))
+    ## CAUTION: stats.nanmean first compute with 0 instead of nan then adjusts : imprecision...
+    #scipy.stats.nanmean(matrix_np_prices_ma_cl[:,:i], axis= 1) -\
+    #                     scipy.stats.nanmean(matrix_np_prices_ma_cl[:,i:], axis= 1))
+  np_ar_mean_diffs = np.ma.array(ls_mean_diffs, fill_value=0).filled()
+  # Filling with np.nan generates pbm with argmax
+  np_ar_mean_diffs = np_ar_mean_diffs.T
+  np_ar_diffs_maxs = np.nanmax(np.abs(np_ar_mean_diffs), axis = 1)
+  np_ar_diffs_argmaxs = np.nanargmax(np.abs(np_ar_mean_diffs), axis = 1)
+  ls_candidates = np.where(np_ar_diffs_maxs > 0.04)[0].astype(int).tolist()
+  # Check if corresponds to a change in brand (TODO: exclude highly rigid prices)
+  ls_total_access_chges = []
+  ls_total_access_no_chges = []
+  for indiv_ind, indiv_id in enumerate(master_price['ids']):
+    ls_brands = [dict_brands[get_str_no_accent_up(brand)][0] for brand, period\
+                   in master_price['dict_info'][indiv_id]['brand']]
+    ls_brands = [x[0] for x in itertools.groupby(ls_brands)]
+    if len(ls_brands) > 1 and 'TOTAL_ACCESS' in ls_brands:
+      if indiv_ind in ls_candidates:
+        ls_total_access_chges.append(indiv_ind)
+      else:
+        ls_total_access_no_chges.append(indiv_ind)
   
+  ## Check original brand change info
+  #for indiv_ind in ls_total_access_chges:  
+  #  print indiv_ind, np_ar_diffs_argmaxs[indiv_ind], np_ar_diffs_maxs[indiv_ind],\
+  #        master_price['dict_info'][master_price['ids'][indiv_ind]]['brand']
+  
+  for indiv_ind in ls_total_access_chges:
+    ls_brands = zip(*master_price['dict_info'][master_price['ids'][indiv_ind]]['brand'])[0]
+    ta_ind = ls_brands.index('TOTAL ACCESS') # 'TOTAL_ACCESS' depend if harmonized...
+    master_price['dict_info'][master_price['ids'][indiv_ind]]['brand'][ta_ind][1] =\
+      int(np_ar_diffs_argmaxs[indiv_ind]) + window_limit
+  
+   #TODO: add corrections to be done manually...
+   #Check 437 (3 changes...)
+
   # #################################
   # HIGHWAY GAS STATION (master_info)
   # #################################
   
-  dict_addresses = {}
-  for indiv_id, station in master_info.iteritems():
-    dict_addresses[indiv_id] = [station['address'][i] for i in (5, 3, 4, 0) if station['address'][i]]
+  dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0) if indiv_info['address'][i]]\
+                      for (indiv_id, indiv_info) in master_info.items()}
   master_addresses = build_master_addresses(dict_addresses)
   
   set_highway_ids = set()
-  for indiv_id, ls_indiv_addresses in master_addresses.iteritems():
-    for address in ls_indiv_addresses:
+  for indiv_id, ls_addresses in master_addresses.items():
+    for address in ls_addresses:
       if 'autoroute' in address[0] or\
          re.search('(^|\s|-)a\s?[0-9]{1,3}($|\s|-|,)', address[0]) or\
          master_info[indiv_id]['highway'][3] == 1:

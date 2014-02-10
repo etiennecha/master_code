@@ -13,6 +13,7 @@ excel_file = pd.ExcelFile(path_excel_file)
 df = excel_file.parse('Worksheet')
 df = df.set_index('Date')
 # excel_file.sheet_names
+print df.info()
 
 # df[['SP95 (Rotterdam)','GAZOLE (Rotterdam)']].plot()
 # plt.show()

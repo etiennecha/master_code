@@ -40,20 +40,9 @@ if __name__=="__main__":
   
   dict_brands = dec_json(path_data + folder_source_brand + r'\dict_brands')
   
-  # #########################
-  # AVERAGE PRICE SERIES
-  # #########################
-  
-  # Master price overview
-  series = 'diesel_price'
-  master_np_prices = np.array(master_price['diesel_price'], dtype = np.float32)
-  matrix_np_prices_ma = np.ma.masked_array(master_np_prices, np.isnan(master_np_prices))
-  ar_nb_valid_prices = np.ma.count(matrix_np_prices_ma, axis = 0) # would be safer to count nan..
-  ar_period_mean_prices = np.mean(matrix_np_prices_ma, axis = 0)
-  
-  # ######
-  # INSEE
-  # ######
+  # ################
+  # INSEE & MARKETS
+  # ################
   
   # import csv data as pd.df and check correspondence
   # TODO: have a look at master_price: some stations have no insee code
@@ -80,24 +69,6 @@ if __name__=="__main__":
   pd_df_insee = pd.read_csv(path_data + folder_built_csv + r'/master_insee_output.csv',
                             encoding = 'utf-8',
                             dtype = str)
-  ls_no_match = []
-  # pd_df_insee[u'Département - Commune CODGEO'] = pd_df_insee[u'Département - Commune CODGEO'].astype(str)
-  ls_insee_data_codes_geo = list(pd_df_insee[u'Département - Commune CODGEO'])
-  for station_id, station_info in master_price['dict_info'].iteritems():
-    if 'code_geo' in station_info.keys():
-      if (station_info['code_geo'] not in ls_insee_data_codes_geo) and\
-         (station_info['code_geo_ardts'] not in ls_insee_data_codes_geo):
-			  ls_no_match.append((station_id, station_info['code_geo']))
-  
-  # ########
-  # MARKETS
-  # ########
-  
-  # TODO: exploit insee data
-  # TODO: use unite urbaine(uu)/aire urbaine(au)/communes as market definitions
-  # TODO: use uu/au/communes info to compare markets
-  # TODO: regressions with these data? how? build specific price dispersion/level database?
-  
   pd_df_insee['id_code_geo'] = pd_df_insee[u'Département - Commune CODGEO']
   pd_df_insee = pd_df_insee.set_index('id_code_geo')
   dict_markets_insee = {}
@@ -111,100 +82,6 @@ if __name__=="__main__":
       dict_markets_uu.setdefault(station_uu, []).append(station_id)
       station_au = pd_df_insee.ix[info_station['code_geo']][u'Code AU2010']
       dict_markets_au.setdefault(station_au, []).append(station_id)
-  
-  # #########################
-  # BRAND CHANGE BEFORE/AFTER
-  # #########################
-  
-  # # DESCRIPTION (GRAPHS) OF CHANGES AS RECORDED BY STATIONS
-  
-  # brand_chge = 'TOTAL;;;TOTAL_ACCESS'
-  # windows_size = 28
-  
-  # ls_before_after_chge = []
-  # ls_chge_indiv_inds = []
-  # ls_chge_day_inds = []
-  # for i, id in enumerate(master_price['ids']):
-    # station_info = master_price['dict_info'][id]
-    # if station_info['brand']:
-      # str_brands = ';;;'.join([dict_brands[get_str_no_accent_up(brand)][0]\
-                                # for (brand, day_ind) in station_info['brand']])
-      # if brand_chge in str_brands:
-        # if day_ind > windows_size and day_ind < len(master_price['dates']) - windows_size:
-          # harmonized_price_series = np.array(master_price[series][i], dtype=np.float32) - ar_mean_diesel_price
-          # ls_before_after_chge.append(harmonized_price_series[day_ind - windows_size:day_ind + windows_size])
-          # ls_chge_indiv_inds.append(i)
-          # ls_tp = [(dict_brands[get_str_no_accent_up(brand)][0], day_ind)\
-                    # for (brand, day_ind) in station_info['brand']]
-          # ls_chge_day_inds.append(dict(ls_tp)[brand_chge.split(';;;')[-1]])
-  
-  # folder_graphs = r'\data_gasoline\data_built\data_graphs'
-  
-  # for i, ar_before_after in enumerate(ls_before_after_chge):
-    # day_ind = ls_chge_day_inds[i]
-    # indiv_ind = ls_chge_indiv_inds[i]
-    # indiv_id = master_price['ids'][indiv_ind]
-        
-    # # draw station price series vs. competitors
-    # # TODO: make it relative to avg price and limit nb of competitors on graph (criteria?)
-    # plt.clf()
-    # fig = plt.figure() 
-    # ax = fig.add_subplot(111)
-    # ax.plot(np.array(master_price[series][indiv_ind], dtype=np.float32), label = '%s' %indiv_ind)
-    # if list_list_competitors[indiv_ind]:
-      # list_list_competitors[indiv_ind].sort(key=lambda x:x[1])
-      # ls_id_competitors = [id_competitor for (id_competitor, distance) in list_list_competitors[indiv_ind][:5]\
-                            # if distance < 2]
-      # ls_ind_competitors = [master_price['ids'].index(id_competitor)\
-                              # for id_competitor in ls_id_competitors if id_competitor in master_price['ids']]
-      # for ind_competitor in ls_ind_competitors:
-        # id_competitor = master_price['ids'][ind_competitor]
-        # competitor_brands = [dict_brands[get_str_no_accent_up(brand)][0]\
-                              # for (brand, comp_day_ind) in master_price['dict_info'][id_competitor]['brand']]
-        # ax.plot(np.array(master_price[series][ind_competitor], dtype=np.float32),
-                # label = '%s %s' %(ind_competitor,'-'.join(competitor_brands)))
-    # ax.set_xlim([0, len(master_price['dates'])])
-    # ax.set_ylim([1.2, 1.6])
-    # ax.set_title('%s-%s' %(master_price['dict_info'][indiv_id]['code_geo'],
-                           # master_price['dict_info'][indiv_id]['city']))
-    # legend_font_props = FontProperties()
-    # legend_font_props.set_size('small')
-    # handles, labels = ax.get_legend_handles_labels()
-    # lgd = ax.legend(handles, labels, loc='center left', bbox_to_anchor=(1, 0.5), prop=legend_font_props)
-    # plt.savefig(path_data + folder_graphs + r'\total_access\price_vs_comp\price_comp_%s.png' %(indiv_ind),\
-                  # bbox_extra_artists=(lgd,), bbox_inches='tight')
-  
-  # BRAND CHANGE DETECTION
-  
-  window_limit = 20
-  ls_mean_diffs = []
-  matrix_np_prices_ma_cl = matrix_np_prices_ma - ar_period_mean_prices
-  for i in range(window_limit, len(master_price['dates']) - window_limit):
-    ls_mean_diffs.append(np.nansum(matrix_np_prices_ma_cl[:,:i], axis = 1)/\
-                          np.sum(~np.isnan(matrix_np_prices_ma_cl[:,:i]), axis =1)-
-                         np.nansum(matrix_np_prices_ma_cl[:,i:], axis = 1)/\
-                           np.sum(~np.isnan(matrix_np_prices_ma_cl[:,i:]), axis =1))
-    # # CAUTION: stats.nanmean first compute with 0 instead of nan then adjusts : imprecision...
-    # scipy.stats.nanmean(matrix_np_prices_ma_cl[:,:i], axis= 1) -\
-                          # scipy.stats.nanmean(matrix_np_prices_ma_cl[:,i:], axis= 1))
-  np_ar_mean_diffs = np.ma.array(ls_mean_diffs, fill_value=0).filled() # fill with np.nan generates pbm with argmax
-  np_ar_mean_diffs = np_ar_mean_diffs.T
-  np_ar_diffs_maxs = np.nanmax(np.abs(np_ar_mean_diffs), axis = 1)
-  np_ar_diffs_argmaxs = np.nanargmax(np.abs(np_ar_mean_diffs), axis = 1)
-  ls_candidates = np.where(np_ar_diffs_maxs > 0.04)[0].astype(int).tolist()
-  # TODO: improve detection: avoid border effects, highy rigid prices..
-  
-  ls_total_access_chges = []
-  ls_total_access_no_chges = []
-  for indiv_ind, indiv_id in enumerate(master_price['ids']):
-    ls_brands = [dict_brands[get_str_no_accent_up(brand)][0] for brand, period\
-                  in master_price['dict_info'][indiv_id]['brand']]
-    ls_brands = [x[0] for x in itertools.groupby(ls_brands)]
-    if len(ls_brands) > 1 and 'TOTAL_ACCESS' in ls_brands:
-      if indiv_ind in ls_candidates:
-        ls_total_access_chges.append(indiv_ind)
-      else:
-        ls_total_access_no_chges.append(indiv_ind)
   
   # #######################################################
   # REDUCE MULTIPLE BRAND CHANGES (for INFO and PRICE FILE)
@@ -234,32 +111,6 @@ if __name__=="__main__":
   for id_station, info_station in master_price['dict_info'].items():
     if len(info_station['brand']) > 2:
       print id_station, info_station['brand']
-  
-  # #############################################
-  # BRAND: CORRECT TIME OF CHANGE (master_price)
-  # #############################################
-  
-  # harmonize brands
-  for indiv_id, indiv_content in master_price['dict_info'].items():
-    if indiv_content['brand']:
-      ls_brand_new = [[get_str_no_accent_up(brand), day_ind]\
-                        for brand, day_ind in indiv_content['brand']]
-      master_price['dict_info'][indiv_id]['brand'] = ls_brand_new
-  
-  # # Check original brand change info
-  # for indiv_ind in ls_total_access_chges:  
-    # print indiv_ind, np_ar_diffs_argmaxs[indiv_ind],\
-          # np_ar_diffs_maxs[indiv_ind],\
-          # master_price['dict_info'][master_price['ids'][indiv_ind]]['brand']
-  
-  for indiv_ind in ls_total_access_chges:
-    ls_brands = zip(*master_price['dict_info'][master_price['ids'][indiv_ind]]['brand'])[0]
-    ta_ind = ls_brands.index('TOTAL ACCESS') # 'TOTAL_ACCESS' depend if harmonized...
-    master_price['dict_info'][master_price['ids'][indiv_ind]]['brand'][ta_ind][1] =\
-      np_ar_diffs_argmaxs[indiv_ind] + window_limit
-  
-  # TODO: add corrections to be done manually...
-  # Check 437 (3 changes...)
   
   # ########################################
   # BRAND: CHANGE TREATMENT (for INFO FILE)
@@ -306,7 +157,7 @@ if __name__=="__main__":
   # #################################
   
   # PRICE FILE
-  
+  series = 'diesel' 
   ls_all_prices = [price for ls_prices in master_price[series] for price in ls_prices]
   ls_all_ids = [id_indiv for id_indiv in master_price['ids'] for x in range(len(master_price['dates']))]
   ls_all_dates = [date for id_indiv in master_price['ids'] for date in master_price['dates']]
@@ -340,31 +191,6 @@ if __name__=="__main__":
   
   # # Convert dates to datetime format
   # pd_pd_prices.minor_axis = pd.to_datetime(pd_pd_prices.minor_axis)
-  
-  # # Plot prices/spread vs. Price in France of two stations (idea: check holiday: peaks in demand)
-  # pd_df_extract = pd_pd_prices['price'].ix[['56340003','56340002']].T
-  # pd_df_extract['mean_fra'] = pd_pd_prices['price'].mean(axis=0)
-  # pd_df_extract['spread_56340003'] = pd_df_extract['mean_fra'] - pd_df_extract['56340003']
-  # pd_df_extract['spread_56340002'] = pd_df_extract['mean_fra'] - pd_df_extract['56340002']
-  # pd_df_extract[['spread_56340002','spread_56340003']].plot()
-  
-  # # Plot mean period prices
-  # pd_pd_prices['price'].mean(axis=0).plot()
-  # pd_pd_prices['price'][pd_pd_prices['brand_1'] == 'TOTAL'].mean().plot()
-  # pd_pd_prices['price'][pd_pd_prices['brand_1'] == 'TOTAL_ACCESS'].mean().plot()
-  
-  # # Plot nb of total access
-  # pd_se_nb_total_access = pd_pd_prices['price'][pd_pd_prices['brand_1'] == 'TOTAL_ACCESS'].count().astype(np.float32)
-  # pd_se_nb_total_access[pd_se_nb_total_access == 0] = np.nan
-  # pd_se_nb_total_access.plot()
-  
-  # # Plot a gas station's prices
-  # pd_pd_prices.major_xs('9700001')['price'].plot()
-  
-  # # Get more natural shape (???)
-  # pd_pd_prices = pd_pd_prices.transpose('major', 'minor', 'items')
-  
-  
   
   # INFO FILE (right now based on master_ids since can't do much w/o prices)
   

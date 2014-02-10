@@ -13,69 +13,28 @@ if __name__=="__main__":
     path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
   
   folder_built_master_json = r'\data_gasoline\data_built\data_json_gasoline'
+  folder_source_brand = r'\data_gasoline\data_source\data_stations\data_brands'
+  folder_dpts_regions = r'\data_insee\Regions_departements'
+  folder_built_csv = r'\data_gasoline\data_built\data_csv_gasoline'
+  
   master_price = dec_json(path_data + folder_built_master_json + r'\master_diesel\master_price_diesel')
   master_info = dec_json(path_data + folder_built_master_json + r'\master_diesel\master_info_diesel')
   ls_ls_competitors = dec_json(path_data + folder_built_master_json + r'\master_diesel\list_list_competitors')
   ls_tuple_competitors = dec_json(path_data + folder_built_master_json + r'\master_diesel\list_tuple_competitors')
-  
-  folder_source_brand = r'\data_gasoline\data_source\data_stations\data_brands'
   dict_brands = dec_json(path_data + folder_source_brand + r'\dict_brands')
-  
-  folder_dpts_regions = r'\data_insee\Regions_departements'
   dict_dpts_regions = dec_json(path_data + folder_dpts_regions + r'\dict_dpts_regions')
-  
-  folder_built_csv = r'\data_gasoline\data_built\data_csv_gasoline'
-  
-  # #########################
-  # SERVICES (for INFO FILE)
-  # #########################
-  
-  ls_listed_services = [service for indiv_id, indiv_info in master_info.items()\
-                          if indiv_info['services'][-1] for service in indiv_info['services'][-1]]
-  ls_listed_services = list(set(ls_listed_services))
-  for indiv_id, indiv_info in master_info.items():
-    if indiv_info['services'][-1] is not None:
-      ls_station_services = [0 for i in ls_listed_services]
-      for service in indiv_info['services'][-1]:
-        service_ind = ls_listed_services.index(service)
-        ls_station_services[service_ind] = 1
-    else:
-      ls_station_services = [None for i in ls_listed_services]
-    master_info[indiv_id]['list_service_dummies'] = ls_station_services
-  
-  
-  # ######
-  # BRANDS
-  # ######
-  
-  ls_ls_ls_brands = []
-  for i in range(3):
-    ls_ls_brands =  [[[dict_brands[get_str_no_accent_up(brand)][i], period]\
-                          for brand, period in master_price['dict_info'][id_indiv]['brand']]\
-                            for id_indiv in master_price['ids']]
-    ls_ls_brands = [get_expanded_list(ls_brands, len(master_price['dates'])) for ls_brands in ls_ls_brands]
-    ls_ls_ls_brands.append(ls_ls_brands)
-  
   
   # #####################
   # IMPORT INSEE DATA
   # #####################
   
-  pd_df_insee = pd.read_csv(path_data + folder_built_csv + r'/master_insee_output.csv',\
-                              encoding = 'utf-8', dtype= str)
-  ls_no_match = []
-  pd_df_insee[u'Département - Commune CODGEO'] = pd_df_insee[u'Département - Commune CODGEO'].astype(str)
-  ls_insee_data_codes_geo = list(pd_df_insee[u'Département - Commune CODGEO'])
-  for station_id, station_info in master_price['dict_info'].iteritems():
-    if 'code_geo' in station_info.keys():
-      if (station_info['code_geo'] not in ls_insee_data_codes_geo) and\
-         (station_info['code_geo_ardts'] not in ls_insee_data_codes_geo):
-			  ls_no_match.append((station_id, station_info['code_geo']))
-  # exclude dom tom
+  pd_df_insee = pd.read_csv(path_data + folder_built_csv + r'/master_insee_output.csv',
+                            encoding = 'utf-8',
+                            dtype= str)
+  # excludes dom tom
   pd_df_insee = pd_df_insee[~pd_df_insee[u'Département - Commune CODGEO'].str.contains('^97')]
-  pd_df_insee['Population municipale 2007 POP_MUN_2007'] =\
-    pd_df_insee['Population municipale 2007 POP_MUN_2007'].astype(float)
-  
+  pd_df_insee['Population municipale 2007 POP_MUN_2007'] = \
+    pd_df_insee['Population municipale 2007 POP_MUN_2007'].apply(lambda x: float(x))
   
   # #####################
   # MARKET DEFINITIONS
@@ -101,7 +60,35 @@ if __name__=="__main__":
 	  # ind = master_price['ids'].index(id_sta)
 	  # print id_sta, ind, list_start_end[ind], master_addresses_final[id_sta]
 	  # print master_price['dict_info'][id_sta]
+
+  # #########################
+  # SERVICES (for INFO FILE)
+  # #########################
   
+  ls_listed_services = [service for indiv_id, indiv_info in master_info.items()\
+                          if indiv_info['services'][-1] for service in indiv_info['services'][-1]]
+  ls_listed_services = list(set(ls_listed_services))
+  for indiv_id, indiv_info in master_info.items():
+    if indiv_info['services'][-1] is not None:
+      ls_station_services = [0 for i in ls_listed_services]
+      for service in indiv_info['services'][-1]:
+        service_ind = ls_listed_services.index(service)
+        ls_station_services[service_ind] = 1
+    else:
+      ls_station_services = [None for i in ls_listed_services]
+    master_info[indiv_id]['list_service_dummies'] = ls_station_services
+  
+  # ######
+  # BRANDS
+  # ######
+  
+  ls_ls_ls_brands = []
+  for i in range(3):
+    ls_ls_brands =  [[[dict_brands[get_str_no_accent_up(brand)][i], period]\
+                          for brand, period in master_price['dict_info'][id_indiv]['brand']]\
+                            for id_indiv in master_price['ids']]
+    ls_ls_brands = [get_expanded_list(ls_brands, len(master_price['dates'])) for ls_brands in ls_ls_brands]
+    ls_ls_ls_brands.append(ls_ls_brands)
   
   # # #################
   # # PRICE OVERVIEW

@@ -26,186 +26,22 @@ if __name__=="__main__":
   
   folder_built_master_json = r'\data_gasoline\data_built\data_json_gasoline'
   folder_source_brand = r'\data_gasoline\data_source\data_stations\data_brands'
+  folder_dpts_regions = r'\data_insee\Regions_departements'
+  folder_built_csv = r'\data_gasoline\data_built\data_csv_gasoline'
+  folder_ufip = r'\data_ufip'
+
   master_price = dec_json(path_data + folder_built_master_json + r'\master_diesel\master_price_diesel')
   master_info = dec_json(path_data + folder_built_master_json + r'\master_diesel\master_info_diesel')
   ls_ls_competitors = dec_json(path_data + folder_built_master_json + r'\master_diesel\list_list_competitors')
-  list_tuple_competitors = dec_json(path_data + folder_built_master_json + r'\master_diesel\list_tuple_competitors')
-  
-  dict_brands = dec_json(path_data + folder_source_brand + r'\dict_brands')
-  
-  folder_dpts_regions = r'\data_insee\Regions_departements'
-  dict_dpts_regions = dec_json(path_data + folder_dpts_regions + r'\dict_dpts_regions')
-  
-  folder_built_csv = r'\data_gasoline\data_built\data_csv_gasoline'
-  
+  ls_tuple_competitors = dec_json(path_data + folder_built_master_json + r'\master_diesel\list_tuple_competitors') 
+  dict_brands = dec_json(path_data + folder_source_brand + r'\dict_brands') 
+  dict_dpts_regions = dec_json(path_data + folder_dpts_regions + r'\dict_dpts_regions') 
+
   # GET AVERAGE PRICE
   master_np_prices = np.array(master_price['diesel_price'], dtype = np.float32)
   matrix_np_prices_ma = np.ma.masked_array(master_np_prices, np.isnan(master_np_prices))
   ar_nb_valid_prices = np.ma.count(matrix_np_prices_ma, axis = 0) # would be safer to count nan..
   ar_period_mean_prices = np.mean(matrix_np_prices_ma, axis = 0)
-  
-  # #########################
-  # BRAND CHANGE DETECTION
-  # #########################
-  
-  # window_limit = 20
-  # ls_mean_diffs = []
-  # matrix_np_prices_ma_cl = matrix_np_prices_ma - ar_period_mean_prices
-  # for i in range(window_limit, len(master_price['dates']) - window_limit):
-    # ls_mean_diffs.append(np.nansum(matrix_np_prices_ma_cl[:,:i], axis = 1)/\
-                          # np.sum(~np.isnan(matrix_np_prices_ma_cl[:,:i]), axis =1)-
-                         # np.nansum(matrix_np_prices_ma_cl[:,i:], axis = 1)/\
-                           # np.sum(~np.isnan(matrix_np_prices_ma_cl[:,i:]), axis =1))
-    # # # CAUTION: stats.nanmean first compute with 0 instead of nan then adjusts : imprecision...
-    # # scipy.stats.nanmean(matrix_np_prices_ma_cl[:,:i], axis= 1) -\
-                          # # scipy.stats.nanmean(matrix_np_prices_ma_cl[:,i:], axis= 1))
-  # np_ar_mean_diffs = np.ma.array(ls_mean_diffs, fill_value=0).filled()
-  # # fill with np.nan generates pbm with argmax
-
-  # np_ar_mean_diffs = np_ar_mean_diffs.T
-  # np_ar_diffs_maxs = np.nanmax(np.abs(np_ar_mean_diffs), axis = 1)
-  # np_ar_diffs_argmaxs = np.nanargmax(np.abs(np_ar_mean_diffs), axis = 1)
-  # ls_candidates = np.where(np_ar_diffs_maxs > 0.04)[0].astype(int).tolist()
-  # # Check if corresponds to a change in brand (TODO: exclude highly rigid prices)
-  
-  # ls_total_access_chges = []
-  # ls_total_access_no_chges = []
-  # for indiv_ind, indiv_id in enumerate(master_price['ids']):
-    # ls_brands = [dict_brands[get_str_no_accent_up(brand)][0] for brand, period\
-                  # in master_price['dict_info'][indiv_id]['brand']]
-    # ls_brands = [x[0] for x in itertools.groupby(ls_brands)]
-    # if len(ls_brands) > 1 and 'TOTAL_ACCESS' in ls_brands:
-      # if indiv_ind in ls_candidates:
-        # ls_total_access_chges.append(indiv_ind)
-      # else:
-        # ls_total_access_no_chges.append(indiv_ind)
-  
-  folder_built_graphs = r'\data_gasoline\data_built\data_graphs'
-  # for indiv_ind in ls_total_access_chges:
-    # indiv_id = master_price['ids'][indiv_ind]
-    # plt.clf()
-    # fig = plt.figure() 
-    # ax = fig.add_subplot(111)
-    # ax.plot(ar_period_mean_prices)
-    # ax.plot(matrix_np_prices_ma[indiv_ind,:])
-    # ax.axvline(x = np_ar_diffs_argmaxs[indiv_ind] + window_limit,color='k',ls='dashed')
-    # ax.set_xlim([0,len(master_price['dates'])]) 
-    # ax.set_ylim([1.2, 1.6]) 
-    # plt.savefig(path_data + folder_built_graphs + r'\total_access\mean_diff\chge_ind_%s_id_%s' %(indiv_ind, indiv_id))
-  
-  # for indiv_ind in ls_total_access_no_chges:
-    # indiv_id = master_price['ids'][indiv_ind]
-    # plt.clf()
-    # plt.plot(ar_period_mean_prices)
-    # plt.plot(matrix_np_prices_ma[indiv_ind,:])
-    # plt.savefig(path_data + folder_built_graphs + r'\total_access\mean_diff\nochge_ind_%s_id_%s' %(indiv_ind, indiv_id))
-  
-  # for indiv_ind in ls_candidates:
-    # if indiv_ind not in ls_total_access_chges:
-      # indiv_id = master_price['ids'][indiv_ind]
-      # plt.clf()
-      # plt.plot(ar_period_mean_prices)
-      # plt.plot(matrix_np_prices_ma[indiv_ind,:])
-      # plt.axvline(x = np_ar_diffs_argmaxs[indiv_ind] + window_limit, color='k',ls='dashed')
-      # plt.title('-'.join([x[0] for x in master_price['dict_info'][indiv_id]['brand']]))
-      # plt.savefig(path_data + folder_built_graphs + r'\total_access\not_ta\ind_%s_id_%s' %(indiv_ind, indiv_id))
-  
-    # draw station price series vs. competitors
-    # TODO: make it relative to avg price and limit nb of competitors on graph (criteria?)
-  
-  # for indiv_ind in ls_total_access_chges:
-    # plt.clf()
-    # fig = plt.figure() 
-    # ax = fig.add_subplot(111)
-    # ax.plot(ar_period_mean_prices)
-    # ax.plot(matrix_np_prices_ma[indiv_ind,:], label = '%s' %indiv_ind)
-    # ax.axvline(x = np_ar_diffs_argmaxs[indiv_ind] + window_limit,color='k',ls='dashed')
-    # if ls_ls_competitors[indiv_ind]:
-      # ls_ls_competitors[indiv_ind].sort(key=lambda x:x[1])
-      # ls_id_competitors = [id_competitor for (id_competitor, distance)\
-                            # in ls_ls_competitors[indiv_ind][:5] if distance < 2]
-      # ls_ind_competitors = [master_price['ids'].index(id_competitor) for id_competitor\
-                              # in ls_id_competitors if id_competitor in master_price['ids']]
-      # for ind_competitor in ls_ind_competitors[:2]:
-        # id_competitor = master_price['ids'][ind_competitor]
-        # competitor_brands = [dict_brands[get_str_no_accent_up(brand)][0] for (brand, comp_day_ind)\
-                              # in master_price['dict_info'][id_competitor]['brand']]
-        # ax.plot(matrix_np_prices_ma[ind_competitor,:], label = '%s %s' %(ind_competitor,'-'.join(competitor_brands)))
-    # ax.set_xlim([0, len(master_price['dates'])])
-    # ax.set_ylim([1.2, 1.6])
-    # ax.set_title('%s-%s' %(master_price['dict_info'][master_price['ids'][indiv_ind]]['code_geo'],\
-                           # master_price['dict_info'][master_price['ids'][indiv_ind]]['city']))
-    # legend_font_props = FontProperties()
-    # legend_font_props.set_size('small')
-    # handles, labels = ax.get_legend_handles_labels()
-    # lgd = ax.legend(handles, labels, loc='center left', bbox_to_anchor=(1, 0.5), prop = legend_font_props)
-    # plt.savefig(path_data + folder_built_graphs + r'\total_access\price_vs_comp\price_comp_%s.png' %(indiv_ind),\
-                  # bbox_extra_artists=(lgd,), bbox_inches='tight')
-    
-    # plt.clf()
-    # fig = plt.figure() 
-    # ax = fig.add_subplot(111)
-    # ax.plot(np_ar_mean_diffs[indiv_ind,:], label = '%s' %indiv_ind)
-    # ax.axvline(x = np_ar_diffs_argmaxs[indiv_ind],color='k',ls='dashed')
-    # if ls_ls_competitors[indiv_ind]:
-      # for ind_competitor in ls_ind_competitors[:2]:
-        # id_competitor = master_price['ids'][ind_competitor]
-        # competitor_brands = [dict_brands[get_str_no_accent_up(brand)][0] for (brand, comp_day_ind)\
-                              # in master_price['dict_info'][id_competitor]['brand']]
-        # ax.plot(np_ar_mean_diffs[ind_competitor,:], label = '%s %s' %(ind_competitor,'-'.join(competitor_brands)))
-    # ax.set_title('%s-%s' %(master_price['dict_info'][master_price['ids'][indiv_ind]]['code_geo'],\
-                           # master_price['dict_info'][master_price['ids'][indiv_ind]]['city']))
-    # legend_font_props = FontProperties()
-    # legend_font_props.set_size('small')
-    # handles, labels = ax.get_legend_handles_labels()
-    # lgd = ax.legend(handles, labels, loc='center left', bbox_to_anchor=(1, 0.5), prop = legend_font_props)
-    # plt.savefig(path_data + folder_built_graphs + r'\total_access\mean_diff_vs_comp\md_comp_%s.png' %(indiv_ind),\
-                  # bbox_extra_artists=(lgd,), bbox_inches='tight')    
-  
-  # TODO: Correct brand info dates in generic_master_price
-  # TODO: Single price variation then nan (or converse) in ind_1003 and others... => correct prices
-  # TODO: Opposite price vars: 9106?
-  
-  # TODO: Correct when chge detected improperly (or false positive):
-  # Bad period detection with 2923, 3098, 8300, 8887 => Can't fix easily (two changes...)
-  # Slight mistake in period detection 5551 (Dunno why)
-  # Exclude (border effect): 4760, 7323, 9010
-  
-  # TODO: Correct when no chge detected
-  # Increase in price (back to prior policy?): 466
-  # Undetected: 9023, 8147 (not big)
-  # Price high for a Total Access: 7382, 4409 (late chges), 6265
-  
-  # TODO: Deal with brand changes detected apart from total access
-  # Generally... false positive = get rid of those sensitive to one price 
-  # (Ideally: Window detection based on station's activity record...)
-  # Real chges (why?): 327,, 9888, 9841, 9744, 9735, 
-  # Ctd: 9414, 9161, 8909, 8689, 8292, 8247, 7475, 7094,
-  # Ctd: 6535, 6511, 6387, 6195, 6021, 5705, 5373, 4940,
-  # Ctd: 2927  3090, 2974, 2962, 2960, 2652,  2617, 2614
-  # (quite a few Agip, Avia...)
-  
-  # TODO: BRANDE CHGE DETECTION WITH REGRESSION
-  # ls_ls_results_reg = []
-  # for indiv_ind, indiv_id in enumerate(master_price['ids']):
-    # ls_brands = [dict_brands[get_str_no_accent_up(brand)][0] for brand, period\
-                  # in master_price['dict_info'][indiv_id]['brand']]
-    # ls_brands = [x[0] for x in itertools.groupby(ls_brands)]
-    # if len(ls_brands) > 1 and 'TOTAL_ACCESS' in ls_brands:
-      # ls_prices = master_price['diesel_price'][indiv_ind]
-      # ar_margins = ar_period_mean_prices - np.array(ls_prices, dtype=np.float32)
-      # ls_results_reg = []
-      # for i in range(window_limit, len(ls_prices) - window_limit):
-        # # regression
-        # ls_dummy = [0 for j in range(i)] + [1 for j in range(len(ls_prices)-i)]
-        # ar_dummy = np.array(ls_dummy, dtype=np.float32)
-        # result = sm.OLS(ar_margins, ar_dummy, missing = 'drop').fit()
-        # ls_results_reg.append(result)
-        # # # mean difference
-      # ls_ls_results_reg.append((indiv_ind, ar_margins, ls_results_reg))
-  # # ls_ls_r2a = [[result.rsquared_adj for result in ls_results_reg]\
-                  # # for indiv_ind, ar_margins, ls_results_reg in ls_results_reg]
-  # # ls_ls_margins = [ar_margins for indiv_ind, ar_margins, ls_results in ls_results_reg]
   
   # #########################
   # SERVICES (for INFO FILE)
@@ -242,108 +78,150 @@ if __name__=="__main__":
   
   pd_df_insee = pd.read_csv(path_data + folder_built_csv + r'/master_insee_output.csv',\
                               encoding = 'utf-8', dtype= str, tupleize_cols=False)
-  ls_no_match = []
-  pd_df_insee[u'Département - Commune CODGEO'] = pd_df_insee[u'Département - Commune CODGEO'].astype(str)
-  ls_insee_data_codes_geo = list(pd_df_insee[u'Département - Commune CODGEO'])
-  for station_id, station_info in master_price['dict_info'].iteritems():
-    if 'code_geo' in station_info.keys():
-      if (station_info['code_geo'] not in ls_insee_data_codes_geo) and\
-         (station_info['code_geo_ardts'] not in ls_insee_data_codes_geo):
-			  ls_no_match.append((station_id, station_info['code_geo']))
   # exclude dom tom
   pd_df_insee = pd_df_insee[~pd_df_insee[u'Département - Commune CODGEO'].str.contains('^97')]
-  # pd_df_insee['Population municipale 2007 POP_MUN_2007'] =\
-    # pd_df_insee['Population municipale 2007 POP_MUN_2007'].astype(float)
-  pd_df_insee['Population municipale 2007 POP_MUN_2007'].apply(lambda x: float(x))
+  pd_df_insee['Population municipale 2007 POP_MUN_2007'] =\
+    pd_df_insee['Population municipale 2007 POP_MUN_2007'].apply(lambda x: float(x))
   
+  # ######################
+  # IMPORT UFIP DATA
+  # ######################
+
+  path_ufip_excel_file = path_data + folder_ufip + r'\ufip-valeurs_2006-01-01_au_2013-12-31.xlsx'
+  ufip_excel_file = pd.ExcelFile(path_ufip_excel_file)
+  df_ufip = ufip_excel_file.parse('Worksheet')
+  df_ufip = df_ufip.set_index('Date')
+  # excel_file.sheet_names
+  print df_ufip.info()
+  df_ufip['date_str'] = map(lambda x: x.strftime('%Y%m%d'), df_ufip.index)
+  df_ufip.set_index('date_str', inplace=True)
+ 
+  # #######################
+  # TAXES
+  # #######################
+
+  ls_tax_11 = [(1,7,26,38,42,69,73,74,75,77,78,91,92,93,94,95,4,5,6,13,83,84), # (PrixTTC-0.4419+0.0135)/1.196
+                (16,17,79,86)] # (PrixTTC-0.4419+0.0250)/1.196
+  # 2011 else: (PrixTTC-0.4419)/1.196
+  ls_tax_12 = [(1,7,26,38,42,69,73,74), # (PrixTTC-0.4419+0.0135)/1.196
+                (16,17,79,86)] # (PrixTTC-0.4419+0.0250)/1.196
+  # 2012 - 2013 else: (PrixTTC-0.4419)/1.196 
+  
+  def get_tax_regime(dpt, ls_tup_regimes):
+    dict_regime = dict(zip(range(96), [0 for i in range(96)]))
+    for regime_ind, ls_regime_dpts in enumerate(ls_tup_regimes, start = 1):
+      for regime in ls_regime_dpts:
+        dict_regime[regime] = regime_ind
+    return dict_regime[dpt] 
+
   # ###########################################
   # PRICE REGRESSION : ONE PERIOD CROSS SECTION
   # ###########################################
   
-  # day_ind = 0
-  # ls_prices = [ls_prices[day_ind] for ls_prices in master_price['diesel_price']]
-  # ls_brands_std = [ls_brands[day_ind] for ls_brands in ls_ls_ls_brands[0]]
-  # ls_brands_gpd = [ls_brands[day_ind] for ls_brands in ls_ls_ls_brands[1]]
-  # ls_types      = [ls_brands[day_ind] for ls_brands in ls_ls_ls_brands[2]]
-  # dict_period = {'price' : ls_prices,
-                 # 'brand' : ls_brands_gpd,
-                 # 'type'  : ls_types}
-  # pd_period_prices = pd.DataFrame(dict_period, index = master_price['ids'])
-  # pd_period_prices['dpt'] =  pd_period_prices.index.map(lambda x: x[:-6])
-  
-  # y,X = patsy.dmatrices('price ~ brand', pd_period_prices, return_type='dataframe')
-  # print sm.OLS(y, X, missing = 'drop').fit().summary()
-  # y,X = patsy.dmatrices('price ~ brand + C(dpt)', pd_period_prices, return_type='dataframe')
-  # print sm.OLS(y, X, missing = 'drop').fit().summary()
-  # # TODO: read https://patsy.readthedocs.org/en/v0.1.0/categorical-coding.html
-  
-  # # stats des on brands / price quantiles per brands
-  # print pd_period_prices['brand'].describe()
-  # print pd_period_prices['brand'].value_counts()
-  
-  # # generate figure with price histograms per brand (?)
-  # ls_of_brands = np.unique(pd_period_prices['brand'])
-  # # should take sqrt of list length rounded above to unit
-  # fig, axes = plt.subplots(nrows=5, ncols=5)
-  # list_axes = [j for i in axes for j in i][:len(ls_of_brands)]
-  # # harmonize scales? (then need to impose categories)
-  # for i, ax in enumerate(list_axes):
-    # brand_prices = pd_period_prices['price'][pd_period_prices['brand'] == ls_of_brands[i]]
-    # test = ax.set_title('%s-%s'%(ls_of_brands[i], len(brand_prices[~np.isnan(brand_prices)])), fontsize=8)
-    # # if brand_prices[~np.isnan(brand_prices)].tolist():
-    # if len(brand_prices[~np.isnan(brand_prices)]) > 20:
-      # test = ax.hist(brand_prices[~np.isnan(brand_prices)], bins = 20)
-  # plt.rcParams['font.size'] = 8
-  # plt.tight_layout()
-  # # plt.show()
+  #day_ind = 0
+  #ls_prices = [ls_prices[day_ind] for ls_prices in master_price['diesel_price']]
+  #ls_brands_std = [ls_brands[day_ind] for ls_brands in ls_ls_ls_brands[0]]
+  #ls_brands_gpd = [ls_brands[day_ind] for ls_brands in ls_ls_ls_brands[1]]
+  #ls_types      = [ls_brands[day_ind] for ls_brands in ls_ls_ls_brands[2]]
+  #dict_period = {'price' : ls_prices,
+  #               'brand' : ls_brands_gpd,
+  #               'type'  : ls_types}
+  #pd_period_prices = pd.DataFrame(dict_period, index = master_price['ids'])
+  #pd_period_prices['dpt'] =  pd_period_prices.index.map(lambda x: x[:-6])
+  #
+  #y,X = patsy.dmatrices('price ~ brand', pd_period_prices, return_type='dataframe')
+  #print sm.OLS(y, X, missing = 'drop').fit().summary()
+  #y,X = patsy.dmatrices('price ~ brand + C(dpt)', pd_period_prices, return_type='dataframe')
+  #print sm.OLS(y, X, missing = 'drop').fit().summary()
+  ## TODO: read https://patsy.readthedocs.org/en/v0.1.0/categorical-coding.html
+  #
+  ## stats des on brands / price quantiles per brands
+  #print pd_period_prices['brand'].describe()
+  #print pd_period_prices['brand'].value_counts()
+  #
+  ## generate figure with price histograms per brand (?)
+  #ls_of_brands = np.unique(pd_period_prices['brand'])
+  ## should take sqrt of list length rounded above to unit
+  #fig, axes = plt.subplots(nrows=5, ncols=5)
+  #list_axes = [j for i in axes for j in i][:len(ls_of_brands)]
+  ## harmonize scales? (then need to impose categories)
+  #for i, ax in enumerate(list_axes):
+  #  brand_prices = pd_period_prices['price'][pd_period_prices['brand'] == ls_of_brands[i]]
+  #  test = ax.set_title('%s-%s'%(ls_of_brands[i], len(brand_prices[~np.isnan(brand_prices)])), fontsize=8)
+  #  # if brand_prices[~np.isnan(brand_prices)].tolist():
+  #  if len(brand_prices[~np.isnan(brand_prices)]) > 20:
+  #    test = ax.hist(brand_prices[~np.isnan(brand_prices)], bins = 20)
+  #plt.rcParams['font.size'] = 8
+  #plt.tight_layout()
+  #plt.show()
   
   # #########################################
   # PRICE REGRESSIONS : ALL PERIOD PANEL DATA
   # #########################################
   
-  # # build pd_mi_prices (long form)
-  # ls_all_prices = [price for ls_prices in master_price['diesel_price'] for price in ls_prices]
-  # ls_all_ids = [id_indiv for id_indiv in master_price['ids'] for x in range(len(master_price['dates']))]
-  # ls_all_dates = [date for id_indiv in master_price['ids'] for date in master_price['dates']]
-  # ls_ls_all_brands = [[brand for ls_brands in ls_ls_brands for brand in ls_brands]\
-                          # for ls_ls_brands in ls_ls_ls_brands]
-  # index = pd.MultiIndex.from_tuples(zip(ls_all_ids, ls_all_dates), names= ['id','date'])
-  # columns = ['price', 'brand_1', 'brand_2', 'brand_type']
-  # pd_mi_prices = pd.DataFrame(zip(*[ls_all_prices] + ls_ls_all_brands), index = index, columns = columns)
-  # pd_pd_prices = pd_mi_prices.to_panel()
-  # # build pd_df_info (simple info dataframe)
-  # ls_rows = []
-  # for indiv_ind, indiv_id in enumerate(master_price['ids']):
-    # city = master_price['dict_info'][indiv_id]['city']
-    # if city:
-      # city = city.replace(',',' ')
-    # zip_code = '%05d' %int(indiv_id[:-3])
-    # code_geo = master_price['dict_info'][indiv_id].get('code_geo')
-    # code_geo_ardts = master_price['dict_info'][indiv_id].get('code_geo_ardts')
-    # highway = None
-    # if master_info.get(indiv_id):
-      # highway = master_info[indiv_id]['highway'][3]
-    # region = dict_dpts_regions[zip_code[:2]]
-    # row = [indiv_id, city, zip_code, code_geo, code_geo_ardts, highway, region]
-    # ls_rows.append(row)
-  # header = ['id', 'city', 'zip_code', 'code_geo', 'code_geo_ardts', 'highway', 'region']
-  # pd_df_master_info = pd.DataFrame(zip(*ls_rows), header).T
-  # # merge info and prices
-  # pd_df_master_info = pd_df_master_info.set_index('id')
-  # pd_mi_prices = pd_mi_prices.reset_index()
-  # pd_mi_final = pd_mi_prices.join(pd_df_master_info, on = 'id')
-  # pd_mi_final = pd_mi_final.set_index(['id','date'])
-  
-  # # TODO: restrict size to begin with (time/location)
-  # # pd_mi_final.ix['1500007',:] # based on id
-  # # pd_mi_final[pd_mi_final['code_geo'].str.startswith('01', na=False)] # based on insee
-  # # http://stackoverflow.com/questions/17242970/multi-index-sorting-in-pandas
-  # pd_mi_final_alt = pd_mi_final.swaplevel('id', 'date')
-  # pd_mi_final_alt = pd_mi_final_alt.sort()
-  # pd_mi_final_extract = pd_mi_final_alt.ix['20110904':'20111004']
-  
-  
-  
+  ls_all_prices = [price for ls_prices in master_price['diesel_price'] for price in ls_prices]
+  ls_all_ids = [id_indiv for id_indiv in master_price['ids'] for x in range(len(master_price['dates']))]
+  ls_all_dates = [date for id_indiv in master_price['ids'] for date in master_price['dates']]
+  ls_ls_all_brands = [[brand for ls_brands in ls_ls_brands for brand in ls_brands]\
+                        for ls_ls_brands in ls_ls_ls_brands]
+  index = pd.MultiIndex.from_tuples(zip(ls_all_ids, ls_all_dates), names= ['id','date'])
+  columns = ['price', 'brand_1', 'brand_2', 'brand_type']
+  pd_mi_prices = pd.DataFrame(zip(*[ls_all_prices] + ls_ls_all_brands), index = index, columns = columns)
+  pd_pd_prices = pd_mi_prices.to_panel()
+  # build pd_df_info (simple info dataframe)
+  ls_rows = []
+  for indiv_ind, indiv_id in enumerate(master_price['ids']):
+    city = master_price['dict_info'][indiv_id]['city']
+    if city:
+      city = city.replace(',',' ')
+    zip_code = '%05d' %int(indiv_id[:-3])
+    code_geo = master_price['dict_info'][indiv_id].get('code_geo')
+    code_geo_ardts = master_price['dict_info'][indiv_id].get('code_geo_ardts')
+    tax_11 = get_tax_regime(int(zip_code[0:2]), ls_tax_11)
+    tax_12 = get_tax_regime(int(zip_code[0:2]), ls_tax_12)
+    highway = None
+    if master_info.get(indiv_id):
+      highway = master_info[indiv_id]['highway'][3]
+    region = dict_dpts_regions[zip_code[:2]]
+    row = [indiv_id, city, zip_code, code_geo, code_geo_ardts, tax_11, tax_12, highway, region]
+    ls_rows.append(row)
+  header = ['id', 'city', 'zip_code', 'code_geo', 'code_geo_ardts', 'tax_11', 'tax_12', 'highway', 'region']
+  pd_df_master_info = pd.DataFrame(zip(*ls_rows), header).T
+  # merge info and prices
+  pd_df_master_info = pd_df_master_info.set_index('id')
+  pd_mi_prices = pd_mi_prices.reset_index()
+  pd_mi_final = pd_mi_prices.join(pd_df_master_info, on = 'id')
+  # add price before tax before setting index (less clear how to select then)
+  # 2011: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,17899.html
+  # 2012: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,26979.html
+  # 2013: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,31455.html
+  pd_mi_final['price_ht'] = (pd_mi_final['price'][(pd_mi_final['date'].str.startswith('2011')) &\
+                                                  (pd_mi_final['tax_11'] == 0)]-0.4419)/1.196
+  pd_mi_final['price_ht'] = np.where((pd_mi_final['date'].str.startswith('2011')) &\
+                                     (pd_mi_final['tax_11'] == 1),
+                                     (pd_mi_final['price']+0.0135-0.4419)/1.196, pd_mi_final['price_ht'])
+  pd_mi_final['price_ht'] = np.where((pd_mi_final['date'].str.startswith('2011')) &\
+                                     (pd_mi_final['tax_11'] == 2),
+                                     (pd_mi_final['price']+0.0250-0.4419)/1.196, pd_mi_final['price_ht'])
+  pd_mi_final['price_ht'] = np.where((pd_mi_final['date'].str.match('2012|2013.*')) &\
+                                     (pd_mi_final['tax_12'] == 0),
+                                     (pd_mi_final['price']-0.4419)/1.196, pd_mi_final['price_ht']) 
+  pd_mi_final['price_ht'] = np.where((pd_mi_final['date'].str.match('2012|2013.*')) &\
+                                     (pd_mi_final['tax_12'] == 1),
+                                     (pd_mi_final['price']+0.0135-0.4419)/1.196, pd_mi_final['price_ht'])
+  pd_mi_final['price_ht'] = np.where((pd_mi_final['date'].str.match('2012|2013.*')) &\
+                                     (pd_mi_final['tax_12'] == 2),
+                                     (pd_mi_final['price']+0.0250-0.4419)/1.196, pd_mi_final['price_ht'])
+  pd_mi_final = pd_mi_final.set_index(['id','date'])
+   
+  # TODO: restrict size to begin with (time/location)
+  # pd_mi_final.ix['1500007',:] # based on id
+  # pd_mi_final[pd_mi_final['code_geo'].str.startswith('01', na=False)] # based on insee
+  # http://stackoverflow.com/questions/17242970/multi-index-sorting-in-pandas
+  pd_mi_final_alt = pd_mi_final.swaplevel('id', 'date')
+  pd_mi_final_alt = pd_mi_final_alt.sort()
+  pd_mi_final_extract = pd_mi_final_alt.ix['20110904':'20111004']
+    
   # # EXAMPLE PANEL DATA REGRESSIONS
   # from patsy import dmatrices
   # f = 'price~brand_2'
@@ -371,6 +249,58 @@ if __name__=="__main__":
                     # map(lambda x: '{:8.3f}'.format(x), np.round(mod1.params,3).tolist()),
                     # map(lambda x: '{:8.3f}'.format(x), np.round(mod1.bse,3).tolist())))
   
+  # TODO: compute price_ht based on dpt... (add categorical variable in df_info)
+  
+  # AGGREGATE LEVEL
+  df_mean = pd_mi_final.mean(level=1)
+  df_mean['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']
+  df_mean['UFIP_ht'] = df_ufip['GAZOLE HTT']
+  df_mean['price_ht_bis'] = df_mean['price_ht'] - (df_mean['price_ht'] - df_mean['Rotterdam']).mean()
+  #df_mean[['Rotterdam', 'price_ht_bis']].plot()
+  #plt.plot()
+  df_mean['OIL_ht'] = pd_mi_final['price_ht'][pd_mi_final['brand_type'] == 'OIL'].mean(level=1)
+  df_mean['SUP_ht'] = pd_mi_final['price_ht'][pd_mi_final['brand_type'] == 'SUP'].mean(level=1)
+  df_mean['OIL_norm'] = df_mean['OIL_ht'] - (df_mean['OIL_ht'] - df_mean['Rotterdam']).mean()
+  df_mean['SUP_norm'] = df_mean['SUP_ht'] - (df_mean['SUP_ht'] - df_mean['Rotterdam']).mean()
+
+  df_mean['OIL_norm_per1'] = df_mean['OIL_ht'] - (df_mean['OIL_ht'] - df_mean['Rotterdam'])[0:360].mean()
+  df_mean['SUP_norm_per1'] = df_mean['SUP_ht'] - (df_mean['SUP_ht'] - df_mean['Rotterdam'])[0:360].mean()
+  
+  df_mean['price_ht_d1'] = df_mean['price_ht'] - df_mean['price_ht'].shift(1)
+  df_mean['OIL_ht_d1'] = df_mean['OIL_ht'] - df_mean['OIL_ht'].shift(1)
+  df_mean['Rotterdam_d1'] = df_mean['Rotterdam'] - df_mean['Rotterdam'].shift(1)
+
+  # STATION LEVEL REGRESSION
+  
+  df_station = pd_mi_final.ix['1500007']
+  df_station['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']
+  #df_station['price_ht'] = (df_station['price']-0.4419)/1.196
+  df_station['gross_margin'] = df_station['price_ht'] - df_station['Rotterdam']
+  # restrict to period before price policy
+  df_station['price_ht_bis'] = df_station['price_ht']-df_station['gross_margin'][0:360].mean()
+  df_station[['Rotterdam', 'price_ht_bis']][0:360].plot()
+
+  ls_display = []
+  for id_sta in master_price['ids'][1:10]:
+    df_station[id_sta] = pd_mi_final.ix[id_sta]['price_ht']
+    df_station['%s_gm' %id_sta] = df_station[id_sta] - df_station['Rotterdam']
+    ls_display.append('%s_gm' %id_sta)
+  
+  # before 0:360, while 361:506, after 507:
+  # dataframe with all prices as columns
+  df_all_station_prices = pd_mi_final['price_ht'].unstack('id')
+  ls_col_titles = list(df_all_station_prices.columns)
+  df_all_station_prices['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']a
+  for col_title in ls_col_titles:
+    df_all_station_prices[col_title] = df_all_station_prices[col_title] - df_all_station_prices['Rotterdam']
+  del(df_all_station_prices['Rotterdam'])
+  se_measure = df_all_station_prices[0:360].mean() - df_all_station_prices[361:506].mean()
+  se_backlash = df_all_station_prices[507:].mean() - df_all_station_prices[0:360].mean()
+  # TODO: merge with info to which brands added (also mark brand chges to exclude Total Access)
+  df_brand = pd.DataFrame([ls_brand[-1] for ls_brand in ls_ls_ls_brands[0]], index = master_price['ids'])
+  pd_df_master_info['brand_1'] = df_brand[0]
+  pd_df_master_info['measure'] = se_measure
+   
   # ###########
   # DEPRECATED
   # ###########
