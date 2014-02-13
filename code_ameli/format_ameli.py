@@ -10,7 +10,7 @@ import pprint
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import statsmodels.api as sm
+import statsmodels as sm
 import statsmodels.formula.api as smf
 
 def ls_to_clean(ls_to_clean):
@@ -25,8 +25,8 @@ def dec_json(chemin):
   with open(chemin, 'r') as fichier:
     return json.loads(fichier.read())
 
-path_physicians = r'\\ulysse\users\echamayou\Bureau\Etienne_work\Data\data_ameli'
-# path_physicians = r'C:\Users\etna\Desktop\Etienne_work\Data\data_ameli'
+# path_physicians = r'\\ulysse\users\echamayou\Bureau\Etienne_work\Data\data_ameli'
+path_physicians = r'C:\Users\etna\Desktop\Etienne_work\Data\data_ameli'
 
 ls_ls_physicians = dec_json(path_physicians + r'\ls_ls_ophtalmologiste_75')
 dict_physicians = dec_json(path_physicians + r'\dict_ophtalmologiste_75')
@@ -186,7 +186,7 @@ pd_df_physicians['immatriculation'][pd_df_physicians['immatriculation'] == 1900]
 pd_df_physicians['zip_city'][pd_df_physicians['zip_city'].str.startswith('75116')] = '75016 PARIS'
 df_temp = pd_df_physicians[~pd_df_physicians['zip_city'].str.contains('CEDEX')]
 formula = 'Consultation ~ C(zip_city) + immatriculation + C(convention)'
-res01 = smf.ols(formula = formula, data = df_temp).fit()
+res01 = smf.ols(formula = formula, data = df_temp, missing= 'drop').fit()
 #TODO: represent homogeneity within ardts
 
 # CHECK OSM ROUTE SERVICE : http://wiki.openstreetmap.org/wiki/OpenRouteService
