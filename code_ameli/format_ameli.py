@@ -179,6 +179,14 @@ for id_physician, info_physician in dict_societe_physicians.items():
 pd_df_physicians['immatriculation'] =\
   pd_df_physicians['immatriculation'].apply(lambda x: float(x[-4:]) if x else None)
 
+#Stats desc:
+#df_temp[['convention', 'Consultation']].groupby('convention').agg([len, np.mean])
+df_cross = pd_df_physicians[['convention','immatriculation','Consultation']].\
+             groupby(['convention','immatriculation'])
+df_cross = df_cross.count()['Consultation'].unstack(0)
+df_cross_cum = df_cross.cumsum()
+df_cross_cum_graph = df_cross_cum.fillna(method='bfill').fillna(method='pad')
+
 # TODO: clean 
 # Some info wrong: 1900 => 2000 after verification with other site
 pd_df_physicians['immatriculation'][pd_df_physicians['immatriculation'] == 1900] = 2000
