@@ -19,7 +19,7 @@ def get_series_from_moving_avg_beg(k, ar_sol):
 
 def get_series_from_moving_avg_end(k, ar_sol):
   """
-  WRONG => A PRIORI NOT POSSIBLE FROM END
+  WRONG => A PRIORI NOT POSSIBLE FROM END...
   Find original series from a k moving average series (not centered) BUT: 
   k last elements of ar_sol are assumed to be data from original series
   """

@@ -7,6 +7,7 @@ import datetime, time
 import pandas as pd
 import matplotlib.pyplot as plt
 from BeautifulSoup import BeautifulSoup
+from scipy import optimize
 from de_move_average import *
 
 # EIA: http://www.eia.gov/dnav/pet/pet_pri_spt_s1_d.htm
@@ -65,7 +66,7 @@ dict_u_cols = {u'Marge de raffinage (€/t)': 'UFIP Ref margin ET',
 df_ufip = df_ufip.rename(columns = dict_u_cols)
 df_ufip.set_index('Date', inplace = True)
 
-# REGROUP EIA,ECB and UFIP IN ONE DATAFRAME
+# REGROUP EIA,ECB and UFIP IN ONE DATAFRAME (arbitrary date range)
 index = pd.date_range(start = pd.to_datetime('20121121'),
                       end   = pd.to_datetime('20140123'), 
                       freq='D')
@@ -95,16 +96,45 @@ df_all['NY Diesel R5 EL'] = pd.rolling_mean(se_temp, window = 5)
 #df_all[['UFIP RT Diesel EL', 'NY Diesel R5 EL']].plot()
 #plt.show()
 
-ar_sol = list(df_all['NY Diesel EL'].ix['2013-04-8':'2013-04-11']) +\
-    list(df_all['UFIP RT Diesel EL'][~pd.isnull(df_all['UFIP RT Diesel EL'])].ix['2013-04-12':])
+# RETRIEVE UFIP ROTTERDAM ORIGINAL SERIES FROM 5D MOVING AVG
+ls_params = list(df_all['NY Diesel EL'].ix['2013-04-8':'2013-04-11'])
+ls_sol = list(df_all['UFIP RT Diesel EL'][~pd.isnull(df_all['UFIP RT Diesel EL'])].ix['2013-04-12':])
 index_sol = df_all.ix['2013-04-12':].index[~pd.isnull(df_all['UFIP RT Diesel EL'].ix['2013-04-12':])]
-result_rott = get_series_from_moving_avg_beg(5, ar_sol)
-se_rott = pd.Series(result_rott[4:], index = index_sol)
-df_all['My RT Diesel EL'] = se_rott
+result_rott = get_series_from_moving_avg_beg(5, ls_params + ls_sol)
+df_all['My RT Diesel EL'] = pd.Series(result_rott[4:], index = index_sol)
 
-df_all[['My RT Diesel EL', 'UFIP RT Diesel EL', 'NY Diesel EL']][130:150]
+# df_all[['My RT Diesel EL', 'UFIP RT Diesel EL', 'NY Diesel EL']][130:150]
 
-#df_all[['UFIP RT Diesel EL', 'NY Diesel R5 EL']].ix['2013-04-8':'2013-04-12']
+def compute_objective(ar_params, ar_sol, ar_comp):
+  ar_temp = get_series_from_moving_avg_beg(len(ar_params), np.hstack([ar_params, ar_sol]))
+  return sum((ar_temp[len(ls_params):]-ar_comp)**2)
+
+def compute_objective_var(ar_params, ar_sol):
+  ar_temp = get_series_from_moving_avg_beg(len(ar_params), np.hstack([ar_params, ar_sol]))
+  return np.std(ar_temp[len(ls_params):])
+
+start, end = 25, 100
+df_extract = df_all[start:end]
+ar_comp = np.array(list(df_extract['NY Diesel EL'][~pd.isnull(df_extract['UFIP RT Diesel EL'])].\
+                          fillna(method='pad')))
+ar_sol = np.array(list(df_extract['UFIP RT Diesel EL'][~pd.isnull(df_extract['UFIP RT Diesel EL'])]))
+index_sol = df_extract.index[~pd.isnull(df_extract['UFIP RT Diesel EL'])]
+
+ar_params = np.array(ls_params)
+test = compute_objective(ar_params, ar_sol, ar_comp)
+
+x0 = np.array([0.6, 0.6, 0.6, 0.6])
+opt_res = optimize.fmin(compute_objective, x0=x0 ,args = (ar_sol, ar_comp))
+print opt_res.view()
+opt_res_2 = optimize.fmin(compute_objective_var, x0=x0 ,args = (ar_sol,))
+print opt_res_2.view()
+
+result_rott = get_series_from_moving_avg_beg(len(opt_res.view()), np.hstack([opt_res.view(), ar_sol]))
+df_extract['My RT Diesel EL'] = pd.Series(result_rott[4:], index = index_sol)
+df_extract[['My RT Diesel EL', 'UFIP RT Diesel EL', 'NY Diesel EL']].plot()
+plt.show()
+#df_extract[['My RT Diesel EL', 'UFIP RT Diesel EL', 'NY Diesel R5 EL']]
+
 # # Try infering series from these prices
 
 #df_all[['OK WTI Brent FOB DB', 'Europe Brent FOB DB']].plot()
