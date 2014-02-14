@@ -7,6 +7,7 @@ import datetime, time
 import pandas as pd
 import matplotlib.pyplot as plt
 from BeautifulSoup import BeautifulSoup
+from de_move_average import *
 
 # EIA: http://www.eia.gov/dnav/pet/pet_pri_spt_s1_d.htm
 # ECB: http://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html 
@@ -64,7 +65,7 @@ dict_u_cols = {u'Marge de raffinage (€/t)': 'UFIP Ref margin ET',
 df_ufip = df_ufip.rename(columns = dict_u_cols)
 df_ufip.set_index('Date', inplace = True)
 
-# REGROUP EIA + ECB (TODO +UFIP) IN ONE DATAFRAME
+# REGROUP EIA,ECB and UFIP IN ONE DATAFRAME
 index = pd.date_range(start = pd.to_datetime('20121121'),
                       end   = pd.to_datetime('20140123'), 
                       freq='D')
@@ -77,9 +78,9 @@ print df_all.info()
 se_temp = df_all['Europe Brent FOB DB'][~pd.isnull(df_all['Europe Brent FOB DB'])]
 df_all['Europe Brent FOB R5 DB'] = pd.rolling_mean(se_temp, window = 5)
 
-df_all[['ECB Rate ED', 'UFIP Rate ED']].plot()
-df_all[['UFIP Brent DB', 'Europe Brent FOB DB', 'Europe Brent FOB R5 DB']].plot()
-plt.show()
+#df_all[['ECB Rate ED', 'UFIP Rate ED']].plot()
+#df_all[['UFIP Brent DB', 'Europe Brent FOB DB', 'Europe Brent FOB R5 DB']].plot()
+#plt.show()
 
 litre_per_us_gallon = 3.785411784
 litre_per_barrel = 158.987295
@@ -90,9 +91,21 @@ df_all['LA Diesel EL'] = df_all['LA Diesel DG'] / litre_per_us_gallon / df_all['
 se_temp = df_all['NY Diesel EL'][~pd.isnull(df_all['NY Diesel EL'])]
 df_all['NY Diesel R5 EL'] = pd.rolling_mean(se_temp, window = 5)
 
-df_all[['UFIP RT Diesel EL', 'Gulf Diesel EL', 'LA Diesel EL', 'NY Diesel EL']].plot()
-df_all[['UFIP RT Diesel EL', 'NY Diesel R5 EL']].plot()
-plt.show()
+#df_all[['UFIP RT Diesel EL', 'Gulf Diesel EL', 'LA Diesel EL', 'NY Diesel EL']].plot()
+#df_all[['UFIP RT Diesel EL', 'NY Diesel R5 EL']].plot()
+#plt.show()
+
+ar_sol = list(df_all['NY Diesel EL'].ix['2013-04-8':'2013-04-11']) +\
+    list(df_all['UFIP RT Diesel EL'][~pd.isnull(df_all['UFIP RT Diesel EL'])].ix['2013-04-12':])
+index_sol = df_all.ix['2013-04-12':].index[~pd.isnull(df_all['UFIP RT Diesel EL'].ix['2013-04-12':])]
+result_rott = get_series_from_moving_avg_beg(5, ar_sol)
+se_rott = pd.Series(result_rott[4:], index = index_sol)
+df_all['My RT Diesel EL'] = se_rott
+
+df_all[['My RT Diesel EL', 'UFIP RT Diesel EL', 'NY Diesel EL']][130:150]
+
+#df_all[['UFIP RT Diesel EL', 'NY Diesel R5 EL']].ix['2013-04-8':'2013-04-12']
+# # Try infering series from these prices
 
 #df_all[['OK WTI Brent FOB DB', 'Europe Brent FOB DB']].plot()
 #plt.show()
