@@ -58,10 +58,10 @@ ls_u_drop = ['GAZOLE TTC', 'GAZOLE HTT',
              'FOD HTT', 'FOD TTC', 'FOD (Rotterdam)']
 df_ufip.drop(ls_u_drop, inplace = True, axis = 1)
 dict_u_cols = {u'Marge de raffinage (€/t)': 'UFIP Ref margin ET',
-               u'GAZOLE (Rotterdam)'      : 'UFIP RT Diesel EL',
-               u'SP95 (Rotterdam)'        : 'UFIP RT SP95 EL',
-               u'Brent ($ / baril)'       : 'UFIP Brent DB',
-               u'Brent (€ / baril)'       : 'UFIP Brent EB',
+               u'GAZOLE (Rotterdam)'      : 'UFIP RT Diesel R5 EL',
+               u'SP95 (Rotterdam)'        : 'UFIP RT SP95 R5 EL',
+               u'Brent ($ / baril)'       : 'UFIP Brent R5 DB',
+               u'Brent (€ / baril)'       : 'UFIP Brent R5 EB',
                u'Parité (€/$)'            : 'UFIP Rate ED'}
 df_ufip = df_ufip.rename(columns = dict_u_cols)
 df_ufip.set_index('Date', inplace = True)
@@ -81,10 +81,27 @@ df_all['Europe Brent FOB R5 DB'] = pd.rolling_mean(se_temp, window = 5)
 
 #df_all[['ECB Rate ED', 'UFIP Rate ED']].plot()
 #df_all[['UFIP Brent DB', 'Europe Brent FOB DB', 'Europe Brent FOB R5 DB']].plot()
-#plt.show()
 
 litre_per_us_gallon = 3.785411784
 litre_per_barrel = 158.987295
+
+# Examination of brent prices
+df_all['Europe Brent FOB EL'] = df_all['Europe Brent FOB DB'] / litre_per_barrel / df_all['ECB Rate ED'] 
+df_all['Europe Brent FOB R5 EL'] = df_all['Europe Brent FOB R5 DB'] / litre_per_barrel / df_all['ECB Rate ED']
+df_all['UFIP Brent R5 EL'] = df_all['UFIP Brent R5 DB'] / litre_per_barrel / df_all['ECB Rate ED']
+df_all[['Europe Brent FOB R5 EL', 'UFIP Brent R5 EL', 'UFIP RT Diesel R5 EL']].plot()
+plt.show()
+
+df_all['UFIP Ref margin EL'] = df_all['UFIP Ref margin ET'] / 1000
+df_all['UFIP RT Diesel EL'] =  df_all['Europe Brent FOB EL'] + df_all['UFIP Ref margin EL']
+df_all['UFIP RT Diesel EL'] = df_all['UFIP RT Diesel EL'] +\
+                                (df_all['UFIP RT Diesel R5 EL'] - df_all['UFIP RT Diesel EL']).mean()
+se_temp = df_all['UFIP RT Diesel EL'][~pd.isnull(df_all['UFIP RT Diesel EL'])]
+df_all['My UFIP RT Diesel R5 EL'] = pd.rolling_mean(se_temp, window = 5)
+df_all[['My UFIP RT Diesel R5 EL', 'UFIP RT Diesel R5 EL']].plot()
+plt.show()
+
+# Examintation of US (vs. Rotterdam) diesel
 df_all['NY Diesel EL'] = df_all['NY Diesel DG'] / litre_per_us_gallon / df_all['ECB Rate ED']
 df_all['Gulf Diesel EL'] = df_all['Gulf Diesel DG'] / litre_per_us_gallon / df_all['ECB Rate ED']
 df_all['LA Diesel EL'] = df_all['LA Diesel DG'] / litre_per_us_gallon / df_all['ECB Rate ED']
@@ -92,18 +109,18 @@ df_all['LA Diesel EL'] = df_all['LA Diesel DG'] / litre_per_us_gallon / df_all['
 se_temp = df_all['NY Diesel EL'][~pd.isnull(df_all['NY Diesel EL'])]
 df_all['NY Diesel R5 EL'] = pd.rolling_mean(se_temp, window = 5)
 
-#df_all[['UFIP RT Diesel EL', 'Gulf Diesel EL', 'LA Diesel EL', 'NY Diesel EL']].plot()
-#df_all[['UFIP RT Diesel EL', 'NY Diesel R5 EL']].plot()
+#df_all[['UFIP RT Diesel R5 EL', 'Gulf Diesel EL', 'LA Diesel EL', 'NY Diesel EL']].plot()
+#df_all[['UFIP RT Diesel R5 EL', 'NY Diesel R5 EL']].plot()
 #plt.show()
 
 # RETRIEVE UFIP ROTTERDAM ORIGINAL SERIES FROM 5D MOVING AVG
 ls_params = list(df_all['NY Diesel EL'].ix['2013-04-8':'2013-04-11'])
-ls_sol = list(df_all['UFIP RT Diesel EL'][~pd.isnull(df_all['UFIP RT Diesel EL'])].ix['2013-04-12':])
-index_sol = df_all.ix['2013-04-12':].index[~pd.isnull(df_all['UFIP RT Diesel EL'].ix['2013-04-12':])]
+ls_sol = list(df_all['UFIP RT Diesel R5 EL'][~pd.isnull(df_all['UFIP RT Diesel R5 EL'])].ix['2013-04-12':])
+index_sol = df_all.ix['2013-04-12':].index[~pd.isnull(df_all['UFIP RT Diesel R5 EL'].ix['2013-04-12':])]
 result_rott = get_series_from_moving_avg_beg(5, ls_params + ls_sol)
-df_all['My RT Diesel EL'] = pd.Series(result_rott[4:], index = index_sol)
+df_all['My UFIP RT Diesel EL'] = pd.Series(result_rott[4:], index = index_sol)
 
-# df_all[['My RT Diesel EL', 'UFIP RT Diesel EL', 'NY Diesel EL']][130:150]
+# df_all[['UFIP RT Diesel EL', 'UFIP RT Diesel R5 EL', 'NY Diesel EL']][130:150]
 
 def compute_objective(ar_params, ar_sol, ar_comp):
   ar_temp = get_series_from_moving_avg_beg(len(ar_params), np.hstack([ar_params, ar_sol]))
@@ -115,10 +132,10 @@ def compute_objective_var(ar_params, ar_sol):
 
 start, end = 25, 100
 df_extract = df_all[start:end]
-ar_comp = np.array(list(df_extract['NY Diesel EL'][~pd.isnull(df_extract['UFIP RT Diesel EL'])].\
+ar_comp = np.array(list(df_extract['NY Diesel EL'][~pd.isnull(df_extract['UFIP RT Diesel R5 EL'])].\
                           fillna(method='pad')))
-ar_sol = np.array(list(df_extract['UFIP RT Diesel EL'][~pd.isnull(df_extract['UFIP RT Diesel EL'])]))
-index_sol = df_extract.index[~pd.isnull(df_extract['UFIP RT Diesel EL'])]
+ar_sol = np.array(list(df_extract['UFIP RT Diesel R5 EL'][~pd.isnull(df_extract['UFIP RT Diesel R5 EL'])]))
+index_sol = df_extract.index[~pd.isnull(df_extract['UFIP RT Diesel R5 EL'])]
 
 ar_params = np.array(ls_params)
 test = compute_objective(ar_params, ar_sol, ar_comp)
@@ -130,15 +147,12 @@ opt_res_2 = optimize.fmin(compute_objective_var, x0=x0 ,args = (ar_sol,))
 print opt_res_2.view()
 
 result_rott = get_series_from_moving_avg_beg(len(opt_res.view()), np.hstack([opt_res.view(), ar_sol]))
-df_extract['My RT Diesel EL'] = pd.Series(result_rott[4:], index = index_sol)
-df_extract[['My RT Diesel EL', 'UFIP RT Diesel EL', 'NY Diesel EL']].plot()
+df_extract['My UFIP RT Diesel EL'] = pd.Series(result_rott[4:], index = index_sol)
+df_extract[['My UFIP RT Diesel EL', 'UFIP RT Diesel R5 EL', 'NY Diesel EL']].plot()
 plt.show()
-#df_extract[['My RT Diesel EL', 'UFIP RT Diesel EL', 'NY Diesel R5 EL']]
+#df_extract[['My UFIP RT Diesel EL', 'UFIP RT Diesel R5 EL', 'NY Diesel R5 EL']]
 
-# # Try infering series from these prices
-
+# # Some backup
 #df_all[['OK WTI Brent FOB DB', 'Europe Brent FOB DB']].plot()
-#plt.show()
-#
 #df_all[['NY Diesel DG', 'Gulf Diesel DG', 'LA Diesel DG']].plot()
 #plt.show()
