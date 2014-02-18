@@ -118,39 +118,57 @@ ls_params = list(df_all['NY Diesel EL'].ix['2013-04-8':'2013-04-11'])
 ls_sol = list(df_all['UFIP RT Diesel R5 EL'][~pd.isnull(df_all['UFIP RT Diesel R5 EL'])].ix['2013-04-12':])
 index_sol = df_all.ix['2013-04-12':].index[~pd.isnull(df_all['UFIP RT Diesel R5 EL'].ix['2013-04-12':])]
 result_rott = get_series_from_moving_avg_beg(5, ls_params + ls_sol)
-df_all['My UFIP RT Diesel EL'] = pd.Series(result_rott[4:], index = index_sol)
-
-# df_all[['UFIP RT Diesel EL', 'UFIP RT Diesel R5 EL', 'NY Diesel EL']][130:150]
+df_all['My UFIP RT Diesel EL test'] = pd.Series(result_rott[4:], index = index_sol)
+# df_all[['My UFIP RT Diesel EL test', 'UFIP RT Diesel R5 EL', 'NY Diesel EL']][130:150]
 
 def compute_objective(ar_params, ar_sol, ar_comp):
-  ar_temp = get_series_from_moving_avg_beg(len(ar_params), np.hstack([ar_params, ar_sol]))
+  ar_temp = get_series_from_moving_avg_beg(len(ar_params) + 1, np.hstack([ar_params, ar_sol]))
   return sum((ar_temp[len(ls_params):]-ar_comp)**2)
 
 def compute_objective_var(ar_params, ar_sol):
-  ar_temp = get_series_from_moving_avg_beg(len(ar_params), np.hstack([ar_params, ar_sol]))
+  ar_temp = get_series_from_moving_avg_beg(len(ar_params) + 1, np.hstack([ar_params, ar_sol]))
   return np.std(ar_temp[len(ls_params):])
 
-start, end = 25, 100
-df_extract = df_all[start:end]
-ar_comp = np.array(list(df_extract['NY Diesel EL'][~pd.isnull(df_extract['UFIP RT Diesel R5 EL'])].\
+# Check with NY Diesel
+ar_sol = np.array(list(df_all['NY Diesel R5 EL'][~pd.isnull(df_all['NY Diesel R5 EL'])]))
+index_sol = df_all.index[~pd.isnull(df_all['NY Diesel R5 EL'])]
+ar_comp = np.array(list(df_all['NY Diesel EL'][~pd.isnull(df_all['NY Diesel R5 EL'])].\
                           fillna(method='pad')))
+# Test function to get original series from moving average
+ar_beg = df_all['NY Diesel EL'][~pd.isnull(df_all['NY Diesel EL'])][:4]
+ar_test = get_series_from_moving_avg_beg(len(ar_beg) + 1, np.hstack([ar_beg, ar_sol]))
+df_all['My NY Diesel EL'] = pd.Series(ar_test[4:], index = index_sol)
+print df_all[['My NY Diesel EL', 'NY Diesel EL', 'NY Diesel R5 EL']][0:30]
+# Test process to retrieve original series with right/some starting values: NOT BAD
+x0 = np.array([0.6, 0.6, 0.6, 0.6]) # df_all['NY Diesel EL'][~pd.isnull(df_all['NY Diesel EL'])][:4] 
+opt_res = optimize.fmin(compute_objective, x0=x0, args = (ar_sol, ar_comp))
+result_ny = get_series_from_moving_avg_beg(len(opt_res.view()) + 1, np.hstack([opt_res.view(), ar_sol]))
+df_all['My NY Diesel EL'] = pd.Series(result_ny[4:], index = index_sol)
+print df_all[['My NY Diesel EL', 'NY Diesel EL', 'NY Diesel R5 EL']][0:30]
+
+# Implement with UFIP
+start, end = 0, 150 # 180, 300
+df_extract = df_all[start:end]
 ar_sol = np.array(list(df_extract['UFIP RT Diesel R5 EL'][~pd.isnull(df_extract['UFIP RT Diesel R5 EL'])]))
 index_sol = df_extract.index[~pd.isnull(df_extract['UFIP RT Diesel R5 EL'])]
 
-ar_params = np.array(ls_params)
-test = compute_objective(ar_params, ar_sol, ar_comp)
+ar_comp = np.array(list(df_extract['UFIP RT Diesel EL'][~pd.isnull(df_extract['UFIP RT Diesel R5 EL'])].\
+                          fillna(method='pad')))
 
-x0 = np.array([0.6, 0.6, 0.6, 0.6])
-opt_res = optimize.fmin(compute_objective, x0=x0 ,args = (ar_sol, ar_comp))
-print opt_res.view()
+x0 = np.array([0.56, 0.56, 0.56, 0.56])
+opt_res_1 = optimize.fmin(compute_objective, x0=x0 ,args = (ar_sol, ar_comp))
+print opt_res_1.view()
 opt_res_2 = optimize.fmin(compute_objective_var, x0=x0 ,args = (ar_sol,))
 print opt_res_2.view()
 
-result_rott = get_series_from_moving_avg_beg(len(opt_res.view()), np.hstack([opt_res.view(), ar_sol]))
-df_extract['My UFIP RT Diesel EL'] = pd.Series(result_rott[4:], index = index_sol)
-df_extract[['My UFIP RT Diesel EL', 'UFIP RT Diesel R5 EL', 'NY Diesel EL']].plot()
+result_rott_1 = get_series_from_moving_avg_beg(len(opt_res_1.view()) + 1, np.hstack([opt_res_1.view(), ar_sol]))
+df_extract['My UFIP RT Diesel EL 1'] = pd.Series(result_rott_1[4:], index = index_sol)
+result_rott_2 = get_series_from_moving_avg_beg(len(opt_res_2.view()) + 1, np.hstack([opt_res_2.view(), ar_sol]))
+df_extract['My UFIP RT Diesel EL 2'] = pd.Series(result_rott_2[4:], index = index_sol)
+df_extract[['My UFIP RT Diesel EL 1', 'My UFIP RT Diesel EL 2', 'NY Diesel EL',\
+             'UFIP RT Diesel R5 EL', 'NY Diesel R5 EL', 'UFIP RT Diesel EL']].plot()
 plt.show()
-#df_extract[['My UFIP RT Diesel EL', 'UFIP RT Diesel R5 EL', 'NY Diesel R5 EL']]
+#df_extract[['My UFIP RT Diesel EL 1', 'My UFIP RT Diesel EL 2', 'UFIP RT Diesel R5 EL', 'NY Diesel R5 EL']]
 
 # # Some backup
 #df_all[['OK WTI Brent FOB DB', 'Europe Brent FOB DB']].plot()
