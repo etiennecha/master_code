@@ -154,7 +154,8 @@ def correct_abnormal_price_values(ls_corrections, ls_indiv_ids, ls_master_dates,
 
 def correct_abnormal_price_variations(ls_ls_prices, var_lim):
   """ Correct apparent price mistakes """
-  # Check with pandas
+  # TODO: Inspect with pandas
+  # TODO: Check mistakes with sp95 and/or input forward vs. backward
   dict_suspects_opposit = {}
   dict_suspects_single = {}
   for indiv_ind, ls_prices in enumerate(ls_ls_prices):
@@ -164,23 +165,23 @@ def correct_abnormal_price_variations(ls_ls_prices, var_lim):
       if np.abs(price - ls_ls_prices[indiv_ind][day_ind-1]) > var_lim:
         if (np.abs(last_price_var) > var_lim) and\
            (last_price_var*(price - ls_ls_prices[indiv_ind][day_ind-1]) < 0):
-          for i in range(last_price_day_ind, day_ind + 1):
+          for i in range(last_price_day_ind, day_ind):
             ls_ls_prices[indiv_ind][i] = ls_ls_prices[indiv_ind][last_price_day_ind - 1]
-          dict_suspects_opposit.setdefault(indiv_ind, []).append(day_ind)
+          dict_suspects_opposit.setdefault(indiv_ind, []).append((last_price_day_ind, day_ind))
         else:
           if np.isnan(last_price_var):
             for i in range(last_price_day_ind, day_ind):
               ls_ls_prices[indiv_ind][i] = np.nan
-            dict_suspects_single.setdefault(indiv_ind, []).append(day_ind)
+            dict_suspects_single.setdefault(indiv_ind, []).append((last_price_day_ind, day_ind))
           else:
             j = 0
             while (ls_ls_prices[indiv_ind][day_ind + j] == ls_ls_prices[indiv_ind][day_ind]) and\
                   day_ind + j < len(ls_ls_prices[indiv_ind]) - 1:
               j += 1
             if np.isnan(ls_ls_prices[indiv_ind][day_ind + j]):
-              for i in range(last_price_day_ind, day_ind + 1):
+              for i in range(day_ind, day_ind + j):
                 ls_ls_prices[indiv_ind][i] = np.nan
-              dict_suspects_single.setdefault(indiv_ind, []).append(day_ind)
+              dict_suspects_single.setdefault(indiv_ind, []).append((day_ind, day_ind + j))
       if price != ls_ls_prices[indiv_ind][day_ind-1]:
         last_price_var = price -ls_ls_prices[indiv_ind][day_ind-1]
         last_price_day_ind = day_ind
@@ -214,36 +215,6 @@ def correct_abnormal_price_durations(ls_ls_prices, ls_ls_price_durations, durati
           ls_duration_pbm.append(day_ind)
         dict_duration_corrections.setdefault(indiv_ind, []).append(ls_duration_pbm)
   return dict_duration_corrections, ls_ls_prices
-
-def get_overview_reporting(ls_ls_prices, ls_ls_price_durations, ls_master_dates, ls_master_missing_dates):
-  """ List of start end and missing within active periods"""
-  ls_start_end = []
-  ls_none = []
-  ls_ls_dilettante = []
-  ls_missing_day_ind = [ls_master_dates.index(str_date) for str_date in ls_master_missing_dates]
-  for indiv_ind, ls_price_durations in enumerate(ls_ls_price_durations):
-    ls_bad_reporting = []
-    if len(ls_price_durations) == 1 and ls_price_durations[0][0] != ls_price_durations[0][0]: 
-      start = None
-      end = None
-      ls_none.append(indiv_ind)
-    else:
-      ls_price_durations_cut = ls_price_durations
-      if ls_price_durations_cut[0][0] != ls_price_durations_cut[0][0]:
-        ls_price_durations_cut = ls_price_durations_cut[1:]
-      if ls_price_durations_cut[-1][0] != ls_price_durations_cut[-1][0]:
-        ls_price_durations_cut = ls_price_durations_cut[:-1]
-      start = ls_price_durations_cut[0][1][0]
-      end = ls_price_durations_cut[-1][1][-1]
-      # find missing prices within valid price series (TODO: make it efficient...)
-      for (price, ls_day_ind) in ls_price_durations_cut:
-        if price != price:
-          for day_ind in ls_day_ind:
-            if day_ind not in ls_missing_day_ind:
-              ls_bad_reporting.append(day_ind)
-    ls_start_end.append((start, end))
-    ls_ls_dilettante.append(ls_bad_reporting)
-  return ls_start_end, ls_none, ls_ls_dilettante
 
 def get_price_variations(ls_ls_price_durations):
   # Caution: tends to modify ls_day_ind in ls_ls_price_durations => copy
@@ -279,6 +250,36 @@ def get_rid_missing_periods(ls_ls_prices, nb_missing):
     ar_ar_prices[:, period] = np.nan
   return [np.round(ls_prices, 3).tolist() for ls_prices in ar_ar_prices.tolist()]
 
+def get_overview_reporting(ls_ls_prices, ls_ls_price_durations, ls_master_dates, ls_master_missing_dates):
+  """ List of start end and missing within active periods"""
+  ls_start_end = []
+  ls_none = []
+  ls_ls_dilettante = []
+  ls_missing_day_ind = [ls_master_dates.index(str_date) for str_date in ls_master_missing_dates]
+  for indiv_ind, ls_price_durations in enumerate(ls_ls_price_durations):
+    ls_bad_reporting = []
+    if len(ls_price_durations) == 1 and ls_price_durations[0][0] != ls_price_durations[0][0]: 
+      start = None
+      end = None
+      ls_none.append(indiv_ind)
+    else:
+      ls_price_durations_cut = ls_price_durations
+      if ls_price_durations_cut[0][0] != ls_price_durations_cut[0][0]:
+        ls_price_durations_cut = ls_price_durations_cut[1:]
+      if ls_price_durations_cut[-1][0] != ls_price_durations_cut[-1][0]:
+        ls_price_durations_cut = ls_price_durations_cut[:-1]
+      start = ls_price_durations_cut[0][1][0]
+      end = ls_price_durations_cut[-1][1][-1]
+      # find missing prices within valid price series (TODO: make it efficient...)
+      for (price, ls_day_ind) in ls_price_durations_cut:
+        if price != price:
+          for day_ind in ls_day_ind:
+            if day_ind not in ls_missing_day_ind:
+              ls_bad_reporting.append(day_ind)
+    ls_start_end.append((start, end))
+    ls_ls_dilettante.append(ls_bad_reporting)
+  return ls_start_end, ls_none, ls_ls_dilettante
+
 def get_overview_reporting_bis(ls_ls_prices, ls_master_dates, ls_master_missing_dates):
   """ List of start end and missing within active periods"""
   ls_start_end = []
@@ -294,31 +295,28 @@ def get_overview_reporting_bis(ls_ls_prices, ls_master_dates, ls_master_missing_
       while np.isnan(ls_prices[end_ind]):
         end_ind -=1
       ls_start_end.append((start_ind, end_ind))
-      for day_ind, price in enumerate(ls_prices[start_ind:end_ind], start = start_ind):
+      for day_ind, price in enumerate(ls_prices[start_ind:end_ind + 1], start = start_ind):
         if np.isnan(price) and day_ind not in ls_missing_day_ind:
           dict_dilettante.setdefault(indiv_ind, []).append(day_ind)
     else:
       ls_nan.append(indiv_ind)
       ls_start_end.append((None, None))
   return ls_start_end, ls_nan, dict_dilettante
-#ls_start_end, ls_nan, dict_dilettante = get_overview_reporting_bis(master_price['diesel_price'], master_price['dates'], master_price['missing_dates'])
 
-def get_sales(ls_ls_price_variations):
+def get_sales(ls_ls_price_variations, lengt_lim):
   """ 
   TODO: improve... (e.g. capture pairs? and time limit?)
   TODO: represent both price value and price variation on a graph
   TODO: show continuity of short inverse variations (promotions) towards longer...
   """
-  ls_ls_sales = []
+  dict_sales = {}
   for indiv_ind, ls_price_variations in enumerate(ls_ls_price_variations):
-    ls_sales = []
     if ls_price_variations:
       for var_ind, (var, list_day_ind) in enumerate(ls_price_variations[1:], start = 1):
         if (np.abs(var + ls_price_variations[var_ind - 1][0]) < 0.00001) and\
-           (len(ls_price_variations[var_ind - 1][1]) < 5):
-          ls_sales.append(ls_price_variations[var_ind - 1])
-    ls_ls_sales.append(ls_sales)
-  return ls_ls_sales
+           (len(ls_price_variations[var_ind - 1][1]) < length_lim):
+          dict_sales.setdefault(indiv_ind, []).append(ls_price_variations[var_ind - 1])
+  return dict_sales
 
 def get_list_price_changes_vs_competitors(ls_ls_competitors, master_price, series):
   master_result = []
@@ -437,13 +435,17 @@ if __name__=="__main__":
   # ##############
   # DIESEL MASTER
   # ##############
-    
+   
   master_price = dec_json(path_data + folder_built_master_json + r'\master_diesel\master_price_diesel_raw')
-  master_price_bu = copy.deepcopy(master_price['diesel_price'])
   master_price['diesel_price'] = get_num_ls_ls(master_price['diesel_price'])
-  master_price['diesel_price'], dict_corrections, dict_errors = fill_prices_using_dates(master_price['diesel_price'],
-                                                                                        master_price['diesel_date'],
-                                                                                        master_price['dates'])
+  master_price_bu = copy.deepcopy(master_price['diesel_price'])
+  ls_start_end_bu, ls_nan_bu, dict_dilettante_bu = get_overview_reporting_bis(master_price['diesel_price'],
+                                                                              master_price['dates'], 
+                                                                              master_price['missing_dates'])
+  master_price['diesel_price'], dict_corrections, dict_errors =\
+                                                    fill_prices_using_dates(master_price['diesel_price'],
+                                                                            master_price['diesel_date'],
+                                                                            master_price['dates'])
   master_price['diesel_price'], ls_corrections_gaps = fill_short_gaps(master_price['diesel_price'], 5)
   ls_abnormal_prices = get_abnormal_price_values(master_price['diesel_price'], 1.0, 2.0)
   ls_abnormal_price_values = format_ls_abnormal_prices(ls_abnormal_prices,
@@ -475,25 +477,22 @@ if __name__=="__main__":
                                                                master_price['ids'],
                                                                master_price['dates'],
                                                                master_price['diesel_price'])
-  ls_suspects, ls_suspects_single, master_price['diesel_price'] =\
+  dict_opposit, dict_single, master_price['diesel_price'] =\
     correct_abnormal_price_variations(master_price['diesel_price'], 0.1)
   
   ls_ls_price_durations = get_price_durations(master_price['diesel_price'])
   ls_duration_corrections, master_price['diesel_price'] =\
-    correct_abnormal_price_durations(master_price['diesel_price'], ls_ls_price_durations, 30)
+    correct_abnormal_price_durations(master_price['diesel_price'], ls_ls_price_durations, 60)
   # Stats des after modifications
   ls_ls_price_durations = get_price_durations(master_price['diesel_price'])
   ls_ls_price_variations = get_price_variations(ls_ls_price_durations)
-  ls_start_end, ls_none, ls_ls_dilettante = get_overview_reporting(master_price['diesel_price'],
-                                                                   ls_ls_price_durations,
-                                                                   master_price['dates'],
-                                                                   master_price['missing_dates'])
-  
+  ls_start_end, ls_nan, dict_dilettante = get_overview_reporting_bis(master_price['diesel_price'],
+                                                                     master_price['dates'],
+                                                                     master_price['missing_dates'])
+  # Get rid of periods with too few observations 
   master_price['diesel_price'] = get_rid_missing_periods(master_price['diesel_price'], 8000)
   
   # enc_json(master_price, path_data + folder_built_master_json + r'\master_diesel\master_price_diesel')
-  
-  # CAUTION: corrections by hand are ok but make them general (alwats test if apply to currently processed master)
   
   # ##############
   # GAS MASTER
@@ -502,21 +501,21 @@ if __name__=="__main__":
   # master_price = dec_json(path_data + folder_built_master_json + r'\master_gas\master_price_gas_raw')
   # # master_price_bu_sp95 = copy.deepcopy(master_price['sp95_price'])
   # # master_price_bu_e10 = copy.deepcopy(master_price['e10_price'])
-  # master_price['sp95_price'] = get_num_ls_ls_nan(master_price['sp95_price'])
-  # master_price['e10_price'] = get_num_ls_ls_nan(master_price['e10_price'])
+  # master_price['sp95_price'] = get_num_ls_ls(master_price['sp95_price'])
+  # master_price['e10_price'] = get_num_ls_ls(master_price['e10_price'])
   
-  # master_price['sp95_price'], ls_cors_sp95, ls_ers_sp95 = fill_prices_using_dates_nan(master_price['sp95_price'],
-                                                                                      # master_price['sp95_date'],
-                                                                                      # master_price['dates'])
-  # master_price['e10_price'], ls_cors_e10, ls_ers_e10 = fill_prices_using_dates_nan(master_price['e10_price'],
-                                                                                   # master_price['e10_date'],
+  # master_price['sp95_price'], ls_cors_sp95, ls_ers_sp95 = fill_prices_using_dates(master_price['sp95_price'],
+                                                                                   # master_price['sp95_date'],
                                                                                    # master_price['dates'])
+  # master_price['e10_price'], ls_cors_e10, ls_ers_e10 = fill_prices_using_dates(master_price['e10_price'],
+                                                                               # master_price['e10_date'],
+                                                                               # master_price['dates'])
   
-  # master_price['sp95_price'], ls_cors_gaps_sp95 = fill_short_gaps_nan(master_price['sp95_price'], 5)
-  # ls_abnormal_prices_sp95 = get_abnormal_price_values_nan(master_price['sp95_price'], 1.0, 2.0)
+  # master_price['sp95_price'], ls_cors_gaps_sp95 = fill_short_gaps(master_price['sp95_price'], 5)
+  # ls_abnormal_prices_sp95 = get_abnormal_price_values(master_price['sp95_price'], 1.0, 2.0)
   
-  # master_price['e10_price'], ls_cors_gaps_sp95 = fill_short_gaps_nan(master_price['e10_price'], 5)
-  # ls_abnormal_prices_e10 = get_abnormal_price_values_nan(master_price['e10_price'], 1.0, 2.0)
+  # master_price['e10_price'], ls_cors_gaps_sp95 = fill_short_gaps(master_price['e10_price'], 5)
+  # ls_abnormal_prices_e10 = get_abnormal_price_values(master_price['e10_price'], 1.0, 2.0)
   
   # # for ind_indiv, price, ls_day_inds in ls_abnormal_prices_sp95:  
     # # print master_price['ids'][ind_indiv], price, [master_price['dates'][x] for x in ls_day_inds]
@@ -571,50 +570,50 @@ if __name__=="__main__":
                          # (u'75015007', float('nan'), [u'20110904', u'20111129'])]
   
   # # TODO (?): change correction function
-  # ls_corrections_sp95_e = expand_corrections_list(ls_corrections_sp95, master_price['dates'])
-  # ls_corrections_e10_e = expand_corrections_list(ls_corrections_e10, master_price['dates'])
+  # ls_corrections_sp95_e = expand_ls_price_corrections(ls_corrections_sp95, master_price['dates'])
+  # ls_corrections_e10_e = expand_ls_price_corrections(ls_corrections_e10, master_price['dates'])
   
-  # master_price['sp95_price'] =  correct_abnormal_price_values_nan(ls_corrections_sp95_e,
-                                                                  # master_price['ids'],
-                                                                  # master_price['dates'],
-                                                                  # master_price['sp95_price'])
+  # master_price['sp95_price'] =  correct_abnormal_price_values(ls_corrections_sp95_e,
+                                                              # master_price['ids'],
+                                                              # master_price['dates'],
+                                                              # master_price['sp95_price'])
                                                                   
-  # master_price['e10_price'] =   correct_abnormal_price_values_nan(ls_corrections_e10_e,
-                                                                  # master_price['ids'],
-                                                                  # master_price['dates'],
-                                                                  # master_price['e10_price'])
+  # master_price['e10_price'] =   correct_abnormal_price_values(ls_corrections_e10_e,
+                                                              # master_price['ids'],
+                                                              # master_price['dates'],
+                                                              # master_price['e10_price'])
                                                                   
   # ls_suspects_sp95, ls_suspects_single_sp95, master_price['sp95_price'] =\
-    # correct_abnormal_price_variations_nan(master_price['sp95_price'], 0.1)
+    # correct_abnormal_price_variations(master_price['sp95_price'], 0.1)
   
   # ls_suspects_e10, ls_suspects_single_e10, master_price['e10_price'] =\
     # correct_abnormal_price_variations_nan(master_price['e10_price'], 0.1)
   
-  # ls_ls_price_durations_sp95 = get_price_durations_nan(master_price['sp95_price'])
+  # ls_ls_price_durations_sp95 = get_price_durations(master_price['sp95_price'])
   # ls_duration_corrections_sp95, master_price['sp95_price'] =\
-    # correct_abnormal_price_durations_nan(master_price['sp95_price'], ls_ls_price_durations_sp95, 30)
+    # correct_abnormal_price_durations(master_price['sp95_price'], ls_ls_price_durations_sp95, 30)
   
-  # ls_ls_price_durations_e10 = get_price_durations_nan(master_price['e10_price'])
+  # ls_ls_price_durations_e10 = get_price_durations(master_price['e10_price'])
   # ls_duration_corrections_sp95, master_price['e10_price'] =\
-    # correct_abnormal_price_durations_nan(master_price['e10_price'], ls_ls_price_durations_sp95, 30)
+    # correct_abnormal_price_durations(master_price['e10_price'], ls_ls_price_durations_sp95, 30)
   
   # # Stats des after modifications
   
-  # ls_ls_price_durations_sp95 = get_price_durations_nan(master_price['sp95_price'])
-  # ls_ls_price_variations_sp95 = get_price_variations_nan(ls_ls_price_durations_sp95)
+  # ls_ls_price_durations_sp95 = get_price_durations(master_price['sp95_price'])
+  # ls_ls_price_variations_sp95 = get_price_variations(ls_ls_price_durations_sp95)
   # ls_start_end_sp95, ls_none_sp95, ls_ls_dilettante_sp95 =\
-                    # get_overview_reporting_nan(master_price['sp95_price'],
-                                               # ls_ls_price_durations_sp95,
-                                               # master_price['dates'],
-                                               # master_price['missing_dates'])
+                    # get_overview_reporting(master_price['sp95_price'],
+                                           # ls_ls_price_durations_sp95,
+                                           # master_price['dates'],
+                                           # master_price['missing_dates'])
   
-  # ls_ls_price_durations_e10 = get_price_durations_nan(master_price['e10_price'])
-  # ls_ls_price_variations_e10 = get_price_variations_nan(ls_ls_price_durations_e10)
+  # ls_ls_price_durations_e10 = get_price_durations(master_price['e10_price'])
+  # ls_ls_price_variations_e10 = get_price_variations(ls_ls_price_durations_e10)
   # ls_start_end_e10, ls_none_e10, ls_ls_dilettante_e10 =\
-                    # get_overview_reporting_nan(master_price['e10_price'],
-                                               # ls_ls_price_durations_e10,
-                                               # master_price['dates'],
-                                               # master_price['missing_dates'])
+                    # get_overview_reporting(master_price['e10_price'],
+                                           # ls_ls_price_durations_e10,
+                                           # master_price['dates'],
+                                           # master_price['missing_dates'])
   
   # master_price['e10_price'] = get_rid_missing_periods(master_price['e10_price'], 2700)
   # master_price['sp95_price'] = get_rid_missing_periods(master_price['sp95_price'], 5500)
