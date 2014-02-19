@@ -283,7 +283,7 @@ def get_overview_reporting_bis(ls_ls_prices, ls_master_dates, ls_master_missing_
   """ List of start end and missing within active periods"""
   ls_start_end = []
   ls_nan = []
-  dict_dilettante = []
+  dict_dilettante = {}
   ls_missing_day_ind = [ls_master_dates.index(str_date) for str_date in ls_master_missing_dates]
   for indiv_ind, ls_prices in enumerate(ls_ls_prices):
     ls_bad_reporting = []
@@ -301,6 +301,7 @@ def get_overview_reporting_bis(ls_ls_prices, ls_master_dates, ls_master_missing_
       ls_nan.append(indiv_ind)
       ls_start_end.append((None, None))
   return ls_start_end, ls_nan, dict_dilettante
+#ls_start_end, ls_nan, dict_dilettante = get_overview_reporting_bis(master_price['diesel_price'], master_price['dates'], master_price['missing_dates'])
 
 def get_sales(ls_ls_price_variations):
   """ 
