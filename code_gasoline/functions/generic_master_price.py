@@ -9,8 +9,8 @@ import re
 #from collections import Counter
 import numpy as np
 import matplotlib.pyplot as plt
-#import decimal
-#from decimal import *
+import decimal
+from decimal import *
 import pandas as pd
 import statsmodels.api as sm
 
@@ -449,7 +449,7 @@ if __name__=="__main__":
     path_data = r'W:\Bureau\Etienne_work\Data'
   else:
     path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
-  # structure of the data folder should be the same
+  
   folder_built_master_json = r'\data_gasoline\data_built\data_json_gasoline'
   
   # ##############
