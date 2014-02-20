@@ -5,12 +5,12 @@ import os, sys
 import json, xlrd
 import copy
 import re
-import itertools
-from collections import Counter
+#import itertools
+#from collections import Counter
 import numpy as np
 import matplotlib.pyplot as plt
-import decimal
-from decimal import *
+#import decimal
+#from decimal import *
 import pandas as pd
 import statsmodels.api as sm
 

@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import json
-import os, sys, codecs
+import os, sys
 import re
-import pandas
+from collections import Counter
+import itertools
 from generic_master_price import *
 from functions_string import *
 
@@ -291,54 +292,42 @@ if __name__=="__main__":
   # Check stations' activity record
   # TODO: May not want to run with sp95/e10 => need to adapt
   series = ls_series[0]
-  ls_ls_price_durations = get_price_durations_nan(master_price[series])
+  ls_ls_price_durations = get_price_durations(master_price[series])
   # ls_ls_price_variations = get_price_variations_nan(ls_ls_price_durations)
   ls_start_end, ls_none, dict_dilettante =  get_overview_reporting_bis(master_price[series],
-                                                                       ls_ls_price_durations,
                                                                        master_price['dates'],
                                                                        master_price['missing_dates'])
   
   # ls_none with data end 2012: [326, 550, 1406, 3293, 3423, 4918, 4919, 5075, 5859, 5876, 7307, 8260, 8647]
   # TODO: clarify treatment of None, None (a priori... already old => potential duplicate)
-  ls_late_start = []
-  ls_early_end = []
-  ls_short_spell = []
-  ls_full_spell = []
-  start_ind_full, end_ind_full = 0, len(master_price['dates'])-1
-  for i, (start, end) in enumerate(ls_start_end):
-    if start != start_ind_full and end == end_ind_full:
-      ls_late_start.append(i)
-    elif start == start_ind_full and end != end_ind_full:
-      ls_early_end.append(i)
-    elif start != start_ind_full and end != end_ind_full:
-      ls_short_spell.append(i)
-    else:
-      ls_full_spell.append(i)
+  dict_turnover = get_overview_turnover(ls_start_end, master_price['dates'], 0)
+  ls_full_spell, ls_short_spell = dict_turnover['full'], dict_turnover['short']
+  ls_late_start, ls_early_end   = dict_turnover['late_start'], dict_turnover['early_end']
   # Detection of potential duplicates (too complex to be automatic...)
   for zip_code, ls_stations in dict_zip_master.iteritems():
     ls_zip_indiv_ids = [station[0] for station in ls_stations]
-    ls_zip_inds = [master_price['ids'].index(indiv_id) for indiv_id in ls_zip_indiv_ids\
-                      if indiv_id in master_price['ids']]
-    if (any(ind in ls_early_end for ind in ls_zip_inds) and\
-         (any(ind in ls_short_spell for ind in ls_zip_inds) or\
-          any(ind in ls_late_start for ind in ls_zip_inds))\
+    ls_zip_indiv_inds = [master_price['ids'].index(indiv_id) for indiv_id in ls_zip_indiv_ids\
+                           if indiv_id in master_price['ids']]
+    if (any(indiv_ind in ls_early_end for indiv_ind in ls_zip_indiv_inds) and\
+          (any(indiv_ind in ls_short_spell for indiv_ind in ls_zip_indiv_inds) or\
+           any(indiv_ind in ls_late_start for indiv_ind in ls_zip_indiv_inds))\
        ) or\
-       (any(ind in ls_short_spell for ind in ls_zip_inds) and\
-         (any(ind in ls_late_start for ind in ls_zip_inds) or\
-         len([ind for ind in ls_zip_inds if ind in ls_short_spell]) > 1)
+       (any(indiv_ind in ls_short_spell for indiv_ind in ls_zip_indiv_inds) and\
+         (any(indiv_ind in ls_late_start for indiv_ind in ls_zip_indiv_inds) or\
+         len([indiv_ind for indiv_ind in ls_zip_indiv_inds if indiv_ind in ls_short_spell]) > 1)
        ):
       print '\n', zip_code
-      for ind in ls_zip_inds:
-        if ind not in ls_full_spell:
-          print master_price['ids'][ind], ls_start_end[ind],\
-                master_addresses[master_price['ids'][ind]],\
-                master_price['dict_info'][master_price['ids'][ind]]['brand']
+      for indiv_ind in ls_zip_indiv_inds:
+        if indiv_ind not in ls_full_spell:
+          print master_price['ids'][indiv_ind], ls_start_end[indiv_ind],\
+                master_addresses[master_price['ids'][indiv_ind]],\
+                master_price['dict_info'][master_price['ids'][indiv_ind]]['brand']
       # # display also full spell stations ?
-      # for ind in ls_zip_inds:
-        # if ind in ls_full_spell:
-          # print master_price['ids'][ind], ls_start_end[ind],\
-                # master_addresses[master_price['ids'][ind]],\
-                # master_price['dict_info'][master_price['ids'][ind]]['brand']
+      # for indiv_ind in ls_zip_indiv_inds:
+        # if indiv_ind in ls_full_spell:
+          # print master_price['ids'][indiv_ind], ls_start_end[indiv_ind],\
+                # master_addresses[master_price['ids'][indiv_ind]],\
+                # master_price['dict_info'][master_price['ids'][indiv_ind]]['brand']
   
   # TODO: add (35560001, 35560004), (42440001, 42440008), (47180001, 47180002)
   
