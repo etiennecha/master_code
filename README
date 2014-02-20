@@ -1,21 +1,21 @@
-Welcome to my project directory! Here's a quick description of each project (all code in Python except if otherwise stated):
+Welcome to my project page! Here's a quick description of each project (all code in Python except if otherwise stated, I decline all responsibility regarding the use of scraping scripts included):
 
 - code_brent: Time series analysis of oil product prices. Includes data from EIA (US Energy Information Administration), UFIP (Union Francaise des Industriel Petroliers, an association which regroups oil companies active in the French market) and ECB (European Central Bank) for exchange rates. So far, data are just loaded in pandas dataframes and examined. They are indeed intended to be studied together with gas station level data in another project.
 
-- code_ameli: Cross section analysis of physician price and locations in France. Project covers the scraping of the governmental website (do it at your own risks) and some descriptive stats descs assuming you have the data.
+- code_ameli: Cross section analysis of physician price and locations in France. Project covers the scraping of the governmental website and some descriptive statistics (a sample of data with be provided soon).
 
 - code_search_advertising: Numerical analysis of a model. Working version in progress is in Matlab. Python version is stuck with some SymPy issue that I still have to look into.
 
 - code_fusion_tables: Play with fusion tables API. Can't create new tables though (even tried to ask on SO... need to have a look again)
 
-- code_gasoline: Analysis of daily price data of gas stations in France. Designed to work with any retail market with limited number of products and reasonably dynamic prices). Includes data scraping, processing and analysis of competition/dispersion (very much work in progress though)
+- code_gasoline: Analysis of daily price data of gas stations in France. Designed to work with any retail market with limited number of products and reasonably dynamic prices). Includes data scraping (your responsibility), processing and analysis of competition/dispersion (a data sample will be provided soon, very much work in progress)
 
 - code_google_scholar: Scraping of google scholar (most probably out of date)
 
-- code_maps: Play with basemap and other tools to draw nice maps
+- code_maps: Play with basemap and other tools to draw maps in Python
 
-- code_qlmc: Analysis of cross sections of prices at French supermarkets (very unbalanced panel data in the sense that supermarkets sampled over time vary a lot): c. 10 cross sections over 2007-2012 (?) of c. 400 supermarkets * 1000 products (sample of product also varies by supermarket...). Data are extracted from pdf made available on a previous version of Leclerc's (supermarket chain in France) comparison website. Includes some analysis of price dispersion, which is to be studied in the light of competition (very preliminary)
+- code_qlmc: Analysis of cross sections of prices at French supermarkets (very unbalanced panel data in the sense that supermarkets sampled over time vary a lot): c. 10 cross sections over 2007-2012 (?) of c. 400 supermarkets * 1000 products (sample of product also varies by supermarket...). Data are extracted from pdf made available on a previous version of Leclerc's (supermarket chain in France) comparison website. Includes some analysis of price dispersion, which is to be studied in the light of competition (data can be provided upon request, very preliminary)
 
 - code_insee: For French data with location: matching of city/zip codes with INSEE codes and use of INSEE data
 
-- code_drive_supermarkets: Scraping of supermarket price data and analysis of price competition and dispersion (very preliminary)
+- code_drive_supermarkets: Scraping of supermarket price data and analysis of price competition and dispersion (data not provided, very preliminary)
