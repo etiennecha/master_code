@@ -303,7 +303,7 @@ def get_overview_reporting_bis(ls_ls_prices, ls_master_dates, ls_master_missing_
       ls_start_end.append((None, None))
   return ls_start_end, ls_nan, dict_dilettante
 
-def get_sales(ls_ls_price_variations, lengt_lim):
+def get_sales(ls_ls_price_variations, length_lim):
   """ 
   TODO: improve... (e.g. capture pairs? and time limit?)
   TODO: represent both price value and price variation on a graph
@@ -491,9 +491,15 @@ if __name__=="__main__":
                                                                      master_price['missing_dates'])
   # Get rid of periods with too few observations 
   master_price['diesel_price'] = get_rid_missing_periods(master_price['diesel_price'], 8000)
-  
+   
   # enc_json(master_price, path_data + folder_built_master_json + r'\master_diesel\master_price_diesel')
-  
+   
+  # MOVE TO PRICE ANALYSIS
+  dict_sales = get_sales(ls_ls_price_variations, 3)
+  ls_sales = [(k, len(v)) for k, v in dict_sales.items()] 
+  ls_sales = sorted(ls_sales, key=lambda x: x[1], reverse = True)
+  # Analysis of periods of sales: seems some are particularly concerned (uncertainty) 
+
   # ##############
   # GAS MASTER
   # ##############
