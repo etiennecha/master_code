@@ -1,19 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import json
-import os, sys, codecs
-import re
+import os, sys
+import json, xlrd
 import copy
-import xlrd
+import re
 import itertools
+from collections import Counter
 import numpy as np
 import matplotlib.pyplot as plt
+import decimal
+from decimal import *
 import pandas as pd
 import statsmodels.api as sm
-from decimal import *
-from collections import Counter
-import decimal
 
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
@@ -77,7 +76,7 @@ def fill_short_gaps(ls_ls_prices, lim):
   Fills price series with last available price if len of missing spell below lim
   Beginning and end missing values are not filled
   """
-  set_corrections = set()
+  dict_corrections = {}
   for indiv_ind, ls_prices in enumerate(ls_ls_prices):
     day_ind = 0
     while (day_ind < len(ls_prices)) and (ls_prices[day_ind] != ls_prices[day_ind]):
@@ -92,11 +91,11 @@ def fill_short_gaps(ls_ls_prices, lim):
           ls_ls_prices[indiv_ind] = ls_ls_prices[indiv_ind][:day_ind] +\
                                     [ls_ls_prices[indiv_ind][day_ind - 1] for x in range(relative_day)] +\
                                     ls_ls_prices[indiv_ind][day_ind + relative_day:]
-          set_corrections.add(indiv_ind)
+          dict_corrections.setdefault(indiv_ind, []).append((day_ind - 1, day_ind + relative_day))
         day_ind += relative_day
       else:
         day_ind += 1
-  return ls_ls_prices, list(set_corrections)
+  return ls_ls_prices, dict_corrections
 
 def get_abnormal_price_values(ls_ls_prices, lower_bound, upper_bound):
   """ Detects abnormal price levels based on provided upper/lower bounds """
@@ -300,8 +299,29 @@ def get_overview_reporting_bis(ls_ls_prices, ls_master_dates, ls_master_missing_
           dict_dilettante.setdefault(indiv_ind, []).append(day_ind)
     else:
       ls_nan.append(indiv_ind)
-      ls_start_end.append((None, None))
+      ls_start_end.append((float('nan'), float('nan')))
   return ls_start_end, ls_nan, dict_dilettante
+
+def get_overview_turnover(ls_start_end, ls_master_dates, tolerance):
+  start_ind_full, end_ind_full = 0, len(ls_master_dates) - 1
+  ls_full_spell  = [indiv_ind for indiv_ind, (start_ind, end_ind) in enumerate(ls_start_end)\
+                      if (start_ind == start_ind) and\
+                         (start_ind <= start_ind_full + tolerance) and\
+                         (end_ind >= end_ind_full - tolerance)]
+  ls_short_spell = [indiv_ind for indiv_ind, (start_ind, end_ind) in enumerate(ls_start_end)
+                      if (start_ind == start_ind) and\
+                         (start_ind > start_ind_full + tolerance) and\
+                         (end_ind < end_ind_full - tolerance)]
+  ls_late_start  = [indiv_ind for indiv_ind, (start_ind, end_ind) in enumerate(ls_start_end)
+                      if (start_ind == start_ind) and\
+                         (start_ind > start_ind_full + tolerance) and\
+                         (end_ind >= end_ind_full - tolerance)]
+  ls_early_end   = [indiv_ind for indiv_ind, (start_ind, end_ind) in enumerate(ls_start_end)
+                      if (start_ind == start_ind) and\
+                         (start_ind <= start_ind_full + tolerance) and\
+                         (end_ind < end_ind_full - tolerance)]
+  ls_turnover_keys = ['full', 'short', 'late_start', 'early_end']
+  return dict(zip(ls_turnover_keys, [ls_full_spell, ls_short_spell, ls_late_start, ls_early_end]))
 
 def get_sales(ls_ls_price_variations, length_lim):
   """ 
@@ -406,7 +426,7 @@ def get_str_no_accent_up(str_to_format):
     for accented_char in accented_chars:
       str_to_format = str_to_format.replace(accented_char, char) 
       # str_to_format.encode('latin-1').replace(accented_char, char)
-  return str_to_format.replace(u'&#039;',u' ').strip().upper()
+  return str_to_format.replace(u'&#039;', u' ').strip().upper()
 
 def get_latest_info(id, field, master_info):
   list_info = [x for x in master_info[id][field]]
@@ -446,7 +466,7 @@ if __name__=="__main__":
                                                     fill_prices_using_dates(master_price['diesel_price'],
                                                                             master_price['diesel_date'],
                                                                             master_price['dates'])
-  master_price['diesel_price'], ls_corrections_gaps = fill_short_gaps(master_price['diesel_price'], 5)
+  master_price['diesel_price'], dict_corrections_gaps = fill_short_gaps(master_price['diesel_price'], 5)
   ls_abnormal_prices = get_abnormal_price_values(master_price['diesel_price'], 1.0, 2.0)
   ls_abnormal_price_values = format_ls_abnormal_prices(ls_abnormal_prices,
                                                        master_price['ids'],

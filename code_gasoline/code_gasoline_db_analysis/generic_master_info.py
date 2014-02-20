@@ -293,10 +293,10 @@ if __name__=="__main__":
   series = ls_series[0]
   ls_ls_price_durations = get_price_durations_nan(master_price[series])
   # ls_ls_price_variations = get_price_variations_nan(ls_ls_price_durations)
-  ls_start_end, ls_none, ls_ls_dilettante =  get_overview_reporting_nan(master_price[series],
-                                                                        ls_ls_price_durations,
-                                                                        master_price['dates'],
-                                                                        master_price['missing_dates'])
+  ls_start_end, ls_none, dict_dilettante =  get_overview_reporting_bis(master_price[series],
+                                                                       ls_ls_price_durations,
+                                                                       master_price['dates'],
+                                                                       master_price['missing_dates'])
   
   # ls_none with data end 2012: [326, 550, 1406, 3293, 3423, 4918, 4919, 5075, 5859, 5876, 7307, 8260, 8647]
   # TODO: clarify treatment of None, None (a priori... already old => potential duplicate)
