@@ -299,25 +299,25 @@ def get_overview_reporting_bis(ls_ls_prices, ls_master_dates, ls_master_missing_
           dict_dilettante.setdefault(indiv_ind, []).append(day_ind)
     else:
       ls_nan.append(indiv_ind)
-      ls_start_end.append((float('nan'), float('nan')))
+      ls_start_end.append((None, None))
   return ls_start_end, ls_nan, dict_dilettante
 
 def get_overview_turnover(ls_start_end, ls_master_dates, tolerance):
   start_ind_full, end_ind_full = 0, len(ls_master_dates) - 1
   ls_full_spell  = [indiv_ind for indiv_ind, (start_ind, end_ind) in enumerate(ls_start_end)\
-                      if (start_ind == start_ind) and\
+                      if (start_ind is not None) and\
                          (start_ind <= start_ind_full + tolerance) and\
                          (end_ind >= end_ind_full - tolerance)]
   ls_short_spell = [indiv_ind for indiv_ind, (start_ind, end_ind) in enumerate(ls_start_end)
-                      if (start_ind == start_ind) and\
+                      if (start_ind is not None) and\
                          (start_ind > start_ind_full + tolerance) and\
                          (end_ind < end_ind_full - tolerance)]
   ls_late_start  = [indiv_ind for indiv_ind, (start_ind, end_ind) in enumerate(ls_start_end)
-                      if (start_ind == start_ind) and\
+                      if (start_ind is not None) and\
                          (start_ind > start_ind_full + tolerance) and\
                          (end_ind >= end_ind_full - tolerance)]
   ls_early_end   = [indiv_ind for indiv_ind, (start_ind, end_ind) in enumerate(ls_start_end)
-                      if (start_ind == start_ind) and\
+                      if (start_ind is not None) and\
                          (start_ind <= start_ind_full + tolerance) and\
                          (end_ind < end_ind_full - tolerance)]
   ls_turnover_keys = ['full', 'short', 'late_start', 'early_end']

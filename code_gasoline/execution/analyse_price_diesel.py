@@ -27,7 +27,7 @@ ls_ls_competitors = dec_json(path_ls_ls_competitors)
 ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
 dict_brands = dec_json(path_dict_brands)
 dict_dpts_regions = dec_json(path_dict_dpts_regions)
-  
+
 # #####################
 # IMPORT INSEE DATA
 # #####################
@@ -294,9 +294,10 @@ for day in pd_pd_final.minor_axis[50:60]:
   pd_df_day_brand.describe()
 
 # TODO: identify 'INTERMARCHE' which change price between day 52 and day 53
+pd_df_brand = pd_pd_final['price'][pd_pd_final['brand_1'] == "INTERMARCHE"]
 ls_select_inds = np.where((pd.notnull(pd_df_brand[pd_pd_final.minor_axis[52]])) &\
                    (pd_df_brand[pd_pd_final.minor_axis[52]]!=pd_df_brand[pd_pd_final.minor_axis[53]]))[0]
-ls_select_ids = [pd_pd_final.major_axis[ind] for ind in ls_select_inds[0]]
+ls_select_ids = [pd_pd_final.major_axis[ind] for ind in ls_select_inds]
 ls_valid_inds = np.where(pd.notnull(pd_df_brand[pd_pd_final.minor_axis[52]]))[0]
 ls_valid_ids = [pd_pd_final.major_axis[ind] for ind in ls_valid_inds]
 ls_unselected_ids = [indiv_id for indiv_id in ls_valid_ids if indiv_id not in ls_select_ids]
