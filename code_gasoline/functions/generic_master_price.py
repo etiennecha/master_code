@@ -338,64 +338,6 @@ def get_sales(ls_ls_price_variations, length_lim):
           dict_sales.setdefault(indiv_ind, []).append(ls_price_variations[var_ind - 1])
   return dict_sales
 
-def get_list_price_changes_vs_competitors(ls_ls_competitors, master_price, series):
-  master_result = []
-  for station_ind, list_competitors in enumerate(ls_ls_competitors):
-    list_result = []
-    if list_competitors:
-      list_prices_1 = master_price[series][station_ind]
-      price_changes_1 = np.array(list_prices_1[1:], dtype = np.float32) - \
-                                    np.array(list_prices_1[:-1], dtype = np.float32)
-      price_changes_1_ma = np.ma.masked_array(price_changes_1, np.isnan(price_changes_1))
-      nb_chges_1 = ((price_changes_1_ma != 0)).sum()
-      list_result.append(nb_chges_1)
-      for competitor_id, competitor_distance in list_competitors:
-        competitor_ind = master_price['ids'].index(competitor_id)
-        list_prices_2 = master_price[series][competitor_ind]
-        price_changes_2 = np.array(list_prices_2[1:], dtype = np.float32) - \
-                                          np.array(list_prices_2[:-1], dtype = np.float32)
-        price_changes_2_ma = np.ma.masked_array(price_changes_2, np.isnan(price_changes_2))
-        nb_chges_2 = ((price_changes_2_ma != 0)).sum()
-        # count changes at firm 1 with firm 2 also changing
-        mask_2 = price_changes_2 == 0 #boolean with True if change at firm 2/
-        mask_2_c = price_changes_2 != 0 #boolean with False (display) if change at firm 2
-        price_changes_1_ma_a = np.ma.masked_array(price_changes_1_ma, mask = mask_2)
-        nb_chges_1_if_2_a = ((price_changes_1_ma_a != 0)).sum()
-        # count changes at firm 1 with firm 2 changing the day before
-        mask_2 = np.append(np.array(np.nan), price_changes_2[:-1]) == 0 #boolean with True if change at firm 2/
-        price_changes_1_ma_h = np.ma.masked_array(price_changes_1_ma, mask = mask_2)
-        price_changes_1_ma_h = np.ma.masked_array(price_changes_1_ma_h, mask = mask_2_c)
-        nb_chges_1_if_2_h = ((price_changes_1_ma_h != 0)).sum()
-        # count changes at firm 1 with firm 2 changing the day after
-        mask_2 = np.append(price_changes_2[1:], np.array(np.nan)) == 0 #boolean with True if change at firm 2/
-        price_changes_1_ma_d = np.ma.masked_array(price_changes_1_ma, mask = mask_2)
-        price_changes_1_ma_d = np.ma.masked_array(price_changes_1_ma_d, mask = mask_2_c)
-        nb_chges_1_if_2_d = ((price_changes_1_ma_d != 0)).sum()
-        list_result.append((competitor_id, nb_chges_2, nb_chges_1_if_2_a, nb_chges_1_if_2_h, nb_chges_1_if_2_d))
-    master_result.append(list_result)
-  """
-  prices_1 = [0, 0, 2, 2, 3, 0, 0, 0, 0, 2, 3, 4]
-  prices_2 = [0, 0, 0, 2, 3, 2, 0, 0, 2, 2, 3, 5]
-  price_changes_1 = np.array(prices_1[1:]) - np.array(prices_1[:-1])
-  price_changes_2 = np.array(prices_2[1:]) - np.array(prices_2[:-1])
-  # count changes at firm 1 with firm 2 also changing
-  mask_2 = price_changes_2 == 0 #boolean with True (hide) if change at firm 2
-  mask_2_c = price_changes_2 != 0 #boolean with False (display) if change at firm 2
-  price_changes_1_ma_a = np.ma.masked_array(price_changes_1, mask = mask_2)
-  nb_chges_1_if_2_a = ((np.float32(0) != price_changes_1_ma_a)).sum()
-  # count changes at firm 1 with firm 2 changing the day before and not the same day
-  mask_2 = np.append(np.array(np.nan), price_changes_2[:-1]) == 0 #boolean with True if change at firm 2
-  price_changes_1_ma_h = np.ma.masked_array(price_changes_1, mask = mask_2)
-  price_changes_1_ma_h = np.ma.masked_array(price_changes_1_ma_h, mask = mask_2_c)
-  nb_chges_1_if_2_h = ((np.float32(0) != price_changes_1_ma_h)).sum()  
-  # count changes at firm 1 with firm 2 changing the day after and not the same day
-  mask_2 = np.append(price_changes_2[1:], np.array(np.nan)) == 0 #boolean with True if change at firm 2
-  price_changes_1_ma_d = np.ma.masked_array(price_changes_1, mask = mask_2)
-  price_changes_1_ma_d = np.ma.masked_array(price_changes_1_ma_d, mask = mask_2_c)
-  nb_chges_1_if_2_d = ((np.float32(0) != price_changes_1_ma_d)).sum()
-  """
-  return master_result
-
 def get_expanded_list(list_to_expand, list_expanded_length):
   """
   Reminder: list_to_expand is a list of lists: [(info, period),(info, period)...]

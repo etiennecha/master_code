@@ -1,5 +1,6 @@
-﻿import os, sys
-import json
+﻿#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import math
 import itertools
 import numpy as np
@@ -13,8 +14,34 @@ import copy
 import random
 from generic_master_price import *
 
+# COMPUTATION OF CROSS DISTANCES
+
+def compute_distance(coordinates_A, coordinates_B):
+  d_lat = math.radians(float(coordinates_B[0]) - float(coordinates_A[0]))
+  d_lon = math.radians(float(coordinates_B[1]) - float(coordinates_A[1]))
+  lat_1 = math.radians(float(coordinates_A[0]))
+  lat_2 = math.radians(float(coordinates_B[0]))
+  a = math.sin(d_lat/2.0) * math.sin(d_lat/2.0) + \
+        math.sin(d_lon/2.0) * math.sin(d_lon/2.0) * math.cos(lat_1) * math.cos(lat_2)
+  c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+  distance = 6371 * c
+  return round(distance, 2)
+
+def get_ls_ls_cross_distances(ls_gps):
+  # Size can be lower if only half the matrix is returned
+  ls_ls_cross_distances = [[np.nan for gps in ls_gps] for gps in ls_gps]
+  for i, gps_i in enumerate(ls_gps):
+    for j, gps_j in enumerate(ls_gps[i+1:], start = i+1):
+      if gps_i and gps_j:
+        distance_i_j = compute_distance(gps_i, gps_j)
+        ls_ls_cross_distances[i][j] = distance_i_j
+        ls_ls_cross_distances[j][i] = distance_i_j
+  return ls_ls_cross_distances
+
+# ANALYIS OF PRICE CHANGES
+
 def get_station_price_change_frequency(indiv_ind, master_np_prices):
-  """ pbm with np.nan: info is lost """
+  """ DEPRECATED? """
   ar_chges = np.hstack([np.array([np.nan]), master_np_prices[indiv_ind,1:] - master_np_prices[indiv_ind,:-1]])
   nb_same_price = ((ar_chges == 0)).sum()
   nb_decrease = ((ar_chges < 0)).sum()
@@ -23,13 +50,13 @@ def get_station_price_change_frequency(indiv_ind, master_np_prices):
   avg_increase = scipy.stats.nanmean(ar_chges[ar_chges > 0])
   return [nb_same_price, nb_decrease, nb_increase, avg_decrease, avg_increase]
 
-def get_list_price_change_frequency(master_np_prices):
-  """ for all ids in master: price change frequencies and values stats """
+def get_ls_price_change_frequency(master_np_prices):
+  """ DEPRECATED? """
   for indiv_ind in range(len(master_np_prices)):
     ls_price_change_frequency.append(get_station_price_change_frequency(indiv_ind, master_np_prices))
   return ls_price_change_frequency
 
-def get_list_price_changes_vs_competitors(ls_ls_competitors, master_price, series):
+def get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series):
   """
   Study price changes vs. competitors
   
@@ -91,7 +118,7 @@ def get_list_price_changes_vs_competitors(ls_ls_competitors, master_price, serie
     ls_ls_results.append(ls_results)
   return ls_ls_results
 
-# PAIR PRICE DISPERSION
+# ANALYSIS OF PAIR PRICE DISPERSION
 
 def get_pair_price_dispersion(id_1, id_2, master_price, series):
   price_array_1 = np.array(master_price[series][master_price['ids'].index(id_1)], dtype = np.float32)
@@ -132,7 +159,7 @@ def get_station_price_dispersion(indiv_id, ls_ls_competitors, master_price, seri
       dict_results.setdefault('list_rr_durations', []).append(pair_pd_stats[7])
   return dict_results
 
-def get_list_pair_price_dispersion(ls_tuple_competitors, master_price, series, km_bound):
+def get_ls_pair_price_dispersion(ls_tuple_competitors, master_price, series, km_bound):
   """ 
   Price dispersion stats for each pair with distance smaller than a given bound
   TODO: add the average spread conditional on rank being reversed
@@ -155,9 +182,9 @@ def get_list_pair_price_dispersion(ls_tuple_competitors, master_price, series, k
       ls_pair_price_dispersion.append(pair_price_dispersion)
   return ls_pair_price_dispersion
 
-# MARKET PRICE DISPERSION
+# ANALYSIS OF MARKET PRICE DISPERSION
 
-def get_list_list_distance_market_ids(master_price, ls_ls_competitors, km_bound):
+def get_ls_ls_distance_market_ids(master_price, ls_ls_competitors, km_bound):
   """
   Distance used to define markets
   ls_ls_competitors has same order as master price (necessary condition)
@@ -178,7 +205,7 @@ def get_list_list_distance_market_ids(master_price, ls_ls_competitors, km_bound)
         ls_ls_distance_market_ids.append(ls_distance_market_ids)
   return ls_ls_distance_market_ids
 
-def get_list_list_distance_market_ids_restricted(master_price, ls_ls_competitors, km_bound):
+def get_ls_ls_distance_market_ids_restricted(master_price, ls_ls_competitors, km_bound):
   """
   Distance used to define markets
   ls_ls_competitors: list of (id, distance) for each competitor (within 10km)
@@ -207,7 +234,7 @@ def get_list_list_distance_market_ids_restricted(master_price, ls_ls_competitors
         ls_ids_covered += ls_distance_market_ids
   return ls_ls_distance_market_ids
   
-def get_list_list_market_price_dispersion(ls_ls_market_ids, master_price, series):
+def get_ls_ls_market_price_dispersion(ls_ls_market_ids, master_price, series):
   # if numpy.version.version = '1.8' or above => switch from scipy to numpy
   # checks nb of prices (non nan) per period (must be 2 prices at least)
   list_list_market_price_dispersion = []
@@ -251,9 +278,40 @@ def get_fe_predicted_prices(list_ids, series):
   # Need to cut ar_y_prediction in price arrays
   # Here: Assumes all have same lengths
   return np.reshape(ar_y_prediction, (len(list_ids), -1))
-  
-  
-  
+
+# DATA DISPLAY
+
+def print_dict_stat_des(dict_stat_des):
+  for key, content in dict_stat_des.iteritems():
+    print key, len(content)
+
+def get_plot_prices(list_of_ids, master_price, series, path_save=None):
+  list_list_prices = []
+  for some_id in list_of_ids:
+    list_list_prices.append(master_price[series][master_price['ids'].index(some_id)])
+  pd_df_temp = pd.DataFrame(zip(*list_list_prices), index=master_price['dates'], columns=list_of_ids, dtype=np.float32)
+  plt.figure()
+  pd_df_temp.plot()
+  fig = plt.gcf()
+  fig.set_size_inches(18.5,10.5)
+  if path_save: 
+    plt.savefig(path_save)
+  else:
+    plt.show()
+  return
+
+def get_plot_list_arrays(list_price_arrays, list_labels = None):
+  plt.figure()
+  for price_index, price_array in enumerate(list_price_arrays):
+    axis = np.array([i for i in range(len(price_array))])
+    if list_labels:
+      plt.plot(axis, price_array, label=list_labels[price_index])
+    else:
+      plt.plot(axis, price_array, label='')
+    plt.legend(loc = 4)
+  plt.show()
+  return 
+
 if __name__=="__main__":
   if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
     path_data = r'W:\Bureau\Etienne_work\Data'
@@ -269,9 +327,8 @@ if __name__=="__main__":
   
   dict_brands = dec_json(path_data + folder_source_brand + r'\dict_brands')
   
-  # cross_distances_dict = dec_json(path_data + folder_built_master_json + r'\dict_ids_gps_cross_distances')
-  ls_ls_competitors = dec_json(path_data + folder_built_master_json + r'\master_diesel\list_list_competitors')
-  ls_tuple_competitors = dec_json(path_data + folder_built_master_json + r'\master_diesel\list_tuple_competitors')
+  ls_ls_competitors = dec_json(path_data + folder_built_master_json + r'\master_diesel\ls_ls_competitors')
+  ls_tuple_competitors = dec_json(path_data + folder_built_master_json + r'\master_diesel\ls_tuple_competitors')
   
   series = 'diesel_price'
   km_bound = 5
@@ -315,18 +372,18 @@ if __name__=="__main__":
                                                           series,
                                                           km_bound)
   
-  ls_pair_price_dispersion = get_list_pair_price_dispersion(ls_tuple_competitors,
-                                                              master_price,
-                                                              series,
-                                                              km_bound)
+  ls_pair_price_dispersion = get_ls_pair_price_dispersion(ls_tuple_competitors,
+                                                          master_price,
+                                                          series,
+                                                          km_bound)
                                                                 
-  # ls_ls_market_ids = get_list_list_distance_market_ids(master_price, ls_ls_competitors, km_bound)
-  # ls_ls_market_price_dispersion = get_list_list_market_price_dispersion(ls_ls_market_ids, master_price, series)
+  # ls_ls_market_ids = get_ls_ls_distance_market_ids(master_price, ls_ls_competitors, km_bound)
+  # ls_ls_market_price_dispersion = get_ls_ls_market_price_dispersion(ls_ls_market_ids, master_price, series)
   
-  # ls_ls_market_ids_res = get_list_list_distance_market_ids_restricted(master_price, ls_ls_competitors, km_bound)
-  # ls_lis_market_pd_res = get_list_list_market_price_dispersion(ls_ls_m_ids_res, master_price, series)
+  # ls_ls_market_ids_res = get_ls_ls_distance_market_ids_restricted(master_price, ls_ls_competitors, km_bound)
+  # ls_lis_market_pd_res = get_ls_ls_market_price_dispersion(ls_ls_m_ids_res, master_price, series)
   
-  # # get_plot_list_arrays(list_list_market_price_dispersion[0][2:], ['range', 'std', 'cvar', 'gs'])
+  # # get_plot_ls_arrays(ls_ls_market_price_dispersion[0][2:], ['range', 'std', 'cvar', 'gs'])
   
   elapsed = timeit.default_timer() - start_time
   print elapsed
@@ -434,7 +491,7 @@ if __name__=="__main__":
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles, labels)
     plt.savefig(path_data + folder_built_graphs + r'\suspect\tough_%s-%s' %(indiv_id_1, indiv_id_2),
-                dpi = 500)
+                dpi = 300)
   
   pd_df_high_diff = pd_df_pair_pd[(pd_df_pair_pd['rank_reversal'] == 0) &\
                                   (pd_df_pair_pd['duration'] > 30)]
@@ -521,12 +578,15 @@ if __name__=="__main__":
     nb_period_rr = pd_df_spread_if_rr[i][(pd_df_spread_if_rr[i] > 0) | (pd_df_spread_if_rr[i] < 0)].count()
     nb_period_valid = pd_df_spread_if_rr[i].count()
     sum_period_rr = np.abs(pd_df_spread_if_rr[i]).sum()
-    ls_percent_period_rr.append(float(nb_period_rr)/nb_period_valid)
-    ls_avg_spread_period_rr.append(float(sum_period_rr)/nb_period_rr)
-  # temp: get rid of periods with too many missing
-  for period in ar_bad_periods:
-    ls_percent_period_rr[period] = np.nan
-    ls_avg_spread_period_rr[period] = np.nan
+    # TODO: check ! (did only quick debug... should not rule out 0 rank reversal for a period?)
+    if nb_period_valid != 0:
+      ls_percent_period_rr.append(float(nb_period_rr)/nb_period_valid)
+    else:
+      ls_percent_period_rr.append(np.nan)
+    if nb_period_rr != 0:
+      ls_avg_spread_period_rr.append(float(sum_period_rr)/nb_period_rr)
+    else:
+      ls_avg_spread_period_rr.append(np.nan)
   print '\Rank reversals per period (% of pairs):\n', np.around(ls_percent_period_rr, 1)
   print '\nAverage spread if rank reversal per period:\n', np.around(ls_avg_spread_period_rr, 3)
   
@@ -539,13 +599,13 @@ if __name__=="__main__":
   pd_df_pair_rr['mean_price_d1'] = pd_df_pair_rr['mean_price'].diff()
   pd_df_pair_rr['mean_price_d1_abs'] = np.abs(pd_df_pair_rr['mean_price_d1'])
   pd_df_pair_rr[['mean_price', 'mean_price_d1','mean_price_d1_abs']].corr()
-  print smf.ols(formula = 'pct_rank_reversals ~ mean_price_d1_abs', data = pd_df_pair_rr).fit().summary()
+  print smf.ols(formula = 'pct_rank_reversals ~ mean_price_d1_abs', data = pd_df_pair_rr, missing = 'drop').fit().summary()
   pd_df_pair_rr['pct_rank_reversals_s1'] = pd_df_pair_rr['pct_rank_reversals'].shift(1)
-  print smf.ols(formula = 'pct_rank_reversals ~ pct_rank_reversals_s1', data = pd_df_pair_rr).fit().summary()
+  print smf.ols(formula = 'pct_rank_reversals ~ pct_rank_reversals_s1', data = pd_df_pair_rr, missing = 'drop').fit().summary()
   print smf.ols(formula = 'pct_rank_reversals ~ pct_rank_reversals_s1 + mean_price_d1_abs',\
-                  data = pd_df_pair_rr).fit().summary()
+                  data = pd_df_pair_rr, missing = 'drop').fit().summary()
   pd_df_pair_rr['pct_rank_reversals_d1'] = pd_df_pair_rr['pct_rank_reversals'].diff()
-  print smf.ols(formula = 'pct_rank_reversals_d1 ~ mean_price_d1_abs', data = pd_df_pair_rr).fit().summary()
+  print smf.ols(formula = 'pct_rank_reversals_d1 ~ mean_price_d1_abs', data = pd_df_pair_rr, missing = 'drop').fit().summary()
   # pd_df_pair_rr[['pct_rank_reversals','mean_price_d1']].plot()
   # plt.show()
   
