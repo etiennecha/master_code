@@ -21,7 +21,7 @@ path_data = os.path.join(path_global_dir, 'data')
 # another location can be provided though
 ls_possible_path_data = [r'W:\Bureau\Etienne_work\Data',
                          r'C:\Users\etna\Desktop\Etienne_work\Data']
-for my_path in ls_my_paths:
+for my_path in ls_possible_path_data:
   if os.path.exists(my_path):
     path_data = my_path
     break
