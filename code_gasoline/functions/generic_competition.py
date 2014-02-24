@@ -57,7 +57,7 @@ def get_ls_price_change_frequency(master_np_prices):
   return ls_price_change_frequency
 
 def get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series):
-  """
+  """ TODO: REPLACE AND DEPRECATED
   Study price changes vs. competitors
   
   prices_1 = [0, 0, 2, 2, 3, 0, 0, 0, 0, 2, 3, 4]
@@ -120,27 +120,29 @@ def get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series)
 
 # ANALYSIS OF PAIR PRICE DISPERSION
 
-def get_pair_price_dispersion(id_1, id_2, master_price, series):
-  price_array_1 = np.array(master_price[series][master_price['ids'].index(id_1)], dtype = np.float32)
-  price_array_2 = np.array(master_price[series][master_price['ids'].index(id_2)], dtype = np.float32)
-  spread = price_array_1 - price_array_2
-  duration = (~np.isnan(spread)).sum()
-  avg_abs_spread = scipy.stats.nanmean(np.abs(spread))
-  avg_spread = scipy.stats.nanmean(spread)
-  std_spread = scipy.stats.nanstd(spread)
-  b_cheaper = (spread < 0).sum()
-  a_cheaper = (spread > 0).sum()
-  rank_reversal = np.min([np.float32(b_cheaper)/duration, np.float32(a_cheaper)/duration])
-  if b_cheaper > a_cheaper:
-    ar_rank_reversal = np.where(spread <= 0, 0, spread)
+def get_pair_price_dispersion(ls_prices_a, ls_prices_b):
+  ar_prices_a = np.array(ls_prices_a, dtype = np.float32)
+  ar_prices_b = np.array(ls_prices_b, dtype = np.float32)
+  ar_spread = ar_prices_b - ar_prices_a
+  nb_days_spread = (~np.isnan(ar_spread)).sum()
+  avg_abs_spread = scipy.stats.nanmean(np.abs(ar_spread))
+  avg_spread = scipy.stats.nanmean(ar_spread)
+  std_spread = scipy.stats.nanstd(ar_spread)
+  nb_days_b_cheaper = (ar_spread < 0).sum()
+  nb_days_a_cheaper = (ar_spread > 0).sum()
+  rank_reversal = np.min([np.float32(nb_days_b_cheaper)/nb_days_spread,
+                          np.float32(nb_days_a_cheaper)/nb_days_spread])
+  if nb_days_b_cheaper > nb_days_a_cheaper:
+    ar_rank_reversal = np.where(ar_spread <= 0, 0, ar_spread)
   else:
-    ar_rank_reversal = np.where(spread >= 0, 0, spread)
-  list_tuples_rr = []
+    ar_rank_reversal = np.where(ar_spread >= 0, 0, ar_spread)
+  ls_tuples_rr = []
   for group in itertools.groupby(iter(range(len(ar_rank_reversal))),\
                                   lambda x: ar_rank_reversal[x] if ~np.isnan(ar_rank_reversal[x]) else None):
-    list_tuples_rr.append((group[0], list(group[1])))
-  list_rr_durations = [len(tuple_rr[1]) for tuple_rr in list_tuples_rr if tuple_rr[0] and tuple_rr[0] != 0]
-  return (duration, avg_abs_spread, avg_spread, std_spread, rank_reversal, ar_rank_reversal, spread, list_rr_durations)
+    ls_tuples_rr.append((group[0], list(group[1])))
+  ls_rr_durations = [len(tuple_rr[1]) for tuple_rr in ls_tuples_rr if tuple_rr[0] and tuple_rr[0] != 0]
+  return (nb_days_spread, avg_abs_spread, avg_spread, std_spread, rank_reversal,\
+          ar_rank_reversal, ar_spread, ls_rr_durations)
 
 def get_station_price_dispersion(indiv_id, ls_ls_competitors, master_price, series, km_bound):
   """ for an id: price dispersion stats with each competitor within a given nb of km """
@@ -168,7 +170,9 @@ def get_ls_pair_price_dispersion(ls_tuple_competitors, master_price, series, km_
   ls_pbms = []
   for ((id_1, id_2), distance) in ls_tuple_competitors:
     if distance < km_bound:
-      pair_pd_stats = get_pair_price_dispersion(id_1, id_2, master_price, series)
+      ls_prices_1 = master_price[series][master_price['ids'].index(id_1)]
+      ls_prices_2 = master_price[series][master_price['ids'].index(id_2)]
+      pair_pd_stats = get_pair_price_dispersion(ls_prices_1, ls_prices_2)
       pair_price_dispersion = ((id_1,id_2), # 0 id pair
                                distance, # 1 distance
                                pair_pd_stats[0], # 2 duration
