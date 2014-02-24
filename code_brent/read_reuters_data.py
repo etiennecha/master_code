@@ -83,12 +83,14 @@ print df_all.info()
 
 litre_per_us_gallon = 3.785411784
 litre_per_barrel = 158.987295
+litre_per_metric_tonne = 1183.5
+
 df_all['Europe Brent FOB EL'] = df_all['Europe Brent FOB DB'] / litre_per_barrel / df_all['ECB Rate ED'] 
 df_all['NY Diesel EL'] = df_all['NY Diesel DG'] / litre_per_us_gallon / df_all['ECB Rate ED']
 
 # ULSD: 100 Metric Tonnes = 118.35 Cubic Metres = 118 350 Litres => divide by 1183.5
-df_all['ULSD 10 FOB MED EL'] = df_all['ULSD 10 FOB MED DT'] / 1183.5 / df_all['ECB Rate ED']
-df_all['ULSD 10 CIF NWE EL'] = df_all['ULSD 10 CIF NWE DT'] / 1183.5 / df_all['ECB Rate ED']
+df_all['ULSD 10 FOB MED EL'] = df_all['ULSD 10 FOB MED DT'] / litre_per_metric_tonne / df_all['ECB Rate ED']
+df_all['ULSD 10 CIF NWE EL'] = df_all['ULSD 10 CIF NWE DT'] / litre_per_metric_tonne / df_all['ECB Rate ED']
 df_all['GASOIL 0.2 FOB ARA EL'] = df_all['GASOIL 0.2 FOB ARA DT'] / 1183.5 / df_all['ECB Rate ED']
 
 #df_all[['ULSD 10 FOB MED EL', 'ULSD 10 CIF NWE EL',
@@ -99,5 +101,5 @@ df_all['GASOIL 0.2 FOB ARA EL'] = df_all['GASOIL 0.2 FOB ARA DT'] / 1183.5 / df_
 se_temp = df_all['ULSD 10 CIF NWE EL'][~pd.isnull(df_all['ULSD 10 CIF NWE EL'])]
 df_all['ULSD 10 CIF NWE R5 EL'] = pd.rolling_mean(se_temp, window = 5)
 
-df_all[['ULSD 10 CIF NWE R5 EL', 'UFIP RT Diesel R5 EL']].plot()
+df_all[['ULSD 10 CIF NWE EL', 'ULSD 10 CIF NWE R5 EL', 'UFIP RT Diesel R5 EL']].plot()
 plt.show()
