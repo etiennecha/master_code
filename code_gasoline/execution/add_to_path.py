@@ -3,10 +3,11 @@
 
 import os, sys
 
-# 1/ Set functions directory on path
-
 path = os.path.abspath(os.path.dirname(sys.argv[0]))
 path_global_dir = os.path.dirname(path)
+
+# 1/ Set functions directory on path
+
 path_dir = os.path.join(path_global_dir, 'functions')
 sys.path.append(path_dir)
 ls_subdir_names = [f for f in os.listdir(path_dir) if not os.path.isfile(os.path.join(path_dir, f))]
@@ -15,7 +16,7 @@ for subdir_name in ls_subdir_names:
 
 # 2/ Set path_data to find demo data or original data
 
-# path_data default to data provided on github
+# path_data defaults to data provided on github
 path_data = os.path.join(path_global_dir, 'data')
 # another location can be provided though
 ls_possible_path_data = [r'W:\Bureau\Etienne_work\Data',
