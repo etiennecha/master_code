@@ -121,6 +121,15 @@ def get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series)
 # ANALYSIS OF PAIR PRICE DISPERSION
 
 def get_pair_price_dispersion(ls_prices_a, ls_prices_b):
+  """
+  Provides various stats about price dispersion (TODO: elaborate)
+  TODO: fix ls_rr_durations: periods of rr must be standardized to one
+  (Right now: a new streak is recorded if spread under rank reversal varies...)
+  
+  Parameters:
+  -----------
+  ls_prices_a, ls_prices_b: list of float and nan
+  """
   ar_prices_a = np.array(ls_prices_a, dtype = np.float32)
   ar_prices_b = np.array(ls_prices_b, dtype = np.float32)
   ar_spread = ar_prices_b - ar_prices_a
