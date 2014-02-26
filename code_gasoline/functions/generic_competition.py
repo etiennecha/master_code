@@ -80,8 +80,8 @@ def get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series)
   price_changes_1_ma_d = np.ma.masked_array(price_changes_1_ma_d, mask = mask_2_c)
   nb_chges_1_if_2_d = ((np.float32(0) != price_changes_1_ma_d)).sum()
   """
-  ls_ls_result = []
-  for indiv_ind, ls_competitors in enumerate(list_list_competitors):
+  ls_ls_results = []
+  for indiv_ind, ls_competitors in enumerate(ls_ls_competitors):
     ls_results = []
     if ls_competitors:
       ls_prices_1 = master_price[series][indiv_ind]
@@ -96,7 +96,7 @@ def get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series)
         ar_price_changes_2 = np.array(ls_prices_2[1:], dtype = np.float32) - \
                                         np.array(ls_prices_2[:-1], dtype = np.float32)
         ar_price_changes_2_ma = np.ma.masked_array(ar_price_changes_2, np.isnan(ar_price_changes_2))
-        nb_chges_2 = ((price_changes_2_ma != 0)).sum()
+        nb_chges_2 = ((ar_price_changes_2_ma != 0)).sum()
         # count changes at firm 1 with firm 2 also changing
         mask_2 = ar_price_changes_2 == 0 #boolean with True if change at firm 2/
         mask_2_c = ar_price_changes_2 != 0 #boolean with False (display) if change at firm 2
@@ -306,7 +306,7 @@ def get_plot_prices(list_of_ids, master_price, series, path_save=None):
   plt.figure()
   pd_df_temp.plot()
   fig = plt.gcf()
-  fig.set_size_inches(18.5,10.5)
+  fig.set_size_inches(18.5, 10.5)
   if path_save: 
     plt.savefig(path_save)
   else:

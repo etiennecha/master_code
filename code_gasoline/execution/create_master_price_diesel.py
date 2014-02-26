@@ -8,7 +8,7 @@ from generic_master_price import *
 path_dir_built_json = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_json_gasoline')
 
 path_diesel_price_raw = os.path.join(path_dir_built_json, 'master_diesel', 'master_price_diesel_raw')
-path_diesel_price_clean = os.path.join(path_dir_built_json, 'master_diesel', 'master_price_diesel')
+path_diesel_price = os.path.join(path_dir_built_json, 'master_diesel', 'master_price_diesel')
 
 # ##############
 # DIESEL MASTER
@@ -70,7 +70,7 @@ ls_start_end, ls_nan, dict_dilettante = get_overview_reporting_bis(master_price[
 # Get rid of periods with too few observations 
 master_price['diesel_price'] = get_rid_missing_periods(master_price['diesel_price'], 8000)
  
-# enc_json(master_price, path_diesel_price_clean)
+# enc_json(master_price, path_diesel_price)
  
 # MOVE TO PRICE ANALYSIS
 dict_sales = get_sales(ls_ls_price_variations, 3)

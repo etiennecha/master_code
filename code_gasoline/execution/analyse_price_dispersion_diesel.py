@@ -32,7 +32,7 @@ dict_dpts_regions = dec_json(path_dict_dpts_regions)
 ar_prices_a = np.array([1, 1, 2, np.nan, 2, 3, 1], np.float32)
 ar_prices_b = np.array([0, 2, 2, np.nan, 1, 4, 4], np.float32)
 
-zero_threshold = 0.00001
+zero_threshold = np.float64(1e-10)
 
 def get_pair_price_dispersion_bis(ar_prices_a, ar_prices_b, light = True):
   """
@@ -64,10 +64,13 @@ def get_pair_price_dispersion_bis(ar_prices_a, ar_prices_b, light = True):
   ls_arrays = [ar_spread, ar_spread_rr]
   if light:
     return [ls_scalars, ls_day_inds_rr, ls_arrays]
-  else: 
-    ls_lengths_rr_naive = get_ls_lengths_rr_naive(ar_abs_spread_rr)
-    ls_lengths_rr_strict = get_ls_lengths_rr_strict(ar_abs_spread_rr)
-    ls_ls_lengths = [ls_lengths_rr_naive, ls_lengths_rr_strict]
+  else:
+    if percent_rr > zero_threshold:
+      ls_lengths_rr_naive = get_ls_lengths_rr_naive(ar_abs_spread_rr)
+      ls_lengths_rr_strict = get_ls_lengths_rr_strict(ar_abs_spread_rr)
+      ls_ls_lengths = [ls_lengths_rr_naive, ls_lengths_rr_strict]
+    else:
+      ls_ls_lengths = [[],[]]
     return [ls_scalars, ls_arrays, ls_ls_lengths]
 
 def count_nb_rr_conservative(ar_abs_spread_rr):
@@ -158,9 +161,13 @@ for ((indiv_id_1, indiv_id_2), distance) in ls_tuple_competitors:
   indiv_ind_2 = master_price['ids'].index(indiv_id_2)
   if distance < km_bound:
     ls_pair_price_dispersion_bis.append(get_pair_price_dispersion_bis(master_np_prices[indiv_ind_1],
-                                                                      master_np_prices[indiv_ind_2]),
-                                                                      light = False)
+                                                                      master_np_prices[indiv_ind_2],
+                                                                      light = False))
 print time.clock() - start
+
+ls_competitor_price_changes = get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series)
+# TODO: check: over 50% changes the same day... + check margin and if same brand
+df_prices = pd.DataFrame(master_np_prices.T, columns=master_price['ids'], index=master_price['dates'])
 
 # #########################
 # PRICE DISPERSION ANALYSIS
