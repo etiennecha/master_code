@@ -159,7 +159,7 @@ for ((indiv_id_1, indiv_id_2), distance) in ls_tuple_competitors:
   if distance < km_bound:
     ls_pair_price_dispersion_bis.append(get_pair_price_dispersion_bis(master_np_prices[indiv_ind_1],
                                                                       master_np_prices[indiv_ind_2]),
-                                                                      light = False)
+                                                                      light = False))
 print time.clock() - start
 
 # #########################
