@@ -148,26 +148,110 @@ km_bound = 5
 
 # AVERAGE PRICE PER PERIOD  
 
-start = time.clock()
 master_np_prices = np.array(master_price[series], np.float64)
-matrix_np_prices_ma = np.ma.masked_array(master_np_prices, np.isnan(master_np_prices))
-period_mean_prices = np.mean(matrix_np_prices_ma, axis = 0)
-period_mean_prices = period_mean_prices.filled(np.nan)
+#matrix_np_prices_ma = np.ma.masked_array(master_np_prices, np.isnan(master_np_prices))
+#period_mean_prices = np.mean(matrix_np_prices_ma, axis = 0)
+#period_mean_prices = period_mean_prices.filled(np.nan)
 
-ls_pair_price_dispersion_bis = []
-for ((indiv_id_1, indiv_id_2), distance) in ls_tuple_competitors:
-  # could check presence btw...
-  indiv_ind_1 = master_price['ids'].index(indiv_id_1)
-  indiv_ind_2 = master_price['ids'].index(indiv_id_2)
-  if distance < km_bound:
-    ls_pair_price_dispersion_bis.append(get_pair_price_dispersion_bis(master_np_prices[indiv_ind_1],
-                                                                      master_np_prices[indiv_ind_2]),
-                                                                      light = False)
-print time.clock() - start
+#start = time.clock()
+#ls_pair_price_dispersion_bis = []
+#for ((indiv_id_1, indiv_id_2), distance) in ls_tuple_competitors:
+#  # could check presence btw...
+#  indiv_ind_1 = master_price['ids'].index(indiv_id_1)
+#  indiv_ind_2 = master_price['ids'].index(indiv_id_2)
+#  if distance < km_bound:
+#    ls_pair_price_dispersion_bis.append(get_pair_price_dispersion_bis(master_np_prices[indiv_ind_1],
+#                                                                      master_np_prices[indiv_ind_2],
+#                                                                      light = False))
+#print time.clock() - start
 
-ls_competitor_price_changes = get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series)
-# TODO: check: over 50% changes the same day... + check margin and if same brand
-df_prices = pd.DataFrame(master_np_prices.T, columns=master_price['ids'], index=master_price['dates'])
+ls_ls_comp_price_chges = get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series)
+
+# Over X% changes the same day(test also before/after)
+# TODO: check if same brand + margin (+stability over time) + reciprocity?
+ls_close_competitors = []
+for indiv_ind, ls_comp_price_chges in enumerate(ls_ls_comp_price_chges):
+  for comp_price_chges in ls_comp_price_chges[1:]:
+    id_comp, distance, nb_chges, nb_chges_c, nb_chges_b, nb_chges_a = comp_price_chges
+    if np.float64(nb_chges_c)/nb_chges > np.float64(0.5):
+      ls_close_competitors.append([master_price['ids'][indiv_ind],
+                                   ls_comp_price_chges[0]]+\
+                                  list(comp_price_chges))
+
+# TODO: how many have no competitors based on distance / on this criteria
+# TODO: how many recursions: too big markets? have to refine? which are excluded?
+# TODO: draw map with links between stations within market
+# TODO: is pandas suitable for query: how many days do two stations chge prices together?
+# TODO: yes a priori but is it fast? (what about group?) Do I want to work on day indexes?
+
+df_prices = pd.DataFrame(master_np_prices.T, columns = master_price['ids'], index = master_price['dates'])
+df_chges = df_prices.shift(1) - df_prices
+
+# AGGREGATE DESCRIPTIVE STATICS
+
+# PRICE VALUE
+
+# DONE / TODO
+
+# PRICES CHANGES
+
+# TODO: apply also at region / dpt / city / brand level => apply to subsets of df_chges
+
+# Period price change frequency
+ls_freq_price_chges = []
+for day in df_chges.index:
+  nb_valid_prices = df_chges.ix[day].count()
+  nb_no_price_chge = df_chges.ix[day][np.abs(df_chges.ix[day]) < zero_threshold].count()
+  nb_pos_price_chge = df_chges.ix[day][df_chges.ix[day] >  zero_threshold].count()
+  nb_neg_price_chge = df_chges.ix[day][df_chges.ix[day] < -zero_threshold].count()
+  ls_freq_price_chges.append([nb_valid_prices, nb_no_price_chge, nb_pos_price_chge, nb_neg_price_chge])
+ls_columns = ['nb_valid', 'nb_no_chge', 'nb_pos_chge', 'nb_neg_chge']
+df_freq_price_chges = pd.DataFrame(ls_freq_price_chges, columns = ls_columns, index = df_chges.index)
+# TODO: apply percent on relevant columns
+
+# Period price change values (TODO: MERGE WITH PREVIOUS!)
+# TODO: see use of describe (standard metrics) and merging all in one df (flex: quantiles etc)
+ls_val_price_chges = []
+for day in df_chges.index:
+  se_pos_price_chge = df_chges.ix[day][df_chges.ix[day] >  zero_threshold]
+  se_neg_price_chge = df_chges.ix[day][df_chges.ix[day] < -zero_threshold]
+  med_pos_chge = np.median(se_pos_price_chge)
+  avg_pos_chge = np.mean(se_pos_price_chge)
+  med_neg_chge = np.median(se_neg_price_chge)
+  avg_neg_chge = np.mean(se_neg_price_chge)
+  ls_val_price_chges.append([med_pos_chge, avg_pos_chge, med_neg_chge, avg_neg_chge])
+ls_columns = ['med_pos_chge', 'avg_pos_chge', 'med_neg_chge', 'avg_neg_chge']
+df_val_price_chges = pd.DataFrame(ls_val_price_chges, columns = ls_columns, index = df_chges.index)
+
+# FIRM LEVEL DESCRIPTIVE STATICS
+
+ls_ls_indiv_chges = []
+for indiv_id in df_chges.columns:
+  # TODO: Check what to do with missing values(exclude first not to miss any change?)
+  # TODO: Exclusion of stations from dispersion stats: count all chges...
+  nb_valid_prices = df_chges[indiv_id].count()
+  nb_no_price_chge = df_chges[indiv_id][np.abs(df_chges[indiv_id]) < zero_threshold].count()
+  se_pos_price_chge = df_chges[indiv_id][df_chges[indiv_id] >  zero_threshold]
+  se_neg_price_chge = df_chges[indiv_id][df_chges[indiv_id] < -zero_threshold]
+  nb_pos_price_chge = se_pos_price_chge.count()
+  nb_neg_price_chge = se_neg_price_chge.count()
+  med_pos_chge = np.median(se_pos_price_chge)
+  avg_pos_chge = np.mean(se_pos_price_chge)
+  med_neg_chge = np.median(se_neg_price_chge)
+  avg_neg_chge = np.mean(se_neg_price_chge)
+  ls_ls_indiv_chges.append([nb_valid_prices, nb_no_price_chge, nb_pos_price_chge, nb_neg_price_chge,
+                            med_pos_chge, avg_pos_chge, med_neg_chge, avg_neg_chge])
+ls_columns = ['nb_valid', 'nb_no_chge', 'nb_pos_chge', 'nb_neg_chge',
+              'med_pos_chge', 'avg_pos_chge', 'med_neg_chge', 'avg_neg_chge']
+df_indiv_price_chges = pd.DataFrame(ls_ls_indiv_chges, columns = ls_columns, index = df_chges.columns)
+
+print 'Stations that should almost certainly be excluded':
+# TODO: add max duration etc (do with pandas?)
+len(df_indiv_price_chges[df_indiv_price_chges['nb_pos_chge'] + df_indiv_price_chges['nb_neg_chge'] < 20])
+
+# pd.options.display.float_format = '{:10,.2f}'.format
+# pd.set_option('max_columns',10)
+# print df_indiv_price_chges.ix[0:100].to_string()
 
 # #########################
 # PRICE DISPERSION ANALYSIS

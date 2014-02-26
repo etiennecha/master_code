@@ -28,7 +28,7 @@ def compute_distance(coordinates_A, coordinates_B):
   return round(distance, 2)
 
 def get_ls_ls_cross_distances(ls_gps):
-  # Size can be lower if only half the matrix is returned
+  # Size can be lowered by filling only half the matrix
   ls_ls_cross_distances = [[np.nan for gps in ls_gps] for gps in ls_gps]
   for i, gps_i in enumerate(ls_gps):
     for j, gps_j in enumerate(ls_gps[i+1:], start = i+1):
@@ -41,7 +41,7 @@ def get_ls_ls_cross_distances(ls_gps):
 # ANALYIS OF PRICE CHANGES
 
 def get_station_price_change_frequency(indiv_ind, master_np_prices):
-  """ DEPRECATED? """
+  """ TODO: Update / Deprecate? """
   ar_chges = np.hstack([np.array([np.nan]), master_np_prices[indiv_ind,1:] - master_np_prices[indiv_ind,:-1]])
   nb_same_price = ((ar_chges == 0)).sum()
   nb_decrease = ((ar_chges < 0)).sum()
@@ -51,13 +51,13 @@ def get_station_price_change_frequency(indiv_ind, master_np_prices):
   return [nb_same_price, nb_decrease, nb_increase, avg_decrease, avg_increase]
 
 def get_ls_price_change_frequency(master_np_prices):
-  """ DEPRECATED? """
+  """ TODO: Update / Deprecate? """
   for indiv_ind in range(len(master_np_prices)):
     ls_price_change_frequency.append(get_station_price_change_frequency(indiv_ind, master_np_prices))
   return ls_price_change_frequency
 
 def get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series):
-  """ TODO: REPLACE AND DEPRECATED
+  """ TODO: Update / Deprecate ?
   Study price changes vs. competitors
   
   prices_1 = [0, 0, 2, 2, 3, 0, 0, 0, 0, 2, 3, 4]
@@ -98,17 +98,21 @@ def get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series)
         ar_price_changes_2_ma = np.ma.masked_array(ar_price_changes_2, np.isnan(ar_price_changes_2))
         nb_chges_2 = ((ar_price_changes_2_ma != 0)).sum()
         # count changes at firm 1 with firm 2 also changing
-        mask_2 = ar_price_changes_2 == 0 #boolean with True if change at firm 2/
-        mask_2_c = ar_price_changes_2 != 0 #boolean with False (display) if change at firm 2
+        mask_2 = ar_price_changes_2 == 0 
+        #boolean with True if change at firm 2/
+        mask_2_c = ar_price_changes_2 != 0 
+        #boolean with False (display) if change at firm 2
         ar_price_changes_1_ma_a = np.ma.masked_array(ar_price_changes_1_ma, mask = mask_2)
         nb_chges_1_if_2_a = ((ar_price_changes_1_ma_a != 0)).sum()
         # count changes at firm 1 with firm 2 changing the day before
-        mask_2 = np.append(np.array(np.nan), ar_price_changes_2[:-1]) == 0 #boolean with True if change at firm 2/
+        mask_2 = np.append(np.array(np.nan), ar_price_changes_2[:-1]) == 0 
+        #boolean with True if change at firm 2/
         ar_price_changes_1_ma_h = np.ma.masked_array(ar_price_changes_1_ma, mask = mask_2)
         ar_price_changes_1_ma_h = np.ma.masked_array(ar_price_changes_1_ma_h, mask = mask_2_c)
         nb_chges_1_if_2_h = ((ar_price_changes_1_ma_h != 0)).sum()
         # count changes at firm 1 with firm 2 changing the day after
-        mask_2 = np.append(ar_price_changes_2[1:], np.array(np.nan)) == 0 #boolean with True if change at firm 2/
+        mask_2 = np.append(ar_price_changes_2[1:], np.array(np.nan)) == 0 
+        #boolean with True if change at firm 2/
         ar_price_changes_1_ma_d = np.ma.masked_array(ar_price_changes_1_ma, mask = mask_2)
         ar_price_changes_1_ma_d = np.ma.masked_array(ar_price_changes_1_ma_d, mask = mask_2_c)
         nb_chges_1_if_2_d = ((ar_price_changes_1_ma_d != 0)).sum()
