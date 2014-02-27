@@ -14,6 +14,8 @@ import copy
 import random
 from generic_master_price import *
 
+zero_threshold = np.float64(1e-10)
+
 # COMPUTATION OF CROSS DISTANCES
 
 def compute_distance(coordinates_A, coordinates_B):
@@ -40,21 +42,99 @@ def get_ls_ls_cross_distances(ls_gps):
 
 # ANALYIS OF PRICE CHANGES
 
-def get_station_price_change_frequency(indiv_ind, master_np_prices):
-  """ TODO: Update / Deprecate? """
-  ar_chges = np.hstack([np.array([np.nan]), master_np_prices[indiv_ind,1:] - master_np_prices[indiv_ind,:-1]])
-  nb_same_price = ((ar_chges == 0)).sum()
-  nb_decrease = ((ar_chges < 0)).sum()
-  nb_increase = ((ar_chges > 0)).sum()
-  avg_decrease = scipy.stats.nanmean(ar_chges[ar_chges < 0])
-  avg_increase = scipy.stats.nanmean(ar_chges[ar_chges > 0])
-  return [nb_same_price, nb_decrease, nb_increase, avg_decrease, avg_increase]
+def get_stats_price_chges(ar_prices, light = True):
+  """
+  Get descriptive stastistics about a station price changes
+  TODO: check how to apply mean/median/quartiles etc to arrays (lambda etc)
+   
+  Parameters:
+  ----------- 
+  ar_prices: numpy array of float and np.nan
+  light: True returns scalar stats only, else arrays too
+  """
+  ar_chges = np.hstack([np.array([np.nan]), ar_prices[1:] - ar_prices[:-1]])
+  nb_valid = (~np.isnan(ar_chges)).sum() 
+  nb_no_chge = (np.abs(ar_chges) < zero_threshold).sum()
+  nb_neg_chges = (ar_chges < -zero_threshold).sum()
+  nb_pos_chges = (ar_chges >  zero_threshold).sum()
+  ar_neg_chge = ar_chges[ar_chges < -zero_threshold]
+  ar_pos_chge = ar_chges[ar_chges >  zero_threshold]
+  avg_neg_chge = np.mean(ar_neg_chge)
+  avg_pos_chge = np.mean(ar_pos_chge)
+  med_neg_chge = np.median(ar_neg_chge)
+  med_pos_chge = np.median(ar_pos_chge)
+  ls_scalars = [nb_valid, nb_no_chge, nb_neg_chge, nb_pos_chge,
+                avg_neg_chge, avg_pos_chge, med_neg_chge, med_pos_chge]
+  ls_ars = [ar_neg_chge, ar_pos_chge]
+  if light:
+    return ls_scalars
+  else:
+    return ls_scalars + ls_ars
 
-def get_ls_price_change_frequency(master_np_prices):
-  """ TODO: Update / Deprecate? """
-  for indiv_ind in range(len(master_np_prices)):
-    ls_price_change_frequency.append(get_station_price_change_frequency(indiv_ind, master_np_prices))
-  return ls_price_change_frequency
+def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
+  """
+  Counts simulatenous changes: A and B had changed before or none had changed
+  Counts followed changes: A changes, B follows (checks B changes after)
+  Counts following changes: B changes, A follows (checks 1 changes after)
+  TODO: check also that B had not changed before A change for followed changes
+  Reminder: must be cautious with nan (and get day indexes if possible...)
+  
+  Parameters:
+  -----------
+  ar_prices_1, ar_prices_2: two numpy arrays of float and np.nan
+  """
+  ar_chges_1 = ar_prices_1[1:] - ar_prices_1[:-1]
+  nb_chges_1 = (np.abs(ar_chges_1) > zero_threshold).sum() 
+  ar_chges_2 = ar_prices_2[1:] - ar_prices_2[:-1]
+  nb_chges_2 = (np.abs(ar_chges_2) > zero_threshold).sum() 
+  # Count simulatenous changes (following no chge at all or another sim chge)
+  ar_dum_chges_1 = (np.abs(ar_chges_1) > zero_threshold)*1
+  ar_dum_chges_2 = (np.abs(ar_chges_2) > zero_threshold)*1
+  ar_sum_dum_chges = ar_dum_chges_1 + ar_dum_chges_2
+  nb_sim_chges = 0 
+  for i, sum_chge in enumerate(ar_sum_dum_chges[1:], start = 1):
+    if sum_chge == 2 and (ar_sum_dum_chges[i-1] == 2 or\
+                          ar_sum_dum_chges[i-1] == 0):
+      nb_sim_chges +=1
+  # Count followed changes:
+  ls_day_ind_1_follows, ls_day_ind_2_follows = [], []
+  for i, (dum_chge_1, dum_chge_2) in enumerate(zip(ar_dum_chges_1, ar_dum_chges_2)[1:], start= 1):
+    if (dum_chge_1 == 1) and (ar_dum_chges_1[i-1] == 0) and (ar_dum_chges_2[i-1] == 1):
+      ls_day_ind_1_follows.append(i)
+    if (dum_chge_2 == 1) and (ar_dum_chges_2[i-1] == 0) and (ar_dum_chges_1[i-1] == 1):
+      ls_day_ind_2_follows.append(i)
+  # TODO: allow for output of intermediary arrays into pandas for visual check
+  return [nb_chges_1, nb_chges_2, nb_sim_chges, len(ls_day_ind_1_follows), len(ls_day_ind_2_follows)]
+
+def get_stats_two_firm_price_dispersion(ar_prices_1, ar_prices_2):
+  """
+  Provides various stats about price dispersion (TODO: elaborate)
+  TODO: fix ls_rr_durations: periods of rr must be standardized to one
+  (Right now: a new streak is recorded if spread under rank reversal varies...)
+  
+  Parameters:
+  -----------
+  ls_prices_a, ls_prices_b: list of float and nan
+  """
+  ar_spread = ar_prices_2 - ar_prices_1
+  ar_spread_nonan = ar_spread[~np.isnan(ar_spread)]
+  nb_days_spread = len(ar_spread_nonan)
+  avg_abs_spread = np.mean(np.abs(ar_spread_nonan))
+  abs_avg_spread = np.abs(np.mean(ar_spread_nonan))
+  std_spread = np.std(ar_spread_nonan)
+  nb_same_price = (np.abs(ar_spread) <= zero_threshold).sum()
+  nb_days_2_cheaper = (ar_spread < -zero_threshold).sum()
+  nb_days_1_cheaper = (ar_spread >  zero_threshold).sum()
+  rank_reversal = np.min([np.float64(nb_days_2_cheaper)/nb_days_spread,
+                          np.float64(nb_days_1_cheaper)/nb_days_spread])
+  if nb_days_2_cheaper > nb_days_1_cheaper:
+    ar_rank_reversal = np.where(ar_spread <=  zero_threshold, 0, ar_spread)
+  else:
+    ar_rank_reversal = np.where(ar_spread >= -zero_threshold, 0, ar_spread)
+  ls_scalars = [nb_days_spread, avg_abs_spread, abs_avg_spread, std_spread, rank_reversal,
+                nb_same_price, nb_days_2_cheaper, nb_days_1_cheaper]
+  ls_arrays = [ar_spread, ar_rank_reversal]
+  return ls_scalars + ls_arrays 
 
 def get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series):
   """ TODO: Update / Deprecate ?
