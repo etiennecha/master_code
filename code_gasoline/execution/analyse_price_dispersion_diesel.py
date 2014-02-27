@@ -178,6 +178,21 @@ for indiv_ind, ls_comp_price_chges in enumerate(ls_ls_comp_price_chges):
                                    ls_comp_price_chges[0]]+\
                                   list(comp_price_chges))
 
+
+ls_columns = ['id_1', 'nb_chge_1', 'id_2', 'distance', 'nb_chge_2', 'sim', 'before', 'after']
+df_comp_chges = pd.DataFrame(ls_close_competitors, columns = ls_columns)
+
+
+df_comp_chges['nb_chge_min'] = df_comp_chges[['nb_chge_1', 'nb_chge_2']].min(axis=1)
+
+df_comp_chges['pct_sim_1'] = df_comp_chges['sim'] / df_comp_chges['nb_chge_1']
+df_comp_chges['pct_sim_2'] = df_comp_chges['sim'] / df_comp_chges['nb_chge_2']
+df_comp_chges['pct_sim'] = df_comp_chges[['pct_sim_1', 'pct_sim_2']].max(axis=1)
+df_comp_chges['pct_sim'] = df_comp_chges['pct_sim'][df_comp_chges['nb_chge_min'] > 30]
+
+n, bins, patches = plt.hist(df_comp_chges['pct_sim'], 30)
+plt.show()
+
 # TODO: how many have no competitors based on distance / on this criteria
 # TODO: how many recursions: too big markets? have to refine? which are excluded?
 # TODO: draw map with links between stations within market
@@ -245,7 +260,7 @@ ls_columns = ['nb_valid', 'nb_no_chge', 'nb_pos_chge', 'nb_neg_chge',
               'med_pos_chge', 'avg_pos_chge', 'med_neg_chge', 'avg_neg_chge']
 df_indiv_price_chges = pd.DataFrame(ls_ls_indiv_chges, columns = ls_columns, index = df_chges.columns)
 
-print 'Stations that should almost certainly be excluded':
+print 'Stations that should almost certainly be excluded'
 # TODO: add max duration etc (do with pandas?)
 len(df_indiv_price_chges[df_indiv_price_chges['nb_pos_chge'] + df_indiv_price_chges['nb_neg_chge'] < 20])
 
