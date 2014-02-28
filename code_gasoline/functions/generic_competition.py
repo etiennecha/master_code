@@ -106,6 +106,8 @@ def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
   # TODO: allow for output of intermediary arrays into pandas for visual check
   return [nb_chges_1, nb_chges_2, nb_sim_chges, len(ls_day_ind_1_follows), len(ls_day_ind_2_follows)]
 
+# ANALYSIS OF PAIR PRICE DISPERSION
+
 def get_stats_two_firm_price_dispersion(ar_prices_1, ar_prices_2):
   """
   Provides various stats about price dispersion (TODO: elaborate)
@@ -136,148 +138,114 @@ def get_stats_two_firm_price_dispersion(ar_prices_1, ar_prices_2):
   ls_arrays = [ar_spread, ar_rank_reversal]
   return ls_scalars + ls_arrays 
 
-def get_ls_price_changes_vs_competitors(ls_ls_competitors, master_price, series):
-  """ TODO: Update / Deprecate ?
-  Study price changes vs. competitors
-  
-  prices_1 = [0, 0, 2, 2, 3, 0, 0, 0, 0, 2, 3, 4]
-  prices_2 = [0, 0, 0, 2, 3, 2, 0, 0, 2, 2, 3, 5]
-  price_changes_1 = np.array(prices_1[1:]) - np.array(prices_1[:-1])
-  price_changes_2 = np.array(prices_2[1:]) - np.array(prices_2[:-1])
-  # count changes at firm 1 with firm 2 also changing
-  mask_2 = price_changes_2 == 0 #boolean with True (hide) if change at firm 2
-  mask_2_c = price_changes_2 != 0 #boolean with False (display) if change at firm 2
-  price_changes_1_ma_a = np.ma.masked_array(price_changes_1, mask = mask_2)
-  nb_chges_1_if_2_a = ((np.float32(0) != price_changes_1_ma_a)).sum()
-  # count changes at firm 1 with firm 2 changing the day before and not the same day
-  mask_2 = np.append(np.array(np.nan), price_changes_2[:-1]) == 0 #boolean with True if change at firm 2
-  price_changes_1_ma_h = np.ma.masked_array(price_changes_1, mask = mask_2)
-  price_changes_1_ma_h = np.ma.masked_array(price_changes_1_ma_h, mask = mask_2_c)
-  nb_chges_1_if_2_h = ((np.float32(0) != price_changes_1_ma_h)).sum()  
-  # count changes at firm 1 with firm 2 changing the day after and not the same day
-  mask_2 = np.append(price_changes_2[1:], np.array(np.nan)) == 0 #boolean with True if change at firm 2
-  price_changes_1_ma_d = np.ma.masked_array(price_changes_1, mask = mask_2)
-  price_changes_1_ma_d = np.ma.masked_array(price_changes_1_ma_d, mask = mask_2_c)
-  nb_chges_1_if_2_d = ((np.float32(0) != price_changes_1_ma_d)).sum()
+def get_pair_price_dispersion(ar_prices_a, ar_prices_b, light = True):
   """
-  ls_ls_results = []
-  for indiv_ind, ls_competitors in enumerate(ls_ls_competitors):
-    ls_results = []
-    if ls_competitors:
-      ls_prices_1 = master_price[series][indiv_ind]
-      ar_price_changes_1 = np.array(ls_prices_1[1:], dtype = np.float32) - \
-                                      np.array(ls_prices_1[:-1], dtype = np.float32)
-      ar_price_changes_1_ma = np.ma.masked_array(ar_price_changes_1, np.isnan(ar_price_changes_1))
-      nb_chges_1 = ((ar_price_changes_1_ma != 0)).sum()
-      ls_results.append(nb_chges_1)
-      for competitor_id, distance in ls_competitors:
-        competitor_ind = master_price['ids'].index(competitor_id)
-        ls_prices_2 = master_price[series][competitor_ind]
-        ar_price_changes_2 = np.array(ls_prices_2[1:], dtype = np.float32) - \
-                                        np.array(ls_prices_2[:-1], dtype = np.float32)
-        ar_price_changes_2_ma = np.ma.masked_array(ar_price_changes_2, np.isnan(ar_price_changes_2))
-        nb_chges_2 = ((ar_price_changes_2_ma != 0)).sum()
-        # count changes at firm 1 with firm 2 also changing
-        mask_2 = ar_price_changes_2 == 0 
-        #boolean with True if change at firm 2/
-        mask_2_c = ar_price_changes_2 != 0 
-        #boolean with False (display) if change at firm 2
-        ar_price_changes_1_ma_a = np.ma.masked_array(ar_price_changes_1_ma, mask = mask_2)
-        nb_chges_1_if_2_a = ((ar_price_changes_1_ma_a != 0)).sum()
-        # count changes at firm 1 with firm 2 changing the day before
-        mask_2 = np.append(np.array(np.nan), ar_price_changes_2[:-1]) == 0 
-        #boolean with True if change at firm 2/
-        ar_price_changes_1_ma_h = np.ma.masked_array(ar_price_changes_1_ma, mask = mask_2)
-        ar_price_changes_1_ma_h = np.ma.masked_array(ar_price_changes_1_ma_h, mask = mask_2_c)
-        nb_chges_1_if_2_h = ((ar_price_changes_1_ma_h != 0)).sum()
-        # count changes at firm 1 with firm 2 changing the day after
-        mask_2 = np.append(ar_price_changes_2[1:], np.array(np.nan)) == 0 
-        #boolean with True if change at firm 2/
-        ar_price_changes_1_ma_d = np.ma.masked_array(ar_price_changes_1_ma, mask = mask_2)
-        ar_price_changes_1_ma_d = np.ma.masked_array(ar_price_changes_1_ma_d, mask = mask_2_c)
-        nb_chges_1_if_2_d = ((ar_price_changes_1_ma_d != 0)).sum()
-        ls_results.append((competitor_id,
-                           distance,
-                           nb_chges_2, nb_chges_1_if_2_a, nb_chges_1_if_2_h, nb_chges_1_if_2_d))
-    ls_ls_results.append(ls_results)
-  return ls_ls_results
+  Produces statistics accounting for price dispersions (TODO: elaborate)
 
-# ANALYSIS OF PAIR PRICE DISPERSION
-
-def get_pair_price_dispersion(ls_prices_a, ls_prices_b):
-  """
-  Provides various stats about price dispersion (TODO: elaborate)
-  TODO: fix ls_rr_durations: periods of rr must be standardized to one
-  (Right now: a new streak is recorded if spread under rank reversal varies...)
-  
   Parameters:
   -----------
-  ls_prices_a, ls_prices_b: list of float and nan
+  ar_prices_a, ar_prices_b: numpy arrays of float and np.nan
   """
-  ar_prices_a = np.array(ls_prices_a, dtype = np.float32)
-  ar_prices_b = np.array(ls_prices_b, dtype = np.float32)
   ar_spread = ar_prices_b - ar_prices_a
   nb_days_spread = (~np.isnan(ar_spread)).sum()
   avg_abs_spread = scipy.stats.nanmean(np.abs(ar_spread))
   avg_spread = scipy.stats.nanmean(ar_spread)
   std_spread = scipy.stats.nanstd(ar_spread)
-  nb_days_b_cheaper = (ar_spread < 0).sum()
-  nb_days_a_cheaper = (ar_spread > 0).sum()
-  rank_reversal = np.min([np.float32(nb_days_b_cheaper)/nb_days_spread,
-                          np.float32(nb_days_a_cheaper)/nb_days_spread])
+  nb_days_b_cheaper = (ar_spread < -zero_threshold).sum()
+  nb_days_a_cheaper = (ar_spread >  zero_threshold).sum()
   if nb_days_b_cheaper > nb_days_a_cheaper:
-    ar_rank_reversal = np.where(ar_spread <= 0, 0, ar_spread)
+    ar_spread_rr = np.where(ar_spread <=  zero_threshold, 0, ar_spread)
   else:
-    ar_rank_reversal = np.where(ar_spread >= 0, 0, ar_spread)
-  ls_tuples_rr = []
-  for group in itertools.groupby(iter(range(len(ar_rank_reversal))),\
-                                  lambda x: ar_rank_reversal[x] if ~np.isnan(ar_rank_reversal[x]) else None):
-    ls_tuples_rr.append((group[0], list(group[1])))
-  ls_rr_durations = [len(tuple_rr[1]) for tuple_rr in ls_tuples_rr if tuple_rr[0] and tuple_rr[0] != 0]
-  return (nb_days_spread, avg_abs_spread, avg_spread, std_spread, rank_reversal,\
-          ar_rank_reversal, ar_spread, ls_rr_durations)
+    ar_spread_rr = np.where(ar_spread >= -zero_threshold, 0, ar_spread)
+  ar_abs_spread_rr = np.abs(ar_spread_rr) 
+  ls_day_inds_rr = list(np.where(ar_abs_spread_rr > zero_threshold)[0])
+  percent_rr = np.float64(len(ls_day_inds_rr))/nb_days_spread
+  avg_abs_spread_rr = np.mean(ar_abs_spread_rr[ar_abs_spread_rr > zero_threshold])
+  med_abs_spread_rr = np.median(ar_abs_spread_rr[ar_abs_spread_rr > zero_threshold])
+  nb_rr_conservative = count_nb_rr_conservative(ar_abs_spread_rr)
+  ls_scalars = [avg_abs_spread, avg_spread, std_spread, nb_days_spread,
+                percent_rr, avg_abs_spread_rr, med_abs_spread_rr, nb_rr_conservative]
+  ls_arrays = [ar_spread, ar_spread_rr]
+  if light:
+    return [ls_scalars, ls_day_inds_rr, ls_arrays]
+  else:
+    if percent_rr > zero_threshold:
+      ls_lengths_rr_naive = get_ls_lengths_rr_naive(ar_abs_spread_rr)
+      ls_lengths_rr_strict = get_ls_lengths_rr_strict(ar_abs_spread_rr)
+      ls_ls_lengths = [ls_lengths_rr_naive, ls_lengths_rr_strict]
+    else:
+      ls_ls_lengths = [[],[]]
+    return [ls_scalars, ls_day_inds_rr, ls_arrays, ls_ls_lengths]
 
-def get_station_price_dispersion(indiv_id, ls_ls_competitors, master_price, series, km_bound):
-  """ for an id: price dispersion stats with each competitor within a given nb of km """
-  dict_results = {}
-  for (competitor_id, distance) in ls_ls_competitors[master_price['ids'].index(indiv_id)]:
-    if distance < km_bound:
-      pair_pd_stats = get_pair_price_dispersion(indiv_id, competitor_id, master_price, series)
-      dict_results.setdefault('ids', []).append(competitor_id)
-      dict_results.setdefault('duration', []).append(pair_pd_stats[0])
-      dict_results.setdefault('avg_abs_spread', []).append(pair_pd_stats[1])
-      dict_results.setdefault('avg_spread', []).append(pair_pd_stats[2])
-      dict_results.setdefault('std_spread', []).append(pair_pd_stats[3])
-      dict_results.setdefault('rank_reversal', []).append(pair_pd_stats[4])
-      dict_results.setdefault('ar_rank_reversal', []).append(pair_pd_stats[5])
-      dict_results.setdefault('spread', []).append(pair_pd_stats[6])
-      dict_results.setdefault('list_rr_durations', []).append(pair_pd_stats[7])
-  return dict_results
-
-def get_ls_pair_price_dispersion(ls_tuple_competitors, master_price, series, km_bound):
-  """ 
-  Price dispersion stats for each pair with distance smaller than a given bound
-  TODO: add the average spread conditional on rank being reversed
+def count_nb_rr_conservative(ar_abs_spread_rr):
   """
-  ls_pair_price_dispersion = []
-  ls_pbms = []
-  for ((id_1, id_2), distance) in ls_tuple_competitors:
-    if distance < km_bound:
-      ls_prices_1 = master_price[series][master_price['ids'].index(id_1)]
-      ls_prices_2 = master_price[series][master_price['ids'].index(id_2)]
-      pair_pd_stats = get_pair_price_dispersion(ls_prices_1, ls_prices_2)
-      pair_price_dispersion = ((id_1,id_2), # 0 id pair
-                               distance, # 1 distance
-                               pair_pd_stats[0], # 2 duration
-                               pair_pd_stats[1], # 3 avg_abs_spread
-                               pair_pd_stats[2], # 4 avg_spread
-                               pair_pd_stats[3], # 5 std_spread
-                               pair_pd_stats[4], # 6 rank_reversal
-                               pair_pd_stats[5], # 7 ar_rank_reversal
-                               pair_pd_stats[6], # 8 spread
-                               pair_pd_stats[7]) # 9 rr_durations
-      ls_pair_price_dispersion.append(pair_price_dispersion)
-  return ls_pair_price_dispersion
+  Counts nb of streaks of positive values in a non negative array:
+  if np.nan in between positive values: only one streak is counted
+  
+  Parameters:
+  -----------
+  ar_abs_spread_rr: numpy array of non negative float and np.nan
+  """
+  ar_abs_spread_rr_nonan = ar_abs_spread_rr[~np.isnan(ar_abs_spread_rr)]
+  nb_rank_reversals = 0
+  if ar_abs_spread_rr[0] > zero_threshold:
+    nb_rank_reversals = 1
+  for i, spread in enumerate(ar_abs_spread_rr_nonan[1:], start = 1):
+    if spread > zero_threshold and ar_abs_spread_rr_nonan[i-1] < zero_threshold:
+      nb_rank_reversals += 1
+  return nb_rank_reversals
+
+def get_ls_lengths_rr_naive(ar_abs_spread_rr):
+  """ 
+  Lists lengths of streaks of positive values in a non negative array:
+  np.nan are considered as 0 except if in between positive values
+  
+  Parameters:
+  -----------
+  ar_abs_spread_rr: numpy array of non negative float and np.nan
+  """
+  ar_abs_spread_rr_nonan = ar_abs_spread_rr[~np.isnan(ar_abs_spread_rr)]
+  ls_len_rr = []
+  len_rr = 0
+  for spread in ar_abs_spread_rr_nonan:
+    if spread > zero_threshold:
+      len_rr +=1
+    elif spread < zero_threshold and len_rr != 0:
+      ls_len_rr.append(len_rr)
+      len_rr = 0
+  if len_rr > 0:
+    ls_len_rr.append(len_rr)
+  return ls_len_rr
+
+def get_ls_lengths_rr_strict(ar_abs_spread_rr):
+  """ 
+  Lists lengths of streaks of positive values in a non negative array:
+  Streak is not recorded if adjacent to a np.nan
+  Streak is not recorded if starts at beginning or ends at end of array
+
+  Parameters:
+  -----------
+  A numpy array of float and np.nan
+  """
+  ls_len_full_rr = []
+  len_rr = 0
+  dum_nan = 0
+  if np.isnan(ar_abs_spread_rr[0]):
+    dum_nan = 1
+  for i, spread in enumerate(ar_abs_spread_rr[1:], start = 1):
+    if spread > zero_threshold and dum_nan == 0:
+      len_rr +=1
+    elif spread < zero_threshold:
+      dum_nan = 0 
+      if len_rr != 0:
+        ls_len_full_rr.append(len_rr)
+        len_rr = 0
+    elif np.isnan(spread):
+      len_rr = 0
+      dum_nan = 1
+  if ar_abs_spread_rr[0] > zero_threshold and ar_abs_spread_rr[1] > zero_threshold:
+    ls_len_full_rr = ls_len_full_rr[1:]
+  return ls_len_full_rr
 
 # ANALYSIS OF MARKET PRICE DISPERSION
 
@@ -463,17 +431,6 @@ if __name__=="__main__":
   print 'Starting price dispersion block'
   start_time = timeit.default_timer() 
   
-  station_price_dispersion = get_station_price_dispersion('1500007',
-                                                          ls_ls_competitors, 
-                                                          master_price, 
-                                                          series,
-                                                          km_bound)
-  
-  ls_pair_price_dispersion = get_ls_pair_price_dispersion(ls_tuple_competitors,
-                                                          master_price,
-                                                          series,
-                                                          km_bound)
-                                                                
   # ls_ls_market_ids = get_ls_ls_distance_market_ids(master_price, ls_ls_competitors, km_bound)
   # ls_ls_market_price_dispersion = get_ls_ls_market_price_dispersion(ls_ls_market_ids, master_price, series)
   

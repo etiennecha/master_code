@@ -5,10 +5,11 @@ import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
 
-path_dir_built_json = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_json_gasoline')
+path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 
-path_diesel_price_raw = os.path.join(path_dir_built_json, 'master_diesel', 'master_price_diesel_raw')
-path_diesel_price = os.path.join(path_dir_built_json, 'master_diesel', 'master_price_diesel')
+path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_diesel_price_raw = os.path.join(path_dir_built_json, 'master_price_diesel_raw.json')
+path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
 
 # ##############
 # DIESEL MASTER

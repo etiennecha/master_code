@@ -8,26 +8,26 @@ from generic_master_info import *
 from functions_geocoding import *
 from generic_competition import *
 
-path_dir_built_json = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_json_gasoline')
-path_diesel_price = os.path.join(path_dir_built_json, 'master_diesel', 'master_price_diesel')
-path_info = os.path.join(path_dir_built_json, 'master_diesel', 'master_info_diesel')
-path_info_output = os.path.join(path_dir_built_json, 'master_diesel', 'master_info_diesel_for_output')
-path_geocoding = os.path.join(path_dir_built_json, 'master_diesel', 'master_geocoding')
+path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 
-path_ar_cross_distances = os.path.join(path_dir_built_json, 'master_diesel', 'ar_cross_distances.npy')
-path_dict_ls_ids_gps = os.path.join(path_dir_built_json, 'master_diesel', 'dict_ls_ids_gps')
-path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'master_diesel', 'ls_tuple_competitors')
-path_ls_ls_competitors = os.path.join(path_dir_built_json, 'master_diesel', 'ls_ls_competitors')
+path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
+path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
+path_info_output = os.path.join(path_dir_built_json, 'master_info_diesel_for_output.json')
+path_geocoding = os.path.join(path_dir_built_json, 'master_geocoding.json')
+path_ar_cross_distances = os.path.join(path_dir_built_json, 'ar_cross_distances.npy')
+path_dict_ls_ids_gps = os.path.join(path_dir_built_json, 'dict_ls_ids_gps.json')
+path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
+path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
 
-path_dir_source_stations = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_stations')
-path_dict_brands = os.path.join(path_dir_source_stations, 'data_brands', 'dict_brands')
-path_csv_rls = os.path.join(path_dir_source_stations, 'data_rls', 'raw', 'data_rls.csv')
-
-path_dir_gps_coordinates = os.path.join(path_dir_source_stations, 'data_gouv_gps', 'std')
-ls_gps_gouv_files = [r'20130117_list_coordinates_essence',
-                     r'20130117_list_coordinates_diesel',
-                     r'20130724_list_coordinates_essence',
-                     r'20130724_list_coordinates_diesel'] 
+path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
+path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
+path_csv_rls = os.path.join(path_dir_source, 'data_other', 'data_rls.csv')
+path_dir_gps_coordinates = os.path.join(path_dir_source, 'data_stations', 'data_gouv_gps')
+ls_gps_gouv_files = [r'20130117_ls_coordinates_essence.json',
+                     r'20130117_ls_coordinates_diesel.json',
+                     r'20130724_ls_coordinates_essence.json',
+                     r'20130724_ls_coordinates_diesel.json'] 
 
 master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info)
@@ -234,11 +234,11 @@ for i, ls_distances_i in enumerate(ls_ls_cross_distances):
 
 # 6/ STORE RESULTS
 
-np.save(path_ar_cross_distances, ar_cross_distances)
-enc_json(dict_ls_ids_gps, path_dict_ls_ids_gps) 
-
-enc_json(ls_ls_competitors, path_ls_ls_competitors)
-enc_json(ls_tuple_competitors, path_ls_tuple_competitors) 
+#np.save(path_ar_cross_distances, ar_cross_distances)
+#enc_json(dict_ls_ids_gps, path_dict_ls_ids_gps) 
+#
+#enc_json(ls_ls_competitors, path_ls_ls_competitors)
+#enc_json(ls_tuple_competitors, path_ls_tuple_competitors) 
 
 
 #ls_ls_competitors = dec_json(path_ls_ls_competitors)

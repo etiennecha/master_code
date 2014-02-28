@@ -7,24 +7,33 @@ from generic_master_price import *
 from generic_master_info import *
 from functions_string import *
 
-path_dir_built_json = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_json_gasoline')
-path_diesel_price = os.path.join(path_dir_built_json, 'master_diesel', 'master_price_diesel')
-path_info_raw = os.path.join(path_dir_built_json, 'master_diesel', 'master_info_diesel_raw')
-path_info = os.path.join(path_dir_built_json, 'master_diesel', 'master_info_diesel')
+path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 
-path_dir_source_stations = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_stations')
-path_dict_brands = os.path.join(path_dir_source_stations, 'data_brands', 'dict_brands')
-path_ls_duplicates = os.path.join(path_dir_source_stations, 'data_reconciliations', 'ls_id_reconciliations')
+path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
+path_info_raw = os.path.join(path_dir_built_json, 'master_info_diesel_raw.json')
+path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
 
-path_dir_built_csv = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_csv_gasoline')
-path_csv_insee_data = os.path.join(path_dir_built_csv, 'master_insee_output.csv') 
+path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
+path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
+path_ls_duplicates = os.path.join(path_dir_source, 'data_other', 'ls_id_reconciliations.json')
+path_csv_insee_extract = os.path.join(path_dir_source, 'data_other', 'data_insee_extract.csv')
+
+path_dir_insee = os.path.join(path_data, 'data_insee')
+path_dir_match_insee_codes = os.path.join(path_dir_insee, 'match_insee_codes')
+path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
 
 master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info_raw)
 dict_brands = dec_json(path_dict_brands)
+dict_dpts_regions = dec_json(path_dict_dpts_regions)
 ls_duplicate_corrections = dec_json(path_ls_duplicates)
 
 ls_series = ['diesel_price', 'diesel_date']
+
+# #################
+# CHECK ADDRESSES
+# #################
 
 # Build master_addresses (addresses corrected for html pbms and somewhat stdized)
 dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0) if indiv_info['address'][i]]\
@@ -59,14 +68,14 @@ for k, v in dict_describe_addresses.items():
 # 1: Search within same zip if city name matches
 
 # Load zip code - insee code correspondence file
-file_correspondence = open(os.path.join(path_data, 'data_insee', 'corr_cinsee_cpostal'),'r')
+file_correspondence = open(os.path.join(path_dir_match_insee_codes, 'corr_cinsee_cpostal'),'r')
 correspondence = file_correspondence.read().split('\n')[1:-1]
 # Update changes in city codes (correspondence is a bit old)
-file_correspondence_update = open(os.path.join(path_data, 'data_insee', 'corr_cinsee_cpostal_update'),'r')
+file_correspondence_update = open(os.path.join(path_dir_match_insee_codes, 'corr_cinsee_cpostal_update'),'r')
 correspondence_update = file_correspondence_update.read().split('\n')[1:]
 correspondence += correspondence_update
 # Patch ad hoc for gas station cedexes
-file_correspondence_gas_path = open(os.path.join(path_data, 'data_insee', 'corr_cinsee_cpostal_gas_patch'),'r')
+file_correspondence_gas_path = open(os.path.join(path_dir_match_insee_codes, 'corr_cinsee_cpostal_gas_patch'),'r')
 correspondence_gas_patch = file_correspondence_gas_path.read().split('\n')
 correspondence += correspondence_gas_patch
 correspondence = [row.split(';') for row in correspondence]
@@ -111,7 +120,7 @@ for indiv_id, ls_addresses in master_addresses.iteritems():
       print 'Could not match', str_insee_harmonization(str_low_noacc(city))
 
 # Check insee codes are still in use
-pd_df_insee = pd.read_csv(path_csv_insee_data, encoding = 'utf-8')
+pd_df_insee = pd.read_csv(path_csv_insee_extract, encoding = 'utf-8', dtype = str)
 ls_france_insee_codes = list(pd_df_insee[u'Département - Commune CODGEO'].astype(str))
 
 dict_large_cities = dict(list(itertools.product(map(str,range(13201, 13217)), ['13055']))+\

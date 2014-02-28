@@ -5,10 +5,11 @@ import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
 
-path_dir_built_json = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_json_gasoline')
+path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 
-path_gas_price_raw = os.path.join(path_dir_built_json, 'master_gas', 'master_price_diesel_raw')
-path_gas_price_clean = os.path.join(path_dir_built_json, 'master_gas', 'master_price_diesel')
+path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_gas_price_raw = os.path.join(path_dir_built_json, 'master_price_gas_raw.json')
+path_gas_price = os.path.join(path_dir_built_json, 'master_price_gas.json')
 
 # #############
 # GAS MASTER
@@ -134,4 +135,4 @@ master_price['sp95_price'] = get_rid_missing_periods(master_price['sp95_price'],
 
 # TODO: read http://www.leparisien.fr/economie/pourquoi-le-sans-plomb-98-coute-t-il-plus-cher-que-le-sp95-01-05-2012-1979493.php
 
-# enc_json(master_price, path_gas_price_clean)
+# enc_json(master_price, path_gas_price)

@@ -7,13 +7,15 @@ from generic_master_price import *
 from generic_master_info import *
 from functions_geocoding import *
 
-path_dir_built_json = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_json_gasoline')
-path_diesel_price = os.path.join(path_dir_built_json, 'master_diesel', 'master_price_diesel')
-path_info = os.path.join(path_dir_built_json, 'master_diesel', 'master_info_diesel')
-path_geocoding = os.path.join(path_dir_built_json, 'master_diesel', 'master_geocoding')
+path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 
-path_dir_source_stations = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_stations')
-path_dict_brands = os.path.join(path_dir_source_stations, 'data_brands', 'dict_brands')
+path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
+path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
+path_geocoding = os.path.join(path_dir_built_json, 'master_geocoding.json')
+
+path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
+path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
 
 master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info)

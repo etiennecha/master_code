@@ -14,7 +14,7 @@ if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
 else:
   path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
 # structure of the data folder should be the same
-folder_current_prices = r'\data_gasoline\data_source\data_json_prices\current_prices'
+folder_current_prices = r'\data_gasoline\data_source\data_prices\current_prices'
 
 def enc_stock_json(database, chemin):
  with open(chemin, 'w') as fichier:
