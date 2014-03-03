@@ -15,11 +15,10 @@ path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
 path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
 path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
 
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
-path_csv_insee_data = os.path.join(path_dir_built_csv, 'master_insee_output.csv') 
-
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_dict_brands = os.path.join(path_dir_source, 'data_various', 'dict_brands.json')
+path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
+path_csv_insee_data = os.path.join(path_dir_source, 'data_other', 'data_insee_extract.csv')
+
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
 
@@ -62,19 +61,40 @@ for id_station, info_station in master_price['dict_info'].items():
 # BRAND CHANGES
 # #####################
 
+dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
+# Builds dict with keys: tuple of brand changes combinations, ctent: list of station ids
+dict_brand_chges = {}
+for indiv_id, indiv_info in master_price['dict_info'].items():
+  if len(indiv_info['brand_std']) > 1:
+    tup_indiv_brands = tuple([brand[0] for brand in indiv_info['brand_std']])
+    dict_brand_chges.setdefault(tup_indiv_brands, []).append(indiv_id)
+# Display significant brand changes
+print '\nBrand changes concerning at least 4 stations'
+for k, v in dict_brand_chges.items():
+  if len(v) >= 5: 
+    print k, len(v)
+# Print intra SUP changes
+print '\nBrand changes between supermarkets'
+for k, v in dict_brand_chges.items():
+  if all(dict_std_brands[x][2] == 'SUP' for x in k):
+    print k, len(v)
+# Print intra OIL changes
+print '\nBrand changes between oil stations'
+for k,v in dict_brand_chges.items():
+  if all(dict_std_brands[x][2] == 'OIL' for x in k):
+    print k, len(v)
+
+# For Total Access analysis (TODO: generalize? + MOVE)
 dict_comp_total_access = {}
 dict_comp_total_access_short = {}
-for indiv_ind, indiv_id in enumerate(master_price['ids']):
-  station_info = master_price['dict_info'][indiv_id]
-  if station_info['brand']:
-    # generalize to all (single) brand changes ?
-    if 'TOTAL_ACCESS' in [dict_brands[get_str_no_accent_up(brand)][0] \
-                            for (brand, day_ind) in station_info['brand']]:
-      if ls_ls_competitors[indiv_ind]:
-        for (competitor_id, competitor_distance) in ls_ls_competitors[indiv_ind]:
-          dict_comp_total_access.setdefault(competitor_id, []).append((indiv_id, competitor_distance))
-for indiv_id, list_stations in dict_comp_total_access.items():
-  dict_comp_total_access[indiv_id] = sorted(list_stations, key = lambda x: x[1])
+for indiv_id, indiv_info in master_price['dict_info'].items():
+  indiv_ind = master_price['ids'].index(indiv_ind) 
+  if 'TOTAL_ACCESS' in indiv_info['brand_std']:
+    if ls_ls_competitors[indiv_ind]:
+      for competitor_id, competitor_distance in ls_ls_competitors[indiv_ind]:
+        dict_comp_total_access.setdefault(competitor_id, []).append((indiv_id, competitor_distance))
+for indiv_id, ls_stations in dict_comp_total_access.items():
+  dict_comp_total_access[indiv_id] = sorted(ls_stations, key = lambda x: x[1])
   dict_comp_total_access_short[indiv_id] = dict_comp_total_access[indiv_id][0:2]
 
 # #########
@@ -93,7 +113,6 @@ for indiv_id, indiv_info in master_info.items():
   else:
     ls_station_services = [None for i in ls_services]
   master_info[indiv_id]['list_service_dummies'] = ls_station_services
-
 
 # ######
 # BRANDS

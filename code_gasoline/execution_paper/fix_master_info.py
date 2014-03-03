@@ -370,6 +370,18 @@ for indiv_ind in ls_total_access_chges:
  #TODO: add corrections to be done manually...
  #Check 437 (3 changes...)
 
+# Adds brand_std to dict_info in master_price and create corresponding dict_std_brands:
+dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
+for indiv_id, indiv_info in master_price['dict_info'].items():
+  ls_brand_std = [[dict_brands[name][0], day_ind] for name, day_ind in indiv_info['brand']]
+  i = 1 
+  while i < len(ls_brand_std):
+    if ls_brand_std[i][0] == ls_brand_std[i-1][0]:
+      del(ls_brand_std[i])
+    else:
+      i += 1
+  master_price['dict_info'][indiv_id]['brand_std'] = ls_brand_std
+
 # #################################
 # HIGHWAY GAS STATION (master_info)
 # #################################
