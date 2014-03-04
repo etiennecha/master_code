@@ -150,18 +150,18 @@ print '\n Chge of type:', len(df_info[df_info['brand_type_b'] != df_info['brand_
 
 # Count stations by location/brand
 dict_count_df = {}
-for col in ['region', 'brand_1_b', 'brand_2_b', 'brand_type_b']:
+for col in ['region', 'brand_1_e', 'brand_2_e', 'brand_type_e']:
   dict_count_df[col] = df_competition[col].value_counts()
 print '\n', dict_count_df['region']
-print '\n', dict_count_df['brand_2_b']
-print '\n', dict_count_df['brand_type_b']
+print '\n', dict_count_df['brand_2_e']
+print '\n', dict_count_df['brand_type_e']
 # TODO: add comparison with population for region or dpt
 # TODO: add comparision between beg and end for brands / groups of brands
 
 # DISTANCE TO CLOSEST COMPETITOR (TODO: robustess with 2nd closest)
 
 # Check 0 distance to closest competitor (to be investigated as pairs)
-df_competition[['city', 'zip_code', 'region', 'brand_1_b']][df_competition['dist_cl_comp']==0]
+df_competition[['city', 'zip_code', 'region', 'brand_1_e']][df_competition['dist_cl_comp']==0]
 
 print '\nNo comp within 10 km:', len(df_competition[df_competition['dist_cl_comp'] == 10])
 print '\nDistance to closest comp:', df_competition['dist_cl_comp'].describe()
@@ -183,12 +183,12 @@ print df_des_region[['count', '25%', '50%', '75%', '% >10km']].to_string()
 
 # WEAK COMPETITION BY TYPE
 
-df_nb_monop_brand = df_competition['brand_1_b'][df_competition['dist_cl_comp'] == 10]\
+df_nb_monop_brand = df_competition['brand_2_e'][df_competition['dist_cl_comp'] == 10]\
                           .value_counts()
-df_nb_monop_brand_type = df_competition['brand_type_b'][df_competition['dist_cl_comp'] == 10]\
+df_nb_monop_brand_type = df_competition['brand_type_e'][df_competition['dist_cl_comp'] == 10]\
                           .value_counts()
-df_pct_monop_region = df_nb_monop_region / dict_count_df['region']
-df_pct_monop_brand_type = df_nb_monop_brand_type / dict_count_df['brand_type_b']
+df_pct_monop_brand = df_nb_monop_brand / dict_count_df['brand_2_e']
+df_pct_monop_brand_type = df_nb_monop_brand_type / dict_count_df['brand_type_e']
 
 # Correlation between series for nb of competitors
 # Res: High from 3 to 10 competitors...
