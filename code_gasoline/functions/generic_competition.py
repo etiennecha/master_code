@@ -48,7 +48,7 @@ def get_stats_price_chges(ar_prices, light = True):
   TODO: check how to apply mean/median/quartiles etc to arrays (lambda etc)
    
   Parameters:
-  ----------- 
+  -----------ar_abs_spread_rr_nonan and  
   ar_prices: numpy array of float and np.nan
   light: True returns scalar stats only, else arrays too
   """
@@ -188,7 +188,7 @@ def count_nb_rr_conservative(ar_abs_spread_rr):
   """
   ar_abs_spread_rr_nonan = ar_abs_spread_rr[~np.isnan(ar_abs_spread_rr)]
   nb_rank_reversals = 0
-  if ar_abs_spread_rr[0] > zero_threshold:
+  if ar_abs_spread_rr_nonan and ar_abs_spread_rr_nonan[0] > zero_threshold:
     nb_rank_reversals = 1
   for i, spread in enumerate(ar_abs_spread_rr_nonan[1:], start = 1):
     if spread > zero_threshold and ar_abs_spread_rr_nonan[i-1] < zero_threshold:
