@@ -41,6 +41,7 @@ df_price = pd.DataFrame(master_np_prices.T, master_price['dates'], columns=maste
 # PAIR PRICE DISPERSION
 # #####################
 
+# COMPUTE PAIR PRICE DISPERSION
 start = time.clock()
 ls_pair_price_dispersion = []
 ls_pair_competitors = []
@@ -60,27 +61,85 @@ ls_ppd_for_df = [elt[0] for elt in ls_pair_price_dispersion]
 ls_columns = ['avg_abs_spread', 'avg_spread', 'std_spread', 'nb_days_spread',
               'percent_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr', 'nb_rr_conservative']
 df_ppd = pd.DataFrame(ls_ppd_for_df, columns = ls_columns)
-
-# No rank reversal => check differentiation
-print 'No rank reversal', len(df_ppd[df_ppd['percent_rr'] <= zero_threshold])
-
-# Too much rank reversal => check deterministic changes
 ls_max_len_rr = [np.max(elt[3][0]) if elt[3][0] else 0 for elt in ls_pair_price_dispersion]
-print 'Station with max length rank reversal', np.argmax(ls_max_len_rr)
 df_ppd['max_len_rr'] = ls_max_len_rr
+df_ppd['id_1'] = [comp[0][0] for comp in ls_pair_competitors]
+df_ppd['id_2'] = [comp[0][1] for comp in ls_pair_competitors]
 
-print 'Suspect rank reversals:', len(df_ppd[(df_ppd['nb_rr_conservative'] < 4)&\
-                                            (df_ppd['max_len_rr'] > 30)])
-# problem: continously reduce... where to stop? what is legit?
+# DF BRAND (LIGHT)
+dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
+ls_brands = []
+for indiv_id in master_price['ids']:
+  indiv_dict_info = master_price['dict_info'][indiv_id]
+  brand_1_b = indiv_dict_info['brand_std'][0][0]
+  brand_2_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][1]
+  brand_type_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][2]
+  brand_1_e = indiv_dict_info['brand_std'][-1][0]
+  brand_2_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][1]
+  brand_type_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][2]
+  ls_brands.append([brand_1_b, brand_2_b, brand_type_b,
+                    brand_1_e, brand_2_e, brand_type_e])
+ls_columns = ['brand_1_b', 'brand_2_b', 'brand_type_b', 'brand_1_e', 'brand_2_e', 'brand_type_e']
+df_brands = pd.DataFrame(ls_brands, index = master_price['ids'], columns = ls_columns)
+df_brands['id'] = df_brands.index
 
-print 'Low number of rank reversals:', len(df_ppd[(df_ppd['nb_rr_conservative'] < 3) &\
-                                          (df_ppd['nb_rr_conservative'] > 0)])
+# MERGE DF BRANDS AND DF PAIR PD STATS
+df_brands = df_brands.rename(columns={'id': 'id_1'})
+df_ppd_brands = pd.merge(df_ppd, df_brands, on='id_1')
+df_brands = df_brands.rename(columns={'id_1': 'id_2'})
+df_ppd_brands = pd.merge(df_ppd_brands, df_brands, on='id_2', suffixes=('_1', '_2'))
+
+# Find suspect rank reversal
+print 'Station with max length rank reversal:', np.argmax(df_ppd['max_len_rr'])
+
+# DF All
+print '\nDF All'
+print '% no rr', len(df_ppd_brands[df_ppd_brands['percent_rr'] <= zero_threshold])/\
+        float(len(df_ppd_brands))
+print '% rr avg', df_ppd_brands['percent_rr'].mean()
+print '% rr, no 0 ', df_ppd_brands['percent_rr'][df_ppd_brands['percent_rr'] > zero_threshold].mean()
+print 'max len rr avg',  df_ppd_brands['max_len_rr'].mean()
+print 'id, no 0', df_ppd_brands['max_len_rr'][df_ppd_brands['percent_rr'] >= zero_threshold].mean()
+
+# DF Total Access
+print '\nDF Total Access'
+df_ppd_ta = df_ppd_brands[(df_ppd_brands['brand_2_e_2'] == 'TOTAL_ACCESS')|\
+                          (df_ppd_brands['brand_2_e_1'] == 'TOTAL_ACCESS')]
+print '% no rr', len(df_ppd_ta[df_ppd_ta['percent_rr'] <= zero_threshold])/\
+        float(len(df_ppd_ta))
+print '% rr avg', df_ppd_ta['percent_rr'].mean()
+print '% rr, no 0 ', df_ppd_ta['percent_rr'][df_ppd_ta['percent_rr'] > zero_threshold].mean()
+print 'max len rr avg',  df_ppd_ta['max_len_rr'].mean()
+print 'id, no 0', df_ppd_ta['max_len_rr'][df_ppd_ta['percent_rr'] >= zero_threshold].mean()
+
+# DF No Total Access
+print '\nNo Total Access'
+df_ppd_nota = df_ppd_brands[(df_ppd_brands['brand_2_e_2'] != 'TOTAL_ACCESS')&\
+                            (df_ppd_brands['brand_2_e_1'] != 'TOTAL_ACCESS')]
+print '% no rr', len(df_ppd_nota[df_ppd_nota['percent_rr'] <= zero_threshold])/\
+        float(len(df_ppd_nota))
+print '% rr avg', df_ppd_nota['percent_rr'].mean()
+print '% rr, no 0 ', df_ppd_nota['percent_rr'][df_ppd_nota['percent_rr'] > zero_threshold].mean()
+print 'max len rr avg avg', df_ppd_nota['percent_rr'].mean()
+print 'id, no 0', df_ppd_nota['percent_rr'][df_ppd_nota['percent_rr'] > zero_threshold].mean()
+
+# Other restrictions
+df_ppd_st = df_ppd_nota[df_ppd_nota['brand_type_e_1'] ==\
+                          df_ppd_nota['brand_type_e_2']]
+
+df_ppd_sup = df_ppd_nota[(df_ppd_nota['brand_type_e_1'] == 'SUP') &\
+                         (df_ppd_nota['brand_type_e_2'] == 'SUP')]
+
+df_ppd_oil = df_ppd_nota[(df_ppd_nota['brand_type_e_1'] == 'OIL') &\
+                         (df_ppd_nota['brand_type_e_2'] == 'OIL')]
+
+# res = smf.ols('avg_spread~percent_rr', df_ppd_st, missing = 'drop').fit()
+# res.summary()
 
 # DF PAIR PD TEMPORAL
 # (could start from simple spread and apply function to mask to each column...)
 ls_rr_spread = [pair_pd[2][1] for tup_comp, pair_pd\
-                  in zip(ls_pair_competitors, ls_pair_price_dispersion)
-                    if tup_comp[1] <= 3]
+                  in zip(ls_pair_competitors, ls_pair_price_dispersion)] #if tup_comp[1] <= 3
 df_rr_spread = pd.DataFrame(np.array(ls_rr_spread, np.float32))
 
 ls_rr_temp = []
@@ -95,7 +154,40 @@ ls_columns = ['nb_valid', 'nb_rr', 'med_rr', 'avg_rr']
 df_rr_temp = pd.DataFrame(ls_rr_temp, master_price['dates'], ls_columns)
 df_rr_temp['pct_rr'] = df_rr_temp['nb_rr']/ df_rr_temp['nb_valid']
 
+#DF PAIR PD TEMPORAL TA
+df_rr_spread_ta = df_rr_spread.ix[df_ppd_ta.index]
+
+ls_rr_temp = []
+for day_ind in df_rr_spread_ta.columns:
+  nb_valid = len(df_rr_spread_ta[day_ind][~pd.isnull(df_rr_spread_ta[day_ind])])
+  se_rr = np.abs(df_rr_spread_ta[day_ind][np.abs(df_rr_spread_ta[day_ind]) >  zero_threshold])
+  nb_rr = len(se_rr)
+  med_rr = np.median(se_rr)
+  avg_rr = np.mean(se_rr)
+  ls_rr_temp.append([nb_valid, nb_rr, med_rr, avg_rr])
+ls_columns = ['nb_valid', 'nb_rr', 'med_rr', 'avg_rr']
+df_rr_temp_ta = pd.DataFrame(ls_rr_temp, master_price['dates'], ls_columns)
+df_rr_temp_ta['pct_rr'] = df_rr_temp_ta['nb_rr']/ df_rr_temp_ta['nb_valid']
+
+#DF PAIR PD TEMPORAL TA
+df_rr_spread_nota = df_rr_spread.ix[df_ppd_nota.index]
+
+ls_rr_temp = []
+for day_ind in df_rr_spread_nota.columns:
+  nb_valid = len(df_rr_spread_nota[day_ind][~pd.isnull(df_rr_spread_nota[day_ind])])
+  se_rr = np.abs(df_rr_spread_nota[day_ind][np.abs(df_rr_spread_nota[day_ind]) >  zero_threshold])
+  nb_rr = len(se_rr)
+  med_rr = np.median(se_rr)
+  avg_rr = np.mean(se_rr)
+  ls_rr_temp.append([nb_valid, nb_rr, med_rr, avg_rr])
+ls_columns = ['nb_valid', 'nb_rr', 'med_rr', 'avg_rr']
+df_rr_temp_nota = pd.DataFrame(ls_rr_temp, master_price['dates'], ls_columns)
+df_rr_temp_nota['pct_rr'] = df_rr_temp_nota['nb_rr']/ df_rr_temp_nota['nb_valid']
 # TODO: plot vs. margin !
+
+plt.plot(df_rr_temp_nota['pct_rr'])
+plt.plot(df_rr_temp_ta['pct_rr'])
+plt.show()
 
 # #########################
 # MARKET PRICE DISPERSION 
