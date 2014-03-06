@@ -37,9 +37,9 @@ km_bound = 5
 master_np_prices = np.array(master_price[series], np.float64)
 df_price = pd.DataFrame(master_np_prices.T, master_price['dates'], columns=master_price['ids'])
 
-# #####################
-# PAIR PRICE DISPERSION
-# #####################
+# #################################
+# PAIR PRICE DISPERSION: RAW PRICES
+# #################################
 
 # COMPUTE PAIR PRICE DISPERSION
 start = time.clock()
@@ -83,11 +83,20 @@ ls_columns = ['brand_1_b', 'brand_2_b', 'brand_type_b', 'brand_1_e', 'brand_2_e'
 df_brands = pd.DataFrame(ls_brands, index = master_price['ids'], columns = ls_columns)
 df_brands['id'] = df_brands.index
 
-# MERGE DF BRANDS AND DF PAIR PD STATS
+# MERGE DF BRANDS AND DF PAIR PD STATS (caution: changes order)
+
 df_brands = df_brands.rename(columns={'id': 'id_1'})
 df_ppd_brands = pd.merge(df_ppd, df_brands, on='id_1')
 df_brands = df_brands.rename(columns={'id_1': 'id_2'})
 df_ppd_brands = pd.merge(df_ppd_brands, df_brands, on='id_2', suffixes=('_1', '_2'))
+
+df_ppd_brands = df_ppd_brands.rename(columns={'nb_rr_conservative': 'nb_rr'})
+
+ls_view_1 =['id_1', 'id_2', 'brand_1_e_1', 'brand_1_e_2', 
+            'nb_days_spread', 'avg_abs_spread', 'avg_spread', 'std_spread', 
+            'percent_rr', 'max_len_rr', 'avg_abs_spread_rr', 'nb_rr']
+print df_ppd_brands[ls_view_1][(np.abs(df_ppd_brands['avg_spread']) < 0.01) &\
+                               (df_ppd_brands['avg_abs_spread'] > 0.01)][0:50].to_string()
 
 # Find suspect rank reversal
 print 'Station with max length rank reversal:', np.argmax(df_ppd['max_len_rr'])
@@ -138,10 +147,27 @@ df_ppd_oil = df_ppd_nota[(df_ppd_nota['brand_type_e_1'] == 'OIL') &\
 
 # DF PAIR PD TEMPORAL
 # (could start from simple spread and apply function to mask to each column...)
-ls_rr_spread = [pair_pd[2][1] for tup_comp, pair_pd\
-                  in zip(ls_pair_competitors, ls_pair_price_dispersion)] #if tup_comp[1] <= 3
+
+#ls_rr_spread = [pair_pd[2][1] for tup_comp, pair_pd\
+#                  in zip(ls_pair_competitors, ls_pair_price_dispersion)] #if tup_comp[1] <= 3
+
+ls_rr_spread = []
+ls_ta_inds = []
+ls_nota_inds = []
+ls_rr_ta_day = []
+for i, (p_comp, p_pd) in enumerate(zip(ls_pair_competitors, ls_pair_price_dispersion)):
+  ls_rr_spread.append(p_pd[2][1])
+  if (df_brands['brand_1_e'][p_comp[0][0]] == 'TOTAL_ACCESS') or\
+     (df_brands['brand_1_e'][p_comp[0][1]] == 'TOTAL_ACCESS'):
+    ls_ta_inds.append(i)
+    if 639 in p_pd[1]: # to check...
+      ls_rr_ta_day.append(i)
+  else:
+    ls_nota_inds.append(i)
+
 df_rr_spread = pd.DataFrame(np.array(ls_rr_spread, np.float32))
 
+# DF PAIR PD TEMPORAL (ALL PAIRS)
 ls_rr_temp = []
 for day_ind in df_rr_spread.columns:
   nb_valid = len(df_rr_spread[day_ind][~pd.isnull(df_rr_spread[day_ind])])
@@ -152,10 +178,10 @@ for day_ind in df_rr_spread.columns:
   ls_rr_temp.append([nb_valid, nb_rr, med_rr, avg_rr])
 ls_columns = ['nb_valid', 'nb_rr', 'med_rr', 'avg_rr']
 df_rr_temp = pd.DataFrame(ls_rr_temp, master_price['dates'], ls_columns)
-df_rr_temp['pct_rr'] = df_rr_temp['nb_rr']/ df_rr_temp['nb_valid']
+df_rr_temp['pct_rr'] = df_rr_temp['nb_rr'] / df_rr_temp['nb_valid']
 
-#DF PAIR PD TEMPORAL TA
-df_rr_spread_ta = df_rr_spread.ix[df_ppd_ta.index]
+# DF PAIR PD TEMPORAL TA
+df_rr_spread_ta = df_rr_spread.ix[ls_ta_inds]
 
 ls_rr_temp = []
 for day_ind in df_rr_spread_ta.columns:
@@ -169,8 +195,8 @@ ls_columns = ['nb_valid', 'nb_rr', 'med_rr', 'avg_rr']
 df_rr_temp_ta = pd.DataFrame(ls_rr_temp, master_price['dates'], ls_columns)
 df_rr_temp_ta['pct_rr'] = df_rr_temp_ta['nb_rr']/ df_rr_temp_ta['nb_valid']
 
-#DF PAIR PD TEMPORAL TA
-df_rr_spread_nota = df_rr_spread.ix[df_ppd_nota.index]
+# DF PAIR PD TEMPORAL NO TA
+df_rr_spread_nota = df_rr_spread.ix[ls_nota_inds]
 
 ls_rr_temp = []
 for day_ind in df_rr_spread_nota.columns:
@@ -183,11 +209,82 @@ for day_ind in df_rr_spread_nota.columns:
 ls_columns = ['nb_valid', 'nb_rr', 'med_rr', 'avg_rr']
 df_rr_temp_nota = pd.DataFrame(ls_rr_temp, master_price['dates'], ls_columns)
 df_rr_temp_nota['pct_rr'] = df_rr_temp_nota['nb_rr']/ df_rr_temp_nota['nb_valid']
+
 # TODO: plot vs. margin !
 
+plt.plot(df_rr_temp['pct_rr'])
 plt.plot(df_rr_temp_nota['pct_rr'])
 plt.plot(df_rr_temp_ta['pct_rr'])
 plt.show()
+
+# TODO: WITH CONTROL FOR PRICE
+# TODO: VS. COST LEVEL
+
+# ########################################
+# PAIR PRICE DISPERSION: NORMALIZED PRICES
+# ########################################
+
+## COMPUTE PAIR PRICE DISPERSION
+#start = time.clock()
+#ls_pair_price_dispersion = []
+#ls_pair_competitors = []
+#for ((indiv_id_1, indiv_id_2), distance) in ls_tuple_competitors:
+#  # could check presence btw...
+#  indiv_ind_1 = master_price['ids'].index(indiv_id_1)
+#  indiv_ind_2 = master_price['ids'].index(indiv_id_2)
+#  if distance < km_bound:
+#    ls_pair_competitors.append(((indiv_id_1, indiv_id_2), distance))
+#    ar_price_1 = master_np_prices[indiv_ind_1]
+#    ar_price_2 = master_np_prices[indiv_ind_2]
+#    ar_diff = ar_price_1 - ar_price_2
+#    ar_price_1_norm = ar_price_1 - ar_diff[~np.isnan(ar_diff)].mean()
+#    ls_pair_price_dispersion.append(get_pair_price_dispersion(ar_price_1_norm,
+#                                                              ar_price_2,
+#                                                              light = False))
+#print 'Pair price dispersion:', time.clock() - start
+#
+#def get_plot_normalized(ar_price_1, ar_price2):
+#  # TODO: see if orient towards pandas or not
+#  ar_diff = ar_price_1 - ar_price_2
+#  ar_price_1_norm = ar_price_1 - ar_diff[~np.isnan(ar_diff)].mean()
+#  plt.plot(ar_price_1_norm)
+#  plt.plot(ar_price_2)
+#  plt.plot(ar_price_1)
+#  plt.show()
+#  return
+#
+## DF PAIR PD STATS
+#ls_ppd_for_df = [elt[0] for elt in ls_pair_price_dispersion]
+#ls_columns = ['avg_abs_spread', 'avg_spread', 'std_spread', 'nb_days_spread',
+#              'percent_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr', 'nb_rr_conservative']
+#df_ppd = pd.DataFrame(ls_ppd_for_df, columns = ls_columns)
+#ls_max_len_rr = [np.max(elt[3][0]) if elt[3][0] else 0 for elt in ls_pair_price_dispersion]
+#df_ppd['max_len_rr'] = ls_max_len_rr
+#df_ppd['id_1'] = [comp[0][0] for comp in ls_pair_competitors]
+#df_ppd['id_2'] = [comp[0][1] for comp in ls_pair_competitors]
+#
+#df_brands = df_brands.rename(columns={'id_2': 'id_1'})
+#df_ppd_brands = pd.merge(df_ppd, df_brands, on='id_1')
+#df_brands = df_brands.rename(columns={'id_1': 'id_2'})
+#df_ppd_brands = pd.merge(df_ppd_brands, df_brands, on='id_2', suffixes=('_1', '_2'))
+#
+#df_ppd_brands = df_ppd_brands.rename(columns={'nb_rr_conservative': 'nb_rr'})
+#
+#plt.hist(np.array(df_ppd_brands['avg_abs_spread'][~pd.isnull(df_ppd_brands['avg_abs_spread'])]), bins = 100)
+#plt.hist(np.array(df_ppd_brands['max_len_rr'][~pd.isnull(df_ppd_brands['max_len_rr'])]), bins = 100)
+#plt.hist(np.array(df_ppd_brands['nb_rr'][~pd.isnull(df_ppd_brands['nb_rr'])]), bins = 100)
+#
+### Change in price policy => high avg_abs_spread with low nb_rr => clear cut: exlude!
+##print df_ppd_brands[ls_view_1][df_ppd_brands['avg_abs_spread'] > 0.03].to_string()
+#print df_ppd_brands[ls_view_1][(df_ppd_brands['avg_abs_spread'] < 0.02) & \
+#                               (df_ppd_brands['nb_rr'] > 30)].to_string()
+#get_plot_normalized(np.array(df_price['95190001']), np.array(df_price['95500005']))
+
+# ##################################
+# PAIR PD: LOOK FOR REAL COMPETITORS 
+# ##################################
+
+
 
 # #########################
 # MARKET PRICE DISPERSION 
