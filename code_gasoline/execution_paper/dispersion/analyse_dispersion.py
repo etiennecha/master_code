@@ -284,7 +284,21 @@ plt.show()
 # PAIR PD: LOOK FOR REAL COMPETITORS 
 # ##################################
 
-
+ls_ls_indiv_pd = []
+for indiv_id, ls_indiv_comp in zip(master_price['ids'], ls_ls_competitors)[0:3]:
+  ls_indiv_pd = []
+  indiv_ind_1 = master_price['ids'].index(indiv_id)
+  for (comp_id, distance) in ls_indiv_comp:
+    indiv_ind_2 = master_price['ids'].index(comp_id)
+    if distance < km_bound:
+      ls_comp_pd = get_pair_price_dispersion(master_np_prices[indiv_ind_1],
+                                             master_np_prices[indiv_ind_2],
+                                             light = False)
+      if (ls_comp_pd[0][3] > 100) and (ls_comp_pd[0][4] > 0.1) and (ls_comp_pd[0][7] > 5):
+        ls_indiv_pd.append([comp_id,
+                            distance,
+                            ls_comp_pd])
+  ls_ls_indiv_pd.append(ls_indiv_pd)
 
 # #########################
 # MARKET PRICE DISPERSION 
