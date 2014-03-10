@@ -90,10 +90,13 @@ m_route = Basemap(resolution='i',
 
 path_data_ubuntu = os.path.join('~', 'Documents', 'Etienne', 'sf_Data')
 path_data_windows = os.path.join('C:\\', 'Users', 'etna', 'Desktop', 'Etienne_work', 'Data')
+path_data_work = os.path.join('W:\\', 'Bureau', 'Etienne_work', 'Data')
 if os.path.exists(path_data_windows):
   path_data = path_data_windows
-else:
+elif os.path.exists(path_data_ubuntu):
   path_data = path_data_ubuntu
+else:
+  path_data = path_data_work 
 
 path_dir_route_500 = os.path.join(path_data, 'data_maps' ,'ROUTE500_WGS84', 'TRONCON_ROUTE')
 path_dir_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
@@ -124,7 +127,6 @@ region_multipolygon = MultiPolygon(list(\
 region_multipolygon_prep = prep(region_multipolygon)
 region_bounds = region_multipolygon.bounds
 
-
 # DF COM
 
 ls_com = []
@@ -133,12 +135,13 @@ for com_poly, com_info in zip(m_route.communes_fr, m_route.communes_fr_info):
   ls_com.append(com_info)
 df_com = pd.DataFrame(ls_com)
 
+
 # MAP: TEST PARIS ARDTS
 
 df_com['patches'] = df_com['poly'].map(lambda x: PolygonPatch(x,
                                                               facecolor='#FFFFFF', # '#555555'
                                                               edgecolor='#555555', # '#787878'
-                                                              lw=.25, alpha=.9, zorder=0))
+                                                              lw=.25, alpha=.3, zorder=1))
 plt.clf()
 fig = plt.figure()
 ax = fig.add_subplot(111, axisbg = 'w', frame_on = False)
@@ -153,8 +156,10 @@ dev = m_route.scatter([station.x for station in df_velib[df_velib['available_bik
 ax.add_collection(PatchCollection(df_com[df_com['NOM_DEPT'] == "PARIS"]['patches'].values,
                                   match_original = True))
 plt.show()
+print ax.get_xlim(), ax.get_ylim()
 
-## HEATMAP EXAMPLE
+## MAP: TEST HEATMAP
+
 ## http://stackoverflow.com/questions/6652671/efficient-method-of-calculating-density-of-irregularly-spaced-points
 #import scipy.ndimage as ndi
 #data = np.random.rand(30000,2)*255       ## create random dataset
@@ -163,20 +168,35 @@ plt.show()
 #  img[data[i,0], data[i,1]] += 1
 #img = ndi.gaussian_filter(img, (10,10))  ## gaussian convolution
 #plt.imshow(img)
-import scipy.ndimage as ndi
-img = np.zeros((h*1000 + 2, w*1000 +2 ))
-for stationx, stationy in zip(df_velib['lng'][df_velib['available_bikes'] == 0],
-                              df_velib['lat'][df_velib['available_bikes'] == 0]):
-  yn = ((stationy) - y1)* 1000
-  xn = ((stationx) - x1) * 1000
-  try:
-    img[yn, xn] += 1
-  except:
-    c+=1
-img = ndi.gaussian_filter(img, (10,10))
-plt.imshow(img, origin = 'lower')
-plt.show()
 
+# Some scale problem (check ll_corner etc but looks not too bad)
+
+#import scipy.ndimage as ndi
+#ll_corner = m_route(x1 - extra *w, y1 - extra *1)
+#ur_corner = m_route(x2 + extra *w, y2 + extra * h)
+#w2 = ur_corner[0] - ll_corner[0]
+#h2 = ur_corner[1] - ll_corner[1]
+#
+#c = 0
+#img = np.zeros((h2/100, w2/100))
+#for station in df_velib['point'][df_velib['available_bikes'] == 0]:
+#  yn = (station.y - ll_corner[1]) / 100
+#  xn = (station.x - ll_corner[0]) / 100
+#  try:
+#    img[yn, xn] += 1
+#  except:
+#    c=+1
+#img = ndi.gaussian_filter(img, (10,10))
+#plt.clf()
+#fig = plt.figure()
+#ax = fig.add_subplot(111, axisbg = 'w', frame_on = False)
+#
+#plt.imshow(img, origin = 'lower', zorder = 0,  extent = [ll_corner[0], ur_corner[0], ll_corner[1], ur_corner[1]]) 
+#ax.add_collection(PatchCollection(df_com[df_com['NOM_DEPT'] == "PARIS"]['patches'].values,
+#                                  match_original = True))
+#plt.show()
+
+# http://stackoverflow.com/questions/15160123/adding-a-background-image-to-a-plot-with-known-corner-coordinates
 
 # MAP: STATIONS AS POINTS
 
