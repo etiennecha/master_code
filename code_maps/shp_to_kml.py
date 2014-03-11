@@ -91,6 +91,8 @@ pol7 = pol5.union(pol6) # seems to worl => Polygon, not MultiPolygon !
 # KML UNITES URBAINES
 
 ls_codes_uu2010 = np.unique(df_insee[u"Code géographique de l'unité urbaine UU2010"].values).tolist()
+# exclude rural areas (end with '000')
+ls_codes_uu2010 = [code_uu2010 for code_uu2010 in ls_codes_uu2010 if code_uu2010[-3:] != '000']
 
 ## '00851' => Paris
 #code_uu2010 = '00851'
@@ -118,17 +120,14 @@ ls_codes_uu2010 = np.unique(df_insee[u"Code géographique de l'unité urbaine UU
 kml = simplekml.Kml()
 ls_uu_pbms = []
 for code_uu2010 in ls_codes_uu2010:
-  # TODO: exclude rural areas and check pbms
   ls_uu_codegeos = df_insee[u'Département - Commune CODGEO']\
                      [df_insee[u"Code géographique de l'unité urbaine UU2010"] == code_uu2010].values.tolist()
   ls_uu_codegeos = [codegeo for codegeo in ls_uu_codegeos if codegeo in ls_ign_codegeo]
   if ls_uu_codegeos: 
     polygon_uu = df_com['poly'][df_com['INSEE_COM'] == ls_uu_codegeos[0]].values[0]
-    for uu_codegeo in ls_uu_codegeos[1:]:
-      try:
-        polygon_uu = polygon_uu.union(df_com['poly'][df_com['INSEE_COM'] == uu_codegeo].values[0])
-      except:
-        print code_uu2010, uu_codegeo, 'not found in df_com'
+    for uu_codegeo in ls_uu_codegeos:
+      for row_ind, row_info in df_com[df_com['INSEE_COM'] == uu_codegeo].iterrows():
+        polygon_uu = polygon_uu.union(row_info['poly'])
     try: 
       shapely_polygon = polygon_uu
       name = df_insee[u"Libellé de l'unité urbaine LIBUU2010"]\
@@ -149,6 +148,8 @@ kml.save(os.path.join(os.path.dirname(sys.argv[0]), 'unites_urbaines.kml'))
 #for uu_codegeo in ls_uu_pbms:
 #	print df_insee[u"Libellé de l'unité urbaine LIBUU2010"]\
 #          [df_insee[u"Code géographique de l'unité urbaine UU2010"] == uu_codegeo].values[0]
+#df_insee[u"Libellé de la commune LIBGEO"]\
+# [df_insee[u"Code géographique de l'unité urbaine UU2010"] == '27501']
 
 # KML AIRES URBAINES
 
