@@ -135,28 +135,28 @@ for com_poly, com_info in zip(m_route.communes_fr, m_route.communes_fr_info):
   ls_com.append(com_info)
 df_com = pd.DataFrame(ls_com)
 
-
-# MAP: TEST PARIS ARDTS
-
 df_com['patches'] = df_com['poly'].map(lambda x: PolygonPatch(x,
                                                               facecolor='#FFFFFF', # '#555555'
                                                               edgecolor='#555555', # '#787878'
                                                               lw=.25, alpha=.3, zorder=1))
-plt.clf()
-fig = plt.figure()
-ax = fig.add_subplot(111, axisbg = 'w', frame_on = False)
-dev = m_route.scatter([station.x for station in df_velib[df_velib['available_bikes'] != 0]['point']],
-                      [station.y for station in df_velib[df_velib['available_bikes'] != 0]['point']],
-                      8, marker = 'D', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
-                      antialiased = True, zorder = 3)
-dev = m_route.scatter([station.x for station in df_velib[df_velib['available_bikes'] == 0]['point']],
-                      [station.y for station in df_velib[df_velib['available_bikes'] == 0]['point']],
-                      8, marker = 'D', lw=0.25, facecolor = '#FF0000', edgecolor = 'w', alpha = 0.9,
-                      antialiased = True, zorder = 3)
-ax.add_collection(PatchCollection(df_com[df_com['NOM_DEPT'] == "PARIS"]['patches'].values,
-                                  match_original = True))
-plt.show()
-print ax.get_xlim(), ax.get_ylim()
+
+# MAP: TEST PARIS ARDTS
+
+#plt.clf()
+#fig = plt.figure()
+#ax = fig.add_subplot(111, axisbg = 'w', frame_on = False)
+#dev = m_route.scatter([station.x for station in df_velib[df_velib['available_bikes'] != 0]['point']],
+#                      [station.y for station in df_velib[df_velib['available_bikes'] != 0]['point']],
+#                      8, marker = 'D', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
+#                      antialiased = True, zorder = 3)
+#dev = m_route.scatter([station.x for station in df_velib[df_velib['available_bikes'] == 0]['point']],
+#                      [station.y for station in df_velib[df_velib['available_bikes'] == 0]['point']],
+#                      8, marker = 'D', lw=0.25, facecolor = '#FF0000', edgecolor = 'w', alpha = 0.9,
+#                      antialiased = True, zorder = 3)
+#ax.add_collection(PatchCollection(df_com[df_com['NOM_DEPT'] == "PARIS"]['patches'].values,
+#                                  match_original = True))
+#plt.show()
+#print ax.get_xlim(), ax.get_ylim()
 
 ## MAP: TEST HEATMAP
 
@@ -171,30 +171,31 @@ print ax.get_xlim(), ax.get_ylim()
 
 # Some scale problem (check ll_corner etc but looks not too bad)
 
-#import scipy.ndimage as ndi
-#ll_corner = m_route(x1 - extra *w, y1 - extra *1)
-#ur_corner = m_route(x2 + extra *w, y2 + extra * h)
-#w2 = ur_corner[0] - ll_corner[0]
-#h2 = ur_corner[1] - ll_corner[1]
-#
-#c = 0
-#img = np.zeros((h2/100, w2/100))
-#for station in df_velib['point'][df_velib['available_bikes'] == 0]:
-#  yn = (station.y - ll_corner[1]) / 100
-#  xn = (station.x - ll_corner[0]) / 100
-#  try:
-#    img[yn, xn] += 1
-#  except:
-#    c=+1
-#img = ndi.gaussian_filter(img, (10,10))
-#plt.clf()
-#fig = plt.figure()
-#ax = fig.add_subplot(111, axisbg = 'w', frame_on = False)
-#
-#plt.imshow(img, origin = 'lower', zorder = 0,  extent = [ll_corner[0], ur_corner[0], ll_corner[1], ur_corner[1]]) 
-#ax.add_collection(PatchCollection(df_com[df_com['NOM_DEPT'] == "PARIS"]['patches'].values,
-#                                  match_original = True))
-#plt.show()
+import scipy.ndimage as ndi
+ll_corner = m_route(x1 - extra *w, y1 - extra *1)
+ur_corner = m_route(x2 + extra *w, y2 + extra * h)
+w2 = ur_corner[0] - ll_corner[0]
+h2 = ur_corner[1] - ll_corner[1]
+
+c = 0
+img = np.zeros((h2/100, w2/100))
+for station in df_velib['point'][df_velib['available_bikes'] == 0]:
+  yn = (station.y - ll_corner[1]) / 100
+  xn = (station.x - ll_corner[0]) / 100
+  try:
+    img[yn, xn] += 1
+  except:
+    c=+1
+img = ndi.gaussian_filter(img, (10,10))
+plt.clf()
+fig = plt.figure()
+ax = fig.add_subplot(111, axisbg = 'w', frame_on = False)
+
+plt.imshow(img, origin = 'lower', zorder = 0,  extent = [ll_corner[0], ur_corner[0], ll_corner[1], ur_corner[1]]) 
+#plt.imshow(img, origin = 'lower', zorder = 0,  extent = [0, ur_corner[0], 0, ur_corner[1]]) 
+ax.add_collection(PatchCollection(df_com[df_com['NOM_DEPT'] == "PARIS"]['patches'].values,
+                                  match_original = True))
+plt.show()
 
 # http://stackoverflow.com/questions/15160123/adding-a-background-image-to-a-plot-with-known-corner-coordinates
 
