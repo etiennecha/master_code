@@ -158,20 +158,63 @@ if __name__=="__main__":
   # No need to merge: all info in df_au_com 
   df_au = df_au_com
 
+  # #######################
+  # 1D/ LOGEMENT 2010
+
+  path_xls_logement = os.path.join(path_dir_communes, 'Logement', 'base-cc-logement-2010.xls')
+  
+  wb_logement = xlrd.open_workbook(os.path.join(path_dir_communes, 'Logement', 'base-cc-logement-2010.xls'))
+  print 'Sheets in file', wb_logement.sheet_names()
+  
+  sh_logement_com = wb_logement.sheet_by_name(u'COM')
+  ls_columns = sh_logement_com.row_values(5)
+  ls_rows = [sh_logement_com.row_values(i) for i in range(6, sh_logement_com.nrows)]
+  df_logement_com = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+  
+  sh_logement_arm = wb_logement.sheet_by_name(u'ARM')
+  ls_columns = sh_logement_arm.row_values(5)
+  ls_rows = [sh_logement_arm.row_values(i) for i in range(6, sh_logement_arm.nrows)]
+  df_logement_arm = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+ 
+  # P10_RP = P10_MEN and P_10_PMEN = P10_NPER_NP (resp. nb menages, nb habitants)
+  ls_select_columns = [u'CODGEO', u'LIBGEO',
+                       u'P10_LOG', u'P10_MEN', u'P10_PMEN',
+                       u'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P']
+  
+  df_logement = pd.concat([df_logement_com, df_logement_arm], ignore_index = True)
+  df_logement = df_logement[ls_select_columns] 
+
   # #################################### 
-  # 1/D Merge INSEE communes dataframes
+  # 1E/ Merge INSEE communes dataframes
  
   print df_uu.info()
   print df_au.info()
-  del(df_au['LIBGEO'])
+  print df_logement.info()
+  del(df_au['LIBGEO'], df_logement['LIBGEO'])
   df_insee = pd.merge(df_uu, df_au, on = 'CODGEO')
+  df_insee = pd.merge(df_insee, df_logement, on = 'CODGEO') 
+
+  print df_insee.info()
   
   #folder_built_csv = r'\data_gasoline\data_built\data_v_gasoline'
   #path_dir_gas_source = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_other')
   #df_insee.to_csv(os.path.join(path_dir_gas_source, 'data_insee_extract'),
   #                float_format='%.3f', encoding='utf-8', index=False)
   
+  # e.g. groupy to build aggregate stats
+  # check : http://bconnelly.net/2013/10/22/summarizing-data-in-python-with-pandas/
+  ls_columns_interest = ['P10_LOG', 'P10_MEN', 'P10_PMEN', 'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P']
+  for column in ls_columns_interest:
+    df_insee[column] = df_insee[column].apply(lambda x: float(x) if x else np.nan)
+  df_uu_agg = df_insee.groupby('UU2010')[ls_columns_interest].sum()
+  # TODO: add suffixes to have proper variable names
+  df_insee = pd.merge(df_insee, df_uu_agg, left_on = "UU2010", right_index = True)
   
+  ## If only one: series
+  #se_uu_men = df_insee.groupby('UU2010')['P10_MEN'].sum()
+  #df_uu_men = pd.Series(se_uu_men, name = 'P10_MEN_UU').reset_index()
+  #df_insee = pd.merge(df_insee, df_uu_men, on = "UU2010")
+
   # ####################################### 
   # 2/ DATA AT INDIVIDUAL LEVEL (BIG FILES)
   # #######################################
