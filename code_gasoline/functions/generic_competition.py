@@ -12,6 +12,7 @@ import statsmodels.formula.api as smf
 import patsy
 import copy
 import random
+import itertools
 from generic_master_price import *
 
 zero_threshold = np.float64(1e-10)
@@ -39,6 +40,23 @@ def get_ls_ls_cross_distances(ls_gps):
         ls_ls_cross_distances[i][j] = distance_i_j
         ls_ls_cross_distances[j][i] = distance_i_j
   return ls_ls_cross_distances
+
+# GENERIC
+
+def get_ls_standardized_frequency(ls_to_count):
+  """
+  Returns frequency of 0, 1, 2, 3, 4, 5, 20 or less, more for a list of int
+  """
+  dict_val = dict((k, len(list(g))) for k, g in itertools.groupby(sorted(ls_to_count)))
+  ls_len_rr = [0 for i in range(7)]
+  for k, v in dict_val.items():
+    if k <= 5:
+      ls_len_rr[k-1] = v
+    elif k <= 20:
+      ls_len_rr[5] += v
+    else:
+      ls_len_rr[6] += v
+  return ls_len_rr
 
 # ANALYIS OF PRICE CHANGES
 
@@ -106,37 +124,43 @@ def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
   # TODO: allow for output of intermediary arrays into pandas for visual check
   return [nb_chges_1, nb_chges_2, nb_sim_chges, len(ls_day_ind_1_follows), len(ls_day_ind_2_follows)]
 
-# ANALYSIS OF PAIR PRICE DISPERSION
+def get_two_firm_similar_prices(ar_price_1, ar_price_2):
+  """
+  Compare price series: rather for non differentiated sellers (same price level)
+  """
+  ar_spread = ar_price_1 - ar_price_2
+  len_spread = len(ar_spread[~np.isnan(ar_spread)])
+  len_same = len(ar_spread[np.abs(ar_spread) < zero_threshold])
+  ls_1_lead, ls_2_lead = [], []
+  ctd, ctd_1, ls_ctd_1, ls_ctd_2 = 0, False, [], []
+  if len_spread and len_same:
+    for i, (price_1, price_2, spread) in enumerate(zip(ar_price_1, ar_price_2, ar_spread)[1:], start = 1):
+      if (np.abs(spread) < zero_threshold) and (np.abs(ar_spread[i-1]) > zero_threshold):
+        if price_1 == ar_price_1[i-1]:
+          ls_1_lead.append(i)
+          ctd_1 = True
+          ctd = 1
+        elif price_2 == ar_price_2[i-1]:
+          ls_2_lead.append(i)
+          # print 'day', i
+          ctd = 1
+      elif (np.abs(spread) < zero_threshold) and (ctd > 0):
+        ctd += 1
+      elif (ctd > 0): #not np.isnan(np.abs(spread)) => cuts if nan...
+        if ctd_1:
+          ls_ctd_1.append(ctd)
+        else:
+          ls_ctd_2.append(ctd)
+          # print 'length', ctd, i
+        ctd, ctd_1 = 0, False
+    if ctd != 0:
+      if ctd_1:
+        ls_ctd_1.append(ctd)
+      else:
+        ls_ctd_2.append(ctd)
+  return (len_spread, len_same, ls_1_lead, ls_2_lead, ls_ctd_1, ls_ctd_2)
 
-def get_stats_two_firm_price_dispersion(ar_prices_1, ar_prices_2):
-  """
-  Provides various stats about price dispersion (TODO: elaborate)
-  TODO: fix ls_rr_durations: periods of rr must be standardized to one
-  (Right now: a new streak is recorded if spread under rank reversal varies...)
-  
-  Parameters:
-  -----------
-  ls_prices_a, ls_prices_b: list of float and nan
-  """
-  ar_spread = ar_prices_2 - ar_prices_1
-  ar_spread_nonan = ar_spread[~np.isnan(ar_spread)]
-  nb_days_spread = len(ar_spread_nonan)
-  avg_abs_spread = np.mean(np.abs(ar_spread_nonan))
-  abs_avg_spread = np.abs(np.mean(ar_spread_nonan))
-  std_spread = np.std(ar_spread_nonan)
-  nb_same_price = (np.abs(ar_spread) <= zero_threshold).sum()
-  nb_days_2_cheaper = (ar_spread < -zero_threshold).sum()
-  nb_days_1_cheaper = (ar_spread >  zero_threshold).sum()
-  rank_reversal = np.min([np.float64(nb_days_2_cheaper)/nb_days_spread,
-                          np.float64(nb_days_1_cheaper)/nb_days_spread])
-  if nb_days_2_cheaper > nb_days_1_cheaper:
-    ar_rank_reversal = np.where(ar_spread <=  zero_threshold, 0, ar_spread)
-  else:
-    ar_rank_reversal = np.where(ar_spread >= -zero_threshold, 0, ar_spread)
-  ls_scalars = [nb_days_spread, avg_abs_spread, abs_avg_spread, std_spread, rank_reversal,
-                nb_same_price, nb_days_2_cheaper, nb_days_1_cheaper]
-  ls_arrays = [ar_spread, ar_rank_reversal]
-  return ls_scalars + ls_arrays 
+# ANALYSIS OF PAIR PRICE DISPERSION
 
 def get_pair_price_dispersion(ar_prices_a, ar_prices_b, light = True):
   """
@@ -148,11 +172,12 @@ def get_pair_price_dispersion(ar_prices_a, ar_prices_b, light = True):
   """
   ar_spread = ar_prices_b - ar_prices_a
   nb_days_spread = (~np.isnan(ar_spread)).sum()
-  avg_abs_spread = scipy.stats.nanmean(np.abs(ar_spread))
-  avg_spread = scipy.stats.nanmean(ar_spread)
-  std_spread = scipy.stats.nanstd(ar_spread)
+  nb_days_same_price = (np.abs(ar_spread) <= zero_threshold).sum()
   nb_days_b_cheaper = (ar_spread < -zero_threshold).sum()
   nb_days_a_cheaper = (ar_spread >  zero_threshold).sum()
+  avg_spread = scipy.stats.nanmean(ar_spread)
+  std_spread = scipy.stats.nanstd(ar_spread)
+  avg_abs_spread = scipy.stats.nanmean(np.abs(ar_spread))
   if nb_days_b_cheaper > nb_days_a_cheaper:
     ar_spread_rr = np.where(ar_spread <=  zero_threshold, 0, ar_spread)
   else:
@@ -163,19 +188,17 @@ def get_pair_price_dispersion(ar_prices_a, ar_prices_b, light = True):
   avg_abs_spread_rr = np.mean(ar_abs_spread_rr[ar_abs_spread_rr > zero_threshold])
   med_abs_spread_rr = np.median(ar_abs_spread_rr[ar_abs_spread_rr > zero_threshold])
   nb_rr_conservative = count_nb_rr_conservative(ar_abs_spread_rr)
-  ls_scalars = [avg_abs_spread, avg_spread, std_spread, nb_days_spread,
-                percent_rr, avg_abs_spread_rr, med_abs_spread_rr, nb_rr_conservative]
+  ls_scalars = [nb_days_spread, nb_days_same_price, nb_days_a_cheaper, nb_days_b_cheaper,
+                nb_rr_conservative, percent_rr, avg_abs_spread_rr, med_abs_spread_rr,
+                avg_abs_spread, avg_spread, std_spread]
   ls_arrays = [ar_spread, ar_spread_rr]
-  if light:
-    return [ls_scalars, ls_day_inds_rr, ls_arrays]
-  else:
+  ls_ls_lengths = [[], []]
+  if not light:
     if percent_rr > zero_threshold:
-      ls_lengths_rr_naive = get_ls_lengths_rr_naive(ar_abs_spread_rr)
+      # ls_lengths_rr_naive = get_ls_lengths_rr_naive(ar_abs_spread_rr)
       ls_lengths_rr_strict = get_ls_lengths_rr_strict(ar_abs_spread_rr)
-      ls_ls_lengths = [ls_lengths_rr_naive, ls_lengths_rr_strict]
-    else:
-      ls_ls_lengths = [[],[]]
-    return [ls_scalars, ls_day_inds_rr, ls_arrays, ls_ls_lengths]
+      ls_ls_lengths = [ls_lengths_rr_strict, []] # ls_lengths_rr_naive
+  return [ls_scalars, ls_day_inds_rr, ls_arrays, ls_ls_lengths]
 
 def count_nb_rr_conservative(ar_abs_spread_rr):
   """

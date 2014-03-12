@@ -4,7 +4,6 @@
 import add_to_path
 from add_to_path import path_data
 import os, sys
-import numpy as np
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -74,7 +73,7 @@ ls_pbms_2 = [codegeo for codegeo in ls_ign_codegeo if codegeo not in ls_insee_co
 #                       outerboundaryis = outerboundary,
 #                       innerboundaryis = innerboundary)
 #
-#kml.save(os.path.join(os.path.dirname(sys.argv[0]), 'communes.kml'))
+#kml.save(os.path.join(path_data, 'data_maps', 'kml_files', 'communes.kml'))
 
 # UNION OF POLYGONS?
 
@@ -115,7 +114,7 @@ ls_codes_uu2010 = [code_uu2010 for code_uu2010 in ls_codes_uu2010 if code_uu2010
 #pol = kml.newpolygon(name = name,
 #                     outerboundaryis = outerboundary,
 #                     innerboundaryis = [])
-#kml.save(os.path.join(os.path.dirname(sys.argv[0]), 'unites_urbaines.kml'))
+#kml.save(os.path.join(path_data, 'data_maps', 'kml_files', 'unites_urbaines.kml'))
 
 kml = simplekml.Kml()
 ls_uu_pbms = []
@@ -142,7 +141,7 @@ for code_uu2010 in ls_codes_uu2010:
                            innerboundaryis = [])
     except:
       ls_uu_pbms.append(code_uu2010)
-kml.save(os.path.join(os.path.dirname(sys.argv[0]), 'unites_urbaines.kml'))
+kml.save(os.path.join(path_data, 'data_maps', 'kml_files', 'unites_urbaines.kml'))
 
 ## List of problematic code_uu2010
 #for uu_codegeo in ls_uu_pbms:
