@@ -19,16 +19,12 @@ print 'Sheets in file', wb_logement.sheet_names()
 
 sh_logement_com = wb_logement.sheet_by_name(u'COM')
 ls_columns = sh_logement_com.row_values(5)
-ls_rows = []
-for row_ind in range(6, sh_logement_com.nrows):
-  ls_rows.append(sh_logement_com.row_values(row_ind))
+ls_rows = [sh_logement_com.row_values(i) for i in range(6, sh_logement_com.nrows)]
 df_logement_com = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
 
 sh_logement_arm = wb_logement.sheet_by_name(u'ARM')
 ls_columns = sh_logement_arm.row_values(5)
-ls_rows = []
-for row_ind in range(6, sh_logement_arm.nrows):
-  ls_rows.append(sh_logement_arm.row_values(row_ind))
+ls_rows = [sh_logement_arm.row_values(i) for i in range(6, sh_logement_arm.nrows)]
 df_logement_arm = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
 
 ls_select_columns = [u'CODGEO', u'LIBGEO',

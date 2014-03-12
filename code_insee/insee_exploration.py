@@ -1,6 +1,8 @@
 ﻿#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import add_to_path
+from add_to_path import path_data
 import os, sys
 import xlrd
 import re
@@ -16,19 +18,14 @@ def str_insee_harmonization(word):
   word = ' '.join(word.split())
   return word.strip()
 
-# path_data: data folder at different locations at CREST vs. HOME
-# could do the same for path_code if necessary (import etc).
-if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
-  path_data = r'W:\Bureau\Etienne_work\Data'
-  # sys.path.append(r'\W:\Bureau\Etienne_work\Code\code_gasoline\code_gasoline_db_analysis')
-else:
-  path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
-
-folder_built_csv = r'\data_gasoline\data_built\data_csv_gasoline'
 
 if __name__=="__main__":
 
+  path_dir_insee = os.path.join(path_data, 'data_insee')
+  
+  # #####################################
   # 0/ CODE INSEE VS. ZIP CODE (AND CITY)
+  # #####################################
 
   # file_correspondence = open(path_data + r'\data_insee\corr_cinsee_cpostal','r')
   # correspondence = file_correspondence.read().split('\n')[1:-1]
@@ -76,143 +73,113 @@ if __name__=="__main__":
   # # Not so clear... unecessay for now: manual update in correspondence
   
   
-  
+  # ################################# 
   # 1/ DATA AT CITY LEVEL ("COMMUNE")
+  # #################################
+
+  path_dir_communes = os.path.join(path_dir_insee, 'communes')
   
-  folder_communal = r'\data_insee\Communal'
+  # ####################################################
+  # 1A/ MOBILITY BETWEEN HOME AND WORK (not used so far)
   
-  # 1A/ MOBILITY BETWEEN HOME AND WORK
-  
-  file_name = r'\Mobilite_Dom_Travail\base-flux-mobilite-domicile-lieu-travail-2010.xls'
-  workbook = xlrd.open_workbook(path_data + folder_communal + file_name)
+  path_xls_mob = os.path.join(path_dir_communes,
+                              'Mobilite_Dom_Travail',
+                              'base-flux-mobilite-domicile-lieu-travail-2010.xls')
+  wb_mob = xlrd.open_workbook(path_xls_mob)
   # sh = wb.sheet_by_index(0)
   # sh_nb_rows = sh.nrows
   # first_column = sh.col_values(0)
   # cell_A1 = sh.cell(0,0).value
-  # cell_C4 = sh.cell(rowx=3,colx=2).value
-  print 'Opened', file_name
-  print 'Sheets in file', workbook.sheet_names()
+  # cell_C4 = sh.cell(rowx=3, colx=2).value
+  print 'Sheets in file', wb_mob.sheet_names()
+ 
   # Communes info: people working in communes vs. outside
-  sheet_communes_work_info = workbook.sheet_by_name(u'TOTAL')
-  ls_title_communes_work_info = sheet_communes_work_info.row_values(5) # 4 has details but long fields
-  ls_communes_work_info = []
-  for row_ind in range(6, sheet_communes_work_info.nrows):
-    ls_communes_work_info.append(sheet_communes_work_info.row_values(row_ind))
-  pd_df_communes_work_info = pd.DataFrame([list(i) for i in zip(*ls_communes_work_info)],\
-                                            ls_title_communes_work_info, dtype = str).T
+  sh_com_work = wb_mob.sheet_by_name(u'TOTAL')
+  ls_columns = sh_com_work.row_values(5) # 4 has details but long fields
+  ls_rows = [sh_com_work.row_values(i) for i in range(6, sh_com_work.nrows)]
+  df_com_work = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+  
   # Mobility info: people commuting to work
-  sheet_mobility_info = workbook.sheet_by_name(u'FLUX>=100')
-  ls_title_mobility_info = sheet_mobility_info.row_values(5)
-  ls_mobility_info = []
-  for row_ind in range(6, sheet_mobility_info.nrows):
-    ls_mobility_info.append(sheet_mobility_info.row_values(row_ind))
-  pd_df_mobility_info = pd.DataFrame([list(i) for i in zip(*ls_mobility_info)],\
-                                            ls_title_mobility_info, dtype = str).T
-  
+  sh_mob = wb_mob.sheet_by_name(u'FLUX>=100')
+  ls_columns = sh_mob.row_values(5)
+  ls_rows = [sh_mob.row_values(i) for i in range(6, sh_mob.nrows)]
+  df_mob = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+ 
+  # ########################
   # 1B/ UNITES URBAINES 2010
+
+  path_xls_uu = os.path.join(path_dir_communes, 'UnitesUrbaines', 'UU2010.xls')
+  wb_uu = xlrd.open_workbook(path_xls_uu)
+  print 'Sheets in file', wb_uu.sheet_names()
   
-  file_name_uu = r'\UnitesUrbaines\UU2010.xls'
-  workbook_uu = xlrd.open_workbook(path_data + folder_communal + file_name_uu)
-  print 'Opened', file_name_uu
-  print 'Sheets in file', workbook_uu.sheet_names()
-  print workbook_uu.sheet_names()
   # Sheet: unites urbaines (info par uu)
-  sheet_liste_des_uu = workbook_uu.sheet_by_name(u'Liste des unit\xe9s urbaines 2010')
-  list_title_uu = zip(sheet_liste_des_uu.row_values(0), sheet_liste_des_uu.row_values(1))
-  list_content_uu = [sheet_liste_des_uu.row_values(i) for i in range(2, sheet_liste_des_uu.nrows)]
-  list_codes_uu = [elt[0] for elt in list_content_uu]
-  dict_uu = dict(zip(list_codes_uu, list_content_uu))
-  pd_df_uu_info = pd.DataFrame([list(i) for i in zip(*list_content_uu)],\
-                                list_title_uu, dtype = str).T
+  sh_uu_info = wb_uu.sheet_by_name(u'Liste des unit\xe9s urbaines 2010')
+  ls_columns = sh_uu_info.row_values(1)
+  ls_rows = [sh_uu_info.row_values(i) for i in range(2, sh_uu_info.nrows)]
+  df_uu_info = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+
   # Sheet: communes (appartenance des communes aux uu)
-  sheet_communes_uu = workbook_uu.sheet_by_name(u'Communes')
-  list_title_communes_uu = zip(sheet_communes_uu.row_values(0), sheet_communes_uu.row_values(1))
-  list_content_communes_uu = [sheet_communes_uu.row_values(i) for i in range(2, sheet_communes_uu.nrows)]
-  list_codes_geo_uu = [elt[0] for elt in list_content_communes_uu]
-  dict_communes_uu = dict(zip(list_codes_geo_uu, list_content_communes_uu))
-  # Note: statut: R(Rural)/C(Urbain Centre)/B(Urbain Banlieue)/I(Urbain Isole)
-  pd_df_uu_communes = pd.DataFrame([list(i) for i in zip(*list_content_communes_uu)],\
-                                    list_title_communes_uu, dtype = str).T
-  #Rename columns and merge
-  for column in pd_df_uu_info.columns:
-    pd_df_uu_info[' '.join(column)] = pd_df_uu_info[column]
-    del(pd_df_uu_info[column])
-  for column in pd_df_uu_communes.columns:
-    pd_df_uu_communes[' '.join(column)] = pd_df_uu_communes[column]
-    del(pd_df_uu_communes[column])
-  pd_df_uu = pd.merge(pd_df_uu_communes, pd_df_uu_info, on = u"Code géographique de l'unité urbaine UU2010")
+  sh_uu_com = wb_uu.sheet_by_name(u'Communes')
+  ls_columns = sh_uu_com.row_values(1)
+  ls_rows = [sh_uu_com.row_values(i) for i in range(2, sh_uu_com.nrows)]
+  # note: statut: r(rural)/c(urbain centre)/b(urbain banlieue)/i(urbain isole)
+  df_uu_com = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
   
+  # Check, clean and merge 
+  df_uu_info.rename(columns={'NB_COM' : 'NB_COM_UU',
+                             'POP_MUN_2007' : 'POP_MUN_07_UU',
+                             'TAILLE' : 'TAILLE_UU',
+                             'TYPE' : 'TYPE_UU'}, inplace=True) 
+  df_uu_com.rename(columns={'TYPE_2010' : 'TYPE_2010_COM',
+                            'STATUT_2010' : 'STATUT_2010_COM',
+                            'POP_MUN_2007': 'POP_MUN_2007_COM'}, inplace=True)  
+  del(df_uu_com['LIBUU2010'], df_uu_com['REG'], df_uu_com['DEP']) 
+  df_uu = pd.merge(df_uu_info, df_uu_com, on = 'UU2010')
+  
+  # #######################
   # 1C/ AIRES URBAINES 2010
   
-  file_name_au = r'\AiresUrbaines\AU2010.xls'
-  workbook_au = xlrd.open_workbook(path_data + folder_communal + file_name_au)
-  print 'Opened', file_name_au
-  print 'Sheets in file', workbook_au.sheet_names()
-  print workbook_au.sheet_names()
+  path_xls_au = os.path.join(path_dir_communes, 'AiresUrbaines', 'AU2010.xls')
+  wb_au = xlrd.open_workbook(path_xls_au)
+  print 'Sheets in file', wb_au.sheet_names()
+  
   # Sheet: aires urbaines (info par au)
-  sheet_liste_des_au = workbook_au.sheet_by_name(u'Zonage en aires urbaines 2010')
-  list_title_au = zip(sheet_liste_des_au.row_values(0), sheet_liste_des_au.row_values(1))
-  list_content_au = [sheet_liste_des_au.row_values(i) for i in range(2, sheet_liste_des_au.nrows)]
-  list_codes_au = [elt[0] for elt in list_content_au]
-  dict_au = dict(zip(list_codes_au, list_content_au))
-  pd_df_au_info = pd.DataFrame([list(i) for i in zip(*list_content_au)],\
-                                list_title_au, dtype = str).T
+  sh_au_info = wb_au.sheet_by_name(u'Zonage en aires urbaines 2010')
+  ls_columns = sh_au_info.row_values(1)
+  ls_rows = [sh_au_info.row_values(i) for i in range(2, sh_au_info.nrows)]
+  df_au_info = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+  
   # Sheet: communes (appartenance des communes aux au)
-  sheet_communes_au = workbook_au.sheet_by_name(u'Composition communale')
-  list_title_communes_au = zip(sheet_communes_au.row_values(0), sheet_communes_au.row_values(1))
-  list_content_communes_au = [sheet_communes_au.row_values(i) for i in range(2, sheet_communes_au.nrows)]
-  list_codes_geo_au = [elt[0] for elt in list_content_communes_au]
-  dict_communes_au = dict(zip(list_codes_geo_au, list_content_communes_au))
-  pd_df_au_communes = pd.DataFrame([list(i) for i in zip(*list_content_communes_au)],\
-                                    list_title_communes_au, dtype = str).T
-  # Rename columns and merge
-  for column in pd_df_au_info.columns:
-    pd_df_au_info[u' '.join(column)] = pd_df_au_info[column]
-    del(pd_df_au_info[column])
-  for column in pd_df_au_communes.columns:
-    pd_df_au_communes[u' '.join(column)] = pd_df_au_communes[column]
-    del(pd_df_au_communes[column])
-  pd_df_au_info[u'Code AU2010'] = pd_df_au_info[u'Code CODGEO']
-  pd_df_au = pd.merge(pd_df_au_communes, pd_df_au_info, on = u'Code AU2010')
-  
-  # 1/D Merge INSEE communes dataframes
-  
-  pd_df_uu[u"Département - Commune CODGEO"] = pd_df_uu[u"Département - commune CODGEO"]
-  del(pd_df_uu[u"Département - commune CODGEO"])
-  pd_df_insee_communes = pd.merge(pd_df_uu, pd_df_au, on= u"Département - Commune CODGEO")
-  
-  # Some duplicates to handle... need to classify info (may not be a good idea to have all in one db) 
-  for i, column_a in enumerate(pd_df_insee_communes.columns):
-    for j, column_b in enumerate(pd_df_insee_communes.columns[i+1:], i+1):
-      if all(pd_df_insee_communes[column_a] == pd_df_insee_communes[column_b]):
-        print i, j, column_a, column_b
-  
-  del(pd_df_insee_communes[u"Libellé LIBGEO"])
-  del(pd_df_insee_communes[u"Code CODGEO"]) # Actual Code AU (duplicate)
-  del(pd_df_insee_communes[u"Libellé de l'unité urbaine LIBUU2010_y"])
-  pd_df_insee_communes[u"Libellé de l'unité urbaine LIBUU2010"] =\
-    pd_df_insee_communes[u"Libellé de l'unité urbaine LIBUU2010_x"]
-  del(pd_df_insee_communes[u"Libellé de l'unité urbaine LIBUU2010_x"])
-  
-  pd_df_insee_communes[u"Population municipale 2007 POP_MUN_2007_UU"]=\
-    pd_df_insee_communes[u"Population municipale 2007 POP_MUN_2007_y"]
-  del(pd_df_insee_communes[u"Population municipale 2007 POP_MUN_2007_y"])
-  
-  pd_df_insee_communes[u"Population municipale 2007 POP_MUN_2007"]=\
-    pd_df_insee_communes[u"Population municipale 2007 POP_MUN_2007_x"]
-  del(pd_df_insee_communes[u"Population municipale 2007 POP_MUN_2007_x"])
-  
-  # pd_df_insee_communes.to_csv(path_data + folder_built_csv + r'/master_insee_output.csv',\
-                                # float_format='%.3f', encoding='utf-8', index=False)
-  
-  
-  
-  # 2/ DATA AT INDIVIDUAL LEVEL (BIG FILES)
+  sh_au_com = wb_au.sheet_by_name(u'Composition communale')
+  ls_columns = sh_au_com.row_values(1)
+  ls_rows = [sh_au_com.row_values(i) for i in range(2, sh_au_com.nrows)]
+  df_au_com = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+ 
+  # No need to merge: all info in df_au_com 
+  df_au = df_au_com
 
-  # folder_insee_mob_par_ind = r'\data_insee\Mobilite_par_individu'
-  # file_opened = open(path_data + folder_insee_mob_par_ind + r'\FD_MOBPRO_2009.txt', 'r')
-  # data = file_opened.read()
-  # data_part = data[0:10000000].split('\n') # memory error if take the whole file
-  # variable_names = data_part[0].split(';')
-  # first_observation = data_part[1].split(';')
-  # tuple_example = zip(variable_names, first_observation)
+  # #################################### 
+  # 1/D Merge INSEE communes dataframes
+ 
+  print df_uu.info()
+  print df_au.info()
+  del(df_au['LIBGEO'])
+  df_insee = pd.merge(df_uu, df_au, on = 'CODGEO')
+  
+  #folder_built_csv = r'\data_gasoline\data_built\data_v_gasoline'
+  #path_dir_gas_source = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_other')
+  #df_insee.to_csv(os.path.join(path_dir_gas_source, 'data_insee_extract'),
+  #                float_format='%.3f', encoding='utf-8', index=False)
+  
+  
+  # ####################################### 
+  # 2/ DATA AT INDIVIDUAL LEVEL (BIG FILES)
+  # #######################################
+
+  #path_txt_mob_ind = os.path.join(path_dir_insee, 'Mobilite_par_individu', 'FD_MOBPRO_2009.txt')
+  #file_opened = open(path_txt_mob_ind, 'r')
+  #data = file_opened.read()
+  #data_part = data[0:10000000].split('\n') # memory error if take the whole file
+  #variable_names = data_part[0].split(';')
+  #first_observation = data_part[1].split(';')
+  #tuple_example = zip(variable_names, first_observation)
