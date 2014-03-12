@@ -3,7 +3,7 @@
 
 import os, sys
 import json
-from lxml import etree
+# from lxml import etree
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,7 +11,7 @@ import matplotlib.cm as cm
 from matplotlib.collections import PatchCollection
 import matplotlib.font_manager as fm
 # import fiona
-import shapefile
+# import shapefile
 from mpl_toolkits.basemap import Basemap
 from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 from shapely.prepared import prep
