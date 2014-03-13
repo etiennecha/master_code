@@ -66,31 +66,31 @@ df_price = pd.DataFrame(master_np_prices.T, master_price['dates'], columns=maste
 #df_ppd['id_1'] = [comp[0][0] for comp in ls_pair_competitors]
 #df_ppd['id_2'] = [comp[0][1] for comp in ls_pair_competitors]
 #
-## DF BRAND (LIGHT)
-#dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
-#ls_brands = []
-#for indiv_id in master_price['ids']:
-#  indiv_dict_info = master_price['dict_info'][indiv_id]
-#  brand_1_b = indiv_dict_info['brand_std'][0][0]
-#  brand_2_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][1]
-#  brand_type_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][2]
-#  brand_1_e = indiv_dict_info['brand_std'][-1][0]
-#  brand_2_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][1]
-#  brand_type_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][2]
-#  ls_brands.append([brand_1_b, brand_2_b, brand_type_b,
-#                    brand_1_e, brand_2_e, brand_type_e])
-#ls_columns = ['brand_1_b', 'brand_2_b', 'brand_type_b', 'brand_1_e', 'brand_2_e', 'brand_type_e']
-#df_brands = pd.DataFrame(ls_brands, index = master_price['ids'], columns = ls_columns)
-#df_brands['id'] = df_brands.index
-#
-## MERGE DF BRANDS AND DF PAIR PD STATS (caution: changes order)
-#
-#df_brands = df_brands.rename(columns={'id': 'id_1'})
-#df_ppd_brands = pd.merge(df_ppd, df_brands, on='id_1')
-#df_brands = df_brands.rename(columns={'id_1': 'id_2'})
-#df_ppd_brands = pd.merge(df_ppd_brands, df_brands, on='id_2', suffixes=('_1', '_2'))
-#
-#df_ppd_brands = df_ppd_brands.rename(columns={'nb_rr_conservative': 'nb_rr'})
+# DF BRAND (LIGHT)
+dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
+ls_brands = []
+for indiv_id in master_price['ids']:
+  indiv_dict_info = master_price['dict_info'][indiv_id]
+  brand_1_b = indiv_dict_info['brand_std'][0][0]
+  brand_2_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][1]
+  brand_type_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][2]
+  brand_1_e = indiv_dict_info['brand_std'][-1][0]
+  brand_2_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][1]
+  brand_type_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][2]
+  ls_brands.append([brand_1_b, brand_2_b, brand_type_b,
+                    brand_1_e, brand_2_e, brand_type_e])
+ls_columns = ['brand_1_b', 'brand_2_b', 'brand_type_b', 'brand_1_e', 'brand_2_e', 'brand_type_e']
+df_brands = pd.DataFrame(ls_brands, index = master_price['ids'], columns = ls_columns)
+df_brands['id'] = df_brands.index
+
+# MERGE DF BRANDS AND DF PAIR PD STATS (caution: changes order)
+
+df_brands = df_brands.rename(columns={'id': 'id_1'})
+df_ppd_brands = pd.merge(df_ppd, df_brands, on='id_1')
+df_brands = df_brands.rename(columns={'id_1': 'id_2'})
+df_ppd_brands = pd.merge(df_ppd_brands, df_brands, on='id_2', suffixes=('_1', '_2'))
+
+df_ppd_brands = df_ppd_brands.rename(columns={'nb_rr_conservative': 'nb_rr'})
 #
 #ls_view_1 =['id_1', 'id_2', 'brand_1_e_1', 'brand_1_e_2', 
 #            'nb_days_spread', 'avg_abs_spread', 'avg_spread', 'std_spread', 

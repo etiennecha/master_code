@@ -70,8 +70,11 @@ def get_stats_price_chges(ar_prices, light = True):
   ar_prices: numpy array of float and np.nan
   light: True returns scalar stats only, else arrays too
   """
+  ar_nonan_chges = ar_prices[~np.isnan(ar_prices)][1:] - ar_prices[~np.isnan(ar_prices)][:-1]
+  nb_prices = (np.abs(ar_nonan_chges) > zero_threshold).sum() #up to 1... count also chfe after nan 
   ar_chges = np.hstack([np.array([np.nan]), ar_prices[1:] - ar_prices[:-1]])
   nb_valid = (~np.isnan(ar_chges)).sum() 
+  nb_chges = (np.abs(ar_chges) > zero_threshold).sum()
   nb_no_chge = (np.abs(ar_chges) < zero_threshold).sum()
   nb_neg_chges = (ar_chges < -zero_threshold).sum()
   nb_pos_chges = (ar_chges >  zero_threshold).sum()
@@ -81,7 +84,7 @@ def get_stats_price_chges(ar_prices, light = True):
   avg_pos_chge = np.mean(ar_pos_chge)
   med_neg_chge = np.median(ar_neg_chge)
   med_pos_chge = np.median(ar_pos_chge)
-  ls_scalars = [nb_valid, nb_no_chge, nb_neg_chge, nb_pos_chge,
+  ls_scalars = [nb_prices, nb_valid, nb_no_chge, nb_chges, nb_neg_chges, nb_pos_chges,
                 avg_neg_chge, avg_pos_chge, med_neg_chge, med_pos_chge]
   ls_ars = [ar_neg_chge, ar_pos_chge]
   if light:
