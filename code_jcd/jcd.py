@@ -62,7 +62,9 @@ print 'Broken bikes?', (df_velib['bike_stands'].sum() -
                         df_velib['available_bike_stands'].sum())-\
                        (df_velib['available_bikes'].sum())
 
+# TODO: check stations out of service (should not be counted?)
 print 'Stations with 0 bike', len(df_velib[df_velib['available_bikes'] == 0])
+print 'Stations full of bikes', len(df_velib[df_velib['available_bike_stands'] == 0])
 
 # PARIS MAP : 48.8148 48.9047 2.2294 2.4688
 
@@ -201,39 +203,39 @@ plt.show()
 
 # MAP: STATIONS AS POINTS
 
-#df_dpt['patches'] = df_dpt['poly'].map(lambda x: PolygonPatch(x,
-#                                                              facecolor='#FFFFFF',
-#                                                              edgecolor='#787878',
-#                                                              lw=.25, alpha=.9, zorder=4))
-#
-#plt.clf()
-#fig = plt.figure()
-#ax = fig.add_subplot(111, axisbg = 'w', frame_on = False)
-#
-#for shape_dict, shape in zip(m_route.routes_fr_info, m_route.routes_fr):
-#  if not region_multipolygon.disjoint(MultiPoint(shape)):
-#    xx, yy = zip(*shape)
-#    if shape_dict['CLASS_ADM'] == 'Autoroute':
-#      temp = m_route.plot(xx, yy, linewidth = 0.6, color = 'b')
-#    elif shape_dict['CLASS_ADM'] == 'Nationale':
-#      temp = m_route.plot(xx, yy, linewidth = 0.5, color = 'r')
-#    elif shape_dict['CLASS_ADM'] == 'D\xe9partementale':
-#      temp = m_route.plot(xx, yy, linewidth = 0.2, color = 'c')
-#    else:
-#      temp = m_route.plot(xx, yy, linewidth = 0.1, color = 'k')
-#
-#dev = m_route.scatter([station.x for station in df_velib[df_velib['available_bikes'] != 0]['point']],
-#                      [station.y for station in df_velib[df_velib['available_bikes'] != 0]['point']],
-#                      8, marker = 'D', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
-#                      antialiased = True, zorder = 3)
-#dev = m_route.scatter([station.x for station in df_velib[df_velib['available_bikes'] == 0]['point']],
-#                      [station.y for station in df_velib[df_velib['available_bikes'] == 0]['point']],
-#                      8, marker = 'D', lw=0.25, facecolor = '#FF0000', edgecolor = 'w', alpha = 0.9,
-#                      antialiased = True, zorder = 3)
-#
-#ax.add_collection(PatchCollection(df_dpt[df_dpt['region_name'] == "ILE-DE-FRANCE"]['patches'].values,
-#                                  match_original = True))
-#plt.show()
+df_dpt['patches'] = df_dpt['poly'].map(lambda x: PolygonPatch(x,
+                                                              facecolor='#FFFFFF',
+                                                              edgecolor='#787878',
+                                                              lw=.25, alpha=.9, zorder=4))
+
+plt.clf()
+fig = plt.figure()
+ax = fig.add_subplot(111, axisbg = 'w', frame_on = False)
+
+for shape_dict, shape in zip(m_route.routes_fr_info, m_route.routes_fr):
+  if not region_multipolygon.disjoint(MultiPoint(shape)):
+    xx, yy = zip(*shape)
+    if shape_dict['CLASS_ADM'] == 'Autoroute':
+      temp = m_route.plot(xx, yy, linewidth = 0.6, color = 'b')
+    elif shape_dict['CLASS_ADM'] == 'Nationale':
+      temp = m_route.plot(xx, yy, linewidth = 0.5, color = 'r')
+    elif shape_dict['CLASS_ADM'] == 'D\xe9partementale':
+      temp = m_route.plot(xx, yy, linewidth = 0.2, color = 'c')
+    else:
+      temp = m_route.plot(xx, yy, linewidth = 0.1, color = 'k')
+
+dev = m_route.scatter([station.x for station in df_velib[df_velib['available_bikes'] != 0]['point']],
+                      [station.y for station in df_velib[df_velib['available_bikes'] != 0]['point']],
+                      8, marker = 'D', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
+                      antialiased = True, zorder = 3)
+dev = m_route.scatter([station.x for station in df_velib[df_velib['available_bikes'] == 0]['point']],
+                      [station.y for station in df_velib[df_velib['available_bikes'] == 0]['point']],
+                      8, marker = 'D', lw=0.25, facecolor = '#FF0000', edgecolor = 'w', alpha = 0.9,
+                      antialiased = True, zorder = 3)
+
+ax.add_collection(PatchCollection(df_dpt[df_dpt['region_name'] == "ILE-DE-FRANCE"]['patches'].values,
+                                  match_original = True))
+plt.show()
 
 # MAP: HEATMAP WITH HEX: NOT SO GOOD RENDERING
 

@@ -66,14 +66,15 @@ def get_stats_price_chges(ar_prices, light = True):
   TODO: check how to apply mean/median/quartiles etc to arrays (lambda etc)
    
   Parameters:
-  -----------ar_abs_spread_rr_nonan and  
+  -----------
   ar_prices: numpy array of float and np.nan
   light: True returns scalar stats only, else arrays too
   """
+  nb_days = len(ar_prices[~np.isnan(ar_prices)])
   ar_nonan_chges = ar_prices[~np.isnan(ar_prices)][1:] - ar_prices[~np.isnan(ar_prices)][:-1]
-  nb_prices = (np.abs(ar_nonan_chges) > zero_threshold).sum() #up to 1... count also chfe after nan 
+  nb_prices = (np.abs(ar_nonan_chges) > zero_threshold).sum() + 1
   ar_chges = np.hstack([np.array([np.nan]), ar_prices[1:] - ar_prices[:-1]])
-  nb_valid = (~np.isnan(ar_chges)).sum() 
+  nb_ctd = len(ar_chges[~np.isnan(ar_chges)])
   nb_chges = (np.abs(ar_chges) > zero_threshold).sum()
   nb_no_chge = (np.abs(ar_chges) < zero_threshold).sum()
   nb_neg_chges = (ar_chges < -zero_threshold).sum()
@@ -84,12 +85,13 @@ def get_stats_price_chges(ar_prices, light = True):
   avg_pos_chge = np.mean(ar_pos_chge)
   med_neg_chge = np.median(ar_neg_chge)
   med_pos_chge = np.median(ar_pos_chge)
-  ls_scalars = [nb_prices, nb_valid, nb_no_chge, nb_chges, nb_neg_chges, nb_pos_chges,
+  ls_scalars = [nb_days, nb_prices,
+                nb_ctd, nb_no_chge, nb_chges, nb_neg_chges, nb_pos_chges,
                 avg_neg_chge, avg_pos_chge, med_neg_chge, med_pos_chge]
-  ls_ars = [ar_neg_chge, ar_pos_chge]
   if light:
     return ls_scalars
   else:
+    ls_ars = [ar_neg_chge, ar_pos_chge]
     return ls_scalars + ls_ars
 
 def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
@@ -104,9 +106,19 @@ def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
   -----------
   ar_prices_1, ar_prices_2: two numpy arrays of float and np.nan
   """
+  ar_prices_nonan_1 = ar_prices_1[~np.isnan(ar_prices_1)]
+  ar_prices_nonan_2 = ar_prices_2[~np.isnan(ar_prices_2)]
+  nb_days_1 = len(ar_prices_nonan_1)
+  nb_days_2 = len(ar_prices_nonan_2)
+  ar_nonan_chges_1 = ar_prices_nonan_1[1:] - ar_prices_nonan_1[:-1]
+  ar_nonan_chges_2 = ar_prices_nonan_2[1:] - ar_prices_nonan_2[:-1]
+  nb_prices_1 = (np.abs(ar_nonan_chges_1) > zero_threshold).sum() + 1
+  nb_prices_2 = (np.abs(ar_nonan_chges_2) > zero_threshold).sum() + 1
   ar_chges_1 = ar_prices_1[1:] - ar_prices_1[:-1]
-  nb_chges_1 = (np.abs(ar_chges_1) > zero_threshold).sum() 
   ar_chges_2 = ar_prices_2[1:] - ar_prices_2[:-1]
+  nb_ctd_1 = len(ar_chges_1[~np.isnan(ar_chges_1)])
+  nb_ctd_2 = len(ar_chges_2[~np.isnan(ar_chges_2)])
+  nb_chges_1 = (np.abs(ar_chges_1) > zero_threshold).sum() 
   nb_chges_2 = (np.abs(ar_chges_2) > zero_threshold).sum() 
   # Count simulatenous changes (following no chge at all or another sim chge)
   ar_dum_chges_1 = (np.abs(ar_chges_1) > zero_threshold)*1
@@ -125,7 +137,9 @@ def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
     if (dum_chge_2 == 1) and (ar_dum_chges_2[i-1] == 0) and (ar_dum_chges_1[i-1] == 1):
       ls_day_ind_2_follows.append(i)
   # TODO: allow for output of intermediary arrays into pandas for visual check
-  return [nb_chges_1, nb_chges_2, nb_sim_chges, len(ls_day_ind_1_follows), len(ls_day_ind_2_follows)]
+  return [nb_days_1, nb_days_2, nb_prices_1, nb_prices_2,
+          nb_ctd_1, nb_ctd_2, nb_chges_1, nb_chges_2, nb_sim_chges,
+          len(ls_day_ind_1_follows), len(ls_day_ind_2_follows)]
 
 def get_two_firm_similar_prices(ar_price_1, ar_price_2):
   """
@@ -134,6 +148,7 @@ def get_two_firm_similar_prices(ar_price_1, ar_price_2):
   ar_spread = ar_price_1 - ar_price_2
   len_spread = len(ar_spread[~np.isnan(ar_spread)])
   len_same = len(ar_spread[np.abs(ar_spread) < zero_threshold])
+  ls_chge_to_same = 0
   ls_1_lead, ls_2_lead = [], []
   ctd, ctd_1, ls_ctd_1, ls_ctd_2 = 0, False, [], []
   if len_spread and len_same:
@@ -147,6 +162,8 @@ def get_two_firm_similar_prices(ar_price_1, ar_price_2):
           ls_2_lead.append(i)
           # print 'day', i
           ctd = 1
+        else:
+          ls_chge_to_same += 1
       elif (np.abs(spread) < zero_threshold) and (ctd > 0):
         ctd += 1
       elif (ctd > 0): #not np.isnan(np.abs(spread)) => cuts if nan...
@@ -161,7 +178,7 @@ def get_two_firm_similar_prices(ar_price_1, ar_price_2):
         ls_ctd_1.append(ctd)
       else:
         ls_ctd_2.append(ctd)
-  return (len_spread, len_same, ls_1_lead, ls_2_lead, ls_ctd_1, ls_ctd_2)
+  return (len_spread, len_same, ls_1_lead, ls_2_lead, ls_ctd_1, ls_ctd_2, ls_chge_to_same)
 
 # ANALYSIS OF PAIR PRICE DISPERSION
 
