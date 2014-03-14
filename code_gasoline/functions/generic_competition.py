@@ -58,6 +58,10 @@ def get_ls_standardized_frequency(ls_to_count):
       ls_len_rr[6] += v
   return ls_len_rr
 
+def print_dict_stat_des(dict_stat_des):
+  for key, content in dict_stat_des.iteritems():
+    print key, len(content)
+
 # ANALYIS OF PRICE CHANGES
 
 def get_stats_price_chges(ar_prices, light = True):
@@ -139,7 +143,8 @@ def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
   # TODO: allow for output of intermediary arrays into pandas for visual check
   return [nb_days_1, nb_days_2, nb_prices_1, nb_prices_2,
           nb_ctd_1, nb_ctd_2, nb_chges_1, nb_chges_2, nb_sim_chges,
-          len(ls_day_ind_1_follows), len(ls_day_ind_2_follows)]
+          len(ls_day_ind_1_follows), len(ls_day_ind_2_follows),
+          ls_day_ind_1_follows, ls_day_ind_2_follows]
 
 def get_two_firm_similar_prices(ar_price_1, ar_price_2):
   """
@@ -178,7 +183,7 @@ def get_two_firm_similar_prices(ar_price_1, ar_price_2):
         ls_ctd_1.append(ctd)
       else:
         ls_ctd_2.append(ctd)
-  return (len_spread, len_same, ls_1_lead, ls_2_lead, ls_ctd_1, ls_ctd_2, ls_chge_to_same)
+  return (len_spread, len_same, ls_chge_to_same, ls_1_lead, ls_2_lead, ls_ctd_1, ls_ctd_2)
 
 # ANALYSIS OF PAIR PRICE DISPERSION
 
@@ -292,60 +297,65 @@ def get_ls_lengths_rr_strict(ar_abs_spread_rr):
 
 # ANALYSIS OF MARKET PRICE DISPERSION
 
-def get_ls_ls_distance_market_ids(master_price, ls_ls_competitors, km_bound):
+def get_ls_ls_distance_market_ids(ls_ids, ls_ls_competitors, km_bound):
   """
   Distance used to define markets
   ls_ls_competitors has same order as master price (necessary condition)
   ls_ls_competitors: list of (id, distance) for each competitor (within 10km)
   """
   ls_ls_distance_market_ids = []
-  for indiv_ind, ls_competitors in enumerate(ls_ls_competitors):
-    indiv_id = master_price['ids'][indiv_ind]
-    if ls_competitors: # and indiv_id not in ls_rejected_ids:
-      ls_distance_market_ids = [indiv_id]
-      for id_competitor, distance_competitor in ls_competitors:
-        if id_competitor in master_price['ids']: # and id_competitor not in ls_rejected_ids:
-          if distance_competitor < km_bound:
-            ls_distance_market_ids.append(id_competitor)
-        else:
-          print id_competitor, 'not in master_price => check'
-      if len(ls_distance_market_ids) > 1:
+  for indiv_id, ls_competitors in zip(ls_ids, ls_ls_competitors):
+    if ls_competitors:
+      ls_distance_market_ids = [indiv_id] +\
+                               [comp_id for comp_id, distance\
+                                  in ls_competitors if distance < km_bound]
+      if len(ls_competitors) > 1:
         ls_ls_distance_market_ids.append(ls_distance_market_ids)
   return ls_ls_distance_market_ids
 
-def get_ls_ls_distance_market_ids_restricted(master_price, ls_ls_competitors, km_bound):
+def get_ls_ls_distance_market_ids_restricted(ls_ids, ls_ls_competitors, km_bound, random_order = False):
   """
   Distance used to define markets
   ls_ls_competitors: list of (id, distance) for each competitor (within 10km)
   ls_ls_competitors has same order as master price
   If id in previous market: drop market 
-  TODO: design better algorithm (max nb of stations such that keep) OR:
-  TODO: add possibility to randomize (beware: ls_ls_competitors' order matters)
-  ls_id_and_ls_competitors_random = copy.deepcopy()
-  random.shuffle(ls_id_and_ls_competitors_random)
   """
+  ls_zip_ids_competitors = zip(ls_ids, ls_ls_competitors)
+  if random_order:
+    random.shuffle(ls_zip_ids_competitors)
   ls_ls_distance_market_ids = []
   ls_ids_covered = []
-  for indiv_ind, ls_competitors in enumerate(ls_ls_competitors):
-    indiv_id = master_price['ids'][indiv_ind]
+  for indiv_id, ls_competitors in ls_zip_ids_competitors:
     if ls_competitors:
-      ls_distance_market_ids = [indiv_id]
-      for competitor_id, distance in ls_competitors:
-        if competitor_id in master_price['ids']:
-          if distance < km_bound:
-            ls_distance_market_ids.append(competitor_id)
-        else:
-          print competitor_id, 'not in master_price => check'
-      if (len(ls_distance_market_ids) > 1) and\
-         (all(indiv_id not in ls_ids_covered for indiv_id in ls_distance_market_ids)):
+      ls_distance_market_ids = [indiv_id] +\
+                               [comp_id for comp_id, distance\
+                                  in ls_competitors if distance < km_bound]
+      if (len(ls_competitors) > 1) and\
+         not (any(indiv_id in ls_ids_covered for indiv_id in ls_distance_market_ids)):
         ls_ls_distance_market_ids.append(ls_distance_market_ids)
         ls_ids_covered += ls_distance_market_ids
   return ls_ls_distance_market_ids
   
+def get_market_price_dispersion(ls_market_ids, df_price):
+  df_market_prices = df_price[ls_market_ids]
+  se_nb_market_prices =(~np.isnan(df_market_prices)).sum(1)
+  se_range = df_market_prices.max(1) - df_market_prices.min(1)
+  se_std = df_market_prices.std(1)
+  se_coeff_var = df_market_prices.std(1) / df_market_prices.mean(1)
+  se_gain_from_search = df_market_prices.mean(1) - df_market_prices.min(1)
+  return pd.DataFrame({'range' : se_range,
+                       'cv'    : se_coeff_var,
+                       'std'   : se_std,
+                       'gfs'   : se_gain_from_search,
+                       'nb_comp_t' : se_nb_market_prices,
+                       'nb_comp'   : se_nb_market_prices.max()})
+  
+  return list_list_market_price_dispersion
+
 def get_ls_ls_market_price_dispersion(ls_ls_market_ids, master_price, series):
   # if numpy.version.version = '1.8' or above => switch from scipy to numpy
   # checks nb of prices (non nan) per period (must be 2 prices at least)
-  list_list_market_price_dispersion = []
+  ls_ls_market_price_dispersion = []
   for ls_market_ids in ls_ls_market_ids:
     list_market_prices = [master_price[series][master_price['ids'].index(indiv_id)] for indiv_id in ls_market_ids]
     arr_market_prices = np.array(list_market_prices, dtype = np.float32)
@@ -389,36 +399,6 @@ def get_fe_predicted_prices(list_ids, series):
 
 # DATA DISPLAY
 
-def print_dict_stat_des(dict_stat_des):
-  for key, content in dict_stat_des.iteritems():
-    print key, len(content)
-
-def get_plot_prices(list_of_ids, master_price, series, path_save=None):
-  list_list_prices = []
-  for some_id in list_of_ids:
-    list_list_prices.append(master_price[series][master_price['ids'].index(some_id)])
-  pd_df_temp = pd.DataFrame(zip(*list_list_prices), index=master_price['dates'], columns=list_of_ids, dtype=np.float32)
-  plt.figure()
-  pd_df_temp.plot()
-  fig = plt.gcf()
-  fig.set_size_inches(18.5, 10.5)
-  if path_save: 
-    plt.savefig(path_save)
-  else:
-    plt.show()
-  return
-
-def get_plot_list_arrays(list_price_arrays, list_labels = None):
-  plt.figure()
-  for price_index, price_array in enumerate(list_price_arrays):
-    axis = np.array([i for i in range(len(price_array))])
-    if list_labels:
-      plt.plot(axis, price_array, label=list_labels[price_index])
-    else:
-      plt.plot(axis, price_array, label='')
-    plt.legend(loc = 4)
-  plt.show()
-  return 
 
 if __name__=="__main__":
   if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
