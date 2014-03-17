@@ -7,8 +7,8 @@ from generic_master_price import *
 from generic_master_info import *
 from generic_competition import *
 import time
-from statsmodels.distributions.empirical_distribution import ECDF
-from scipy.stats import ks_2samp
+#from statsmodels.distributions.empirical_distribution import ECDF
+#from scipy.stats import ks_2samp
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 
@@ -28,6 +28,8 @@ ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
 dict_brands = dec_json(path_dict_brands)
 
 zero_threshold = np.float64(1e-10)
+pd.set_option('use_inf_as_null', True)
+pd.options.display.float_format = '{:6,.4f}'.format
 
 master_np_prices = np.array(master_price['diesel_price'], np.float64)
 df_price = pd.DataFrame(master_np_prices.T, index = master_price['dates'], columns = master_price['ids'])
@@ -78,7 +80,13 @@ ls_columns  = ['id_1', 'id_2', 'distance'] + ls_scalars + ls_freq_std + ls_chges
 
 df_ppd = pd.DataFrame(ls_ppd, columns = ls_columns)
 df_ppd['pct_same_price'] = df_ppd['nb_same_price'] / df_ppd['nb_spread']
-pd.options.display.float_format = '{:6,.4f}'.format
+# Create same corner variables
+df_ppd['sc_500'] = 0
+df_ppd['sc_500'][df_ppd['distance'] <= 0.5] = 1
+df_ppd['sc_750'] = 0
+df_ppd['sc_750'][df_ppd['distance'] <= 0.75] = 1
+df_ppd['sc_1000'] = 0
+df_ppd['sc_1000'][df_ppd['distance'] <= 1] = 1
 
 # DF BRAND (LIGHT)
 dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
@@ -103,99 +111,139 @@ df_ppd = pd.merge(df_ppd, df_brands, on='id_1')
 df_brands = df_brands.rename(columns={'id_1': 'id_2'})
 df_ppd = pd.merge(df_ppd, df_brands, on='id_2', suffixes=('_1', '_2'))
 
-# ##################
-# SOME STATS/GRAPHS
-# ##################
+# CLEAN DF (avoid pbm with missing, inf which should be represented as missing etc.)
+df_ppd = df_ppd[~(pd.isnull(df_ppd['std_spread']) | pd.isnull(df_ppd['pct_rr']))]
+df_ppd = df_ppd[df_ppd['nb_spread'] > 60]
+#df_ppd = df_ppd[(df_ppd['std_spread'] != np.inf) &\
+#                (df_ppd['std_spread'] != -np.inf) &\
+#                (df_ppd['pct_rr'] != np.inf) &\
+#                (df_ppd['pct_rr'] ! -np.inf)]
+df_ppd['abs_avg_spread'] = np.abs(df_ppd['avg_spread'])
+## Need to avoid 0 in quantile regressions... pbmatic 
+df_ppd['pct_rr_nozero'] = df_ppd['pct_rr']
+df_ppd['pct_rr_nozero'][df_ppd['pct_rr'] == 0] = 0.00001
+df_ppd['std_spread_nozero'] = df_ppd['std_spread']
+df_ppd['std_spread_nozero'][df_ppd['std_spread'] == 0] = 0.00001
+# TODO: check 0 rr => seems some duplicates
 
+# RESTRICTIONS ON BRANDS / TYPES
+# todo: loop for various cases
+df_ppd = df_ppd[(df_ppd['brand_1_e_1'] != 'TOTAL_ACCESS') &\
+                (df_ppd['brand_1_e_2'] != 'TOTAL_ACCESS') &\
+                (df_ppd['brand_1_e_1'] != df_ppd['brand_1_e_2'])]
+#df_ppd = df_ppd[(df_ppd['brand_type_e_1'] == 'OIL') & (df_ppd_reg['brand_type_e_2'] == 'OIL')]
+#df_ppd = df_ppd[((df_ppd['brand_type_e_1'] == 'IND') & (df_ppd['brand_type_e_2'] == 'SUP'))|\
+#                ((df_ppd['brand_type_e_1'] == 'SUP') & (df_ppd['brand_type_e_2'] == 'IND'))]
+
+# DF NO DIFFERENTIATION VS. DIFFERENTIATION (CLEANED PRICES)
+# todo: check that must be connected with criterion to clean prices...
 df_ppd_nodiff = df_ppd[np.abs(df_ppd['avg_spread']) <= 0.02]
 df_ppd_diff = df_ppd[np.abs(df_ppd['avg_spread']) > 0.02]
 print len(df_ppd_nodiff), len(df_ppd_diff)
-
-# SPREAD VS DISTANCE
-print len(df_ppd_nodiff['pct_rr'][df_ppd_nodiff['pct_rr'] <= zero_threshold])
-#hist_test = plt.hist(df_ppd_nodiff['pct_rr'][~pd.isnull(df_ppd_nodiff['pct_rr'])], bins = 50)
-df_all = df_ppd_nodiff[(~pd.isnull(df_ppd_nodiff['pct_rr'])) & (df_ppd_nodiff['distance'] <= 3)]
-df_close = df_ppd_nodiff[(~pd.isnull(df_ppd_nodiff['pct_rr'])) & (df_ppd_nodiff['distance'] <= 1)]
-df_far = df_ppd_nodiff[(~pd.isnull(df_ppd_nodiff['pct_rr'])) & (df_ppd_nodiff['distance'] > 1)]
-ecdf = ECDF(df_all['pct_rr'])
-ecdf_close = ECDF(df_close['pct_rr'])
-ecdf_far = ECDF(df_far['pct_rr'])
-x = np.linspace(min(df_all['pct_rr']), max(df_all['pct_rr']))
-y = ecdf(x)
-y_close = ecdf_close(x)
-y_far = ecdf_far(x)
-plt.step(x, y)
-plt.step(x, y_close)
-plt.step(x, y_far)
-print ks_2samp(df_close['pct_rr'], df_far['pct_rr'])
-print len(df_all['pct_rr']), len(df_close['pct_rr']), len(df_far['pct_rr'])
-
-for df_temp, name_df in zip([df_all, df_close, df_far], ['all', 'close', 'far']):
-  print '\n%s' %name_df
-  print 'OIL/SUP', len(df_temp[((df_temp['brand_type_e_1'] == 'SUP') &\
-                                (df_temp['brand_type_e_2'] == 'OIL')) |\
-                               ((df_temp['brand_type_e_1'] == 'OIL') &\
-                                (df_temp['brand_type_e_2'] == 'SUP'))]) / float(len(df_temp))
-  print 'SUP/SUP', len(df_temp[(df_temp['brand_type_e_1'] == 'SUP') &\
-                               (df_temp['brand_type_e_2'] == 'SUP')]) / float(len(df_temp))
-  print 'OIL/OIL', len(df_temp[(df_temp['brand_type_e_1'] == 'OIL') &\
-                               (df_temp['brand_type_e_2'] == 'OIL')])/ float(len(df_temp))
-  print 'IND/IND', len(df_temp[(df_temp['brand_type_e_1'] == 'IND') &\
-                               (df_temp['brand_type_e_2'] == 'IND')])/ float(len(df_temp))
 
 # ##################
 # REGRESSION
 # ##################
 
-df_ppd_reg = df_ppd_nodiff
-# TODO: LOOP AND STORE RESULTS FOR VARIOUS CASES!
-df_ppd_reg = df_ppd_reg[(df_ppd_reg['brand_1_e_1'] != 'TOTAL_ACCESS') &\
-                        (df_ppd_reg['brand_1_e_2'] != 'TOTAL_ACCESS') &\
-                        (df_ppd_reg['brand_1_e_1'] != df_ppd_reg['brand_1_e_2'])]
-# df_ppd_reg = df_ppd_reg[(df_ppd_reg['brand_type_e_1'] == 'OIL') & (df_ppd_reg['brand_type_e_2'] == 'OIL')]
-df_ppd_reg = df_ppd_reg[((df_ppd_reg['brand_type_e_1'] == 'IND') & (df_ppd_reg['brand_type_e_2'] == 'SUP')) |\
-                        ((df_ppd_reg['brand_type_e_1'] == 'SUP') & (df_ppd_reg['brand_type_e_2'] == 'IND'))]
-df_ppd_reg['abs_avg_spread'] = np.abs(df_ppd_reg['avg_spread'])
-# df_ppd_reg = df_ppd_reg[df_ppd_reg['abs_avg_spread'] <= 0.01]
-print '\n', smf.ols(formula = 'abs_avg_spread ~ distance', data = df_ppd_reg).fit().summary()
-print '\n', smf.ols(formula = 'avg_abs_spread ~ distance', data = df_ppd_reg).fit().summary()
-print '\n', smf.ols(formula = 'pct_rr ~ distance', data = df_ppd_reg).fit().summary()
-print '\n', smf.ols(formula = 'std_spread ~ distance', data = df_ppd_reg).fit().summary()
+# REGRESSION FORMULAS AND PARAMETERS
+ls_dist_ols_formulas = ['abs_avg_spread ~ distance',
+                        'avg_abs_spread ~ distance',
+                        'pct_rr ~ distance',
+                        'std_spread ~ distance']
+
+ls_sc_ols_formulas = ['abs_avg_spread ~ sc_500',
+                      'avg_abs_spread ~ sc_500',
+                      'pct_rr ~ sc_500',
+                      'std_spread ~ sc_500']
+
+from statsmodels.regression.quantile_regression import QuantReg
+ls_quantiles = [0.25, 0.5, 0.75, 0.9]
+
+def get_df_ols_res(ls_ols_res, ls_index):
+  ls_se_ols_res = []
+  for reg_res in ls_ols_res:
+    ls_reg_res = [reg_res.nobs, reg_res.rsquared, reg_res.rsquared_adj,
+                reg_res.params, reg_res.bse, reg_res.tvalues]
+    dict_reg_res = dict(zip(['NObs', 'R2', 'R2a'], ls_reg_res[:3]) +\
+                        zip(['%s_be' %ind for ind in ls_reg_res[3].index], ls_reg_res[3].values)+\
+                        zip(['%s_se' %ind for ind in ls_reg_res[4].index], ls_reg_res[4].values)+\
+                        zip(['%s_t' %ind for ind in ls_reg_res[5].index], ls_reg_res[5].values))
+    ls_se_ols_res.append(pd.Series(dict_reg_res))
+  df_ols_res = pd.DataFrame(ls_se_ols_res, index = ls_index)
+  return df_ols_res
+
+ls_df_reg_res = []
+for df_ppd_reg in [df_ppd_nodiff, df_ppd_diff]:
+  ls_dist_ols_res = [smf.ols(formula = str_formula, data = df_ppd_reg).fit()\
+                       for str_formula in ls_dist_ols_formulas]
+  ls_sc_ols_res   = [smf.ols(formula = str_formula, data = df_ppd_reg).fit()\
+                       for str_formula in ls_sc_ols_formulas]
+  ls_rr_qreg_res  = [QuantReg(df_ppd_reg['pct_rr_nozero'], df_ppd_reg['sc_500']).fit(quantile)\
+                       for quantile in ls_quantiles]
+  ls_std_qreg_res = [QuantReg(df_ppd_reg['std_spread_nozero'], df_ppd_reg['sc_500']).fit(quantile)\
+                       for quantile in ls_quantiles]
+  ls_ls_reg_res = [ls_dist_ols_res, ls_sc_ols_res, ls_rr_qreg_res, ls_std_qreg_res]
+  ls_ls_index = [ls_dist_ols_formulas, ls_dist_ols_formulas, ls_quantiles, ls_quantiles]
+  ls_df_reg_res.append([get_df_ols_res(ls_ols_res, ls_index)\
+                          for ls_ols_res, ls_index in zip(ls_ls_reg_res, ls_ls_index)])
+print 'Compare raw prices vs. prices not raw:'
+
+print '\nOLS: Distance'
+print ls_df_reg_res[0][0][['distance_be', 'distance_t', 'R2', 'NObs']].to_string()
+print ls_df_reg_res[1][0][['distance_be', 'distance_t', 'R2', 'NObs']].to_string()
+
+print '\nOLS: Same corner'
+print ls_df_reg_res[0][1][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
+print ls_df_reg_res[1][1][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
+
+print '\nQR: Rank reversal (PBM: INCOHERENT)'
+print ls_df_reg_res[0][2][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
+print ls_df_reg_res[1][2][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
+
+print '\nQR: Std spread (PBM: INCOHERENT)'
+print ls_df_reg_res[0][3][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
+print ls_df_reg_res[1][3][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
+
+# check => https://groups.google.com/forum/?hl=fr#!topic/pystatsmodels/XnXu_k1h-gc
+
+## Output data to csv to run quantile regressions in R
+#path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+#df_ppd.to_csv(os.path.join(path_dir_built_csv, 'data_ppd.csv'))
 
 # ##############
 # INVESTIGATIONS
 # ##############
 
-end, start = 0, 650
-
-ppd_res = get_pair_price_dispersion(np.array(df_price['1500006'][end:start]),\
-                                    np.array(df_price['1500003'][end:start]))[0:2]
-print ppd_res[0], '\n', ppd_res[1:]
-
-tfpc_res = get_stats_two_firm_price_chges(np.array(df_price['1500006'][end:start]),\
-                                          np.array(df_price['1500003'][end:start]))
-ls_tfpc_chges = ['nb_days_1', 'nb_days_2', 'nb_prices_1', 'nb_prices_2',
-                 'nb_ctd_1', 'nb_ctd_2', 'nb_chges_1', 'nb_chges_2', 'nb_sim_chges',
-                 'nb_1_fol', 'nb_2_fol']
-print '\nAnalysis: two firm price changes'
-print zip(ls_tfpc_chges, tfpc_res[:-2])
-print tfpc_res[-2], '\n', tfpc_res[-1]
-
-psp_res = get_two_firm_similar_prices(np.array(df_price['1500006'][end:start]),\
-                                      np.array(df_price['1500003'][end:start]))
-print '\nAnalysis: same price'
-ls_psp = ['nb_day_spread', 'nb_same_price', 'sim_chge_same', 'nb_1_lead', 'nb_2_lead']
-print zip(ls_psp, [psp_res[0], psp_res[1], psp_res[2], len(psp_res[3]), len(psp_res[4])])
-print psp_res[3], '\n', psp_res[4], '\n', psp_res[5], '\n', psp_res[6]
-
-"""
-Caution: 
-For same price analysis: Follower is the one to initiate change (matches other's price)
-For price changes: if follower changes prices (to match) and then other moves: follower is considered to lead!
-"""
-
-#df_price[['1500006', '1500003']][end:start].plot()
-print df_price[['1500006', '1500003']][130:150]
+#end, start = 0, 650
+#
+#ppd_res = get_pair_price_dispersion(np.array(df_price['1500006'][end:start]),\
+#                                    np.array(df_price['1500003'][end:start]))[0:2]
+#print ppd_res[0], '\n', ppd_res[1:]
+#
+#tfpc_res = get_stats_two_firm_price_chges(np.array(df_price['1500006'][end:start]),\
+#                                          np.array(df_price['1500003'][end:start]))
+#ls_tfpc_chges = ['nb_days_1', 'nb_days_2', 'nb_prices_1', 'nb_prices_2',
+#                 'nb_ctd_1', 'nb_ctd_2', 'nb_chges_1', 'nb_chges_2', 'nb_sim_chges',
+#                 'nb_1_fol', 'nb_2_fol']
+#print '\nAnalysis: two firm price changes'
+#print zip(ls_tfpc_chges, tfpc_res[:-2])
+#print tfpc_res[-2], '\n', tfpc_res[-1]
+#
+#psp_res = get_two_firm_similar_prices(np.array(df_price['1500006'][end:start]),\
+#                                      np.array(df_price['1500003'][end:start]))
+#print '\nAnalysis: same price'
+#ls_psp = ['nb_day_spread', 'nb_same_price', 'sim_chge_same', 'nb_1_lead', 'nb_2_lead']
+#print zip(ls_psp, [psp_res[0], psp_res[1], psp_res[2], len(psp_res[3]), len(psp_res[4])])
+#print psp_res[3], '\n', psp_res[4], '\n', psp_res[5], '\n', psp_res[6]
+#
+#"""
+#Caution: 
+#For same price analysis: Follower is the one to initiate change (matches other's price)
+#For price changes: if follower changes prices (to match) and then other moves: follower is considered to lead!
+#"""
+#
+##df_price[['1500006', '1500003']][end:start].plot()
+#print df_price[['1500006', '1500003']][130:150]
 
 # ###########
 # DEPRECATED

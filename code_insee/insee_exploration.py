@@ -205,7 +205,7 @@ if __name__=="__main__":
   # check : http://bconnelly.net/2013/10/22/summarizing-data-in-python-with-pandas/
   ls_columns_interest = ['P10_LOG', 'P10_MEN', 'P10_PMEN', 'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P']
   for column in ls_columns_interest:
-    df_insee[column] = df_insee[column].apply(lambda x: float(x) if x else np.nan)
+    df_insee[column] = df_insee[column].apply(lambda x: float(x) if x else float('nan'))
   df_uu_agg = df_insee.groupby('UU2010')[ls_columns_interest].sum()
   # TODO: add suffixes to have proper variable names
   df_insee = pd.merge(df_insee, df_uu_agg, left_on = "UU2010", right_index = True)

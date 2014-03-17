@@ -33,6 +33,7 @@ dict_brands = dec_json(path_dict_brands)
 dict_dpts_regions = dec_json(path_dict_dpts_regions)
 
 zero_threshold = np.float64(1e-10)
+pd.options.display.float_format = '{:6,.4f}'.format
 
 start = time.clock()
 df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
@@ -44,13 +45,13 @@ df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], maste
 km_bound = 5
 diff_bound = 1
 
-# TODO: iterate with various diff_bounds (high value: no cleaning of prices)
+# todo: iterate with various diff_bounds (high value: no cleaning of prices)
 
 # DF PAIR PRICE DISPERSION
 ls_ppd = []
 ls_ar_rrs = []
 ls_rr_lengths = []
-for (indiv_id, comp_id), distance in ls_tuple_competitors[:10000]:
+for (indiv_id, comp_id), distance in ls_tuple_competitors:
   if distance <= km_bound: 
     se_prices_1 = df_price[indiv_id]
     se_prices_2 = df_price[comp_id]
@@ -67,8 +68,6 @@ for (indiv_id, comp_id), distance in ls_tuple_competitors[:10000]:
                   ls_comp_chges[:-2])
     ls_ar_rrs.append(ls_comp_pd[2][1])
     ls_rr_lengths += ls_comp_pd[3][0]
-    #ls_ppd.append([indiv_id, comp_id, distance] + ls_comp_pd + ls_comp_chges[:-2])
-#ls_ppd = [ppd[:3] + ppd[3] + get_ls_standardized_frequency(ppd[6][0]) for ppd in ls_ppd]
 
 ls_scalars  = ['nb_spread', 'nb_same_price', 'nb_a_cheaper', 'nb_b_cheaper', 
                'nb_rr', 'pct_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr',
@@ -84,7 +83,14 @@ ls_columns  = ['id_1', 'id_2', 'distance'] + ls_scalars + ls_freq_std + ls_chges
 
 df_ppd = pd.DataFrame(ls_ppd, columns = ls_columns)
 df_ppd['pct_same_price'] = df_ppd['nb_same_price'] / df_ppd['nb_spread']
-pd.options.display.float_format = '{:6,.4f}'.format
+# Create same corner variables
+df_ppd['sc_500'] = 0
+df_ppd['sc_500'][df_ppd['distance'] <= 0.5] = 1
+df_ppd['sc_750'] = 0
+df_ppd['sc_500'][df_ppd['distance'] <= 0.75] = 1
+df_ppd['sc_1000'] = 0
+df_ppd['sc_1000'][df_ppd['distance'] <= 1] = 1
+
 
 # DF BRAND (LIGHT)
 dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
@@ -119,9 +125,8 @@ print 'Pair price dispersion dataframe built in:', time.clock() - start
 #            'nb_days_spread', 'avg_abs_spread', 'avg_spread', 'std_spread', 
 #            'percent_rr', 'max_len_rr', 'avg_abs_spread_rr', 'nb_rr']
 
-# RR DURATION
+# RR LENGTHS
 ar_rr_lengths = np.array(ls_rr_lengths)
-
 
 # HISTOGRAM OF AVERAGE SPREADS
 hist_test = plt.hist(np.abs(df_ppd['avg_spread'])[~pd.isnull(df_ppd['avg_spread'])].values, bins = 100)
@@ -171,50 +176,6 @@ for df_temp, name_df in zip([df_all, df_close, df_far], ['all', 'close', 'far'])
 
 ## Find suspect rank reversal
 #print 'Station with max length rank reversal:', np.argmax(df_ppd['max_len_rr'])
-#
-## DF All
-#print '\nDF All'
-#print '% no rr', len(df_ppd_brands[df_ppd_brands['percent_rr'] <= zero_threshold])/\
-#        float(len(df_ppd_brands))
-#print '% rr avg', df_ppd_brands['percent_rr'].mean()
-#print '% rr, no 0 ', df_ppd_brands['percent_rr'][df_ppd_brands['percent_rr'] > zero_threshold].mean()
-#print 'max len rr avg',  df_ppd_brands['max_len_rr'].mean()
-#print 'id, no 0', df_ppd_brands['max_len_rr'][df_ppd_brands['percent_rr'] >= zero_threshold].mean()
-#
-## DF Total Access
-#print '\nDF Total Access'
-#df_ppd_ta = df_ppd_brands[(df_ppd_brands['brand_2_e_2'] == 'TOTAL_ACCESS')|\
-#                          (df_ppd_brands['brand_2_e_1'] == 'TOTAL_ACCESS')]
-#print '% no rr', len(df_ppd_ta[df_ppd_ta['percent_rr'] <= zero_threshold])/\
-#        float(len(df_ppd_ta))
-#print '% rr avg', df_ppd_ta['percent_rr'].mean()
-#print '% rr, no 0 ', df_ppd_ta['percent_rr'][df_ppd_ta['percent_rr'] > zero_threshold].mean()
-#print 'max len rr avg',  df_ppd_ta['max_len_rr'].mean()
-#print 'id, no 0', df_ppd_ta['max_len_rr'][df_ppd_ta['percent_rr'] >= zero_threshold].mean()
-#
-## DF No Total Access
-#print '\nNo Total Access'
-#df_ppd_nota = df_ppd_brands[(df_ppd_brands['brand_2_e_2'] != 'TOTAL_ACCESS')&\
-#                            (df_ppd_brands['brand_2_e_1'] != 'TOTAL_ACCESS')]
-#print '% no rr', len(df_ppd_nota[df_ppd_nota['percent_rr'] <= zero_threshold])/\
-#        float(len(df_ppd_nota))
-#print '% rr avg', df_ppd_nota['percent_rr'].mean()
-#print '% rr, no 0 ', df_ppd_nota['percent_rr'][df_ppd_nota['percent_rr'] > zero_threshold].mean()
-#print 'max len rr avg avg', df_ppd_nota['percent_rr'].mean()
-#print 'id, no 0', df_ppd_nota['percent_rr'][df_ppd_nota['percent_rr'] > zero_threshold].mean()
-#
-## Other restrictions
-#df_ppd_st = df_ppd_nota[df_ppd_nota['brand_type_e_1'] ==\
-#                          df_ppd_nota['brand_type_e_2']]
-#
-#df_ppd_sup = df_ppd_nota[(df_ppd_nota['brand_type_e_1'] == 'SUP') &\
-#                         (df_ppd_nota['brand_type_e_2'] == 'SUP')]
-#
-#df_ppd_oil = df_ppd_nota[(df_ppd_nota['brand_type_e_1'] == 'OIL') &\
-#                         (df_ppd_nota['brand_type_e_2'] == 'OIL')]
-#
-## res = smf.ols('avg_spread~percent_rr', df_ppd_st, missing = 'drop').fit()
-## res.summary()
 
 # ####################
 # DF PAIR PD TEMPORAL
@@ -266,8 +227,6 @@ df_rrs_su_all = pd.merge(df_rrs_su_all, ls_df_rrs_su[3],\
 df_rrs_su_all[['pct_rr', 'pct_rr_ta', 'pct_rr_nota', 'pct_rr_nodiff']].plot()
 plt.show()
 
-# TODO: WITH CONTROL FOR PRICE
-# TODO: VS. COST LEVEL
 
 # ########################################
 # PAIR PRICE DISPERSION: NORMALIZED PRICES

@@ -309,7 +309,7 @@ def get_ls_ls_distance_market_ids(ls_ids, ls_ls_competitors, km_bound):
       ls_distance_market_ids = [indiv_id] +\
                                [comp_id for comp_id, distance\
                                   in ls_competitors if distance < km_bound]
-      if len(ls_competitors) > 1:
+      if len(ls_distance_market_ids) > 1:
         ls_ls_distance_market_ids.append(ls_distance_market_ids)
   return ls_ls_distance_market_ids
 
@@ -330,7 +330,7 @@ def get_ls_ls_distance_market_ids_restricted(ls_ids, ls_ls_competitors, km_bound
       ls_distance_market_ids = [indiv_id] +\
                                [comp_id for comp_id, distance\
                                   in ls_competitors if distance < km_bound]
-      if (len(ls_competitors) > 1) and\
+      if (len(ls_distance_market_ids) > 1) and\
          not (any(indiv_id in ls_ids_covered for indiv_id in ls_distance_market_ids)):
         ls_ls_distance_market_ids.append(ls_distance_market_ids)
         ls_ids_covered += ls_distance_market_ids
