@@ -21,6 +21,9 @@ path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competit
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
 
+path_dir_insee = os.path.join(path_data, 'data_insee')
+path_csv_insee_extract = os.path.join(path_dir_insee, 'data_extracts', 'data_insee_extract.csv')
+
 master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info)
 ls_ls_competitors = dec_json(path_ls_ls_competitors)
@@ -105,6 +108,11 @@ ls_columns = ['brand_1_b', 'brand_2_b', 'brand_type_b', 'brand_1_e', 'brand_2_e'
 df_brands = pd.DataFrame(ls_brands, index = master_price['ids'], columns = ls_columns)
 df_brands['id'] = df_brands.index
 
+# DF INSEE
+df_insee = pd.read_csv(path_csv_insee_extract, encoding = 'utf-8', dtype = str)
+#df_insee = df_insee[['CODGEO', 'REG', 'DEP', 'STATUT_COM...?']]
+#df_brands = pd.merge(df_brands, df_insee, right_column = 'codgeo', left_column = 'CODGEO')
+
 # DF PPD WITH BRANDS (Merge may change order of pdd)
 df_brands = df_brands.rename(columns={'id': 'id_1'})
 df_ppd = pd.merge(df_ppd, df_brands, on='id_1')
@@ -114,16 +122,17 @@ df_ppd = pd.merge(df_ppd, df_brands, on='id_2', suffixes=('_1', '_2'))
 # CLEAN DF (avoid pbm with missing, inf which should be represented as missing etc.)
 df_ppd = df_ppd[~(pd.isnull(df_ppd['std_spread']) | pd.isnull(df_ppd['pct_rr']))]
 df_ppd = df_ppd[df_ppd['nb_spread'] > 60]
+#df_ppd.replace([np.inf, -np.inf], np.nan).dropna(subset=["pct_rr", "std_spread"], how="all")
 #df_ppd = df_ppd[(df_ppd['std_spread'] != np.inf) &\
 #                (df_ppd['std_spread'] != -np.inf) &\
 #                (df_ppd['pct_rr'] != np.inf) &\
 #                (df_ppd['pct_rr'] ! -np.inf)]
 df_ppd['abs_avg_spread'] = np.abs(df_ppd['avg_spread'])
-## Need to avoid 0 in quantile regressions... pbmatic 
-df_ppd['pct_rr_nozero'] = df_ppd['pct_rr']
-df_ppd['pct_rr_nozero'][df_ppd['pct_rr'] == 0] = 0.00001
-df_ppd['std_spread_nozero'] = df_ppd['std_spread']
-df_ppd['std_spread_nozero'][df_ppd['std_spread'] == 0] = 0.00001
+### Need to avoid 0 in quantile regressions... pbmatic 
+#df_ppd['pct_rr_nozero'] = df_ppd['pct_rr']
+#df_ppd['pct_rr_nozero'][df_ppd['pct_rr'] == 0] = 0.00001
+#df_ppd['std_spread_nozero'] = df_ppd['std_spread']
+#df_ppd['std_spread_nozero'][df_ppd['std_spread'] == 0] = 0.00001
 # TODO: check 0 rr => seems some duplicates
 
 # RESTRICTIONS ON BRANDS / TYPES
@@ -156,7 +165,7 @@ ls_sc_ols_formulas = ['abs_avg_spread ~ sc_500',
                       'pct_rr ~ sc_500',
                       'std_spread ~ sc_500']
 
-from statsmodels.regression.quantile_regression import QuantReg
+# from statsmodels.regression.quantile_regression import QuantReg
 ls_quantiles = [0.25, 0.5, 0.75, 0.9]
 
 def get_df_ols_res(ls_ols_res, ls_index):
@@ -172,20 +181,28 @@ def get_df_ols_res(ls_ols_res, ls_index):
   df_ols_res = pd.DataFrame(ls_se_ols_res, index = ls_index)
   return df_ols_res
 
+#mod = smf.quantreg('pct_rr~distance', df_ppd_reg[~pd.isnull(df_ppd_reg['pct_rr'])])
+#res = mod.fit(q=.5)
+#print res.summary()
+## Following: need to add constant to make it equivalent
+#res_alt = QuantReg(df_ppd_reg['pct_rr_nozero'], df_ppd_reg['sc_500']).fit(0.5)
+# So far: need to add "resid[resid == 0] = .000001" in quantreg line 171-3 to have it run
+
 ls_df_reg_res = []
 for df_ppd_reg in [df_ppd_nodiff, df_ppd_diff]:
   ls_dist_ols_res = [smf.ols(formula = str_formula, data = df_ppd_reg).fit()\
                        for str_formula in ls_dist_ols_formulas]
   ls_sc_ols_res   = [smf.ols(formula = str_formula, data = df_ppd_reg).fit()\
                        for str_formula in ls_sc_ols_formulas]
-  ls_rr_qreg_res  = [QuantReg(df_ppd_reg['pct_rr_nozero'], df_ppd_reg['sc_500']).fit(quantile)\
+  ls_rr_qreg_res  = [smf.quantreg('pct_rr~sc_500', data = df_ppd_reg).fit(quantile)\
                        for quantile in ls_quantiles]
-  ls_std_qreg_res = [QuantReg(df_ppd_reg['std_spread_nozero'], df_ppd_reg['sc_500']).fit(quantile)\
+  ls_std_qreg_res = [smf.quantreg('std_spread~sc_500', data = df_ppd_reg).fit(quantile)\
                        for quantile in ls_quantiles]
   ls_ls_reg_res = [ls_dist_ols_res, ls_sc_ols_res, ls_rr_qreg_res, ls_std_qreg_res]
   ls_ls_index = [ls_dist_ols_formulas, ls_dist_ols_formulas, ls_quantiles, ls_quantiles]
   ls_df_reg_res.append([get_df_ols_res(ls_ols_res, ls_index)\
                           for ls_ols_res, ls_index in zip(ls_ls_reg_res, ls_ls_index)])
+
 print 'Compare raw prices vs. prices not raw:'
 
 print '\nOLS: Distance'
@@ -196,11 +213,11 @@ print '\nOLS: Same corner'
 print ls_df_reg_res[0][1][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
 print ls_df_reg_res[1][1][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
 
-print '\nQR: Rank reversal (PBM: INCOHERENT)'
+print '\nQR: Rank reversal (Check vs. R?)'
 print ls_df_reg_res[0][2][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
 print ls_df_reg_res[1][2][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
 
-print '\nQR: Std spread (PBM: INCOHERENT)'
+print '\nQR: Std spread (Check vs. R?)'
 print ls_df_reg_res[0][3][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
 print ls_df_reg_res[1][3][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
 

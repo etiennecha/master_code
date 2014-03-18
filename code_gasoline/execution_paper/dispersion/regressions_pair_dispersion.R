@@ -1,6 +1,8 @@
 library(quantreg)
 
-data = read.csv("C:\\Users\\etna\\Desktop\\Etienne_work\\Data\\data_gasoline\\data_built\\data_paper\\data_csv\\data_ppd.csv")
+data <- read.csv("C:\\Users\\etna\\Desktop\\Etienne_work\\Data\\data_gasoline\\data_built\\data_paper\\data_csv\\data_ppd.csv")
+#data <- '//ulysse/users/echamayou/Bureau/Etienne_work/Data/data_gasoline/data_built/data_paper/data_csv/data_ppd_reg.csv'
+
 ppd <- na.omit(data)
 ppd.nodiff <- subset(ppd, abs(ppd$avg_spread) <= 0.02)
 

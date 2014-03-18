@@ -8,70 +8,14 @@ import xlrd
 import re
 import pandas as pd
 
-def str_insee_harmonization(word):
-  # Just for comparison's sake: no accent and word-word (maybe insufficient?)
-  word = word.lower()
-  word = re.sub(ur"(^|\s)st(s?)(\s|$|-)", ur" saint\2 ", word)
-  word = re.sub(ur"(^|\s)ste(s?)(\s|$|-)", ur" sainte\2 ", word)
-  word = word.replace("'", " ")
-  word = word.replace("-", " ")
-  word = ' '.join(word.split())
-  return word.strip()
-
+# READ AND IMPLEMENT:
+# http://rdf.insee.fr/
+# http://rdf.insee.fr/common/appli-help.html
+# http://rdf.insee.fr/common/sparql-help.html
 
 if __name__=="__main__":
 
   path_dir_insee = os.path.join(path_data, 'data_insee')
-  
-  # #####################################
-  # 0/ CODE INSEE VS. ZIP CODE (AND CITY)
-  # #####################################
-
-  # file_correspondence = open(path_data + r'\data_insee\corr_cinsee_cpostal','r')
-  # correspondence = file_correspondence.read().split('\n')[1:-1]
-  # file_correspondence_update = open(path_data + r'\data_insee\corr_cinsee_cpostal_update','r')
-  # correspondence_update = file_correspondence_update.read().split('\n')[1:]
-  # correspondence += correspondence_update
-  # correspondence = [row.split(';') for row in correspondence]
-
-  # dict_cpostal = {}
-  # for (city, cpostal, dpt, cinsee) in correspondence:
-    # dict_cpostal.setdefault(cpostal, []).append((city, cpostal, dpt, cinsee))
-
-  # dict_dpt = {}
-  # for (city, cpostal, dpt, cinsee) in correspondence:
-    # dict_dpt.setdefault(cpostal[:-3], []).append((city, cpostal, dpt, cinsee))
-  
-  # # TODO: CREATE MATCHING FUNCTION WITH REASONABLE LEVENSHTEIN COMPARISON
-  # # TODO: Search within cpostal (or dpt) closest levenshtein city
-  # # TODO: Set a limit regarding the tolerated score...
-  # # TODO: Build a class: should be able to import from everywhere so as to match with INSEE data...
-  
-  # # Large cities: arrondissements
-  # # Paris code or Arrondissements codes... need flexibility
-  # Large_cities = {'13055' : ['%s' %elt for elt in range(13201, 13217)], # Marseille
-                  # '69123' : ['%s' %elt for elt in range(69381, 69390)], #Lyon
-                  # '75056' : ['%s' %elt for elt in range(75101, 75121)]} # Paris
-
-  
-  # # Evolution in communes... manual updating so far
-
-  # file_communes_maj = open(path_data + r'\data_insee\Communes_chgt\majcom2013.txt','r')
-  # communes_maj = file_communes_maj.read().split('\n')
-  # communes_maj_titles = communes_maj[0].split('\t')
-  # communes_maj = [row.split('\t') for row in communes_maj[1:-1]]
-  
-  # file_communes_historiq = open(path_data + r'\data_insee\Communes_chgt\historiq2013.txt','r')
-  # communes_historiq = file_communes_historiq.read().split('\n')
-  # communes_historiq_titles = communes_historiq[0].split('\t')
-  # communes_historiq = [row.split('\t') for row in communes_historiq[1:-1]]
-  
-  # list_communes_update_todo = []
-  # for i, elt in enumerate(communes_historiq):
-	  # if elt[0] and elt[3] and elt[13]:
-		  # list_communes_update_todo.append(('%s%s' %(elt[0], elt[3]), elt[13], elt[20]))
-  # # Not so clear... unecessay for now: manual update in correspondence
-  
   
   # ################################# 
   # 1/ DATA AT CITY LEVEL ("COMMUNE")
@@ -80,7 +24,7 @@ if __name__=="__main__":
   path_dir_communes = os.path.join(path_dir_insee, 'communes')
   
   # ####################################################
-  # 1A/ MOBILITY BETWEEN HOME AND WORK (not used so far)
+  # MOBILITY BETWEEN HOME AND WORK (not used so far)
   
   path_xls_mob = os.path.join(path_dir_communes,
                               'Mobilite_Dom_Travail',
@@ -106,7 +50,7 @@ if __name__=="__main__":
   df_mob = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
  
   # ########################
-  # 1B/ UNITES URBAINES 2010
+  # UNITES URBAINES 2010
 
   path_xls_uu = os.path.join(path_dir_communes, 'UnitesUrbaines', 'UU2010.xls')
   wb_uu = xlrd.open_workbook(path_xls_uu)
@@ -137,7 +81,7 @@ if __name__=="__main__":
   df_uu = pd.merge(df_uu_info, df_uu_com, on = 'UU2010')
   
   # #######################
-  # 1C/ AIRES URBAINES 2010
+  # AIRES URBAINES 2010
   
   path_xls_au = os.path.join(path_dir_communes, 'AiresUrbaines', 'AU2010.xls')
   wb_au = xlrd.open_workbook(path_xls_au)
@@ -159,11 +103,34 @@ if __name__=="__main__":
   df_au = df_au_com
 
   # #######################
-  # 1D/ LOGEMENT 2010
+  # POPULATION 2010
+
+  path_xls_population = os.path.join(path_dir_communes, 'Pop', 'base-cc-evol-struct-pop-2010.xls')
+  
+  wb_population = xlrd.open_workbook(path_xls_population)
+  print 'Sheets in file', wb_population.sheet_names()
+  
+  sh_population_com = wb_population.sheet_by_name(u'COM')
+  ls_columns = sh_population_com.row_values(5)
+  ls_rows = [sh_population_com.row_values(i) for i in range(6, sh_population_com.nrows)]
+  df_population_com = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+  
+  sh_population_arm = wb_population.sheet_by_name(u'ARM')
+  ls_columns = sh_population_arm.row_values(5)
+  ls_rows = [sh_population_arm.row_values(i) for i in range(6, sh_population_arm.nrows)]
+  df_population_arm = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+
+  df_population = pd.concat([df_population_com, df_population_arm], ignore_index = True)
+  ls_population_select_columns = ['CODGEO', 'LIBGEO', 'REG', 'DEP',
+                                  'ZE2010', 'P10_POP', 'SUPERF']
+  df_population = df_population[ls_population_select_columns] 
+  
+  # #######################
+  # LOGEMENT 2010
 
   path_xls_logement = os.path.join(path_dir_communes, 'Logement', 'base-cc-logement-2010.xls')
   
-  wb_logement = xlrd.open_workbook(os.path.join(path_dir_communes, 'Logement', 'base-cc-logement-2010.xls'))
+  wb_logement = xlrd.open_workbook(path_xls_logement)
   print 'Sheets in file', wb_logement.sheet_names()
   
   sh_logement_com = wb_logement.sheet_by_name(u'COM')
@@ -175,41 +142,45 @@ if __name__=="__main__":
   ls_columns = sh_logement_arm.row_values(5)
   ls_rows = [sh_logement_arm.row_values(i) for i in range(6, sh_logement_arm.nrows)]
   df_logement_arm = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
- 
-  # P10_RP = P10_MEN and P_10_PMEN = P10_NPER_NP (resp. nb menages, nb habitants)
-  ls_select_columns = [u'CODGEO', u'LIBGEO',
-                       u'P10_LOG', u'P10_MEN', u'P10_PMEN',
-                       u'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P']
-  
+
   df_logement = pd.concat([df_logement_com, df_logement_arm], ignore_index = True)
-  df_logement = df_logement[ls_select_columns] 
+  # P10_RP = P10_MEN and P_10_PMEN = P10_NPER_NP (resp. nb menages, nb habitants)
+  ls_logement_select_columns = [u'CODGEO', u'LIBGEO',
+                                u'P10_LOG', u'P10_MEN', u'P10_PMEN',
+                                u'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P']
+  df_logement = df_logement[ls_logement_select_columns] 
 
   # #################################### 
   # 1E/ Merge INSEE communes dataframes
  
-  print df_uu.info()
-  print df_au.info()
-  print df_logement.info()
-  del(df_au['LIBGEO'], df_logement['LIBGEO'])
+  print '\n', df_uu.info()
+  print '\n', df_au.info()
+  print '\n', df_population.info()
+  print '\n', df_logement.info()
+  del(df_au['LIBGEO'], df_population['LIBGEO'], df_logement['LIBGEO'])
   df_insee = pd.merge(df_uu, df_au, on = 'CODGEO')
+  df_insee = pd.merge(df_insee, df_population, on = 'CODGEO')
   df_insee = pd.merge(df_insee, df_logement, on = 'CODGEO') 
 
-  print df_insee.info()
+  print '\nINSEE EXTRACT\n', df_insee.info()
   
-  #folder_built_csv = r'\data_gasoline\data_built\data_v_gasoline'
+  path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
+  df_insee.to_csv(os.path.join(path_dir_insee_built, 'data_insee_extract.csv'),
+                    float_format='%.3f', encoding='utf-8', index=False)
   #path_dir_gas_source = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_other')
-  #df_insee.to_csv(os.path.join(path_dir_gas_source, 'data_insee_extract'),
+  #df_insee.to_csv(os.path.join(path_dir_gas_source, 'data_insee_extract.csv')
   #                float_format='%.3f', encoding='utf-8', index=False)
   
-  # e.g. groupy to build aggregate stats
+  # Adding columns with aggregated data using groupby
   # check : http://bconnelly.net/2013/10/22/summarizing-data-in-python-with-pandas/
   ls_columns_interest = ['P10_LOG', 'P10_MEN', 'P10_PMEN', 'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P']
   for column in ls_columns_interest:
     df_insee[column] = df_insee[column].apply(lambda x: float(x) if x else float('nan'))
   df_uu_agg = df_insee.groupby('UU2010')[ls_columns_interest].sum()
-  # TODO: add suffixes to have proper variable names
-  df_insee = pd.merge(df_insee, df_uu_agg, left_on = "UU2010", right_index = True)
-  
+  df_insee = pd.merge(df_insee, df_uu_agg, left_on = "UU2010",
+                      right_index = True, suffixes = ('_COM', '_UU'))
+  print '\nINSEE EXTRACT ENRICHED\n', df_insee.info() 
+   
   ## If only one: series
   #se_uu_men = df_insee.groupby('UU2010')['P10_MEN'].sum()
   #df_uu_men = pd.Series(se_uu_men, name = 'P10_MEN_UU').reset_index()
