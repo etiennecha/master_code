@@ -98,3 +98,44 @@ df_all['ULSD 10 CIF NWE R5 EL'] = pd.rolling_mean(se_temp, window = 5)
 
 df_all[['ULSD 10 CIF NWE EL', 'ULSD 10 CIF NWE R5 EL', 'UFIP RT Diesel R5 EL']].plot()
 plt.show()
+
+# ####################
+# TEST UFIP COMPARISON
+# ####################
+
+# TODO: take into account week end properly with shift
+# Think it was done with excel and there was no line for week end
+# Shift must a.s. intervene before moving average
+
+# nb: same to shift by 1 then moving average 5 or converse
+# pbm with WE doing it this way...
+df_all['ULSD 10 CIF NWE S1 EL'] = df_all['ULSD 10 CIF NWE EL'].shift(1)
+df_all['ULSD 10 CIF NWE R5 S1 EL'] = df_all['ULSD 10 CIF NWE R5 EL'].shift(1)
+
+print (df_all['UFIP RT Diesel R5 EL'] - df_all['ULSD 10 CIF NWE R5 EL']).mean()
+print (df_all['UFIP RT Diesel R5 EL'] - df_all['ULSD 10 CIF NWE R5 S1 EL']).mean()
+
+df_all['UFIP_diff'] = df_all['UFIP RT Diesel R5 EL'] - df_all['ULSD 10 CIF NWE R5 S1 EL']
+print np.argmax(df_all['UFIP_diff']), np.max(df_all['UFIP_diff'])
+print df_all[['UFIP RT Diesel R5 EL', 'ULSD 10 CIF NWE R5 S1 EL',
+              'ULSD 10 CIF NWE S1 EL', 'UFIP_diff']].ix['2013-03-20':'2013-04-20'].to_string()
+# Obs: though WE prices are filled with previous prices by UFIP, other missing seem not to be
+
+#plt.plot(df_all['UFIP RT Diesel R5 EL'] - df_all['ULSD 10 CIF NWE R5 EL'])
+#plt.plot(df_all['UFIP RT Diesel R5 EL'] - df_all['ULSD 10 CIF NWE R5 S1 EL'])
+#plt.show()
+
+# TODO: check: not ok because time stamps are kept... so then week end are still there as nan
+df_all_nowe = df_all[~((df_all.index.weekday == 5) | (df_all.index.weekday == 6))]
+df_all_nowe['ULSD 10 CIF NWE S1b EL'] = df_all_nowe['ULSD 10 CIF NWE EL'].shift(1)
+df_all_nowe['ULSD 10 CIF NWE S1b R5b EL'] = pd.stats.moments.rolling_apply(
+                                              df_all_nowe['ULSD 10 CIF NWE S1b EL'], 5,
+                                              lambda x: x[~pd.isnull(x)].mean(),2)
+df_all_nowe['UFIP_diff_b'] = df_all_nowe['UFIP RT Diesel R5 EL'] - df_all_nowe['ULSD 10 CIF NWE S1b R5b EL']
+df_all_nowe['UFIP_diff_b'].plot()
+plt.show()
+# not good
+print df_all_nowe[['UFIP RT Diesel R5 EL', 'ULSD 10 CIF NWE S1b R5b EL',
+                   'ULSD 10 CIF NWE S1b EL', 'UFIP_diff_b']].ix['2013-03-20':'2013-04-20'].to_string()
+
+df_all['ULSD 10 CIF NWE S1b R5b EL'] = df_all_nowe['ULSD 10 CIF NWE S1b R5b EL']

@@ -7,6 +7,8 @@ from generic_master_price import *
 from generic_master_info import *
 import datetime, time
 from BeautifulSoup import BeautifulSoup
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
 
 path_dir_rotterdam = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_rotterdam')
 path_dir_reuters = os.path.join(path_dir_rotterdam, 'data_reuters')
@@ -43,7 +45,8 @@ dict_dpts_regions = dec_json(path_dict_dpts_regions)
 
 reuters_diesel_excel_file = pd.ExcelFile(path_xls_reuters_diesel)
 print 'Reuters excel file sheets:', reuters_diesel_excel_file.sheet_names
-df_reuters_diesel = reuters_diesel_excel_file.parse('Feuil1', skiprows = 0, header = 1, parse_dates = True)
+df_reuters_diesel = reuters_diesel_excel_file.parse('Feuil1', skiprows = 0,
+                                                    header = 1, parse_dates = True)
 df_reuters_diesel.set_index('Date', inplace = True)
 
 ecb_xml_file = open(path_xml_ecb, 'r').read()
@@ -68,16 +71,18 @@ litre_per_us_gallon = 3.785411784
 litre_per_barrel = 158.987295
 litre_per_metric_tonne = 1183.5
 
-df_cost['ULSD 10 FOB MED EL'] = df_cost['ULSD 10 FOB MED DT'] / litre_per_metric_tonne / df_cost['ECB Rate ED']
-df_cost['ULSD 10 CIF NWE EL'] = df_cost['ULSD 10 CIF NWE DT'] / litre_per_metric_tonne / df_cost['ECB Rate ED']
-df_cost['GASOIL 0.2 FOB ARA EL'] = df_cost['GASOIL 0.2 FOB ARA DT'] / 1183.5 / df_cost['ECB Rate ED']
+df_cost['ULSD 10 FOB MED EL'] = df_cost['ULSD 10 FOB MED DT'] /\
+                                  litre_per_metric_tonne / df_cost['ECB Rate ED']
+df_cost['ULSD 10 CIF NWE EL'] = df_cost['ULSD 10 CIF NWE DT'] /\
+                                  litre_per_metric_tonne / df_cost['ECB Rate ED']
+df_cost['GASOIL 0.2 FOB ARA EL'] = df_cost['GASOIL 0.2 FOB ARA DT'] / 1183.5 /\
+                                     df_cost['ECB Rate ED']
 
 # DF PRICES TTC
 
 ar_diesel_price = np.array(master_price['diesel_price'], np.float64)
 ls_index = [pd.to_datetime(date) for date in master_price['dates']]
 df_prices_ttc = pd.DataFrame(ar_diesel_price.T, columns = master_price['ids'], index = ls_index)
-# TODO: get rid of highway... single out Corsica?
 
 # DF PRICES HT
 
@@ -88,30 +93,33 @@ ls_tax_11 = [(1,7,26,38,42,69,73,74,75,77,78,91,92,93,94,95,4,5,6,13,83,84), # (
 # 2011 else: (PrixTTC-0.4419)/1.196
 ls_tax_12 = [(1,7,26,38,42,69,73,74), # (PrixTTC-0.4419+0.0135)/1.196
               (16,17,79,86)] # (PrixTTC-0.4419+0.0250)/1.196
-# 2012 - 2013 else: (PrixTTC-0.4419)/1.196 
+# 2012 - 2013 else: (PrixTTC-0.4419)/1.196
+# All: VAT ... but temporary tax cut
 
 df_prices_ht_2011 = df_prices_ht.ix[:'2011-12-31']
 for indiv_id in df_prices_ht_2011.columns:
   if indiv_id[:-6] in ls_tax_11[0]:
-    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: (x-0.4419+0.0135)/1.196)
+    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x-0.4419+0.0135)
   elif indiv_id[:-6] in ls_tax_11[1]:
-    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: (x-0.4419+0.0250)/1.196)
+    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x-0.4419+0.0250)
   else:
-    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: (x-0.4419)/1.196)
+    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x-0.4419)
 
 df_prices_ht_2012 = df_prices_ht.ix['2012-01-01':]
 for indiv_id in df_prices_ht_2012.columns:
   if indiv_id[:-6] in ls_tax_12[0]:
-    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: (x-0.4419+0.0135)/1.196)
+    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x-0.4419+0.0135)
   elif indiv_id[:-6] in ls_tax_12[1]:
-    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: (x-0.4419+0.0250)/1.196)
+    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x-0.4419+0.0250)
   else:
-    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: (x-0.4419)/1.196)
+    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x-0.4419)
 
-# DF ALL: MERGE DF PRICES HT AND DF REUTERS
-df_all = df_cost[['ULSD 10 FOB MED EL', 'ULSD 10 CIF NWE EL']]
-df_all['diesel_ht'] = df_prices_ht.mean(axis = 1)
-df_all['margin'] = df_all['diesel_ht'] - df_all['ULSD 10 CIF NWE EL']
+df_prices_ht.ix['2012-08-31':'2012-11-30'] = df_prices_ht.ix['2012-08-31':'2012-11-30'] + 0.03
+df_prices_ht.ix['2012-12-01':'2012-12-11'] = df_prices_ht.ix['2012-12-01':'2012-12-11'] + 0.02
+df_prices_ht.ix['2012-12-11':'2012-12-21'] = df_prices_ht.ix['2012-12-11':'2012-12-21'] + 0.015
+df_prices_ht.ix['2012-12-21':'2013-01-11'] = df_prices_ht.ix['2012-12-21':'2013-01-11'] + 0.01
+
+df_prices_ht = df_prices_ht / 1.196
 
 # DF INFO
 
@@ -166,49 +174,109 @@ print '\n', df_info.info()
 
 df_info['dpt'] = df_info['code_geo'].map(lambda x: x[:2] if x else None)
 
-# Exclude highway and Corse
+# Exclude highway and Corse from df_info, df_prices_ttc, df_prices_ht
 df_info = df_info[(df_info['highway'] != 1) &\
                   (df_info['region'] != 'Corse')]
+
+df_prices_ttc = df_prices_ttc[df_info.index]
+df_prices_ht = df_prices_ht[df_info.index]
 
 # ########
 # ANALYSIS
 # ########
 
+# not sure if need to keep this... compare UFIP for robustness if needed
+df_cost_nowe = df_cost[~((df_cost.index.weekday == 5) | (df_cost.index.weekday == 6))]
+df_cost_nowe['ULSD 10 CIF NWE S1 EL'] = df_cost_nowe['ULSD 10 CIF NWE EL'].shift(1)
+df_cost_nowe['ULSD 10 CIF NWE S1 R5 EL'] = pd.stats.moments.rolling_apply(
+                                             df_cost_nowe['ULSD 10 CIF NWE S1 EL'], 5,
+                                             lambda x: x[~pd.isnull(x)].mean(), 2)
+df_cost['ULSD 10 CIF NWE S1 R5 EL'] = df_cost_nowe['ULSD 10 CIF NWE S1 R5 EL']
+
+# DF AGG : aggregate prices series
+df_agg = df_cost[['ULSD 10 FOB MED EL', 'ULSD 10 CIF NWE EL', 'ULSD 10 CIF NWE S1 R5 EL']]
+df_agg['price_ht'] = df_prices_ht.mean(axis = 1)
+df_agg['margin_a'] = df_agg['price_ht'] - df_agg['ULSD 10 CIF NWE EL']
+df_agg['margin_b'] = df_agg['price_ht'] - df_agg['ULSD 10 CIF NWE S1 R5 EL']
+# spaces in variable names seem not to be tolerated by formula
+df_agg['cost_a'] = df_agg['ULSD 10 CIF NWE EL']
+df_agg['cost_b'] = df_agg['ULSD 10 CIF NWE S1 R5 EL']
+# dummy july + measure, dummy tax_cut
+df_agg['dum_taxcut'] = 0
+df_agg['dum_taxcut'].ix['2012-08-31':'2013-01-11'] = 1
+df_agg['dum_july_taxcut'] = 0
+df_agg['dum_july_taxcut'].ix['2012-07-31':'2013-01-11'] = 1
+
+# Need to rationalize
+ls_ls_reg_res = []
+for cost in ['cost_a', 'cost_b']:
+  ls_formulas = ['price_ht ~ %s' %cost,
+                 'price_ht ~ %s + dum_taxcut' %cost,
+                 'price_ht ~ %s + dum_july_taxcut' %cost]
+  ls_reg_res = [smf.ols(str_formula, missing ='drop', data = df_agg).fit()\
+                  for str_formula in ls_formulas]
+  ls_ls_reg_res.append(ls_reg_res)
+
+se_est_a = ls_ls_reg_res[0][-1].predict(sm.add_constant(df_agg[["cost_a", "dum_july_taxcut"]]),
+                                          transform=False)
+se_est_b = ls_ls_reg_res[1][-1].predict(sm.add_constant(df_agg[["cost_b", "dum_july_taxcut"]]),
+                                          transform=False)
+plt.plot(se_est_a)
+plt.plot(se_est_b)
+plt.plot(df_agg['price_ht'])
+plt.show()
+
+reg01 = smf.ols('price_ht ~ cost_a', missing = 'drop', data = df_agg[0:200]).fit().summary()
+
+
+# brand (looks only at firm which don't change brand right now)
+for brand in ['TOTAL', 'MOUSQUETAIRES', 'CARREFOUR', 'SYSTEMEU', 'ESSO']:
+  ls_ind_brand = df_info.index[(df_info['brand_2_e'] == '%s' %brand) &\
+                             (df_info['brand_2_b'] == '%s' %brand)]
+  df_agg['price_ht_%s' %brand] = df_prices_ht[ls_ind_brand].mean(1)
+  df_agg['margin_%s' %brand] = df_agg['price_ht_%s' %brand] - df_agg['cost_a']
+
+# region
+
 ## Print prices and margin
 #df_all.plot()
 #plt.show()
 
-# Hist: all prices at day 0 (TODO: over time)
-min_x, max_x = 1.2, 1.6
-bins = np.linspace(min_x, max_x, (max_x - min_x) / 0.01 + 1)
-plt.hist(df_prices_ttc.ix[0][~pd.isnull(df_prices_ttc.ix[0])], bins = bins, alpha = 0.5)
-plt.show()
+# ##########################
+# TO BE MOVED SOMEWHERE ELSE
+# ##########################
 
-# Hist: supermarkets vs. oil (add ind?): first period
-
-ls_sup_ids = df_info.index[(df_info['brand_type_b'] == 'SUP') &\
-                           (df_info['brand_type_b'] == df_info['brand_type_e'])]
-ls_oil_ids = df_info.index[(df_info['brand_type_b'] == 'OIL') &\
-                           (df_info['brand_type_b'] == df_info['brand_type_e'])]
-
-plt.hist(df_prices_ttc[ls_sup_ids].ix[0][~pd.isnull(df_prices_ttc[ls_sup_ids].ix[0])],
-         bins = bins,
-         alpha = 0.5)
-plt.hist(df_prices_ttc[ls_oil_ids].ix[0][~pd.isnull(df_prices_ttc[ls_oil_ids].ix[0])],
-         bins = bins,
-         alpha = 0.5)
-plt.show()
-
-# Hist: supermarkets vs. oil (add ind?): last period
-
-plt.hist(df_prices_ttc[ls_sup_ids].ix[-1][~pd.isnull(df_prices_ttc[ls_sup_ids].ix[0])],
-         bins = bins,
-         alpha = 0.5,
-         label = 'sup')
-plt.hist(df_prices_ttc[ls_oil_ids].ix[-1][~pd.isnull(df_prices_ttc[ls_oil_ids].ix[0])],
-         bins = bins,
-         alpha = 0.5
-         label = 'oil')
-plt.show()
-
-# Hist: oil companies
+## Hist: all prices at day 0 (TODO: over time)
+#min_x, max_x = 1.2, 1.6
+#bins = np.linspace(min_x, max_x, (max_x - min_x) / 0.01 + 1)
+#plt.hist(df_prices_ttc.ix[0][~pd.isnull(df_prices_ttc.ix[0])], bins = bins, alpha = 0.5)
+#plt.show()
+#
+## Hist: supermarkets vs. oil (add ind?): first period
+#
+#ls_sup_ids = df_info.index[(df_info['brand_type_b'] == 'SUP') &\
+#                           (df_info['brand_type_b'] == df_info['brand_type_e'])]
+#ls_oil_ids = df_info.index[(df_info['brand_type_b'] == 'OIL') &\
+#                           (df_info['brand_type_b'] == df_info['brand_type_e'])]
+#
+#plt.hist(df_prices_ttc[ls_sup_ids].ix[0][~pd.isnull(df_prices_ttc[ls_sup_ids].ix[0])],
+#         bins = bins,
+#         alpha = 0.5)
+#plt.hist(df_prices_ttc[ls_oil_ids].ix[0][~pd.isnull(df_prices_ttc[ls_oil_ids].ix[0])],
+#         bins = bins,
+#         alpha = 0.5)
+#plt.show()
+#
+## Hist: supermarkets vs. oil (add ind?): last period
+#
+#plt.hist(df_prices_ttc[ls_sup_ids].ix[-1][~pd.isnull(df_prices_ttc[ls_sup_ids].ix[0])],
+#         bins = bins,
+#         alpha = 0.5,
+#         label = 'sup')
+#plt.hist(df_prices_ttc[ls_oil_ids].ix[-1][~pd.isnull(df_prices_ttc[ls_oil_ids].ix[0])],
+#         bins = bins,
+#         alpha = 0.5,
+#         label = 'oil')
+#plt.show()
+#
+## Hist: oil companies

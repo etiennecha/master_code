@@ -34,6 +34,10 @@ zero_threshold = np.float64(1e-10)
 pd.set_option('use_inf_as_null', True)
 pd.options.display.float_format = '{:6,.4f}'.format
 
+# ##########################
+# DF PRICE and DF MEAN PRICE
+# ##########################
+
 master_np_prices = np.array(master_price['diesel_price'], np.float64)
 df_price = pd.DataFrame(master_np_prices.T, index = master_price['dates'], columns = master_price['ids'])
 #df_price = pd.DataFrame(master_price['diesel_price'],
