@@ -23,10 +23,10 @@ def enc_json(database, chemin):
   with open(chemin, 'w') as fichier:
     json.dump(database, fichier)
 
-key_jcd = '82c9828532a0826fae7d88c65da42bb000409d60'
 # GET https://api.jcdecaux.com/vls/v1/stations?contract={contract_name}&apiKey={api_key}
 # https://twitter.com/jcdecauxdev
 path = os.path.abspath(os.path.dirname(sys.argv[0]))
+key_jcd = open(path + r'\api_jcd.txt', 'r').read()
 paris_json = dec_json(os.path.join(path, 'Paris.json'))
 print type(paris_json), len(paris_json)
 print paris_json[0]
