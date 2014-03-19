@@ -33,16 +33,33 @@ zero_threshold = np.float64(1e-10)
 
 master_np_prices = np.array(master_price['diesel_price'], np.float64)
 df_price = pd.DataFrame(master_np_prices.T, master_price['dates'], master_price['ids'])
-#df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
+#dp_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
 
 se_mean_price = df_price.mean(1)
 
 # CLEAN PRICES (CAN BE DONE DIFFERENTLY...)
-df_price = df_price.apply(lambda x: x - (x - se_mean_price).mean())
+df_price_cl = df_price.apply(lambda x: x - (x - se_mean_price).mean())
 
 # ################
 # BUILD DATAFRAME
 # ################
+
+# DF BRANDS
+dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
+ls_brands = []
+for indiv_id in master_price['ids']:
+  indiv_dict_info = master_price['dict_info'][indiv_id]
+  brand_1_b = indiv_dict_info['brand_std'][0][0]
+  brand_2_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][1]
+  brand_type_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][2]
+  brand_1_e = indiv_dict_info['brand_std'][-1][0]
+  brand_2_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][1]
+  brand_type_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][2]
+  ls_brands.append([brand_1_b, brand_2_b, brand_type_b,
+                    brand_1_e, brand_2_e, brand_type_e])
+ls_columns = ['brand_1_b', 'brand_2_b', 'brand_type_b', 'brand_1_e', 'brand_2_e', 'brand_type_e']
+df_brands = pd.DataFrame(ls_brands, index = master_price['ids'], columns = ls_columns)
+df_brands['id'] = df_brands.index
 
 # DF MARKET PRICE DISPERSION
 ls_ls_market_ids = get_ls_ls_distance_market_ids(master_price['ids'],\
@@ -52,18 +69,27 @@ ls_ls_market_ids_st = get_ls_ls_distance_market_ids_restricted(master_price['ids
 ls_ls_market_ids_st_rd = get_ls_ls_distance_market_ids_restricted(master_price['ids'],\
                                                                   ls_ls_competitors, km_bound, True)
 
-ls_ls_market_ids_temp = ls_ls_market_ids_st_rd
+ls_ls_market_ids_temp = ls_ls_market_ids_st_rd[0:6000]
 
-ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price) for\
+ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price_cl) for\
                              ls_market_ids in ls_ls_market_ids_temp]
 
 # Can loop to add mean price or add date column and then merge df mean price with concatenated on date
 # TODO: add max nb of firms and keep only if enough
+ls_total_price_vs_dispersion = []
 for ls_market_id, df_market_dispersion in zip(ls_ls_market_ids_temp, ls_df_market_dispersion):
   df_market_dispersion['id'] = ls_market_id[0]
   df_market_dispersion['price'] = se_mean_price
   df_market_dispersion['date'] = df_market_dispersion.index
-  # df_dispersion['date'] = df_dispersion.index
+  for indiv_id in ls_market_id:
+    # todo: work on mean if several + other stations ?    
+    if df_brands['brand_1_b'][indiv_id] == 'TOTAL':
+      ls_total_price_vs_dispersion.append([indiv_id,
+                                           (df_price[indiv_id] - se_mean_price).mean(),
+                                           df_market_dispersion['std'].mean(),
+                                           df_market_dispersion['range'].quantile(0.9),
+                                           df_market_dispersion['nb_comp'].mean()])
+      break
 df_dispersion = pd.concat(ls_df_market_dispersion, ignore_index = True)
 
 # Get rid of cases with too few competitors
@@ -71,7 +97,7 @@ df_dispersion = df_dispersion[(df_dispersion['nb_comp_t'] >= 3) &\
                               (df_dispersion['nb_comp'] >= 3) &\
                               (df_dispersion['nb_comp'] == df_dispersion['nb_comp_t'])]
 
-# Get rid of nan... otherwise pbm to compute clustered standard errors 
+# Get rid of nan... otherwise pbm to compute clustered standard errors (TODO: one liner) 
 df_dispersion = df_dispersion[(~pd.isnull(df_dispersion['gfs'])) &\
                               (~pd.isnull(df_dispersion['std'])) &\
                               (~pd.isnull(df_dispersion['cv'])) &\
@@ -79,32 +105,49 @@ df_dispersion = df_dispersion[(~pd.isnull(df_dispersion['gfs'])) &\
                               (~pd.isnull(df_dispersion['price'])) &\
                               (~pd.isnull(df_dispersion['nb_comp']))]
 
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
-df_dispersion.to_csv(os.path.join(path_dir_built_csv, 'data_test.csv'))
+# Ouput for R regressions
+#path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+#df_dispersion.to_csv(os.path.join(path_dir_built_csv, 'data_test.csv'))
 
-# PBM: need to run clustered regressions
-ls_formulas = ['gfs ~ nb_comp',
-               'gfs ~ nb_comp + price',
-               'std ~ nb_comp',
-               'std ~ nb_comp + price',
-               'cv  ~ nb_comp',
-               'cv  ~ nb_comp + price',
-               'range ~ nb_comp',
-               'range ~ nb_comp + price']
+# #############################################
+# REGRESSIONS: DISPERSION VS. NB COMP / COST
+# #############################################
 
-ls_ls_reg_res = []
-for str_formula in ls_formulas:
-  #print '\n', smf.ols(formula = str_formula, data = df_dispersion).fit().summary()
-  reg_res = smf.ols(formula = str_formula, data = df_dispersion).fit()
-  cl_std_errors =  sm.stats.sandwich_covariance.cov_cluster_2groups(reg_res,
-                                                                    df_dispersion['date'].astype(int),
-                                                                    df_dispersion['id'].astype(int))
-  ar_cl_std_errors = np.array([np.sqrt(cl_std_errors[0][i, i]) for i in range(len(str_formula.split('+')) + 1)])
-  ar_cl_t_values = reg_res.params / ar_cl_std_errors
-  ls_reg_res = [reg_res.nobs, reg_res.rsquared, reg_res.rsquared_adj,
-                reg_res.params, reg_res.bse, reg_res.tvalues,
-                ar_cl_std_errors, ar_cl_t_values]
-  ls_ls_reg_res.append(ls_reg_res)
+## PBM: need to run clustered regressions
+#ls_formulas = ['gfs ~ nb_comp',
+#               'gfs ~ nb_comp + price',
+#               'std ~ nb_comp',
+#               'std ~ nb_comp + price',
+#               'cv  ~ nb_comp',
+#               'cv  ~ nb_comp + price',
+#               'range ~ nb_comp',
+#               'range ~ nb_comp + price']
+#
+#ls_ls_reg_res = []
+#for str_formula in ls_formulas:
+#  #print '\n', smf.ols(formula = str_formula, data = df_dispersion).fit().summary()
+#  reg_res = smf.ols(formula = str_formula, data = df_dispersion).fit()
+#  cl_std_errors =  sm.stats.sandwich_covariance.cov_cluster_2groups(reg_res,
+#                                                                    df_dispersion['date'].astype(int),
+#                                                                    df_dispersion['id'].astype(int))
+#  ar_cl_std_errors = np.array([np.sqrt(cl_std_errors[0][i, i])\
+#                                 for i in range(len(str_formula.split('+')) + 1)])
+#  ar_cl_t_values = reg_res.params / ar_cl_std_errors
+#  ls_reg_res = [reg_res.nobs, reg_res.rsquared, reg_res.rsquared_adj,
+#                reg_res.params, reg_res.bse, reg_res.tvalues,
+#                ar_cl_std_errors, ar_cl_t_values]
+#  ls_ls_reg_res.append(ls_reg_res)
+
+# #############################################
+# REGRESSIONS: PRICE LEVEL VS. DISPERSION
+# #############################################
+
+ls_columns = ['id_total', 'price_proxy', 'std', 'range', 'nbcomp']
+df_total_dispersion = pd.DataFrame(ls_total_price_vs_dispersion, columns = ls_columns)
+
+smf.ols(formula = 'price_proxy ~ std + nbcomp', data = df_total_dispersion).fit().summary()
+df_total_dispersion = df_total_dispersion[df_total_dispersion['nbcomp'] >= 3]
+
 
 # #############
 # DEPRECATED
