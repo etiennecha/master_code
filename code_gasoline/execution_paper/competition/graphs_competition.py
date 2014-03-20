@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+import time
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 
@@ -44,6 +45,7 @@ df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], maste
 # BRAND CHANGE DETECTION
 # #########################
 
+start = time.clock()
 master_np_prices = np.array(master_price['diesel_price'], dtype = np.float32)
 matrix_np_prices_ma = np.ma.masked_array(master_np_prices, np.isnan(master_np_prices))
 ar_period_mean_prices = np.mean(matrix_np_prices_ma, axis = 0)
@@ -62,8 +64,10 @@ for i in range(window_limit, len(master_price['dates']) - window_limit):
 np_ar_mean_diffs = np.ma.array(ls_mean_diffs, fill_value=0).filled()
 # Filling with np.nan generates pbm with argmax
 np_ar_mean_diffs = np_ar_mean_diffs.T
-np_ar_diffs_maxs = np.nanmax(np.abs(np_ar_mean_diffs), axis = 1)
 np_ar_diffs_argmaxs = np.nanargmax(np.abs(np_ar_mean_diffs), axis = 1)
+print time.clock() - start
+
+np_ar_diffs_maxs = np.nanmax(np.abs(np_ar_mean_diffs), axis = 1)
 ls_candidates = np.where(np_ar_diffs_maxs > 0.04)[0].astype(int).tolist()
 
 # Check if corresponds to a change in brand (TODO: exclude highly rigid prices)
@@ -81,9 +85,21 @@ for indiv_ind, indiv_id in enumerate(master_price['ids']):
 
 # PANDAS IMPLEMENTATION
 # todo: could want to control prices better (no additivity...)
+start = time.clock()
 se_mean_price =  df_price.mean(1)
 df_price_cl = df_price.apply(lambda x: x - se_mean_price)
 # TODO: loop and merge series
+ls_day_inds = range(window_limit, len(df_price_cl) - window_limit)
+ls_se_mean_diffs = []
+for day_ind in ls_day_inds:
+  ls_se_mean_diffs.append(df_price_cl[:day_ind].mean() - df_price_cl[day_ind:].mean())
+df_mean_diffs = pd.DataFrame(dict(zip(ls_day_inds, ls_se_mean_diffs))).T
+se_argmax = df_mean_diffs.apply(lambda x: np.abs(x).argmax() if not all(pd.isnull(x)) else np.nan)
+print time.clock() - start
+ls_max = [df_mean_diffs[indiv_ind][day_ind] if (not np.isnan(day_ind)) else np.nan\
+            for indiv_ind, day_ind in zip(se_argmax.index, se_argmax.values)]
+ls_candidates2 = np.where(np.abs(np.array(ls_max)) > 0.04)[0].astype(int).tolist()
+# CHECK CONSISTENCY
 
 path_dir_total_access = os.path.join(path_dir_built_graphs, 'total_access')
 #for indiv_ind in ls_total_access_chges:
