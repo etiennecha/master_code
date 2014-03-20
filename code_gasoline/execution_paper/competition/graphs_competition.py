@@ -24,6 +24,7 @@ path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.js
 path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
 
 path_dir_built_graphs = os.path.join(path_dir_built_paper, 'data_graphs')
+path_dir_brand_chges = os.path.join(path_dir_built_graphs, 'brand_changes')
 
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
@@ -39,126 +40,89 @@ ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
 dict_brands = dec_json(path_dict_brands)
 dict_dpts_regions = dec_json(path_dict_dpts_regions)
 
-df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
+ls_columns = [pd.to_datetime(date) for date in master_price['dates']]
+df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_columns).T
 
 # #########################
 # BRAND CHANGE DETECTION
 # #########################
 
-start = time.clock()
-master_np_prices = np.array(master_price['diesel_price'], dtype = np.float32)
-matrix_np_prices_ma = np.ma.masked_array(master_np_prices, np.isnan(master_np_prices))
-ar_period_mean_prices = np.mean(matrix_np_prices_ma, axis = 0)
-
-window_limit = 20
-ls_mean_diffs = []
-matrix_np_prices_ma_cl = matrix_np_prices_ma - ar_period_mean_prices
-for i in range(window_limit, len(master_price['dates']) - window_limit):
-  ls_mean_diffs.append(np.nansum(matrix_np_prices_ma_cl[:,:i], axis = 1)/\
-                         np.sum(~np.isnan(matrix_np_prices_ma_cl[:,:i]), axis =1)-
-                       np.nansum(matrix_np_prices_ma_cl[:,i:], axis = 1)/\
-                         np.sum(~np.isnan(matrix_np_prices_ma_cl[:,i:]), axis =1))
-  ## CAUTION: stats.nanmean first compute with 0 instead of nan then adjusts : imprecision...
-  #scipy.stats.nanmean(matrix_np_prices_ma_cl[:,:i], axis= 1) -\
-  #                     scipy.stats.nanmean(matrix_np_prices_ma_cl[:,i:], axis= 1))
-np_ar_mean_diffs = np.ma.array(ls_mean_diffs, fill_value=0).filled()
-# Filling with np.nan generates pbm with argmax
-np_ar_mean_diffs = np_ar_mean_diffs.T
-np_ar_diffs_argmaxs = np.nanargmax(np.abs(np_ar_mean_diffs), axis = 1)
-print time.clock() - start
-
-np_ar_diffs_maxs = np.nanmax(np.abs(np_ar_mean_diffs), axis = 1)
-ls_candidates = np.where(np_ar_diffs_maxs > 0.04)[0].astype(int).tolist()
-
-# Check if corresponds to a change in brand (TODO: exclude highly rigid prices)
-ls_total_access_chges = []
-ls_total_access_no_chges = []
-for indiv_ind, indiv_id in enumerate(master_price['ids']):
-  ls_brands = [dict_brands[get_str_no_accent_up(brand)][0] for brand, period\
-                 in master_price['dict_info'][indiv_id]['brand']]
-  ls_brands = [x[0] for x in itertools.groupby(ls_brands)]
-  if len(ls_brands) > 1 and 'TOTAL_ACCESS' in ls_brands:
-    if indiv_ind in ls_candidates:
-      ls_total_access_chges.append(indiv_ind)
-    else:
-      ls_total_access_no_chges.append(indiv_ind)
-
-# PANDAS IMPLEMENTATION
-# todo: could want to control prices better (no additivity...)
-start = time.clock()
+# todo: robustness of price control (no additivity...)
 se_mean_price =  df_price.mean(1)
 df_price_cl = df_price.apply(lambda x: x - se_mean_price)
-# TODO: loop and merge series
-ls_day_inds = range(window_limit, len(df_price_cl) - window_limit)
+window_limit = 20
+beg_ind, end_ind = window_limit, len(df_price_cl) - window_limit
 ls_se_mean_diffs = []
-for day_ind in ls_day_inds:
+for day_ind in range(beg_ind, end_ind):
   ls_se_mean_diffs.append(df_price_cl[:day_ind].mean() - df_price_cl[day_ind:].mean())
-df_mean_diffs = pd.DataFrame(dict(zip(ls_day_inds, ls_se_mean_diffs))).T
-se_argmax = df_mean_diffs.apply(lambda x: np.abs(x).argmax() if not all(pd.isnull(x)) else np.nan)
-print time.clock() - start
-ls_max = [df_mean_diffs[indiv_ind][day_ind] if (not np.isnan(day_ind)) else np.nan\
-            for indiv_ind, day_ind in zip(se_argmax.index, se_argmax.values)]
-ls_candidates2 = np.where(np.abs(np.array(ls_max)) > 0.04)[0].astype(int).tolist()
-# CHECK CONSISTENCY
+df_mean_diffs = pd.DataFrame(dict(zip(df_price_cl.index[beg_ind:end_ind], ls_se_mean_diffs))).T
+se_argmax = df_mean_diffs.apply(lambda x: x.abs()[~pd.isnull(x)].argmax()\
+                                            if not all(pd.isnull(x)) else None)
+ls_max = [df_mean_diffs[indiv_ind][day] if day else np.nan\
+            for indiv_ind, day in zip(se_argmax.index, se_argmax.values)]
+se_max = pd.Series(ls_max, index = se_argmax.index)
+ls_candidates = se_max.index[np.abs(se_max) > 0.04] # consistency with numpy only method...
 
-path_dir_total_access = os.path.join(path_dir_built_graphs, 'total_access')
-#for indiv_ind in ls_total_access_chges:
-#  indiv_id = master_price['ids'][indiv_ind]
-#  plt.clf()
-#  fig = plt.figure() 
-#  ax = fig.add_subplot(111)
-#  ax.plot(ar_period_mean_prices)
-#  ax.plot(matrix_np_prices_ma[indiv_ind,:])
-#  ax.axvline(x = np_ar_diffs_argmaxs[indiv_ind] + window_limit,color='k',ls='dashed')
-#  ax.set_xlim([0,len(master_price['dates'])]) 
-#  ax.set_ylim([1.2, 1.6]) 
-#  plt.savefig(os.path.join(path_dir_total_access, 'mean_diff',
-#                           'chge_ind_%s_id_%s' %(indiv_ind, indiv_id)))
-#
-#for indiv_ind in ls_total_access_no_chges:
-#  indiv_id = master_price['ids'][indiv_ind]
-#  plt.clf()
-#  plt.plot(ar_period_mean_prices)
-#  plt.plot(matrix_np_prices_ma[indiv_ind,:])
-#  plt.savefig(os.path.join(path_dir_total_access, 'mean_diff',
-#                           'nochge_ind_%s_id_%s' %(indiv_ind, indiv_id)))
-#
-#for indiv_ind in ls_candidates:
-#  if indiv_ind not in ls_total_access_chges:
-#    indiv_id = master_price['ids'][indiv_ind]
-#    plt.clf()
-#    plt.plot(ar_period_mean_prices)
-#    plt.plot(matrix_np_prices_ma[indiv_ind,:])
-#    plt.axvline(x = np_ar_diffs_argmaxs[indiv_ind] + window_limit, color='k',ls='dashed')
-#    plt.title('-'.join([x[0] for x in master_price['dict_info'][indiv_id]['brand']]))
-#    plt.savefig(os.path.join(path_dir_total_access, 'not_ta', 
-#                             'ind_%s_id_%s' %(indiv_ind, indiv_id)))
-#
-## draw station price series vs. competitors
-## TODO: make it relative to avg price and limit nb of competitors on graph (criteria?)
-#
-#for indiv_ind in ls_total_access_chges:
-#  plt.clf()
-#  fig = plt.figure() 
-#  ax = fig.add_subplot(111)
-#  ax.plot(ar_period_mean_prices)
-#  ax.plot(matrix_np_prices_ma[indiv_ind,:], label = '%s' %indiv_ind)
-#  ax.axvline(x = np_ar_diffs_argmaxs[indiv_ind] + window_limit,color='k',ls='dashed')
-#  if ls_ls_competitors[indiv_ind]:
-#    ls_ls_competitors[indiv_ind].sort(key=lambda x:x[1])
-#    ls_id_competitors = [id_competitor for (id_competitor, distance)\
-#                          in ls_ls_competitors[indiv_ind][:5] if distance < 2]
-#    ls_ind_competitors = [master_price['ids'].index(id_competitor) for id_competitor\
-#                            in ls_id_competitors if id_competitor in master_price['ids']]
-#    for ind_competitor in ls_ind_competitors[:2]:
-#      id_competitor = master_price['ids'][ind_competitor]
-#      competitor_brands = [dict_brands[get_str_no_accent_up(brand)][0] for (brand, comp_day_ind)\
-#                            in master_price['dict_info'][id_competitor]['brand']]
-#      ax.plot(matrix_np_prices_ma[ind_competitor,:], label = '%s %s' %(ind_competitor,'-'.join(competitor_brands)))
-#  ax.set_xlim([0, len(master_price['dates'])])
-#  ax.set_ylim([1.2, 1.6])
-#  ax.set_title('%s-%s' %(master_price['dict_info'][master_price['ids'][indiv_ind]]['code_geo'],\
-#                         master_price['dict_info'][master_price['ids'][indiv_ind]]['city']))
+# Check if corresponds to a change in brand
+# todo: exclude highly rigid prices
+
+#dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
+dict_chge_brands = {}
+for indiv_id, indiv_info in master_price['dict_info'].items():
+  ls_brands = [brand_name for brand_name, brand_day_ind in indiv_info['brand']]
+  if (len(ls_brands) > 1) and ('TOTAL ACCESS' in ls_brands):
+    dict_chge_brands.setdefault('TA', []).append(indiv_id)
+  elif (len(ls_brands) > 1) and ('ESSO EXPRESS' in ls_brands):
+    dict_chge_brands.setdefault('EE', []).append(indiv_id)
+  elif (len(ls_brands) > 1) and ('AVIA' in ls_brands):
+    dict_chge_brands.setdefault('AV', []).append(indiv_id)
+  elif len(ls_brands) > 1:
+    dict_chge_brands.setdefault('OT', []).append(indiv_id)
+  else:
+    dict_chge_brands.setdefault('NO', []).append(indiv_id)
+
+for chge in ['TA', 'EE', 'AV', 'OT', 'NO']:
+  print chge, len([indiv_id for indiv_id in dict_chge_brands[chge] if indiv_id in ls_candidates])
+
+## Plot prices which trigger detection vs. average price
+## Either time or numeric index... string does not work for plot with vertical line
+#df_price['avg_price'] = se_mean_price
+#for chge, ls_chge_ids in dict_chge_brands.items():
+#  path_dir_temp = os.path.join(path_dir_brand_chges, 'price_detection', chge)
+#  if not os.path.exists(path_dir_temp):
+#    os.makedirs(path_dir_temp)
+#  ls_detected_chge_ids = [indiv_id for indiv_id in ls_chge_ids if indiv_id in ls_candidates]
+#  for indiv_id in ls_detected_chge_ids:
+#    ax = df_price[['avg_price', indiv_id]].plot(xlim = (df_price.index[0], df_price.index[-1]),
+#                                                ylim=(1.2, 1.6))
+#    ax.axvline(x = se_argmax[indiv_id], color='k', ls='dashed')
+#    plt.savefig(os.path.join(path_dir_temp, 'chge_id_%s' %indiv_id))
+#    plt.close()
+
+# todo: Plot total access which do not trigger price detection
+# toto: Check detected "other" => answer to total access etc?
+
+## Draw TA station margin vs. competitors (upon margin chge detection)
+# TODO: pbm of adding labels (e.g. id with brand + city as title)
+path_dir_ta_comp_margins = os.path.join (path_dir_brand_chges, 'price_detection', 'TA_comp_margins')
+for indiv_id in [indiv_id for indiv_id in dict_chge_brands['TA'] if indiv_id in ls_candidates]:
+  indiv_ind = master_price['ids'].index(indiv_id)
+  ls_ls_competitors[indiv_ind].sort(key=lambda x:x[1])
+  ls_id_competitors = [indiv_id] + [id_competitor for (id_competitor, distance)\
+                                    in ls_ls_competitors[indiv_ind][:5] if distance < 2]
+  df_price_cl[ls_id_competitors].plot(xlim = (df_price_cl.index[0], df_price_cl.index[-1]),
+                                      ylim=(-0.2, 0.2))
+  plt.savefig(os.path.join(path_dir_ta_comp_margins, 'margins_id_%s' %indiv_id))
+  plt.close()
+
+# Change in margin with regressions? (margin: robustness checks?)
+ls_ids_detected_ta = [indiv_id for indiv_id in dict_chge_brands['TA'] if indiv_id in ls_candidates]
+indiv_id = ls_ids_detected_ta[0]
+
+# Change in margin at competitors
+
+
+
 #  legend_font_props = FontProperties()
 #  legend_font_props.set_size('small')
 #  handles, labels = ax.get_legend_handles_labels()
@@ -208,7 +172,35 @@ path_dir_total_access = os.path.join(path_dir_built_graphs, 'total_access')
 ## Ctd: 6535, 6511, 6387, 6195, 6021, 5705, 5373, 4940,
 ## Ctd: 2927  3090, 2974, 2962, 2960, 2652,  2617, 2614
 ## (quite a few Agip, Avia...)
-#
+
+
+
+# #####################
+# DEPRECATED
+# #####################
+
+## DETECT BRAND CHANGE: numpy only method
+#start = time.clock()
+#master_np_prices = np.array(master_price['diesel_price'], dtype = np.float32)
+#matrix_np_prices_ma = np.ma.masked_array(master_np_prices, np.isnan(master_np_prices))
+#ar_period_mean_prices = np.mean(matrix_np_prices_ma, axis = 0)
+#window_limit = 20
+#ls_mean_diffs = []
+#matrix_np_prices_ma_cl = matrix_np_prices_ma - ar_period_mean_prices
+#for i in range(window_limit, len(master_price['dates']) - window_limit):
+#  ls_mean_diffs.append(np.nansum(matrix_np_prices_ma_cl[:,:i], axis = 1)/\
+#                         np.sum(~np.isnan(matrix_np_prices_ma_cl[:,:i]), axis =1)-
+#                       np.nansum(matrix_np_prices_ma_cl[:,i:], axis = 1)/\
+#                         np.sum(~np.isnan(matrix_np_prices_ma_cl[:,i:]), axis =1))
+#  ## CAUTION: scipy.stats.nanmea result vary as a function of # nan
+#np_ar_mean_diffs = np.ma.array(ls_mean_diffs, fill_value=0).filled()
+## Filling with np.nan generates pbm with argmax (lines full of nan)
+#np_ar_mean_diffs = np_ar_mean_diffs.T
+#np_ar_diffs_argmaxs = np.nanargmax(np.abs(np_ar_mean_diffs), axis = 1)
+#np_ar_diffs_maxs = np.nanmax(np.abs(np_ar_mean_diffs), axis = 1)
+#ls_candidates = np.where(np_ar_diffs_maxs > 0.04)[0].astype(int).tolist()
+#print time.clock() - start
+
 ## todo: BRANDE CHGE DETECTION WITH REGRESSION
 #ls_ls_results_reg = []
 #for indiv_ind, indiv_id in enumerate(master_price['ids']):
