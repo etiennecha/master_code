@@ -45,126 +45,16 @@ ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
 dict_brands = dec_json(path_dict_brands)
 dict_dpts_regions = dec_json(path_dict_dpts_regions)
 
-#ls_columns = [pd.to_datetime(date) for date in master_price['dates']]
-#df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_columns).T
-#se_mean_price =  df_price.mean(1)
-
-# ##########################
-# DF PRICES BRANDS
-# ##########################
-
-# DF COST
-
-# DF REUTERS
-reuters_diesel_excel_file = pd.ExcelFile(path_xls_reuters_diesel)
-print 'Reuters excel file sheets:', reuters_diesel_excel_file.sheet_names
-df_reuters_diesel = reuters_diesel_excel_file.parse('Feuil1', skiprows = 0,
-                                                    header = 1, parse_dates = True)
-df_reuters_diesel.set_index('Date', inplace = True)
-
-ecb_xml_file = open(path_xml_ecb, 'r').read()
-soup = BeautifulSoup(ecb_xml_file)
-print 'ECB xml file row content:', dict(soup.findAll('obs')[0].attrs)
-ls_ecb = [[pd.to_datetime(dict(obs.attrs)[u'time_period']), float(dict(obs.attrs)[u'obs_value'])]\
-            for obs in soup.findAll('obs')]
-df_ecb = pd.DataFrame(ls_ecb, columns = ['Date', 'ECB Rate ED'])
-df_ecb.set_index('Date', inplace = True)
-
-print '\nReuters data and ECB US/EUR exchange rate'
-index = pd.date_range(start = pd.to_datetime('20110904'),
-                      end   = pd.to_datetime('20130604'), 
-                      freq='D')
-df_cost = pd.DataFrame(None, index = index)
-for df_temp in [df_ecb, df_reuters_diesel]:
-  for column in df_temp:
-    df_cost[column] = df_temp[column]
-print '\n', df_cost.info()
-
-litre_per_us_gallon = 3.785411784
-litre_per_barrel = 158.987295
-litre_per_metric_tonne = 1183.5
-
-df_cost['ULSD 10 FOB MED EL'] = df_cost['ULSD 10 FOB MED DT'] /\
-                                  litre_per_metric_tonne / df_cost['ECB Rate ED']
-df_cost['ULSD 10 CIF NWE EL'] = df_cost['ULSD 10 CIF NWE DT'] /\
-                                  litre_per_metric_tonne / df_cost['ECB Rate ED']
-df_cost['GASOIL 0.2 FOB ARA EL'] = df_cost['GASOIL 0.2 FOB ARA DT'] / 1183.5 /\
-                                     df_cost['ECB Rate ED']
-
-# DF PRICES TTC
-ls_columns = [pd.to_datetime(date) for date in master_price['dates']]
-df_prices_ttc = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_columns).T
-
-# DF PRICES HT
-df_prices_ht = pd.DataFrame.copy(df_prices_ttc)
-# 2011: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,17899.html
-# 2012: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,26979.html
-# 2013: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,31455.html
-ls_tax_11 = [(1,7,26,38,42,69,73,74,75,77,78,91,92,93,94,95,4,5,6,13,83,84), # (PrixTTC-0.4419+0.0135)/1.196
-              (16,17,79,86)] # (PrixTTC-0.4419+0.0250)/1.196
-# 2011 else: (PrixTTC-0.4419)/1.196
-ls_tax_12 = [(1,7,26,38,42,69,73,74), # (PrixTTC-0.4419+0.0135)/1.196
-              (16,17,79,86)] # (PrixTTC-0.4419+0.0250)/1.196
-# 2012 - 2013 else: (PrixTTC-0.4419)/1.196
-# All: VAT ... but temporary tax cut
-
-df_prices_ht_2011 = df_prices_ht.ix[:'2011-12-31']
-for indiv_id in df_prices_ht_2011.columns:
-  if indiv_id[:-6] in ls_tax_11[0]:
-    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x-0.4419+0.0135)
-  elif indiv_id[:-6] in ls_tax_11[1]:
-    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x-0.4419+0.0250)
-  else:
-    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x-0.4419)
-
-df_prices_ht_2012 = df_prices_ht.ix['2012-01-01':]
-for indiv_id in df_prices_ht_2012.columns:
-  if indiv_id[:-6] in ls_tax_12[0]:
-    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x-0.4419+0.0135)
-  elif indiv_id[:-6] in ls_tax_12[1]:
-    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x-0.4419+0.0250)
-  else:
-    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x-0.4419)
-
-df_prices_ht.ix['2012-08-31':'2012-11-30'] = df_prices_ht.ix['2012-08-31':'2012-11-30'] + 0.03
-df_prices_ht.ix['2012-12-01':'2012-12-11'] = df_prices_ht.ix['2012-12-01':'2012-12-11'] + 0.02
-df_prices_ht.ix['2012-12-11':'2012-12-21'] = df_prices_ht.ix['2012-12-11':'2012-12-21'] + 0.015
-df_prices_ht.ix['2012-12-21':'2013-01-11'] = df_prices_ht.ix['2012-12-21':'2013-01-11'] + 0.01
-
-df_prices_ht = df_prices_ht / 1.196
-
-# BRANDS
-ls_ls_ls_brands = []
-for i in range(3):
-  ls_ls_brands =  [[[dict_brands[get_str_no_accent_up(brand)][i], period]\
-                        for brand, period in master_price['dict_info'][id_indiv]['brand']]\
-                          for id_indiv in master_price['ids']]
-  ls_ls_brands = [get_expanded_list(ls_brands, len(master_price['dates'])) for ls_brands in ls_ls_brands]
-  ls_ls_ls_brands.append(ls_ls_brands)
-
-# ASSEMBLE PRICES/BRANDS INTO ONE DF (MI?) PRICES
-
-## Pbms with Memory
-#df_prices_ht = df_prices_ht.T.stack(dropna = False)
-#df_brands_1 = pd.DataFrame(ls_ls_ls_brands[0], master_price['ids'], ls_columns).stack(dropna = False)
-#df_mi_agg = pd.DataFrame({'price_ht' : df_prices_ht, 'brand_1': df_brands_1})
-#del(ls_ls_ls_brands, df_prices_ttc, df_prices_ht, df_brands_1)
-#df_mi_agg.rename(index={0:'id', 1:'date'}, inplace = True)
-
-ls_all_prices = df_prices_ht.T.stack(dropna=False).values
-ls_all_ids = [id_indiv for id_indiv in master_price['ids'] for x in range(len(master_price['dates']))]
-ls_all_dates = [date for id_indiv in master_price['ids'] for date in master_price['dates']]
-ls_ls_all_brands = [[brand for ls_brands in ls_ls_brands for brand in ls_brands]\
-                      for ls_ls_brands in ls_ls_ls_brands]
-index = pd.MultiIndex.from_tuples(zip(ls_all_ids, ls_all_dates), names= ['id','date'])
-columns = ['price', 'brand_1', 'brand_2', 'brand_type']
-df_mi_prices = pd.DataFrame(zip(*[ls_all_prices] + ls_ls_all_brands), index = index, columns = columns)
-
-# ########
-# DF INFO
-# ########
-
+# GET AVERAGE PRICE
+master_np_prices = np.array(master_price['diesel_price'], dtype = np.float32)
+matrix_np_prices_ma = np.ma.masked_array(master_np_prices, np.isnan(master_np_prices))
+ar_nb_valid_prices = np.ma.count(matrix_np_prices_ma, axis = 0) # would be safer to count nan..
+ar_period_mean_prices = np.mean(matrix_np_prices_ma, axis = 0)
+  
+# #########################
 # SERVICES (for INFO FILE)
+# #########################
+
 ls_listed_services = [service for indiv_id, indiv_info in master_info.items()\
                         if indiv_info['services'][-1] for service in indiv_info['services'][-1]]
 ls_listed_services = list(set(ls_listed_services))
@@ -178,43 +68,61 @@ for indiv_id, indiv_info in master_info.items():
     ls_station_services = [None for i in ls_listed_services]
   master_info[indiv_id]['list_service_dummies'] = ls_station_services
 
-# INSEE DATA
+# ######
+# BRANDS
+# ######
+  
+ls_ls_ls_brands = []
+for i in range(3):
+  ls_ls_brands =  [[[dict_brands[get_str_no_accent_up(brand)][i], period]\
+                        for brand, period in master_price['dict_info'][id_indiv]['brand']]\
+                          for id_indiv in master_price['ids']]
+  ls_ls_brands = [get_expanded_list(ls_brands, len(master_price['dates'])) for ls_brands in ls_ls_brands]
+  ls_ls_ls_brands.append(ls_ls_brands)
+  
+# #####################
+# IMPORT INSEE DATA
+# #####################
+
 pd_df_insee = pd.read_csv(path_csv_insee_data, encoding = 'utf-8', dtype= str, tupleize_cols=False)
 # exclude dom tom
 pd_df_insee = pd_df_insee[~pd_df_insee[u'Département - Commune CODGEO'].str.contains('^97')]
 pd_df_insee['Population municipale 2007 POP_MUN_2007'] =\
   pd_df_insee['Population municipale 2007 POP_MUN_2007'].apply(lambda x: float(x))
 
-# build pd_df_info (simple info dataframe)
-ls_rows = []
-for indiv_ind, indiv_id in enumerate(master_price['ids']):
-  city = master_price['dict_info'][indiv_id]['city']
-  if city:
-    city = city.replace(',',' ')
-  zip_code = '%05d' %int(indiv_id[:-3])
-  code_geo = master_price['dict_info'][indiv_id].get('code_geo')
-  code_geo_ardts = master_price['dict_info'][indiv_id].get('code_geo_ardts')
-  highway = None
-  if master_info.get(indiv_id):
-    highway = master_info[indiv_id]['highway'][3]
-  region = dict_dpts_regions[zip_code[:2]]
-  row = [indiv_id, city, zip_code, code_geo, code_geo_ardts, highway, region]
-  ls_rows.append(row)
-ls_columns = ['id', 'city', 'zip_code', 'code_geo', 'code_geo_ardts', 'highway', 'region']
-df_info = pd.DataFrame(ls_rows, master_price['ids'], ls_columns).T
+# ######################
+# IMPORT UFIP DATA
+# ######################
 
-# ############
-# FINAL MERGE
-# ############
+path_xlsx_ufip = os.path.join(path_dir_rotterdam, r'ufip-valeurs_2006-01-01_au_2013-12-31.xlsx')
+ufip_excel_file = pd.ExcelFile(path_xlsx_ufip)
+df_ufip = ufip_excel_file.parse('Worksheet')
+df_ufip = df_ufip.set_index('Date')
+# excel_file.sheet_names
+print df_ufip.info()
+df_ufip['date_str'] = map(lambda x: x.strftime('%Y%m%d'), df_ufip.index)
+df_ufip.set_index('date_str', inplace=True)
 
-df_mi_prices = df_mi_prices.reset_index()
-# df_final = df_mi_prices.join(df_info, on = 'id')
+# #######################
+# TAXES
+# #######################
 
-# ###############
-# DEPRECATED
-# ###############
+# Base 2011-13: PrixTTC/1.196 - 0.4419
+ls_tax_11 = [(1,7,26,38,42,69,73,74,75,77,78,91,92,93,94,95,4,5,6,13,83,84), # PrixTTC/1.196-0.4419+0.0135
+              (16,17,79,86)] # PrixTTC/1.196-0.4419+0.0250
+ls_tax_12 = [(1,7,26,38,42,69,73,74), # PrixTTC/1.196-0.4419+0.0135
+              (16,17,79,86)] # PrixTTC/1.196-0.4419+0.0250
 
-## PRICE REGRESSION : ONE PERIOD CROSS SECTION
+def get_tax_regime(dpt, ls_tup_regimes):
+  dict_regime = dict(zip(range(96), [0 for i in range(96)]))
+  for regime_ind, ls_regime_dpts in enumerate(ls_tup_regimes, start = 1):
+    for regime in ls_regime_dpts:
+      dict_regime[regime] = regime_ind
+  return dict_regime[dpt] 
+
+# ###########################################
+# PRICE REGRESSION : ONE PERIOD CROSS SECTION
+# ###########################################
 
 #day_ind = 0
 #ls_prices = [ls_prices[day_ind] for ls_prices in master_price['diesel_price']]
@@ -253,49 +161,97 @@ df_mi_prices = df_mi_prices.reset_index()
 #plt.tight_layout()
 #plt.show()
 
-## PRICE REGRESSIONS : ALL PERIOD PANEL DATA
+# #########################################
+# PRICE REGRESSIONS : ALL PERIOD PANEL DATA
+# #########################################
 
-#ls_all_prices = [price for ls_prices in master_price['diesel_price'] for price in ls_prices]
-#ls_all_ids = [id_indiv for id_indiv in master_price['ids'] for x in range(len(master_price['dates']))]
-#ls_all_dates = [date for id_indiv in master_price['ids'] for date in master_price['dates']]
-#ls_ls_all_brands = [[brand for ls_brands in ls_ls_brands for brand in ls_brands]\
-#                      for ls_ls_brands in ls_ls_ls_brands]
-#index = pd.MultiIndex.from_tuples(zip(ls_all_ids, ls_all_dates), names= ['id','date'])
-#columns = ['price', 'brand_1', 'brand_2', 'brand_type']
-#pd_mi_prices = pd.DataFrame(zip(*[ls_all_prices] + ls_ls_all_brands), index = index, columns = columns)
+# Build pd_pd_prices
+ls_all_prices = [price for ls_prices in master_price['diesel_price'] for price in ls_prices]
+ls_all_ids = [id_indiv for id_indiv in master_price['ids'] for x in range(len(master_price['dates']))]
+ls_all_dates = [date for id_indiv in master_price['ids'] for date in master_price['dates']]
+ls_ls_all_brands = [[brand for ls_brands in ls_ls_brands for brand in ls_brands]\
+                      for ls_ls_brands in ls_ls_ls_brands]
+index = pd.MultiIndex.from_tuples(zip(ls_all_ids, ls_all_dates), names= ['id', 'date'])
+columns = ['price', 'brand_1', 'brand_2', 'brand_type']
+
+pd_mi_prices = pd.DataFrame(zip(*[ls_all_prices] + ls_ls_all_brands), index = index, columns = columns)
+
+## Too slow...
+#df_prices = pd.DataFrame(zip(*[ls_all_prices] + ls_ls_all_brands), index = index, columns = columns)
+#df_prices = df_prices.reset_index(0)
+#df_prices = df_prices.sort()
+#df_prices_2011 = df_prices.ix['20110904':'20120905']
+#for dpt in ls_tax_11[0]:
+#  dpt = str(dpt)
+#  df_prices_2011['price'][df_prices_2011['id'].str.slice(stop = -6) == dpt] =\
+#    df_prices_2011['price'][df_prices_2011['id'].str.slice(stop = -6) == dpt] + 0.4419 + 0.0135
+
+# Build pd_df_info (simple info dataframe)
+ls_rows = []
+for indiv_ind, indiv_id in enumerate(master_price['ids']):
+  city = master_price['dict_info'][indiv_id]['city']
+  if city:
+    city = city.replace(',',' ')
+  zip_code = '%05d' %int(indiv_id[:-3])
+  code_geo = master_price['dict_info'][indiv_id].get('code_geo')
+  code_geo_ardts = master_price['dict_info'][indiv_id].get('code_geo_ardts')
+  tax_11 = get_tax_regime(int(zip_code[0:2]), ls_tax_11)
+  tax_12 = get_tax_regime(int(zip_code[0:2]), ls_tax_12)
+  highway = None
+  if master_info.get(indiv_id):
+    highway = master_info[indiv_id]['highway'][3]
+  region = dict_dpts_regions[zip_code[:2]]
+  row = [indiv_id, city, zip_code, code_geo, code_geo_ardts,
+         tax_11, tax_12, highway, region]
+  ls_rows.append(row)
+ls_columns = ['id', 'city', 'zip_code', 'code_geo', 'code_geo_ardts',
+              'tax_11', 'tax_12', 'highway', 'region']
+pd_df_master_info = pd.DataFrame(zip(*ls_rows), ls_columns).T
+
+# Merge info and prices
+pd_df_master_info = pd_df_master_info.set_index('id')
+pd_mi_prices = pd_mi_prices.reset_index()
+pd_mi_final = pd_mi_prices.join(pd_df_master_info, on = 'id')
+# add price before tax before setting index (less clear how to select then)
+# 2011: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,17899.html
+# 2012: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,26979.html
+# 2013: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,31455.html
+pd_mi_final['price_ht'] = pd_mi_final['price'] / 1.196 - 0.4419
+
+pd_mi_final['price_ht'] = np.where((pd_mi_final['date'].str.startswith('2011')) &\
+                                     (pd_mi_final['tax_11'] == 1),
+                                   pd_mi_final['price_ht'] + 0.0135,
+                                   pd_mi_final['price_ht'])
+pd_mi_final['price_ht'] = np.where((pd_mi_final['date'].str.startswith('2011')) &\
+                                     (pd_mi_final['tax_11'] == 2),
+                                   pd_mi_final['price_ht'] + 0.0250,
+                                   pd_mi_final['price_ht'])
+
+pd_mi_final['price_ht'] = np.where((pd_mi_final['date'].str.match('2012|2013.*')) &\
+                                     (pd_mi_final['tax_12'] == 1),
+                                   pd_mi_final['price_ht'] + 0.0135,
+                                   pd_mi_final['price_ht'])
+pd_mi_final['price_ht'] = np.where((pd_mi_final['date'].str.match('2012|2013.*')) &\
+                                     (pd_mi_final['tax_12'] == 2),
+                                   pd_mi_final['price_ht'] + 0.0250,
+                                   pd_mi_final['price_ht'])
+
+pd_mi_final = pd_mi_final.set_index(['id','date'])
+# Tax cut and progressive exit
+pd_mi_final = pd_mi_final.reset_index(0)
+pd_mi_final = pd_mi_final.sort()
+pd_mi_final.ix['20120831':'20121130']['price'] = pd_mi_final.ix['20120831':'20121130']['price'] + 0.03
+pd_mi_final.ix['20121201':'20121211']['price'] = pd_mi_final.ix['20121201':'20121211']['price'] + 0.02
+pd_mi_final.ix['20121211':'20121221']['price'] = pd_mi_final.ix['20121211':'20121221']['price'] + 0.015
+pd_mi_final.ix['20121221':'20130111']['price'] = pd_mi_final.ix['20121221':'20130111']['price'] + 0.01
+
+pd_mi_final = pd_mi_final.set_index(['id'], append = True)
+pd_mi_final = pd_mi_final.swaplevel('id', 'date')
+pd_mi_final = pd_mi_final.sort()
 #pd_pd_prices = pd_mi_prices.to_panel()
-## build pd_df_info (simple info dataframe)
-#ls_rows = []
-#for indiv_ind, indiv_id in enumerate(master_price['ids']):
-#  city = master_price['dict_info'][indiv_id]['city']
-#  if city:
-#    city = city.replace(',',' ')
-#  zip_code = '%05d' %int(indiv_id[:-3])
-#  code_geo = master_price['dict_info'][indiv_id].get('code_geo')
-#  code_geo_ardts = master_price['dict_info'][indiv_id].get('code_geo_ardts')
-#  tax_11 = get_tax_regime(int(zip_code[0:2]), ls_tax_11)
-#  tax_12 = get_tax_regime(int(zip_code[0:2]), ls_tax_12)
-#  highway = None
-#  if master_info.get(indiv_id):
-#    highway = master_info[indiv_id]['highway'][3]
-#  region = dict_dpts_regions[zip_code[:2]]
-#  row = [indiv_id, city, zip_code, code_geo, code_geo_ardts, tax_11, tax_12, highway, region]
-#  ls_rows.append(row)
-#header = ['id', 'city', 'zip_code', 'code_geo', 'code_geo_ardts', 'tax_11', 'tax_12', 'highway', 'region']
-#pd_df_master_info = pd.DataFrame(zip(*ls_rows), header).T
-## merge info and prices
-#pd_df_master_info = pd_df_master_info.set_index('id')
-#pd_mi_prices = pd_mi_prices.reset_index()
-#pd_mi_final = pd_mi_prices.join(pd_df_master_info, on = 'id')
-## add price before tax before setting index (less clear how to select then)
-# 
-## TODO: restrict size to begin with (time/location)
+
 ## pd_mi_final.ix['1500007',:] # based on id
-## pd_mi_final[pd_mi_final['code_geo'].str.startswith('01', na=False)] # based on insee
 ## http://stackoverflow.com/questions/17242970/multi-index-sorting-in-pandas
-#pd_mi_final_alt = pd_mi_final.swaplevel('id', 'date')
-#pd_mi_final_alt = pd_mi_final_alt.sort()
-#pd_mi_final_extract = pd_mi_final_alt.ix['20110904':'20111004']
   
 # # EXAMPLE PANEL DATA REGRESSIONS
 # from patsy import dmatrices
@@ -326,27 +282,9 @@ df_mi_prices = df_mi_prices.reset_index()
 
 # TODO: compute price_ht based on dpt... (add categorical variable in df_info)
 
-## AGGREGATE LEVEL
-#df_mean = pd_mi_final.mean(level=1)
-#df_mean['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']
-#df_mean['UFIP_ht'] = df_ufip['GAZOLE HTT']
-#df_mean['price_ht_bis'] = df_mean['price_ht'] - (df_mean['price_ht'] - df_mean['Rotterdam']).mean()
-##df_mean[['Rotterdam', 'price_ht_bis']].plot()
-##plt.plot()
-#df_mean['OIL_ht'] = pd_mi_final['price_ht'][pd_mi_final['brand_type'] == 'OIL'].mean(level=1)
-#df_mean['SUP_ht'] = pd_mi_final['price_ht'][pd_mi_final['brand_type'] == 'SUP'].mean(level=1)
-#df_mean['OIL_norm'] = df_mean['OIL_ht'] - (df_mean['OIL_ht'] - df_mean['Rotterdam']).mean()
-#df_mean['SUP_norm'] = df_mean['SUP_ht'] - (df_mean['SUP_ht'] - df_mean['Rotterdam']).mean()
-#
-#df_mean['OIL_norm_per1'] = df_mean['OIL_ht'] - (df_mean['OIL_ht'] - df_mean['Rotterdam'])[0:360].mean()
-#df_mean['SUP_norm_per1'] = df_mean['SUP_ht'] - (df_mean['SUP_ht'] - df_mean['Rotterdam'])[0:360].mean()
-#
-#df_mean['price_ht_d1'] = df_mean['price_ht'] - df_mean['price_ht'].shift(1)
-#df_mean['OIL_ht_d1'] = df_mean['OIL_ht'] - df_mean['OIL_ht'].shift(1)
-#df_mean['Rotterdam_d1'] = df_mean['Rotterdam'] - df_mean['Rotterdam'].shift(1)
-#
-## STATION LEVEL REGRESSION
-#
+
+# STATION LEVEL REGRESSION
+
 #df_station = pd_mi_final.ix['1500007']
 #df_station['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']
 ##df_station['price_ht'] = (df_station['price']-0.4419)/1.196
@@ -365,7 +303,7 @@ df_mi_prices = df_mi_prices.reset_index()
 ## dataframe with all prices as columns
 #df_all_station_prices = pd_mi_final['price_ht'].unstack('id')
 #ls_col_titles = list(df_all_station_prices.columns)
-#df_all_station_prices['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']a
+#df_all_station_prices['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']
 #for col_title in ls_col_titles:
 #  df_all_station_prices[col_title] = df_all_station_prices[col_title] - df_all_station_prices['Rotterdam']
 #del(df_all_station_prices['Rotterdam'])
@@ -377,8 +315,28 @@ df_mi_prices = df_mi_prices.reset_index()
 #pd_df_master_info['measure'] = se_measure
  
 # ###########
-# OLDIES
+# DEPRECATED
 # ###########
+
+## AGGREGATE LEVEL
+#df_mean = pd_mi_final.mean(level=1)
+#df_mean['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']
+#df_mean['UFIP_ht'] = df_ufip['GAZOLE HTT']
+#df_mean['price_ht_bis'] = df_mean['price_ht'] - (df_mean['price_ht'] - df_mean['Rotterdam']).mean()
+##df_mean[['Rotterdam', 'price_ht_bis']].plot()
+##plt.plot()
+#df_mean['OIL_ht'] = pd_mi_final['price_ht'][pd_mi_final['brand_type'] == 'OIL'].mean(level=1)
+#df_mean['SUP_ht'] = pd_mi_final['price_ht'][pd_mi_final['brand_type'] == 'SUP'].mean(level=1)
+#df_mean['OIL_norm'] = df_mean['OIL_ht'] - (df_mean['OIL_ht'] - df_mean['Rotterdam']).mean()
+#df_mean['SUP_norm'] = df_mean['SUP_ht'] - (df_mean['SUP_ht'] - df_mean['Rotterdam']).mean()
+#
+#df_mean['OIL_norm_per1'] = df_mean['OIL_ht'] - (df_mean['OIL_ht'] - df_mean['Rotterdam'])[0:360].mean()
+#df_mean['SUP_norm_per1'] = df_mean['SUP_ht'] - (df_mean['SUP_ht'] - df_mean['Rotterdam'])[0:360].mean()
+#
+#df_mean['price_ht_d1'] = df_mean['price_ht'] - df_mean['price_ht'].shift(1)
+#df_mean['OIL_ht_d1'] = df_mean['OIL_ht'] - df_mean['OIL_ht'].shift(1)
+#df_mean['Rotterdam_d1'] = df_mean['Rotterdam'] - df_mean['Rotterdam'].shift(1)
+
 
 # # SMALL REMINDER ON PANDAS COMMANDS
 # pd_multi_index_master['price']

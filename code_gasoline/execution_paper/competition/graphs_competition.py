@@ -115,39 +115,7 @@ for chge in ['TA', 'EE', 'AV', 'OT', 'NO']:
 #  plt.savefig(os.path.join(path_dir_ta_comp_margins, 'margins_id_%s' %indiv_id))
 #  plt.close()
 
-# DD Regression (margin: robustness checks?)
-ls_ids_detected_ta = [indiv_id for indiv_id in dict_chge_brands['TA'] if indiv_id in ls_candidates]
-indiv_id = ls_ids_detected_ta[0]
-chge_day = se_argmax[indiv_id]
-# todo: should check that following is not np.nan... else move to next valid and take this one
-indiv_ind = master_price['ids'].index(indiv_id)
-ls_ls_competitors[indiv_ind].sort(key=lambda x:x[1])
-ls_comp_ids = ls_ls_competitors[indiv_ind]
-
-# todo: focus control group, only stations without total access nearby btw
-df_price['avg_price'] = se_mean_price
-
-# todo... loop?
-comp_id = ls_comp_ids[0][0]
-df_dd_1 = df_price[['avg_price']]
-df_dd_1= df_dd_1.rename(columns = {'avg_price' : 'price'})
-df_dd_1['d_t'] = 0
-df_dd_1['d_t'][chge_day:] = 1
-df_dd_1['d_x'] = 0
-df_dd_1['d_t_x'] = 0
-
-df_dd_2 = df_price[[ls_comp_ids[0][0]]]
-df_dd_2= df_dd_2.rename(columns = {ls_comp_ids[0][0] : 'price'})
-df_dd_2['d_t'] = 0
-df_dd_2['d_t'][chge_day:] = 1
-df_dd_2['d_x'] = 1
-df_dd_2['d_t_x'] = 0
-df_dd_2['d_t_x'][chge_day:] = 1
-
-df_dd = pd.concat([df_dd_1, df_dd_2], ignore_index = True)
-print smf.ols('price ~ d_t + d_x + d_t_x', data = df_dd, missing = 'drop')
-
-
+# OTHER (NEED UPDATE)
 
 #  legend_font_props = FontProperties()
 #  legend_font_props.set_size('small')
