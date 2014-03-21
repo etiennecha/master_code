@@ -58,8 +58,8 @@ for day_ind in range(beg_ind, end_ind):
 df_mean_diffs = pd.DataFrame(dict(zip(df_price_cl.index[beg_ind:end_ind], ls_se_mean_diffs))).T
 se_argmax = df_mean_diffs.apply(lambda x: x.abs()[~pd.isnull(x)].argmax()\
                                             if not all(pd.isnull(x)) else None)
-ls_max = [df_mean_diffs[indiv_ind][day] if day else np.nan\
-            for indiv_ind, day in zip(se_argmax.index, se_argmax.values)]
+ls_max = [df_mean_diffs[indiv_id][day] if not pd.isnull(day) else np.nan\
+            for indiv_id, day in zip(se_argmax.index, se_argmax.values)]
 se_max = pd.Series(ls_max, index = se_argmax.index)
 ls_candidates = se_max.index[np.abs(se_max) > 0.04] # consistency with numpy only method...
 
@@ -102,24 +102,50 @@ for chge in ['TA', 'EE', 'AV', 'OT', 'NO']:
 # todo: Plot total access which do not trigger price detection
 # toto: Check detected "other" => answer to total access etc?
 
-## Draw TA station margin vs. competitors (upon margin chge detection)
-# TODO: pbm of adding labels (e.g. id with brand + city as title)
-path_dir_ta_comp_margins = os.path.join (path_dir_brand_chges, 'price_detection', 'TA_comp_margins')
-for indiv_id in [indiv_id for indiv_id in dict_chge_brands['TA'] if indiv_id in ls_candidates]:
-  indiv_ind = master_price['ids'].index(indiv_id)
-  ls_ls_competitors[indiv_ind].sort(key=lambda x:x[1])
-  ls_id_competitors = [indiv_id] + [id_competitor for (id_competitor, distance)\
-                                    in ls_ls_competitors[indiv_ind][:5] if distance < 2]
-  df_price_cl[ls_id_competitors].plot(xlim = (df_price_cl.index[0], df_price_cl.index[-1]),
-                                      ylim=(-0.2, 0.2))
-  plt.savefig(os.path.join(path_dir_ta_comp_margins, 'margins_id_%s' %indiv_id))
-  plt.close()
+### Draw TA station margin vs. competitors (upon margin chge detection)
+## TODO: pbm of adding labels (e.g. id with brand + city as title)
+#path_dir_ta_comp_margins = os.path.join (path_dir_brand_chges, 'price_detection', 'TA_comp_margins')
+#for indiv_id in [indiv_id for indiv_id in dict_chge_brands['TA'] if indiv_id in ls_candidates]:
+#  indiv_ind = master_price['ids'].index(indiv_id)
+#  ls_ls_competitors[indiv_ind].sort(key=lambda x:x[1])
+#  ls_id_competitors = [indiv_id] + [id_competitor for (id_competitor, distance)\
+#                                    in ls_ls_competitors[indiv_ind][:5] if distance < 2]
+#  df_price_cl[ls_id_competitors].plot(xlim = (df_price_cl.index[0], df_price_cl.index[-1]),
+#                                      ylim=(-0.2, 0.2))
+#  plt.savefig(os.path.join(path_dir_ta_comp_margins, 'margins_id_%s' %indiv_id))
+#  plt.close()
 
-# Change in margin with regressions? (margin: robustness checks?)
+# DD Regression (margin: robustness checks?)
 ls_ids_detected_ta = [indiv_id for indiv_id in dict_chge_brands['TA'] if indiv_id in ls_candidates]
 indiv_id = ls_ids_detected_ta[0]
+chge_day = se_argmax[indiv_id]
+# todo: should check that following is not np.nan... else move to next valid and take this one
+indiv_ind = master_price['ids'].index(indiv_id)
+ls_ls_competitors[indiv_ind].sort(key=lambda x:x[1])
+ls_comp_ids = ls_ls_competitors[indiv_ind]
 
-# Change in margin at competitors
+# todo: focus control group, only stations without total access nearby btw
+df_price['avg_price'] = se_mean_price
+
+# todo... loop?
+comp_id = ls_comp_ids[0][0]
+df_dd_1 = df_price[['avg_price']]
+df_dd_1= df_dd_1.rename(columns = {'avg_price' : 'price'})
+df_dd_1['d_t'] = 0
+df_dd_1['d_t'][chge_day:] = 1
+df_dd_1['d_x'] = 0
+df_dd_1['d_t_x'] = 0
+
+df_dd_2 = df_price[[ls_comp_ids[0][0]]]
+df_dd_2= df_dd_2.rename(columns = {ls_comp_ids[0][0] : 'price'})
+df_dd_2['d_t'] = 0
+df_dd_2['d_t'][chge_day:] = 1
+df_dd_2['d_x'] = 1
+df_dd_2['d_t_x'] = 0
+df_dd_2['d_t_x'][chge_day:] = 1
+
+df_dd = pd.concat([df_dd_1, df_dd_2], ignore_index = True)
+print smf.ols('price ~ d_t + d_x + d_t_x', data = df_dd, missing = 'drop')
 
 
 
