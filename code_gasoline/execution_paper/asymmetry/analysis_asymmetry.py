@@ -87,6 +87,7 @@ df_prices_ttc = pd.DataFrame(ar_diesel_price.T, columns = master_price['ids'], i
 # DF PRICES HT
 
 df_prices_ht = pd.DataFrame.copy(df_prices_ttc)
+df_prices_ht = df_prices_ht / 1.196 - 0.4419
 
 ls_tax_11 = [(1,7,26,38,42,69,73,74,75,77,78,91,92,93,94,95,4,5,6,13,83,84), # (PrixTTC-0.4419+0.0135)/1.196
               (16,17,79,86)] # (PrixTTC-0.4419+0.0250)/1.196
@@ -99,27 +100,21 @@ ls_tax_12 = [(1,7,26,38,42,69,73,74), # (PrixTTC-0.4419+0.0135)/1.196
 df_prices_ht_2011 = df_prices_ht.ix[:'2011-12-31']
 for indiv_id in df_prices_ht_2011.columns:
   if indiv_id[:-6] in ls_tax_11[0]:
-    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x-0.4419+0.0135)
+    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x + 0.0135)
   elif indiv_id[:-6] in ls_tax_11[1]:
-    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x-0.4419+0.0250)
-  else:
-    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x-0.4419)
+    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x + 0.0250)
 
 df_prices_ht_2012 = df_prices_ht.ix['2012-01-01':]
 for indiv_id in df_prices_ht_2012.columns:
   if indiv_id[:-6] in ls_tax_12[0]:
-    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x-0.4419+0.0135)
+    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x + 0.0135)
   elif indiv_id[:-6] in ls_tax_12[1]:
-    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x-0.4419+0.0250)
-  else:
-    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x-0.4419)
+    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x + 0.0250)
 
 df_prices_ht.ix['2012-08-31':'2012-11-30'] = df_prices_ht.ix['2012-08-31':'2012-11-30'] + 0.03
 df_prices_ht.ix['2012-12-01':'2012-12-11'] = df_prices_ht.ix['2012-12-01':'2012-12-11'] + 0.02
 df_prices_ht.ix['2012-12-11':'2012-12-21'] = df_prices_ht.ix['2012-12-11':'2012-12-21'] + 0.015
 df_prices_ht.ix['2012-12-21':'2013-01-11'] = df_prices_ht.ix['2012-12-21':'2013-01-11'] + 0.01
-
-df_prices_ht = df_prices_ht / 1.196
 
 # DF INFO
 
