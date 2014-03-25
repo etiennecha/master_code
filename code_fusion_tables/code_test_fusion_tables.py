@@ -14,7 +14,6 @@ redirect_uri = 'https://www.example.com/oauth2callback'
 path_current = os.path.abspath(os.path.dirname(sys.argv[0]))
 dict_api_info = json.loads(open(os.path.join(path_current, 'client_secret_%s.json' %client_id), 'r').read())
 client_secret = dict_api_info['web']['client_secret']
-# api_key = 'AIzaSyDzJhqpk1dUdKpxOIuv-xSZcMCDMgQmtYc'
 
 print 'Visit the URL below in a browser to authorize'
 print '%s?client_id=%s&redirect_uri=%s&scope=%s&response_type=code' % \
