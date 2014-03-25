@@ -5,6 +5,9 @@ import os, sys
 import urllib2, urllib, httplib
 import json, pprint
 
+# INSPIRED BY: 
+# https://developers.google.com/fusiontables/docs/samples/python?hl=FR
+
 client_id = '970870116608.apps.googleusercontent.com'
 redirect_uri = 'https://www.example.com/oauth2callback'
 
@@ -52,7 +55,9 @@ str_tables_info = request_open.read()
 request_open.close()
 dict_tables_info = json.loads(str_tables_info)
 
-# Try adding row to this one:
+pprint.pprint(dict_tables_info['items'][4])
+
+# Functions taken from Google Code Sample
 
 def runRequest(method, url, data=None, headers=None):
   request = httplib.HTTPSConnection("www.googleapis.com")
@@ -66,9 +71,8 @@ def runRequest(method, url, data=None, headers=None):
   print response
   return response
 
-def insertTemplate(table_id, access_token):
+def insertRow(table_id, access_token, data):
   print "INSERT ROWS"
-  data = "'Test', 10\n'Lol', 20""" 
   response = runRequest(
     "POST",
     "/upload/fusiontables/v1/tables/%s/import" % table_id,
@@ -79,14 +83,17 @@ def insertTemplate(table_id, access_token):
   return json_response
 
 table_id = u'1tSUrkjvpE2r85XvpfwW46LPdbzxoj4mu8G1YeIz_'
-lol = insertTemplate(table_id, access_token)
+data = "test3, 51\ntest4, 31"
 
-# import
-pprint.pprint(dict_tables_info['items'][4])
-table_id = u'1tSUrkjvpE2r85XvpfwW46LPdbzxoj4mu8G1YeIz_'
-headers =  {u'access_token': access_token,
+# Insert rows with functions taken from Google Code Sample
+test = insertRow(table_id, access_token, data)
+
+# Using urllib2
+headers =  {u'Authorization': 'Bearer %s' %access_token,
             u'Content-Type': u'application/octet-stream'} #application/json
-url = u'https://www.googleapis.com/fusiontables/v1/tables/%s/import'
+url = u'https://www.googleapis.com/upload/fusiontables/v1/tables/%s/import' %table_id
+request = urllib2.Request(url, headers = headers)
+request_open = urllib2.urlopen(request, data = data)
 
 # insert row with normal post (?)
 #url = u'https://www.googleapis.com/fusiontables/v1/query'
