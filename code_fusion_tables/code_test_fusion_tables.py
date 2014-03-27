@@ -7,7 +7,7 @@ import json, pprint
 
 def runRequest(method, url, data=None, headers=None):
   """
-  Generic functions to run http requests adapted from a Google code sample
+  Function to run http requests (adapted from a Google code sample)
   """
   request = httplib.HTTPSConnection("www.googleapis.com")
   if data and headers:
@@ -22,7 +22,7 @@ def runRequest(method, url, data=None, headers=None):
 
 def insertRow(table_id, access_token, data):
   """
-  Function to insert rows in a table (csv format only?) adapted from a Google code sample
+  Function to insert rows in a table (csv? adapted from a Google code sample)
   """
   print "INSERT ROWS"
   response = runRequest(
@@ -79,7 +79,7 @@ tokens = json.loads(response)
 access_token = tokens['access_token']
 # refresh_token = tokens['refresh_token']
 
-# Get list of tables (example of query request)
+# Get list of tables
 request = urllib2.Request(
   url='https://www.googleapis.com/fusiontables/v1/tables?%s' % \
     (urllib.urlencode({'access_token': access_token})))
@@ -87,22 +87,48 @@ request_open = urllib2.urlopen(request)
 str_tables_info = request_open.read()
 request_open.close()
 dict_tables_info = json.loads(str_tables_info)
-
 pprint.pprint(dict_tables_info['items'][4])
 
+# Example: table_id and data
 table_id = u'1tSUrkjvpE2r85XvpfwW46LPdbzxoj4mu8G1YeIz_'
 data = "test3, 51\ntest4, 31"
 
-# Insert rows with functions taken from Google Code Sample
-test = insertRow(table_id, access_token, data)
+# Get rows of a tables
+request = urllib2.Request(u'https://www.googleapis.com/fusiontables/v1/query?%s'\
+                            %(urllib.urlencode({'access_token': access_token,
+                                                'sql': 'SELECT * FROM %s' %table_id})))
+request_open = urllib2.urlopen(request)
+str_table_content = request_open.read()
+dict_table_content = json.loads(str_table_content)
+print dict_table_content['columns']
+print dict_table_content['rows'][0]
 
-# Using urllib2
+## Insert rows as csv with functions from Google code sample
+#test = insertRow(table_id, access_token, data)
+#
+## Insert rows as csv with urllib2
+#headers =  {u'Authorization': 'Bearer %s' %access_token,
+#            u'Content-Type': u'application/octet-stream'} #application/json
+#url = u'https://www.googleapis.com/upload/fusiontables/v1/tables/%s/import' %table_id
+#request = urllib2.Request(url, headers = headers)
+#try:
+#  request_open = urllib2.urlopen(request, data = data)
+#except urllib2.HTTPError, e:
+#  print 'HTTP error'
+#  pprint.pprint(e.readlines())
+#except urllib2.URLError, e:
+#  print 'URL error'
+#  error = e
+
+# Insert row as sql query with urllib2
+url = u'https://www.googleapis.com/fusiontables/v1/query'
 headers =  {u'Authorization': 'Bearer %s' %access_token,
-            u'Content-Type': u'application/octet-stream'} #application/json
-url = u'https://www.googleapis.com/upload/fusiontables/v1/tables/%s/import' %table_id
-request = urllib2.Request(url, headers = headers)
+            u'Content-Type': u'application/x-www-form-urlencoded'} #application/json
+data = {u'sql' : u"INSERT INTO %s(Text, Number) VALUES ('75014100', 8);" %table_id}
+request = urllib2.Request(url, data = urllib.urlencode(data), headers = headers)
 try:
-  request_open = urllib2.urlopen(request, data = data)
+  request_open = urllib2.urlopen(request)
+  print request_open.read()
 except urllib2.HTTPError, e:
   print 'HTTP error'
   pprint.pprint(e.readlines())
@@ -110,103 +136,61 @@ except urllib2.URLError, e:
   print 'URL error'
   error = e
 
-## Insert row with normal post (?)
-#url = u'https://www.googleapis.com/fusiontables/v1/query'
-#headers =  {u'access_token': access_token,
-#            u'Content-Type': u'application/x-www-form-urlencoded'} #application/json
-#data = {u'sql' : u"INSERT INTO %s(Text, Number) VALUES ('75014100', 8);" %table_id}
-#request = urllib2.Request(url, data = urllib.urlencode(data), headers = headers)
-#request_open = urllib2.urlopen(request)
-#str_result = request_open.read()
-#dict_result = json.loads(str_result)
-# check : https://groups.google.com/forum/#!msg/google-api-php-client/9d2lQAppTvg/o5QGhsXiAQIJ
+# Create table
+data="""
+{
+ "name": "Insects",
+ "columns": [
+  {
+   "name": "Species",
+   "type": "STRING"
+  },
+  {
+   "name": "Elevation",
+   "type": "NUMBER"
+  },
+  {
+   "name": "Year",
+   "type": "DATETIME"
+  }
+ ],
+ "description": "Insect Tracking Information.",
+ "isExportable": true
+}
+"""
 
-#data = {u'access_token': access_token,
-#        u'Content-Type': u'application/json',
-#        u'sql' : u"INSERT INTO %s (id_station, coordinates) VALUES ('75014100', '49.0 1.3');" %table_id}
-#params = urllib.urlencode(data)
-#url = u'https://www.googleapis.com/fusiontables/v1/query?%s' %params
-#request = urllib2.Request(url)
-#request_open = urllib2.urlopen(request)
-#str_result = request_open.read()
-#dict_result = json.loads(str_result)
+#data_1 = {"name": "Insects",
+#          "description": "Insect Tracking Information.",
+#          "isExportable": True}
+#data_2 = {"columns": [{"name": "Species",   "type": "STRING"},
+#                    {"name": "Elevation", "type": "NUMBER"},
+#                    {"name": "Year",      "type": "DATETIME"}]}
+#data = urllib.urlencode(data_1) + '&' + urllib.urlencode(data_2) 
 
-#POST https://www.googleapis.com/fusiontables/v1/query?access_token={my access token} HTTP/1.1
-#Content-Type: application/json
-#sql=INSERT INTO 1JOgUG5QWE5hybrDAd2GX3yfjVCGoM6u7WkSVDok ('_id', '_count', 'start_time', 'end_time',  'counts', 'start_plaece', 'end_place', 'distance',  'average_speed', 'send_flag', 'time_span', 'train_type',  'calories', 'weight', 'status', 'map_url', 'rally_id' ) VALUES ('-1', '0', '2013/01/19 09:00:00.000', '2013/01/19 12:34:56.000', '9876', 'Tokorozawa3', 'iidabashi2', '45678',  '67', '0', '986532', '1', '389', '77.70', '0', 'http://www.google.com/',  '3');
-#
+data = {"name": "Insects",
+        "columns": [{"name": "Species",   "type": "STRING"},
+                    {"name": "Elevation", "type": "NUMBER"},
+                    {"name": "Year",      "type": "DATETIME"}],
+        "description": "Insect Tracking Information.",
+        "isExportable": True}
+data = urllib.urlencode(data)
 
-
-# table_id = dict_tables_info['items'][0]['tableId']
-
-# # Get rows of tables (example of query request)
-# request = urllib2.Request(
-  # url='https://www.googleapis.com/fusiontables/v1/query?%s' % \
-    # (urllib.urlencode({'access_token': access_token,
-                       # 'sql': 'SELECT * FROM %s' %table_id})))
-# request_open = urllib2.urlopen(request)
-# str_table_content = request_open.read()
-# dict_table_content = json.loads(str_table_content)
-# print dict_table_content['columns']
-# print dict_table_content['rows'][0]
-
-# # Create table
-# data = '''{"name": "Insects","columns": [{"name": "Species","type": "STRING"},{"name":"Elevation","type": "NUMBER"},{"name": "Year","type": "DATETIME"}],"description": "Insect Tracking Information.","isExportable": True}'''
-
-#data="""
-#{
-# "name": "Insects",
-# "columns": [
-#  {
-#   "name": "Species",
-#   "type": "STRING"
-#  },
-#  {
-#   "name": "Elevation",
-#   "type": "NUMBER"
-#  },
-#  {
-#   "name": "Year",
-#   "type": "DATETIME"
-#  }
-# ],
-# "description": "Insect Tracking Information.",
-# "isExportable": true
-#}
-#"""
-#
-#params = {u'Authorization': access_token,
-#          u'Content-Type': u'application/json'}
-#url = u'https://www.googleapis.com/fusiontables/v1/tables?%s' %urllib.urlencode(params)
-#request = urllib2.Request(url, data=data)
-#request_open = urllib2.urlopen(request)
-#str_result = request_open.read()
-#dict_result = json.loads(str_result)
-
-# def runRequest(method, url, data=None, headers=None):
-  # request = httplib.HTTPSConnection("www.googleapis.com")
-  # if data and headers: 
-    # request.request(method, url, data, headers)
-  # else: 
-    # request.request(method, url)
-  # response = request.getresponse()
-  # print response.status, response.reason
-  # response = response.read()
-  # return response
-
-# headers={}
-# headers['Authorization'] = access_token
-# headers['Content-Type'] = 'application/json'
-# print headers
-# response = runRequest("POST","/fusiontables/v1/tables/",data,headers)
-# json_response = json.loads(response)
-
+url = u'https://www.googleapis.com/fusiontables/v1/tables'
+headers = {u'Authorization': u'Bearer %s' %access_token,
+           u'Content-Type' : u'application/json'} 
+request = urllib2.Request(url, data = data, headers = headers)
+try:
+  request_open = urllib2.urlopen(request)
+  print request_open.read()
+except urllib2.HTTPError, e:
+  print 'HTTP error'
+  pprint.pprint(e.readlines())
+except urllib2.URLError, e:
+  print 'URL error'
+  error = e
 
 # How to create table (Google)
 # https://developers.google.com/fusiontables/docs/v1/reference/table/insert#try-it
-
-# Question (SO)
-# http://stackoverflow.com/questions/15919201/trying-to-create-table-in-fusion-tables-returns-invalid-credentials?answertab=oldest#tab-top
 
 # Other resources
 # # https://developers.google.com/fusiontables/docs/sample_code
