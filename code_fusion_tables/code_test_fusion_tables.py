@@ -5,7 +5,36 @@ import os, sys
 import urllib2, urllib, httplib
 import json, pprint
 
-# INSPIRED BY: 
+def runRequest(method, url, data=None, headers=None):
+  """
+  Generic functions to run http requests adapted from a Google code sample
+  """
+  request = httplib.HTTPSConnection("www.googleapis.com")
+  if data and headers:
+    request.request(method, url, data, headers)
+  else: 
+    request.request(method, url)
+  response = request.getresponse()
+  print response.status, response.reason
+  response = response.read()
+  print response
+  return response
+
+def insertRow(table_id, access_token, data):
+  """
+  Function to insert rows in a table (csv format only?) adapted from a Google code sample
+  """
+  print "INSERT ROWS"
+  response = runRequest(
+    "POST",
+    "/upload/fusiontables/v1/tables/%s/import" % table_id,
+    data,
+    headers={'Authorization': 'Bearer %s' %access_token,
+             'Content-Type':'application/octet-stream'})
+  json_response = json.loads(response)
+  return json_response
+
+# Authentication with OAuth, inspired by: 
 # https://developers.google.com/fusiontables/docs/samples/python?hl=FR
 
 client_id = '970870116608.apps.googleusercontent.com'
@@ -15,6 +44,7 @@ path_current = os.path.abspath(os.path.dirname(sys.argv[0]))
 dict_api_info = json.loads(open(os.path.join(path_current, 'client_secret_%s.json' %client_id), 'r').read())
 client_secret = dict_api_info['web']['client_secret']
 
+# Originally in Google sample code:
 print 'Visit the URL below in a browser to authorize'
 print '%s?client_id=%s&redirect_uri=%s&scope=%s&response_type=code' % \
   ('https://accounts.google.com/o/oauth2/auth',
@@ -23,6 +53,18 @@ print '%s?client_id=%s&redirect_uri=%s&scope=%s&response_type=code' % \
   'https://www.googleapis.com/auth/fusiontables')
 
 auth_code = raw_input('Enter authorization code (parameter of URL): ')
+
+# Automation of auth_code retrieval (not working so far):
+# TODO: add headers:
+# http://stackoverflow.com/questions/8779497/how-to-programmatically-retrieve-access-token-from-client-side-oauth-flow-using
+request_auth_code = urllib2.urlopen('https://accounts.google.com/o/oauth2/auth'+\
+                                    '?client_id=%s' %client_id +\
+                                    '&redirect_uri=%s' %redirect_uri +\
+                                    '&scope=https://www.googleapis.com/auth/fusiontables'+\
+                                    '&response_type=code'
+                                    '&output=embed')
+print request_auth_code.info().getheader('location')
+request_auth_code_2 = urllib2.urlopen(request_auth_code.geturl())
 
 # Application requests an access token (and refresh token???) from Google
 # Check if needed: https://developers.google.com/accounts/docs/OAuth2WebServer?hl=fr#offline
@@ -56,43 +98,25 @@ dict_tables_info = json.loads(str_tables_info)
 
 pprint.pprint(dict_tables_info['items'][4])
 
-# Functions taken from Google Code Sample
-
-def runRequest(method, url, data=None, headers=None):
-  request = httplib.HTTPSConnection("www.googleapis.com")
-  if data and headers:
-    request.request(method, url, data, headers)
-  else: 
-    request.request(method, url)
-  response = request.getresponse()
-  print response.status, response.reason
-  response = response.read()
-  print response
-  return response
-
-def insertRow(table_id, access_token, data):
-  print "INSERT ROWS"
-  response = runRequest(
-    "POST",
-    "/upload/fusiontables/v1/tables/%s/import" % table_id,
-    data,
-    headers={'Authorization': 'Bearer %s' %access_token,
-             'Content-Type':'application/octet-stream'})
-  json_response = json.loads(response)
-  return json_response
-
-table_id = u'1tSUrkjvpE2r85XvpfwW46LPdbzxoj4mu8G1YeIz_'
-data = "test3, 51\ntest4, 31"
-
-# Insert rows with functions taken from Google Code Sample
-test = insertRow(table_id, access_token, data)
-
-# Using urllib2
-headers =  {u'Authorization': 'Bearer %s' %access_token,
-            u'Content-Type': u'application/octet-stream'} #application/json
-url = u'https://www.googleapis.com/upload/fusiontables/v1/tables/%s/import' %table_id
-request = urllib2.Request(url, headers = headers)
-request_open = urllib2.urlopen(request, data = data)
+#table_id = u'1tSUrkjvpE2r85XvpfwW46LPdbzxoj4mu8G1YeIz_'
+#data = "test3, 51\ntest4, 31"
+#
+## Insert rows with functions taken from Google Code Sample
+#test = insertRow(table_id, access_token, data)
+#
+## Using urllib2
+#headers =  {u'Authorization': 'Bearer %s' %access_token,
+#            u'Content-Type': u'application/octet-stream'} #application/json
+#url = u'https://www.googleapis.com/upload/fusiontables/v1/tables/%s/import' %table_id
+#request = urllib2.Request(url, headers = headers)
+#try:
+#  request_open = urllib2.urlopen(request, data = data)
+#except urllib2.HTTPError, e:
+#  print 'HTTP error'
+#  pprint.pprint(e.readlines())
+#except urllib2.URLError, e:
+#  print 'URL error'
+#  error = e
 
 # insert row with normal post (?)
 #url = u'https://www.googleapis.com/fusiontables/v1/query'
