@@ -1,28 +1,38 @@
 ﻿library(plm)
+library(MatrixModels)
 
 #path.dir.data <- "C:\\Users\\etna\\Desktop\\Etienne_work\\Data"
 path.dir.data <- "W:\\Bureau\\Etienne_work\\Data"
 path.file.data <- "\\data_gasoline\\data_built\\data_paper\\data_csv\\price_panel_data.csv"
 full.path <- paste(path.dir.data, path.file.data, sep = "")
 df.price <- read.csv(full.path, encoding = "UTF-8")
-head(df_price)
+head(df.price)
+nrow(df.price)
+#summary(df.price)
 
-#df.price <- plm.data(df.price, indexes = c("id", "date))
+# REGRESSION
 #http://stackoverflow.com/questions/3169371/large-scale-regression-in-r-with-a-sparse-feature-matrix
-
-library(MatrixModels)
-res <- glm4(formula = price ~ factor(id) + factor(date), data = df_price, sparse = TRUE)
+res <- glm4(formula = price ~ factor(id) + factor(date), data = df.price, sparse = TRUE)
 str(res, max.lev = 4)
-length(res@pred@coef)
-res@pred@coef[0:10]
 
-## To see more
-example(glm4)
-
-## RESULTS
-#res@pred@X@Dimnames[2]
+# RESULTS (Not clear that much value... check alternatives)
+# Inspect result help: example(glm4)
+df.coeffs <- data.frame(res@pred@X@Dimnames[[2]], res@pred@coef)
+head(df.coeffs)
+tail(df.coeffs)
 #plot(res@pred@coef[seq(length=500, from=length(res@pred@coef)-500+1, by=1)], type = "o")
 
-# Check how to create dataframe... can use aschar but not clear how to get list of variables
+# Residuals
+price_resid <- resid(res)
+length(price_resid) 
+# 5390749 => question: which?
 
-# TODO: get estimated coeffs and use to predict cleaned prices in pandas
+# BUILD DF FOR OUTPUT
+df.price.nona <- df.price[!is.na(df.price$price),]
+df.price.nona['price_cl'] <- price_resid
+#plot(df.price.nona[df.price.nona$id_a == 1500007,]$price_cl, type = "o")
+
+df.price.nona.out <- subset(df.price.nona, select = c(id, date, price, price_cl))
+path.file.data.out <- "\\data_gasoline\\data_built\\data_paper\\data_csv\\price_cleaned.csv"
+full.path.out <- paste(path.dir.data, path.file.data.out, sep = "")
+write.csv(df.price.nona.out, file = full.path.out, row.names = TRUE)

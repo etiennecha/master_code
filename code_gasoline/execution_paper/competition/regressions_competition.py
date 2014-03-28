@@ -208,10 +208,10 @@ df_info = pd.DataFrame(ls_rows, master_price['ids'], ls_columns)
 df_mi_prices = df_mi_prices.reset_index()
 df_final = df_mi_prices.join(df_info, on = 'id', lsuffix = '_a')
 
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
-df_final.to_csv(os.path.join(path_dir_built_csv, 'price_panel_data.csv'),
-                float_format='%.4f',
-                encoding='utf-8')
+#path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+#df_final.to_csv(os.path.join(path_dir_built_csv, 'price_panel_data.csv'),
+#                float_format='%.4f',
+#                encoding='utf-8')
 
 # ############
 # REGRESSIONS
@@ -229,9 +229,9 @@ df_final = df_final[~(df_final['highway'] == 1) &\
 #res01 = smf.ols('price ~ C(date) + C(id)', data = df_final, missing = 'drop').fit()
 
 ## Try with 2011 only... memory error at work too
-res02 = smf.ols('price ~ C(date) + C(id)',\
-                data = df_final[df_final['date'].str.startswith('2011')],\
-                missing = 'drop').fit()
+#res02 = smf.ols('price ~ C(date) + C(id)',\
+#                data = df_final[df_final['date'].str.startswith('2011')],\
+#                missing = 'drop').fit()
 
 # Subset dpt 92 (exclude null code_geo so far: should exclude only full series)
 #df_final = df_final[~pd.isnull(df_final['code_geo'])]
