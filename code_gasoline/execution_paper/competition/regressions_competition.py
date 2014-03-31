@@ -208,10 +208,10 @@ df_info = pd.DataFrame(ls_rows, master_price['ids'], ls_columns)
 df_mi_prices = df_mi_prices.reset_index()
 df_final = df_mi_prices.join(df_info, on = 'id', lsuffix = '_a')
 
-#path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
-#df_final.to_csv(os.path.join(path_dir_built_csv, 'price_panel_data.csv'),
-#                float_format='%.4f',
-#                encoding='utf-8')
+path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+df_final.to_csv(os.path.join(path_dir_built_csv, 'price_panel_data.csv'),
+                float_format='%.4f',
+                encoding='utf-8')
 
 # ############
 # REGRESSIONS
@@ -256,8 +256,6 @@ df_final = df_final[~(df_final['highway'] == 1) &\
 #mod1 = PanelLM(y, X, method='pooling').fit()
 #pprint.pprint(zip(X.columns, mod1.params, mod1.bse))
 
-
-
 # FOR UPDATE...
 
 ## TODO: restrict size to begin with (time/location)
@@ -294,144 +292,3 @@ df_final = df_final[~(df_final['highway'] == 1) &\
 # pprint.pprint(zip(map(lambda x: '{:<28}'.format(x[:25]), X.columns),
                   # map(lambda x: '{:8.3f}'.format(x), np.round(mod1.params,3).tolist()),
                   # map(lambda x: '{:8.3f}'.format(x), np.round(mod1.bse,3).tolist())))
-
-# ###############
-# DEPRECATED
-# ###############
-
-## PRICE REGRESSION : ONE PERIOD CROSS SECTION
-
-#day_ind = 0
-#ls_prices = [ls_prices[day_ind] for ls_prices in master_price['diesel_price']]
-#ls_brands_std = [ls_brands[day_ind] for ls_brands in ls_ls_ls_brands[0]]
-#ls_brands_gpd = [ls_brands[day_ind] for ls_brands in ls_ls_ls_brands[1]]
-#ls_types      = [ls_brands[day_ind] for ls_brands in ls_ls_ls_brands[2]]
-#dict_period = {'price' : ls_prices,
-#               'brand' : ls_brands_gpd,
-#               'type'  : ls_types}
-#pd_period_prices = pd.DataFrame(dict_period, index = master_price['ids'])
-#pd_period_prices['dpt'] =  pd_period_prices.index.map(lambda x: x[:-6])
-#
-#y,X = patsy.dmatrices('price ~ brand', pd_period_prices, return_type='dataframe')
-#print sm.OLS(y, X, missing = 'drop').fit().summary()
-#y,X = patsy.dmatrices('price ~ brand + C(dpt)', pd_period_prices, return_type='dataframe')
-#print sm.OLS(y, X, missing = 'drop').fit().summary()
-## TODO: read https://patsy.readthedocs.org/en/v0.1.0/categorical-coding.html
-#
-## stats des on brands / price quantiles per brands
-#print pd_period_prices['brand'].describe()
-#print pd_period_prices['brand'].value_counts()
-#
-## generate figure with price histograms per brand (?)
-#ls_of_brands = np.unique(pd_period_prices['brand'])
-## should take sqrt of list length rounded above to unit
-#fig, axes = plt.subplots(nrows=5, ncols=5)
-#list_axes = [j for i in axes for j in i][:len(ls_of_brands)]
-## harmonize scales? (then need to impose categories)
-#for i, ax in enumerate(list_axes):
-#  brand_prices = pd_period_prices['price'][pd_period_prices['brand'] == ls_of_brands[i]]
-#  test = ax.set_title('%s-%s'%(ls_of_brands[i], len(brand_prices[~np.isnan(brand_prices)])), fontsize=8)
-#  # if brand_prices[~np.isnan(brand_prices)].tolist():
-#  if len(brand_prices[~np.isnan(brand_prices)]) > 20:
-#    test = ax.hist(brand_prices[~np.isnan(brand_prices)], bins = 20)
-#plt.rcParams['font.size'] = 8
-#plt.tight_layout()
-#plt.show()
-
-## AGGREGATE LEVEL
-
-#df_mean = pd_mi_final.mean(level=1)
-#df_mean['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']
-#df_mean['UFIP_ht'] = df_ufip['GAZOLE HTT']
-#df_mean['price_ht_bis'] = df_mean['price_ht'] - (df_mean['price_ht'] - df_mean['Rotterdam']).mean()
-##df_mean[['Rotterdam', 'price_ht_bis']].plot()
-##plt.plot()
-#df_mean['OIL_ht'] = pd_mi_final['price_ht'][pd_mi_final['brand_type'] == 'OIL'].mean(level=1)
-#df_mean['SUP_ht'] = pd_mi_final['price_ht'][pd_mi_final['brand_type'] == 'SUP'].mean(level=1)
-#df_mean['OIL_norm'] = df_mean['OIL_ht'] - (df_mean['OIL_ht'] - df_mean['Rotterdam']).mean()
-#df_mean['SUP_norm'] = df_mean['SUP_ht'] - (df_mean['SUP_ht'] - df_mean['Rotterdam']).mean()
-#
-#df_mean['OIL_norm_per1'] = df_mean['OIL_ht'] - (df_mean['OIL_ht'] - df_mean['Rotterdam'])[0:360].mean()
-#df_mean['SUP_norm_per1'] = df_mean['SUP_ht'] - (df_mean['SUP_ht'] - df_mean['Rotterdam'])[0:360].mean()
-#
-#df_mean['price_ht_d1'] = df_mean['price_ht'] - df_mean['price_ht'].shift(1)
-#df_mean['OIL_ht_d1'] = df_mean['OIL_ht'] - df_mean['OIL_ht'].shift(1)
-#df_mean['Rotterdam_d1'] = df_mean['Rotterdam'] - df_mean['Rotterdam'].shift(1)
-
-## STATION LEVEL REGRESSION
-#
-#df_station = pd_mi_final.ix['1500007']
-#df_station['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']
-##df_station['price_ht'] = (df_station['price']-0.4419)/1.196
-#df_station['gross_margin'] = df_station['price_ht'] - df_station['Rotterdam']
-## restrict to period before price policy
-#df_station['price_ht_bis'] = df_station['price_ht']-df_station['gross_margin'][0:360].mean()
-#df_station[['Rotterdam', 'price_ht_bis']][0:360].plot()
-#
-#ls_display = []
-#for id_sta in master_price['ids'][1:10]:
-#  df_station[id_sta] = pd_mi_final.ix[id_sta]['price_ht']
-#  df_station['%s_gm' %id_sta] = df_station[id_sta] - df_station['Rotterdam']
-#  ls_display.append('%s_gm' %id_sta)
-#
-## before 0:360, while 361:506, after 507:
-## dataframe with all prices as columns
-#df_all_station_prices = pd_mi_final['price_ht'].unstack('id')
-#ls_col_titles = list(df_all_station_prices.columns)
-#df_all_station_prices['Rotterdam'] = df_ufip['GAZOLE (Rotterdam)']a
-#for col_title in ls_col_titles:
-#  df_all_station_prices[col_title] = df_all_station_prices[col_title] - df_all_station_prices['Rotterdam']
-#del(df_all_station_prices['Rotterdam'])
-#se_measure = df_all_station_prices[0:360].mean() - df_all_station_prices[361:506].mean()
-#se_backlash = df_all_station_prices[507:].mean() - df_all_station_prices[0:360].mean()
-## TODO: merge with info to which brands added (also mark brand chges to exclude Total Access)
-#df_brand = pd.DataFrame([ls_brand[-1] for ls_brand in ls_ls_ls_brands[0]], index = master_price['ids'])
-#pd_df_master_info['brand_1'] = df_brand[0]
-#pd_df_master_info['measure'] = se_measure
- 
-# ###########
-# OLDIES
-# ###########
-
-# # SMALL REMINDER ON PANDAS COMMANDS
-# pd_multi_index_master['price']
-# pd_multi_index_master.ix['10000001']
-# print X[u'brand[T.TOTAL_ACCESS]'].ix['10000001']
-# # Reorder columns
-# cols = X.columns.tolist()
-# cols = cols[:-2] + cols[-1:] + cols[-2:-1]
-# X = X[cols]
-
-# # Creates a dict: keys = station ids, contents = DataFrame with gas station prices and info etc
-# # e.g. data = {'Item1' : pd.DataFrame(np.random.randn(4,3)), 'Item2' : pd.DataFrame(np.random.randn(4,2))}
-# # e.g. panel_data = pd.Panel(data)
-# # list_formatted_dates = ['%s/%s/%s' %(elt[:4], elt[4:6], elt[6:]) for elt in master_price['dates']]
-# # index_formatted_dates = pd.to_datetime(list_formatted_dates)
-
-# # TODO: try station FE regression within a dpt and with 300 periods
-# # UGLY... PROBLEM SOLVED (TEMP)
-# dict_panel_data_master_temp = {}
-# for i, id in enumerate(master_price['ids']):
-  # if 'code_geo' in master_price['dict_info'][id]: # temp: TODO: complete master_info
-    # list_station_prices = master_price['diesel_price'][i]
-    # list_station_brands = [dict_brands[get_str_no_accent_up(brand)][1] if brand else brand\
-                            # for brand in get_field_as_list(id, 'brand', master_price)]
-    # zip_code = '%05d' %int(id[:-3])
-    # dict_station = {'price' : np.array(list_station_prices, dtype = np.float32),
-                    # 'brand' : np.array(list_station_brands),
-                    # 'zip_code' : zip_code,
-                    # 'department' : zip_code[:2],
-                    # 'region' : dict_dpts_regions[zip_code[:2]],
-                    # 'insee_code' : master_price['dict_info'][id]['code_geo'],
-                    # 'id' : id}
-    # pd_df_station_temp = pd.DataFrame(dict_station, index = master_price['dates'])
-    # dict_panel_data_master_temp[id] = pd_df_station_temp[0:300]
-# pd_pd_master_temp = pd.Panel(dict_panel_data_master_temp)
-# pd_pd_master_temp = pd_pd_master_temp.transpose('minor', 'items', 'major')
-# pd_mi_master_temp = pd_pd_master_temp.to_frame(filter_observations=False)
-# pd_mi_master_temp['price'] = pd_mi_master_temp['price'].astype(np.float32)
-# pd_dpt_01['date'] = pd_dpt_01.index.get_level_values(1)
-# pd_dpt_01 = pd_mi_master_temp[pd_mi_master_temp['department'] == '01']
-# res01 = smf.ols(formula = 'price ~ C(id) + C(date)', data = pd_dpt_01).fit()
-# # X = pd.DataFrame(pd_dpt_01[['id', 'date']], columns=["id", "date"])
-# # y_prediction = res01.predict(X)
