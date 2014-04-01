@@ -22,6 +22,8 @@ path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
 path_csv_insee_data = os.path.join(path_dir_source, 'data_other', 'data_insee_extract.csv')
 
+path_dir_built_paper_csv = os.path.join(path_dir_built_paper, 'data_csv')
+
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
 
@@ -36,7 +38,24 @@ zero_threshold = np.float64(1e-10)
 pd.options.display.float_format = '{:6,.4f}'.format
 
 start = time.clock()
+
+# DF PRICES
 df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
+
+# DF CLEAN PRICES
+
+# Prices cleaned with R / STATA
+path_csv_price_cl_R = os.path.join(path_dir_built_paper_csv, 'price_cleaned_R.csv')
+df_prices_cl_R = pd.read_csv(path_csv_price_cl_R,
+                             dtype = {'id' : str,
+                                      'date' : str,
+                                      'price': np.float64,
+                                      'price.cl' : np.float64})
+df_prices_cl_R  = df_prices_cl_R.pivot(index='date', columns='id', values='price.cl')
+df_prices_cl_R.index = [pd.to_datetime(x) for x in df_prices_cl_R.index]
+idx = pd.date_range('2011-09-04', '2013-06-04')
+df_prices_cl_R = df_prices_cl_R.reindex(idx, fill_value=np.nan)
+df_price_cl = df_prices_cl_R
 
 # ################
 # BUILD DATAFRAME
@@ -57,7 +76,9 @@ for (indiv_id, comp_id), distance in ls_tuple_competitors:
     se_prices_2 = df_price[comp_id]
     avg_spread = (se_prices_2 - se_prices_1).mean()
     if np.abs(avg_spread) > diff_bound:
-      se_prices_2 = se_prices_2 - avg_spread
+      # se_prices_2 = se_prices_2 - avg_spread
+      se_prices_1 = df_prices_cl[indiv_id]
+      se_prices_2 = df_prices_cl[comp_id]
     ls_comp_pd = get_pair_price_dispersion(se_prices_1.as_matrix(),
                                            se_prices_2.as_matrix(), light = False)
     ls_comp_chges = get_stats_two_firm_price_chges(se_prices_1.as_matrix(),

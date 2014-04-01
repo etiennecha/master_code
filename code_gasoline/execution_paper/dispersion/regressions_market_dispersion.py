@@ -37,7 +37,8 @@ zero_threshold = np.float64(1e-10)
 
 #master_np_prices = np.array(master_price['diesel_price'], np.float64)
 #df_price = pd.DataFrame(master_np_prices.T, master_price['dates'], master_price['ids'])
-df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
+ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
+df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
 
 se_mean_price = df_price.mean(1)
 
@@ -88,7 +89,7 @@ ls_ls_market_ids_st = get_ls_ls_distance_market_ids_restricted(master_price['ids
 ls_ls_market_ids_st_rd = get_ls_ls_distance_market_ids_restricted(master_price['ids'],\
                                                                   ls_ls_competitors, km_bound, True)
 
-ls_ls_market_ids_temp = ls_ls_market_ids_st_rd[0:6000]
+ls_ls_market_ids_temp = ls_ls_market_ids_st_rd # [0:6000]
 
 ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price_cl) for\
                              ls_market_ids in ls_ls_market_ids_temp]
@@ -143,21 +144,35 @@ ls_formulas = ['gfs ~ nb_comp',
                'range ~ nb_comp + price']
 
 ls_ls_reg_res = []
+ls_reg_series = []
 for str_formula in ls_formulas:
   #print '\n', smf.ols(formula = str_formula, data = df_dispersion).fit().summary()
   reg_res = smf.ols(formula = str_formula, data = df_dispersion).fit()
-  cl_std_errors =  sm.stats.sandwich_covariance.cov_cluster_2groups(reg_res,
-                                                                    [date.strftime('%Y%m%d') for date in df_dispersion['date']],
-                                                                    [indiv_id for indiv_id in df_dispersion['id']])
+  cl_std_errors =  sm.stats.sandwich_covariance.cov_cluster_2groups(\
+                     reg_res,
+                     [date.strftime('%Y%m%d') for date in df_dispersion['date']],
+                     [indiv_id for indiv_id in df_dispersion['id']])
   ar_cl_std_errors = np.array([np.sqrt(cl_std_errors[0][i, i])\
                                  for i in range(len(str_formula.split('+')) + 1)])
   ar_cl_t_values = reg_res.params / ar_cl_std_errors
-  ls_reg_res = [reg_res.nobs, reg_res.rsquared, reg_res.rsquared_adj,
-                reg_res.params, reg_res.bse, reg_res.tvalues,
-                ar_cl_std_errors, ar_cl_t_values]
-  ls_ls_reg_res.append(ls_reg_res)
+  #ls_reg_res = [reg_res.nobs, reg_res.rsquared, reg_res.rsquared_adj,
+  #              reg_res.params, reg_res.bse, reg_res.tvalues,
+  #              ar_cl_std_errors, ar_cl_t_values]
+  #ls_ls_reg_res.append(ls_reg_res)
+  ls_columns = ['N', 'R2', 'R2a'] +\
+               ['B_%s' %x for x in reg_res.params.index.values.tolist()] +\
+               ['B_%s_t' %x for x in reg_res.tvalues.index.values.tolist()] +\
+               ['B_%s_tc' %x for x in reg_res.tvalues.index.values.tolist()]
+  ls_values =  [reg_res.nobs, reg_res.rsquared, reg_res.rsquared_adj] +\
+               reg_res.params.values.tolist() +\
+               reg_res.tvalues.values.tolist() +\
+               ar_cl_t_values.tolist()
+  ls_reg_series.append(pd.Series(ls_values, ls_columns))
 
-ls_columns = ['N', 'R2', 'R2a', 'B', 'Bstd', 'Bt', 'Bcstd', 'Bct']
+pd.options.display.float_format = '{:6,.4f}'.format
+df_results = pd.DataFrame(ls_reg_series, index = [formula[:formula.index('~')-1] for formula in ls_formulas])
+df_results['N'] = df_results['N'].apply(lambda x: int(x))
+print df_results.to_string()
 
 # #############################################
 # REGRESSIONS: PRICE LEVEL VS. DISPERSION
