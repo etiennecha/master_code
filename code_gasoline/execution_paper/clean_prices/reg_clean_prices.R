@@ -23,16 +23,16 @@ tail(df.coeffs)
 #plot(res@pred@coef[seq(length=500, from=length(res@pred@coef)-500+1, by=1)], type = "o")
 
 # Residuals
-price_resid <- resid(res)
-length(price_resid) 
+price.resid <- resid(res)
+length(price.resid) 
 # 5390749 => question: which?
 
 # BUILD DF FOR OUTPUT
 df.price.nona <- df.price[!is.na(df.price$price),]
-df.price.nona['price_cl'] <- price_resid
+df.price.nona['price.cl'] <- price.resid
 #plot(df.price.nona[df.price.nona$id_a == 1500007,]$price_cl, type = "o")
 
-df.price.nona.out <- subset(df.price.nona, select = c(id, date, price, price_cl))
+df.price.nona.out <- subset(df.price.nona, select = c(id, date, price, price.cl))
 path.file.data.out <- "\\data_gasoline\\data_built\\data_paper\\data_csv\\price_cleaned_R.csv"
 full.path.out <- paste(path.dir.data, path.file.data.out, sep = "")
 write.csv(df.price.nona.out, file = full.path.out, row.names = FALSE)

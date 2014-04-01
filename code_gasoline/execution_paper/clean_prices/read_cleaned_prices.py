@@ -93,8 +93,8 @@ df_prices_cl_R = pd.read_csv(path_csv_price_cl_R,
                              dtype = {'id' : str,
                                       'date' : str,
                                       'price': np.float64,
-                                      'price_cl' : np.float64})
-df_prices_cl_R  = df_prices_cl_R.pivot(index='date', columns='id', values='price_cl')
+                                      'price.cl' : np.float64})
+df_prices_cl_R  = df_prices_cl_R.pivot(index='date', columns='id', values='price.cl')
 df_prices_cl_R.index = [pd.to_datetime(x) for x in df_prices_cl_R.index]
 idx = pd.date_range('2011-09-04', '2013-06-04')
 df_prices_cl_R = df_prices_cl_R.reindex(idx, fill_value=np.nan)
