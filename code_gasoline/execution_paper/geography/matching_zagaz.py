@@ -1,43 +1,43 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os, sys
-import json
+import add_to_path_sub
+from add_to_path_sub import path_data
+from generic_master_price import *
+from generic_master_info import *
 from functions_string import *
 
-def enc_json(database, chemin):
- with open(chemin, 'w') as fichier:
-  json.dump(database, fichier)
+path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 
-def dec_json(chemin):
-  with open(chemin, 'r') as fichier:
-    return json.loads(fichier.read())
-    
-if __name__=="__main__":
-  # path_data: data folder at different locations at CREST vs. HOME
-  # could do the same for path_code if necessary (import etc).
-  if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
-    path_data = r'W:\Bureau\Etienne_work\Data'
-    path_code = r'W:\Bureau\Etienne_work\Code'
-  else:
-    path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
-  
-  folder_source_zagaz_std = r'\data_gasoline\data_source\data_stations\data_zagaz\std'  
-  folder_source_zagaz = r'\data_gasoline\data_source\data_json_prices\zagaz'
-    
-  folder_source_brand = r'\data_gasoline\data_source\data_stations\data_brands'
-  dict_brands = dec_json(path_data + folder_source_brand + r'\dict_brands')
-  
-  ls_ls_zagaz_gps = dec_json(path_data + folder_source_zagaz_std + r'\2012_zagzag_gps')
-  dict_zagaz_all = dec_json(path_data + folder_source_zagaz + r'\20140124_zagzag_stations')
-  dict_zagaz_prices = dec_json(path_data + folder_source_zagaz + r'\20140127_zagzag_dict_ext_prices')
-  
-  # TODO: include in format file and drop
-  dict_zagaz_gps = {}
-  for ls_zagaz_gps in ls_ls_zagaz_gps:
-    dict_zagaz_gps[ls_zagaz_gps[0]] = ls_zagaz_gps[1:]
-    
-  # Check matching between (old) zagaz gps file and (recent) info/price files
-  ls_missing_gps_zagaz = [indiv_id for indiv_id in dict_zagaz_all if indiv_id not in dict_zagaz_gps]
-  print len(ls_missing_gps_zagaz), 'gps coordinates are to be collected'
-  # TODO: pbm: need to have all insee codes if those are used for matching
+path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
+path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
+path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
+path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
+
+path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
+path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
+path_csv_insee_data = os.path.join(path_dir_source, 'data_other', 'data_insee_extract.csv')
+
+path_dir_zagaz = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
+
+path_dir_insee = os.path.join(path_data, 'data_insee')
+path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
+
+master_price = dec_json(path_diesel_price)
+master_info = dec_json(path_info)
+ls_ls_competitors = dec_json(path_ls_ls_competitors)
+ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
+dict_brands = dec_json(path_dict_brands)
+dict_dpts_regions = dec_json(path_dict_dpts_regions)
+
+dict_zagaz_gps = dec_json(os.path.join(path_dir_zagaz, 'zagaz_info_and_gps_stations.json'))
+dict_zagaz_all = dec_json(os.path.join(path_dir_zagaz, '20140124_zagaz_stations.json'))
+dict_zagaz_prices = dec_json(os.path.join(path_dir_zagaz, '20140127_zagaz_dict_ext_prices.json'))
+dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz, '20140124_zagaz_dict_active_users.json'))
+ 
+# Check matching between (old) zagaz gps file and (recent) info/price files
+ls_missing_gps_zagaz = [indiv_id for indiv_id, indiv_info in dict_zagaz_all.items()\
+                          if indiv_id not in dict_zagaz_gps]
+print len(ls_missing_gps_zagaz), 'gps coordinates are to be collected'
+# TODO: pbm: need to have all insee codes if those are used for matching

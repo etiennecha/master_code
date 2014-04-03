@@ -1,20 +1,13 @@
 ﻿#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os, sys
-import re
-import json
-import pprint
+import add_to_path
+from add_to_path import path_data
+from generic_master_price import *
+from generic_master_info import *
+from functions_string import *
 from BeautifulSoup import BeautifulSoup
 import copy
-
-def enc_json(database, chemin):
- with open(chemin, 'w') as fichier:
-  json.dump(database, fichier)
-
-def dec_json(chemin):
-  with open(chemin, 'r') as fichier:
-    return json.loads(fichier.read())
 
 def get_dict_stat(list_items):
   dict_stats = {}
@@ -26,27 +19,28 @@ def get_dict_stat(list_items):
   return dict_stats
 
 if __name__=="__main__":
-  # path_data: data folder at different locations at CREST vs. HOME
-  # could do the same for path_code if necessary (import etc).
-  if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
-    path_data = r'W:\Bureau\Etienne_work\Data'
-    path_code = r'W:\Bureau\Etienne_work\Code'
-  else:
-    path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
+ 
+  path_dir_raw = os.path.join(path_data, 'data_gasoline', 'data_raw')
+  path_dir_zagaz_raw = os.path.join(path_dir_raw, 'data_stations', 'data_zagaz')
+  path_json_zagaz_raw = os.path.join(path_dir_zagaz_raw, 'zagaz_info_and_gps.json')
+ 
+  path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
+  path_dir_zagaz_source = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
+  path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
   
-  sys.path.append(r'W:\Bureau\Etienne_work\Code\code_gasoline\code_gasoline_db_analysis')
-  from functions_string import *
+  ls_zagaz_info_stations_raw = dec_json(path_json_zagaz_raw)
   
-  folder_source_zagaz_raw = r'\data_gasoline\data_source\data_stations\data_zagaz\raw'
-  folder_source_zagaz_std = r'\data_gasoline\data_source\data_stations\data_zagaz\std'  
-  ls_zagaz_info_stations_raw = dec_json(path_data + folder_source_zagaz_raw + r'\zagzag_info_and_gps_stations')
+  path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+  path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+  path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
+  path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
   
-  folder_source_brand = r'\data_gasoline\data_source\data_stations\data_brands'
-  dict_brands = dec_json(path_data + folder_source_brand + r'\dict_brands')
+  path_dir_insee = os.path.join(path_data, 'data_insee')
+  path_dir_match_insee_codes = os.path.join(path_dir_insee, 'match_insee_codes')
   
-  # folder_built_master_json = r'\data_gasoline\data_built\data_json_gasoline'
-  # master_info = dec_json(path_data + folder_built_master_json + r'\master_diesel\master_info_diesel')
-  # master_price = dec_json(path_data + folder_built_master_json + r'\master_diesel\master_price_diesel')  
+  master_price = dec_json(path_diesel_price)
+  master_info = dec_json(path_info)
+  dict_brands = dec_json(path_dict_brands)
   
   # #####################
   # CLEANING ZAGAZ DATA
@@ -75,7 +69,7 @@ if __name__=="__main__":
     else:
       comment_station = None
     latitude = re.search('Latitude: ([0-9.]*)', station[2][0])
-    longitude = re.search('longitude: ([0-9.]*)', station[2][0])
+    longitude = re.search('longitude: (-?[0-9.]*)', station[2][0])
     if latitude and longitude:
       gps_station = (latitude.group(1), longitude.group(1), station[2][1])
     else:
@@ -91,7 +85,7 @@ if __name__=="__main__":
                                   highway]
     ls_ls_zagaz_stations.append(ls_zagaz_station)
     dict_zagaz[id_station] = ls_zagaz_station
-  # enc_json(dict_zagaz, path_data + folder_source_zagaz_std + r'\zagzag_info_and_gps_stations')
+  # enc_json(dict_zagaz, os.path.join(path_dir_zagaz_source, 'zazag_info_and_gps.json'))
   
   # brands and gps quality in zagaz
   dict_zagaz_brands = get_dict_stat([ls_zagaz_station[1] for ls_zagaz_station in ls_ls_zagaz_stations])
@@ -145,14 +139,14 @@ if __name__=="__main__":
   # ###############
   
   # Load zip code - insee code correspondence file
-  file_correspondence = open(path_data + r'\data_insee\corr_cinsee_cpostal','r')
+  file_correspondence = open(os.path.join(path_dir_match_insee_codes, 'corr_cinsee_cpostal'),'r')
   correspondence = file_correspondence.read().split('\n')[1:-1]
   # Update changes in city codes (correspondence is a bit old)
-  file_correspondence_update = open(path_data + r'\data_insee\corr_cinsee_cpostal_update','r')
+  file_correspondence_update = open(os.path.join(path_dir_match_insee_codes, 'corr_cinsee_cpostal_update'),'r')
   correspondence_update = file_correspondence_update.read().split('\n')[1:]
   correspondence += correspondence_update
   # Patch ad hoc for gas station cedexes
-  file_correspondence_gas_path = open(path_data + r'\data_insee\corr_cinsee_cpostal_gas_patch','r')
+  file_correspondence_gas_path = open(os.path.join(path_dir_match_insee_codes, 'corr_cinsee_cpostal_gas_patch'),'r')
   correspondence_gas_patch = file_correspondence_gas_path.read().split('\n')
   correspondence += correspondence_gas_patch
   correspondence = [row.split(';') for row in correspondence]
@@ -214,7 +208,7 @@ if __name__=="__main__":
       ls_ls_zagaz_stations[i][6] = u'Boulazac'
     if zagaz_station[6] == u'Château-Chinon(Ville)' and zagaz_station[5] == '58120':
       ls_ls_zagaz_stations[i][6] = u'Château-Chinon Ville'
-  
+   
   # Check best matching based on zip: first if same city name then if contained
   ls_matching = []
   ls_not_matched = []
@@ -250,98 +244,103 @@ if __name__=="__main__":
   # PBM: may not work for all (not registered with same city/zip in zagaz and gouv)
   # SOLUTION: Could look with UU or UA... less risk
   
-  # # #######################
-  # # MATCHING GOUV VS. ZAGAZ
-  # # #######################
+  # #######################
+  # MATCHING GOUV VS. ZAGAZ
+  # #######################
   
-  # # Strategy 1: within similar ZIP, compare standardized address 
-  # #             + check on name station (print) if score is ambiguous
-  # # Strategy 2: compare standardized string: address, ZIP, City
+  # Strategy 1: within similar ZIP, compare standardized address 
+  #             + check on name station (print) if score is ambiguous
+  # Strategy 2: compare standardized string: address, ZIP, City
 
-  # # Standardization: suppress '-' (?), replace ' st ' by 'saint'
-  # # master: 26200005, 40390001 (C/C => Centre Commercial ?), 35230001, 13800007 (Av. => Avenue)
-  # # master: 67540002 (\\ => ), 59860002 (386/388 => 386/388 (?))
-  # # master: lack of space (not necessarily big pbm) 78120010
-  # # check weird : 18000014, 82500001, 58240002
+  # Standardization: suppress '-' (?), replace ' st ' by 'saint'
+  # master: 26200005, 40390001 (C/C => Centre Commercial ?), 35230001, 13800007 (Av. => Avenue)
+  # master: 67540002 (\\ => ), 59860002 (386/388 => 386/388 (?))
+  # master: lack of space (not necessarily big pbm) 78120010
+  # check weird : 18000014, 82500001, 58240002
   
-  # # loop on all zagaz stations within zip code area
-  # # loop on all master sub-adresses vs. zagaz sub-addresses: keep best match
-  # # produces a list with best match for each zagaz station within zip code are
-  # # can be more than 2 components... some seem to have standard format DXXX=NXX
+  # loop on all zagaz stations within zip code area
+  # loop on all master sub-adresses vs. zagaz sub-addresses: keep best match
+  # produces a list with best match for each zagaz station within zip code are
+  # can be more than 2 components... some seem to have standard format DXXX=NXX
+  
+  dict_addresses = {}
+  for id, station in master_info.iteritems():
+    dict_addresses[id] = [station['address'][i] for i in (5, 3, 4, 0) if station['address'][i]]
+  master_addresses = build_master_addresses(dict_addresses)
+  
+  list_zip_not_in_zagaz = []
+  list_info_levenshtein = []
+  for id, station in master_addresses.items():
+    if station:
+      zip_and_city = re.match('([0-9]{5,5}) (.*)', station[0][1])
+      zip = zip_and_city.group(1)
+      if zip in dict_zip_zagaz.keys():
+        station_results = []
+        for (id_zagaz, address_zagaz) in dict_zip_zagaz[zip]:
+          for address in str_low_noacc(station[0][0]).split(' - '):
+            list_station_levenshtein = []
+            for sub_address_zagaz in address_zagaz.split(' - '):
+              if not ('=' in sub_address_zagaz) or\
+                all('=' in e for e in address_zagaz.split(' - ')):
+                std_sub_address_zagaz = str_corr_low_std_noacc(sub_address_zagaz, False)
+                levenshtein_tuple = get_levenshtein_tuple(address, std_sub_address_zagaz)
+                list_station_levenshtein.append(levenshtein_tuple)
+          sorted(list_station_levenshtein, key=lambda tup: tup[0])
+          station_results.append([id_zagaz] + list(list_station_levenshtein[0]))
+        list_info_levenshtein.append((id, sorted(station_results, key=lambda tup: tup[1])))
+      else:
+        list_info_levenshtein.append([])
+        list_zip_not_in_zagaz.append((zip, id))
+    else:
+      list_info_levenshtein.append([])
 
-  # list_zip_not_in_zagaz = []
-  # list_info_levenshtein = []
-  # for id, station in master_addresses_final.iteritems():
-    # if station:
-      # zip_and_city = re.match('([0-9]{5,5}) (.*)', station[0][1])
-      # zip = zip_and_city.group(1)
-      # if zip in dict_zip_zagaz.keys():
-        # station_results = []
-        # for (id_zagaz, address_zagaz) in dict_zip_zagaz[zip]:
-          # for address in str_low_noacc(station[0][0]).split(' - '):
-            # list_station_levenshtein = []
-            # for sub_address_zagaz in address_zagaz.split(' - '):
-              # if not ('=' in sub_address_zagaz) or\
-                # all('=' in e for e in address_zagaz.split(' - ')):
-                # std_sub_address_zagaz = str_corr_low_std_noacc(sub_address_zagaz, False)
-                # levenshtein_tuple = get_levenshtein_tuple(address, std_sub_address_zagaz)
-                # list_station_levenshtein.append(levenshtein_tuple)
-          # sorted(list_station_levenshtein, key=lambda tup: tup[0])
-          # station_results.append([id_zagaz] + list(list_station_levenshtein[0]))
-        # list_info_levenshtein.append((id, sorted(station_results, key=lambda tup: tup[1])))
-      # else:
-        # list_info_levenshtein.append([])
-        # list_zip_not_in_zagaz.append((zip, id))
-    # else:
-      # list_info_levenshtein.append([])
+  # TODO: c. 100 zip are unmatched (merely?) because of cedex => use city
+  # TODO: drop duplicate gas stations in master
+  # TODO: some are matched with the same zagaz => check them, may want to match from each side
+  # TODO: check GPS proximity
+  # TODO: some short addresses (part of which: highway, to be excluded)    
 
-  # # TODO: c. 100 zip are unmatched (merely?) because of cedex => use city
-  # # TODO: drop duplicate gas stations in master
-  # # TODO: some are matched with the same zagaz => check them, may want to match from each side
-  # # TODO: check GPS proximity
-  # # TODO: some short addresses (part of which: highway, to be excluded)    
+  list_accepted = []
+  list_rejected = []
+  for elt in list_info_levenshtein:
+    if elt:
+      temp_tuple= ([elt[0]] + elt[1][0],\
+                  master_addresses[elt[0]][0][0],\
+                  dict_id_zagaz[elt[1][0][0]][0][1])
+      if 1 - float(elt[1][0][1])/float(elt[1][0][3]) >= 0.5:
+        list_accepted.append(temp_tuple)
+      else:
+        list_rejected.append(temp_tuple)
 
-  # list_accepted = []
-  # list_rejected = []
-  # for elt in list_info_levenshtein:
-    # if elt:
-      # temp_tuple= ([elt[0]] + elt[1][0],\
-                  # master_addresses_final[elt[0]][0][0],\
-                  # dict_id_zagaz[elt[1][0][0]][0][1])
-      # if 1 - float(elt[1][0][1])/float(elt[1][0][3]) >= 0.5:
-        # list_accepted.append(temp_tuple)
-      # else:
-        # list_rejected.append(temp_tuple)
+  # Check result quality with brand
+  list_accepted_2 = []
+  list_rejected_2 = []
+  for row in list_accepted:
+    if row[0][0] in master_price['dict_info'].keys():
+      brand_gouv = str_low_noacc(str_correct_html(\
+                      master_price['dict_info'][row[0][0]]['brand'][-1][0]))
+      brand_zagaz = str_low_noacc(str_correct_html(dict_zagaz[row[0][1]][1]))
+      if dict_brands.get(brand_gouv.upper()) != dict_brands.get(brand_zagaz.upper()):
+        list_rejected_2.append((row, brand_gouv, brand_zagaz))
+      else:
+        list_accepted_2.append(row)
+    else:
+      print row[0][0], 'not in master_price'
 
-  # # Check result quality with brand
-  # list_accepted_2 = []
-  # list_rejected_2 = []
-  # for row in list_accepted:
-    # if row[0][0] in master_price['dict_info'].keys():
-      # brand_gouv = str_low_noacc(str_correct_html(\
-                      # master_price['dict_info'][row[0][0]]['brand'][-1][0]))
-      # brand_zagaz = str_low_noacc(str_correct_html(dict_zagaz[row[0][1]][1]))
-      # if dict_brands.get(brand_gouv.upper()) != dict_brands.get(brand_zagaz.upper()):
-        # list_rejected_2.append((row, brand_gouv, brand_zagaz))
-      # else:
-        # list_accepted_2.append(row)
-    # else:
-      # print row[0][0], 'not in master_price'
-
-  # # len(list_accepted_2) = 5988
-  # # TODO: check GPS consistence (could check double attributions first...)
+  # len(list_accepted_2) = 5988 (5869 new but total access etc?)
+  # TODO: check GPS consistence (could check double attributions first...)
      
-  # for row in list_rejected:
-    # if row[0][0] in master_price['dict_info'].keys():
-      # brand_gouv = str_low_noacc(str_correct_html(\
-                    # master_price['dict_info'][row[0][0]]['brand'][-1][0]))
-      # brand_zagaz = str_low_noacc(str_correct_html(dict_zagaz[row[0][1]][1]))
-      # if dict_brands.get(brand_gouv.upper()) == dict_brands.get(brand_zagaz.upper()):
-        # print row, brand_gouv, brand_zagaz
-    # else:
-      # print row[0][0], 'not in master_price'
+  for row in list_rejected:
+    if row[0][0] in master_price['dict_info'].keys():
+      brand_gouv = str_low_noacc(str_correct_html(\
+                    master_price['dict_info'][row[0][0]]['brand'][-1][0]))
+      brand_zagaz = str_low_noacc(str_correct_html(dict_zagaz[row[0][1]][1]))
+      if dict_brands.get(brand_gouv.upper()) == dict_brands.get(brand_zagaz.upper()):
+        print row, brand_gouv, brand_zagaz
+    else:
+      print row[0][0], 'not in master_price'
 
-  # for elt in list_accepted[0:1000]:
-    # print elt[0]
-    # print elt[1]
-    # print elt[2],'\n'
+  for elt in list_accepted[0:1000]:
+    print elt[0]
+    print elt[1]
+    print elt[2],'\n'
