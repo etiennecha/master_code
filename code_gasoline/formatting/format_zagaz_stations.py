@@ -9,6 +9,12 @@ from functions_string import *
 from BeautifulSoup import BeautifulSoup
 import copy
 
+def str_zagaz_corrections(word):
+  word = word.lower()
+  word = re.sub(ur'(^|\s|,)r?\.?\s?d\.?\s?([0-9]{0,5})(\s|$|,)', ur'\1 route departementale \2 \3', word)
+  word = re.sub(ur'(^|\s|,)r?\.?\s?n\.?\s?([0-9]{0,5})(\s|$|,)', ur'\1 route nationale \2 \3', word) 
+  return word.strip()
+
 def get_dict_stat(list_items):
   dict_stats = {}
   for item in list_items:
@@ -284,49 +290,93 @@ if __name__=="__main__":
                       for indiv_id, indiv_info in master_info.items()}
   master_addresses = build_master_addresses(dict_addresses)
   
-  ls_zip_not_in_zagaz = []
-  ls_info_levenshtein = []
-  for indiv_id, indiv_addresses in master_addresses.items():
-    if indiv_addresses:
-      zip_and_city = re.match('([0-9]{5,5}) (.*)', indiv_addresses[0][1])
-      zip_code = zip_and_city.group(1)
-      if zip_code in dict_zip_zagaz.keys():
-        station_results = []
-        for (id_zagaz, address_zagaz) in dict_zip_zagaz[zip_code]:
-          for address in str_low_noacc(indiv_addresses[0][0]).split(' - '):
-            ls_station_levenshtein = []
-            for sub_address_zagaz in address_zagaz.split(' - '):
-              if not ('=' in sub_address_zagaz) or\
-                all('=' in e for e in address_zagaz.split(' - ')):
-                std_sub_address_zagaz = str_corr_low_std_noacc(sub_address_zagaz, False)
-                levenshtein_tuple = get_levenshtein_tuple(address, std_sub_address_zagaz)
-                ls_station_levenshtein.append(levenshtein_tuple)
-          sorted(ls_station_levenshtein, key=lambda tup: tup[0])
-          station_results.append([id_zagaz] + list(ls_station_levenshtein[0]))
-        ls_info_levenshtein.append((indiv_id, sorted(station_results, key=lambda tup: tup[1])))
-      else:
-        ls_info_levenshtein.append([])
-        ls_zip_not_in_zagaz.append((zip_code, indiv_id))
-    else:
-      ls_info_levenshtein.append([])
+  ## MATCHING BASED ON ZIP 
+  #dict_matches = {}
+  #ls_zip_not_in_zagaz = []
+  #for indiv_id, indiv_addresses in master_addresses.items():
+  #  if indiv_addresses:
+  #    zip_and_city = re.match('([0-9]{5,5}) (.*)', indiv_addresses[0][1])
+  #    zip_code = zip_and_city.group(1)
+  #    if zip_code in dict_zip_zagaz.keys():
+  #      station_results = []
+  #      for (id_zagaz, address_zagaz) in dict_zip_zagaz[zip_code]:
+  #        ls_station_levenshtein = []
+  #        for address in str_low_noacc(indiv_addresses[0][0]).split(' - '):
+  #          for sub_address_zagaz in address_zagaz.split(' - '):
+  #            if not ('=' in sub_address_zagaz):
+  #              std_sub_address_zagaz = str_corr_low_std_noacc(sub_address_zagaz, False)
+  #              levenshtein_tuple = get_levenshtein_tuple(address, std_sub_address_zagaz)
+  #              ls_station_levenshtein.append(levenshtein_tuple)
+  #            else:
+  #              for sub_sub_address_zagaz in sub_address_zagaz.split('='):
+  #                std_sub_sub_address_zagaz = str_corr_low_std_noacc(sub_sub_address_zagaz, False)
+  #                std_sub_sub_address_zagaz = str_zagaz_corrections(std_sub_sub_address_zagaz)
+  #                levenshtein_tuple = get_levenshtein_tuple(address, std_sub_sub_address_zagaz)
+  #                ls_station_levenshtein.append(levenshtein_tuple)
+  #        ls_station_levenshtein = sorted(ls_station_levenshtein, key=lambda tup: tup[0])
+  #        station_results.append([id_zagaz] + list(ls_station_levenshtein[0]))
+  #      dict_matches[indiv_id] = sorted(station_results, key=lambda tup: tup[1])
+  #    else:
+  #      ls_zip_not_in_zagaz.append((zip_code, indiv_id))
+  #  else:
+  #    print indiv_id, 'no address'
+  
+  # MATCHING BASED ON INSEE CODE
+  dict_geo_zagaz = {}
+  for pair in ls_matching:
+    dict_geo_zagaz.setdefault(pair[-1], []).append((pair[0], pair[4]))
 
-  # TODO: c. 100 zip are unmatched (merely?) because of cedex => use city
-  # TODO: drop duplicate gas stations in master
-  # TODO: some are matched with the same zagaz => check them, may want to match from each side
-  # TODO: check GPS proximity
-  # TODO: some short addresses (part of which: highway, to be excluded)    
+  dict_matches = {}
+  ls_geo_not_in_zagaz = []
+  for indiv_id, indiv_info in master_price['dict_info'].items():
+    if (indiv_id in master_addresses) and (master_addresses[indiv_id]): 
+      indiv_addresses = master_addresses[indiv_id]
+      if 'code_geo' in indiv_info:
+        code_geo = indiv_info['code_geo']
+        if code_geo not in dict_geo_zagaz.keys():
+          code_geo = indiv_info['code_geo_ardts']
+        if code_geo in dict_geo_zagaz.keys():
+          station_results = []
+          for (id_zagaz, address_zagaz) in dict_geo_zagaz[code_geo]:
+            ls_station_levenshtein = []
+            for address in str_low_noacc(indiv_addresses[0][0]).split(' - '):
+              for sub_address_zagaz in address_zagaz.split(' - '):
+                if not ('=' in sub_address_zagaz):
+                  std_sub_address_zagaz = str_corr_low_std_noacc(sub_address_zagaz, False)
+                  levenshtein_tuple = get_levenshtein_tuple(address, std_sub_address_zagaz)
+                  ls_station_levenshtein.append(levenshtein_tuple)
+                else:
+                  for sub_sub_address_zagaz in sub_address_zagaz.split('='):
+                    std_sub_sub_address_zagaz = str_corr_low_std_noacc(sub_sub_address_zagaz, False)
+                    std_sub_sub_address_zagaz = str_zagaz_corrections(std_sub_sub_address_zagaz)
+                    levenshtein_tuple = get_levenshtein_tuple(address, std_sub_sub_address_zagaz)
+                    ls_station_levenshtein.append(levenshtein_tuple)
+            ls_station_levenshtein = sorted(ls_station_levenshtein, key=lambda tup: tup[0])
+            station_results.append([id_zagaz] + list(ls_station_levenshtein[0]))
+          dict_matches[indiv_id] = sorted(station_results, key=lambda tup: tup[1])
+        else:
+           ls_geo_not_in_zagaz.append((zip_code, indiv_id))
+      else:
+        print indiv_id, 'no code_geo'
+    else:
+      print indiv_id, 'no address'
+  # todo: c. 100 zip are unmatched (merely?) because of cedex => use city
+  # todo: some short addresses (part of which: highway, to be excluded)    
   
   # Results ranked? could be the second the right one?
-  ls_accepted, ls_rejected = [], []
-  for elt in ls_info_levenshtein:
-    if elt:
-      temp_tuple= ([elt[0]] + elt[1][0],\
-                   master_addresses[elt[0]][0][0],\
-                   dict_id_zagaz[elt[1][0][0]][0][1])
-      if 1 - float(elt[1][0][1])/float(elt[1][0][3]) >= 0.5:
-        ls_accepted.append(temp_tuple)
+  ls_accepted, ls_ambiguous, ls_rejected = [], [], []
+  for gouv_id, ls_matches in dict_matches.items():
+    if ls_matches:
+      temp_res = [[gouv_id, ls_matches[0][0]],
+                  [master_addresses[gouv_id][0][0], dict_id_zagaz[ls_matches[0][0]][0][1]]]
+      if (1 - float(ls_matches[0][1])/float(ls_matches[0][3]) >= 0.5):
+        if (len(ls_matches) == 1) or\
+           (ls_matches[0][1] < ls_matches[1][1]):
+          ls_accepted.append(temp_res)
+        else:
+          ls_ambiguous.append(temp_res + [ls_matches[0][1], dict_id_zagaz[ls_matches[1][0]][0][1]])
       else:
-        ls_rejected.append(temp_tuple)
+        ls_rejected.append(temp_res)
    
   # Update dict_brands with zagaz specific brands
   dict_brands.update(dict_brands_update)
@@ -342,9 +392,9 @@ if __name__=="__main__":
       brand_zagaz = str_low_noacc(str_correct_html(dict_zagaz[zagaz_id][1])).upper()
       brand_zagaz = dict_brands[brand_zagaz][1]
       if brand_zagaz not in ls_brand_gouv:
-        ls_rejected_2.append([row[0], list(row[1:]), [brand_zagaz, ls_brand_gouv]])
+        ls_rejected_2.append([row[0], row[1:], [brand_zagaz, ls_brand_gouv]])
       else:
-        ls_accepted_2.append([row[0], list(row[1:]), [brand_zagaz, ls_brand_gouv]])
+        ls_accepted_2.append([row[0], row[1:], [brand_zagaz, ls_brand_gouv]])
     else:
       print gouv_id, 'not in master_price'
    
