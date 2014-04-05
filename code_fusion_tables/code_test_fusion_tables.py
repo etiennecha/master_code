@@ -38,7 +38,6 @@ def insertRow(table_id, access_token, data):
 # https://developers.google.com/fusiontables/docs/samples/python?hl=FR
 
 client_id = '970870116608.apps.googleusercontent.com'
-redirect_uri = 'https://www.example.com/oauth2callback'
 
 path_current = os.path.abspath(os.path.dirname(sys.argv[0]))
 dict_api_info = json.loads(open(os.path.join(path_current, 'client_secret_%s.json' %client_id), 'r').read())
