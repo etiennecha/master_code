@@ -43,6 +43,7 @@ redirect_uri = 'https://www.example.com/oauth2callback'
 path_current = os.path.abspath(os.path.dirname(sys.argv[0]))
 dict_api_info = json.loads(open(os.path.join(path_current, 'client_secret_%s.json' %client_id), 'r').read())
 client_secret = dict_api_info['web']['client_secret']
+redirect_uri = dict_api_info['web']['redirect_uris'][0]
 
 # Originally in Google sample code:
 # Copy paste displayed url in navigator
@@ -93,7 +94,7 @@ pprint.pprint(dict_tables_info['items'][4])
 table_id = u'1tSUrkjvpE2r85XvpfwW46LPdbzxoj4mu8G1YeIz_'
 data = "test3, 51\ntest4, 31"
 
-# Get rows of a tables
+# Get rows of a table
 request = urllib2.Request(u'https://www.googleapis.com/fusiontables/v1/query?%s'\
                             %(urllib.urlencode({'access_token': access_token,
                                                 'sql': 'SELECT * FROM %s' %table_id})))
