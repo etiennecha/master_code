@@ -102,10 +102,7 @@ for indiv_ind, indiv_gps_info in enumerate(ls_ls_indiv_gps):
 # Globally... geocoding may fail badly (only lowest quality geocoding?)
 # Conclusion... should really try to match gouv data with zagaz data
 
-# TODO: reconcile gouv data with zagaz data to improve gps info quality
-
 # 1/ BUILD MASTER GEO (FINAL)
-# TODO: add previous geocoding data? (just in case)
 
 master_geo = {}
 for indiv_id, gps_rls_info in master_gps_rls.iteritems():
@@ -142,95 +139,94 @@ for indiv_id, gps_geocoding in master_geo.iteritems():
     master_info[indiv_id]['gps'][5] = gps_geocoding
   else:
     ls_gps_not_recorded_info.append(indiv_id)
-# TODO: Check why... duplicates or?
 
 enc_json(master_info, path_info_output)
 
 # 2/ GET CROSS DISTANCES
 
-## order of pref 4 (website) then 3 (best geocoding info)
-#ls_gps = []
-#for indiv_id in master_price['ids']:
-#  indiv_gps = None
-#  if indiv_id in master_info and master_info[indiv_id]['highway'][3] != 1:
-#    if master_info[indiv_id]['gps'][4]:
-#      indiv_gps = master_info[indiv_id]['gps'][4][0:2]
-#    elif master_info[indiv_id]['gps'][3]:
-#      indiv_gpsmaster_info[indiv_id]['gps'][3][0:2]
-#  ls_gps.append(indiv_gps)
-#dict_ls_ids_gps = {'ids': master_price['ids'],
-#                  'gps': ls_gps}
+# order of pref 4 (website) then 3 (best geocoding info)
+ls_gps = []
+for indiv_id in master_price['ids']:
+  indiv_gps = None
+  if indiv_id in master_info and master_info[indiv_id]['highway'][-1] != 1:
+    if master_info[indiv_id]['gps'][4]:
+      indiv_gps = master_info[indiv_id]['gps'][4][0:2]
+    elif master_info[indiv_id]['gps'][3]:
+      indiv_gps = master_info[indiv_id]['gps'][3][0:2]
+  ls_gps.append(indiv_gps)
+dict_ls_ids_gps = {'ids': master_price['ids'],
+                   'gps': ls_gps}
 
 ## Execution time : c. 13 mn
-#ls_ls_cross_distances = get_ls_ls_cross_distances(dict_ls_ids_gps['gps'])
-#ar_cross_distances = np.array(ls_ls_cross_distances, dtype = np.float32)
-#
-##dict_ls_ids_gps = dec_json(path_dict_ls_ids_gps)
-##np_arrays_cross_distances = np.load(path_ar_cross_distances)
-#
-### Comments
-### Numpy array: None were converted to np.nan (if dtype = np.float32) which are preserved by tolist()
-### np.nan comparison (<, > etc.) always false but if np.nan is True (different from None)
-### ls_ls_cross_distances = np_arrays_cross_distances.tolist()
-### np_arrays_cross_distances_ma = np.ma.masked_array(np_arrays_cross_distances, np.isnan(np_arrays_cross_distances))
-#
-## 3/ IDENTIFYING UNACCEPTABLE DISTANCES (SAME LOCATION => UPDATE GPS?)
-#
-#ls_tup_same_location = []
-#for i, list_distances_i in enumerate(ls_ls_cross_distances):
-#  for j, distance_i_j in enumerate(ls_ls_cross_distances[i][i+1:], start = i+1):
-#    if distance_i_j < np.float32(0.01):
-#      ls_tup_same_location.append((i,j))
-##      # printing takes a lot of time (?)
-##      print dict_ls_ids_gps['ids'][i],\
-##        dict_ls_ids_gps['ids'][j],\
-##        master_info[dict_ls_ids_gps['ids'][i]]['address'][4],\
-##        master_info[dict_ls_ids_gps['ids'][j]]['address'][4]
-#print 'Length of tuples same location', len(ls_tup_same_location)
-#ls_same_location = list(set([ind for tup_ind in ls_tup_same_location for ind in tup_ind]))
+ls_ls_cross_distances = get_ls_ls_cross_distances(dict_ls_ids_gps['gps'])
+ar_cross_distances = np.array(ls_ls_cross_distances, dtype = np.float32)
 
-## Replace gps from gouv by gps geocoding if same location and...
-#
-#ls_use_geocoding_info = []
-#ls_no_geocoding_info = []
-#for indiv_ind in ls_same_location:
-#  indiv_id = dict_ls_ids_gps['ids'][indiv_ind]
-#  geocoding_info = get_best_geocoding_info(master_geocoding[indiv_id][1])
-#  if (geocoding_info) and\
-#     (geocoding_info['status'] == u'OK') and\
-#     (u'France' in geocoding_info['results'][0]['formatted_address']):
-#    ls_use_geocoding_info.append(indiv_id)
-#    print geocoding_info['results'][0]['geometry']['location_type'], indiv_id,\
-#          master_info[indiv_id]['address'][-1], geocoding_info['results'][0]['formatted_address']
-#  else:
-#    ls_no_geocoding_info.append(indiv_ind)
-#
-#for indiv_id in ls_use_geocoding_info:
-#  ind = master_price['ids'].index(indiv_id)
-#  dict_ls_ids_gps['gps'][indiv_ind] = get_best_geocoding_info(master_geocoding[indiv_id][1])
+#dict_ls_ids_gps = dec_json(path_dict_ls_ids_gps)
+#np_arrays_cross_distances = np.load(path_ar_cross_distances)
 
-# TODO: Check if worth recomputing cross distances?
+## Numpy array: None were converted to np.nan (if dtype = np.float32) which are preserved by tolist()
+## np.nan comparison (<, > etc.) always false but if np.nan is True (different from None)
+## ls_ls_cross_distances = np_arrays_cross_distances.tolist()
+## np_arrays_cross_distances_ma = np.ma.masked_array(np_arrays_cross_distances,
+##                                                   np.isnan(np_arrays_cross_distances))
 
-## 4/ GETTING LISTS OF COMPETITORS (LISTS OF TUPLES ID DISTANCE)
-#
-#max_competitor_distance = 10
-#
-#ls_ls_competitors = []
-#for i, list_distances_i in enumerate(ls_ls_cross_distances):
-#  ls_competitors = []
-#  for j, distance_i_j in enumerate(ls_ls_cross_distances[i]):
-#    if distance_i_j < np.float32(max_competitor_distance):
-#      ls_competitors.append((dict_ls_ids_gps['ids'][j], distance_i_j))
-#  ls_ls_competitors.append(ls_competitors)
-#
-## 5/ GETTING A LIST OF COMPETITOR PAIRS (A LIST OF TUPLES EACH INCLUDING AN ID PAIR TUPLE AND DISTANCE)
-#
-#ls_tuple_competitors = []
-#for i, ls_distances_i in enumerate(ls_ls_cross_distances):
-#  for j, distance_i_j in enumerate(ls_ls_cross_distances[i][i+1:], start = i+1):
-#    if distance_i_j < np.float32(max_competitor_distance):
-#      ls_tuple_competitors.append(\
-#        ((dict_ls_ids_gps['ids'][i], dict_ls_ids_gps['ids'][j]), float(distance_i_j)))
+# 3/ IDENTIFYING UNACCEPTABLE DISTANCES (SAME LOCATION => UPDATE GPS?)
+
+ls_tup_same_location = []
+for i, list_distances_i in enumerate(ls_ls_cross_distances):
+  for j, distance_i_j in enumerate(ls_ls_cross_distances[i][i+1:], start = i+1):
+    if distance_i_j < np.float32(0.01):
+      ls_tup_same_location.append((i,j))
+#      # printing takes a lot of time (?)
+#      print dict_ls_ids_gps['ids'][i],\
+#        dict_ls_ids_gps['ids'][j],\
+#        master_info[dict_ls_ids_gps['ids'][i]]['address'][4],\
+#        master_info[dict_ls_ids_gps['ids'][j]]['address'][4]
+print 'Length of tuples same location', len(ls_tup_same_location)
+ls_same_location = list(set([ind for tup_ind in ls_tup_same_location for ind in tup_ind]))
+
+# Replace gps from gouv by gps geocoding if same location and...
+
+ls_use_geocoding_info = []
+ls_no_geocoding_info = []
+for indiv_ind in ls_same_location:
+  indiv_id = dict_ls_ids_gps['ids'][indiv_ind]
+  geocoding_info = get_best_geocoding_info(master_geocoding[indiv_id][1])
+  if (geocoding_info) and\
+     (geocoding_info['status'] == u'OK') and\
+     (u'France' in geocoding_info['results'][0]['formatted_address']):
+    ls_use_geocoding_info.append(indiv_id)
+    print geocoding_info['results'][0]['geometry']['location_type'], indiv_id,\
+          master_info[indiv_id]['address'][-1], geocoding_info['results'][0]['formatted_address']
+  else:
+    ls_no_geocoding_info.append(indiv_ind)
+
+for indiv_id in ls_use_geocoding_info:
+  ind = master_price['ids'].index(indiv_id)
+  dict_ls_ids_gps['gps'][indiv_ind] = get_best_geocoding_info(master_geocoding[indiv_id][1])
+
+# todo: Check if worth recomputing cross distances?
+
+# 4/ GETTING LISTS OF COMPETITORS (LISTS OF TUPLES ID DISTANCE)
+
+max_competitor_distance = 10
+
+ls_ls_competitors = []
+for i, list_distances_i in enumerate(ls_ls_cross_distances):
+  ls_competitors = []
+  for j, distance_i_j in enumerate(ls_ls_cross_distances[i]):
+    if distance_i_j < np.float32(max_competitor_distance):
+      ls_competitors.append((dict_ls_ids_gps['ids'][j], distance_i_j))
+  ls_ls_competitors.append(ls_competitors)
+
+# 5/ GETTING A LIST OF COMPETITOR PAIRS (A LIST OF TUPLES EACH INCLUDING AN ID PAIR TUPLE AND DISTANCE)
+
+ls_tuple_competitors = []
+for i, ls_distances_i in enumerate(ls_ls_cross_distances):
+  for j, distance_i_j in enumerate(ls_ls_cross_distances[i][i+1:], start = i+1):
+    if distance_i_j < np.float32(max_competitor_distance):
+      ls_tuple_competitors.append(\
+        ((dict_ls_ids_gps['ids'][i], dict_ls_ids_gps['ids'][j]), float(distance_i_j)))
 
 # 6/ STORE RESULTS
 

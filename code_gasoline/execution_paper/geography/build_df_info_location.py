@@ -82,7 +82,7 @@ for indiv_ind, indiv_id in enumerate(master_price['ids']):
   # from master_info
   highway = None
   if master_info.get(indiv_id):
-    highway = master_info[indiv_id]['highway'][3]
+    highway = master_info[indiv_id]['highway'][-1]
   ls_ls_info.append([city, zip_code, code_geo, code_geo_ardts, region, highway,
                      brand_1_b, brand_2_b, brand_type_b, brand_1_e, brand_2_e, brand_type_e])
 

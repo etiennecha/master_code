@@ -292,7 +292,8 @@ for zip_code, ls_stations in dict_zip_master.iteritems():
               # master_addresses[master_price['ids'][indiv_ind]],\
               # master_price['dict_info'][master_price['ids'][indiv_ind]]['brand']
 
-# TODO: add (35560001, 35560004), (42440001, 42440008), (47180001, 47180002)
+# TODO: add (35560001, 35560004), (42440001, 42440008), (47180001, 47180002),
+#           (56700005, 56700003)     
 
 # ##########################
 # BRAND INFO (master_price)
@@ -404,6 +405,8 @@ ls_highway_indiv_ids = [indiv_id for indiv_id in list(set_highway_ids) if indiv_
     # print indiv_id, master_price['dict_info'][indiv_id]['name'], master_addresses[indiv_id]
 # # excluded: 93130007 (address incl. 'chasse a 3'), 75017016 ('6 a 8'),  56190007 (dummy 1), 
 # # excluded: 68127001 ('pres sortie...'), 7580002 (dummy 1, RN)
+for indiv_id in ls_highway_indiv_ids:
+  master_info[indiv_id]['highway'][-1] = 1
 
 # enc_json(master_price, path_diesel_price)
 # enc_json(master_info, path_info)

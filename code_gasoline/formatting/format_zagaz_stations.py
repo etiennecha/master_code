@@ -420,8 +420,49 @@ if __name__=="__main__":
   # print ls_accepted[0]
   # compute_distance(master_info['75014005']['gps'][-1], dict_zagaz[u'10112'][7][0:2])
   ls_distance = []
-  for pair in ls_accepted:
+  for pair in ls_accepted_2:
     gouv_id, zagaz_id = pair[0]
-    if master_info[gouv_id]['gps'][-1] and dict_zagaz[zagaz_id][7][0:2]:
-      ls_distance.append([compute_distance(master_info[gouv_id]['gps'][-1],
+    # todo: use dict_ls_ids_gps (gouv else geocoding)
+    if master_info[gouv_id]['gps'][4] and dict_zagaz[zagaz_id][7][0:2]:
+      ls_distance.append([compute_distance(master_info[gouv_id]['gps'][4],
                                           dict_zagaz[zagaz_id][7][0:2])] + pair)
+  # shows only one address from gouv data
+  ls_distance = [ls_x[0:1] + ls_x[1] + ls_x[2][0] + [ls_x[3][0]] for ls_x in ls_distance]
+  ls_columns = ['dist', 'gouv_id', 'zagaz_id', 'ad_1', 'ad_2', 'brand_zagaz']
+  df_distance = pd.DataFrame(ls_distance, columns = ls_columns)
+  
+  # todo: exlude highway (and corsica?)
+  ls_highway = [(k, v['highway'][-1]) for k,v in master_info.items()]
+  df_highway = pd.DataFrame(ls_highway, columns = ['id', 'highway'])
+  df_distance = pd.merge(df_distance, df_highway, how = 'inner', left_on = 'gouv_id', right_on ='id')
+  # print df_distance[df_distance['highway'] == 1].to_string()
+  df_distance = df_distance[df_distance['highway'] != 1]
+  del(df_distance['id'], df_distance['highway'])
+  df_distance = df_distance.sort(['dist'], ascending = [0])
+  
+  print df_distance[0:100].to_string()
+  
+  for row_ind, row in df_distance[0:10].iterrows():
+  	print row_ind, row.dist, row.gouv_id, row.zagaz_id
+  	print master_info[row.gouv_id]['address'][-1], master_info[row.gouv_id]['gps'][4],\
+          dict_zagaz[row.zagaz_id][7][0:2]
+  
+  # Gouv error: 13115001 ("big" mistake still on website)
+  # Correct zagaz error
+  dict_zagaz['14439'][7] = (dict_zagaz['14439'][7][0],
+                            str(-float(dict_zagaz['14439'][7][1])),
+                            dict_zagaz['14439'][7][2]) # was fixed on zagaz already
+  dict_zagaz['19442'][7] = (u'46.527805',
+                            u'5.60754',
+                            dict_zagaz['19442'][7][2]) # fixed it on zagaz
+
+  # Stations out of France: short term fix for GFT/GMap output
+  ls_temp_matching = {'4140001'  : '20101',
+                      '33830004' : '17259',
+                      '13115001' : '20072', # included in top mistakes found upon matching
+                      '20189002' : '1980',  # from here on: Corsica
+                      '20167010' : '13213',
+                      '20118004' : '13220',
+                      '20213004' : '13600',
+                      '20213003' : '17310'}
+
