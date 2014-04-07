@@ -5,6 +5,7 @@ import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
+from generic_competition import *
 from functions_string import *
 from BeautifulSoup import BeautifulSoup
 import copy
@@ -40,12 +41,13 @@ if __name__=="__main__":
   path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
   path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
   path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
+  path_info_output = os.path.join(path_dir_built_json, 'master_info_diesel_for_output.json')
   
   path_dir_insee = os.path.join(path_data, 'data_insee')
   path_dir_match_insee_codes = os.path.join(path_dir_insee, 'match_insee_codes')
   
   master_price = dec_json(path_diesel_price)
-  master_info = dec_json(path_info)
+  master_info = dec_json(path_info_output) # TODO: have only one
   dict_brands = dec_json(path_dict_brands)
   
   # #####################
@@ -398,7 +400,7 @@ if __name__=="__main__":
     else:
       print gouv_id, 'not in master_price'
    
-  # Check those present twice ?
+  # Check those present twice ? => FIX BY HAND
   ls_gouv_ids = [station[0][0] for station in ls_accepted_2]
   print len(ls_gouv_ids), len(set(ls_gouv_ids))
   ls_zagaz_ids = [station[0][1] for station in ls_accepted_2]
@@ -413,3 +415,13 @@ if __name__=="__main__":
 
   # len(ls_accepted_2) = 5988 (5869 new but total access etc?)
   # todo: check double attributions + gps consistency
+
+  # Check distance for accepted
+  # print ls_accepted[0]
+  # compute_distance(master_info['75014005']['gps'][-1], dict_zagaz[u'10112'][7][0:2])
+  ls_distance = []
+  for pair in ls_accepted:
+    gouv_id, zagaz_id = pair[0]
+    if master_info[gouv_id]['gps'][-1] and dict_zagaz[zagaz_id][7][0:2]:
+      ls_distance.append([compute_distance(master_info[gouv_id]['gps'][-1],
+                                          dict_zagaz[zagaz_id][7][0:2])] + pair)
