@@ -16,6 +16,34 @@ def dec_json(chemin):
   with open(chemin, 'r') as fichier:
     return json.loads(fichier.read())
 
+def get_dpt_users(dpt_ind):
+  ls_dpt_users = []
+  i = 0
+  while True:
+    url = 'http://www.zagaz.com/userDep.php?id_div=10%02d&tri=&limit=30&offset=%s' %(dpt_ind, i)
+    response = urllib2.urlopen(url)
+    soup = BeautifulSoup(response.read())
+    block_table = soup.find('table', {'class' : 'deco ligne',
+                                      'summary' : re.compile('Liste des utilisateurs.*')})
+    ls_users = block_table.findAll('a', {'href' : re.compile('userDetail\.php\?id=[0-9]*')})
+    if ls_users:
+      ls_users = [(user.text, user['href']) for user in ls_users]
+      ls_dpt_users += ls_users
+      i += 30
+    else:
+      break
+  return ls_dpt_users
+
+def get_user_info(user_url):
+  base_url = 'http://www.zagaz.com'
+  url = '/'.join([base_url, user_url])
+  try:
+    response = urllib2.urlopen(url)
+    return parse_user_page(BeautifulSoup(response.read()))
+  except:
+    print 'Could not collect:', user_url
+    return None 
+
 def parse_user_page(soup):
   ls_ls_user_info = []
   bloc_table_user = soup.find('table', {'summary' : '', 'class' : 'deco'})
@@ -46,7 +74,6 @@ def parse_user_page(soup):
         ls_ls_stations_info.append([id_station, price_time, ls_prices])
   return [ls_ls_user_info, ls_ls_stations_info]
 
-
 # path_data: data folder at different locations at CREST vs. HOME
 # could do the same for path_code if necessary (import etc).
 if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
@@ -54,27 +81,33 @@ if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
 else:
   path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
 # structure of the data folder should be the same
-folder_source_zagaz = r'\data_gasoline\data_source\data_json_prices\zagaz'  
+folder_source_zagaz = r'\data_gasoline\data_source\data_stations\data_zagaz' 
 
-dict_all_stations = dec_json(path_data + folder_source_zagaz + r'\20140124_zagzag_stations')
-ls_users = list(set([tuple(v[:2]) for k,v in dict_all_stations.items() if k and v[0]]))
+##Active users at some date (not that interesting...)
+#dict_all_stations = dec_json(path_data + folder_source_zagaz + r'\20140124_zagzag_stations')
+#ls_active_users = list(set([tuple(v[:2]) for k,v in dict_all_stations.items() if k and v[0]]))
+#dict_zagaz_active_user_info = dec_json(path_data + folder_source_zagaz +\
+#                                       r'\20140124_dict_zagaz_active_users.json')
 
-# dict_users_info = {}
-dict_users_info = dec_json(path_data + folder_source_zagaz + r'\20140124_dict_active_users')
+## Get all user urls (by dpt)
+#dict_dpt_users = {}
+#for i in range(1, 96):
+#  dict_dpt_users['%02d' %i] = get_dpt_users(i)
+#  time.sleep(1)
+##enc_json(dict_dpt_users, path_data + folder_source_zagaz + r'\20140408_dict_zagaz_dpt_users.json')
+dict_dpt_users = dec_json(path_data + folder_source_zagaz + r'\20140408_dict_zagaz_dpt_users.json')
 
-base_url = r'http://www.zagaz.com'
-for user_pseudo, user_url in ls_users:
-  if user_url not in dict_users_info:
-    url = '/'.join([base_url, user_url])
-    try:
-      response = urllib2.urlopen(url)
-      dict_users_info[user_url] = parse_user_page(BeautifulSoup(response.read()))
-    except:
-      'Could not collect:', user_pseudo, user_url
-    time.sleep(0.3)
-  else:
-    # print 'User already in dict (?):', user_pseudo, user_url
-    pass
+#dict_user_info = {}
+dict_user_info = dec_json(path_data + folder_source_zagaz + r'\20140408_dict_zagaz_user_info')
 
-path_zagaz_users = path_data + folder_source_zagaz + r'\20140124_dict_active_users'
-# enc_json(dict_users_info, path_zagaz_users)
+for dpt_ind in range(30, 40):
+  for user_name, user_url in dict_dpt_users['%02d' %dpt_ind]:
+    if user_url not in dict_user_info:
+      user_info = get_user_info(user_url)
+      if user_info:
+        dict_user_info[user_url] = user_info
+        time.sleep(0.3)
+      else:
+        break
+
+# enc_json(dict_user_info, path_data + folder_source_zagaz + r'\20140408_dict_zagaz_user_info')
