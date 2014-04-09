@@ -130,22 +130,23 @@ df_prices_cl.index = [pd.to_datetime(date) for date in df_prices_cl.index]
 idx = pd.date_range('2011-09-04', '2013-06-04')
 df_prices_cl = df_prices_cl.reindex(idx, fill_value = np.nan)
 
-# OUTPUT FOR DISPERSION ANALYSIS
-df_prices_cl.index.name = 'date'
-df_prices_cl.to_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
-                    float_format='%.4f',
-                    encoding='utf-8')
+## OUTPUT FOR DISPERSION ANALYSIS
+#df_prices_cl.index.name = 'date'
+#df_prices_cl.to_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
+#                    float_format='%.4f',
+#                    encoding='utf-8')
 
 ## READ RESULTS FROM EXTERNAL PRICE CLEANING
-## TODO: clean ids
+## Consistency checked for R (one series...)
 #
 ## READ CLEANED PRICES R
-#path_csv_price_cl_R = os.path.join(path_dir_built_paper_csv, 'price_cleaned_R.csv')
+#path_csv_price_cl_R = os.path.join(path_dir_built_csv, 'price_cleaned_light_R.csv')
 #df_prices_cl_R = pd.read_csv(path_csv_price_cl_R,
 #                             dtype = {'id' : str,
 #                                      'date' : str,
 #                                      'price': np.float64,
 #                                      'price.cl' : np.float64})
+#df_prices_cl_R['id'] = df_prices_cl_R['id'].str.slice(stop = -1) # set id back!
 #df_prices_cl_R  = df_prices_cl_R.pivot(index='date', columns='id', values='price.cl')
 #df_prices_cl_R.index = [pd.to_datetime(x) for x in df_prices_cl_R.index]
 #idx = pd.date_range('2011-09-04', '2013-06-04')
@@ -158,6 +159,7 @@ df_prices_cl.to_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
 #                                          'date' : str,
 #                                          'price': np.float64,
 #                                          'price_cl' : np.float64})
+#df_prices_cl_stata['id'] = df_prices_cl_stata['id'].str.slice(stop = -1) # set id back!
 #df_prices_cl_stata  = df_prices_cl_stata.pivot(index='date', columns='id', values='price_cl')
 #df_prices_cl_stata.index = [pd.to_datetime(x) for x in df_prices_cl_stata.index]
 #idx = pd.date_range('2011-09-04', '2013-06-04')

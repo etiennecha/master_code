@@ -37,8 +37,9 @@ dict_dpts_regions = dec_json(path_dict_dpts_regions)
 dict_zagaz_stations_2012 = dec_json(os.path.join(path_dir_zagaz, '2012_dict_zagaz_info_gps.json'))
 dict_zagaz_station_ids = dec_json(os.path.join(path_dir_zagaz,\
                                                '20140124_dict_zagaz_station_ids.json'))
-dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz, '20140124_dict_zagaz_users.json'))
 dict_zagaz_prices = dec_json(os.path.join(path_dir_zagaz, '20140127_dict_zagaz_ext_prices.json'))
+#dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz, '20140124_dict_zagaz_users.json'))
+dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz, '20140408_dict_zagaz_user_info.json'))
 
 # Content of station description within dict_zagaz_stations:
 # [id, brand, name, comment, street, zip_code, city, gps_tup, other?]
@@ -67,11 +68,52 @@ for user_id, user_info in dict_zagaz_users.items():
   dict_dict_contribs[user_id] = dict_user_contrib
   ls_user_station_contribs.append(len(dict_user_contrib))
 
-pd.Series(ls_user_station_contribs).describe()
-pd.Series(ls_user_nb_contribs).describe()
+# Nb of contributions / stations contributed by user
+se_user_nb_contribs = pd.Series(ls_user_nb_contribs)
+print 'users w/ 3+ contribs:', len(se_user_nb_contribs[se_user_nb_contribs > 3]) 
+print 'users w/ 4+ contribs:', len(se_user_nb_contribs[se_user_nb_contribs > 4]) 
+print 'users w/ 5+ contribs:', len(se_user_nb_contribs[se_user_nb_contribs > 5]) 
+
+se_user_station_contribs = pd.Series(ls_user_station_contribs)
+print 'users w/ 3+ stations:', len(se_user_station_contribs[se_user_station_contribs > 3]) 
+print 'users w/ 4+ stations:', len(se_user_station_contribs[se_user_station_contribs > 4]) 
+print 'users w/ 5+ stations:', len(se_user_station_contribs[se_user_station_contribs > 5]) 
 
 ls_ls_user_contrib = []
 for user_id, dict_user_contrib in dict_dict_contribs.items():
   ls_user_contrib = [(k,len(v)) for k,v in dict_user_contrib.items()]
   ls_user_contrib = sorted(ls_user_contrib, key = lambda tup: tup[1], reverse = True)
   ls_ls_user_contrib.append(ls_user_contrib)
+
+# GRAPHS: check:
+# http://nbviewer.ipython.org/github/cs109/content/blob/master/lec_03_statistical_graphs.ipynb
+
+# Registration dates
+ls_registration_dates = [v[0][3][1] for k,v in dict_zagaz_users.items() if v and v[0]]
+ls_registration_years = [date[-4:] for date in ls_registration_dates]
+
+dict_registration_years = dict(collections.Counter(ls_registration_years))
+ls_years = [int(x) for x in sorted(dict_registration_years.keys())]
+ls_heights = [dict_registration_years['%s' %k] for k in ls_years]
+plt.bar([year - 0.4 for year in ls_years], ls_heights)
+plt.xlim(2005.5, 2014.5)
+plt.xticks(ls_years, ls_years)
+for x, y in zip(ls_years, ls_heights):
+    plt.annotate("%i" % y, (x, y + 200), ha='center')
+plt.show()
+
+# Last visit
+ls_activity_dates = [v[0][4][1] for k,v in dict_zagaz_users.items() if v and v[0]]
+ls_activity_years = [date[6:10] for date in ls_activity_dates]
+
+dict_activity_years = dict(collections.Counter(ls_activity_years))
+ls_years = [int(x) for x in sorted(dict_activity_years.keys())]
+ls_heights = [dict_activity_years['%s' %k] for k in ls_years]
+plt.bar([year - 0.4 for year in ls_years], ls_heights)
+plt.xlim(2005.5, 2014.5)
+plt.xticks(ls_years, ls_years)
+for x, y in zip(ls_years, ls_heights):
+    plt.annotate("%i" % y, (x, y + 200), ha='center')
+plt.show()
+
+# Check survival of 2006 cohort...
