@@ -21,7 +21,7 @@ path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competit
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
 
-path_dir_built_paper_csv = os.path.join(path_dir_built_paper, 'data_csv')
+path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
 master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info)
@@ -47,18 +47,22 @@ se_mean_price = df_price.mean(1)
 # First approximate way
 # df_price_cl = df_price.apply(lambda x: x - (x - se_mean_price).mean())
 
-# Prices cleaned with R / STATA
-path_csv_price_cl_R = os.path.join(path_dir_built_paper_csv, 'price_cleaned_R.csv')
-df_prices_cl_R = pd.read_csv(path_csv_price_cl_R,
-                             dtype = {'id' : str,
-                                      'date' : str,
-                                      'price': np.float64,
-                                      'price.cl' : np.float64})
-df_prices_cl_R  = df_prices_cl_R.pivot(index='date', columns='id', values='price.cl')
-df_prices_cl_R.index = [pd.to_datetime(x) for x in df_prices_cl_R.index]
-idx = pd.date_range('2011-09-04', '2013-06-04')
-df_prices_cl_R = df_prices_cl_R.reindex(idx, fill_value=np.nan)
-df_price_cl = df_prices_cl_R
+## Prices cleaned with R / STATA
+#path_csv_price_cl_R = os.path.join(path_dir_built_csv, 'price_cleaned_R.csv')
+#df_prices_cl_R = pd.read_csv(path_csv_price_cl_R,
+#                             dtype = {'id' : str,
+#                                      'date' : str,
+#                                      'price': np.float64,
+#                                      'price.cl' : np.float64})
+#df_prices_cl_R  = df_prices_cl_R.pivot(index='date', columns='id', values='price.cl')
+#df_prices_cl_R.index = [pd.to_datetime(x) for x in df_prices_cl_R.index]
+#idx = pd.date_range('2011-09-04', '2013-06-04')
+#df_prices_cl_R = df_prices_cl_R.reindex(idx, fill_value=np.nan)
+#df_price_cl = df_prices_cl_R
+
+df_price_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
+                          index_col = 0,
+                          parse_dates = True)
 
 # ################
 # BUILD DATAFRAME

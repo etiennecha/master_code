@@ -98,9 +98,9 @@ folder_source_zagaz = r'\data_gasoline\data_source\data_stations\data_zagaz'
 dict_dpt_users = dec_json(path_data + folder_source_zagaz + r'\20140408_dict_zagaz_dpt_users.json')
 
 #dict_user_info = {}
-dict_user_info = dec_json(path_data + folder_source_zagaz + r'\20140408_dict_zagaz_user_info')
+dict_user_info = dec_json(path_data + folder_source_zagaz + r'\20140408_dict_zagaz_user_info.json')
 
-for dpt_ind in range(30, 40):
+for dpt_ind in range(1, 96):
   for user_name, user_url in dict_dpt_users['%02d' %dpt_ind]:
     if user_url not in dict_user_info:
       user_info = get_user_info(user_url)
@@ -110,4 +110,4 @@ for dpt_ind in range(30, 40):
       else:
         break
 
-# enc_json(dict_user_info, path_data + folder_source_zagaz + r'\20140408_dict_zagaz_user_info')
+# enc_json(dict_user_info, path_data + folder_source_zagaz + r'\20140408_dict_zagaz_user_info.json')

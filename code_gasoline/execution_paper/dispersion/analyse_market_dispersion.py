@@ -21,7 +21,7 @@ path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competit
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
 
-path_dir_built_paper_csv = os.path.join(path_dir_built_paper, 'data_csv')
+path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
 master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info)
@@ -35,23 +35,27 @@ zero_threshold = np.float64(1e-10)
 
 # DF PRICES
 df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
+se_mean_price = df_price.mean(1)
 
 # DF CLEAN PRICES
 
-# Prices cleaned with R / STATA
-path_csv_price_cl_R = os.path.join(path_dir_built_paper_csv, 'price_cleaned_R.csv')
-df_prices_cl_R = pd.read_csv(path_csv_price_cl_R,
-                             dtype = {'id' : str,
-                                      'date' : str,
-                                      'price': np.float64,
-                                      'price.cl' : np.float64})
-df_prices_cl_R  = df_prices_cl_R.pivot(index='date', columns='id', values='price.cl')
-df_prices_cl_R.index = [pd.to_datetime(x) for x in df_prices_cl_R.index]
-idx = pd.date_range('2011-09-04', '2013-06-04')
-df_prices_cl_R = df_prices_cl_R.reindex(idx, fill_value=np.nan)
-df_prices_cl = df_prices_cl_R
+## Prices cleaned with R / STATA
+#path_csv_price_cl_R = os.path.join(path_dir_built_csv, 'price_cleaned_R.csv')
+#df_prices_cl_R = pd.read_csv(path_csv_price_cl_R,
+#                             dtype = {'id' : str,
+#                                      'date' : str,
+#                                      'price': np.float64,
+#                                      'price.cl' : np.float64})
+#df_prices_cl_R  = df_prices_cl_R.pivot(index='date', columns='id', values='price.cl')
+#df_prices_cl_R.index = [pd.to_datetime(x) for x in df_prices_cl_R.index]
+#idx = pd.date_range('2011-09-04', '2013-06-04')
+#df_prices_cl_R = df_prices_cl_R.reindex(idx, fill_value=np.nan)
+#df_prices_cl = df_prices_cl_R
 
-se_mean_price = df_price.mean(1)
+# todo: add index mgt (date missing not a pbm here but will be for regressions)
+df_price_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
+                          index_col = 0,
+                          parse_dates = True)
 
 # ################
 # BUILD DATAFRAME
@@ -67,7 +71,8 @@ ls_ls_market_ids_st_rd = get_ls_ls_distance_market_ids_restricted(master_price['
 
 ls_ls_market_ids_temp = ls_ls_market_ids
 
-ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_prices_cl)\
+# df_price vs. df_price_cl (check different cleaning ways...)
+ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price)\
                              for ls_market_ids in ls_ls_market_ids_temp]
 
 # Can loop to add mean price or add date column and then merge df mean price with concatenated on date
@@ -88,6 +93,8 @@ for ls_market_id, df_market_dispersion in zip(ls_ls_market_ids_temp, ls_df_marke
 ls_columns = ['avg_%s' %field for field in ls_stats]+\
              ['std_%s' %field for field in ls_stats]
 df_market_stats = pd.DataFrame(ls_ls_market_stats, ls_market_ref_ids, ls_columns)
+# exclude market with small nb of competitors (check how it's done btw)
+df_market_stats = df_market_stats[df_market_stats['avg_nb_comp'] >= 3]
 
 df_dispersion = pd.concat(ls_df_market_dispersion, ignore_index = True)
 

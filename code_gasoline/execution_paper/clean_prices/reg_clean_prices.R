@@ -3,8 +3,15 @@ library(MatrixModels)
 
 #path.dir.data <- "C:\\Users\\etna\\Desktop\\Etienne_work\\Data"
 path.dir.data <- "W:\\Bureau\\Etienne_work\\Data"
-path.file.data <- "\\data_gasoline\\data_built\\data_paper\\data_csv\\price_panel_data.csv"
+
+#path.file.data <- "\\data_gasoline\\data_built\\data_paper\\data_csv\\price_panel_data.csv"
+#path.file.data.out <- "\\data_gasoline\\data_built\\data_paper\\data_csv\\price_cleaned_R.csv"
+path.file.data <- "\\data_gasoline\\data_built\\data_paper\\data_csv\\price_panel_data_light.csv"
+path.file.data.out <- "\\data_gasoline\\data_built\\data_paper\\data_csv\\price_cleaned_light_R.csv"
+
 full.path <- paste(path.dir.data, path.file.data, sep = "")
+full.path.out <- paste(path.dir.data, path.file.data.out, sep = "")
+
 df.price <- read.csv(full.path, encoding = "UTF-8")
 head(df.price)
 nrow(df.price)
@@ -33,6 +40,4 @@ df.price.nona['price.cl'] <- price.resid
 #plot(df.price.nona[df.price.nona$id_a == 1500007,]$price_cl, type = "o")
 
 df.price.nona.out <- subset(df.price.nona, select = c(id, date, price, price.cl))
-path.file.data.out <- "\\data_gasoline\\data_built\\data_paper\\data_csv\\price_cleaned_R.csv"
-full.path.out <- paste(path.dir.data, path.file.data.out, sep = "")
 write.csv(df.price.nona.out, file = full.path.out, row.names = FALSE)
