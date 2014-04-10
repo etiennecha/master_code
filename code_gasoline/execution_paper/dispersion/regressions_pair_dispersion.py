@@ -62,8 +62,8 @@ df_price_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.cs
 # BUILD DATAFRAME
 # ################
 
-km_bound = 5
-diff_bound = 0.02
+km_bound = 3
+diff_bound = 0.08
 
 # TODO: iterate with various diff_bounds (high value: no cleaning of prices)
 
@@ -139,6 +139,27 @@ df_ppd = pd.merge(df_ppd, df_brands, on='id_1')
 df_brands = df_brands.rename(columns={'id_1': 'id_2'})
 df_ppd = pd.merge(df_ppd, df_brands, on='id_2', suffixes=('_1', '_2'))
 
+# Build categories (are they really relevant?)
+df_ppd['pair_type'] = None
+df_ppd['pair_type'][((df_ppd['brand_type_e_1'] == 'SUP') &\
+                     (df_ppd['brand_type_e_2'] == 'OIL')) |\
+                    ((df_ppd['brand_type_e_1'] == 'OIL') &\
+                     (df_ppd['brand_type_e_2'] == 'SUP'))] = 'OIL-SUP'
+df_ppd['pair_type'][((df_ppd['brand_type_e_1'] == 'SUP') &\
+                     (df_ppd['brand_type_e_2'] == 'IND')) |\
+                    ((df_ppd['brand_type_e_1'] == 'IND') &\
+                     (df_ppd['brand_type_e_2'] == 'SUP'))] = 'IND-SUP'
+df_ppd['pair_type'][((df_ppd['brand_type_e_1'] == 'OIL') &\
+                     (df_ppd['brand_type_e_2'] == 'IND')) |\
+                    ((df_ppd['brand_type_e_1'] == 'IND') &\
+                     (df_ppd['brand_type_e_2'] == 'OIL'))] = 'IND-OIL'
+df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'OIL') &\
+                    (df_ppd['brand_type_e_2'] == 'OIL')] = 'OIL'
+df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'SUP') &\
+                    (df_ppd['brand_type_e_2'] == 'SUP')] = 'SUP'
+df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'IND') &\
+                    (df_ppd['brand_type_e_2'] == 'IND')] = 'IND'
+
 # CLEAN DF (avoid pbm with missing, inf which should be represented as missing etc.)
 df_ppd = df_ppd[~(pd.isnull(df_ppd['std_spread']) | pd.isnull(df_ppd['pct_rr']))]
 df_ppd = df_ppd[df_ppd['nb_spread'] > 60]
@@ -166,8 +187,8 @@ df_ppd = df_ppd[(df_ppd['brand_1_e_1'] != 'TOTAL_ACCESS') &\
 
 # DF NO DIFFERENTIATION VS. DIFFERENTIATION (CLEANED PRICES)
 # todo: check that must be connected with criterion to clean prices...
-df_ppd_nodiff = df_ppd[np.abs(df_ppd['avg_spread']) <= 0.02]
-df_ppd_diff = df_ppd[np.abs(df_ppd['avg_spread']) > 0.02]
+df_ppd_nodiff = df_ppd[np.abs(df_ppd['avg_spread']) <= diff_bound]
+df_ppd_diff = df_ppd[np.abs(df_ppd['avg_spread']) > diff_bound]
 print len(df_ppd_nodiff), len(df_ppd_diff)
 
 # ##################
@@ -242,6 +263,13 @@ print ls_df_reg_res[0][3][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
 print ls_df_reg_res[1][3][['sc_500_be', 'sc_500_t', 'R2', 'NObs']].to_string()
 
 # check => https://groups.google.com/forum/?hl=fr#!topic/pystatsmodels/XnXu_k1h-gc
+
+smf.ols(formula = 'pct_rr ~ distance', data = df_ppd_diff).fit().summary()
+smf.ols(formula = 'pct_rr ~ distance + C(pair_type)', data = df_ppd_diff).fit().summary()
+smf.ols(formula = 'pct_rr ~ distance * C(pair_type)', data = df_ppd_diff).fit().summary()
+smf.ols(formula = 'pct_rr ~ distance', data = df_ppd_nodiff).fit().summary()
+smf.ols(formula = 'pct_rr ~ distance + C(pair_type)', data = df_ppd_nodiff).fit().summary()
+smf.ols(formula = 'pct_rr ~ distance * C(pair_type)', data = df_ppd_nodiff).fit().summary()
 
 ## Output data to csv to run quantile regressions in R
 #path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')

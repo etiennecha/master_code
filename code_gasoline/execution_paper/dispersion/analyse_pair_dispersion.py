@@ -65,10 +65,10 @@ df_price_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.cs
 # BUILD DATAFRAME
 # ################
 
-km_bound = 5
+km_bound = 3
 diff_bound = 0.02
 
-# todo: iterate with various diff_bounds (high value: no cleaning of prices)
+# todo: iterate with various  (high value: no cleaning of prices)
 
 # DF PAIR PRICE DISPERSION
 ls_ppd = []
@@ -160,7 +160,7 @@ df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'OIL') &\
                     (df_ppd['brand_type_e_2'] == 'OIL')] = 'OIL'
 df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'SUP') &\
                     (df_ppd['brand_type_e_2'] == 'SUP')] = 'SUP'
-df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'SUP') &\
+df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'IND') &\
                     (df_ppd['brand_type_e_2'] == 'IND')] = 'IND'
 
 # ##################
@@ -182,8 +182,8 @@ for i in range(10):
   print i, len(df_ppd[np.abs(df_ppd['avg_spread']) > i * 10**(-2)]),\
         len(df_ppd[(np.abs(df_ppd['avg_spread']) > i * 10**(-2)) & (df_ppd['nb_rr'] > 10)])
 
-df_ppd_nodiff = df_ppd[np.abs(df_ppd['avg_spread']) <= 0.02]
-df_ppd_diff = df_ppd[np.abs(df_ppd['avg_spread']) > 0.02]
+df_ppd_nodiff = df_ppd[np.abs(df_ppd['avg_spread']) <= diff_bound]
+df_ppd_diff = df_ppd[np.abs(df_ppd['avg_spread']) > diff_bound]
 print len(df_ppd_nodiff), len(df_ppd_diff)
 
 # RR & SPREAD VS DISTANCE + PER TYPE OF BRAND
@@ -236,7 +236,7 @@ ls_ar_rrs_nodiff = []
 for ar_rrs, ls_pair_ppd in zip(ls_ar_rrs, ls_ppd):
   if (not df_brands['brand_1_e'][ls_pair_ppd[0]] == 'TOTAL_ACCESS') &\
      (not df_brands['brand_1_e'][ls_pair_ppd[1]] == 'TOTAL_ACCESS') &\
-     (np.abs(ls_pair_ppd[12]) <= 0.02): # CHANGE !?!
+     (np.abs(ls_pair_ppd[12]) <= diff_bound): # CHANGE !?!
     ls_ar_rrs_nodiff.append(ar_rrs)
  
 ls_df_rrs_su = []
@@ -266,8 +266,31 @@ df_rrs_su_all = pd.merge(df_rrs_su_all, ls_df_rrs_su[3],\
 df_rrs_su_all[['pct_rr', 'pct_rr_ta', 'pct_rr_nota', 'pct_rr_nodiff']].plot()
 plt.show()
 
+# Price obs: stats descs + graph observations (investigate price cleaning too)
 
-# ########################################
+# Check very close prices (Output to folder: graph + map (Google?))
+# todo: check if same result with average spread small
+df_ppd['pair_type'][(df_ppd['pct_same_price'] > 0.5) &\
+                    (df_ppd['brand_2_e_1'] != df_ppd['brand_2_e_2'])].value_counts()
+df_ppd[['id_1', 'id_2', 'pair_type']][(df_ppd['pct_same_price'] > 0.5) &\
+                                      (df_ppd['brand_2_e_1'] != df_ppd['brand_2_e_2'])][0:10]
+ax = df_price[['1500007', '1500001']].plot()
+handles, labels = ax.get_legend_handles_labels()
+ax.legend(handles, [df_brands.ix[indiv_id]['brand_2_e'] for indiv_id in labels])
+plt.title(master_price['dict_info']['1500007']['city'])
+plt.show()
+# pd.set_option('display.max_columns', 500)
+
+# Check leader follower
+# todo: check if can add follow 1 follow 2 and sim (?)
+# todo: make more systematic and output graphs with relevant info + maps
+# todo: static dispersion but sim changes... more or less same trend (work on variations?)
+df_ppd[(df_ppd['brand_2_e_1'] != df_ppd['brand_2_e_2']) &\
+       (df_ppd['nb_1_fol'] / df_ppd[['nb_chges_1', 'nb_chges_2']].min(axis=1) > 0.5)]
+
+# todo: add same brand pair var to make lighter + get rid of/signal abnormal obs (rigid prices)
+
+# #######################################
 # PAIR PRICE DISPERSION: NORMALIZED PRICES
 # ########################################
 
