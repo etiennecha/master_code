@@ -142,6 +142,27 @@ df_ppd = pd.merge(df_ppd, df_brands, on='id_2', suffixes=('_1', '_2'))
 
 print 'Pair price dispersion dataframe built in:', time.clock() - start
 
+# Build categories (are they really relevant?)
+df_ppd['pair_type'] = None
+df_ppd['pair_type'][((df_ppd['brand_type_e_1'] == 'SUP') &\
+                     (df_ppd['brand_type_e_2'] == 'OIL')) |\
+                    ((df_ppd['brand_type_e_1'] == 'OIL') &\
+                     (df_ppd['brand_type_e_2'] == 'SUP'))] = 'OIL-SUP'
+df_ppd['pair_type'][((df_ppd['brand_type_e_1'] == 'SUP') &\
+                     (df_ppd['brand_type_e_2'] == 'IND')) |\
+                    ((df_ppd['brand_type_e_1'] == 'IND') &\
+                     (df_ppd['brand_type_e_2'] == 'SUP'))] = 'IND-SUP'
+df_ppd['pair_type'][((df_ppd['brand_type_e_1'] == 'OIL') &\
+                     (df_ppd['brand_type_e_2'] == 'IND')) |\
+                    ((df_ppd['brand_type_e_1'] == 'IND') &\
+                     (df_ppd['brand_type_e_2'] == 'OIL'))] = 'IND-OIL'
+df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'OIL') &\
+                    (df_ppd['brand_type_e_2'] == 'OIL')] = 'OIL'
+df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'SUP') &\
+                    (df_ppd['brand_type_e_2'] == 'SUP')] = 'SUP'
+df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'SUP') &\
+                    (df_ppd['brand_type_e_2'] == 'IND')] = 'IND'
+
 # ##################
 # PPD: DF STATS DES
 # ##################
@@ -184,18 +205,11 @@ plt.step(x, y_far)
 print ks_2samp(df_close['pct_rr'], df_far['pct_rr'])
 print len(df_all['pct_rr']), len(df_close['pct_rr']), len(df_far['pct_rr'])
 
+print '\nPair types representation among all pairs, close pairs, far pairs'
 for df_temp, name_df in zip([df_all, df_close, df_far], ['all', 'close', 'far']):
-  print '\n%s' %name_df
-  print 'OIL/SUP', len(df_temp[((df_temp['brand_type_e_1'] == 'SUP') &\
-                                (df_temp['brand_type_e_2'] == 'OIL')) |\
-                               ((df_temp['brand_type_e_1'] == 'OIL') &\
-                                (df_temp['brand_type_e_2'] == 'SUP'))]) / float(len(df_temp))
-  print 'SUP/SUP', len(df_temp[(df_temp['brand_type_e_1'] == 'SUP') &\
-                               (df_temp['brand_type_e_2'] == 'SUP')]) / float(len(df_temp))
-  print 'OIL/OIL', len(df_temp[(df_temp['brand_type_e_1'] == 'OIL') &\
-                               (df_temp['brand_type_e_2'] == 'OIL')]) / float(len(df_temp))
-  print 'IND/IND', len(df_temp[(df_temp['brand_type_e_1'] == 'IND') &\
-                               (df_temp['brand_type_e_2'] == 'IND')]) / float(len(df_temp))
+  print '\n%s' %name_df, len(df_temp), 'pairs'
+  for pair_type in np.unique(df_temp['pair_type']):
+    print pair_type, len(df_temp[df_temp['pair_type'] == pair_type]) / float(len(df_temp))
   
 # RR VS. TOTAL ACCESS / RR DURATION
 
@@ -218,15 +232,15 @@ for ar_rrs, ls_pair_ppd in zip(ls_ar_rrs, ls_ppd):
     ls_ar_rrs_nota.append(ar_rrs)
 
 # Stations with low differentiation and not Total Access
-ls_ar_rss_nodiff = [] 
+ls_ar_rrs_nodiff = [] 
 for ar_rrs, ls_pair_ppd in zip(ls_ar_rrs, ls_ppd):
   if (not df_brands['brand_1_e'][ls_pair_ppd[0]] == 'TOTAL_ACCESS') &\
      (not df_brands['brand_1_e'][ls_pair_ppd[1]] == 'TOTAL_ACCESS') &\
-     (np.abs(ls_pair_ppd[9]) <= 0.02): # CHANGE !?!
-    ls_ar_rss_nodiff.append(ar_rrs)
+     (np.abs(ls_pair_ppd[12]) <= 0.02): # CHANGE !?!
+    ls_ar_rrs_nodiff.append(ar_rrs)
  
 ls_df_rrs_su = []
-for ls_ar_rrs_temp in [ls_ar_rrs, ls_ar_rrs_ta, ls_ar_rrs_nota, ls_ar_rss_nodiff]:
+for ls_ar_rrs_temp in [ls_ar_rrs, ls_ar_rrs_ta, ls_ar_rrs_nota, ls_ar_rrs_nodiff]:
   df_rrs_temp = pd.DataFrame(ls_ar_rrs_temp, columns = master_price['dates'])
   se_nb_valid = df_rrs_temp.apply(lambda x: (~pd.isnull(x)).sum())
   se_nb_rr    = df_rrs_temp.apply(lambda x: (np.abs(x) > zero_threshold).sum())
