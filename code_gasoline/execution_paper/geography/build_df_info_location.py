@@ -167,9 +167,9 @@ df_competition['city'] = df_competition['city'].apply(lambda x: x.replace(',', '
 #                              apply(lambda x: int(x) if not pd.isnull(x) else x)
 
 # OUTPUT FOR DISPLAY
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
-df_competition.to_csv(os.path.join(path_dir_built_csv, 'df_info_locations.csv'),
-                      float_format='%.4f',
-                      encoding='utf-8')
+#path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+#df_competition.to_csv(os.path.join(path_dir_built_csv, 'df_info_locations.csv'),
+#                      float_format='%.4f',
+#                      encoding='utf-8')
 
 # priori: not possible to realize nice screenshots... => draw maps (try in webpage..)

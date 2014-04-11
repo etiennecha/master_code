@@ -195,13 +195,18 @@ df_far = df_ppd_nodiff[(~pd.isnull(df_ppd_nodiff['pct_rr'])) & (df_ppd_nodiff['d
 ecdf = ECDF(df_all['pct_rr'])
 ecdf_close = ECDF(df_close['pct_rr'])
 ecdf_far = ECDF(df_far['pct_rr'])
-x = np.linspace(min(df_all['pct_rr']), max(df_all['pct_rr']))
+x = np.linspace(min(df_all['pct_rr']), max(df_all['pct_rr']), num=100)
 y = ecdf(x)
 y_close = ecdf_close(x)
 y_far = ecdf_far(x)
-plt.step(x, y)
-plt.step(x, y_close)
-plt.step(x, y_far)
+
+ax = plt.subplot()
+ax.step(x, y_close, label = r'$d_{ij} \leq 1km$')
+ax.step(x, y_far, label = r'$1km < d_{ij} \leq 3km$')
+plt.legend()
+plt.title('Rank reversals distributions')
+plt.show()
+
 print ks_2samp(df_close['pct_rr'], df_far['pct_rr'])
 print len(df_all['pct_rr']), len(df_close['pct_rr']), len(df_far['pct_rr'])
 
