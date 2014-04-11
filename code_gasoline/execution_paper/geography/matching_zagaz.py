@@ -39,7 +39,7 @@ master_info = dec_json(path_info_output)
 dict_brands = dec_json(path_dict_brands)
 dict_dpts_regions = dec_json(path_dict_dpts_regions)
 
-dict_zagaz_stations = dec_json(os.path.join(path_dir_zagaz, '2012_zagaz_info_gps.json'))
+dict_zagaz_stations = dec_json(os.path.join(path_dir_zagaz, '2012_dict_zagaz_info_gps.json'))
 #dict_zagaz_all = dec_json(os.path.join(path_dir_zagaz, '20140124_zagaz_stations.json'))
 #dict_zagaz_prices = dec_json(os.path.join(path_dir_zagaz, '20140127_zagaz_dict_ext_prices.json'))
 #dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz, '20140124_zagaz_dict_active_users.json'))

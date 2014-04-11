@@ -88,32 +88,52 @@ for user_id, dict_user_contrib in dict_dict_contribs.items():
 # GRAPHS: check:
 # http://nbviewer.ipython.org/github/cs109/content/blob/master/lec_03_statistical_graphs.ipynb
 
-# Registration dates
-ls_registration_dates = [v[0][3][1] for k,v in dict_zagaz_users.items() if v and v[0]]
-ls_registration_years = [date[-4:] for date in ls_registration_dates]
+# todo: both on same graphs with two colors...
 
-dict_registration_years = dict(collections.Counter(ls_registration_years))
-ls_years = [int(x) for x in sorted(dict_registration_years.keys())]
-ls_heights = [dict_registration_years['%s' %k] for k in ls_years]
-plt.bar([year - 0.4 for year in ls_years], ls_heights)
-plt.xlim(2005.5, 2014.5)
-plt.xticks(ls_years, ls_years)
-for x, y in zip(ls_years, ls_heights):
-    plt.annotate("%i" % y, (x, y + 200), ha='center')
-plt.show()
+## Registration dates
+#ls_registration_dates = [v[0][3][1] for k,v in dict_zagaz_users.items() if v and v[0]]
+#ls_registration_years = [date[-4:] for date in ls_registration_dates]
+#
+#dict_registration_years = dict(collections.Counter(ls_registration_years))
+#ls_years = [int(x) for x in sorted(dict_registration_years.keys())]
+#ls_heights = [dict_registration_years['%s' %k] for k in ls_years]
+#plt.bar([year - 0.4 for year in ls_years], ls_heights)
+#plt.xlim(2005.5, 2014.5)
+#plt.xticks(ls_years, ls_years)
+#for x, y in zip(ls_years, ls_heights):
+#    plt.annotate("%i" % y, (x, y + 200), ha='center')
+#plt.show()
+#
+## Last visit
+#ls_activity_dates = [v[0][4][1] for k,v in dict_zagaz_users.items() if v and v[0]]
+#ls_activity_years = [date[6:10] for date in ls_activity_dates]
+#
+#dict_activity_years = dict(collections.Counter(ls_activity_years))
+#ls_years = [int(x) for x in sorted(dict_activity_years.keys())]
+#ls_heights = [dict_activity_years['%s' %k] for k in ls_years]
+#plt.bar([year - 0.4 for year in ls_years], ls_heights)
+#plt.xlim(2005.5, 2014.5)
+#plt.xticks(ls_years, ls_years)
+#for x, y in zip(ls_years, ls_heights):
+#    plt.annotate("%i" % y, (x, y + 200), ha='center')
+#plt.show()
 
-# Last visit
-ls_activity_dates = [v[0][4][1] for k,v in dict_zagaz_users.items() if v and v[0]]
-ls_activity_years = [date[6:10] for date in ls_activity_dates]
+# Dict station relations
 
-dict_activity_years = dict(collections.Counter(ls_activity_years))
-ls_years = [int(x) for x in sorted(dict_activity_years.keys())]
-ls_heights = [dict_activity_years['%s' %k] for k in ls_years]
-plt.bar([year - 0.4 for year in ls_years], ls_heights)
-plt.xlim(2005.5, 2014.5)
-plt.xticks(ls_years, ls_years)
-for x, y in zip(ls_years, ls_heights):
-    plt.annotate("%i" % y, (x, y + 200), ha='center')
-plt.show()
+# 1/ Without user weight
+dict_user_relations = {}
+for user_id, dict_user_contribs in dict_dict_contribs.items():
+  ls_zagaz_ids = list(set(dict_user_contribs.keys()))
+  for i, zagaz_id in enumerate(ls_zagaz_ids):
+    for zagaz_id_2 in ls_zagaz_ids[i+1:]:
+      dict_user_relations.setdefault(zagaz_id, []).append(zagaz_id_2)
+      dict_user_relations.setdefault(zagaz_id_2, []).append(zagaz_id)
 
-# Check survival of 2006 cohort...
+import operator
+dict_relations_stats = {}
+print 'Length dict user relations', len(dict_user_relations)
+for zagaz_id, ls_zagaz_ids in dict_user_relations.items():
+  dict_count_relations = dict(Counter(ls_zagaz_ids))
+  # maybe several.. keep only one arbitrarily here
+  id_max, val_max = max(dict_count_relations.iteritems(), key=operator.itemgetter(1))
+  dict_relations_stats.setdefault(val_max, []).append(zagaz_id)
