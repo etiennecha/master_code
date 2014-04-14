@@ -55,6 +55,7 @@ for distance in [3,4,5]:
   ls_dict_markets.append(dict_market_size)
 
 # Most stable markets
+print '\nMarkets robust to distance vars'
 dict_refined, dict_rejected = {}, {}
 for market_size, ls_markets in ls_dict_markets[0].items():
   for market in ls_markets:

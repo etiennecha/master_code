@@ -130,10 +130,24 @@ for user_id, dict_user_contribs in dict_dict_contribs.items():
       dict_user_relations.setdefault(zagaz_id_2, []).append(zagaz_id)
 
 import operator
+dict_dict_stations_relations = {}
+dict_tup_stations_relations = {}
 dict_relations_stats = {}
 print 'Length dict user relations', len(dict_user_relations)
 for zagaz_id, ls_zagaz_ids in dict_user_relations.items():
   dict_count_relations = dict(Counter(ls_zagaz_ids))
+  dict_dict_stations_relations[zagaz_id] = dict_count_relations
+  dict_tup_stations_relations[zagaz_id] = sorted([(k,v) for k,v in dict_count_relations.items()],
+                                                 key = lambda x: x[1],
+                                                 reverse = True)
   # maybe several.. keep only one arbitrarily here
-  id_max, val_max = max(dict_count_relations.iteritems(), key=operator.itemgetter(1))
-  dict_relations_stats.setdefault(val_max, []).append(zagaz_id)
+  val_max = max(dict_count_relations.iteritems(), key=operator.itemgetter(1))[1]
+  for id_max in [k for k, v in dict_count_relations.items() if v == val_max]:
+    dict_relations_stats.setdefault(val_max, []).append((zagaz_id, id_max))
+
+for k, v in dict_relations_stats.items():
+	print k, len(v)
+
+  # todo: map of zagaz stations.. would be cool to make display of markets easy
+  # markets around stations or general?
+  # view javascript? 
