@@ -129,6 +129,23 @@ for user_id, dict_user_contribs in dict_dict_contribs.items():
       dict_user_relations.setdefault(zagaz_id, []).append(zagaz_id_2)
       dict_user_relations.setdefault(zagaz_id_2, []).append(zagaz_id)
 
+dict_dict_station_relations = {}
+for user_id, dict_user_contribs in dict_dict_contribs.items():
+  ls_tup_user_contribs = dict_user_contribs.items()
+  for i, (zagaz_id, zagaz_id_contribs) in enumerate(ls_tup_user_contribs):
+    for zagaz_id_2, zagaz_id_2_contribs in ls_tup_user_contribs[i+1:]:
+      if zagaz_id in dict_dict_station_relations:
+        if zagaz_id_2 in dict_dict_station_relations[zagaz_id]:
+          dict_dict_station_relations[zagaz_id][zagaz_id_2][0] += 1
+          dict_dict_station_relations[zagaz_id][zagaz_id_2][1] += max(len(zagaz_id_contribs),
+                                                                      len(zagaz_id_2_contribs))
+        else:
+          dict_dict_station_relations[zagaz_id][zagaz_id_2] = [1, max(len(zagaz_id_contribs),
+                                                                      len(zagaz_id_2_contribs))]
+      else:
+        dict_dict_station_relations[zagaz_id] = {zagaz_id_2 : [1, max(len(zagaz_id_contribs),
+                                                                      len(zagaz_id_2_contribs))]}
+
 import operator
 dict_dict_stations_relations = {}
 dict_tup_stations_relations = {}
