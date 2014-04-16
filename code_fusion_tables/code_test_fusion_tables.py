@@ -136,49 +136,17 @@ except urllib2.URLError, e:
   print 'URL error'
   error = e
 
-# Create table
-data="""
-{
- "name": "Insects",
- "columns": [
-  {
-   "name": "Species",
-   "type": "STRING"
-  },
-  {
-   "name": "Elevation",
-   "type": "NUMBER"
-  },
-  {
-   "name": "Year",
-   "type": "DATETIME"
-  }
- ],
- "description": "Insect Tracking Information.",
- "isExportable": true
-}
-"""
-
-#data_1 = {"name": "Insects",
-#          "description": "Insect Tracking Information.",
-#          "isExportable": True}
-#data_2 = {"columns": [{"name": "Species",   "type": "STRING"},
-#                    {"name": "Elevation", "type": "NUMBER"},
-#                    {"name": "Year",      "type": "DATETIME"}]}
-#data = urllib.urlencode(data_1) + '&' + urllib.urlencode(data_2) 
-
-data = {"name": "Insects",
-        "columns": [{"name": "Species",   "type": "STRING"},
-                    {"name": "Elevation", "type": "NUMBER"},
-                    {"name": "Year",      "type": "DATETIME"}],
-        "description": "Insect Tracking Information.",
-        "isExportable": True}
-data = urllib.urlencode(data)
-
-url = u'https://www.googleapis.com/fusiontables/v1/tables'
-headers = {u'Authorization': u'Bearer %s' %access_token,
-           u'Content-Type' : u'application/json'} 
-request = urllib2.Request(url, data = data, headers = headers)
+import datetime
+current_datetime = datetime.datetime.now()
+str_current_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+table_id = '17Au_nfmJVRB_IJvCLyPeLV0GQ9AqJ381Ko9HsAI9'
+# Insert row as sql query with urllib2
+url = u'https://www.googleapis.com/fusiontables/v1/query'
+headers =  {u'Authorization': 'Bearer %s' %access_token,
+            u'Content-Type': u'application/x-www-form-urlencoded'} #application/json
+data = {u'sql' : u"INSERT INTO %s(text_column, nb_column, gps_column, date_column)" %table_id+\
+                 u"VALUES ('text_example', 8, '49.0 2.5', '%s');" %str_current_datetime}
+request = urllib2.Request(url, data = urllib.urlencode(data), headers = headers)
 try:
   request_open = urllib2.urlopen(request)
   print request_open.read()
@@ -188,6 +156,59 @@ except urllib2.HTTPError, e:
 except urllib2.URLError, e:
   print 'URL error'
   error = e
+
+## Create table
+#data="""
+#{
+# "name": "Insects",
+# "columns": [
+#  {
+#   "name": "Species",
+#   "type": "STRING"
+#  },
+#  {
+#   "name": "Elevation",
+#   "type": "NUMBER"
+#  },
+#  {
+#   "name": "Year",
+#   "type": "DATETIME"
+#  }
+# ],
+# "description": "Insect Tracking Information.",
+# "isExportable": true
+#}
+#"""
+
+#data_1 = {"name": "Insects",
+#          "description": "Insect Tracking Information.",
+#          "isExportable": True}
+#data_2 = {"columns": [{"name": "Species",   "type": "STRING"},
+#                    {"name": "Elevation", "type": "NUMBER"},
+#                    {"name": "Year",      "type": "DATETIME"}]}
+#data = urllib.urlencode(data_1) + '&' + urllib.urlencode(data_2) 
+
+#data = {"name": "Insects",
+#        "columns": [{"name": "Species",   "type": "STRING"},
+#                    {"name": "Elevation", "type": "NUMBER"},
+#                    {"name": "Year",      "type": "DATETIME"}],
+#        "description": "Insect Tracking Information.",
+#        "isExportable": True}
+#data = urllib.urlencode(data)
+#
+#url = u'https://www.googleapis.com/fusiontables/v1/tables'
+#headers = {u'Authorization': u'Bearer %s' %access_token,
+#           u'Content-Type' : u'application/json'} 
+#request = urllib2.Request(url, data = data, headers = headers)
+#try:
+#  request_open = urllib2.urlopen(request)
+#  print request_open.read()
+#except urllib2.HTTPError, e:
+#  print 'HTTP error'
+#  pprint.pprint(e.readlines())
+#except urllib2.URLError, e:
+#  print 'URL error'
+#  error = e
 
 # How to create table (Google)
 # https://developers.google.com/fusiontables/docs/v1/reference/table/insert#try-it
