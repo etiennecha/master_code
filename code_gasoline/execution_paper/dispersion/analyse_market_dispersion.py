@@ -73,7 +73,7 @@ ls_ls_market_ids_st_rd = get_ls_ls_distance_market_ids_restricted(master_price['
                                                                   ls_ls_competitors, km_bound, True)
 
 ls_ls_markets = [ls_market for ls_market in ls_ls_markets if len(ls_market) > 2]
-ls_ls_market_ids_temp = ls_ls_markets
+ls_ls_market_ids_temp = ls_ls_market_ids
 
 # df_price vs. df_price_cl (check different cleaning ways...)
 ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price)\
@@ -114,34 +114,38 @@ df_dispersion = df_dispersion[(df_dispersion['nb_comp_t'] >= 3) &\
                               (df_dispersion['nb_comp_t']/\
                                df_dispersion['nb_comp'].astype(float) >= 2.0/3)]
 
-from statsmodels.distributions.empirical_distribution import ECDF
+# PLOT ECDF OF CLEANED PRICES
 
-## All prices
+#from statsmodels.distributions.empirical_distribution import ECDF
+#
+### All prices
+##ls_market_ids = ls_ls_market_ids_temp[0]
+##x = np.linspace(np.nanmin(df_price_cl[ls_market_ids]),\
+##                np.nanmax(df_price_cl[ls_market_ids]), num=100)
+##ax = plt.subplot()
+##for indiv_id in ls_market_ids:
+##  ecdf = ECDF(df_price_cl[indiv_id])
+##  y = ecdf(x)
+##  ax.step(x, y, label = indiv_id)
+##plt.legend()
+##plt.title('Cleaned prices CDFs')
+#
+## Excluding extreme values
 #ls_market_ids = ls_ls_market_ids_temp[0]
-#x = np.linspace(np.nanmin(df_price_cl[ls_market_ids]),\
-#                np.nanmax(df_price_cl[ls_market_ids]), num=100)
-#ax = plt.subplot()
+#x = np.linspace(df_price_cl[ls_market_ids].quantile(0.95).max(),\
+#                df_price_cl[ls_market_ids].quantile(0.05).min(), num=200)
+#f, ax = plt.subplots()
 #for indiv_id in ls_market_ids:
-#  ecdf = ECDF(df_price_cl[indiv_id])
+#  min_quant = df_price_cl[indiv_id].quantile(0.05)
+#  max_quant = df_price_cl[indiv_id].quantile(0.95)
+#  se_prices = df_price_cl[indiv_id][(df_price_cl[indiv_id] >= min_quant) &\
+#                                    (df_price_cl[indiv_id] <= max_quant)]
+#  print indiv_id, len(df_price_cl[indiv_id]), len(se_prices)
+#  ecdf = ECDF(se_prices)
 #  y = ecdf(x)
 #  ax.step(x, y, label = indiv_id)
 #plt.legend()
 #plt.title('Cleaned prices CDFs')
+#plt.show()
 
-# Excluding extreme values
-ls_market_ids = ls_ls_market_ids_temp[0]
-x = np.linspace(df_price_cl[ls_market_ids].quantile(0.95).max(),\
-                df_price_cl[ls_market_ids].quantile(0.05).min(), num=100)
-ax = plt.subplot()
-for indiv_id in ls_market_ids:
-  min_quant = df_price_cl[indiv_id].quantile(0.05)
-  max_quant = df_price_cl[indiv_id].quantile(0.95)
-  se_prices = df_price_cl[indiv_id][(df_price_cl[indiv_id] >= min_quant) &\
-                                    (df_price_cl[indiv_id] <= max_quant)]
-  print indiv_id, len(df_price_cl[indiv_id]), len(se_prices)
-  ecdf = ECDF(se_prices)
-  y = ecdf(x)
-  ax.step(x, y, label = indiv_id)
-plt.legend()
-plt.title('Cleaned prices CDFs')
-plt.show()
+# TODO: regress support of distribution of cleaned prices and std on nb competitors
