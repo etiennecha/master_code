@@ -146,6 +146,8 @@ for user_id, dict_user_contribs in dict_dict_contribs.items():
         dict_dict_station_relations[zagaz_id] = {zagaz_id_2 : [1, max(len(zagaz_id_contribs),
                                                                       len(zagaz_id_2_contribs))]}
 
+# perform stats by region (build df?) and if ok check example of bretagne
+
 import operator
 dict_dict_stations_relations = {}
 dict_tup_stations_relations = {}

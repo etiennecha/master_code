@@ -168,7 +168,7 @@ df_competition['city'] = df_competition['city'].apply(lambda x: x.replace(',', '
 
 # OUTPUT FOR DISPLAY
 #path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
-#df_competition.to_csv(os.path.join(path_dir_built_csv, 'df_info_locations.csv'),
+#df_competition.to_csv(os.path.join(path_dir_built_csv, 'df_info_locations_gouv.csv'),
 #                      float_format='%.4f',
 #                      encoding='utf-8')
 

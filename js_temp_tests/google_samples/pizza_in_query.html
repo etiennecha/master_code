@@ -89,6 +89,7 @@
         var where = '';
         if (filter.length) {
           where = "'Store Name' IN (" + filter.join(',') + ')';
+          document.write(where)
         }
         return where;
       }

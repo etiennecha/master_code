@@ -1,26 +1,17 @@
-<head>
-  <script>
-
+<html>
+  <head>
+    <script>
       function doStuff()
       {
         var nameElement = document.getElementById("someInput");
         var theName = nameElement.value;
         document.getElementById("someDiv").innerHTML = 'Hello ' + theName; <!-- += -->
       }
-
-  </script>
-</head>
-
-<html>
-
+    </script>
+  </head>
   <div id="someDiv">
     Hello
   </div>
-
-  <br><br>
-
   <input id="someInput" type="text">
   <input type="button" value="is my name!" onClick="doStuff()">
-
-  <br>    
 </html>

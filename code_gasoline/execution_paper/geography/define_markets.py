@@ -67,6 +67,5 @@ for market_size, ls_markets in ls_dict_markets[0].items():
 for k, v in dict_refined.items():
   print k, len(v)
 
-
-#    if ((market_size in ls_dict_markets[1]) and (market in ls_dict_markets[1][market_size])) and\
-#       ((market_size in ls_dict_markets[2]) and (market in ls_dict_markets[2][market_size])):
+ls_ls_markets = [x for k,v in dict_refined.items() for x in v]
+enc_json(ls_ls_markets, os.path.join(path_dir_built_json, 'ls_ls_markets.json'))
