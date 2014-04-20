@@ -149,3 +149,15 @@ df_dispersion = df_dispersion[(df_dispersion['nb_comp_t'] >= 3) &\
 #plt.show()
 
 # TODO: regress support of distribution of cleaned prices and std on nb competitors
+
+# Check median spread for no diff
+ls_tuple_nodiff = []
+for ((id_1, id_2), distance) in ls_tuple_competitors:
+  if distance < km_bound and (df_price[id_1]-df_price[id_2]).median() == 0:
+    ls_tuple_nodiff.append((id_1, id_2))
+ls_ids_nodiff = [indiv_id for ls_indiv_ids in ls_tuple_nodiff for indiv_id in ls_indiv_ids]
+ls_ids_nodiff = list(set(ls_ids_nodiff))
+
+ls_ids_diff = [indiv_id for indiv_id in master_price['ids'] if indiv_id not in ls_ids_nodiff]
+
+indiv_ind = master_price['ids'].index(ls_ids_diff[0])
