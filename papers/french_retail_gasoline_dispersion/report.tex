@@ -87,7 +87,11 @@ Since September 2011, retail gas station prices were collected on a daily basis.
 
 Essentially data from governement website prix-carburants.gouv.fr, from website zagaz.fr and INSEE data: prices of gas (sp95-sp95/e10?) and diesel on a daily basis, gas station information: opening hours, services, gps coordinates (special treatment), INSEE data: information about local markets (rural/center/suburb, population etc.). Price collected with date at which it was set hence possibility to correct when data is missing and check that no loss of information. Generally no intra day changes...
 
-Regarding location (...) . Information provided by user is typically of better quality than information resulting from geocoding. Such information was collected from the website www.zagaz.com.
+Regarding the location of gas stations, information provided by users on the website zagaz is typically of better quality than information provided on the governmental website.
+
+\subsection{Limits}
+
+
 
 \subsection{Context}
 
@@ -100,9 +104,9 @@ On August 29, 2012, a decrease in price of 6c per litre was announced by the gov
 
 \subsection{Descriptive statistics}
 
-Descriptive statistics are provided for a period of 640 days starting September 9, 2011 and ending May 6, 2013. Four subperiods of data are missing whose respective day lengths are 11 (2012/07/08-2012/07/18), 10 (2012/08/13-2012/08/22), 49 (2012/12/04-2013/01/21) and 6 (2013/04/04-2013/04/09). The end of the period studied has been determined quite arbitrarily. It essentially avoids including another missing subperiod and keeps the database to a reasonable size.
+Descriptive statistics are provided for a period of 640 days starting September 9, 2011 and ending May 6, 2013. Four subperiods of data are missing whose respective day lengths are 11 (2012/07/08-2012/07/18), 10 (2012/08/13-2012/08/22), 49 (2012/12/04-2013/01/21) and 6 (2013/04/04-2013/04/09). The end of the period studied has been determined arbitrarily to avoid including another missing subperiod and keep the database to a reasonable size.
 
-Data include prices at 10,054 gas stations, of which 421 (20 missing) are identified as highway gas stations and thus treated as a specific market.
+Data include prices at 10,054 gas stations, of which 421 are identified as highway gas stations and thus excluded from the analysis.
 
 \begin{itemize}
 \item Price rigidity: price durations and variations (sales?)
@@ -111,11 +115,11 @@ Data include prices at 10,054 gas stations, of which 421 (20 missing) are identi
 \item Distance and competition
 \end{itemize}
 
-Static price dispersion in French Data is easily seen in any single day price cross section. The resulting price distribution is bimodal, largely reflecting the presence of two dominant types of actors: supermarkets and oil companies. Supermarkets justify their relatively low prices by the fact that they use gasoline to attract consumers, while oil companies mention the quality of the service to justify higher prices and sell to business clients for which the price paid is not (necessarily) the price displayed at the gas station.
+Static price dispersion in French Data is easily seen in any single day price cross section. The resulting price distribution is bimodal, largely reflecting the presence of two dominant types of actors: supermarkets and oil companies. Supermarkets typically state that they use gasoline to attract consumers, while oil companies mention the quality of the service to justify higher prices. Oil companies also traditionally enjoy more demand from businesses with which they develop exclusive relationships in exchange for consumption tracking tools (firm employees pay with a specific magnetic card) and rebates. Price displayed at the gas station is then irrelevant to the transaction.
 
 In comparison, data used in \cite{TAP11} include prices of gas (regular, mid-grade, premium) and diesel at gas stations in California, Florida, Texas and New Jersey from January 2006 to May 2007. The average price of regular gas fluctuates quite a bit over time (from c.\$2.5/gal to c.\$3.5/gal for California) and from one state to the other (average price in Texas over all stations and periods is \$2.576/gal vs. \$3.019/gal in California), largely due to difference in taxes. The number of rivals within 2 miles (c.3.2km) of each station is rather similar in all states: from 13.38 in New Jersey to 14.22 in Texas (resp. 4.25 to 4.74 with 1 mile). The average distance to the closest rival ranges from 0.38 to 0.49 miles (c. 600 to 800m).
 
-\section{Pair price dispersion}
+\section{Price dispersion vs. consumer information}
 
 A simple way to measure temporal price dispersion between two stations with daily observations is to consider the probability that the station which is in general cheaper (in terms of day count) turns out to be more expensive. Formally, considering the prices $p_{it}$ and $p_{jt}$ of two stations $i$ and $j$ over $T_{ij}$ days, such that $p_{it} >= p_{ij}$ is observed most of the time, the rank reversals statistic writes:
 

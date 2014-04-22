@@ -87,6 +87,7 @@ df_prices_ttc = pd.DataFrame(ar_diesel_price.T, columns = master_price['ids'], i
 # DF PRICES HT
 
 df_prices_ht = pd.DataFrame.copy(df_prices_ttc)
+# TODO: Corsica: VAT is 13% ? 
 df_prices_ht = df_prices_ht / 1.196 - 0.4419
 
 ls_tax_11 = [(1,7,26,38,42,69,73,74,75,77,78,91,92,93,94,95,4,5,6,13,83,84), # (PrixTTC-0.4419+0.0135)/1.196
