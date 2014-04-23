@@ -34,7 +34,7 @@ master_info = dec_json(path_info_output)
 dict_brands = dec_json(path_dict_brands)
 dict_dpts_regions = dec_json(path_dict_dpts_regions)
 
-dict_zagaz_stations_2012 = dec_json(os.path.join(path_dir_zagaz, '2012_dict_zagaz_info_gps.json'))
+dict_zagaz_stations_2012 = dec_json(os.path.join(path_dir_zagaz, '2012_dict_zagaz_stations.json'))
 dict_zagaz_station_ids = dec_json(os.path.join(path_dir_zagaz,\
                                                '20140124_dict_zagaz_station_ids.json'))
 dict_zagaz_prices = dec_json(os.path.join(path_dir_zagaz, '20140127_dict_zagaz_ext_prices.json'))
@@ -90,20 +90,39 @@ for user_id, dict_user_contrib in dict_dict_contribs.items():
 
 # todo: both on same graphs with two colors...
 
-## Registration dates
-#ls_registration_dates = [v[0][3][1] for k,v in dict_zagaz_users.items() if v and v[0]]
-#ls_registration_years = [date[-4:] for date in ls_registration_dates]
-#
-#dict_registration_years = dict(collections.Counter(ls_registration_years))
-#ls_years = [int(x) for x in sorted(dict_registration_years.keys())]
-#ls_heights = [dict_registration_years['%s' %k] for k in ls_years]
-#plt.bar([year - 0.4 for year in ls_years], ls_heights)
-#plt.xlim(2005.5, 2014.5)
-#plt.xticks(ls_years, ls_years)
-#for x, y in zip(ls_years, ls_heights):
-#    plt.annotate("%i" % y, (x, y + 200), ha='center')
+# Registration dates
+ls_registration_dates = [v[0][3][1] for k,v in dict_zagaz_users.items() if v and v[0]]
+
+# Plot histogram of registration dates (users still registered only)
+ls_registration_years = [date[-4:] for date in ls_registration_dates]
+dict_registration_years = dict(collections.Counter(ls_registration_years))
+ls_years = [int(x) for x in sorted(dict_registration_years.keys())]
+ls_heights = [dict_registration_years['%s' %k] for k in ls_years]
+plt.bar([year - 0.4 for year in ls_years], ls_heights)
+plt.xlim(2005.5, 2014.5)
+plt.xticks(ls_years, ls_years)
+for x, y in zip(ls_years, ls_heights):
+    plt.annotate("%i" % y, (x, y + 200), ha='center')
+plt.show()
+
+# Plot graph of registration per day (may want per weeks rather?)
+dict_registration_dates = dict(collections.Counter(ls_registration_dates))
+df_registrations_temp = pd.DataFrame([(k,v) for k,v in dict_registration_dates.items()],
+                                     columns = ['date', 'nb_registrations'])
+df_registrations_temp.index = [pd.to_datetime(date) for date in df_registrations_temp['date']]
+
+index = pd.date_range(start = pd.to_datetime('20060101'),
+                      end   = pd.to_datetime('20140423'), 
+                      freq='D')
+df_registrations = pd.DataFrame(None, index = index)
+df_registrations['registrations'] = df_registrations_temp['nb_registrations']
+df_registrations['registrations'] = df_registrations['registrations'].fillna(0)
+#df_registrations['registrations'].plot()
 #plt.show()
-#
+df_registrations_w = df_registrations.resample('W', how = 'sum')
+df_registrations_w.plot()
+plt.show()
+
 ## Last visit
 #ls_activity_dates = [v[0][4][1] for k,v in dict_zagaz_users.items() if v and v[0]]
 #ls_activity_years = [date[6:10] for date in ls_activity_dates]
@@ -118,54 +137,54 @@ for user_id, dict_user_contrib in dict_dict_contribs.items():
 #    plt.annotate("%i" % y, (x, y + 200), ha='center')
 #plt.show()
 
-# Dict station relations
-
-# 1/ Without user weight
-dict_user_relations = {}
-for user_id, dict_user_contribs in dict_dict_contribs.items():
-  ls_zagaz_ids = list(set(dict_user_contribs.keys()))
-  for i, zagaz_id in enumerate(ls_zagaz_ids):
-    for zagaz_id_2 in ls_zagaz_ids[i+1:]:
-      dict_user_relations.setdefault(zagaz_id, []).append(zagaz_id_2)
-      dict_user_relations.setdefault(zagaz_id_2, []).append(zagaz_id)
-
-dict_dict_station_relations = {}
-for user_id, dict_user_contribs in dict_dict_contribs.items():
-  ls_tup_user_contribs = dict_user_contribs.items()
-  for i, (zagaz_id, zagaz_id_contribs) in enumerate(ls_tup_user_contribs):
-    for zagaz_id_2, zagaz_id_2_contribs in ls_tup_user_contribs[i+1:]:
-      if zagaz_id in dict_dict_station_relations:
-        if zagaz_id_2 in dict_dict_station_relations[zagaz_id]:
-          dict_dict_station_relations[zagaz_id][zagaz_id_2][0] += 1
-          dict_dict_station_relations[zagaz_id][zagaz_id_2][1] += max(len(zagaz_id_contribs),
-                                                                      len(zagaz_id_2_contribs))
-        else:
-          dict_dict_station_relations[zagaz_id][zagaz_id_2] = [1, max(len(zagaz_id_contribs),
-                                                                      len(zagaz_id_2_contribs))]
-      else:
-        dict_dict_station_relations[zagaz_id] = {zagaz_id_2 : [1, max(len(zagaz_id_contribs),
-                                                                      len(zagaz_id_2_contribs))]}
-
-# perform stats by region (build df?) and if ok check example of bretagne
-
-import operator
-dict_dict_stations_relations = {}
-dict_tup_stations_relations = {}
-dict_relations_stats = {}
-print 'Length dict user relations', len(dict_user_relations)
-for zagaz_id, ls_zagaz_ids in dict_user_relations.items():
-  dict_count_relations = dict(Counter(ls_zagaz_ids))
-  dict_dict_stations_relations[zagaz_id] = dict_count_relations
-  dict_tup_stations_relations[zagaz_id] = sorted([(k,v) for k,v in dict_count_relations.items()],
-                                                 key = lambda x: x[1],
-                                                 reverse = True)
-  # maybe several.. keep only one arbitrarily here
-  val_max = max(dict_count_relations.iteritems(), key=operator.itemgetter(1))[1]
-  for id_max in [k for k, v in dict_count_relations.items() if v == val_max]:
-    dict_relations_stats.setdefault(val_max, []).append((zagaz_id, id_max))
-
-for k, v in dict_relations_stats.items():
-	print k, len(v)
+## Dict station relations
+#
+## 1/ Without user weight
+#dict_user_relations = {}
+#for user_id, dict_user_contribs in dict_dict_contribs.items():
+#  ls_zagaz_ids = list(set(dict_user_contribs.keys()))
+#  for i, zagaz_id in enumerate(ls_zagaz_ids):
+#    for zagaz_id_2 in ls_zagaz_ids[i+1:]:
+#      dict_user_relations.setdefault(zagaz_id, []).append(zagaz_id_2)
+#      dict_user_relations.setdefault(zagaz_id_2, []).append(zagaz_id)
+#
+#dict_dict_station_relations = {}
+#for user_id, dict_user_contribs in dict_dict_contribs.items():
+#  ls_tup_user_contribs = dict_user_contribs.items()
+#  for i, (zagaz_id, zagaz_id_contribs) in enumerate(ls_tup_user_contribs):
+#    for zagaz_id_2, zagaz_id_2_contribs in ls_tup_user_contribs[i+1:]:
+#      if zagaz_id in dict_dict_station_relations:
+#        if zagaz_id_2 in dict_dict_station_relations[zagaz_id]:
+#          dict_dict_station_relations[zagaz_id][zagaz_id_2][0] += 1
+#          dict_dict_station_relations[zagaz_id][zagaz_id_2][1] += max(len(zagaz_id_contribs),
+#                                                                      len(zagaz_id_2_contribs))
+#        else:
+#          dict_dict_station_relations[zagaz_id][zagaz_id_2] = [1, max(len(zagaz_id_contribs),
+#                                                                      len(zagaz_id_2_contribs))]
+#      else:
+#        dict_dict_station_relations[zagaz_id] = {zagaz_id_2 : [1, max(len(zagaz_id_contribs),
+#                                                                      len(zagaz_id_2_contribs))]}
+#
+## perform stats by region (build df?) and if ok check example of bretagne
+#
+#import operator
+#dict_dict_stations_relations = {}
+#dict_tup_stations_relations = {}
+#dict_relations_stats = {}
+#print 'Length dict user relations', len(dict_user_relations)
+#for zagaz_id, ls_zagaz_ids in dict_user_relations.items():
+#  dict_count_relations = dict(Counter(ls_zagaz_ids))
+#  dict_dict_stations_relations[zagaz_id] = dict_count_relations
+#  dict_tup_stations_relations[zagaz_id] = sorted([(k,v) for k,v in dict_count_relations.items()],
+#                                                 key = lambda x: x[1],
+#                                                 reverse = True)
+#  # maybe several.. keep only one arbitrarily here
+#  val_max = max(dict_count_relations.iteritems(), key=operator.itemgetter(1))[1]
+#  for id_max in [k for k, v in dict_count_relations.items() if v == val_max]:
+#    dict_relations_stats.setdefault(val_max, []).append((zagaz_id, id_max))
+#
+#for k, v in dict_relations_stats.items():
+#  print k, len(v)
 
   # todo: map of zagaz stations.. would be cool to make display of markets easy
   # markets around stations or general?
