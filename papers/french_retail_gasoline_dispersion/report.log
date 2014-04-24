@@ -1,23 +1,17 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2012.11.28)  16 APR 2014 20:59
+This is pdfTeX, Version 3.1415926-1.40.9 (MiKTeX 2.7) (preloaded format=pdflatex 2011.4.4)  23 APR 2014 14:12
 entering extended mode
 **report.tex
+(report.tex
+LaTeX2e <2009/09/24>
+Babel <v3.8l> and hyphenation patterns for english, dumylang, nohyphenation, ge
+rman, ngerman, german-x-2009-06-19, ngerman-x-2009-06-19, french, loaded.
 
-(C:\Users\etna\Desktop\Etienne_work\Code\master_code\papers\french_retail_gasol
-ine_dispersion\report.tex
-LaTeX2e <2011/06/27>
-Babel <v3.8m> and hyphenation patterns for english, afrikaans, ancientgreek, ar
-abic, armenian, assamese, basque, bengali, bokmal, bulgarian, catalan, coptic, 
-croatian, czech, danish, dutch, esperanto, estonian, farsi, finnish, french, ga
-lician, german, german-x-2012-05-30, greek, gujarati, hindi, hungarian, iceland
-ic, indonesian, interlingua, irish, italian, kannada, kurmanji, latin, latvian,
- lithuanian, malayalam, marathi, mongolian, mongolianlmc, monogreek, ngerman, n
-german-x-2012-05-30, nynorsk, oriya, panjabi, pinyin, polish, portuguese, roman
-ian, russian, sanskrit, serbian, slovak, slovenian, spanish, swedish, swissgerm
-an, tamil, telugu, turkish, turkmen, ukenglish, ukrainian, uppersorbian, usengl
-ishmax, welsh, loaded.
-("C:\Program Files\MiKTeX 2.9\tex\latex\base\article.cls"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\base\artic
+le.cls
 Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
-("C:\Program Files\MiKTeX 2.9\tex\latex\base\size11.clo"
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\base\size1
+1.clo
 File: size11.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
 )
 \c@part=\count79
@@ -32,46 +26,60 @@ File: size11.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
 \belowcaptionskip=\skip42
 \bibindent=\dimen102
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\base\fontenc.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\base\fonte
+nc.sty
 Package: fontenc 2005/09/27 v1.99g Standard LaTeX package
 
-("C:\Program Files\MiKTeX 2.9\tex\latex\base\t1enc.def"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\base\t1enc
+.def
 File: t1enc.def 2005/09/27 v1.99g Standard LaTeX file
 LaTeX Font Info:    Redeclaring font encoding T1 on input line 43.
 ))
-("C:\Program Files\MiKTeX 2.9\tex\latex\base\inputenc.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\base\input
+enc.sty
 Package: inputenc 2008/03/30 v1.1d Input encoding file
 \inpenc@prehook=\toks14
 \inpenc@posthook=\toks15
 
-("C:\Program Files\MiKTeX 2.9\tex\latex\base\latin1.def"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\base\latin
+1.def
 File: latin1.def 2008/03/30 v1.1d Input encoding file
 ))
-("C:\Program Files\MiKTeX 2.9\tex\latex\tools\enumerate.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\tools\enum
+erate.sty
 Package: enumerate 1999/03/05 v3.00 enumerate extensions (DPC)
 \@enLab=\toks16
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\setspace\setspace.sty"
-Package: setspace 2011/12/19 v6.7a set line spacing
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\setspace\s
+etspace.sty
+Package: setspace 2000/12/01 6.7 Contributed and Supported LaTeX2e package
+
+Package: `setspace' 6.7 <2000/12/01>
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\ams\math\amsmath.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\ams\math\a
+msmath.sty
 Package: amsmath 2000/07/18 v2.13 AMS math features
 \@mathmargin=\skip43
 
 For additional information on amsmath, use the `?' option.
-("C:\Program Files\MiKTeX 2.9\tex\latex\ams\math\amstext.sty"
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\ams\math\a
+mstext.sty
 Package: amstext 2000/06/29 v2.01
 
-("C:\Program Files\MiKTeX 2.9\tex\latex\ams\math\amsgen.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\ams\math\a
+msgen.sty
 File: amsgen.sty 1999/11/30 v2.0
 \@emptytoks=\toks17
 \ex@=\dimen103
 ))
-("C:\Program Files\MiKTeX 2.9\tex\latex\ams\math\amsbsy.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\ams\math\a
+msbsy.sty
 Package: amsbsy 1999/11/29 v1.2d
 \pmbraise@=\dimen104
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\ams\math\amsopn.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\ams\math\a
+msopn.sty
 Package: amsopn 1999/12/14 v2.01 operator names
 )
 \inf@bad=\count87
@@ -112,17 +120,20 @@ LaTeX Font Info:    Redeclaring font encoding OMS on input line 568.
 LaTeX Info: Redefining \[ on input line 2666.
 LaTeX Info: Redefining \] on input line 2667.
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\amssymb.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\amsfonts\a
+mssymb.sty
 Package: amssymb 2009/06/22 v3.00
 
-("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\amsfonts.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\amsfonts\a
+msfonts.sty
 Package: amsfonts 2009/06/22 v3.00 Basic AMSFonts support
 \symAMSa=\mathgroup4
 \symAMSb=\mathgroup5
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 96.
 ))
-("C:\Program Files\MiKTeX 2.9\tex\latex\ams\classes\amsthm.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\ams\classe
+s\amsthm.sty
 Package: amsthm 2004/08/06 v2.20
 \thm@style=\toks22
 \thm@bodyfont=\toks23
@@ -134,65 +145,66 @@ Package: amsthm 2004/08/06 v2.20
 \thm@headsep=\skip48
 \dth@everypar=\toks27
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\graphicx.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\graphics\g
+raphicx.sty
 Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
 
-("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\keyval.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\graphics\k
+eyval.sty
 Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
 \KV@toks@=\toks28
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\graphics.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\graphics\g
+raphics.sty
 Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
 
-("C:\Program Files\MiKTeX 2.9\tex\latex\graphics\trig.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\graphics\t
+rig.sty
 Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\00miktex\graphics.cfg"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\00miktex\g
+raphics.cfg
 File: graphics.cfg 2007/01/18 v1.5 graphics configuration of teTeX/TeXLive
 )
 Package graphics Info: Driver file: pdftex.def on input line 91.
 
-("C:\Program Files\MiKTeX 2.9\tex\latex\pdftex-def\pdftex.def"
-File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
-
-("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\infwarerr.sty"
-Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
-)
-("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\ltxcmds.sty"
-Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
-)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\pdftex-def
+\pdftex.def
+File: pdftex.def 2010/02/14 v0.04n Graphics/color for pdfTeX
 \Gread@gobject=\count99
 ))
 \Gin@req@height=\dimen112
 \Gin@req@width=\dimen113
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\bbm\bbm.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\bbm\bbm.st
+y
 Package: bbm 1999/03/15 V 1.2 provides fonts for set symbols - TH
 LaTeX Font Info:    Overwriting math alphabet `\mathbbm' in version `bold'
 (Font)                  U/bbm/m/n --> U/bbm/bx/n on input line 33.
 LaTeX Font Info:    Overwriting math alphabet `\mathbbmss' in version `bold'
 (Font)                  U/bbmss/m/n --> U/bbmss/bx/n on input line 35.
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\natbib\natbib.sty"
-Package: natbib 2010/09/13 8.31b (PWD, AO)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\natbib\nat
+bib.sty
+Package: natbib 2009/11/07 8.31a (PWD, AO)
 \bibhang=\skip49
 \bibsep=\skip50
 LaTeX Info: Redefining \cite on input line 694.
 \c@NAT@ctr=\count100
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\geometry\geometry.sty"
-Package: geometry 2010/09/12 v5.6 Page Geometry
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\geometry\g
+eometry.sty
+Package: geometry 2010/03/13 v5.3 Page Geometry
 
-("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\ifpdf.sty"
-Package: ifpdf 2011/01/30 v2.3 Provides the ifpdf switch (HO)
-Package ifpdf Info: pdfTeX in PDF mode is detected.
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\ifpdf.sty
+Package: ifpdf 2010/01/28 v2.1 Provides the ifpdf switch (HO)
+Package ifpdf Info: pdfTeX in pdf mode detected.
 )
-("C:\Program Files\MiKTeX 2.9\tex\generic\oberdiek\ifvtex.sty"
-Package: ifvtex 2010/03/01 v1.5 Detect VTeX and its facilities (HO)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\ifvtex.sty
+Package: ifvtex 2010/03/01 v1.5 Switches for detecting VTeX and its modes (HO)
 Package ifvtex Info: VTeX not detected.
-)
-("C:\Program Files\MiKTeX 2.9\tex\generic\ifxetex\ifxetex.sty"
-Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
 )
 \Gm@cnth=\count101
 \Gm@cntv=\count102
@@ -207,9 +219,11 @@ Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
 \Gm@layoutvoffset=\dimen121
 \Gm@dimlist=\toks29
 
-("C:\Program Files\MiKTeX 2.9\tex\latex\geometry\geometry.cfg"))
-("C:\Program Files\MiKTeX 2.9\tex\latex\footmisc\footmisc.sty"
-Package: footmisc 2011/06/06 v5.5b a miscellany of footnote facilities
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\geometry\g
+eometry.cfg))
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\footmisc\f
+ootmisc.sty
+Package: footmisc 2009/09/15 v5.5a a miscellany of footnote facilities
 \FN@temptoken=\toks30
 \footnotemargin=\dimen122
 \c@pp@next@reset=\count104
@@ -222,19 +236,23 @@ Package footmisc Info: Declaring symbol style lamport* on input line 903.
 Package footmisc Info: Declaring symbol style lamport*-robust on input line 924
 .
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\tools\indentfirst.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\tools\inde
+ntfirst.sty
 Package: indentfirst 1995/11/23 v1.03 Indent first paragraph (DPC)
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\endnotes\endnotes.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\endnotes\e
+ndnotes.sty
 \c@endnote=\count105
 \endnotesep=\dimen123
 \@enotes=\write3
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\eurosym\eurosym.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\eurosym\eu
+rosym.sty
 Package: eurosym 1998/08/06 v1.1 European currency symbol ``Euro''
 \@eurobox=\box28
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\tools\array.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\tools\arra
+y.sty
 Package: array 2008/09/09 v2.4c Tabular extension package (FMi)
 \col@sep=\dimen124
 \extrarowheight=\dimen125
@@ -242,7 +260,8 @@ Package: array 2008/09/09 v2.4c Tabular extension package (FMi)
 \extratabsurround=\skip51
 \backup@length=\skip52
 )
-("C:\Program Files\MiKTeX 2.9\tex\latex\booktabs\booktabs.sty"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\booktabs\b
+ooktabs.sty
 Package: booktabs 2005/04/14 v1.61803 publication quality tables
 \heavyrulewidth=\dimen126
 \lightrulewidth=\dimen127
@@ -262,43 +281,194 @@ Package: booktabs 2005/04/14 v1.61803 publication quality tables
 \@lastruleclass=\count109
 \@thisrulewidth=\dimen138
 )
-(C:\Users\etna\Desktop\Etienne_work\Code\master_code\papers\french_retail_gasol
-ine_dispersion\report.aux)
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\hyperref\h
+yperref.sty
+Package: hyperref 2010/06/18 v6.81g Hypertext links for LaTeX
 
-("C:\Program Files\MiKTeX 2.9\tex\context\base\supp-pdf.mkii"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\ltxcmds.sty
+Package: ltxcmds 2010/04/26 v1.7 LaTeX kernel commands for general use (HO)
+)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\kvsetkeys.sty
+Package: kvsetkeys 2010/03/01 v1.9 Key value parser (HO)
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\infwarerr.sty
+Package: infwarerr 2010/04/08 v1.3 Providing info/warning/message (HO)
+)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\etexcmds.sty
+Package: etexcmds 2010/01/28 v1.3 Prefix for e-TeX command names (HO)
+Package etexcmds Info: Could not find \expanded.
+(etexcmds)             That can mean that you are not using pdfTeX 1.50 or
+(etexcmds)             that some package has redefined \expanded.
+(etexcmds)             In the latter case, load this package earlier.
+))
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\pdfescape.sty
+Package: pdfescape 2010/03/01 v1.9 Provides hex, PDF name and string conversion
+s (HO)
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\pdftexcmds.sty
+Package: pdftexcmds 2010/04/01 v0.9 Utility functions of pdfTeX for LuaTeX (HO)
+
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\ifluatex.sty
+Package: ifluatex 2010/03/01 v1.3 Provides the ifluatex switch (HO)
+Package ifluatex Info: LuaTeX not detected.
+)
+Package pdftexcmds Info: LuaTeX not detected.
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+))
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\ifxetex\if
+xetex.sty
+Package: ifxetex 2009/01/23 v0.5 Provides ifxetex conditional
+)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\oberdiek\h
+ycolor.sty
+Package: hycolor 2009/12/12 v1.6 Color options of hyperref/bookmark (HO)
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\oberdiek\x
+color-patch.sty
+Package: xcolor-patch 2009/12/12 xcolor patch
+))
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\oberdiek\l
+etltxmacro.sty
+Package: letltxmacro 2008/06/24 v1.3 Let assignment for LaTeX macros (HO)
+)
+\@linkdim=\dimen139
+\Hy@linkcounter=\count110
+\Hy@pagecounter=\count111
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\hyperref\p
+d1enc.def
+File: pd1enc.def 2010/06/18 v6.81g Hyperref: PDFDocEncoding definition (HO)
+)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\intcalc.sty
+Package: intcalc 2007/09/27 v1.1 Expandable integer calculations (HO)
+)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\00miktex\h
+yperref.cfg
+File: hyperref.cfg 2002/06/06 v1.2 hyperref configuration of TeXLive
+)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\oberdiek\k
+voptions.sty
+Package: kvoptions 2010/02/22 v3.7 Keyval support for LaTeX options (HO)
+)
+Package hyperref Info: Hyper figures OFF on input line 3658.
+Package hyperref Info: Link nesting OFF on input line 3663.
+Package hyperref Info: Hyper index ON on input line 3666.
+Package hyperref Info: Plain pages OFF on input line 3673.
+Package hyperref Info: Backreferencing OFF on input line 3678.
+
+Implicit mode ON; LaTeX internals redefined
+Package hyperref Info: Bookmarks ON on input line 3874.
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\ltxmisc\ur
+l.sty
+\Urlmuskip=\muskip11
+Package: url 2006/04/12  ver 3.3  Verb mode for urls, etc.
+)
+LaTeX Info: Redefining \url on input line 4159.
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\bitset.sty
+Package: bitset 2007/09/28 v1.0 Data type bit set (HO)
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\bigintcalc.sty
+Package: bigintcalc 2007/11/11 v1.1 Expandable big integer calculations (HO)
+))
+\Fld@menulength=\count112
+\Field@Width=\dimen140
+\Fld@charsize=\dimen141
+\Field@toks=\toks32
+Package hyperref Info: Hyper figures OFF on input line 5137.
+Package hyperref Info: Link nesting OFF on input line 5142.
+Package hyperref Info: Hyper index ON on input line 5145.
+Package hyperref Info: backreferencing OFF on input line 5152.
+Package hyperref Info: Link coloring OFF on input line 5157.
+Package hyperref Info: Link coloring with OCG OFF on input line 5162.
+Package hyperref Info: PDF/A mode OFF on input line 5167.
+LaTeX Info: Redefining \ref on input line 5207.
+LaTeX Info: Redefining \pageref on input line 5211.
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\atbegshi.sty
+Package: atbegshi 2010/03/25 v1.12 At begin shipout hook (HO)
+)
+\Hy@abspage=\count113
+\c@Item=\count114
+\c@Hfootnote=\count115
+)
+* hyperref using default driver hpdftex *
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\hyperref\h
+pdftex.def
+File: hpdftex.def 2010/06/18 v6.81g Hyperref driver for pdfTeX
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\oberdiek\a
+tveryend.sty
+Package: atveryend 2010/03/24 v1.5 Hooks at very end of document (HO)
+Package atveryend Info: \enddocument detected (standard).
+)
+\Fld@listcount=\count116
+\c@bookmark@seq@number=\count117
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\oberdiek\r
+erunfilecheck.sty
+Package: rerunfilecheck 2010/03/16 v1.6 Rerun checks for auxiliary files (HO)
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\uniquecounter.sty
+Package: uniquecounter 2009/12/18 v1.1 Provides unlimited unique counter (HO)
+)
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
+71.
+)
+\Hy@SectionHShift=\skip53
+) (report.aux)
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 29.
+LaTeX Font Info:    ... okay on input line 29.
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\context\base\sup
+p-pdf.tex
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count110
-\scratchdimen=\dimen139
+\scratchcounter=\count118
+\scratchdimen=\dimen142
 \scratchbox=\box29
-\nofMPsegments=\count111
-\nofMParguments=\count112
-\everyMPshowfont=\toks32
-\MPscratchCnt=\count113
-\MPscratchDim=\dimen140
-\MPnumerator=\count114
-\makeMPintoPDFobject=\count115
-\everyMPtoPDFconversion=\toks33
+\nofMPsegments=\count119
+\nofMParguments=\count120
+\everyMPshowfont=\toks33
+\MPscratchCnt=\count121
+\MPscratchDim=\dimen143
+\MPnumerator=\count122
+\everyMPtoPDFconversion=\toks34
 )
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
 *geometry* verbose mode - [ preamble ] result:
 * driver: pdftex
-* paper: <default>
-* layout: <same size as paper>
-* layoutoffset:(h,v)=(0.0pt,0.0pt)
-* modes: 
+* paper: 614.295pt, 794.96999pt (class default)
+* layout: 614.295pt, 794.96999pt
+* switch(es): 
 * h-part:(L,W,R)=(92.14519pt, 430.00462pt, 92.14519pt)
 * v-part:(T,H,B)=(95.39737pt, 556.47656pt, 143.09605pt)
 * \paperwidth=614.295pt
@@ -310,7 +480,6 @@ LaTeX Font Info:    ... okay on input line 28.
 * \topmargin=23.12738pt
 * \headheight=0.0pt
 * \headsep=0.0pt
-* \topskip=11.0pt
 * \footskip=30.0pt
 * \marginparwidth=59.0pt
 * \marginparsep=10.0pt
@@ -323,90 +492,127 @@ LaTeX Font Info:    ... okay on input line 28.
 * \@twosidefalse
 * \@mparswitchfalse
 * \@reversemarginfalse
-* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+* (1in=72.27pt, 1cm=28.453pt)
 
-LaTeX Font Info:    Try loading font information for U+msa on input line 33.
-("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\umsa.fd"
+\AtBeginShipoutBox=\box30
+Package hyperref Info: Link coloring OFF on input line 29.
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\hyperref\n
+ameref.sty
+Package: nameref 2010/04/30 v2.40 Cross-referencing by name of section
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\oberdiek\r
+efcount.sty
+Package: refcount 2008/08/11 v3.1 Data extraction from references (HO)
+)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\generic\oberdiek
+\gettitlestring.sty
+Package: gettitlestring 2009/12/18 v1.3 Cleanup title references (HO)
+)
+\c@section@level=\count123
+)
+LaTeX Info: Redefining \ref on input line 29.
+LaTeX Info: Redefining \pageref on input line 29.
+LaTeX Info: Redefining \nameref on input line 29.
+ (report.out) (report.out)
+\@outlinefile=\write4
+LaTeX Font Info:    Try loading font information for U+msa on input line 35.
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\amsfonts\u
+msa.fd
 File: umsa.fd 2009/06/22 v3.00 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 33.
+LaTeX Font Info:    Try loading font information for U+msb on input line 35.
 
-("C:\Program Files\MiKTeX 2.9\tex\latex\amsfonts\umsb.fd"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\amsfonts\u
+msb.fd
 File: umsb.fd 2009/06/22 v3.00 AMS symbols B
 )
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 33.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 35.
 
-("C:\Program Files\MiKTeX 2.9\tex\latex\base\omscmr.fd"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\base\omscm
+r.fd
 File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <8> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 33.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 35.
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <6> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 33.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 35.
  [1
 
-{C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map}] [1]
+{w:/Appdata/MiKTeX/2.7/UserData/pdftex/config/pdftex.map}]pdfTeX warning (ext4)
+: destination with the same identifier (name{page.1}) has been already used, du
+plicate ignored
+<to be read again> 
+                   \relax 
+l.62 
+      [1]
 
-Package natbib Warning: Citation `BAC91' on page 2 undefined on input line 64.
+Package natbib Warning: Citation `BAC91' on page 2 undefined on input line 65.
 
-[2] [3]
-Underfull \hbox (badness 1571) in paragraph at lines 82--83
-[]\T1/cmr/m/n/10.95 Since 2006, French law makes it manda-tory for any gas sta-
-tion hav-ing sold
- []
+[2] [3] [4]
+LaTeX Font Info:    Try loading font information for T1+cmtt on input line 97.
 
-[4]
-Underfull \hbox (badness 1072) in paragraph at lines 88--89
-[]\T1/cmr/m/n/10.95 Essentially data from gov-erne-ment web-site prix-carburant
-s.gouv.fr, from web-site
- []
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\base\t1cmt
+t.fd
+File: t1cmtt.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+) [5] [6] [7]
+LaTeX Font Info:    Try loading font information for U+bbm on input line 149.
 
-[5] [6]
-LaTeX Font Info:    Try loading font information for U+bbm on input line 124.
- ("C:\Program Files\MiKTeX 2.9\tex\latex\bbm\ubbm.fd"
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\bbm\ubbm.f
+d
 File: ubbm.fd 1999/03/15 V 1.2 Font definition for bbm font - TH
-) [7] [8] [9]
-[10]
-(C:\Users\etna\Desktop\Etienne_work\Code\master_code\papers\french_retail_gasol
-ine_dispersion\report.bbl) [11] [12]
+) [8] [9] [10] [11] (report.bbl) [12] [13]
 
 Package natbib Warning: There were undefined citations.
 
-[13]
-(C:\Users\etna\Desktop\Etienne_work\Code\master_code\papers\french_retail_gasol
-ine_dispersion\report.aux) ) 
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 240.
+[14]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 240.
+ (report.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 240.
+Package rerunfilecheck Info: File `report.out' has not changed.
+(rerunfilecheck)             Checksum: 4E31AA1784AFBF11C780DA585EC22ABD;875.
+ ) 
 Here is how much of TeX's memory you used:
- 3625 strings out of 493921
- 46713 string characters out of 3147284
- 106214 words of memory out of 3000000
- 6831 multiletter control sequences out of 15000+200000
- 21609 words of font info for 63 fonts, out of 3000000 for 9000
- 841 hyphenation exceptions out of 8191
- 29i,11n,24p,1117b,308s stack positions out of 5000i,500n,10000p,200000b,50000s
- <C:\Users\etna\AppData\Local\MiKTeX\2.9\fonts\pk\l
-jfour\jknappen\ec\dpi600\ecti1095.pk> <C:\Users\etna\AppData\Local\MiKTeX\2.9\f
-onts\pk\ljfour\public\bbm\dpi657\bbm10.pk> <C:\Users\etna\AppData\Local\MiKTeX\
-2.9\fonts\pk\ljfour\jknappen\ec\dpi600\ecbx1200.pk> <C:\Users\etna\AppData\Loca
-l\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dpi600\ecbx1440.pk> <C:\Users\etna\App
-Data\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dpi600\ecti0900.pk> <C:\Users
-\etna\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dpi600\ecrm0900.pk> 
-<C:\Users\etna\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dpi600\ecbx
-1095.pk> <C:\Users\etna\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknappen\ec\dp
-i600\ecrm1095.pk> <C:\Users\etna\AppData\Local\MiKTeX\2.9\fonts\pk\ljfour\jknap
-pen\ec\dpi600\ecrm1200.pk> <C:\Users\etna\AppData\Local\MiKTeX\2.9\fonts\pk\ljf
-our\jknappen\ec\dpi600\ecrm1728.pk><C:/Program Files/MiKTeX 2.9/fonts/type1/pub
-lic/amsfonts/cm/cmex10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsf
-onts/cm/cmmi10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/
-cmmi6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi8.pfb
-><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Prog
-ram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Program Files/
-MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files/MiKTeX 2
-.9/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Program Files/MiKTeX 2.9/fonts/
-type1/public/amsfonts/cm/cmsy8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/pub
-lic/eurosym/feymr10.pfb>
-Output written on report.pdf (14 pages, 199881 bytes).
+ 6948 strings out of 95304
+ 96453 string characters out of 1181907
+ 178852 words of memory out of 1500000
+ 9966 multiletter control sequences out of 110000
+ 21923 words of font info for 64 fonts, out of 3000000 for 5000
+ 14 hyphenation exceptions out of 8191
+ 31i,11n,28p,1126b,366s stack positions out of 5000i,500n,10000p,200000b,50000s
+{//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/enc/dvips/cm
+-super/cm-super-t1.enc} <w:\Appdata\MiKTeX\2.7\UserData\fonts\pk\ljfour\public\
+bbm\dpi657\bbm10.pk><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/
+fonts/type1/public/amsfonts/cm/cmex10.pfb><//ensae.fr/dfsgenes/SourceLogicielsV
+ista/LaTeX/MiKTeX/2.7/fonts/type1/public/amsfonts/cm/cmmi10.pfb><//ensae.fr/dfs
+genes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/public/amsfonts/cm/cmmi
+6.pfb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/pu
+blic/amsfonts/cm/cmmi8.pfb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKT
+eX/2.7/fonts/type1/public/amsfonts/cm/cmr10.pfb><//ensae.fr/dfsgenes/SourceLogi
+cielsVista/LaTeX/MiKTeX/2.7/fonts/type1/public/amsfonts/cm/cmr8.pfb><//ensae.fr
+/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/public/amsfonts/cm/
+cmsy10.pfb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/typ
+e1/public/amsfonts/cm/cmsy6.pfb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX
+/MiKTeX/2.7/fonts/type1/public/amsfonts/cm/cmsy8.pfb><//ensae.fr/dfsgenes/Sourc
+eLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/public/eurosym/feymr10.pfb><//ensa
+e.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/public/cm-super
+/sfbx1095.pfb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/
+type1/public/cm-super/sfbx1200.pfb><//ensae.fr/dfsgenes/SourceLogicielsVista/La
+TeX/MiKTeX/2.7/fonts/type1/public/cm-super/sfbx1440.pfb><//ensae.fr/dfsgenes/So
+urceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/public/cm-super/sfrm0900.pfb></
+/ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/public/cm-
+super/sfrm1095.pfb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/f
+onts/type1/public/cm-super/sfrm1200.pfb><//ensae.fr/dfsgenes/SourceLogicielsVis
+ta/LaTeX/MiKTeX/2.7/fonts/type1/public/cm-super/sfrm1728.pfb><//ensae.fr/dfsgen
+es/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/public/cm-super/sfti0900.p
+fb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/publi
+c/cm-super/sfti1095.pfb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/
+2.7/fonts/type1/public/cm-super/sftt1095.pfb>
+Output written on report.pdf (15 pages, 324112 bytes).
 PDF statistics:
- 385 PDF objects out of 1000 (max. 8388607)
- 0 named destinations out of 1000 (max. 500000)
- 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 252 PDF objects out of 1000 (max. 8388607)
+ 34 named destinations out of 1000 (max. 131072)
+ 113 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -15,6 +15,7 @@
 \usepackage{eurosym}
 \usepackage{array}
 \usepackage{booktabs}
+\usepackage{hyperref}
 \renewcommand{\labelitemi}{--}
 \renewcommand{\labelitemii}{$\bullet$}
 \bibliographystyle{chicago}
@@ -77,19 +78,49 @@ The dynamic interpretation of the model is not unambiguous however. In the model
 
 \section{The French retail gasoline market}
 
-\subsection{Data}
+\subsection{Information source overview}
 
-Since 2006, French law makes it mandatory for any gas station having sold over 500m$^{3}$ gas the previous year to keep prices posted on a web site (www.prix-carburants.economie.gouv.fr). This legal obligation was motivated by the French Ministry of Finance's will to increase transparency on the retail gas market. Gas stations (in France and many countries) have indeed long been suspected of colluding and taking advantage of oil price variations to maintain high margins (through asymmetries in retail price responses to wholesale cost increases and decreases).
+As is put by the 2011 governmental report on the French retail gasoline market, "nobody knows precisely the number of gas stations operating in the markets". As a consequence, all efforts to investigate competition in the French retail gasoline market start with a difficult quest for trustworthy information. The following section offers a brief overview of the information sources and their limits.
 
-As it turns out, the French website only enjoys a moderate success (c. 200k-300k visitors per month).
+Two websites relying on crowdsourcing i.e information provided by users, Carbeo and Zagaz, were launched respectively in 2005 and 2006. In 2007, a law/decree was published making it mandatory for gas stations having sold over 500m$^{3}$ gas the previous year to keep prices posted on the governmental website www.prix-carburants.economie.gouv.fr (changed?). The 2011 governmental report notes shortly after its launch the website started being scraped in a signficant way, to the extent that user experience was deteriorated. In 2009, as a consequence, licenses were created to allow for resale of price data for internal or commercial use.
 
-Since September 2011, retail gas station prices were collected on a daily basis. Data downloaded from the web site include over c. 10,000 gas stations' addresses, services (presence of a shop, car wash etc.) and daily price of gas. I have used Google's geocoding service to obtain gas stations' gps coordinates and computed the distance separating gas stations. Information on gas stations' competitive environment could probably be further refined using their address and observing strategic price interactions (e.g. a gas stations located on a "Route Nationale/Departementale", the price of which would be higher/uncorrelated with other gas stations in the vicinity). Rotterdam wholesale gas price is used as the best proxy for gas stations' variable costs.
+The launch of the governemental website put significant pressure on the young websites Zagaz and Carbeo, then still striving to reach a critical size. Zagaz still exists and has stuck to its pure crodwsourcing philosophy. Carbeo, on the contrary, purchased a licence from the governement as early as 2009.
 
-Essentially data from governement website prix-carburants.gouv.fr, from website zagaz.fr and INSEE data: prices of gas (sp95-sp95/e10?) and diesel on a daily basis, gas station information: opening hours, services, gps coordinates (special treatment), INSEE data: information about local markets (rural/center/suburb, population etc.). Price collected with date at which it was set hence possibility to correct when data is missing and check that no loss of information. Generally no intra day changes...
+TODO: finish redaction
+\begin{itemize}
+\item 2011 governmental report: "prices seem to have been set so expenses incuded by the website can be covered" (p178) yet : Carbeo not more reported to be a direct customer... deemed normal but then unclear what governemental website will become
+\item prix-carburants.gouv.fr: most reliable info on prices but uncomplete... => DATAR used Zagaz information to study the retail gas station network: Zagaz best source but suffers from competition...
+\item How to obtain good info? OSM, good GPS?
+\end{itemize}
 
-Regarding location (...) . Information provided by user is typically of better quality than information resulting from geocoding. Such information was collected from the website www.zagaz.com.
+TODO: footenote
+Zagaz actually kicked users copying data from governmental website: \url{http://www.zagaz.com/forum-detail.php?id_fil=3621&offset=108}
 
-\subsection{Context}
+\subsection{Retail gasoline distribution}
+\begin{itemize}
+\item Reduction in size of network and exits
+\item Supermarket penetration
+\item Business cards
+\item Small gas stations
+\item Tax?
+\item Supply chain? (briefly)
+\end{itemize}
+
+\subsection{Demand}
+
+Consumer can get information about prices from a variety of sources: at gas stations, on gps, on mobile phone applications (e.g. Zagaz, Carbeo, Essence Free) and on a computer or mobile phone browser (Prix-Carburants.gouv.fr).
+
+\section{Data}
+
+\subsection{Data overview}
+
+Data essentially come from governement website prix-carburants.gouv.fr, from website zagaz.fr and INSEE data: prices of gas (sp95-sp95/e10?) and diesel on a daily basis, gas station information: opening hours, services, gps coordinates (special treatment), INSEE data: information about local markets (rural/center/suburb, population etc.). Price collected with date at which it was set hence possibility to correct when data is missing and check that no loss of information. Generally no intra day changes...
+
+Regarding the location of gas stations, information provided by users on the website zagaz is typically of better quality than information provided on the governmental website.
+
+Rotterdam wholesale gas price is used as the best proxy for gas stations' variable costs.
+
+\subsection{Context of studied period}
 
 The period covered is marked by two significant events of different natures. One is a change of pricing strategy by a leading retail brand affecting the whole country and the other is a governmental intervention.
 
@@ -100,9 +131,9 @@ On August 29, 2012, a decrease in price of 6c per litre was announced by the gov
 
 \subsection{Descriptive statistics}
 
-Descriptive statistics are provided for a period of 640 days starting September 9, 2011 and ending May 6, 2013. Four subperiods of data are missing whose respective day lengths are 11 (2012/07/08-2012/07/18), 10 (2012/08/13-2012/08/22), 49 (2012/12/04-2013/01/21) and 6 (2013/04/04-2013/04/09). The end of the period studied has been determined quite arbitrarily. It essentially avoids including another missing subperiod and keeps the database to a reasonable size.
+Descriptive statistics are provided for a period of 640 days starting September 9, 2011 and ending May 6, 2013. Four subperiods of data are missing whose respective day lengths are 11 (2012/07/08-2012/07/18), 10 (2012/08/13-2012/08/22), 49 (2012/12/04-2013/01/21) and 6 (2013/04/04-2013/04/09). The end of the period studied has been determined arbitrarily to avoid including another missing subperiod and keep the database to a reasonable size.
 
-Data include prices at 10,054 gas stations, of which 421 (20 missing) are identified as highway gas stations and thus treated as a specific market.
+Data include prices at 10,054 gas stations, of which 421 are identified as highway gas stations and thus excluded from the analysis.
 
 \begin{itemize}
 \item Price rigidity: price durations and variations (sales?)
@@ -111,11 +142,15 @@ Data include prices at 10,054 gas stations, of which 421 (20 missing) are identi
 \item Distance and competition
 \end{itemize}
 
-Static price dispersion in French Data is easily seen in any single day price cross section. The resulting price distribution is bimodal, largely reflecting the presence of two dominant types of actors: supermarkets and oil companies. Supermarkets justify their relatively low prices by the fact that they use gasoline to attract consumers, while oil companies mention the quality of the service to justify higher prices and sell to business clients for which the price paid is not (necessarily) the price displayed at the gas station.
+Static price dispersion in French Data is easily seen in any single day price cross section. The resulting price distribution is bimodal, largely reflecting the presence of two dominant types of actors: supermarkets and oil companies. Supermarkets typically state that they use gasoline to attract consumers, while oil companies mention the quality of the service to justify higher prices. Oil companies also traditionally enjoy more demand from businesses with which they develop exclusive relationships in exchange for consumption tracking tools (firm employees pay with a specific magnetic card) and rebates. Price displayed at the gas station is then irrelevant to the transaction.
 
 In comparison, data used in \cite{TAP11} include prices of gas (regular, mid-grade, premium) and diesel at gas stations in California, Florida, Texas and New Jersey from January 2006 to May 2007. The average price of regular gas fluctuates quite a bit over time (from c.\$2.5/gal to c.\$3.5/gal for California) and from one state to the other (average price in Texas over all stations and periods is \$2.576/gal vs. \$3.019/gal in California), largely due to difference in taxes. The number of rivals within 2 miles (c.3.2km) of each station is rather similar in all states: from 13.38 in New Jersey to 14.22 in Texas (resp. 4.25 to 4.74 with 1 mile). The average distance to the closest rival ranges from 0.38 to 0.49 miles (c. 600 to 800m).
 
-\section{Pair price dispersion}
+\section{Consumer search vs. price levels and dispersion}
+
+Though any attempt to evaluate the degree of consumer information directly through statistics compiled from all potential sources appears futile, Zagaz.com and Prix-carburant.gouv.fr offer the opportunity to observe trend in user registrations and/or trafic. Such information can then be merged with price data to study the relation between proxies for consumer search efforts and price levels or dispersion.
+
+\section{Price dispersion vs. consumer information}
 
 A simple way to measure temporal price dispersion between two stations with daily observations is to consider the probability that the station which is in general cheaper (in terms of day count) turns out to be more expensive. Formally, considering the prices $p_{it}$ and $p_{jt}$ of two stations $i$ and $j$ over $T_{ij}$ days, such that $p_{it} >= p_{ij}$ is observed most of the time, the rank reversals statistic writes:
 
