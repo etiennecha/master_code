@@ -5,31 +5,17 @@ import add_to_path_sub
 from add_to_path_sub import path_data
 from generic_master_price import *
 from generic_master_info import *
+import copy
 
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 
 path_dir_web_visits = os.path.join(path_dir_source, 'data_web_visits')
-path_csv_google_trend = os.path.join(path_dir_web_visits, u'20140422_google_trend_prix_carburant.csv')
+path_csv_google = os.path.join(path_dir_web_visits, u'20140422_google_trend_prix_carburant.csv')
+path_csv_dgec = os.path.join(path_dir_web_visits, u'20140424_dgec_prix_carburants.csv')
 path_dir_rotterdam = os.path.join(path_dir_source, 'data_rotterdam')
 path_xlsx_ufip = os.path.join(path_dir_rotterdam, 'ufip-valeurs_2006-01-01_au_2013-12-31.xlsx')
 
-# Google Trend File
-str_file = open(path_csv_google_trend, 'r').read()
-ls_rows = [row.split(',') for row in str_file.split('\n')[4:543]]
-df_trend = pd.DataFrame(ls_rows[1:], columns = ls_rows[0])
-
-df_trend.index = df_trend['Semaine'].apply(lambda x: pd.to_datetime(x[0:10]))
-df_trend.rename(columns = {'prix carburant' : 'prix_carburant',
-                           'prix essence' : 'prix_essence',
-                           'prix diesel' : 'prix_diesel'}, inplace = True)
-for col in ['prix_carburant', 'prix_essence', 'prix_diesel']:
-  df_trend[col] = df_trend[col].apply(lambda x: float(x))
-
-#df_trend[['prix_carburant', 'prix_essence', 'prix_diesel']].plot()
-#df_trend['prix_carburant']['2010':].plot()
-## todo: output?
-
-# Ufip file
+# UFIP FILE (keep? replace by reuters?)
 ufip_excel_file = pd.ExcelFile(path_xlsx_ufip)
 df_ufip = ufip_excel_file.parse('Worksheet')
 #ls_u_drop = ['GAZOLE TTC', 'GAZOLE HTT',
@@ -45,10 +31,77 @@ dict_u_cols = {u'Marge de raffinage (€/t)': 'UFIP Ref margin ET',
 df_ufip = df_ufip.rename(columns = dict_u_cols)
 df_ufip.set_index('Date', inplace = True)
 
-df_weekly_prices = df_ufip[df_ufip.columns[:4]][~pd.isnull(df_ufip['GAZOLE TTC'])]
-df_weekly_prices.index = pd.Series(df_weekly_prices.index).apply(lambda x: \
-                           x + pd.tseries.offsets.timedelta(days=2))
-df_weekly_prices['trend'] = df_trend['prix_carburant']/100 + 0.9
+# Google Trend file
+df_google = pd.read_csv(path_csv_google, index_col = 0, parse_dates = [0])
+del(df_google['semaine_range']) # move to formatting file
 
-df_weekly_prices[['trend', 'GAZOLE TTC']].plot()
+# DGEC price file
+df_dgec = pd.read_csv(path_csv_dgec, index_col = 0, parse_dates = [0])
+
+# MERGE FILES
+
+## Harmonize week starting dates (fundamental pbm though)
+# df_google['2004':]
+# df_dgec['2004':]
+df_dgec.index = pd.Series(df_dgec.index).apply(lambda x: \
+                  x + pd.tseries.offsets.timedelta(days=2))
+# Import DGEC data in Google dataframe (same week start luckily)
+df_google['gazole_ttc'] = df_dgec[u'Gazole PRIX DE VENTE T.T.C.']
+df_google['gazole_ht'] = df_dgec[u'Gazole PRIX DE VENTE H.T.T.']
+df_google['sp95_ttc'] = df_dgec[u'Super SP95 PRIX DE VENTE T.T.C.']
+df_google['sp95_ht'] = df_dgec[u'Super SP95 PRIX DE VENTE H.T.T.']
+
+## BASE 100 from 2004
+df_google['gazole_ttc_base100'] = df_google['gazole_ttc'] / df_google['gazole_ttc'].max() * 100
+#df_google[['prix_carburant', 'gazole_ttc_base100']].plot()
+#plt.show()
+
+# BASE 100 from 2004
+df_google_2 = df_google['2007-04':]
+df_google_2['gazole_ttc_base100'] = df_google_2['gazole_ttc'] / df_google_2['gazole_ttc'].max() * 100
+df_google_2['prix_carburant'] = df_google_2['prix_carburant'] / df_google_2['prix_carburant'].max() * 100
+ax = df_google_2[['prix_carburant', 'gazole_ttc_base100']].plot()
+# Annonce dispo 28/08/2012
+ax.axvline(x=pd.to_datetime('2012-08-26'), linewidth=1, color='r')
+# Annonce fin dispo 28/11/2012 (dbt de fin 01/12/2012)
+ax.axvline(x=pd.to_datetime('2012-11-28'), linewidth=1, color='r')
+# Dispo totalement termine 11/01/2013
+ax.axvline(x=pd.to_datetime('2012-12-30'), linewidth=1, color='r')
 plt.show()
+
+# TODO: add baril prices
+
+# Largest peaks (60): explanations
+print df_google_2[df_google_2['prix_carburant'] > 60]
+# 2011-03 : Articles sur prix records
+# http://www.lefigaro.fr/conso/2011/02/28/05007-20110228ARTFIG00578-les-prix-de-l-essence-frolent-leurs-records-de-2008.php => is it because of time delta?
+# http://tempsreel.nouvelobs.com/economie/20110307.OBS9264/prix-de-l-essence-record-historique-a-la-pompe.html
+# 2011-08 : Articles sur Besson qui exige baisse rapide
+# http://www.lefigaro.fr/conso/2011/08/11/05007-20110811ARTFIG00271-besson-veut-que-les-prix-a-la-pompe-baisse-avant-le-15-aout.php
+# http://www.tf1.fr/auto-moto/actualite/le-prix-de-l-essence-a-baisse-moins-que-prevu-en-aout-2011-6663328.html
+# 2012-08-26 : Communique de Moscovici sur baisse des prix du carburant etc.
+# http://www.lefigaro.fr/conso/2012/08/27/05007-20120827ARTFIG00376-la-baisse-du-prix-de-l-essence-limitee-a-quelques-centimes.php
+
+# Graph with all small peaks (40)
+ax = df_google_2[['prix_carburant', 'gazole_ttc_base100']].plot()
+for date in df_google_2.index[df_google_2['prix_carburant'] > 50]:
+  ax.axvline(x=date, linewidth=1, color='r')
+  print date
+plt.show()
+
+
+
+# DEPRECATED?
+
+#df_weekly_prices = df_ufip[df_ufip.columns[:4]][~pd.isnull(df_ufip['GAZOLE TTC'])]
+## Harmonize week starting dates (fundamental pbm though)
+#df_weekly_prices.index = pd.Series(df_weekly_prices.index).apply(lambda x: \
+#                           x + pd.tseries.offsets.timedelta(days=2))
+#df_weekly_prices['Google trend base 100'] = df_trend['prix_carburant']
+#
+#df_weekkly_prices['Gazole TTC base 100'] = df['GAZOLE TTC'] / df['GAZOLE TTC'].max() * 100
+#
+#df_weekly_prices[['Google trend base 100', 'Gazole TTC base 100']].plot()
+#plt.show()
+
+# Wait for new data... forget beginning of website...
