@@ -189,3 +189,21 @@ plt.show()
   # todo: map of zagaz stations.. would be cool to make display of markets easy
   # markets around stations or general?
   # view javascript? 
+
+zero = 0.000001
+ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
+df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
+df_price_chge = df_price.shift(1) - df_price
+ls_res = []
+for ind in df_price_chge.index:
+  ls_res.append(len(df_price_chge.ix[ind][np.abs(df_price_chge.ix[ind]) > zero]))
+se_nb_chges = pd.Series(ls_res, ls_dates)
+se_nb_chges[se_nb_chges < zero] = np.nan
+se_nb_chges_w = se_nb_chges.resample('W', how  = 'sum')
+se_nb_chges_w.plot()
+plt.show()
+# TODO: check if nan as soon as one is nan... + synchronize weeks
+df_registrations_w['nb_chges'] = se_nb_chges_w
+# TODO: add price level + perform analysis in variations (regressions)
+
+# TODO: import google data
