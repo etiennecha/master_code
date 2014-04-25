@@ -6,6 +6,7 @@ from add_to_path_sub import path_data
 from generic_master_price import *
 from generic_master_info import *
 import copy
+import collections
 
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 
@@ -14,6 +15,12 @@ path_csv_google = os.path.join(path_dir_web_visits, u'20140422_google_trend_prix
 path_csv_dgec = os.path.join(path_dir_web_visits, u'20140424_dgec_prix_carburants.csv')
 path_dir_rotterdam = os.path.join(path_dir_source, 'data_rotterdam')
 path_xlsx_ufip = os.path.join(path_dir_rotterdam, 'ufip-valeurs_2006-01-01_au_2013-12-31.xlsx')
+
+path_dir_zagaz = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
+
+# ############
+# LOAD FILES
+# ############
 
 # UFIP FILE (keep? replace by reuters?)
 ufip_excel_file = pd.ExcelFile(path_xlsx_ufip)
@@ -38,7 +45,27 @@ del(df_google['semaine_range']) # move to formatting file
 # DGEC price file
 df_dgec = pd.read_csv(path_csv_dgec, index_col = 0, parse_dates = [0])
 
+# Zagaz user file
+dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz, '20140408_dict_zagaz_user_info.json'))
+ls_registration_dates = [v[0][3][1] for k,v in dict_zagaz_users.items() if v and v[0]]
+dict_registration_dates = dict(collections.Counter(ls_registration_dates))
+df_registrations_temp = pd.DataFrame([(k,v) for k,v in dict_registration_dates.items()],
+                                     columns = ['date', 'nb_registrations'])
+df_registrations_temp.index = [pd.to_datetime(date) for date in df_registrations_temp['date']]
+
+index = pd.date_range(start = pd.to_datetime('20060101'),
+                      end   = pd.to_datetime('20140423'), 
+                      freq='D')
+df_registrations = pd.DataFrame(None, index = index)
+df_registrations['registrations'] = df_registrations_temp['nb_registrations']
+df_registrations['registrations'] = df_registrations['registrations'].fillna(0)
+#df_registrations['registrations'].plot()
+#plt.show()
+df_registrations_w = df_registrations.resample('W', how = 'sum')
+
+# ###########
 # MERGE FILES
+# ###########
 
 ## Harmonize week starting dates (fundamental pbm though)
 # df_google['2004':]
@@ -89,19 +116,8 @@ for date in df_google_2.index[df_google_2['prix_carburant'] > 50]:
   print date
 plt.show()
 
-
-
-# DEPRECATED?
-
-#df_weekly_prices = df_ufip[df_ufip.columns[:4]][~pd.isnull(df_ufip['GAZOLE TTC'])]
-## Harmonize week starting dates (fundamental pbm though)
-#df_weekly_prices.index = pd.Series(df_weekly_prices.index).apply(lambda x: \
-#                           x + pd.tseries.offsets.timedelta(days=2))
-#df_weekly_prices['Google trend base 100'] = df_trend['prix_carburant']
-#
-#df_weekkly_prices['Gazole TTC base 100'] = df['GAZOLE TTC'] / df['GAZOLE TTC'].max() * 100
-#
-#df_weekly_prices[['Google trend base 100', 'Gazole TTC base 100']].plot()
-#plt.show()
-
-# Wait for new data... forget beginning of website...
+# With zagaz data
+df_google_2['zagaz'] = df_registrations_w['registrations']
+df_google_2['zagaz_base100'] = df_google_2['zagaz'] / df_google_2['zagaz'].max()*100
+ax = df_google_2[['prix_carburant', 'gazole_ttc_base100', 'zagaz_base100']].plot()
+plt.show()
