@@ -161,3 +161,35 @@ ls_ids_nodiff = list(set(ls_ids_nodiff))
 ls_ids_diff = [indiv_id for indiv_id in master_price['ids'] if indiv_id not in ls_ids_nodiff]
 
 indiv_ind = master_price['ids'].index(ls_ids_diff[0])
+
+# Check that on stable markets
+ls_ls_market_ids[0]
+ls_harmonized_series = [df_price[ls_ls_market_ids[0][0]]]
+for comp_id in ls_ls_market_ids[0][1:]:
+	ls_harmonized_series.append(df_price[comp_id] + (df_price[ls_ls_market_ids[0][0]] - df_price[comp_id]).median())
+df_market = pd.DataFrame(dict(zip(ls_ls_market_ids[0], ls_harmonized_series)))
+df_market['range'] = df_market.max(1) - df_market.min(1) + 1 # for graph
+df_market.plot()
+
+df_market['range'] = df_market[ls_ls_market_ids[0]].max(1) - df_market[ls_ls_market_ids[0]].min(1)
+
+df_market['avg_price'] = df_market[ls_ls_market_ids[0]].mean(1)
+print smf.ols('range ~ avg_price', missing = 'drop', data = df_market).fit().summary()
+
+df_market['avg_price_var'] = df_market['avg_price'] - df_market['avg_price'].shift(1)
+df_market['avg_price_var_abs'] = np.abs(df_market['avg_price_var'])
+print smf.ols('range ~ avg_price + avg_price_var_abs', missing = 'drop', data = df_market).fit().summary()
+
+df_market['avg_price_var_pos'] = 0
+df_market['avg_price_var_pos'][df_market['avg_price_var'] > 0.0001] = df_market['avg_price_var']
+df_market['avg_price_var_neg'] = 0
+df_market['avg_price_var_neg'][df_market['avg_price_var'] < -0.0001] = df_market['avg_price_var']
+
+print smf.ols('range ~ avg_price + avg_price_var_neg + avg_price_var_pos',
+              missing = 'drop', data = df_market).fit().summary()
+
+# todo: control for outliers...
+# promo Intermarche: decrease in average price with increase in dispersion...
+print smf.ols('range ~ avg_price + avg_price_var_neg + avg_price_var_pos',
+              missing = 'drop', 
+              data = df_market[df_market['range'] <= df_market['range'].quantile(0.95)]).fit().summary()
