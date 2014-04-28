@@ -166,10 +166,12 @@ indiv_ind = master_price['ids'].index(ls_ids_diff[0])
 ls_ls_market_ids[0]
 ls_harmonized_series = [df_price[ls_ls_market_ids[0][0]]]
 for comp_id in ls_ls_market_ids[0][1:]:
-	ls_harmonized_series.append(df_price[comp_id] + (df_price[ls_ls_market_ids[0][0]] - df_price[comp_id]).median())
+	ls_harmonized_series.append(df_price[comp_id] +\
+    (df_price[ls_ls_market_ids[0][0]] - df_price[comp_id]).median())
 df_market = pd.DataFrame(dict(zip(ls_ls_market_ids[0], ls_harmonized_series)))
 df_market['range'] = df_market.max(1) - df_market.min(1) + 1 # for graph
 df_market.plot()
+plt.show()
 
 df_market['range'] = df_market[ls_ls_market_ids[0]].max(1) - df_market[ls_ls_market_ids[0]].min(1)
 
@@ -193,3 +195,12 @@ print smf.ols('range ~ avg_price + avg_price_var_neg + avg_price_var_pos',
 print smf.ols('range ~ avg_price + avg_price_var_neg + avg_price_var_pos',
               missing = 'drop', 
               data = df_market[df_market['range'] <= df_market['range'].quantile(0.95)]).fit().summary()
+
+# Nb of times a station is min
+ls_market_ids = ls_ls_market_ids[0]
+ls_min_max = []
+for indiv_id in ls_market_ids:
+  nb_min = len(df_market[df_market[indiv_id] == df_market[ls_market_ids].min(1)])
+  nb_max = len(df_market[df_market[indiv_id] == df_market[ls_market_ids].max(1)])
+  ls_min_max.append((nb_min, nb_max))
+# Count nb of time each is cheaper / least expensive... stuffs like that
