@@ -79,7 +79,7 @@ ls_ls_market_ids_temp = ls_ls_market_ids
 ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price)\
                              for ls_market_ids in ls_ls_market_ids_temp]
 
-# Can loop to add mean price or add date column and then merge df mean price with concatenated on date
+# Can loop to add mean price or add date column and then merge df mean price w/ concatd on date
 # Pbm: cv is false (pbmatic division?)
 ls_stats = ['range', 'gfs', 'std', 'cv', 'nb_comp']
 ls_ls_market_stats = []
@@ -87,7 +87,8 @@ ls_market_ref_ids = []
 for ls_market_id, df_market_dispersion in zip(ls_ls_market_ids_temp, ls_df_market_dispersion):
   df_market_dispersion = df_market_dispersion[(df_market_dispersion['nb_comp'] >= 3) &\
                                               (df_market_dispersion['nb_comp_t']/\
-                                               df_market_dispersion['nb_comp'].astype(float) >= 2.0/3)]
+                                               df_market_dispersion['nb_comp'].astype(float)\
+                                                 >= 2.0/3)]
   if len(df_market_dispersion) > 50:
     df_market_dispersion['id'] = ls_market_id[0]
     df_market_dispersion['price'] = se_mean_price
@@ -180,7 +181,8 @@ print smf.ols('range ~ avg_price', missing = 'drop', data = df_market).fit().sum
 
 df_market['avg_price_var'] = df_market['avg_price'] - df_market['avg_price'].shift(1)
 df_market['avg_price_var_abs'] = np.abs(df_market['avg_price_var'])
-print smf.ols('range ~ avg_price + avg_price_var_abs', missing = 'drop', data = df_market).fit().summary()
+print smf.ols('range ~ avg_price + avg_price_var_abs',
+              missing = 'drop', data = df_market).fit().summary()
 
 df_market['avg_price_var_pos'] = 0
 df_market['avg_price_var_pos'][df_market['avg_price_var'] > 0.0001] = df_market['avg_price_var']
@@ -194,7 +196,8 @@ print smf.ols('range ~ avg_price + avg_price_var_neg + avg_price_var_pos',
 # promo Intermarche: decrease in average price with increase in dispersion...
 print smf.ols('range ~ avg_price + avg_price_var_neg + avg_price_var_pos',
               missing = 'drop', 
-              data = df_market[df_market['range'] <= df_market['range'].quantile(0.95)]).fit().summary()
+              data = df_market[df_market['range'] <= df_market['range'].quantile(0.95)]\
+             ).fit().summary()
 
 # Nb of times a station is min
 ls_market_ids = ls_ls_market_ids[0]
