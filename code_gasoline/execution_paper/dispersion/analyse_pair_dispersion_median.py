@@ -40,7 +40,9 @@ pd.options.display.float_format = '{:6,.4f}'.format
 start = time.clock()
 
 # DF PRICES
-df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
+# df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
+ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
+df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
 
 # DF CLEAN PRICES
 
