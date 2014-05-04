@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--
+http://stackoverflow.com/questions/16112801/jquery-display-a-list-of-items-in-ul
+http://learn.jquery.com/about-jquery/how-jquery-works/
+-->
+<html>
+  <head>
+    <meta charset="UTF-8">
+
+    <title>Fusion Tables API Example: Google Chart Tools</title>
+
+    <link href="https://developers.google.com/fusiontables/docs/samples/style/default.css"
+        rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+    <style type="text/css">
+      table {
+        width: 30%;
+      }
+
+      th {
+        width: 30%;
+        text-align: left;
+      }
+    </style>
+
+    <script type="text/javascript">
+      google.load('visualization', '1');
+      
+      function drawTable() {
+        // Construct query
+        var query = "SELECT 'col0' as station_id, " +
+            "'gps' as gps, 'region' as region, 'brand_1_b' as brand_1_b " +
+            "FROM 1XfoTvO3_tb1JHR8HVzrIEaDhzYOq1HVfGrINH4Al WHERE 'brand_1_b' = 'LECLERC'";
+        var region = document.getElementById('region').value;
+        if (region) {
+          query += " AND 'region' = '" + region + "'";
+        }
+        var queryText = encodeURIComponent(query);
+        var gvizQuery = new google.visualization.Query(
+            'http://www.google.com/fusiontables/gvizdata?tq='  + queryText);
+
+        // Send query and draw table with data in response
+        gvizQuery.send(handleQueryResponse)
+      }
+      
+      function handleQueryResponse(response) {
+        var numRows = response.getDataTable().getNumberOfRows();
+        var numCols = response.getDataTable().getNumberOfColumns();
+
+        var ftdata = ['<table><thead><tr>'];
+        for (var i = 0; i < numCols; i++) {
+          var columnTitle = response.getDataTable().getColumnLabel(i);
+          ftdata.push('<th>' + columnTitle + '</th>');
+        }
+        ftdata.push('</tr></thead><tbody>');
+
+        for (var i = 0; i < numRows; i++) {
+          ftdata.push('<tr>');
+          for(var j = 0; j < numCols; j++) {
+            var rowValue = response.getDataTable().getValue(i, j);
+            ftdata.push('<td>' + rowValue + '</td>');
+          }
+          var gps = response.getDataTable().getValue(i, 1)
+          if (gps){
+            var lat = parseFloat(gps.split(' ')[0])
+            var lon = parseFloat(gps.split(' ')[1])
+            ftdata.push('<td>' + String(lat.toFixed(2)) + ' ' + String(lon.toFixed(2)) + '</td>');
+          }
+          else
+            ftdata.push('<td>' + 'No gps' + '</td>');
+          ftdata.push('</tr>');
+        }
+          ftdata.push('</tbody></table>');
+          document.getElementById('ft-data').innerHTML = ftdata.join('');
+      };
+
+      google.setOnLoadCallback(drawTable);
+    </script>
+  </head>
+  <body>
+    <div>
+      <label>Region:</label>
+      <select id="region" onchange="drawTable();">
+        <option value="" selected="selected">All</option>
+        <option value="Auvergne">Auvergne</option>
+      </select>
+    </div>
+    <div id="ft-data"></div>
+  </body>
+</html>

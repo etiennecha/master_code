@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!--
+http://stackoverflow.com/questions/16112801/jquery-display-a-list-of-items-in-ul
+http://learn.jquery.com/about-jquery/how-jquery-works/
+-->
+<html>
+  <head>
+    <meta charset="UTF-8">
+
+    <title>Fusion Tables API Example (+Leaflet)</title>
+
+    <link href="https://developers.google.com/fusiontables/docs/samples/style/default.css"
+        rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+    <style type="text/css">
+      table {
+        width: 30%;
+      }
+
+      th {
+        width: 30%;
+        text-align: left;
+      }
+    </style>
+
+    <script type="text/javascript">
+      google.load('visualization', '1');
+      
+      var table_result;
+
+      function drawTable() {
+        // Construct query
+        var query = "SELECT 'col0' as station_id, " +
+            "'gps' as gps, 'region' as region, 'brand_1_b' as brand_1_b " +
+            "FROM 1XfoTvO3_tb1JHR8HVzrIEaDhzYOq1HVfGrINH4Al WHERE 'brand_1_b' = 'LECLERC'";
+        var region = document.getElementById('region').value;
+        if (region) {
+          query += " AND 'region' = '" + region + "'";
+        }
+        var queryText = encodeURIComponent(query);
+        var gvizQuery = new google.visualization.Query(
+            'http://www.google.com/fusiontables/gvizdata?tq='  + queryText);
+
+        // Send query and draw table with data in response
+        gvizQuery.send(handleQueryResponse);
+      }
+      
+      var ar_gps = [];
+
+      function handleQueryResponse(response) {
+        var table_result = response.getDataTable();
+        console.log(table_result);
+        var numRows = response.getDataTable().getNumberOfRows();
+        var numCols = response.getDataTable().getNumberOfColumns();
+
+        var ftdata = ['<table><thead><tr>'];
+        for (var i = 0; i < numCols; i++) {
+          var columnTitle = response.getDataTable().getColumnLabel(i);
+          ftdata.push('<th>' + columnTitle + '</th>');
+        }
+        ftdata.push('</tr></thead><tbody>');
+
+        for (var i = 0; i < numRows; i++) {
+          ftdata.push('<tr>');
+          for(var j = 0; j < numCols; j++) {
+            var rowValue = response.getDataTable().getValue(i, j);
+            ftdata.push('<td>' + rowValue + '</td>');
+          }
+          var gps = response.getDataTable().getValue(i, 1)
+          if (gps){
+            var lat = parseFloat(gps.split(' ')[0])
+            var lon = parseFloat(gps.split(' ')[1])
+            ftdata.push('<td>' + String(lat.toFixed(2)) + ' ' + String(lon.toFixed(2)) + '</td>');
+            ar_gps.push([lat, lon])
+          }
+          else
+            ftdata.push('<td>' + 'No gps' + '</td>');
+          ftdata.push('</tr>');
+        }
+        ftdata.push('</tbody></table>');
+        document.getElementById('ft-data').innerHTML = ftdata.join('');
+      };
+      // http://paulcrickard.wordpress.com/2012/06/29/leaflet-js-interactivity-ii-allow-users-to-add-points/
+      google.setOnLoadCallback(drawTable);
+
+    </script>
+
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="../dist/leaflet.css" />
+  
+  </head>
+  
+  <body>
+    <div>
+      <label>Region:</label>
+      <select id="region" onchange="drawTable();">
+        <option value="" selected="selected">All</option>
+        <option value="Auvergne">Auvergne</option>
+      </select>
+    </div>
+    <div id="ft-data"></div>
+
+	  <div id="map" style="width: 600px; height: 400px"></div>
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+	  <script>
+	  	var map = L.map('map').setView([48.856638, 2.352241], 10);
+	  	L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
+	  		maxZoom: 18,
+	  		attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+	  			'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+	  			'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+	  		id: 'examples.map-9ijuk24y'
+	  	}).addTo(map);
+	  </script>
+  </body>
+</html>

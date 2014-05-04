@@ -190,3 +190,8 @@ df_cost['avg_diesel_margin_total'].plot()
 plt.show()
 
 # Check variations frequent changers vs. prices
+df_price_chges = df_prices_ttc - df_prices_ttc.shift(1)
+ls_chges = []
+for col in df_price_chges.columns:
+  ls_chges.append(len(df_price_chges[col][np.abs(df_price_chges[col]) > 0.00001]))
+se_chges = pd.Series(ls_chges, master_price['ids'])
