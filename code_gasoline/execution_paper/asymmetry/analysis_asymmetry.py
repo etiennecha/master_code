@@ -224,7 +224,6 @@ plt.show()
 
 reg01 = smf.ols('price_ht ~ cost_a', missing = 'drop', data = df_agg[0:200]).fit().summary()
 
-
 # brand (looks only at firm which don't change brand right now)
 for brand in ['TOTAL', 'MOUSQUETAIRES', 'CARREFOUR', 'SYSTEMEU', 'ESSO']:
   ls_ind_brand = df_info.index[(df_info['brand_2_e'] == '%s' %brand) &\
@@ -236,6 +235,131 @@ for brand in ['TOTAL', 'MOUSQUETAIRES', 'CARREFOUR', 'SYSTEMEU', 'ESSO']:
 
 ## Print prices and margin
 #df_all.plot()
+#plt.show()
+
+## Graph with cost, average retail price, and margin
+#
+### Pb to get all 3 labels?
+##ax = df_agg[['price_ht', 'ULSD 10 CIF NWE EL', 'margin_a']].plot(secondary_y = ['margin_a'])
+##handles, labels = ax.get_legend_handles_labels()
+##ax.legend(handles, ['Retail price before Tax', 'Rotterdam price', 'Retail margin'])
+#
+#df_agg = df_agg[:'2012-06']
+#
+#ax1 = plt.subplot()
+#line_1 = ax1.plot(df_agg.index, df_agg['price_ht'].values,
+#                  ls='--', c='b', label='Retail price before tax')
+#line_1[0].set_dashes([4,2])
+#line_2 = ax1.plot(df_agg.index, df_agg['ULSD 10 CIF NWE EL'].values,
+#                  ls='--', c= 'g', label='Rotterdam price')
+#line_2[0].set_dashes([8,2])
+#ax2 = ax1.twinx()
+#line_3 = ax2.plot(df_agg.index, df_agg['margin_a'].values,
+#                  ls='-', c='r', label='Retail gross margin (right axis)')
+#
+#lns = line_1 + line_2 + line_3
+#labs = [l.get_label() for l in lns]
+#ax1.legend(lns, labs, loc=0)
+#
+#ax1.grid()
+#ax1.set_ylabel(r"Price (euros)")
+#ax2.set_ylabel(r"Margin (euros)")
+#plt.show()
+#
+## Explore brand
+#df_agg['cost_a_l4'] = df_agg['cost_a'].shift(4)
+#df_agg['resid_ESSO'] = smf.ols('price_ht_ESSO~cost_a_l4', df_agg, missing='drop').fit().resid
+#df_agg['pred_ESSO'] = df_agg['price_ht_ESSO'] - df_agg['resid_ESSO']
+#df_agg[['pred_ESSO', 'price_ht_ESSO']].plot()
+#plt.show()
+
+## Explore groups
+#df_info['brand_1_b'][df_info['brand_2_b'] == df_info['brand_2_e']].value_counts()
+
+# Asymetry regressions
+
+zero = 0.00000000001
+df_agg = df_agg[:'2012-06']
+
+# Pbm with missing data... need to fillna (or not necessarily if moving average)
+df_agg['cost_a_f'] = df_agg['cost_a'].fillna(method='pad')
+## Too volatile: can't proceed with raw cost => Moving averages... but then asymmetry?
+#df_agg['cost_a_f'] = pd.rolling_mean(df_agg['cost_a'], 4, min_periods = 2)
+# could do following step becore filling na...
+df_agg['resid'] = smf.ols('price_ht~cost_a', df_agg, missing='drop').fit().resid
+df_agg['cost_a_l3'] = df_agg['cost_a'].shift(3)
+df_agg['resid_l3'] = smf.ols('price_ht~cost_a_l3', df_agg, missing='drop').fit().resid
+
+## Cost variations only
+#ls_cost_d = []
+#ls_cost_d_sign = []
+#for i in range(1, 20):
+#  df_agg['cost_a_d%s' %(i-1)] = df_agg['cost_a_f'].shift(i-1) - df_agg['cost_a_f'].shift(i)
+#  ls_cost_d.append('cost_a_d%s' %(i-1))
+#  df_agg['cost_a_d%s_p' %(i-1)] = 0
+#  df_agg['cost_a_d%s_p' %(i-1)][df_agg['cost_a_d%s' %(i-1)] > 0 + 0.000000001]  = df_agg['cost_a_d%s' %(i-1)]
+#  df_agg['cost_a_d%s_n' %(i-1)] = 0
+#  df_agg['cost_a_d%s_n' %(i-1)][df_agg['cost_a_d%s' %(i-1)] < 0 - 0.000000001] = df_agg['cost_a_d%s' %(i-1)]
+#  ls_cost_d_sign.append('cost_a_d%s_p' %(i-1))
+#  ls_cost_d_sign.append('cost_a_d%s_n' %(i-1))
+#df_agg['price_ht_d0' ] = df_agg['price_ht'] - df_agg['price_ht'].shift(1)
+## or 4:30
+#reg0 = smf.ols('price_ht_d0 ~ resid + ' + '+'.join(ls_cost_d_sign[4:34]),
+#               df_agg, missing = 'drop').fit()
+#print reg0.summary()
+#df_agg['price_ht_d0_res'] = reg0.resid
+#df_agg['price_ht_d0_pred'] = df_agg['price_ht_d0'] - df_agg['price_ht_d0_res']
+#df_agg[['price_ht_d0', 'price_ht_d0_pred']].plot()
+#
+#se_params = reg0.params
+#se_params_p = se_params[se_params.index.map(lambda x: x[-1] == 'p')]
+#se_params_n = se_params[se_params.index.map(lambda x: x[-1] == 'n')]
+#df_adj = pd.DataFrame(zip(se_params_p.cumsum(), se_params_n.cumsum()),
+#                      columns = ['pos', 'neg'])
+#df_adj.plot()
+#plt.show()
+
+# Cost and Retail variations
+ls_cost_d = []
+ls_retail_d = []
+ls_cost_d_sign = []
+ls_retail_d_sign = []
+for i in range(1, 20):
+  # Cost variations
+  df_agg['cost_a_d%s' %(i-1)] = df_agg['cost_a_f'].shift(i-1) - df_agg['cost_a_f'].shift(i)
+  ls_cost_d.append('cost_a_d%s' %(i-1))
+  df_agg['cost_a_d%s_p' %(i-1)] = 0
+  df_agg['cost_a_d%s_p' %(i-1)][df_agg['cost_a_d%s' %(i-1)] > zero]  = df_agg['cost_a_d%s' %(i-1)]
+  df_agg['cost_a_d%s_n' %(i-1)] = 0
+  df_agg['cost_a_d%s_n' %(i-1)][df_agg['cost_a_d%s' %(i-1)] < -zero] = df_agg['cost_a_d%s' %(i-1)]
+  ls_cost_d_sign.append('cost_a_d%s_p' %(i-1))
+  ls_cost_d_sign.append('cost_a_d%s_n' %(i-1))
+  # Retail price variations
+  df_agg['price_ht_d%s' %(i-1)] = df_agg['price_ht'].shift(i-1) - df_agg['price_ht'].shift(i)
+  ls_retail_d.append('price_ht_d%s' %(i-1))
+  df_agg['price_ht_d%s_p' %(i-1)] = 0
+  df_agg['price_ht_d%s_p' %(i-1)][df_agg['price_ht_d%s' %(i-1)] > zero] = df_agg['price_ht_d%s' %(i-1)]
+  df_agg['price_ht_d%s_n' %(i-1)] = 0
+  df_agg['price_ht_d%s_n' %(i-1)][df_agg['price_ht_d%s' %(i-1)] < -zero] = df_agg['price_ht_d%s' %(i-1)]
+  ls_retail_d_sign.append('price_ht_d%s_p' %(i-1))
+  ls_retail_d_sign.append('price_ht_d%s_n' %(i-1))
+df_agg['price_ht_d0' ] = df_agg['price_ht'] - df_agg['price_ht'].shift(1)
+# or 4:30
+reg1 = smf.ols('price_ht_d0 ~ resid + ' +\
+               '+'.join(ls_cost_d_sign[0:28]) + '+' + \
+               '+'.join(ls_retail_d_sign[2:12]),
+               df_agg, missing = 'drop').fit()
+print reg1.summary()
+df_agg['price_ht_d0_res_2'] = reg1.resid
+df_agg['price_ht_d0_pred_2'] = df_agg['price_ht_d0'] - df_agg['price_ht_d0_res_2']
+df_agg[['price_ht_d0', 'price_ht_d0_pred_2']].plot()
+
+#se_params = reg0.params
+#se_params_p = se_params[se_params.index.map(lambda x: x[-1] == 'p')]
+#se_params_n = se_params[se_params.index.map(lambda x: x[-1] == 'n')]
+#df_adj = pd.DataFrame(zip(se_params_p.cumsum(), se_params_n.cumsum()),
+#                      columns = ['pos', 'neg'])
+#df_adj.plot()
 #plt.show()
 
 # ##########################
