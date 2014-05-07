@@ -244,28 +244,52 @@ for brand in ['TOTAL', 'MOUSQUETAIRES', 'CARREFOUR', 'SYSTEMEU', 'ESSO']:
 ##handles, labels = ax.get_legend_handles_labels()
 ##ax.legend(handles, ['Retail price before Tax', 'Rotterdam price', 'Retail margin'])
 #
-#df_agg = df_agg[:'2012-06']
-#
-#ax1 = plt.subplot()
-#line_1 = ax1.plot(df_agg.index, df_agg['price_ht'].values,
-#                  ls='--', c='b', label='Retail price before tax')
-#line_1[0].set_dashes([4,2])
-#line_2 = ax1.plot(df_agg.index, df_agg['ULSD 10 CIF NWE EL'].values,
-#                  ls='--', c= 'g', label='Rotterdam price')
-#line_2[0].set_dashes([8,2])
-#ax2 = ax1.twinx()
-#line_3 = ax2.plot(df_agg.index, df_agg['margin_a'].values,
-#                  ls='-', c='r', label='Retail gross margin (right axis)')
-#
-#lns = line_1 + line_2 + line_3
-#labs = [l.get_label() for l in lns]
-#ax1.legend(lns, labs, loc=0)
-#
-#ax1.grid()
-#ax1.set_ylabel(r"Price (euros)")
-#ax2.set_ylabel(r"Margin (euros)")
-#plt.show()
-#
+df_agg = df_agg[:'2012-06']
+
+#import matplotlib as mpl
+#mpl.rcParams['font.size'] = 10.
+#mpl.rcParams['font.family'] = 'cursive'
+#mpl.rcParams['font.cursive'] = 'Sand'
+#mpl.rcParams['axes.labelsize'] = 8.
+#mpl.rcParams['xtick.labelsize'] = 6.
+#mpl.rcParams['ytick.labelsize'] = 6.
+
+plt.rc('font', **{'serif': 'Computer Modern Roman'})
+
+#http://damon-is-a-geek.com/publication-ready-the-first-time-beautiful-reproducible-plots-with-matplotlib.html
+from matplotlib import rcParams
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Computer Modern Roman']
+rcParams['text.usetex'] = True
+rcParams['pgf.texsystem'] = 'pdflatex'
+
+#from pylab import *
+#rcParams['figure.figsize'] = 16, 6
+
+fig = plt.figure()
+ax1 = fig.add_subplot(111)
+# ax1 = plt.subplot(frameon=False)
+line_1 = ax1.plot(df_agg.index, df_agg['price_ht'].values,
+                  ls='--', c='b', label='Retail price before tax')
+line_1[0].set_dashes([4,2])
+line_2 = ax1.plot(df_agg.index, df_agg['ULSD 10 CIF NWE EL'].values,
+                  ls='--', c= 'g', label=r'Rotterdam price')
+line_2[0].set_dashes([8,2])
+ax2 = ax1.twinx()
+line_3 = ax2.plot(df_agg.index, df_agg['margin_a'].values,
+                  ls='-', c='r', label=r'Retail gross margin (right axis)')
+
+lns = line_1 + line_2 + line_3
+labs = [l.get_label() for l in lns]
+ax1.legend(lns, labs, loc=0)
+
+ax1.grid()
+#ax1.set_title(r"Daily diesel average prices and margin: September 2011 - July 2012")
+ax1.set_ylabel(r"Price (euros)")
+ax2.set_ylabel(r"Margin (euros)")
+plt.tight_layout()
+plt.show()
+
 ## Explore brand
 #df_agg['cost_a_l4'] = df_agg['cost_a'].shift(4)
 #df_agg['resid_ESSO'] = smf.ols('price_ht_ESSO~cost_a_l4', df_agg, missing='drop').fit().resid
@@ -280,6 +304,7 @@ for brand in ['TOTAL', 'MOUSQUETAIRES', 'CARREFOUR', 'SYSTEMEU', 'ESSO']:
 
 zero = 0.00000000001
 df_agg = df_agg[:'2012-06']
+#df_agg = df_agg['2012-08':]
 
 # Pbm with missing data... need to fillna (or not necessarily if moving average)
 df_agg['cost_a_f'] = df_agg['cost_a'].fillna(method='pad')
@@ -289,6 +314,7 @@ df_agg['cost_a_f'] = df_agg['cost_a'].fillna(method='pad')
 df_agg['resid'] = smf.ols('price_ht~cost_a', df_agg, missing='drop').fit().resid
 df_agg['cost_a_l3'] = df_agg['cost_a'].shift(3)
 df_agg['resid_l3'] = smf.ols('price_ht~cost_a_l3', df_agg, missing='drop').fit().resid
+# ok not error autocorrelation
 
 ## Cost variations only
 #ls_cost_d = []
@@ -307,9 +333,16 @@ df_agg['resid_l3'] = smf.ols('price_ht~cost_a_l3', df_agg, missing='drop').fit()
 #reg0 = smf.ols('price_ht_d0 ~ resid + ' + '+'.join(ls_cost_d_sign[4:34]),
 #               df_agg, missing = 'drop').fit()
 #print reg0.summary()
+#
+#import statsmodels.tsa.stattools as ts
+## should improve nan treatment probably...
+#ts.adfuller(df_agg['resid'][~pd.isnull(df_agg['resid'])])
+#
 #df_agg['price_ht_d0_res'] = reg0.resid
 #df_agg['price_ht_d0_pred'] = df_agg['price_ht_d0'] - df_agg['price_ht_d0_res']
 #df_agg[['price_ht_d0', 'price_ht_d0_pred']].plot()
+#plt.show()
+
 #
 #se_params = reg0.params
 #se_params_p = se_params[se_params.index.map(lambda x: x[-1] == 'p')]
@@ -319,40 +352,45 @@ df_agg['resid_l3'] = smf.ols('price_ht~cost_a_l3', df_agg, missing='drop').fit()
 #df_adj.plot()
 #plt.show()
 
-# Cost and Retail variations
-ls_cost_d = []
-ls_retail_d = []
-ls_cost_d_sign = []
-ls_retail_d_sign = []
-for i in range(1, 20):
-  # Cost variations
-  df_agg['cost_a_d%s' %(i-1)] = df_agg['cost_a_f'].shift(i-1) - df_agg['cost_a_f'].shift(i)
-  ls_cost_d.append('cost_a_d%s' %(i-1))
-  df_agg['cost_a_d%s_p' %(i-1)] = 0
-  df_agg['cost_a_d%s_p' %(i-1)][df_agg['cost_a_d%s' %(i-1)] > zero]  = df_agg['cost_a_d%s' %(i-1)]
-  df_agg['cost_a_d%s_n' %(i-1)] = 0
-  df_agg['cost_a_d%s_n' %(i-1)][df_agg['cost_a_d%s' %(i-1)] < -zero] = df_agg['cost_a_d%s' %(i-1)]
-  ls_cost_d_sign.append('cost_a_d%s_p' %(i-1))
-  ls_cost_d_sign.append('cost_a_d%s_n' %(i-1))
-  # Retail price variations
-  df_agg['price_ht_d%s' %(i-1)] = df_agg['price_ht'].shift(i-1) - df_agg['price_ht'].shift(i)
-  ls_retail_d.append('price_ht_d%s' %(i-1))
-  df_agg['price_ht_d%s_p' %(i-1)] = 0
-  df_agg['price_ht_d%s_p' %(i-1)][df_agg['price_ht_d%s' %(i-1)] > zero] = df_agg['price_ht_d%s' %(i-1)]
-  df_agg['price_ht_d%s_n' %(i-1)] = 0
-  df_agg['price_ht_d%s_n' %(i-1)][df_agg['price_ht_d%s' %(i-1)] < -zero] = df_agg['price_ht_d%s' %(i-1)]
-  ls_retail_d_sign.append('price_ht_d%s_p' %(i-1))
-  ls_retail_d_sign.append('price_ht_d%s_n' %(i-1))
-df_agg['price_ht_d0' ] = df_agg['price_ht'] - df_agg['price_ht'].shift(1)
-# or 4:30
-reg1 = smf.ols('price_ht_d0 ~ resid + ' +\
-               '+'.join(ls_cost_d_sign[0:28]) + '+' + \
-               '+'.join(ls_retail_d_sign[2:12]),
-               df_agg, missing = 'drop').fit()
-print reg1.summary()
-df_agg['price_ht_d0_res_2'] = reg1.resid
-df_agg['price_ht_d0_pred_2'] = df_agg['price_ht_d0'] - df_agg['price_ht_d0_res_2']
-df_agg[['price_ht_d0', 'price_ht_d0_pred_2']].plot()
+## Cost and Retail variations
+#ls_cost_d = []
+#ls_retail_d = []
+#ls_cost_d_sign = []
+#ls_retail_d_sign = []
+#for i in range(1, 20):
+#  # Cost variations
+#  df_agg['cost_a_d%s' %(i-1)] = df_agg['cost_a_f'].shift(i-1) - df_agg['cost_a_f'].shift(i)
+#  ls_cost_d.append('cost_a_d%s' %(i-1))
+#  df_agg['cost_a_d%s_p' %(i-1)] = 0
+#  df_agg['cost_a_d%s_p' %(i-1)][df_agg['cost_a_d%s' %(i-1)] > zero]  = df_agg['cost_a_d%s' %(i-1)]
+#  df_agg['cost_a_d%s_n' %(i-1)] = 0
+#  df_agg['cost_a_d%s_n' %(i-1)][df_agg['cost_a_d%s' %(i-1)] < -zero] = df_agg['cost_a_d%s' %(i-1)]
+#  ls_cost_d_sign.append('cost_a_d%s_p' %(i-1))
+#  ls_cost_d_sign.append('cost_a_d%s_n' %(i-1))
+#  # Retail price variations
+#  df_agg['price_ht_d%s' %(i-1)] = df_agg['price_ht'].shift(i-1) - df_agg['price_ht'].shift(i)
+#  ls_retail_d.append('price_ht_d%s' %(i-1))
+#  df_agg['price_ht_d%s_p' %(i-1)] = 0
+#  df_agg['price_ht_d%s_p' %(i-1)][df_agg['price_ht_d%s' %(i-1)] > zero] = df_agg['price_ht_d%s' %(i-1)]
+#  df_agg['price_ht_d%s_n' %(i-1)] = 0
+#  df_agg['price_ht_d%s_n' %(i-1)][df_agg['price_ht_d%s' %(i-1)] < -zero] = df_agg['price_ht_d%s' %(i-1)]
+#  ls_retail_d_sign.append('price_ht_d%s_p' %(i-1))
+#  ls_retail_d_sign.append('price_ht_d%s_n' %(i-1))
+#df_agg['price_ht_d0' ] = df_agg['price_ht'] - df_agg['price_ht'].shift(1)
+## or 4:30
+#reg1 = smf.ols('price_ht_d0 ~ resid + ' +\
+#               '+'.join(ls_cost_d_sign[0:28]) + '+' + \
+#               '+'.join(ls_retail_d_sign[2:6]),
+#               df_agg, missing = 'drop').fit()
+#print reg1.summary()
+#df_agg['price_ht_d0_res_2'] = reg1.resid
+#df_agg['price_ht_d0_pred_2'] = df_agg['price_ht_d0'] - df_agg['price_ht_d0_res_2']
+#df_agg[['price_ht_d0', 'price_ht_d0_pred_2']].plot()
+#plt.show() # print both residuals and prev vs. actual on graph
+#
+#df_agg['price_ht_d0_res_2_l1']= df_agg['price_ht_d0_res_2'].shift(1)
+#print df_agg[['price_ht_d0_res_2_l1', 'price_ht_d0_res_2']].corr()
+#print smf.ols('price_ht_d0_res_2~price_ht_d0_res_2_l1', df_agg, missing='drop').fit().summary()
 
 #se_params = reg0.params
 #se_params_p = se_params[se_params.index.map(lambda x: x[-1] == 'p')]
