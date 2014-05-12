@@ -33,7 +33,8 @@ dict_dpts_regions = dec_json(path_dict_dpts_regions)
 # DF REUTERS
 
 reuters_diesel_excel_file = pd.ExcelFile(path_xls_reuters_diesel)
-df_reuters_diesel = reuters_diesel_excel_file.parse('Feuil1', skiprows = 0, header = 1, parse_dates = True)
+df_reuters_diesel =\
+  reuters_diesel_excel_file.parse('Feuil1', skiprows = 0, header = 1, parse_dates = True)
 df_reuters_diesel.set_index('Date', inplace = True)
 
 ecb_xml_file = open(path_xml_ecb, 'r').read()
