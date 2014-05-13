@@ -36,7 +36,8 @@ km_bound = 3
 zero_threshold = np.float64(1e-10)
 
 # DF PRICES
-df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
+ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
+df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
 se_mean_price = df_price.mean(1)
 
 # DF CLEAN PRICES
@@ -71,8 +72,9 @@ ls_ls_market_ids_st = get_ls_ls_distance_market_ids_restricted(master_price['ids
                                                                ls_ls_competitors, km_bound)
 ls_ls_market_ids_st_rd = get_ls_ls_distance_market_ids_restricted(master_price['ids'],
                                                                   ls_ls_competitors, km_bound, True)
-
 ls_ls_markets = [ls_market for ls_market in ls_ls_markets if len(ls_market) > 2]
+
+# Choose market definition for analysis
 ls_ls_market_ids_temp = ls_ls_market_ids
 
 # df_price vs. df_price_cl (check different cleaning ways...)
@@ -163,7 +165,9 @@ ls_ids_diff = [indiv_id for indiv_id in master_price['ids'] if indiv_id not in l
 
 indiv_ind = master_price['ids'].index(ls_ids_diff[0])
 
-# Check that on stable markets
+# CHECK STABLE MARKETS
+
+# Example
 ls_ls_market_ids[0]
 ls_harmonized_series = [df_price[ls_ls_market_ids[0][0]]]
 for comp_id in ls_ls_market_ids[0][1:]:
@@ -207,3 +211,19 @@ for indiv_id in ls_market_ids:
   nb_max = len(df_market[df_market[indiv_id] == df_market[ls_market_ids].max(1)])
   ls_min_max.append((nb_min, nb_max))
 # Count nb of time each is cheaper / least expensive... stuffs like that
+
+# Loop
+ls_stable_market_dispersion = []
+for ls_market in ls_ls_markets:
+  # stability of results vs. order of ids?
+  ls_harmonized_series = [df_price[ls_market[0]]]
+  for comp_id in ls_market[1:]:
+  	ls_harmonized_series.append(df_price[comp_id] +\
+      (df_price[ls_market[0]] - df_price[comp_id]).median())
+  df_market = pd.DataFrame(dict(zip(ls_market, ls_harmonized_series)))
+  ls_stable_market_dispersion.append([df_market, df_market.max(1) - df_market.min(1)])
+
+for ls_market, df_market, se_range in zip(ls_ls_markets, ls_stable_market_dispersion):
+  if len(ls_market) >= 5:
+    df_market.plot()
+    break

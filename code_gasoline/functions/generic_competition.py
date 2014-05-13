@@ -397,9 +397,6 @@ def get_fe_predicted_prices(list_ids, series):
   # Here: Assumes all have same lengths
   return np.reshape(ar_y_prediction, (len(list_ids), -1))
 
-# DATA DISPLAY
-
-
 if __name__=="__main__":
   if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
     path_data = r'W:\Bureau\Etienne_work\Data'
