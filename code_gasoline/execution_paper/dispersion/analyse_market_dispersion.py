@@ -259,34 +259,34 @@ ls_ls_ex = [[u'86100001', u'86100003', u'86100009', u'86100011'],
             [u'86100005'], [u'86100012'], [u'86102001']]
 str_ex = "[" + "], [".join(["'" + "', '".join(ls_ex) + "'" for ls_ex in ls_ls_ex]) + "]"
 
-plt.rcParams['figure.figsize'] = 16, 6
-ls_ls_groups = []
-for ls_market, (df_market, se_range) in zip(ls_ls_markets, ls_stable_market_dispersion):
-  if len(ls_market) >= 5:
-    #df_market.plot()
-    #break
-    ls_groups = []
-    ls_beg_market_ids = ls_market
-    while ls_beg_market_ids:
-      ls_group_nd_ids, ls_add_group_nd_ids = [ls_beg_market_ids[0]], [ls_beg_market_ids[0]]
-      ls_comp_ids = ls_beg_market_ids[1:]
-      while ls_add_group_nd_ids:
-        ls_add_group_nd_ids = get_nd_comps(ls_add_group_nd_ids, ls_comp_ids, df_price)
-        ls_group_nd_ids += ls_add_group_nd_ids
-        ls_comp_ids = [temp_id for temp_id in ls_comp_ids if temp_id not in ls_add_group_nd_ids]
-      ls_beg_market_ids = [market_id for market_id in ls_beg_market_ids\
-                              if market_id not in ls_group_nd_ids]
-      ls_groups.append(ls_group_nd_ids)
-    ls_ls_groups.append(ls_groups)
-    path_temp = os.path.join(path_dir_graphs,
-                             'stable_markets',
-                             '%s' %len(ls_groups))
-    if not os.path.exists(path_temp):
-      os.makedirs(path_temp)
-    df_market.plot()
-    str_group = "[" + "], [".join(["'" + "', '".join(group) + "'"\
-                                     for group in ls_groups]) + "]"
-    plt.figtext(.02, .02, str_group)
-    plt.subplots_adjust(bottom=0.2)
-    plt.savefig(os.path.join(path_temp, ls_market[0]))
-    plt.close()
+#plt.rcParams['figure.figsize'] = 16, 6
+#ls_ls_groups = []
+#for ls_market, (df_market, se_range) in zip(ls_ls_markets, ls_stable_market_dispersion):
+#  if len(ls_market) >= 5:
+#    #df_market.plot()
+#    #break
+#    ls_groups = []
+#    ls_beg_market_ids = ls_market
+#    while ls_beg_market_ids:
+#      ls_group_nd_ids, ls_add_group_nd_ids = [ls_beg_market_ids[0]], [ls_beg_market_ids[0]]
+#      ls_comp_ids = ls_beg_market_ids[1:]
+#      while ls_add_group_nd_ids:
+#        ls_add_group_nd_ids = get_nd_comps(ls_add_group_nd_ids, ls_comp_ids, df_price)
+#        ls_group_nd_ids += ls_add_group_nd_ids
+#        ls_comp_ids = [temp_id for temp_id in ls_comp_ids if temp_id not in ls_add_group_nd_ids]
+#      ls_beg_market_ids = [market_id for market_id in ls_beg_market_ids\
+#                              if market_id not in ls_group_nd_ids]
+#      ls_groups.append(ls_group_nd_ids)
+#    ls_ls_groups.append(ls_groups)
+#    path_temp = os.path.join(path_dir_graphs,
+#                             'stable_markets',
+#                             '%s' %len(ls_groups))
+#    if not os.path.exists(path_temp):
+#      os.makedirs(path_temp)
+#    df_price[ls_market].plot()
+#    str_group = "[" + "], [".join(["'" + "', '".join(group) + "'"\
+#                                     for group in ls_groups]) + "]"
+#    plt.figtext(.02, .02, str_group)
+#    plt.subplots_adjust(bottom=0.2)
+#    plt.savefig(os.path.join(path_temp, ls_market[0]))
+#    plt.close()
