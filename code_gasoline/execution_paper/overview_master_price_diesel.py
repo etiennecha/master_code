@@ -64,11 +64,11 @@ for id_station, info_station in master_price['dict_info'].iteritems():
 ls_start_end, ls_nan, dict_dilettante = get_overview_reporting_bis(master_price['diesel_price'],
                                                                    master_price['dates'],
                                                                    master_price['missing_dates'])
-# TODO: correct missing dates...
+# todo: correct station missing dates (like prices...)
 
 #dict_turnover = get_overview_turnover(ls_start_end, master_price['dates'], 3)
 
-# BAD REPORTING OVER TIME
+# Bad reporting over time
 ls_nb_missing_prices = [0 if date not in master_price['missing_dates'] else np.nan\
                           for date in master_price['dates']]
 for indiv_ind, ls_missing_day_ind in dict_dilettante.items():
@@ -78,8 +78,8 @@ ar_nb_missing_prices = np.array(ls_nb_missing_prices)
 #plt.plot(ar_nb_missing_prices)
 #plt.show()
 
-# BAD REPORTING OVER INDIVIDUALS
-print 'Nb of nan only:', len(ls_nan)
+# Bad reporting over individuals
+print '\nNb of stations with no price (nan): {:,.0f}'.format(len(ls_nan))
 ls_reporting = []
 for indiv_ind, indiv_start_end in enumerate(ls_start_end):
   ls_reporting.append(list(indiv_start_end) + [len(dict_dilettante.get(indiv_ind, []))])
@@ -114,38 +114,59 @@ for indiv_id in df_early.index:
 # LATE START
 # Same location? based on zip (map?)
 
-# ##############################
-# BRAND CHANGES (QUICK OVERVIEW)
-# ##############################
-
-## Count
-
 # #################
 # PRICE OVERVIEW
 # #################
 
-# TODO: 3 digits or not, how many used (to be done in pandas?)
-# Variations: size of variations, grid of variations used (to be done in pandas?)
-# Promotions (successive inverse moves)
-# Brand changes and impact (pandas)
-# Price graphs (pandas)
+# Variations: size of variations, grid of variations used
+# Promotions
+# Brand changes and impact (here?)
+# Price graphs (here?)
 
 ls_ls_price_durations = get_price_durations(master_price['diesel_price'])
 ls_ls_price_variations = get_price_variations(ls_ls_price_durations)
 
-# PRICE VARIATION VALUES (DEPRECATED?)
+# Price variation values (todo: deprecate)
 dict_price_variations = Counter()
 for ls_price_variations in ls_ls_price_variations:
   if ls_price_variations:
-    for variation in [variation for (variation, ls_day_ind) in ls_price_variations if not np.isnan(variation)]:
+    for variation in [variation for (variation, ls_day_ind)\
+                        in ls_price_variations if not np.isnan(variation)]:
       dict_price_variations[variation] += 1 
 
+# Create prices and price changes pandas dataframes
 zero_threshold = np.float64(1e-10)
-master_np_prices = np.array(master_price['diesel_price'], np.float64)
-df_prices = pd.DataFrame(master_np_prices.T, columns = master_price['ids'], index = master_price['dates'])
+ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
+df_prices = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
 df_chges = df_prices.shift(1) - df_prices
 
-# TODO: apply also at region / dpt / city / brand level => apply to subsets of df_chges
+# Stations using 3 digit prices
+ls_two_digit_ids, ls_three_digit_ids = [], []
+for col in df_prices.columns:
+  ar_prices_cent = df_prices[col].values*100
+  if any(ar_prices_cent[~np.isnan(ar_prices_cent)] !=\
+          ar_prices_cent[~np.isnan(ar_prices_cent)].astype(int).astype(float)):
+    ls_three_digit_ids.append(col)
+  elif len(ar_prices_cent[~np.isnan(ar_prices_cent)]) > 0:
+    ls_two_digit_ids.append(col)
+
+# Nb of prices in data (todo: apply restrictions before: highway etc?)
+ar_all_prices = df_prices.values
+ar_all_prices = ar_all_prices[~np.isnan(ar_all_prices)]
+print '\nNb of prices: {:,.0f}'.format(len(ar_all_prices))
+
+# Last figure of 3 digit prices
+ar_3d_prices = (df_prices[ls_three_digit_ids]*1000).values
+# todo: improve (int then str avoids 1299.0 but not robust)
+ar_3d_prices = ar_3d_prices[~np.isnan(ar_3d_prices)].astype(int).astype(str)  
+print '\nNb of 3 digit prices: {:,.0f}'.format(len(ar_3d_prices))
+dict_last_digit = {}
+for i in range(10):
+  ar_3dld_prices = ar_3d_prices[np.core.defchararray.startswith(ar_3d_prices, '%s'%i, start = -1)]
+  dict_last_digit[i] = len(ar_3dld_prices)
+print '\nNb of 3 digit prices ending with (nb and %)'
+for k,v in dict_last_digit.items():
+	print "{:>d}{:>12,.0f}{:>8.2f}".format(k, v, float(v)/len(ar_3d_prices))
 
 # Period price change frequency
 ls_freq_price_chges = []
@@ -154,18 +175,27 @@ for day in df_chges.index:
   nb_no_price_chge = df_chges.ix[day][np.abs(df_chges.ix[day]) < zero_threshold].count()
   nb_pos_price_chge = df_chges.ix[day][df_chges.ix[day] >  zero_threshold].count()
   nb_neg_price_chge = df_chges.ix[day][df_chges.ix[day] < -zero_threshold].count()
-  ls_freq_price_chges.append([nb_valid_prices, nb_no_price_chge, nb_pos_price_chge, nb_neg_price_chge])
+  ls_freq_price_chges.append([nb_valid_prices,
+                              nb_no_price_chge,
+                              nb_pos_price_chge,
+                              nb_neg_price_chge])
 ls_columns = ['nb_valid', 'nb_no_chge', 'nb_pos_chge', 'nb_neg_chge']
-df_freq_price_chges = pd.DataFrame(ls_freq_price_chges, columns = ls_columns, index = df_chges.index)
-df_freq_price_chges['pct_chge'] = (df_freq_price_chges['nb_pos_chge'] + df_freq_price_chges['nb_neg_chge'])/\
+df_freq_price_chges = pd.DataFrame(ls_freq_price_chges, df_chges.index, ls_columns)
+df_freq_price_chges['pct_chge'] = (df_freq_price_chges['nb_pos_chge'] +\
+                                   df_freq_price_chges['nb_neg_chge'])/\
                                      df_freq_price_chges['nb_valid']
+# TODO: cumulate noth neg and pos chge per period
+#fig, ax = plt.subplots()
+#df_freq_price_chges['nb_pos_chge'][0:200].plot(style = 'bs-', ax=ax)
+#df_freq_price_chges['nb_neg_chge'][0:200].plot(style = 'ro-', ax=ax)
+#plt.show()
 #df_freq_price_chges[['nb_pos_chge', 'nb_neg_chge']][0:100].plot(kind = 'bar')
 #plt.plot()
 #df_freq_price_chges['pct_chge'][355:450].plot(kind = 'bar')
 #plt.show()
 
-# Period price change values (TODO: MERGE WITH PREVIOUS!)
-# TODO: see use of describe (standard metrics) and merging all in one df (flex: quantiles etc)
+# Period price change values (todo: MERGE WITH PREVIOUS!)
+# todo: see use of describe (standard metrics) and merging all in one df (flex: quantiles etc)
 ls_val_price_chges = []
 for day in df_chges.index:
   se_pos_price_chge = df_chges.ix[day][df_chges.ix[day] >  zero_threshold]
@@ -180,12 +210,14 @@ df_val_price_chges = pd.DataFrame(ls_val_price_chges, columns = ls_columns, inde
 #df_val_price_chges.plot()
 #plt.show()
 
-# FIRM LEVEL DESCRIPTIVE STATICS
+# todo: apply also at region / dpt / city / brand level => apply to subsets of df_chges
+
+# Firm level descriptive stats
 
 ls_ls_indiv_chges = []
 for indiv_id in df_chges.columns:
-  # TODO: Check what to do with missing values(exclude first not to miss any change?)
-  # TODO: Exclusion of stations from dispersion stats: count all chges...
+  # todo: Check what to do with missing values(exclude first not to miss any change?)
+  # todo: Exclusion of stations from dispersion stats: count all chges...
   nb_valid_prices = df_chges[indiv_id].count()
   nb_no_price_chge = df_chges[indiv_id][np.abs(df_chges[indiv_id]) < zero_threshold].count()
   se_pos_price_chge = df_chges[indiv_id][df_chges[indiv_id] >  zero_threshold]
@@ -203,8 +235,8 @@ ls_columns = ['nb_valid', 'nb_no_chge', 'nb_pos_chge', 'nb_neg_chge',
 df_indiv_price_chges = pd.DataFrame(ls_ls_indiv_chges, columns = ls_columns, index = df_chges.columns)
 df_indiv_price_chges['nb_chge'] = df_indiv_price_chges['nb_pos_chge'] + df_indiv_price_chges['nb_neg_chge']
 df_indiv_price_chges['pct_chge'] = df_indiv_price_chges['nb_chge'] / df_indiv_price_chges['nb_valid']
-# TODO: check if should not rather divide by nb of days?
-# TODO: stats by brand / dpt etc / nb competitors etc.
+# todo: check if should not rather divide by nb of days?
+# todo: stats by brand / dpt etc / nb competitors etc.
 
 print 'Stations that should almost certainly be excluded:',\
   len(df_indiv_price_chges[df_indiv_price_chges['pct_chge'] < 0.03])
