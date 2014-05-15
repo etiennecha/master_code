@@ -185,6 +185,28 @@ df_freq_price_chges['pct_chge'] = (df_freq_price_chges['nb_pos_chge'] +\
                                    df_freq_price_chges['nb_neg_chge'])/\
                                      df_freq_price_chges['nb_valid']
 # TODO: cumulate noth neg and pos chge per period
+# http://matplotlib.org/examples/pylab_examples/bar_stacked.html
+# http://stackoverflow.com/questions/14920691/using-negative-values-in-a-matplotlibs-bar-plot
+
+# todo: end '2012-06' and customize x axis again + add grid and average price
+ar_pos_chges = df_freq_price_chges['nb_pos_chge'][0:200].values
+ar_neg_chges = df_freq_price_chges['nb_neg_chge'][0:200].values
+width = 0.8
+p1 = plt.bar(range(len(ar_pos_chges)), ar_pos_chges, width=width, color = 'r')
+p2 = plt.bar(range(len(ar_neg_chges)), -ar_neg_chges, width=width, color = 'y')
+ls_x_axis = []
+for i, date in enumerate(df_freq_price_chges['nb_neg_chge'][0:200].index[1:], 1):
+	if date.month != df_freq_price_chges['nb_neg_chge'][0:200].index[i-1].month:
+		ls_x_axis.append((i, date.strftime('%B-%Y')))
+ind = np.array([x[0] for x in ls_x_axis])
+plt.xticks(ind+0.8/2., [x[1] for x in ls_x_axis])
+plt.show()
+
+# todo format x axis
+
+#p1 = plt.bar(range(len(ar_pos_chges)), ar_pos_chges, color = 'r')
+#p2 = plt.bar(range(len(ar_neg_chges)), ar_neg_chges, color = 'y', bottom = ar_pos_chges)
+#plt.show()
 #fig, ax = plt.subplots()
 #df_freq_price_chges['nb_pos_chge'][0:200].plot(style = 'bs-', ax=ax)
 #df_freq_price_chges['nb_neg_chge'][0:200].plot(style = 'ro-', ax=ax)
