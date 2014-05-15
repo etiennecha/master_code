@@ -188,18 +188,29 @@ df_freq_price_chges['pct_chge'] = (df_freq_price_chges['nb_pos_chge'] +\
 # http://matplotlib.org/examples/pylab_examples/bar_stacked.html
 # http://stackoverflow.com/questions/14920691/using-negative-values-in-a-matplotlibs-bar-plot
 
-# todo: end '2012-06' and customize x axis again + add grid and average price
-ar_pos_chges = df_freq_price_chges['nb_pos_chge'][0:200].values
-ar_neg_chges = df_freq_price_chges['nb_neg_chge'][0:200].values
+# todo: add average price or price change with secondary axis?
+ar_pos_chges = df_freq_price_chges['nb_pos_chge'][:'2012-06'].values
+ar_neg_chges = df_freq_price_chges['nb_neg_chge'][:'2012-06'].values
+
+plt.rcParams['figure.figsize'] = 16, 6
+fig = plt.figure()
+ax1 = fig.add_subplot(111)
 width = 0.8
-p1 = plt.bar(range(len(ar_pos_chges)), ar_pos_chges, width=width, color = 'r')
-p2 = plt.bar(range(len(ar_neg_chges)), -ar_neg_chges, width=width, color = 'y')
+p1 = ax1.bar(range(len(ar_pos_chges)), ar_pos_chges, width=width, color = 'r', label='positive')
+p2 = ax1.bar(range(len(ar_neg_chges)), -ar_neg_chges, width=width, color = 'y', label='negative')
 ls_x_axis = []
-for i, date in enumerate(df_freq_price_chges['nb_neg_chge'][0:200].index[1:], 1):
-	if date.month != df_freq_price_chges['nb_neg_chge'][0:200].index[i-1].month:
-		ls_x_axis.append((i, date.strftime('%B-%Y')))
+for i, date in enumerate(df_freq_price_chges['nb_neg_chge'][:'2012-06'].index[1:], 1):
+  if date.month != df_freq_price_chges['nb_neg_chge'][:'2012-06'].index[i-1].month:
+		ls_x_axis.append((i, date.strftime('%b-%Y')))
 ind = np.array([x[0] for x in ls_x_axis])
+handles, labels = ax1.get_legend_handles_labels()
+ax1.legend(handles, labels, loc = 4)
+ax1.grid()
+plt.xlim((0, len(ar_neg_chges)))
 plt.xticks(ind+0.8/2., [x[1] for x in ls_x_axis])
+y_l, y_t = plt.yticks() # can be done with ax1
+plt.yticks(label = np.abs(y_l).astype(int))
+plt.tight_layout()
 plt.show()
 
 # todo format x axis

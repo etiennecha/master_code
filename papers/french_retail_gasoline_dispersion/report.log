@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.9 (MiKTeX 2.7) (preloaded format=pdflatex 2011.4.4)  7 MAY 2014 18:49
+This is pdfTeX, Version 3.1415926-1.40.9 (MiKTeX 2.7) (preloaded format=pdflatex 2011.4.4)  15 MAY 2014 10:14
 entering extended mode
 **report.tex
 (report.tex
@@ -564,14 +564,22 @@ Overfull \hbox (25.23946pt too wide) in paragraph at lines 124--125
  [][] 
  []
 
-[6 <graphs/diesel_price_margin.png>] [7]
-Underfull \hbox (badness 1281) in paragraph at lines 155--156
+<graphs/diesel_nb_price_chges.png, id=125, 1166.4378pt x 444.4605pt>
+File: graphs/diesel_nb_price_chges.png Graphic file (type png)
+
+<use graphs/diesel_nb_price_chges.png>
+Overfull \hbox (25.23946pt too wide) in paragraph at lines 130--131
+ [][] 
+ []
+
+[6 <graphs/diesel_price_margin.png>] [7 <graphs/diesel_nb_price_chges.png>]
+[8]
+Underfull \hbox (badness 1281) in paragraph at lines 161--162
 \T1/cmr/m/n/10.95 statis-tics com-piled from all po-ten-tial sources ap-pears f
 u-tile, Zagaz.com and Prix-
  []
 
-[8]
-LaTeX Font Info:    Try loading font information for U+bbm on input line 163.
+LaTeX Font Info:    Try loading font information for U+bbm on input line 169.
 
 (\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\bbm\ubbm.f
 d
@@ -580,19 +588,19 @@ File: ubbm.fd 1999/03/15 V 1.2 Font definition for bbm font - TH
 
 Package natbib Warning: There were undefined citations.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 254.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 260.
 [15]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 254.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 260.
  (report.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 254.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 260.
 Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: EFFA8D692E54ECD567264B964AF4C69F;945.
  ) 
 Here is how much of TeX's memory you used:
- 6958 strings out of 95304
- 96651 string characters out of 1181907
+ 6964 strings out of 95304
+ 96831 string characters out of 1181907
  178852 words of memory out of 1500000
- 9970 multiletter control sequences out of 110000
+ 9974 multiletter control sequences out of 110000
  21923 words of font info for 64 fonts, out of 3000000 for 5000
  14 hyphenation exceptions out of 8191
  31i,11n,28p,1126b,366s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -624,9 +632,9 @@ es/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/public/cm-super/sfti0900.p
 fb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/publi
 c/cm-super/sfti1095.pfb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/
 2.7/fonts/type1/public/cm-super/sftt1095.pfb>
-Output written on report.pdf (16 pages, 476412 bytes).
+Output written on report.pdf (16 pages, 519498 bytes).
 PDF statistics:
- 267 PDF objects out of 1000 (max. 8388607)
- 37 named destinations out of 1000 (max. 131072)
- 126 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 270 PDF objects out of 1000 (max. 8388607)
+ 38 named destinations out of 1000 (max. 131072)
+ 131 words of extra memory for PDF output out of 10000 (max. 10000000)
 
