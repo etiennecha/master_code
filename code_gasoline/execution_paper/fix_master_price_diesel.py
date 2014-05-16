@@ -25,6 +25,8 @@ master_price['diesel_price'], dict_corrections, dict_errors =\
                                                   fill_prices_using_dates(master_price['diesel_price'],
                                                                           master_price['diesel_date'],
                                                                           master_price['dates'])
+# todo: fill missing prices too if to be used later
+
 master_price['diesel_price'], dict_corrections_gaps = fill_short_gaps(master_price['diesel_price'], 5)
 ls_abnormal_prices = get_abnormal_price_values(master_price['diesel_price'], 1.0, 2.0)
 ls_abnormal_price_values = format_ls_abnormal_prices(ls_abnormal_prices,
