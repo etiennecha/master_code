@@ -63,7 +63,7 @@ df_price_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.cs
 # ################
 
 km_bound = 3
-diff_bound = 0.08
+diff_bound = 0.02
 
 # TODO: iterate with various diff_bounds (high value: no cleaning of prices)
 

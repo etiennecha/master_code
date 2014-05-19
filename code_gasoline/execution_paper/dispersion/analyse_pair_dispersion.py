@@ -40,7 +40,8 @@ pd.options.display.float_format = '{:6,.4f}'.format
 start = time.clock()
 
 # DF PRICES
-df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
+ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
+df_prices = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
 
 # DF CLEAN PRICES
 
@@ -76,13 +77,14 @@ ls_ar_rrs = []
 ls_rr_lengths = []
 for (indiv_id, comp_id), distance in ls_tuple_competitors:
   if distance <= km_bound: 
-    se_prices_1 = df_price[indiv_id]
-    se_prices_2 = df_price[comp_id]
+    se_prices_1 = df_prices[indiv_id]
+    se_prices_2 = df_prices[comp_id]
     avg_spread = (se_prices_2 - se_prices_1).mean()
     if np.abs(avg_spread) > diff_bound:
-      # se_prices_2 = se_prices_2 - avg_spread
-      se_prices_1 = df_price_cl[indiv_id]
-      se_prices_2 = df_price_cl[comp_id]
+      #se_prices_1 = df_price_cl[indiv_id]
+      #se_prices_2 = df_price_cl[comp_id]
+      se_prices_1 = df_prices[indiv_id]
+      se_prices_2 = df_prices[comp_id]
     ls_comp_pd = get_pair_price_dispersion(se_prices_1.as_matrix(),
                                            se_prices_2.as_matrix(), light = False)
     ls_comp_chges = get_stats_two_firm_price_chges(se_prices_1.as_matrix(),
@@ -115,7 +117,6 @@ df_ppd['sc_750'] = 0
 df_ppd['sc_500'][df_ppd['distance'] <= 0.75] = 1
 df_ppd['sc_1000'] = 0
 df_ppd['sc_1000'][df_ppd['distance'] <= 1] = 1
-
 
 # DF BRAND (LIGHT)
 dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
@@ -184,37 +185,50 @@ for i in range(10):
 
 df_ppd_nodiff = df_ppd[np.abs(df_ppd['avg_spread']) <= diff_bound]
 df_ppd_diff = df_ppd[np.abs(df_ppd['avg_spread']) > diff_bound]
-print len(df_ppd_nodiff), len(df_ppd_diff)
+ls_ppd_names = ['All', 'No differentation', 'Differentiation']
 
-# RR & SPREAD VS DISTANCE + PER TYPE OF BRAND
-print len(df_ppd_nodiff['pct_rr'][df_ppd_nodiff['pct_rr'] <= zero_threshold])
-#hist_test = plt.hist(df_ppd_nodiff['pct_rr'][~pd.isnull(df_ppd_nodiff['pct_rr'])], bins = 50)
-df_all = df_ppd_nodiff[(~pd.isnull(df_ppd_nodiff['pct_rr'])) & (df_ppd_nodiff['distance'] <= 3)]
-df_close = df_ppd_nodiff[(~pd.isnull(df_ppd_nodiff['pct_rr'])) & (df_ppd_nodiff['distance'] <= 1)]
-df_far = df_ppd_nodiff[(~pd.isnull(df_ppd_nodiff['pct_rr'])) & (df_ppd_nodiff['distance'] > 1)]
-ecdf = ECDF(df_all['pct_rr'])
-ecdf_close = ECDF(df_close['pct_rr'])
-ecdf_far = ECDF(df_far['pct_rr'])
-x = np.linspace(min(df_all['pct_rr']), max(df_all['pct_rr']), num=100)
-y = ecdf(x)
-y_close = ecdf_close(x)
-y_far = ecdf_far(x)
-
-ax = plt.subplot()
-ax.step(x, y_close, label = r'$d_{ij} \leq 1km$')
-ax.step(x, y_far, label = r'$1km < d_{ij} \leq 3km$')
-plt.legend()
-plt.title('Rank reversals distributions')
-plt.show()
-
-print ks_2samp(df_close['pct_rr'], df_far['pct_rr'])
-print len(df_all['pct_rr']), len(df_close['pct_rr']), len(df_far['pct_rr'])
-
-print '\nPair types representation among all pairs, close pairs, far pairs'
-for df_temp, name_df in zip([df_all, df_close, df_far], ['all', 'close', 'far']):
-  print '\n%s' %name_df, len(df_temp), 'pairs'
-  for pair_type in np.unique(df_temp['pair_type']):
-    print pair_type, len(df_temp[df_temp['pair_type'] == pair_type]) / float(len(df_temp))
+for ppd_name, df_ppd_temp in zip(ls_ppd_names, [df_ppd, df_ppd_nodiff, df_ppd_diff]):
+  print '\n', 'ppd_name'
+  print "\nNb pairs", len(df_ppd_temp)
+  
+  print "Of which no rank rank reversals",\
+           len(df_ppd_temp['pct_rr'][df_ppd_temp['pct_rr'] <= zero_threshold])
+  
+  # RR & SPREAD VS DISTANCE + PER TYPE OF BRAND
+  #hist_test = plt.hist(df_ppd_nodiff['pct_rr'][~pd.isnull(df_ppd_nodiff['pct_rr'])], bins = 50)
+  df_all = df_ppd_temp[(~pd.isnull(df_ppd_temp['pct_rr'])) & (df_ppd_temp['distance'] <= 3)]
+  df_close = df_ppd_temp[(~pd.isnull(df_ppd_temp['pct_rr'])) & (df_ppd_temp['distance'] <= 1)]
+  df_far = df_ppd_temp[(~pd.isnull(df_ppd_temp['pct_rr'])) & (df_ppd_temp['distance'] > 1)]
+  
+  # Plot ECDF of rank reversals: close vs. far
+  ecdf = ECDF(df_all['pct_rr'])
+  ecdf_close = ECDF(df_close['pct_rr'])
+  ecdf_far = ECDF(df_far['pct_rr'])
+  x = np.linspace(min(df_all['pct_rr']), max(df_all['pct_rr']), num=100)
+  y = ecdf(x)
+  y_close = ecdf_close(x)
+  y_far = ecdf_far(x)
+  # Set size of plot
+  ax = plt.subplot()
+  ax.step(x, y_close, label = r'$d_{ij} \leq 1km$')
+  ax.step(x, y_far, label = r'$1km < d_{ij} \leq 3km$')
+  plt.legend()
+  plt.show()
+  
+  print '\nK-S test of equality of rank reversal distributions'
+  print ks_2samp(df_close['pct_rr'], df_far['pct_rr'])
+  # one side test not implemented in python
+  
+  print '\nNb of pairs', len(df_all['pct_rr'])
+  print 'Nb of pairs w/ short distance', len(df_close['pct_rr'])
+  print 'Nb of pairs w/ longer distance', len(df_far['pct_rr'])
+  
+  print '\nPair types representation among all pairs, close pairs, far pairs'
+  for df_temp, name_df in zip([df_all, df_close, df_far], ['All', 'Close', 'Far']):
+    print '\n%s' %name_df, len(df_temp), 'pairs'
+    for pair_type in np.unique(df_temp['pair_type']):
+      print "{:20} {:>4.2f}".\
+              format(pair_type, len(df_temp[df_temp['pair_type'] == pair_type]) / float(len(df_temp)))
   
 # RR VS. TOTAL ACCESS / RR DURATION
 
@@ -246,7 +260,8 @@ for ar_rrs, ls_pair_ppd in zip(ls_ar_rrs, ls_ppd):
  
 ls_df_rrs_su = []
 for ls_ar_rrs_temp in [ls_ar_rrs, ls_ar_rrs_ta, ls_ar_rrs_nota, ls_ar_rrs_nodiff]:
-  df_rrs_temp = pd.DataFrame(ls_ar_rrs_temp, columns = master_price['dates'])
+  ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
+  df_rrs_temp = pd.DataFrame(ls_ar_rrs_temp, columns = ls_dates)
   se_nb_valid = df_rrs_temp.apply(lambda x: (~pd.isnull(x)).sum())
   se_nb_rr    = df_rrs_temp.apply(lambda x: (np.abs(x) > zero_threshold).sum())
   se_avg_rr   = df_rrs_temp.apply(lambda x: np.abs(x[np.abs(x) > zero_threshold]).mean())
@@ -268,7 +283,10 @@ df_rrs_su_all = pd.merge(df_rrs_su_all, ls_df_rrs_su[2],\
 df_rrs_su_all = pd.merge(df_rrs_su_all, ls_df_rrs_su[3],\
                          right_index = True, left_index = True, suffixes=('', '_nodiff'))
 
-df_rrs_su_all[['pct_rr', 'pct_rr_ta', 'pct_rr_nota', 'pct_rr_nodiff']].plot()
+ax = df_rrs_su_all[['pct_rr', 'pct_rr_ta', 'pct_rr_nota', 'pct_rr_nodiff']].plot()
+handles, labels = ax.get_legend_handles_labels()
+labels = ['All', 'Total Access', 'All but Total Access', 'No differentiation']
+ax.legend(handles, labels)
 plt.show()
 
 # Price obs: stats descs + graph observations (investigate price cleaning too)
@@ -279,11 +297,13 @@ df_ppd['pair_type'][(df_ppd['pct_same_price'] > 0.5) &\
                     (df_ppd['brand_2_e_1'] != df_ppd['brand_2_e_2'])].value_counts()
 df_ppd[['id_1', 'id_2', 'pair_type']][(df_ppd['pct_same_price'] > 0.5) &\
                                       (df_ppd['brand_2_e_1'] != df_ppd['brand_2_e_2'])][0:10]
-ax = df_price[['1500007', '1500001']].plot()
+# Set size of plot
+ax = df_prices[['1500007', '1500001']].plot()
 handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles, [df_brands.ix[indiv_id]['brand_2_e'] for indiv_id in labels])
 plt.title(master_price['dict_info']['1500007']['city'])
 plt.show()
+
 # pd.set_option('display.max_columns', 500)
 
 # Check leader follower

@@ -1,11 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import add_to_path
-from add_to_path import path_data
+import add_to_path_sub
+from add_to_path_sub import path_data
 from generic_master_price import *
 from generic_master_info import *
 from functions_string import *
+import time
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 
@@ -28,6 +29,102 @@ ls_ls_competitors = dec_json(path_ls_ls_competitors)
 ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
 dict_brands = dec_json(path_dict_brands)
 dict_dpts_regions = dec_json(path_dict_dpts_regions)
+
+zero_threshold = np.float64(1e-10)
+series = 'diesel_price'
+km_bound = 5
+
+# #####################
+# IMPORT INSEE DATA
+# #####################
+
+pd_df_insee = pd.read_csv(path_csv_insee_data, encoding = 'utf-8', dtype= str)
+# excludes dom tom
+pd_df_insee = pd_df_insee[~pd_df_insee[u'Département - Commune CODGEO'].str.contains('^97')]
+pd_df_insee['Population municipale 2007 POP_MUN_2007'] = \
+  pd_df_insee['Population municipale 2007 POP_MUN_2007'].apply(lambda x: float(x))
+
+# #####################
+# MARKET DEFINITIONS
+# #####################
+
+pd_df_insee['id_code_geo'] = pd_df_insee[u'Département - Commune CODGEO']
+pd_df_insee = pd_df_insee.set_index('id_code_geo')
+dict_markets_insee = {}
+dict_markets_au = {}
+dict_markets_uu = {}
+# some stations don't have code_geo (short spells which are not in master_info)
+for id_station, info_station in master_price['dict_info'].iteritems():
+  if 'code_geo' in info_station:
+    dict_markets_insee.setdefault(info_station['code_geo'], []).append(id_station)
+    station_uu = pd_df_insee.ix[info_station['code_geo']][u"Code géographique de l'unité urbaine UU2010"]
+    dict_markets_uu.setdefault(station_uu, []).append(id_station)
+    station_au = pd_df_insee.ix[info_station['code_geo']][u'Code AU2010']
+    dict_markets_au.setdefault(station_au, []).append(id_station)
+
+# ###################
+# BUILD DF INFO
+# ###################
+
+dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
+
+ls_services = [service for indiv_id, indiv_info in master_info.items()\
+                 if indiv_info['services'][-1] for service in indiv_info['services'][-1]]
+ls_services = list(set(ls_services))
+for indiv_id, indiv_info in master_info.items():
+  # Caution [] and None are false but different here
+  if indiv_info['services'][-1] is not None:
+    ls_station_services = [0 for i in ls_services]
+    for service in indiv_info['services'][-1]:
+      service_ind = ls_services.index(service)
+      ls_station_services[service_ind] = 1
+  else:
+    ls_station_services = [None for i in ls_services]
+  master_info[indiv_id]['list_service_dummies'] = ls_station_services
+
+ls_ls_info = []
+for indiv_ind, indiv_id in enumerate(master_price['ids']):
+  # from master_price
+  indiv_dict_info = master_price['dict_info'][indiv_id]
+  city = indiv_dict_info['city']
+  zip_code = '%05d' %int(indiv_id[:-3]) # TODO: improve if must be used alone
+  region = dict_dpts_regions[zip_code[:2]]
+  code_geo = indiv_dict_info.get('code_geo')
+  code_geo_ardts = indiv_dict_info.get('code_geo_ardts')
+  brand_1_b = indiv_dict_info['brand_std'][0][0]
+  brand_2_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][1]
+  brand_type_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][2]
+  brand_1_e = indiv_dict_info['brand_std'][-1][0]
+  brand_2_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][1]
+  brand_type_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][2]
+  # from master_info
+  highway, hours = None, None
+  ls_service_dummies = [None for i in ls_services]
+  if master_info.get(indiv_id):
+    highway = master_info[indiv_id]['highway'][3]
+    hours = master_info[indiv_id]['hours'][-1]
+    ls_service_dummies = master_info[indiv_id]['list_service_dummies']
+  ls_ls_info.append([city, zip_code, code_geo, code_geo_ardts, region,
+                     brand_1_b, brand_2_b, brand_type_b,
+                     brand_1_e, brand_2_e, brand_type_e,
+                     highway, hours] + ls_service_dummies)
+ls_columns = ['city', 'zip_code', 'code_geo', 'code_geo_ardts', 'region',
+              'brand_1_b', 'brand_2_b', 'brand_type_b',
+              'brand_1_e', 'brand_2_e', 'brand_type_e',
+              'highway', 'hours'] + ls_services
+df_info = pd.DataFrame(ls_ls_info, master_price['ids'], ls_columns)
+
+df_info['dpt'] = df_info['code_geo'].map(lambda x: x[:2] if x else None)
+
+# Exclude highway and Corse
+df_info = df_info[(df_info['highway'] != 1) &\
+                  (df_info['region'] != 'Corse')]
+
+ls_ids_sup = df_info.index[df_info['brand_type_e'] == 'SUP']
+ls_ids_oil = df_info.index[df_info['brand_type_e'] == 'OIL']
+ls_ids_oil_noelan = df_info.index[(df_info['brand_type_e'] == 'OIL') &\
+                                  (df_info['brand_1_e'] != 'ELAN')]
+ls_ids_ind = df_info.index[df_info['brand_type_e'] == 'IND']
 
 # #########
 # TURNOVER
@@ -119,9 +216,18 @@ for indiv_id, ls_price_durations in zip(master_price['ids'], ls_ls_price_duratio
                            np.std(ls_indiv_durations)])
 ls_columns = ['nb_prices_used', 'mean_length', 'std_length']
 df_rigidity = pd.DataFrame(ls_rigidity_rows, master_price['ids'], ls_columns)
-print "\nMean length of a price validity: {:>8.2f}".format(df_rigidity['mean_length'].mean())
-print "\nMean length of a price validity(10 prices at least): {:>8.2f}".\
+print "\nMean length of a price validity: {:>4.2f}".format(df_rigidity['mean_length'].mean())
+print "\nMean length of a price validity(10 prices at least): {:>4.2f}".\
         format(df_rigidity[df_rigidity['nb_prices_used'] > 10]['mean_length'].mean())
+
+print "\nMean length of a price validity OIL: {:>4.2f}".\
+        format(df_rigidity.ix[ls_ids_oil]['mean_length'].mean())
+print "\nMean length of a price validity OIL (no ELAN): {:>4.2f}".\
+        format(df_rigidity.ix[ls_ids_oil_noelan]['mean_length'].mean())
+print "\nMean length of a price validity SUP: {:>4.2f}".\
+        format(df_rigidity.ix[ls_ids_sup]['mean_length'].mean())
+print "\nMean length of a price validity IND: {:>4.2f}".\
+        format(df_rigidity.ix[ls_ids_ind]['mean_length'].mean())
 
 # Create prices and price changes pandas dataframes
 zero_threshold = np.float64(1e-10)
@@ -191,21 +297,6 @@ ls_dow_chge_sum = [df_chges_su_notnan['nb_chge'][df_chges_su_notnan['dow'] == i]
 print '\nChanges per day of week'
 for i, x in enumerate(ls_dow_chge_sum):
   print '% of total chges on dow {:,.0f}: {:>4.2f}'.format(i, x/float(np.sum(ls_dow_chge_sum)))
-
-## Some prices are recorded a day too late... check issue
-## Normal but appears problematic for price changes vs missing dates
-#ls_chge_dates = []
-#for i, date_today in enumerate(master_price['dates'][1:], 1):
-#  date_today_alt = '/'.join([date_today[6:8], date_today[4:6], date_today[2:4]])
-#  date_yesterday = master_price['dates'][i-1]
-#  date_yesterday_alt = '/'.join([date_yesterday[6:8], date_yesterday[4:6], date_yesterday[2:4]])
-#  ls_ok, ls_late = [], []
-#  for indiv_id, ls_dates in zip(master_price['ids'], master_price['diesel_date']):
-#    if ls_dates[i] == date_today_alt:
-#		  ls_ok.append(indiv_id)
-#    elif ls_dates[i] == date_yesterday_alt:
-#      ls_late.append(indiv_id)
-#  ls_chge_dates.append([ls_ok, ls_late])
 
 # http://matplotlib.org/examples/pylab_examples/bar_stacked.html
 # http://stackoverflow.com/questions/14920691/using-negative-values-in-a-matplotlibs-bar-plot
@@ -354,78 +445,3 @@ for price_cut, ls_days in ls_indiv_promo:
 for price_cut, ls_days in ls_indiv_peaks:
   ax.axvline(x=df_prices.index[ls_days[0]], linewidth=1, color='r')
 plt.show()
-
-# ###########
-# DEPRECATED
-# ###########
-
-## REMINDER: USE OF PANEL DATA
-## select station 10000001 (df object)
-#pd_panel_data_master['10000001'] 
-## select all station at 1st period (df object)
-#pd_panel_data_master.major_xs(pd_panel_data_master.major_axis[0]) 
-##tranpose (items: brand, price)
-#pd_df_first_period = pd_panel_data_master.major_xs(pd_panel_data_master.major_axis[0]).T 
-## selects all TOTAL prices in 1st period
-#pd_df_first_period[pd_df_first_period['brand']=='TOTAL']['price']
-## average TOTAL price in 1st period
-#np.mean(pd_df_first_period[pd_df_first_period['brand']=='TOTAL']['price'])
-## average price in 1st period at TOTAL stations in Paris
-#np.mean(pd_df_first_period[(pd_df_first_period['brand']=='TOTAL') & \
-#                           (pd_df_first_period['zip_code'].str.startswith('75')) & \
-#                           (pd_df_first_period['zip_code'].str.len()==5)]['price'])
-## display prices of TOTAL stations in Paris for periods 1 to 10 ?
-
-## OLD WAY TO BUILD PANDAS PRICE DATA FILE
-#dict_panel_data_master = {}
-#ls_formatted_dates = ['%s/%s/%s' %(elt[:4], elt[4:6], elt[6:]) for elt in master_price['dates']]
-#index_formatted_dates = pd.to_datetime(ls_formatted_dates)
-#for i, id in enumerate(master_price['ids']):
-#  if 'code_geo' in master_price['dict_info'][id]:
-#    ls_station_prices = master_price['diesel_price'][i]
-#    ls_station_brands = [dict_brands[get_str_no_accent_up(brand)][1] if brand else brand\
-#                            for brand in get_field_as_list(id, 'brand', master_price)]
-#    zip_code = '%05d' %int(id[:-3])
-#    dict_station = {'price' : np.array(ls_station_prices, dtype = np.float32),
-#                    'brand' : np.array(ls_station_brands),
-#                    'zip_code' : zip_code,
-#                    'department' : zip_code[:2],
-#                    'region' : dict_dpts_regions[zip_code[:2]],
-#                    'insee_code' : master_price['dict_info'][id]['code_geo']}
-#    dict_panel_data_master[id] = pd.DataFrame(dict_station, index = index_formatted_dates)
-#pd_pd_master = pd.Panel(dict_panel_data_master)
-#
-#pd_df_price = pd_pd_master.minor_xs('price')
-#pd_df_price_total = pd_pd_master.minor_xs('price')[pd_pd_master.minor_xs('brand') == 'TOTAL']
-#pd_df_mean_comp = pd.concat([pd_df_price.mean(1),
-#                             pd_df_price_total.mean(1)],
-#                            keys = ['All', 'Total'] , axis = 1)
-#pd_df_mean_comp_2 = pd_df_price_total.mean(1) - pd_df_price.mean(1)
-
-## ANALYSIS OF PRICES AT GLOBAL LEVEL (DEPRECATED)
-#master_np_prices = np.array(master_price['diesel_price'], dtype = np.float64)
-#master_np_prices_chges = master_np_prices[:,:-1] - master_np_prices[:,1:]
-#ar_non_nan = np.sum((~np.isnan(master_np_prices_chges)), axis = 0)
-#ar_nb_chges = np.sum((~np.isnan(master_np_prices_chges)) &\
-#                     (master_np_prices_chges!=0), axis = 0)
-#ar_nb_pos_chges = np.sum((master_np_prices_chges > 0), axis = 0)
-#ar_nb_neg_chges = np.sum((master_np_prices_chges < 0), axis = 0)
-#ar_pos_chges = np.ma.masked_less_equal(master_np_prices_chges, 0).filled(np.nan)
-#ar_avg_pos_chges = scipy.stats.nanmean(pos_master_np_prices_chges, axis = 0)
-#ar_neg_chges = np.ma.masked_greater_equal(master_np_prices_chges, 0).filled(np.nan)
-#ar_avg_neg_chges = scipy.stats.nanmean(ar_master_np_neg_prices_chges, axis = 0)
-#ar_nonzero_chges = np.ma.masked_equal(master_np_prices_chges, 0).filled(np.nan)
-#ar_avg_nonzero_chges = scipy.stats.nanmean(ar_master_np_nonzero_prices_chges, axis = 0)
-#ar_normal_chges = master_np_prices_chges[(np.abs(master_np_prices_chges) <= 0.1) &\
-#                                         (master_np_prices_chges != 0)]
-#ar_extreme_chges = master_np_prices_chges[(np.abs(master_np_prices_chges) > 0.1)]
-#print 'Percentage of abnormal changes',\
-#      float(len(ar_extreme_chges))/(len(ar_normal_chges) + len(ar_extreme_chges))
-### TOO BIG => RESTRICT
-##n, bins, patches = plt.hist(ar_normal_chges[0:100000], 50, normed=1, facecolor='g')
-##plt.show()
-##n, bins, patches = plt.hist(ar_extreme_chges, 50, normed=1, facecolor='g')
-##plt.show()
-### CAUTION: still 324 changes among which some very high (-0.6) 
-##plt.step([i for i in range(300)], ar_avg_nonzero_chge[:300])
-##plt.show()
