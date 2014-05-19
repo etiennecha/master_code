@@ -16,6 +16,7 @@
 \usepackage{array}
 \usepackage{booktabs}
 \usepackage{hyperref}
+\usepackage[capposition=top]{floatrow}
 \renewcommand{\labelitemi}{--}
 \renewcommand{\labelitemii}{$\bullet$}
 \bibliographystyle{chicago}
@@ -118,18 +119,6 @@ Consumer can get information about prices from a variety of sources: at gas stat
 
 Data about daily diesel prices, gas station locations, opening hours and amenities were collected from website prix-carburants.gouv.fr. Gas station location was verified and improved with data from Zagaz (information provided by users about gas station locations was observed to be of better quality). Finally, the gas station database was merged with INSEE data in order to add information about local markets (rural/center/suburb, population etc.). Rotterdam wholesale diesel price is used as proxy for gas stations' variable costs.
 
-\begin{figure}[!h]
-    \caption{Diesel prices and retail gross margin (09/2011-06/2013)}
-	\centering
-		\includegraphics[width=16cm]{graphs/diesel_price_margin.png}
-\end{figure}
-
-\begin{figure}[!h]
-    \caption{Daily number of price changes (09/2011-06/2012)}
-	\centering
-		\includegraphics[width=16cm]{graphs/diesel_nb_price_chges.png}
-\end{figure}
-
 \subsection{Context of studied period}
 
 The period covered is marked by two significant events of different natures. One is a change of pricing strategy by a leading retail brand affecting the whole country and the other is a governmental intervention.
@@ -141,16 +130,28 @@ On August 29, 2012, a decrease in price of 6c per litre was announced by the gov
 
 \subsection{Descriptive statistics}
 
+\textbf{Retail price vs. wholesale cost of diesel}
+
 Descriptive statistics are provided for a period of 640 days starting September 9, 2011 and ending May 6, 2013. Four subperiods of data are missing whose respective day lengths are 11 (2012/07/08-2012/07/18), 10 (2012/08/13-2012/08/22), 49 (2012/12/04-2013/01/21) and 6 (2013/04/04-2013/04/09). The end of the period studied has been determined arbitrarily to avoid including another missing subperiod and keep the database to a reasonable size.
 
-Data include prices at 10,054 gas stations, of which 421 are identified as highway gas stations and thus excluded from the analysis.
+\begin{figure}[!h]
+    \caption{Diesel prices and retail gross margin (09/2011-06/2013)}
+	\centering
+		\includegraphics[width=16cm]{graphs/diesel_price_margin.png}
+\end{figure}
 
-\begin{itemize}
-\item Price rigidity: price durations and variations (sales?)
-\item Aggregate price vs. Rotterdam price
-\item Prices by brand / region (taxes)
-\item Distance and competition
-\end{itemize}
+\textbf{Price ridigity}
+
+Data include prices at 10,054 gas stations, of which 421 are identified as highway gas stations and thus excluded from the analysis. Additionnally, XXX stations are excluded due to apparent poor data quality (prices not updated on a regular basis). Overall, the number of prices available within one day varies between XXX and XXX over the period studied. On average, XXX gas stations (c. XXX\% of gas stations recorded on the website) change prices within a day. On average, a gas station changes its price every XXX days.
+
+\begin{figure}[!h]
+    \caption{Daily number of price changes (09/2011-06/2012)}
+	\centerings
+		\includegraphics[width=16cm]{graphs/diesel_nb_price_chges.png}
+    \floatfoot{The daily collection of prices has occasionally been delayed by a few hours resulting in some imprecision regarding the exact number of price changes occurring within one day}
+\end{figure}
+
+\textbf{Heterogeneity among gas stations}
 
 Static price dispersion in French Data is easily seen in any single day price cross section. The resulting price distribution is bimodal, largely reflecting the presence of two dominant types of actors: supermarkets and oil companies. Supermarkets typically state that they use gasoline to attract consumers, while oil companies mention the quality of the service to justify higher prices. Oil companies also traditionally enjoy more demand from businesses with which they develop exclusive relationships in exchange for consumption tracking tools (firm employees pay with a specific magnetic card) and rebates. Price displayed at the gas station is then irrelevant to the transaction.
 

@@ -192,20 +192,61 @@ print '\nChanges per day of week'
 for i, x in enumerate(ls_dow_chge_sum):
   print '% of total chges on dow {:,.0f}: {:>4.2f}'.format(i, x/float(np.sum(ls_dow_chge_sum)))
 
-## Some prices are recorded a day too late... check issue
-## Normal but appears problematic for price changes vs missing dates
-#ls_chge_dates = []
-#for i, date_today in enumerate(master_price['dates'][1:], 1):
-#  date_today_alt = '/'.join([date_today[6:8], date_today[4:6], date_today[2:4]])
-#  date_yesterday = master_price['dates'][i-1]
-#  date_yesterday_alt = '/'.join([date_yesterday[6:8], date_yesterday[4:6], date_yesterday[2:4]])
-#  ls_ok, ls_late = [], []
+## Create df dates...
+#ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
+#df_dates = pd.DataFrame(master_price['diesel_date'], master_price['ids'], ls_dates).T
+#df_dates[pd.isnull(df_dates)] = ''
+#df_dates = df_dates.apply(lambda x: pd.to_datetime(x, format='%d/%m/%y', coerce = True), axis = 1)
+
+## Fill missing dates in master_price
+#dict_dates_filled = {}
+#for missing_date in master_price['missing_dates']:
+#  ind_missing_date = master_price['dates'].index(missing_date)
+#  missing_date_dt = pd.to_datetime(missing_date)
 #  for indiv_id, ls_dates in zip(master_price['ids'], master_price['diesel_date']):
-#    if ls_dates[i] == date_today_alt:
-#		  ls_ok.append(indiv_id)
-#    elif ls_dates[i] == date_yesterday_alt:
-#      ls_late.append(indiv_id)
-#  ls_chge_dates.append([ls_ok, ls_late])
+#    i = 0
+#    ls_next_dates = [x for x in ls_dates[ind_missing_date:] if x and x != u'--']
+#    if (ls_next_dates) and\
+#       (pd.to_datetime(ls_next_dates[0], format = '%d/%m/%y') <= missing_date_dt):
+#      ls_dates[ind_missing_date] = ls_next_dates[0]
+#      dict_dates_filled.setdefault(missing_date, []).append(indiv_id)
+
+## Check prices recorded too early vs. station date
+ls_chge_early = []
+for i, date_today in enumerate(master_price['dates'][:-1]):
+  date_today_alt = '/'.join([date_today[6:8], date_today[4:6], date_today[2:4]])
+  date_tomorrow = master_price['dates'][i+1]
+  date_tomorrow_alt = '/'.join([date_tomorrow[6:8], date_tomorrow[4:6], date_tomorrow[2:4]])
+  #date_today_dt = pd.to_datetime(date_today)
+  #date_tomorrow_dt = pd.to_datetime(date_tomorrow)
+  ls_ok, ls_early = [], []
+  for indiv_id, ls_dates in zip(master_price['ids'], master_price['diesel_date']):
+    if ls_dates[i] == date_today_alt:
+      ls_ok.append(indiv_id)
+    elif ls_dates[i] == date_tomorrow_alt:
+      ls_early.append(indiv_id)
+  ls_chge_early.append([ls_ok, ls_early])
+
+## Check prices recorded too late vs. station date
+ls_chge_late = []
+for i, date_today in enumerate(master_price['dates'][1:], 1):
+  date_today_alt = '/'.join([date_today[6:8], date_today[4:6], date_today[2:4]])
+  date_yesterday = master_price['dates'][i-1]
+  date_yesterday_alt = '/'.join([date_yesterday[6:8], date_yesterday[4:6], date_yesterday[2:4]])
+  #date_today_dt = pd.to_datetime(date_today)
+  #date_tomorrow_dt = pd.to_datetime(date_tomorrow)
+  ls_late = []
+  for indiv_id, ls_dates in zip(master_price['ids'], master_price['diesel_date']):
+    # check if price dates back to day before and was collected the day before!
+    if (ls_dates[i] == date_yesterday_alt) and\
+       (ls_dates[i-1] != date_yesterday_alt) and\
+       (date_yesterday not in master_price['missing_dates']): # missing date not filled so far
+      ls_late.append(indiv_id)
+  ls_chge_late.append(ls_late)
+
+# Appears to be a sizeable issue for exact temporal examination: would need corrections
+for x,y,z in zip(master_price['dates'][1:], ls_chge_early, ls_chge_late):
+  print x, "{:6,.0f}{:6,.0f}{:6,.0f}".format(len(y[0]), len(y[1]), len(z))
 
 # http://matplotlib.org/examples/pylab_examples/bar_stacked.html
 # http://stackoverflow.com/questions/14920691/using-negative-values-in-a-matplotlibs-bar-plot

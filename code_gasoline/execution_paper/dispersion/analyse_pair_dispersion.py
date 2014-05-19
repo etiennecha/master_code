@@ -208,16 +208,17 @@ for ppd_name, df_ppd_temp in zip(ls_ppd_names, [df_ppd, df_ppd_nodiff, df_ppd_di
   y = ecdf(x)
   y_close = ecdf_close(x)
   y_far = ecdf_far(x)
-  # Set size of plot
+  plt.rcParams['figure.figsize'] = 8, 6
   ax = plt.subplot()
   ax.step(x, y_close, label = r'$d_{ij} \leq 1km$')
   ax.step(x, y_far, label = r'$1km < d_{ij} \leq 3km$')
   plt.legend()
+  plt.tight_layout()
   plt.show()
   
   print '\nK-S test of equality of rank reversal distributions'
   print ks_2samp(df_close['pct_rr'], df_far['pct_rr'])
-  # one side test not implemented in python
+  # one side test not implemented in python ? (not in scipy at least)
   
   print '\nNb of pairs', len(df_all['pct_rr'])
   print 'Nb of pairs w/ short distance', len(df_close['pct_rr'])
@@ -228,7 +229,8 @@ for ppd_name, df_ppd_temp in zip(ls_ppd_names, [df_ppd, df_ppd_nodiff, df_ppd_di
     print '\n%s' %name_df, len(df_temp), 'pairs'
     for pair_type in np.unique(df_temp['pair_type']):
       print "{:20} {:>4.2f}".\
-              format(pair_type, len(df_temp[df_temp['pair_type'] == pair_type]) / float(len(df_temp)))
+              format(pair_type, len(df_temp[df_temp['pair_type'] == pair_type]) /\
+                       float(len(df_temp)))
   
 # RR VS. TOTAL ACCESS / RR DURATION
 
@@ -283,10 +285,12 @@ df_rrs_su_all = pd.merge(df_rrs_su_all, ls_df_rrs_su[2],\
 df_rrs_su_all = pd.merge(df_rrs_su_all, ls_df_rrs_su[3],\
                          right_index = True, left_index = True, suffixes=('', '_nodiff'))
 
+plt.rcParams['figure.figsize'] = 16, 6
 ax = df_rrs_su_all[['pct_rr', 'pct_rr_ta', 'pct_rr_nota', 'pct_rr_nodiff']].plot()
 handles, labels = ax.get_legend_handles_labels()
 labels = ['All', 'Total Access', 'All but Total Access', 'No differentiation']
 ax.legend(handles, labels)
+plt.tight_layout()
 plt.show()
 
 # Price obs: stats descs + graph observations (investigate price cleaning too)

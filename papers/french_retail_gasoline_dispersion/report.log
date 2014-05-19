@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-1.40.9 (MiKTeX 2.7) (preloaded format=pdflatex 2011.4.4)  15 MAY 2014 10:14
+This is pdfTeX, Version 3.1415926-1.40.9 (MiKTeX 2.7) (preloaded format=pdflatex 2011.4.4)  19 MAY 2014 17:03
 entering extended mode
 **report.tex
 (report.tex
@@ -432,35 +432,85 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 71.
 )
 \Hy@SectionHShift=\skip53
+)
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\floatrow\f
+loatrow.sty
+Package: floatrow 2008/08/02 v0.3b floatrow: float package extension
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\caption\ca
+ption3.sty
+Package: caption3 2010/01/14 v3.1m caption3 kernel (AR)
+\captionmargin=\dimen142
+\captionmargin@=\dimen143
+\captionwidth=\dimen144
+\caption@indent=\dimen145
+\caption@parindent=\dimen146
+\caption@hangindent=\dimen147
+)
+\c@float@type=\count118
+\float@exts=\toks33
+\float@box=\box29
+\@floatcapt=\box30
+Package floatrow Info: Modified float package code loaded on input line 455.
+Package floatrow Info: Modified rotfloat package code loaded on input line 473.
+
+\FR@everyfloat=\toks34
+\flrow@foot=\insert233
+\FB@wd=\dimen148
+\FBo@wd=\dimen149
+\FBc@wd=\dimen150
+\FBo@ht=\skip54
+\FBc@ht=\skip55
+\FBf@ht=\skip56
+\FBo@max=\skip57
+\FBc@max=\skip58
+\FBf@max=\skip59
+\c@FBl@b=\count119
+\floatbox@depth=\count120
+\c@FRobj=\count121
+\c@FRsobj=\count122
+\Xhsize=\skip60
+\sXhsize=\skip61
+\Zhsize=\skip62
+\sZhsize=\skip63
+\flrow@rowbox=\box31
+\FR@Zunitlength=\dimen151
+\c@FBcnt=\count123
+\FPOScnt=\count124
+\LTleft=\skip64
+\LTright=\skip65
+\LTleft=\skip66
+\LTright=\skip67
+\flrow@types=\toks35
 ) (report.aux)
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 29.
-LaTeX Font Info:    ... okay on input line 29.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 30.
+LaTeX Font Info:    ... okay on input line 30.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 30.
+LaTeX Font Info:    ... okay on input line 30.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 30.
+LaTeX Font Info:    ... okay on input line 30.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 30.
+LaTeX Font Info:    ... okay on input line 30.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 30.
+LaTeX Font Info:    ... okay on input line 30.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 30.
+LaTeX Font Info:    ... okay on input line 30.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 30.
+LaTeX Font Info:    ... okay on input line 30.
 
 (\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\context\base\sup
 p-pdf.tex
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count118
-\scratchdimen=\dimen142
-\scratchbox=\box29
-\nofMPsegments=\count119
-\nofMParguments=\count120
-\everyMPshowfont=\toks33
-\MPscratchCnt=\count121
-\MPscratchDim=\dimen143
-\MPnumerator=\count122
-\everyMPtoPDFconversion=\toks34
+\scratchcounter=\count125
+\scratchdimen=\dimen152
+\scratchbox=\box32
+\nofMPsegments=\count126
+\nofMParguments=\count127
+\everyMPshowfont=\toks36
+\MPscratchCnt=\count128
+\MPscratchDim=\dimen153
+\MPnumerator=\count129
+\everyMPtoPDFconversion=\toks37
 )
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -494,8 +544,8 @@ p-pdf.tex
 * \@reversemarginfalse
 * (1in=72.27pt, 1cm=28.453pt)
 
-\AtBeginShipoutBox=\box30
-Package hyperref Info: Link coloring OFF on input line 29.
+\AtBeginShipoutBox=\box33
+Package hyperref Info: Link coloring OFF on input line 30.
 
 (\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\hyperref\n
 ameref.sty
@@ -509,35 +559,48 @@ Package: refcount 2008/08/11 v3.1 Data extraction from references (HO)
 \gettitlestring.sty
 Package: gettitlestring 2009/12/18 v1.3 Cleanup title references (HO)
 )
-\c@section@level=\count123
+\c@section@level=\count130
 )
-LaTeX Info: Redefining \ref on input line 29.
-LaTeX Info: Redefining \pageref on input line 29.
-LaTeX Info: Redefining \nameref on input line 29.
+LaTeX Info: Redefining \ref on input line 30.
+LaTeX Info: Redefining \pageref on input line 30.
+LaTeX Info: Redefining \nameref on input line 30.
  (report.out) (report.out)
 \@outlinefile=\write4
-LaTeX Font Info:    Try loading font information for U+msa on input line 35.
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: End \AtBeginDocument code.
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\graphics\c
+olor.sty
+Package: color 2005/11/14 v1.0j Standard LaTeX Color (DPC)
+
+(\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\00miktex\c
+olor.cfg
+File: color.cfg 2007/01/18 v1.5 color configuration of teTeX/TeXLive
+)
+Package color Info: Driver file: pdftex.def on input line 130.
+)
+LaTeX Font Info:    Try loading font information for U+msa on input line 36.
 
 (\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\amsfonts\u
 msa.fd
 File: umsa.fd 2009/06/22 v3.00 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 35.
+LaTeX Font Info:    Try loading font information for U+msb on input line 36.
 
 (\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\amsfonts\u
 msb.fd
 File: umsb.fd 2009/06/22 v3.00 AMS symbols B
 )
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 35.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 36.
 
 (\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\base\omscm
 r.fd
 File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <8> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 35.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 36.
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <6> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 35.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 36.
  [1
 
 {w:/Appdata/MiKTeX/2.7/UserData/pdftex/config/pdftex.map}]pdfTeX warning (ext4)
@@ -545,65 +608,72 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <6> not available
 plicate ignored
 <to be read again> 
                    \relax 
-l.62 
+l.63 
       [1]
 
-Package natbib Warning: Citation `BAC91' on page 2 undefined on input line 65.
+Package natbib Warning: Citation `BAC91' on page 2 undefined on input line 66.
 
 [2] [3] [4]
-LaTeX Font Info:    Try loading font information for T1+cmtt on input line 97.
+LaTeX Font Info:    Try loading font information for T1+cmtt on input line 98.
 
 (\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\base\t1cmt
 t.fd
 File: t1cmtt.fd 1999/05/25 v2.5h Standard LaTeX font definitions
-) [5] <graphs/diesel_price_margin.png, id=123, 1166.4378pt x 444.4605pt>
+) [5] [6]
+<graphs/diesel_price_margin.png, id=128, 1166.4378pt x 444.4605pt>
 File: graphs/diesel_price_margin.png Graphic file (type png)
 
 <use graphs/diesel_price_margin.png>
-Overfull \hbox (25.23946pt too wide) in paragraph at lines 124--125
+Overfull \hbox (25.23946pt too wide) in paragraph at lines 140--141
  [][] 
  []
 
-<graphs/diesel_nb_price_chges.png, id=125, 1166.4378pt x 444.4605pt>
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+<graphs/diesel_nb_price_chges.png, id=130, 1166.4378pt x 444.4605pt>
 File: graphs/diesel_nb_price_chges.png Graphic file (type png)
 
 <use graphs/diesel_nb_price_chges.png>
-Overfull \hbox (25.23946pt too wide) in paragraph at lines 130--131
+Overfull \hbox (25.23946pt too wide) in paragraph at lines 150--152
  [][] 
  []
 
-[6 <graphs/diesel_price_margin.png>] [7 <graphs/diesel_nb_price_chges.png>]
-[8]
-Underfull \hbox (badness 1281) in paragraph at lines 161--162
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[7] [8 <graphs/diesel_price_margin.png> <graphs/diesel_nb_price_chges.png>]
+Underfull \hbox (badness 1281) in paragraph at lines 162--163
 \T1/cmr/m/n/10.95 statis-tics com-piled from all po-ten-tial sources ap-pears f
 u-tile, Zagaz.com and Prix-
  []
 
-LaTeX Font Info:    Try loading font information for U+bbm on input line 169.
+[9]
+LaTeX Font Info:    Try loading font information for U+bbm on input line 170.
 
 (\\ensae.fr\dfsgenes\SourceLogicielsVista\LaTeX\MiKTeX\2.7\tex\latex\bbm\ubbm.f
 d
 File: ubbm.fd 1999/03/15 V 1.2 Font definition for bbm font - TH
-) [9] [10] [11] [12] (report.bbl) [13] [14]
+) [10] [11] [12] (report.bbl) [13] [14]
 
 Package natbib Warning: There were undefined citations.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 260.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 261.
 [15]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 260.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 261.
  (report.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 260.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 261.
 Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: EFFA8D692E54ECD567264B964AF4C69F;945.
  ) 
 Here is how much of TeX's memory you used:
- 6964 strings out of 95304
- 96831 string characters out of 1181907
- 178852 words of memory out of 1500000
- 9974 multiletter control sequences out of 110000
+ 8046 strings out of 95304
+ 114487 string characters out of 1181907
+ 202116 words of memory out of 1500000
+ 11045 multiletter control sequences out of 110000
  21923 words of font info for 64 fonts, out of 3000000 for 5000
  14 hyphenation exceptions out of 8191
- 31i,11n,28p,1126b,366s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 37i,11n,38p,1126b,367s stack positions out of 5000i,500n,10000p,200000b,50000s
 {//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/enc/dvips/cm
 -super/cm-super-t1.enc} <w:\Appdata\MiKTeX\2.7\UserData\fonts\pk\ljfour\public\
 bbm\dpi657\bbm10.pk><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/
@@ -632,7 +702,7 @@ es/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/public/cm-super/sfti0900.p
 fb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/2.7/fonts/type1/publi
 c/cm-super/sfti1095.pfb><//ensae.fr/dfsgenes/SourceLogicielsVista/LaTeX/MiKTeX/
 2.7/fonts/type1/public/cm-super/sftt1095.pfb>
-Output written on report.pdf (16 pages, 519498 bytes).
+Output written on report.pdf (16 pages, 533672 bytes).
 PDF statistics:
  270 PDF objects out of 1000 (max. 8388607)
  38 named destinations out of 1000 (max. 131072)
