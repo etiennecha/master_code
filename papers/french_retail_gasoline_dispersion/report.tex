@@ -15,6 +15,7 @@
 \usepackage{eurosym}
 \usepackage{array}
 \usepackage{booktabs}
+\usepackage{subcaption}
 \usepackage{hyperref}
 \usepackage[capposition=top]{floatrow}
 \renewcommand{\labelitemi}{--}
@@ -63,7 +64,7 @@ The seminal paper of the consumer search literature, \cite{STI61}, advocated the
 
 As argued by \cite{TAP11}, the retail gasoline market appears to be particularly relevant to a discussion about the role of consumer search. The presence of sustained retail price variations due to oil cost fluctuations generates an information issue that consumers cannot ignore. High product homogeneity offers the opportunity to work with raw prices rather than prices which may have been cleaned inadequately. And most importantly, current data allow to compare prices posted by sellers which are actually competing within the same market.
 
-Competition in the retail gasoline market has attracted a lot of attention in France over last years. In 2006, a governmental website was launched by the Ministry of Economics with a view to increase transparency in the market. All stations having sold over 500m3 of gasoline over the previous year are since then required to keep prices posted on the website. In 2011, a large inquiry was ordered by the government as retail price adjustments to oil cost variations were suspected to be faster upwards than downwards (the "Rocket and feathers" hypothesis first investigated by \cite{BAC91} in the UK). Little evidence was yet found and the report rather emphasized signs pointing toward a significant degree of competitiveness. Finally, in August 2013, following an election promise, the governement of the then newly elected French President François Hollande has implemented a 3c/l tax cut for 3 month, asking gasoline retailers on the market to produce the same effort.
+Competition in the retail gasoline market has attracted a lot of attention in France over last years. In 2006, a governmental website was launched by the Ministry of Economics with a view to increase transparency in the market. All stations having sold over 500m3 of gasoline over the previous year are since then required to keep prices posted on the website. In 2011, a large inquiry was ordered by the government as retail price adjustments to oil cost variations were suspected to be faster upwards than downwards (the "Rocket and feathers" hypothesis first investigated by \cite{BAC91} in the UK). Little evidence was yet found and the report rather emphasized signs pointing toward a significant degree of competitiveness. Finally, in August 2013, following an election promise, the governement of the then newly elected French President Franï¿½ois Hollande has implemented a 3c/l tax cut for 3 month, asking gasoline retailers on the market to produce the same effort.
 
 The effect of the creation of the website has not been evaluated, probably for lack of data before 2006. The 2011 report yet called for further development of the website, and Germany has taken a similar initiative in 2012. More generally, in a context where dynamic prices generate heightened debates (e.g. Amazon), the idea to monitor competition by constraining firms to increase transparency enjoys strong popularity among politicians. The theory of consumer search however tells us that measures affecting information are far from innocuous. On the one hand, in a situation of strong competition, aligned prices provide little incentive for consumers to search, thus undermining the stability of such an equilibrium. Contrarily, collusion appears quite sustainable in a context where a reliable website makes monitoring costless and, again, aligned prices discourage search by consumers.
 
@@ -126,7 +127,7 @@ The period covered is marked by two significant events of different natures. One
 The first event is the progressive conversion by the historical incumbent "Total" of a number of its gas stations to low cost gas stations branded "Total Access" i.e. gas stations whose prices are aligned with supermarket gas stations. The French retail gasoline market is indeed characterized by the penetration of supermarkets, which currently account for over 50\% of total sales. Though these conversions are obviously not heterogeneous shocks to the market, they yet involve a significant number of gas stations lowering their price by c. 0.10 \euro per liter virtually overnight.
 
 The second event is of political nature.
-On August 29, 2012, a decrease in price of 6c per litre was announced by the government, following an election promise made by François Hollande. This decrease was (to be) achieved by a decrease of tax of 3c per litre and an equivalent "effort" by gas station operators. Also, it must be noted that a small portion of the tax on gasoline is set by regions on an annual basis.
+On August 29, 2012, a decrease in price of 6c per litre was announced by the government, following an election promise made by Franï¿½ois Hollande. This decrease was (to be) achieved by a decrease of tax of 3c per litre and an equivalent "effort" by gas station operators. Also, it must be noted that a small portion of the tax on gasoline is set by regions on an annual basis.
 
 \subsection{Descriptive statistics}
 
@@ -146,10 +147,11 @@ Data include prices at 10,054 gas stations, of which 421 are identified as highw
 
 \begin{figure}[!h]
     \caption{Daily number of price changes (09/2011-06/2012)}
-	\centerings
+	\centering
 		\includegraphics[width=16cm]{graphs/diesel_nb_price_chges.png}
     \floatfoot{The daily collection of prices has occasionally been delayed by a few hours resulting in some imprecision regarding the exact number of price changes occurring within one day}
 \end{figure}
+
 
 \textbf{Heterogeneity among gas stations}
 
@@ -170,6 +172,20 @@ r_{ij} = \frac{1}{T_{ij}} \sum_{t=1}^{T_{ij}} \mathbbm{1}_{p_{jt} > p_{it}}
 \end{align*}
 
 Though the computation and intuition of rank reversals is fairly straightforward, its actual use involves dealing with two fundamental practical questions. Though rank reversals at nearby competitors certainly provide more convincing evidence of temporal price dispersion linked to consumer information than variations in the distribution of prices at a municipal/regional/national level, it raises the issue of actual market definition. Also, as static price dispersion leads to a reduction in temporal price dispersion ceteris paribus (in the case of randomization over utilities, there may be dispersion without rank reversals at all), one may need to control for it. As the issue of static price dispersion gets more severe, it can become unclear to which extent nearby sellers actually compete for the same customers, potentially connecting the two questions.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{.4\linewidth}
+\centering
+\includegraphics[width=6cm]{graphs/ecdf_rr_all.png}
+\caption[short]{All pairs}
+\end{subfigure}
+\begin{subfigure}{.4\linewidth}
+\centering
+\includegraphics[width=6cm]{graphs/ecdf_rr_nodiff.png}
+\caption[short]{Pairs with low differentiation}
+\end{subfigure}
+\end{figure}
 
 Statistics provided in \cite{TAP11} to describe prices and mark up suggest that the issue of static price dispersion is not severe. In all pairs obtained with a 1 mile maximum distance between stations, depending on fuel type, average spread amounts to 1\% to 2\% of average price, over 90\% of pairs exhibit positive rank reversals, and the average pair rank reversals varies between c.12\% and c.15\%. Results do not vary significantly with a 2 mile maximum distance. Static price dispersion can therefore arguably be neglected, thus avoiding the shortcomings associated with price cleaning.
 

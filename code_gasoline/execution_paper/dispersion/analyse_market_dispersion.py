@@ -225,7 +225,6 @@ for ls_market in ls_ls_markets:
   df_market = pd.DataFrame(dict(zip(ls_market, ls_harmonized_series)))
   ls_stable_market_dispersion.append([df_market, df_market.max(1) - df_market.min(1)])
 
-
 def get_nd_comps(ls_indiv_ids, ls_comp_ids, df_price):
   # ls_indiv_ids are within non diff group, to be compared with ls_comp_ids
   # if any pair: 0 median spread: add to non diff group (to be added)

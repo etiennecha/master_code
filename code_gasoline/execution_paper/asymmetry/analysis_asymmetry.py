@@ -257,14 +257,14 @@ df_agg = df_agg[:'2012-06']
 plt.rc('font', **{'serif': 'Computer Modern Roman'})
 
 #http://damon-is-a-geek.com/publication-ready-the-first-time-beautiful-reproducible-plots-with-matplotlib.html
-from matplotlib import rcParams
-rcParams['font.family'] = 'serif'
-rcParams['font.serif'] = ['Computer Modern Roman']
-rcParams['text.usetex'] = True
-rcParams['pgf.texsystem'] = 'pdflatex'
+#from matplotlib import rcParams
+#rcParams['font.family'] = 'serif'
+#rcParams['font.serif'] = ['Computer Modern Roman']
+#rcParams['text.usetex'] = True
+#rcParams['pgf.texsystem'] = 'pdflatex'
 
-#from pylab import *
-#rcParams['figure.figsize'] = 16, 6
+from pylab import *
+rcParams['figure.figsize'] = 16, 6
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
