@@ -86,16 +86,16 @@ ls_ls_markets = [ls_market for ls_market in ls_ls_markets if len(ls_market) > 2]
 # Choose market definition for analysis
 ls_ls_market_ids_temp = ls_ls_markets
 
-# Example
-ls_ls_market_ids[0]
-ls_harmonized_series = [df_price[ls_ls_market_ids[0][0]]]
-for comp_id in ls_ls_market_ids[0][1:]:
-	ls_harmonized_series.append(df_price[comp_id] +\
-    (df_price[ls_ls_market_ids[0][0]] - df_price[comp_id]).median())
-df_market = pd.DataFrame(dict(zip(ls_ls_market_ids[0], ls_harmonized_series)))
-df_market['range'] = df_market.max(1) - df_market.min(1) + 1 # for graph
-df_market.plot()
-plt.show()
+## Example
+#ls_ls_market_ids[0]
+#ls_harmonized_series = [df_price[ls_ls_market_ids[0][0]]]
+#for comp_id in ls_ls_market_ids[0][1:]:
+#	ls_harmonized_series.append(df_price[comp_id] +\
+#    (df_price[ls_ls_market_ids[0][0]] - df_price[comp_id]).median())
+#df_market = pd.DataFrame(dict(zip(ls_ls_market_ids[0], ls_harmonized_series)))
+#df_market['range'] = df_market.max(1) - df_market.min(1) + 1 # for graph
+#df_market.plot()
+#plt.show()
 
 # Loop
 ls_stable_market_dispersion = []
@@ -115,7 +115,7 @@ def get_nd_comps(ls_indiv_ids, ls_comp_ids, df_price):
   for indiv_id in ls_indiv_ids:
     for comp_id in ls_comp_ids:
       # if np.abs((df_price[indiv_id] - df_price[comp_id]).median()) <= zero_threshold:
-      if np.abs((df_price[indiv_id] - df_price[comp_id]).mean()) - 0.02 <= zero_threshold:
+      if np.abs((df_price[indiv_id] - df_price[comp_id]).mean()) - 0.01 <= zero_threshold:
         ls_nd_comps.append(comp_id)
   return ls_nd_comps
 
@@ -164,7 +164,7 @@ for ls_market, (df_market, se_range) in zip(ls_ls_markets, ls_stable_market_disp
     ls_ls_groups.append(ls_groups)
     path_temp = os.path.join(path_dir_graphs,
                              'stable_markets',
-                             'groups_mean02',
+                             'groups_mean01',
                              '%s' %len(ls_groups))
     if not os.path.exists(path_temp):
       os.makedirs(path_temp)

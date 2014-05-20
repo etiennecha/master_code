@@ -110,9 +110,11 @@ def plot_pair_followed_price_chges(pair_id_1, pair_id_2, beg=0, end=1000):
                                                  df_prices[pair_id_2].values)
   ax = df_prices[[pair_id_1, pair_id_2]][beg:end].plot()
   for day_ind in ls_pair_chges[-1]:
-  	ax.axvline(x=df_prices.index[day_ind], lw=1, ls='--', c='b')
+    line_1 = ax.axvline(x=df_prices.index[day_ind], lw=1, ls='--', c='b')
+    line_1[0].set_dashes([4,2])
   for day_ind in ls_pair_chges[-2]:
-  	ax.axvline(x=df_prices.index[day_ind], lw=1, ls='--', c='g')
+    line_2 = ax.axvline(x=df_prices.index[day_ind], lw=1, ls='--', c='g')
+    line_2[0].set_dashes([8,2])
   plt.show()
 
 # Check matched prices (more robust but works only if no differentiation for now)

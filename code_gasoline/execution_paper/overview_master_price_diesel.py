@@ -113,21 +113,51 @@ for indiv_id, ls_price_durations in zip(master_price['ids'], ls_ls_price_duratio
     # discard first and last price
     # consider only prices which are not followed by missing periods
     if not np.isnan(price_duration[0]):
-      ls_indiv_durations.append(len(ls_price_durations[i-1][1]))
-  ls_rigidity_rows.append([len(ls_indiv_durations),
-                           np.mean(ls_indiv_durations),
-                           np.std(ls_indiv_durations)])
-ls_columns = ['nb_prices_used', 'mean_length', 'std_length']
+      # ls_indiv_durations.append(len(ls_price_durations[i-1][1]))
+      ls_indiv_durations.append(len(price_duration[1]))
+  if ls_indiv_durations:
+    ls_rigidity_rows.append([len(ls_indiv_durations),
+                             np.mean(ls_indiv_durations),
+                             np.std(ls_indiv_durations),
+                             np.min(ls_indiv_durations),
+                             np.max(ls_indiv_durations)])
+  else:
+    ls_rigidity_rows.append([np.nan for i in range(5)])
+ls_columns = ['nb_prices_used', 'mean_length', 'std_length', 'min_length', 'max_length']
 df_rigidity = pd.DataFrame(ls_rigidity_rows, master_price['ids'], ls_columns)
-print "\nMean length of a price validity: {:>8.2f}".format(df_rigidity['mean_length'].mean())
-print "\nMean length of a price validity(10 prices at least): {:>8.2f}".\
-        format(df_rigidity[df_rigidity['nb_prices_used'] > 10]['mean_length'].mean())
+
+# Solve pbm... one length > 60: probably two stations reconciled?
+df_rigidity = df_rigidity[df_rigidity.index != '35660003']
+
+print "\nNb w/ less than 10 prices (dropped): {:>6.2f}".\
+         format(len(df_rigidity[(pd.isnull(df_rigidity['nb_prices_used'])) |\
+                   (df_rigidity['nb_prices_used'] < 10)]))
+
+print df_rigidity.describe()
+print "\nNb of stations with censored prices: {:>8.2f}".\
+        format(len(df_rigidity[df_rigidity['max_length'] == 60]))
+print "\nAvg max length of a price validity w/o censored: {:>8.2f}".\
+        format(df_rigidity['max_length'][df_rigidity['max_length'] < 60].mean())
 
 # Create prices and price changes pandas dataframes
 zero_threshold = np.float64(1e-10)
 ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
 df_prices = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
 df_chges = df_prices - df_prices.shift(1)
+
+# Price change day of week
+ar_ind_dow = df_prices.index.dayofweek # seems faster to store it first
+ls_rows_chge_dows = []
+for ls_price_durations in ls_ls_price_durations:
+  ls_chge_days = []
+  for price, ls_price_days in ls_ls_price_durations[0][1:]:
+    if price:
+      ls_chge_days.append(ls_price_days[0])
+  ls_chge_dows = [ar_ind_dow[i] for i in ls_chge_days]
+  se_chge_dows = pd.Series(ls_chge_dows).value_counts()
+  dow_argmax = se_chge_dows.argmax()
+  dow_max_pct = se_chge_dows.max() / float(se_chge_dows.sum())
+  ls_rows_chge_dows.append((dow_argmax, dow_max_pct))
 
 # Stations using 3 digit prices
 ls_two_digit_ids, ls_three_digit_ids = [], []

@@ -69,24 +69,136 @@ ls_ls_market_ids_st_rd = get_ls_ls_distance_market_ids_restricted(master_price['
 ls_ls_markets = [ls_market for ls_market in ls_ls_markets if len(ls_market) > 2]
 
 # EXAMPLE: AMBERIEU EN BUGEY
-# compute spreads, leader follower, matched prices, rank reversals, market dispersion
 
-# Raw prices
-df_price[ls_ls_market_ids[0]][:'2012-06'].plot()
-plt.show()
+ls_case_studies = ['1500001', # not many rr
+                   '3800001', # idem
+                   '4100002', # idem
+                   '80600001', # rr ?
+                   '87500001', # rr ?
+                   '9190001', # rr ?
+                   '11300001', # rr ?
+                   '22100001'] # rr ?
+for k, case_id in enumerate(ls_case_studies):
+  for ls_market in ls_ls_market_ids:
+  	if case_id in ls_market:
+  		break
+  
+  # 1/ Plot market prices: raw, cleaned, cleaned alternative
+  
+  ## Raw prices
+  #df_price[ls_market][:'2012-06'].plot()
+  #plt.show()
+  #
+  ## Cleaned prices (residuals)
+  #df_price_cl[ls_market][:'2012-06'].plot()
+  #plt.show()
+  #
+  ## Cleaned prices: alternative way
+  #ls_harmonized_series = [df_price[ls_market[0]]]
+  #for comp_id in ls_market[1:]:
+  #	ls_harmonized_series.append(df_price[comp_id] +\
+  #    (df_price[ls_market[0]] - df_price[comp_id]).median())
+  #df_market = pd.DataFrame(dict(zip(ls_market, ls_harmonized_series)))
+  ## df_market['range'] = df_market.max(1) - df_market.min(1) + 1 # for graph
+  #df_market[:'2012-06'].plot()
+  #plt.show()
+  
+  # 2/ compute spreads, leader follower, matched prices, rank reversals, market dispersion
+  
+  # Pair: compute stats and display graphs
+  #indiv_id = ls_market[0]
+  #comp_id = ls_market[1]
+ 
+  # TODO: filter interesting cases only
+  # TODO: output text file with stats summary (gen tex report?)
+  # TODO: location + market info?
 
-# Cleaned prices (residuals)
-df_price_cl[ls_ls_market_ids[0]][:'2012-06'].plot()
-plt.show()
+  plt.rcParams['figure.figsize'] = 14, 10 
+  path_temp = os.path.join(path_dir_graphs,
+                           'stable_markets',
+                           'case_study_%s' %k)
+  if not os.path.exists(path_temp):
+    os.makedirs(path_temp)
+  for i, indiv_id in enumerate(ls_market):
+    for comp_id in ls_market[i+1:]:
+      # todo: create clean classes...
+      
+      ls_two_cols = ['nb_days_1', 'nb_days_2', 'nb_prices_1', 'nb_prices_2',
+                     'nb_ctd_1', 'nb_ctd_2', 'nb_chges_1', 'nb_chges_2', 'nb_sim_chges',
+                      'nb_1_fol', 'nb_2_fol']
+      ls_two_res = get_stats_two_firm_price_chges(df_price[indiv_id].values,
+                                                  df_price[comp_id].values)
+      # function does not work with pandas series for now
+      ls_two_rows = zip(ls_two_cols, ls_two_res[:-2]) 
+      df_two = pd.DataFrame(ls_two_rows).set_index(0)
+      print df_two
+      
+      ls_sim_cols = ['len_spread', 'len_same', 'ls_chge_to_same',
+                     'ls_1_lead', 'ls_2_lead', 'ls_ctd_1', 'ls_ctd_2']
+      ls_sim_res = get_two_firm_similar_prices(df_price[indiv_id], df_price[comp_id])
+      ls_sim_rows = zip(ls_sim_cols, list(ls_sim_res[:3]) + [len(ls_x) for ls_x in ls_sim_res[3:]])
+      df_sim = pd.DataFrame(ls_sim_rows).set_index(0)
+      print df_sim
+      
+      ls_disp_cols = ['nb_days_spread', 'nb_days_same_price', 'nb_days_a_cheaper', 'nb_days_b_cheaper',
+                      'nb_rr_conservative', 'percent_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr',
+                      'avg_abs_spread', 'avg_spread', 'std_spread']
+      ls_disp_res = get_pair_price_dispersion(df_price[indiv_id], df_price[comp_id])
+      ls_disp_rows = zip(ls_disp_cols, ls_disp_res[0])
+      df_disp = pd.DataFrame(ls_disp_rows).set_index(0)
+      print df_disp
+      
+      # Two subplots: followed price changes and matching of competitor's price
+      fig = plt.figure()
+      
+      ax1 = fig.add_subplot(2,1,1)
+      df_price[[indiv_id, comp_id]]['2013-02':].plot(ax=ax1)
+      for day_ind in ls_two_res[-2]:
+        line_0 = ax1.axvline(x=df_price.index[day_ind], lw=1, ls='--', c='b')
+        line_0.set_dashes([10,2])
+      for day_ind in ls_two_res[-1]:
+        line_1 = ax1.axvline(x=df_price.index[day_ind], lw=1, ls='--', c='g')
+        line_1.set_dashes([10,2])
+      handles, labels = ax1.get_legend_handles_labels()
+      ax1.legend(handles, labels, loc = 1)
+      ax1.set_title("Followed price changes")
+      
+      ax2 = fig.add_subplot(2,1,2)
+      df_price[[indiv_id, comp_id]]['2013-02':].plot(ax=ax2)
+      for day_ind in ls_sim_res[3]:
+        line_2 = ax2.axvline(x=df_price.index[day_ind], lw=1, ls='--', c='g')
+        line_2.set_dashes([10,2])
+      for day_ind in ls_sim_res[4]:
+        line_3 = ax2.axvline(x=df_price.index[day_ind], lw=1, ls='--', c='b')
+        line_3.set_dashes([10,2])
+      
+      handles, labels = ax2.get_legend_handles_labels()
+      ax2.legend(handles, labels, loc = 1)
+      ax2.set_title("Matching of competitor's price")
+      
+      plt.tight_layout()
+      # plt.show()
+      plt.savefig(os.path.join(path_temp, '%s-%s' %(indiv_id, comp_id)))
+      plt.close()
 
-# Cleaned prices: alternative way
-ls_ls_market_ids[0]
-ls_harmonized_series = [df_price[ls_ls_market_ids[0][0]]]
-for comp_id in ls_ls_market_ids[0][1:]:
-	ls_harmonized_series.append(df_price[comp_id] +\
-    (df_price[ls_ls_market_ids[0][0]] - df_price[comp_id]).median())
-df_market = pd.DataFrame(dict(zip(ls_ls_market_ids[0], ls_harmonized_series)))
-# df_market['range'] = df_market.max(1) - df_market.min(1) + 1 # for graph
-df_market[:'2012-06'].plot()
-plt.show()
+# BACKUP
 
+## leader, follower
+#ax = df_price[[indiv_id, comp_id]][:'2012-06'].plot()
+#for day_ind in ls_two_res[-2]:
+#  line_0 = ax.axvline(x=df_price.index[day_ind], lw=1, ls='--', c='g')
+#  line_0.set_dashes([10,2])
+#for day_ind in ls_two_res[-1]:
+#  line_1 = ax.axvline(x=df_price.index[day_ind], lw=1, ls='--', c='b')
+#  line_1.set_dashes([10,2])
+#plt.show()
+#
+## price matching
+#ax = df_price[[indiv_id, comp_id]][:'2012-06'].plot()
+#for day_ind in ls_sim_res[3]:
+#  line_2 = ax.axvline(x=df_price.index[day_ind], lw=1, ls='--', c='g')
+#  line_2.set_dashes([2,4])
+#for day_ind in ls_sim_res[4]:
+#  line_3 = ax.axvline(x=df_price.index[day_ind], lw=1, ls='--', c='b')
+#  line_3.set_dashes([2,4])
+#plt.show()
