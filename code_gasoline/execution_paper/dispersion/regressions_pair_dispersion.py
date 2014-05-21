@@ -15,6 +15,7 @@ path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'd
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
 path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
+path_ls_ids_final = os.path.join(path_dir_built_json, 'ls_ids_final.json')
 path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
 path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
 
@@ -28,6 +29,7 @@ path_csv_insee_extract = os.path.join(path_dir_insee, 'data_extracts', 'data_ins
 
 master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info)
+ls_ids_final = dec_json(path_ls_ids_final)
 ls_ls_competitors = dec_json(path_ls_ls_competitors)
 ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
 dict_brands = dec_json(path_dict_brands)
@@ -38,6 +40,7 @@ pd.options.display.float_format = '{:6,.4f}'.format
 
 # DF PRICES
 df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], master_price['dates']).T
+df_price[[x for x in df_price.columns if x not in ls_ids_final]] = np.nan 
 
 # DF CLEAN PRICES
 
@@ -175,6 +178,11 @@ df_ppd['abs_avg_spread'] = np.abs(df_ppd['avg_spread'])
 #df_ppd['std_spread_nozero'] = df_ppd['std_spread']
 #df_ppd['std_spread_nozero'][df_ppd['std_spread'] == 0] = 0.00001
 # TODO: check 0 rr => seems some duplicates
+
+# Drop pairs with no info
+print "Dropped pairs:".format(len(df_ppd[(pd.isnull(df_ppd['avg_spread'])) |\
+                                         (df_ppd['nb_spread'] < 100)]))
+df_ppd = df_ppd[(~pd.isnull(df_ppd['avg_spread'])) & (df_ppd['nb_spread'] >= 100)]
 
 # RESTRICTIONS ON BRANDS / TYPES
 # todo: loop for various cases

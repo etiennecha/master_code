@@ -15,6 +15,7 @@ path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'd
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
 path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
+path_ls_ids_final = os.path.join(path_dir_built_json, 'ls_ids_final.json')
 path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
 path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
 path_ls_ls_markets = os.path.join(path_dir_built_json, 'ls_ls_markets.json')
@@ -30,6 +31,7 @@ master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info)
 ls_ls_competitors = dec_json(path_ls_ls_competitors)
 ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
+ls_ids_final = dec_json(path_ls_ids_final)
 ls_ls_markets = dec_json(path_ls_ls_markets)
 dict_brands = dec_json(path_dict_brands)
 
@@ -40,6 +42,7 @@ zero_threshold = np.float64(1e-10)
 # DF PRICES
 ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
 df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
+df_price[[x for x in df_price.columns if x not in ls_ids_final]] = np.nan 
 se_mean_price = df_price.mean(1)
 
 # DF CLEAN PRICES

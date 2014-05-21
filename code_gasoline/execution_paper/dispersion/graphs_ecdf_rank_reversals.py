@@ -15,6 +15,7 @@ path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'd
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
 path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
+path_ls_ids_final = os.path.join(path_dir_built_json, 'ls_ids_final.json')
 path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
 path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
 
@@ -29,6 +30,7 @@ path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts
 
 master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info)
+ls_ids_final = dec_json(path_ls_ids_final)
 ls_ls_competitors = dec_json(path_ls_ls_competitors)
 ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
 dict_brands = dec_json(path_dict_brands)
@@ -42,6 +44,7 @@ start = time.clock()
 # DF PRICES
 ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
 df_prices = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
+df_prices[[x for x in df_prices.columns if x not in ls_ids_final]] = np.nan 
 
 # DF CLEAN PRICES
 
@@ -172,17 +175,23 @@ df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'IND') &\
 #            'nb_days_spread', 'avg_abs_spread', 'avg_spread', 'std_spread', 
 #            'percent_rr', 'max_len_rr', 'avg_abs_spread_rr', 'nb_rr']
 
-# RR LENGTHS
+# Drop pairs with no info
+print "Dropped pairs:".format(len(df_ppd[(pd.isnull(df_ppd['avg_spread'])) |\
+                                         (df_ppd['nb_spread'] < 100)]))
+df_ppd = df_ppd[(~pd.isnull(df_ppd['avg_spread'])) & (df_ppd['nb_spread'] >= 100)]
+
+# Rank reversal length?
 ar_rr_lengths = np.array(ls_rr_lengths)
 
-# HISTOGRAM OF AVERAGE SPREADS
-hist_test = plt.hist(np.abs(df_ppd['avg_spread'])[~pd.isnull(df_ppd['avg_spread'])].values,
-                     bins = 100)
+# Histogram of average spreads
+hist_test = plt.hist(df_ppd['avg_spread'].abs().values,
+                     bins = 100,
+                     range = (0, 0.3))
 plt.show()
 
-for i in range(10):
-  print i, len(df_ppd[np.abs(df_ppd['avg_spread']) > i * 10**(-2)]),\
-        len(df_ppd[(np.abs(df_ppd['avg_spread']) > i * 10**(-2)) & (df_ppd['nb_rr'] > 10)])
+#for i in range(10):
+#  print i, len(df_ppd[np.abs(df_ppd['avg_spread']) > i * 10**(-2)]),\
+#        len(df_ppd[(np.abs(df_ppd['avg_spread']) > i * 10**(-2)) & (df_ppd['nb_rr'] > 10)])
 
 df_ppd_nodiff = df_ppd[np.abs(df_ppd['avg_spread']) <= diff_bound]
 df_ppd_diff = df_ppd[np.abs(df_ppd['avg_spread']) > diff_bound]
