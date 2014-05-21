@@ -180,8 +180,14 @@ print "Dropped pairs:".format(len(df_ppd[(pd.isnull(df_ppd['avg_spread'])) |\
                                          (df_ppd['nb_spread'] < 100)]))
 df_ppd = df_ppd[(~pd.isnull(df_ppd['avg_spread'])) & (df_ppd['nb_spread'] >= 100)]
 
-# Rank reversal length?
-ar_rr_lengths = np.array(ls_rr_lengths)
+# Exclude Total Access from analysis
+
+#df_ppd_nota = df_ppd[(df_ppd['brand_2_e_1'] != 'TOTAL_ACCESS') &\
+#                     (df_ppd['brand_2_e_2'] != 'TOTAL_ACCESS')]
+#df_ppd = df_ppd_nota
+
+## Rank reversal length? => Exclude Total Access
+#ar_rr_lengths = np.array(ls_rr_lengths)
 
 # Histogram of average spreads
 hist_test = plt.hist(df_ppd['avg_spread'].abs().values,
@@ -232,6 +238,7 @@ for ppd_name, df_ppd_temp in zip(ls_ppd_names, [df_ppd, df_ppd_nodiff, df_ppd_di
     ecdf = ECDF(df_temp['pct_rr'])
     y = ecdf(x)
     ax.step(x, y, label = label_temp)
+  ax.grid()
   plt.legend()
   plt.tight_layout()
   plt.show()

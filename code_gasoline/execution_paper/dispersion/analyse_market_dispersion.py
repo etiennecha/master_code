@@ -29,9 +29,9 @@ path_dir_graphs = os.path.join(path_dir_built_paper, 'data_graphs')
 
 master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info)
+ls_ids_final = dec_json(path_ls_ids_final)
 ls_ls_competitors = dec_json(path_ls_ls_competitors)
 ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
-ls_ids_final = dec_json(path_ls_ids_final)
 ls_ls_markets = dec_json(path_ls_ls_markets)
 dict_brands = dec_json(path_dict_brands)
 
@@ -80,7 +80,7 @@ ls_ls_market_ids_st_rd = get_ls_ls_distance_market_ids_restricted(master_price['
 ls_ls_markets = [ls_market for ls_market in ls_ls_markets if len(ls_market) > 2]
 
 # Choose market definition for analysis
-ls_ls_market_ids_temp = ls_ls_market_ids
+ls_ls_market_ids_temp = ls_ls_markets
 
 # df_price vs. df_price_cl (check different cleaning ways...)
 ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price)\

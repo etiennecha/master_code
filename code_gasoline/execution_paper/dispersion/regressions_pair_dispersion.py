@@ -68,14 +68,12 @@ df_price_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.cs
 km_bound = 3
 diff_bound = 0.02
 
-# TODO: iterate with various diff_bounds (high value: no cleaning of prices)
-
 # DF PAIR PRICE DISPERSION
 ls_ppd = []
 for (indiv_id, comp_id), distance in ls_tuple_competitors:
   if distance <= km_bound: 
-    se_prices_1 = df_price[indiv_id]
-    se_prices_2 = df_price[comp_id]
+    se_prices_1 = df_price_cl[indiv_id]
+    se_prices_2 = df_price_cl[comp_id]
     avg_spread = (se_prices_2 - se_prices_1).mean()
     if np.abs(avg_spread) > diff_bound:
       # se_prices_2 = se_prices_2 - avg_spread
@@ -165,7 +163,6 @@ df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'IND') &\
 
 # CLEAN DF (avoid pbm with missing, inf which should be represented as missing etc.)
 df_ppd = df_ppd[~(pd.isnull(df_ppd['std_spread']) | pd.isnull(df_ppd['pct_rr']))]
-df_ppd = df_ppd[df_ppd['nb_spread'] > 60]
 #df_ppd.replace([np.inf, -np.inf], np.nan).dropna(subset=["pct_rr", "std_spread"], how="all")
 #df_ppd = df_ppd[(df_ppd['std_spread'] != np.inf) &\
 #                (df_ppd['std_spread'] != -np.inf) &\
@@ -177,15 +174,13 @@ df_ppd['abs_avg_spread'] = np.abs(df_ppd['avg_spread'])
 #df_ppd['pct_rr_nozero'][df_ppd['pct_rr'] == 0] = 0.00001
 #df_ppd['std_spread_nozero'] = df_ppd['std_spread']
 #df_ppd['std_spread_nozero'][df_ppd['std_spread'] == 0] = 0.00001
-# TODO: check 0 rr => seems some duplicates
 
-# Drop pairs with no info
+# Drop pairs with insufficient price data
 print "Dropped pairs:".format(len(df_ppd[(pd.isnull(df_ppd['avg_spread'])) |\
                                          (df_ppd['nb_spread'] < 100)]))
 df_ppd = df_ppd[(~pd.isnull(df_ppd['avg_spread'])) & (df_ppd['nb_spread'] >= 100)]
 
 # RESTRICTIONS ON BRANDS / TYPES
-# todo: loop for various cases
 df_ppd = df_ppd[(df_ppd['brand_1_e_1'] != 'TOTAL_ACCESS') &\
                 (df_ppd['brand_1_e_2'] != 'TOTAL_ACCESS') &\
                 (df_ppd['brand_1_e_1'] != df_ppd['brand_1_e_2'])]
@@ -215,7 +210,7 @@ ls_sc_ols_formulas = ['abs_avg_spread ~ sc_500',
                       'std_spread ~ sc_500']
 
 # from statsmodels.regression.quantile_regression import QuantReg
-ls_quantiles = [0.25, 0.5, 0.75, 0.9]
+ls_quantiles = [0.25, 0.5, 0.75]
 
 def get_df_ols_res(ls_ols_res, ls_index):
   ls_se_ols_res = []
@@ -238,7 +233,7 @@ def get_df_ols_res(ls_ols_res, ls_index):
 # So far: need to add "resid[resid == 0] = .000001" in quantreg line 171-3 to have it run
 
 ls_df_reg_res = []
-for df_ppd_reg in [df_ppd_nodiff, df_ppd_diff]:
+for df_ppd_reg in [df_ppd]: #[df_ppd_nodiff, df_ppd_diff]:
   ls_dist_ols_res = [smf.ols(formula = str_formula, data = df_ppd_reg).fit()\
                        for str_formula in ls_dist_ols_formulas]
   ls_sc_ols_res   = [smf.ols(formula = str_formula, data = df_ppd_reg).fit()\

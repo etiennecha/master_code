@@ -15,8 +15,10 @@ path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'd
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
 path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
+path_ls_ids_final = os.path.join(path_dir_built_json, 'ls_ids_final.json')
 path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
 path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
+path_ls_ls_markets = os.path.join(path_dir_built_json, 'ls_ls_markets.json')
 
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
@@ -25,8 +27,10 @@ path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
 master_price = dec_json(path_diesel_price)
 master_info = dec_json(path_info)
+ls_ids_final = dec_json(path_ls_ids_final)
 ls_ls_competitors = dec_json(path_ls_ls_competitors)
 ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
+ls_ls_markets = dec_json(path_ls_ls_markets)
 dict_brands = dec_json(path_dict_brands)
 
 series = 'diesel_price'
@@ -39,7 +43,7 @@ zero_threshold = np.float64(1e-10)
 #df_price = pd.DataFrame(master_np_prices.T, master_price['dates'], master_price['ids'])
 ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
 df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
-
+df_price[[x for x in df_price.columns if x not in ls_ids_final]] = np.nan 
 se_mean_price = df_price.mean(1)
 
 # DF CLEAN PRICES
@@ -92,15 +96,16 @@ ls_ls_market_ids_st = get_ls_ls_distance_market_ids_restricted(master_price['ids
                                                                ls_ls_competitors, km_bound)
 ls_ls_market_ids_st_rd = get_ls_ls_distance_market_ids_restricted(master_price['ids'],\
                                                                   ls_ls_competitors, km_bound, True)
+ls_ls_markets = [ls_market for ls_market in ls_ls_markets if len(ls_market) > 2]
 
-ls_ls_market_ids_temp = ls_ls_market_ids_st_rd # [0:6000]
+ls_ls_market_ids_temp = ls_ls_markets # [0:6000]
 
 ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price_cl) for\
                              ls_market_ids in ls_ls_market_ids_temp]
 # Check why prices is Nan: should not be the case
 
-# Can loop to add mean price or add date column and then merge df mean price with concatenated on date
-# TODO: add max nb of firms and keep only if enough
+# Can loop to add mean price or add date column and then merge df mean price w/ concatenated on date
+# todo: add max nb of firms and keep only if enough
 ls_total_price_vs_dispersion = []
 for ls_market_id, df_market_dispersion in zip(ls_ls_market_ids_temp, ls_df_market_dispersion):
   df_market_dispersion['id'] = ls_market_id[0]
@@ -122,7 +127,7 @@ df_dispersion = df_dispersion[(df_dispersion['nb_comp_t'] >= 3) &\
                               (df_dispersion['nb_comp'] >= 3) &\
                               (df_dispersion['nb_comp'] == df_dispersion['nb_comp_t'])]
 
-# Get rid of nan... otherwise pbm to compute clustered standard errors (TODO: one liner) 
+# Get rid of nan... otherwise pbm to compute clustered standard errors (todo: one liner) 
 df_dispersion = df_dispersion[(~pd.isnull(df_dispersion['gfs'])) &\
                               (~pd.isnull(df_dispersion['std'])) &\
                               (~pd.isnull(df_dispersion['cv'])) &\
@@ -174,7 +179,8 @@ for str_formula in ls_formulas:
   ls_reg_series.append(pd.Series(ls_values, ls_columns))
 
 pd.options.display.float_format = '{:6,.4f}'.format
-df_results = pd.DataFrame(ls_reg_series, index = [formula[:formula.index('~')-1] for formula in ls_formulas])
+df_results = pd.DataFrame(ls_reg_series,
+                          [formula[:formula.index('~')-1] for formula in ls_formulas])
 df_results['N'] = df_results['N'].apply(lambda x: int(x))
 print df_results.to_string()
 
@@ -182,12 +188,12 @@ print df_results.to_string()
 # REGRESSIONS: PRICE LEVEL VS. DISPERSION
 # #############################################
 
-ls_columns = ['id_total', 'price_proxy', 'std', 'range', 'nbcomp']
-df_total_dispersion = pd.DataFrame(ls_total_price_vs_dispersion, columns = ls_columns)
-
-print smf.ols(formula = 'price_proxy ~ std + nbcomp', data = df_total_dispersion).fit().summary()
-df_total_dispersion = df_total_dispersion[df_total_dispersion['nbcomp'] >= 3]
-print smf.ols(formula = 'price_proxy ~ std + nbcomp', data = df_total_dispersion).fit().summary()
+#ls_columns = ['id_total', 'price_proxy', 'std', 'range', 'nbcomp']
+#df_total_dispersion = pd.DataFrame(ls_total_price_vs_dispersion, columns = ls_columns)
+#
+#print smf.ols(formula = 'price_proxy ~ std + nbcomp', data = df_total_dispersion).fit().summary()
+#df_total_dispersion = df_total_dispersion[df_total_dispersion['nbcomp'] >= 3]
+#print smf.ols(formula = 'price_proxy ~ std + nbcomp', data = df_total_dispersion).fit().summary()
 
 # #############
 # DEPRECATED

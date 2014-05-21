@@ -15,9 +15,11 @@
 \usepackage{eurosym}
 \usepackage{array}
 \usepackage{booktabs}
+\usepackage{caption}
 \usepackage{subcaption}
 \usepackage{hyperref}
-\usepackage[capposition=top]{floatrow}
+\usepackage{floatrow} %[capposition=top]
+\floatsetup{footposition=bottom,capposition=top}
 \renewcommand{\labelitemi}{--}
 \renewcommand{\labelitemii}{$\bullet$}
 \bibliographystyle{chicago}
@@ -64,7 +66,7 @@ The seminal paper of the consumer search literature, \cite{STI61}, advocated the
 
 As argued by \cite{TAP11}, the retail gasoline market appears to be particularly relevant to a discussion about the role of consumer search. The presence of sustained retail price variations due to oil cost fluctuations generates an information issue that consumers cannot ignore. High product homogeneity offers the opportunity to work with raw prices rather than prices which may have been cleaned inadequately. And most importantly, current data allow to compare prices posted by sellers which are actually competing within the same market.
 
-Competition in the retail gasoline market has attracted a lot of attention in France over last years. In 2006, a governmental website was launched by the Ministry of Economics with a view to increase transparency in the market. All stations having sold over 500m3 of gasoline over the previous year are since then required to keep prices posted on the website. In 2011, a large inquiry was ordered by the government as retail price adjustments to oil cost variations were suspected to be faster upwards than downwards (the "Rocket and feathers" hypothesis first investigated by \cite{BAC91} in the UK). Little evidence was yet found and the report rather emphasized signs pointing toward a significant degree of competitiveness. Finally, in August 2013, following an election promise, the governement of the then newly elected French President Fran�ois Hollande has implemented a 3c/l tax cut for 3 month, asking gasoline retailers on the market to produce the same effort.
+Competition in the retail gasoline market has attracted a lot of attention in France over last years. In 2006, a governmental website was launched by the Ministry of Economics with a view to increase transparency in the market. All stations having sold over 500m3 of gasoline over the previous year are since then required to keep prices posted on the website. In 2011, a large inquiry was ordered by the government as retail price adjustments to oil cost variations were suspected to be faster upwards than downwards (the "Rocket and feathers" hypothesis first investigated by \cite{BAC91} in the UK). Little evidence was yet found and the report rather emphasized signs pointing toward a significant degree of competitiveness. Finally, in August 2013, following an election promise, the governement of the then newly elected French President Francois Hollande has implemented a 3c/l tax cut for 3 month, asking gasoline retailers on the market to produce the same effort.
 
 The effect of the creation of the website has not been evaluated, probably for lack of data before 2006. The 2011 report yet called for further development of the website, and Germany has taken a similar initiative in 2012. More generally, in a context where dynamic prices generate heightened debates (e.g. Amazon), the idea to monitor competition by constraining firms to increase transparency enjoys strong popularity among politicians. The theory of consumer search however tells us that measures affecting information are far from innocuous. On the one hand, in a situation of strong competition, aligned prices provide little incentive for consumers to search, thus undermining the stability of such an equilibrium. Contrarily, collusion appears quite sustainable in a context where a reliable website makes monitoring costless and, again, aligned prices discourage search by consumers.
 
@@ -97,7 +99,7 @@ The exact number of gas stations operating in the market is uknown. As of May 20
 Gas stations are essentially either owned and operated by a chain or with a "location-gerance" contract according to which the manager receives a commission on gasoline sold (e.g. only 200 gas stations set prices independently among gas stations from Total brand). There is significant evidence that many gas stations hardly make any profits: oil companies exiting the market (Shell, BP), drastically reducing the size of their organic network (Esso), bankrupts or terminations of independent gas stations etc.
 
 Key cost components are the cost of wholesale gasoline, including delivery fees,  gas station operating expenses, and taxes. Taxes included a fix part called TICPE, which slightly varies between regions, and the standard variable VAT (19.6\% over the period studied, which bear on cost and TICPE).
- 
+
 \subsection{Demand}
 
 Diesel consumption currenlty accounts for c. 80\% of total gasoline consumption. This evolution was achieved through a lower tax on diesel. At a very aggregate level, two kinds of consumers can be distinguished: businesses and individual customers. Businesses are typically offered card programs which allow them to monitor employees' consumptions and obtain rebates. An important implication is that the price of the gas station is irrelevant (or only partly relevant) to a signicant number of transations in the market.
@@ -120,7 +122,7 @@ On August 29, 2012, a decrease in price of 6c per litre was announced by the gov
 
 \subsection{Descriptive statistics}
 
-\textbf{Retail price vs. wholesale cost of diesel}
+\subsubsection{Retail price vs. wholesale cost of diesel}
 
 Descriptive statistics are provided for a period of 640 days starting September 9, 2011 and ending May 6, 2013. Four subperiods of data are missing whose respective day lengths are 11 (2012/07/08-2012/07/18), 10 (2012/08/13-2012/08/22), 49 (2012/12/04-2013/01/21) and 6 (2013/04/04-2013/04/09). The end of the period studied has been determined arbitrarily to avoid including another missing subperiod and keep the database to a reasonable size.
 
@@ -130,7 +132,7 @@ Descriptive statistics are provided for a period of 640 days starting September 
 		\includegraphics[width=16cm]{graphs/diesel_price_margin.png}
 \end{figure}
 
-\textbf{Price ridigity}
+\subsubsection{Price ridigity}
 
 Data include prices at 9,932 gas stations in Mainland France, of which 421 are identified as highway gas stations and thus excluded from the analysis. Additionnally, 381 stations are excluded due to apparent poor data quality (less than 10 prices observed or less than a price change per month). Overall, the number of prices observed varies between 8,715 and 8,965 across days in the period studied. On average, XXX gas stations (c. XXX\% of gas stations recorded on the website) change prices within a day. On average, a gas station changes its price every XXX days.
 
@@ -141,29 +143,68 @@ Data include prices at 9,932 gas stations in Mainland France, of which 421 are i
     \floatfoot{The daily collection of prices has occasionally been delayed by a few hours resulting in some imprecision regarding the exact number of price changes occurring within one day}
 \end{figure}
 
-
-\textbf{Heterogeneity among gas stations}
+\subsubsection{Heterogeneity among gas stations}
 
 Static price dispersion in French Data is easily seen in any single day price cross section. The resulting price distribution is bimodal, largely reflecting the presence of two dominant types of actors: supermarkets and oil companies. Supermarkets typically state that they use gasoline to attract consumers, while oil companies mention the quality of the service to justify higher prices. Oil companies also traditionally enjoy more demand from businesses with which they develop exclusive relationships in exchange for consumption tracking tools (firm employees pay with a specific magnetic card) and rebates. Price displayed at the gas station is then irrelevant to the transaction.
 
 In comparison, data used in \cite{TAP11} include prices of gas (regular, mid-grade, premium) and diesel at gas stations in California, Florida, Texas and New Jersey from January 2006 to May 2007. The average price of regular gas fluctuates quite a bit over time (from c.\$2.5/gal to c.\$3.5/gal for California) and from one state to the other (average price in Texas over all stations and periods is \$2.576/gal vs. \$3.019/gal in California), largely due to difference in taxes. The number of rivals within 2 miles (c.3.2km) of each station is rather similar in all states: from 13.38 in New Jersey to 14.22 in Texas (resp. 4.25 to 4.74 with 1 mile). The average distance to the closest rival ranges from 0.38 to 0.49 miles (c. 600 to 800m).
 
-\section{Consumer search vs. price levels and dispersion}
-
-Though any attempt to evaluate the degree of consumer information directly through statistics compiled from all potential sources appears futile, Zagaz.com and Prix-carburant.gouv.fr offer the opportunity to observe trend in user registrations and/or trafic. Such information can then be merged with price data to study the relation between proxies for consumer search efforts and price levels or dispersion.
-
 \section{Price dispersion vs. consumer information}
 
-A simple way to measure temporal price dispersion between two stations with daily observations is to consider the probability that the station which is in general cheaper (in terms of day count) turns out to be more expensive. Formally, considering the prices $p_{it}$ and $p_{jt}$ of two stations $i$ and $j$ over $T_{ij}$ days, such that $p_{it} >= p_{ij}$ is observed most of the time, the rank reversals statistic writes:
+A simple way to measure temporal price dispersion between two stations with daily observations is to consider the probability that the station which is in general cheaper (in terms of day count) turns out to be more expensive. Formally, considering the prices $p_{it}$ and $p_{jt}$ of two stations $i$ and $j$ over $T_{ij}$ days, such that $p_{it} \ge p_{ij}$ is observed most of the time, the rank reversals statistic writes:
 
 \begin{align*}
 r_{ij} = \frac{1}{T_{ij}} \sum_{t=1}^{T_{ij}} \mathbbm{1}_{p_{jt} > p_{it}}
 \end{align*}
 
-Though the computation and intuition of rank reversals is fairly straightforward, its actual use involves dealing with two fundamental practical questions. Though rank reversals at nearby competitors certainly provide more convincing evidence of temporal price dispersion linked to consumer information than variations in the distribution of prices at a municipal/regional/national level, it raises the issue of actual market definition. Also, as static price dispersion leads to a reduction in temporal price dispersion ceteris paribus (in the case of randomization over utilities, there may be dispersion without rank reversals at all), one may need to control for it. As the issue of static price dispersion gets more severe, it can become unclear to which extent nearby sellers actually compete for the same customers, potentially connecting the two questions.
+Depending on market definitions, a database can then be built in which observations are pairs of stations assumed to compete within the same market. In the following analysis, distance as the crow flies is used with an upper distance limit of 3km (robustness checks are joined in appendix). Rank reversals are thus computed for all gas stations in the database separated by a distance of less than 3km.
+
+A second sensitive issue which arises in the empirical analysis is the treatment of differentiation, here broadly understood as lasting differences in prices. Such an issue is traditionally addressed by working with price residuals (i.e. after taking out time and gas station fixed effects), which likely introduce errors in data. The analysis is thus performed with raw prices whenever differentiation is limited, and with residual prices when differentiation requires it.
+
+A last issue that must be mentioned before the exposition of results is the presence in the data of significant changes in price policies. Such changes are found to be associated with a change of brand "Total" for "Total Access", the low cost brand of Total. In order to avoid spurious rank reversals (cf. appendix), all concerned pairs are excluded from the analysis. It has also been checked that no competitor's margin was affected in a different way vs. other sellers in the market whenever a change occurs.
+
+\begin{figure}[!h]
+    \caption{Percentage of rank reversals among pairs}
+	\centering
+		\includegraphics[width=16cm]{graphs/ecdf_rr_temporal.png}
+    \floatfoot{Series represent for each day the percentage of pairs observed where the usual price order is not respected (reversed rank). No differentiation implies that pairs exhibit an average price difference below 2c/l.}
+\end{figure}
+
+\ \\
+\begin{figure}
+\caption{Pair rank reversals}
+% {\renewcommand{\arraystretch}{0.8}
+\centering
+%\begin{center}
+\begin{tabular}{lrrrrr}
+\hline
+{} & \multicolumn{3}{c}{Raw prices} & \multicolumn{2}{c}{Residual prices}  \\
+{} & All & No Total & Price difference & Price difference & Price difference \\
+{} & {} & Access & $\le$ 2c/l (mean) & $\le$ 2c/l (mean) & $\ge$ 2c/l (mean)\\
+\hline
+Max $d_{ij}$: 3km & {} & {} & {} & {} & {} \\
+\hline
+Nb pairs & 16,142 & 13,846 & 5,166 & 5,166 & 8,680 \\
+Mean & 0.09 & 0.08 & 0.19 & 0.39 & 0.45 \\
+Std & 0.13 & 0.12 & 0.13 & 0.11 & 0.05 \\
+Median & 0.02 & 0.01 & 0.17 & 0.43 & 0.46 \\
+\hline
+Max $d_{ij}$: 5 km & {} & {} & {} & {} & {} \\
+\hline
+Nb pairs & 33,478 & 28,433 & 10,314 & 10,314 & 18,119 \\
+Mean & 0.09 & 0.08 & 0.21 & 0.41 & 0.45 \\
+Std & 0.13 & 0.12 & 0.13 & 0.10 & 0.04 \\
+Median & 0.02 & 0.01 & 0.19 & 044 & 0.46 \\
+\hline
+\multicolumn{6}{l}{\small Pairs including a Total Access gas station are excluded in the three last columns}\\
+\end{tabular}
+%\end{center}
+\end{figure}
+
 
 \begin{figure}[H]
 \centering
+\caption{Empirical distribution functions of rank reversals (raw prices)}
 \begin{subfigure}{.4\linewidth}
 \centering
 \includegraphics[width=6cm]{graphs/ecdf_rr_all.png}
@@ -220,9 +261,9 @@ Market price range & 0.033  & 0.028 & 0.020 \\
 Market gain from search & 0.017 & 0.014 & 0.010 \\
 Market price std & 0.011 & 0.011 & 0.010 \\
 \hline
-\multicolumn{4}{p{.8\textwidth}}{Each price dispersion statistic corresponds to the average across markets of average price dispersion over time. Markets with less than 3 competitors are dropped. At the market level, price dispersion has been computed only for days when more than two thirds of competitors' prices are available. Only markets with more than 50 days of data are then kept for the overall average.}
 \end{tabular}
 \end{center}
+\floatfoot{Each statistic accounting for price dispersion is first computed for each local market across time. The table reports averages across markets. At the market level, price dispersion has been computed only for days when more than two thirds of competitors' prices were available. Only markets with more than 50 days of data are then taken into account to compute reported statistics.}
 \end{figure}
 
 \newpage
@@ -262,5 +303,9 @@ Station information:
 \item Geocoding: address standardization
 \item Highway gas stations
 \end{itemize}
+
+\section{Consumer search vs. price levels and dispersion}
+
+Zagaz.com and Prix-carburant.gouv.fr offer the opportunity to observe trend in user registrations and/or trafic. Such information can then be merged with price data to study the relation between proxies for consumer search efforts and price levels or dispersion.
 
 \end{document}

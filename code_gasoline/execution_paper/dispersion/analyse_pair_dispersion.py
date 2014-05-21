@@ -61,15 +61,16 @@ df_prices[[x for x in df_prices.columns if x not in ls_ids_final]] = np.nan
 #df_prices_cl_R = df_prices_cl_R.reindex(idx, fill_value=np.nan)
 #df_price_cl = df_prices_cl_R
 
-df_price_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
+df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
                           index_col = 0,
                           parse_dates = True)
+df_prices_cl[[x for x in df_prices_cl.columns if x not in ls_ids_final]] = np.nan 
 
 # ################
 # BUILD DATAFRAME
 # ################
 
-km_bound = 3
+km_bound = 5
 diff_bound = 0.02
 
 # todo: iterate with various  (high value: no cleaning of prices)
@@ -175,7 +176,7 @@ df_ppd['pair_type'][(df_ppd['brand_type_e_1'] == 'IND') &\
 #            'nb_days_spread', 'avg_abs_spread', 'avg_spread', 'std_spread', 
 #            'percent_rr', 'max_len_rr', 'avg_abs_spread_rr', 'nb_rr']
 
-# Drop pairs with no info
+# Drop pairs with insufficient price data
 print "Dropped pairs:".format(len(df_ppd[(pd.isnull(df_ppd['avg_spread'])) |\
                                          (df_ppd['nb_spread'] < 100)]))
 df_ppd = df_ppd[(~pd.isnull(df_ppd['avg_spread'])) & (df_ppd['nb_spread'] >= 100)]
@@ -193,14 +194,28 @@ plt.show()
 #  print i, len(df_ppd[np.abs(df_ppd['avg_spread']) > i * 10**(-2)]),\
 #        len(df_ppd[(np.abs(df_ppd['avg_spread']) > i * 10**(-2)) & (df_ppd['nb_rr'] > 10)])
 
-df_ppd_nota = df_ppd[(df_ppd['brand_2_e_1'] != 'TOTAL_ACCESS') |\
+# Exclude Total Access from analysis
+
+df_ppd_nota = df_ppd[(df_ppd['brand_2_e_1'] != 'TOTAL_ACCESS') &\
                      (df_ppd['brand_2_e_2'] != 'TOTAL_ACCESS')]
 
-print '\nRank reversal: all'
+
+print '\nRank reversal: All'
+print df_ppd['pct_rr'].describe()
+
+print '\nRank reversal: Total Access'
+print df_ppd.ix[[ind for ind in df_ppd.index if ind not in df_ppd_nota.index]]['pct_rr'].describe()
+
+df_ppd = df_ppd_nota
+
+print '\nRank reversal: All (No TA)'
 print df_ppd_nota['pct_rr'].describe()
 
-print '\nRank reversal: no differentiation'
-df_ppd_nota['pct_rr'][df_ppd_nota['avg_spread'].abs() <= diff_bound].describe()
+print '\nRank reversal: No differentiation (No TA)'
+print df_ppd_nota['pct_rr'][df_ppd_nota['avg_spread'].abs() <= diff_bound].describe()
+
+print '\nRank reversal: Differentiation (No TA)'
+print df_ppd_nota['pct_rr'][df_ppd_nota['avg_spread'].abs() > diff_bound].describe()
 
 # Build dataframes: differentiation vs. no differentiation
 df_ppd_nodiff = df_ppd[np.abs(df_ppd['avg_spread']) <= diff_bound]
