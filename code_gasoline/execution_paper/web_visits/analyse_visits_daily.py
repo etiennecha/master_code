@@ -70,7 +70,7 @@ se_nb_chges[se_nb_chges < zero] = np.nan
 df_registrations['nb_chges'] = se_nb_chges
 df_registrations['price_gazole_ttc'] = df_price.mean(1)
 
-# Harmonization: base 100
+# Harmonize (base 100) and plot registrations, nb price changes and price
 df_visits = df_registrations['2011-09-04':'2013-06-04']
 df_visits['registrations_base100'] = df_visits['registrations'] /\
                                          df_visits['registrations'].max() * 100
@@ -82,7 +82,25 @@ df_visits['price_gazole_ttc_base100'] = df_visits['price_gazole_ttc'] /\
 df_visits[['price_gazole_ttc_base100', 'registrations_base100']].plot()
 plt.show()
 
+# Plot registrations, and price (two y axis)
+fig = plt.figure()
+ax1 = fig.add_subplot(111)
+df_visits['registrations'].plot(ax = ax1 , c='g')
+ax2 = ax1.twinx()
+df_visits['price_gazole_ttc'].plot(ax = ax2, c='b')
+ax1.grid()
+plt.show()
 
+# Plot registrations, and price (two y axis)
+fig = plt.figure()
+ax1 = fig.add_subplot(111)
+df_visits['registrations'].plot(ax = ax1 , c='g')
+ax2 = ax1.twinx()
+df_visits['nb_chges'].plot(ax = ax2, c='b')
+ax1.grid()
+plt.show()
+
+# Regressions
 df_visits['week_day'] = [x.weekday() for x in df_visits.index]
 df_visits['tax_cut'] = 0
 df_visits['tax_cut'][(df_visits.index == '2012-08-28') |\
@@ -102,7 +120,6 @@ df_visits['registrations_l1'] = df_visits['registrations'].shift(1)
 
 for i in range(1, 10):
   df_visits['price_gazole_ttc_l%s' %i] = df_visits['price_gazole_ttc'].shift(i)
-
 
 # #################
 # PLOT AND ANALYSE

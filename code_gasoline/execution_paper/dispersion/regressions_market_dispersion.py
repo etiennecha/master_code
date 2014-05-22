@@ -34,7 +34,7 @@ ls_ls_markets = dec_json(path_ls_ls_markets)
 dict_brands = dec_json(path_dict_brands)
 
 series = 'diesel_price'
-km_bound = 5
+km_bound = 3
 zero_threshold = np.float64(1e-10)
 
 # DF PRICES
@@ -99,9 +99,9 @@ ls_ls_market_ids_st_rd = get_ls_ls_distance_market_ids_restricted(master_price['
                                                                   ls_ls_competitors, km_bound, True)
 ls_ls_markets = [ls_market for ls_market in ls_ls_markets if len(ls_market) > 2]
 
-ls_ls_market_ids_temp = ls_ls_market_ids_st # [0:6000]
+ls_ls_market_ids_temp = ls_ls_markets # [0:6000]
 
-ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price) for\
+ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price_cl) for\
                              ls_market_ids in ls_ls_market_ids_temp]
 # Check why prices is Nan: should not be the case
 
@@ -165,6 +165,8 @@ for str_formula in ls_formulas:
                      [indiv_id for indiv_id in df_dispersion['id']])
   ar_cl_std_errors = np.array([np.sqrt(cl_std_errors[0][i, i])\
                                  for i in range(len(str_formula.split('+')) + 1)])
+  print str_formula
+  print ar_cl_std_errors
   ar_cl_t_values = reg_res.params / ar_cl_std_errors
   #ls_reg_res = [reg_res.nobs, reg_res.rsquared, reg_res.rsquared_adj,
   #              reg_res.params, reg_res.bse, reg_res.tvalues,

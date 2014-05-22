@@ -34,7 +34,7 @@
 
 \title{Price dispersion on the French retail gasoline market\ \\ \ \\(Very preliminary)}
 \author{Etienne Chamayou\thanks{e-mail:
-\textit{etienne.chamayou@ensae.fr}}\medskip\\{\normalsize CREST and Department of Economics, Ecole Polytechnique}}
+\textit{etienne.chamayou@ensae.fr}}\medskip\\{\normalsize CREST and Department of Economics, Ecole Polytechnique }}
 \maketitle
 
 \sloppy%
@@ -42,25 +42,21 @@
 \onehalfspacing
 
 \textbf{Abstract:}
-Abstract to be added here.
+This article studies price dispersion on the French retail gasoline market, following and discussing the methodology employed by \cite{TAP11} with US data to test a standard prediction of consumer search models: randomized pricing. Changes in price ranking are found to occur frequently among pairs of competing gas stations*, with more changes occurring between stations which are separated by a higher distance i.e. where the consumer information problem is arguably more significant. This provides support for the link between price dispersion and consumer search. Price dispersion furthermore decreases with cost and increases with the number of firms, in accordance with predictions from a model a la \cite{VAR80}.
 
 \strut
 
-\textbf{Keywords:} Industrial Organization, Search
+\textbf{Keywords:} Consumer search, Price dispersion
 
 \strut
 
-\textbf{JEL Classification Numbers:} XXX
+\textbf{JEL Classification Numbers:} L13
 
 \pagebreak%
 \doublespacing
 
-\section{Abstract}
-\setcounter{page}{1}
-
-This article studies price dispersion on the French retail gasoline market, following and discussing the methodology employed by \cite{TAP11} with US data to test a standard prediction of consumer search models: randomized pricing. Even though the presence of differentiation and shocks affecting competition in French data are shown to require careful treatment, findings are consistent with \cite{TAP11}. Price rankings in local markets exhibit significant variability over time, with variability increasing in distance between stations. This arguably supports the connection made by \cite{STI61} between price dispersion and the "ignorance in the market". Price dispersion furthermore decreases with cost and increases with the number of firms, in accordance with predictions from a model a la \cite{VAR80}.
-
 \section{Introduction}
+\setcounter{page}{1}
 
 The seminal paper of the consumer search literature, \cite{STI61}, advocated the idea that a key element of competition was the relation between the cost of searching for prices by consumers and price dispersion i.e. the lasting existence of different prices for a homogeneous product. While the paper only provides evidence of static price dispersion (e.g. retailers posting different prices for a given car model in a suburb), thus leaving open discussions about differentiation, the empirical literature would soon strive to make the case stronger by considering temporal price dispersion, namely sellers'price moving within the market distribution over time. This was long done essentially by considering panel data of standard goods sold at various stores, introducing fixed effects to account for potential differentiation, and producing statistics to account for changes of rank in the distribution of prices (e.g. quantile to quantile changes). Shortcomings typically included the fact that price distributions included sellers that were not necessarily operating in the same environment.
 
@@ -70,7 +66,7 @@ Competition in the retail gasoline market has attracted a lot of attention in Fr
 
 The effect of the creation of the website has not been evaluated, probably for lack of data before 2006. The 2011 report yet called for further development of the website, and Germany has taken a similar initiative in 2012. More generally, in a context where dynamic prices generate heightened debates (e.g. Amazon), the idea to monitor competition by constraining firms to increase transparency enjoys strong popularity among politicians. The theory of consumer search however tells us that measures affecting information are far from innocuous. On the one hand, in a situation of strong competition, aligned prices provide little incentive for consumers to search, thus undermining the stability of such an equilibrium. Contrarily, collusion appears quite sustainable in a context where a reliable website makes monitoring costless and, again, aligned prices discourage search by consumers.
 
-TODO: contribute to the understanding of the relation between dispersion and search, taking advantage of the heterogeneity in local contexts of competition.
+With a long term goal of being able able to achieve a better understanding of local competition contexts, the paper investigates price dispersion in the French market. Between stations exhibiting little differentiation, price dispersion is found to significantly increase with distance between stations (very close competitors vs. competitors located a bit further), providing support for the connection between consumer information and price dispersion. The effect is significantly weaker for differentiated competitors. At the market level, price dispersion is found to increase with the number of competitors and decrease with price level. Overall, despite very different characteristics, results are close to those obtained by \cite{TAP11} on US data.
 
 \section{Literature}
 
@@ -231,18 +227,18 @@ In order to evaluate the hypothesis according to which information is connected 
 {} & No differentiation & No differentiation & Differentiation \\
 {} & raw prices & residual prices & residual prices \\
 \hline
-OLS: distance                   & 0.014\sym{***}    &  0.020\sym{***}  &       0.001\sym{}\\
-{}                                      &  (0.002)                 & (0.002)                 &     (0.001)   \\
-OLS: dummy                     &  -0.024\sym{***} & -0.034\sym{***}  &     -0.006\sym{***}\\
-{}                                      & (0.007)                  &(0.006)                  &     (0.002) \\
-Quantile 0.25: dummy      & -0.027\sym{***}  &-0.067\sym{***}   &       -0.007\sym{***}\\
-{}                                      &    (0.008)               & (0.010)                 &     (0.003)  \\
-Quantile 0.50: dummy      & -0.024\sym{*}      & -0.030\sym{***}  &       -0.007\sym{**}\\
-{}                                      &  (0.011)                 & (0.005)                 &     (0.002)    \\
-Quantile 0.75: dummy      & -0.027\sym{*}      & -0.007\sym{*}      &       -0.002\sym{}\\
-{}                                      &     (0.014)              & (0.003)                 &     (0.001)   \\
+OLS: distance             &  0.014\sym{***}  &  0.020\sym{***}  &  0.001\sym{}\\
+{}                        & (0.002)          & (0.002)          & (0.001)   \\
+OLS: dummy                & -0.024\sym{***}  & -0.034\sym{***}  & -0.006\sym{***}\\
+{}                        & (0.007)          & (0.006)          & (0.002) \\
+Quantile 0.25: dummy      & -0.027\sym{***}  & -0.067\sym{***}  & -0.007\sym{***}\\
+{}                        & (0.008)          & (0.010)          & (0.003)  \\
+Quantile 0.50: dummy      & -0.024\sym{*}    & -0.030\sym{***}  & -0.007\sym{**}\\
+{}                        & (0.011)          & (0.005)          & (0.002)    \\
+Quantile 0.75: dummy      & -0.027\sym{*}    & -0.007\sym{*}    & -0.002\sym{}\\
+{}                        & (0.014)          & (0.003)          & (0.001)   \\
 \hline
-N                                       & 4,183         &   4,183     &     8,312    \\
+N                         & 4,183            &   4,183          &     8,312    \\
 \hline\hline
 \multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
 \multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
@@ -282,7 +278,7 @@ Market price range & 0.116 & 0.105 & 0.089\\
 Market gain from search & 0.046 & 0.044 & 0.036 \\
 Market price std & 0.046 & 0.045 & 0.045 \\
 \hline
-Clean prices & & & \\
+Residual prices & & & \\
 \hline
 Market price range & 0.033  & 0.028 & 0.020 \\
 Market gain from search & 0.017 & 0.014 & 0.010 \\
@@ -298,29 +294,56 @@ Estimation results show that dispersion is increasing in the number of firm and 
 \begin{table}[htbp]\centering
 \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
 \caption{Regressions of market dispersion}
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc }
 \hline
 \hline
-{} & All & No overlap & Stable markets\\
-{} & raw prices & residual prices & residual prices \\
+{} & All & All & No overlap & Stable markets\\
+{} & Raw prices & Residual prices & Residual prices &  Residual prices \\
 \hline
-OLS: distance                   & 0.014\sym{***}    &  0.020\sym{***}  &       0.001\sym{}\\
-{}                                      &  (0.002)                 & (0.002)                 &     (0.001)   \\
-OLS: dummy                     &  -0.024\sym{***} & -0.034\sym{***}  &     -0.006\sym{***}\\
-{}                                      & (0.007)                  &(0.006)                  &     (0.002) \\
-Quantile 0.25: dummy      & -0.027\sym{***}  &-0.067\sym{***}   &       -0.007\sym{***}\\
-{}                                      &    (0.008)               & (0.010)                 &     (0.003)  \\
-Quantile 0.50: dummy      & -0.024\sym{*}      & -0.030\sym{***}  &       -0.007\sym{**}\\
-{}                                      &  (0.011)                 & (0.005)                 &     (0.002)    \\
-Quantile 0.75: dummy      & -0.027\sym{*}      & -0.007\sym{*}      &       -0.002\sym{}\\
-{}                                      &     (0.014)              & (0.003)                 &     (0.001)   \\
+Gains from search & & & & \\
 \hline
-N                                       & 4,183         &   4,183     &     8,312    \\
+Nb competitors           &  0.003\sym{***}  &  0.001\sym{***}  &  0.001\sym{***}  & 0.001\sym{***} \\
+{}                       & (0.000)          & (0.000)          & (0.000)          & (0.000)        \\
+Cost                     &  0.007\sym{*  }  & -0.006\sym{*}    & -0.005\sym{}     & -0.005\sym{}   \\
+{}                       & (0.003)          & (0.003)          & (0.003)          & (0.003)        \\
+Intercept                &  0.015\sym{***}  &  0.015\sym{***}  & 0.013\sym{***}   &  0.012\sym{**} \\
+{}                       & (0.004)          & (0.004)          & (0.004)          & (0.004)        \\
+\hline
+Standard deviation & & & & \\
+\hline
+Nb competitors           &  0.000\sym{***}  &  0.000\sym{***}  &  0.000\sym{***}  &  0.000\sym{}          \\
+{}                       & (0.000)          & (0.000)          & (0.000)          & (0.000)    \\
+Cost                     & -0.001\sym{   }  & -0.009\sym{***}  & -0.009\sym{***}  & -0.008\sym{***} \\
+{}                       & (0.002)          & (0.002)          & (0.002)          & (0.003)         \\
+Intercept                &  0.044\sym{***}  &  0.022\sym{***}  &  0.021\sym{***}  &  0.021\sym{***} \\
+{}                       & (0.003)          & (0.003)          & (0.003)          & (0.004)    \\
+\hline
+Coefficient of variation & & & & \\
+\hline
+Nb competitors           &  0.000\sym{***}  &        \sym{}    &       \sym{}     &\\
+{}                       & (0.000)          &                  &                  &\\
+Cost                     & -0.024\sym{***}  &        \sym{}    &       \sym{}     &\\
+{}                       & (0.001)          &                  &                  &\\
+Intercept                &  0.064\sym{***}  &        \sym{}    &       \sym{}     &\\
+{}                       & (0.002)          &                  &                  &\\
+\hline
+Range & & & & \\
+\hline
+Nb competitors           &  0.006\sym{***}  &  0.002\sym{***}  &  0.003\sym{***}  &  0.002\sym{***} \\
+{}                       & (0.000)          & (0.000)          & (0.000)          & (0.000)         \\
+Cost                     & -0.004\sym{}     & -0.025\sym{***}  & -0.021\sym{***}  & -0.019\sym{***} \\
+{}                       & (0.005)          & (0.005)          & (0.005)          & (0.006)         \\
+Intercept                &  0.074\sym{***}  & 0.048\sym{***}   &  0.041\sym{***}  &  0.038\sym{***} \\
+{}                       & (0.007)          & (0.007)          & (0.007)          & (0.008)         \\
+\hline
+N                        & 2,756,096        & 2,756,096        & 493,356          &\\
 \hline\hline
 \multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
 \multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
 \end{tabular}
 \end{table}
+
+\section{Conclusion}
 
 \newpage
 
@@ -329,36 +352,6 @@ N                                       & 4,183         &   4,183     &     8,31
 \newpage
 
 \appendix
-
-\section{Data processing}
-
-Price and station information: Duplicate detection. Not trivial: typically occurs when brand changes... new record with new address/brand... use price information
-Investigation of brand changes more detailed in descriptive statistics.
-
-Location: same corner gas station... crucial for consumer information / advantage in location
-Duplicates: picture of competition, potentially interesting if stations closed can be found in data.
-Brand changes: Connected to duplicates... important policy implications
-Highway gas stations: different market
-
-The database which lies behind the website is first essentially recreated, using the same gas station identification numbers as it is contained in webpages (zip code + 3 digits which appear to merely reflect the registration order of gas stations with the same zip code). Two observations follow: there appears to be a significant turnover in the data, some prices appear to reflect mistakes by managers (extraordinary variations in price).
-
-Since there are very few gas stations which are newly opened each year, it must be that gas stations either stop providing information because they are not/no more committed to do so or create a new account and are then registered under a different identification number... hence the need to reconcile them.
-
-Treatment of prices:
-\begin{itemize}
-\item Daily files are merged recursively on station ids which leads to create a database of 10,433 individuals over 640 days, including unobserved periods which result in missing values within series. Since dates of price changes are known, missing periods can yet be filled in many cases (e.g: if price on day 2 if missing, it can be checked in day 3 that price hasn't changed since day 1 and if price on days 10-15 are missing, it can be seen on day 16 that the last changed was made on day 13: prices for 13-15 are then input backward and forward for 10-12). TODO: stats
-\item Abnormal values are then looked for based on prior observation. This allows to observe that some prices are input as 0.156 instead of 1.56 and correct rather than transform in missing values. TODO: stats
-\item Abnormal price variations are then looked for based on observation. Quite often it appears that the variation must have been the consequence of a mistake given the size and the following reverse change. Such changes are eliminated. When no converse changes can be found due to missing data, suspect periods are also switched to missing.
-\item Abnormal price durations are finally examined based on prior observation. As mentioned in XXX, a duration of 1 month is considered suspect, 1 month and 1/2 highly suspect, 2 months almost certainly an error.
-\end{itemize}
-
-Station information:
-\begin{itemize}
-\item Matching of stations with INSEE codes: Zip codes: problem of cedex and changing zip codes. City name matching implies the generic problem of string comparison, not to mention the fact that the same name can be used in different regions and that city names sometimes change (small municipalities are regrouped). Approach: matching on zip then city name
-\item Matching of databases: address standardization but still remains a big issues as quite different addresses can be provided, a piece of info can be up to date in one database while a bit old in the other. It requires a multicriteria approach.
-\item Geocoding: address standardization
-\item Highway gas stations
-\end{itemize}
 
 \section{Additionnal regression results}
 
@@ -388,8 +381,6 @@ N      &     4,183         &     4,183      &     8,312    \\
 \multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
 \end{tabular}
 \end{table}
-
-
 
 \section{Consumer search vs. price levels and dispersion}
 
