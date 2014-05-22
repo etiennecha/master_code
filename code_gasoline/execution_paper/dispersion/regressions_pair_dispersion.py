@@ -72,13 +72,13 @@ diff_bound = 0.02
 ls_ppd = []
 for (indiv_id, comp_id), distance in ls_tuple_competitors:
   if distance <= km_bound: 
+    se_prices_1 = df_price[indiv_id]
+    se_prices_2 = df_price[comp_id]
+    avg_spread = (se_prices_2 - se_prices_1).mean()
+    #if np.abs(avg_spread) > diff_bound:
+    #  # se_prices_2 = se_prices_2 - avg_spread
     se_prices_1 = df_price_cl[indiv_id]
     se_prices_2 = df_price_cl[comp_id]
-    avg_spread = (se_prices_2 - se_prices_1).mean()
-    if np.abs(avg_spread) > diff_bound:
-      # se_prices_2 = se_prices_2 - avg_spread
-      se_prices_1 = df_price_cl[indiv_id]
-      se_prices_2 = df_price_cl[comp_id]
     ls_comp_pd = get_pair_price_dispersion(se_prices_1.as_matrix(),
                                            se_prices_2.as_matrix(), light = False)
     ls_comp_chges = get_stats_two_firm_price_chges(se_prices_1.as_matrix(),
@@ -233,7 +233,7 @@ def get_df_ols_res(ls_ols_res, ls_index):
 # So far: need to add "resid[resid == 0] = .000001" in quantreg line 171-3 to have it run
 
 ls_df_reg_res = []
-for df_ppd_reg in [df_ppd]: #[df_ppd_nodiff, df_ppd_diff]:
+for df_ppd_reg in [df_ppd_nodiff, df_ppd_diff]:
   ls_dist_ols_res = [smf.ols(formula = str_formula, data = df_ppd_reg).fit()\
                        for str_formula in ls_dist_ols_formulas]
   ls_sc_ols_res   = [smf.ols(formula = str_formula, data = df_ppd_reg).fit()\

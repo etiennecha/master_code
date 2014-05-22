@@ -170,6 +170,8 @@ A last issue that must be mentioned before the exposition of results is the pres
     \floatfoot{Series represent for each day the percentage of pairs observed where the usual price order is not respected (reversed rank). No differentiation implies that pairs exhibit an average price difference below 2c/l.}
 \end{figure}
 
+Among all pairs of gas stations built with a maximum distance of 3km, the percentage of reversed pairs fluctuates between XX\% and XX\% over the period studied. The maximum of XX\% is reached at the time of the government's intervention. Figure X shows that one needs to be careful when computing rank reversals as data can be significantly biased by exogeneous factors. In the case in point, the development of "Total Access" with a change in price policy leads to measure spurious rank reversals (cf. Appendix for more details). The "No differentiation" series results from a focus on pairs which exhibit an average price difference below 2c/l.
+
 \ \\
 \begin{figure}
 \caption{Pair rank reversals}
@@ -201,6 +203,7 @@ Median & 0.02 & 0.01 & 0.19 & 044 & 0.46 \\
 %\end{center}
 \end{figure}
 
+A clear ranking of empirical distribution functions of rank reversals can be observed among pairs of gas stations depending on distances. This is consistent with the idea that nearby gas stations compete in a (virtually) complete information setting, where there is no particular reason to expect rank reversals. Conversely, distance can create an information issue for other pairs, leading to the inexistence of an equilibrium in pure strategies.
 
 \begin{figure}[H]
 \centering
@@ -217,15 +220,39 @@ Median & 0.02 & 0.01 & 0.19 & 044 & 0.46 \\
 \end{subfigure}
 \end{figure}
 
-Statistics provided in \cite{TAP11} to describe prices and mark up suggest that the issue of static price dispersion is not severe. In all pairs obtained with a 1 mile maximum distance between stations, depending on fuel type, average spread amounts to 1\% to 2\% of average price, over 90\% of pairs exhibit positive rank reversals, and the average pair rank reversals varies between c.12\% and c.15\%. Results do not vary significantly with a 2 mile maximum distance. Static price dispersion can therefore arguably be neglected, thus avoiding the shortcomings associated with price cleaning.
+In order to evaluate the hypothesis according to which information is connected to price dispersion, two measures of price dispersion: rank reversals and standard deviation in spread, are regressed on a proxy for consumer information: distance between stations.
+
+\begin{table}[htbp]\centering
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\caption{Regression of rank reversals}
+\begin{tabular}{lccc}
+\hline
+\hline
+{} & No differentiation & No differentiation & Differentiation \\
+{} & raw prices & residual prices & residual prices \\
+\hline
+OLS: distance                   & 0.014\sym{***}    &  0.020\sym{***}  &       0.001\sym{}\\
+{}                                      &  (0.002)                 & (0.002)                 &     (0.001)   \\
+OLS: dummy                     &  -0.024\sym{***} & -0.034\sym{***}  &     -0.006\sym{***}\\
+{}                                      & (0.007)                  &(0.006)                  &     (0.002) \\
+Quantile 0.25: dummy      & -0.027\sym{***}  &-0.067\sym{***}   &       -0.007\sym{***}\\
+{}                                      &    (0.008)               & (0.010)                 &     (0.003)  \\
+Quantile 0.50: dummy      & -0.024\sym{*}      & -0.030\sym{***}  &       -0.007\sym{**}\\
+{}                                      &  (0.011)                 & (0.005)                 &     (0.002)    \\
+Quantile 0.75: dummy      & -0.027\sym{*}      & -0.007\sym{*}      &       -0.002\sym{}\\
+{}                                      &     (0.014)              & (0.003)                 &     (0.001)   \\
+\hline
+N                                       & 4,183         &   4,183     &     8,312    \\
+\hline\hline
+\multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
+\end{tabular}
+\end{table}
 
 Using maximum 1km and 2km allows to build databases containing respectively X and X pairs of gas stations. As expected, rank reversals between two stations decreases in the average spread between their prices, with a large number exhibiting no rank reversals. In order to reduce the influence of static dispersion, the sample is subset based on the value of the average spread between prices. Results are presented for a maximum average spread of 0.02c/l i.e. a 1\% to 2\% average difference in prices (NB: X\% of stations include 3 digits in price display). Finally, a last element is taken in consideration: the conversion of XXX gas stations by the brand Total to low cost gas stations, which generates a large number of spurious rank reversals.
 
-INSERT GRAPHS + STATS DES
 
-The percentage of reversed pairs per day varies between X and X etc.
-
-TODO: test with distance vs. rank reversals (control for spread) considering cleaned prices (compare to Lach and Hosken (relevant?) and raw prices... Noise? + Discuss duration of rank reversals and deterministic moves. Insist on economic significance. (+ dispersion vs. price rigidity?)
+Statistics provided in \cite{TAP11} to describe prices and mark up suggest that the issue of static price dispersion is not severe. In all pairs obtained with a 1 mile maximum distance between stations, depending on fuel type, average spread amounts to 1\% to 2\% of average price, over 90\% of pairs exhibit positive rank reversals, and the average pair rank reversals varies between c.12\% and c.15\%. Results do not vary significantly with a 2 mile maximum distance. Static price dispersion can therefore arguably be neglected, thus avoiding the shortcomings associated with price cleaning.
 
 \section{Market price dispersion}
 
@@ -266,6 +293,35 @@ Market price std & 0.011 & 0.011 & 0.010 \\
 \floatfoot{Each statistic accounting for price dispersion is first computed for each local market across time. The table reports averages across markets. At the market level, price dispersion has been computed only for days when more than two thirds of competitors' prices were available. Only markets with more than 50 days of data are then taken into account to compute reported statistics.}
 \end{figure}
 
+Estimation results show that dispersion is increasing in the number of firm and decreasing in price.
+
+\begin{table}[htbp]\centering
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\caption{Regressions of market dispersion}
+\begin{tabular}{lccc}
+\hline
+\hline
+{} & All & No overlap & Stable markets\\
+{} & raw prices & residual prices & residual prices \\
+\hline
+OLS: distance                   & 0.014\sym{***}    &  0.020\sym{***}  &       0.001\sym{}\\
+{}                                      &  (0.002)                 & (0.002)                 &     (0.001)   \\
+OLS: dummy                     &  -0.024\sym{***} & -0.034\sym{***}  &     -0.006\sym{***}\\
+{}                                      & (0.007)                  &(0.006)                  &     (0.002) \\
+Quantile 0.25: dummy      & -0.027\sym{***}  &-0.067\sym{***}   &       -0.007\sym{***}\\
+{}                                      &    (0.008)               & (0.010)                 &     (0.003)  \\
+Quantile 0.50: dummy      & -0.024\sym{*}      & -0.030\sym{***}  &       -0.007\sym{**}\\
+{}                                      &  (0.011)                 & (0.005)                 &     (0.002)    \\
+Quantile 0.75: dummy      & -0.027\sym{*}      & -0.007\sym{*}      &       -0.002\sym{}\\
+{}                                      &     (0.014)              & (0.003)                 &     (0.001)   \\
+\hline
+N                                       & 4,183         &   4,183     &     8,312    \\
+\hline\hline
+\multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
+\end{tabular}
+\end{table}
+
 \newpage
 
 \bibliography{references}
@@ -303,6 +359,37 @@ Station information:
 \item Geocoding: address standardization
 \item Highway gas stations
 \end{itemize}
+
+\section{Additionnal regression results}
+
+\begin{table}[htbp]\centering
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\caption{Regression of standard deviation in spread}
+\begin{tabular}{lrrr}
+\hline
+\hline
+{} & No differentiation & No differentiation & Differentiation \\
+{} & raw prices & residual prices & residual prices \\
+\hline
+OLS: distance &  0.001 \sym{***}&      0.001\sym{***}&       0.000\sym{***}\\
+{} &     (0.000)         &     (0.000)         &     (0.000)   \\
+OLS: dummy &  -0.001\sym{***}&      -0.001\sym{***}&     -0.001\sym{***}\\
+{} &    (0.000)     &     (0.000)         &     (0.000) \\
+Quantile 0.25: dummy     &       -0.001\sym{**}&       -0.001\sym{**}&       -0.000\sym{}\\
+{} &     (0.000)       &     (0.000)         &     (0.000)  \\
+Quantile 0.50: dummy     &       -0.001\sym{**}&      -0.001\sym{*}&       -0.000\sym{}\\
+{} &  (0.000)         &     (0.000)         &     (0.000)    \\
+Quantile 0.75: dummy     &       -0.001\sym{**}&     -0.001\sym{**}&       -0.000\sym{}\\
+{} &     (0.001)         &     (0.001)         &     (0.000)   \\
+\hline
+N      &     4,183         &     4,183      &     8,312    \\
+\hline\hline
+\multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
+\end{tabular}
+\end{table}
+
+
 
 \section{Consumer search vs. price levels and dispersion}
 

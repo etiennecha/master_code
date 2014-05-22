@@ -67,6 +67,7 @@ se_mean_price = df_price.mean(1)
 df_price_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
                           index_col = 0,
                           parse_dates = True)
+df_price_cl[[x for x in df_price_cl.columns if x not in ls_ids_final]] = np.nan 
 
 # ################
 # BUILD DATAFRAME
@@ -98,9 +99,9 @@ ls_ls_market_ids_st_rd = get_ls_ls_distance_market_ids_restricted(master_price['
                                                                   ls_ls_competitors, km_bound, True)
 ls_ls_markets = [ls_market for ls_market in ls_ls_markets if len(ls_market) > 2]
 
-ls_ls_market_ids_temp = ls_ls_markets # [0:6000]
+ls_ls_market_ids_temp = ls_ls_market_ids_st # [0:6000]
 
-ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price_cl) for\
+ls_df_market_dispersion = [get_market_price_dispersion(ls_market_ids, df_price) for\
                              ls_market_ids in ls_ls_market_ids_temp]
 # Check why prices is Nan: should not be the case
 
@@ -110,6 +111,7 @@ ls_total_price_vs_dispersion = []
 for ls_market_id, df_market_dispersion in zip(ls_ls_market_ids_temp, ls_df_market_dispersion):
   df_market_dispersion['id'] = ls_market_id[0]
   df_market_dispersion['price'] = se_mean_price
+  df_market_dispersion['price_chge'] = se_mean_price - se_mean_price.shift(1)
   df_market_dispersion['date'] = df_market_dispersion.index
   for indiv_id in ls_market_id:
     # todo: work on mean if several + other stations ?    
@@ -183,6 +185,18 @@ df_results = pd.DataFrame(ls_reg_series,
                           [formula[:formula.index('~')-1] for formula in ls_formulas])
 df_results['N'] = df_results['N'].apply(lambda x: int(x))
 print df_results.to_string()
+
+# Check regressions with price variations: get rid of nan
+df_dispersion = df_dispersion[(~pd.isnull(df_dispersion['price_chge']))]
+str_formula = 'gfs ~ nb_comp + price + price_chge'
+reg_res = smf.ols(formula = str_formula, data = df_dispersion).fit()
+cl_std_errors =  sm.stats.sandwich_covariance.cov_cluster_2groups(\
+                   reg_res,
+                   [date.strftime('%Y%m%d') for date in df_dispersion['date']],
+                   [indiv_id for indiv_id in df_dispersion['id']])
+ar_cl_std_errors = np.array([np.sqrt(cl_std_errors[0][i, i])\
+                               for i in range(len(str_formula.split('+')) + 1)])
+ar_cl_t_values = reg_res.params / ar_cl_std_errors
 
 # #############################################
 # REGRESSIONS: PRICE LEVEL VS. DISPERSION

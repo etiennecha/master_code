@@ -70,7 +70,7 @@ df_prices_cl[[x for x in df_prices_cl.columns if x not in ls_ids_final]] = np.na
 # BUILD DATAFRAME
 # ################
 
-km_bound = 5
+km_bound = 3
 diff_bound = 0.02
 
 # todo: iterate with various  (high value: no cleaning of prices)
@@ -87,8 +87,8 @@ for (indiv_id, comp_id), distance in ls_tuple_competitors:
     if np.abs(avg_spread) > diff_bound:
       #se_prices_1 = df_price_cl[indiv_id]
       #se_prices_2 = df_price_cl[comp_id]
-      se_prices_1 = df_prices[indiv_id]
-      se_prices_2 = df_prices[comp_id]
+      se_prices_1 = df_prices_cl[indiv_id]
+      se_prices_2 = df_prices_cl[comp_id]
     ls_comp_pd = get_pair_price_dispersion(se_prices_1.as_matrix(),
                                            se_prices_2.as_matrix(), light = False)
     ls_comp_chges = get_stats_two_firm_price_chges(se_prices_1.as_matrix(),
