@@ -350,3 +350,21 @@ for price_cut, ls_days in ls_indiv_promo:
 for price_cut, ls_days in ls_indiv_peaks:
   ax.axvline(x=df_prices.index[ls_days[0]], linewidth=1, color='r')
 plt.show()
+
+# Graphs: competitors (subset)
+print ls_ls_competitors[master_price['ids'].index('22600004')]
+ax = df_prices[['22600006', '22600001', '22600004']][0:100].plot()
+for i, dow in enumerate(ar_ind_dow[0:100]):
+  if dow == 5:
+    ax.axvline(x=df_prices.index[i], lw=0.8, ls='--' ,color='k')
+
+pd.options.display.float_format = '{:,.3f}'.format
+print df_prices[['22600006', '22600001', '22600004']][0:30].to_string()
+# Looks like Leclerc only has 2 digit prices vs. 3 for others?
+# Super U uses 5 and 9 to be cheaper / more expensive but not noticed?
+
+# Leclerc (*4) relatively far from Carrefour Market (*1) and Super U (*6)
+# Yet Leclerc has a pattern of prices closer to Carrefour Market: seems prices higher on week ends
+# Close to N164: people going to Brest or whatever: not local consumers so higher price?
+# Check prices of ESSO on N164 a bit further vs. other ESSO
+# Check prices of Leclerc vs. Leclerc around etc
