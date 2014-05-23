@@ -278,6 +278,7 @@ print "\nAvg max length of a price validity w/o censored: {:>8.2f}".\
 # Price changes: day of week (todo: normalize by available days!)
 ar_ind_dow = df_prices.index.dayofweek # seems faster to store it first
 ls_chge_dow_rows = []
+ls_se_chge_dows = []
 for ls_price_durations in ls_ls_price_durations:
   ls_chge_days = []
   for price, ls_price_days in ls_price_durations:
@@ -285,6 +286,7 @@ for ls_price_durations in ls_ls_price_durations:
       ls_chge_days.append(ls_price_days[0])
   ls_chge_dows = [ar_ind_dow[i] for i in ls_chge_days]
   se_chge_dows = pd.Series(ls_chge_dows).value_counts()
+  ls_se_chge_dows.append(se_chge_dows)
   dow_argmax = se_chge_dows.argmax()
   dow_max_pct = se_chge_dows.max() / float(se_chge_dows.sum())
   ls_chge_dow_rows.append((dow_argmax, dow_max_pct))
@@ -334,6 +336,18 @@ print "Min nb of prices observed in one day: {:>6,.0f}".\
         format(np.min([x for x in ls_nb_prices if x != 0]))
 print "Max nb of prices observed in one day: {:>6,.0f}".\
         format(np.max([x for x in ls_nb_prices if x != 0]))
+
+# Total changes per period
+ls_ids_total = df_info_st.index[df_info_st['brand_2_e'] == 'TOTAL']
+ls_ids_total_92 = df_info_st.index[(df_info_st['brand_2_e'] == 'TOTAL') &\
+                                   (df_info_st['dpt'] == '92')]
+
+ls_total_nb_chges = []
+for ind in df_chges.index:
+  ls_total_nb_chges.append((df_chges.ix[ind][ls_ids_total].count(),
+                            len(df_chges.ix[ind][ls_ids_total]\
+                              [df_chges.ix[ind][ls_ids_total].abs() > zero_threshold])))
+df_total_chges = pd.DataFrame(ls_total_nb_chges, df_chges.index)
 
 # Store list of ids to be kept for analysis
 enc_json(ls_ids_final, os.path.join(path_dir_built_json, 'ls_ids_final.json'))
