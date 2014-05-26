@@ -68,4 +68,28 @@ for k, v in dict_refined.items():
   print k, len(v)
 
 ls_ls_markets = [x for k,v in dict_refined.items() for x in v]
-enc_json(ls_ls_markets, os.path.join(path_dir_built_json, 'ls_ls_markets.json'))
+# enc_json(ls_ls_markets, os.path.join(path_dir_built_json, 'ls_ls_markets.json'))
+
+
+
+# Import INSEE data
+pd_df_insee = pd.read_csv(path_csv_insee_data, encoding = 'utf-8', dtype= str)
+# excludes dom tom
+pd_df_insee = pd_df_insee[~pd_df_insee[u'Département - Commune CODGEO'].str.contains('^97')]
+pd_df_insee['Population municipale 2007 POP_MUN_2007'] = \
+  pd_df_insee['Population municipale 2007 POP_MUN_2007'].apply(lambda x: float(x))
+
+# Define INSEE homogeneous areas
+pd_df_insee['id_code_geo'] = pd_df_insee[u'Département - Commune CODGEO']
+pd_df_insee = pd_df_insee.set_index('id_code_geo')
+dict_markets_insee = {}
+dict_markets_au = {}
+dict_markets_uu = {}
+# some stations don't have code_geo (short spells which are not in master_info)
+for id_station, info_station in master_price['dict_info'].items():
+  if 'code_geo' in info_station:
+    dict_markets_insee.setdefault(info_station['code_geo'], []).append(id_station)
+    station_uu = pd_df_insee.ix[info_station['code_geo']][u"Code géographique de l'unité urbaine UU2010"]
+    dict_markets_uu.setdefault(station_uu, []).append(id_station)
+    station_au = pd_df_insee.ix[info_station['code_geo']][u'Code AU2010']
+    dict_markets_au.setdefault(station_au, []).append(id_station)

@@ -166,9 +166,6 @@ df_info = df_info[(df_info['highway'] != 1) &\
 # STATS DESCS
 # ############
 
-# Generic station info stats desc (MOVE TO overview info)
-:w
-
 print '\nChge of type:', len(df_info[df_info['brand_type_b'] != df_info['brand_type_e']])
 
 # Count stations by location/brand
