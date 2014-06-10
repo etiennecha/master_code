@@ -351,3 +351,24 @@ df_total_chges = pd.DataFrame(ls_total_nb_chges, df_chges.index)
 
 # Store list of ids to be kept for analysis
 enc_json(ls_ids_final, os.path.join(path_dir_built_json, 'ls_ids_final.json'))
+
+# Final description of price changes (temporal)
+df_chges = df_chges[ls_ids_final]
+ls_rows = []
+for day in df_chges.index:
+  se_pos_price_chge = df_chges.ix[day][df_chges.ix[day] >  zero_threshold]
+  se_neg_price_chge = df_chges.ix[day][df_chges.ix[day] < -zero_threshold]
+  ls_rows.append([df_chges.ix[day].count(), # valid (no nan) chges
+                  df_chges.ix[day][df_chges.ix[day].abs() < zero_threshold].count(), # no chge
+                  se_pos_price_chge.count(),
+                  se_neg_price_chge.count(),
+                  se_pos_price_chge.median(),
+                  se_pos_price_chge.mean(),
+                  se_neg_price_chge.median(),
+                  se_neg_price_chge.mean()])
+ls_columns = ['nb_valid', 'nb_no_chge', 'nb_pos_chge', 'nb_neg_chge',
+              'med_pos_chge', 'avg_pos_chge', 'med_neg_chge', 'avg_neg_chge']
+df_chges_su = pd.DataFrame(ls_rows, df_chges.index, ls_columns)
+df_chges_su['nb_valid'][df_chges_su['nb_valid'] == 0] = np.nan
+df_chges_su['pct_chge'] = df_chges_su[['nb_pos_chge','nb_neg_chge']].sum(1)/df_chges_su['nb_valid']
+df_chges_su['nb_chge'] = df_chges_su[['nb_pos_chge', 'nb_neg_chge']].sum(1)

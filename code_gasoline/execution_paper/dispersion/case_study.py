@@ -78,17 +78,24 @@ ls_case_studies = ['1500001', # not many rr
                    '9190001', # rr ?
                    '11300001', # rr ?
                    '22100001'] # rr ?
-for k, case_id in enumerate(ls_case_studies):
+for k, case_id in enumerate(ls_case_studies[0:1]):
   for ls_market in ls_ls_market_ids:
   	if case_id in ls_market:
   		break
+  path_temp = os.path.join(path_dir_graphs,
+                           'stable_markets',
+                           'case_study_%s' %k)
+  if not os.path.exists(path_temp):
+    os.makedirs(path_temp)
   
   # 1/ Plot market prices: raw, cleaned, cleaned alternative
   
   ## Raw prices
-  #df_price[ls_market][:'2012-06'].plot()
-  #plt.show()
-  #
+  plt.rcParams['figure.figsize'] = 20, 10 
+  df_price[ls_market].plot()
+  plt.savefig(os.path.join(path_temp, '%s' %(case_id)))
+  plt.close()
+
   ## Cleaned prices (residuals)
   #df_price_cl[ls_market][:'2012-06'].plot()
   #plt.show()
@@ -113,46 +120,40 @@ for k, case_id in enumerate(ls_case_studies):
   # TODO: output text file with stats summary (gen tex report?)
   # TODO: location + market info?
 
-  plt.rcParams['figure.figsize'] = 14, 10 
-  path_temp = os.path.join(path_dir_graphs,
-                           'stable_markets',
-                           'case_study_%s' %k)
-  if not os.path.exists(path_temp):
-    os.makedirs(path_temp)
+  plt.rcParams['figure.figsize'] = 20, 10 
   for i, indiv_id in enumerate(ls_market):
     for comp_id in ls_market[i+1:]:
       # todo: create clean classes...
-      
       ls_two_cols = ['nb_days_1', 'nb_days_2', 'nb_prices_1', 'nb_prices_2',
                      'nb_ctd_1', 'nb_ctd_2', 'nb_chges_1', 'nb_chges_2', 'nb_sim_chges',
                       'nb_1_fol', 'nb_2_fol']
       ls_two_res = get_stats_two_firm_price_chges(df_price[indiv_id].values,
                                                   df_price[comp_id].values)
       # function does not work with pandas series for now
-      ls_two_rows = zip(ls_two_cols, ls_two_res[:-2]) 
-      df_two = pd.DataFrame(ls_two_rows).set_index(0)
-      print df_two
-      
+      se_rows = pd.Series(ls_two_res[:-2], ls_two_cols)
       ls_sim_cols = ['len_spread', 'len_same', 'ls_chge_to_same',
                      'ls_1_lead', 'ls_2_lead', 'ls_ctd_1', 'ls_ctd_2']
       ls_sim_res = get_two_firm_similar_prices(df_price[indiv_id], df_price[comp_id])
-      ls_sim_rows = zip(ls_sim_cols, list(ls_sim_res[:3]) + [len(ls_x) for ls_x in ls_sim_res[3:]])
-      df_sim = pd.DataFrame(ls_sim_rows).set_index(0)
-      print df_sim
-      
+      ls_sim_rows = list(ls_sim_res[:3]) + [len(ls_x) for ls_x in ls_sim_res[3:]]
+      se_sim = pd.Series(ls_sim_rows, ls_sim_cols)
       ls_disp_cols = ['nb_days_spread', 'nb_days_same_price', 'nb_days_a_cheaper', 'nb_days_b_cheaper',
                       'nb_rr_conservative', 'percent_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr',
                       'avg_abs_spread', 'avg_spread', 'std_spread']
       ls_disp_res = get_pair_price_dispersion(df_price[indiv_id], df_price[comp_id])
-      ls_disp_rows = zip(ls_disp_cols, ls_disp_res[0])
-      df_disp = pd.DataFrame(ls_disp_rows).set_index(0)
-      print df_disp
-      
+      se_disp = pd.Series(ls_disp_res[0], ls_disp_cols)
+     
+      se_pair_su = pd.concat([se_rows, se_sim, se_disp])
+
+      print '\n', indiv_id, comp_id
+      print (df_price[indiv_id] - df_price[comp_id]).mean()
+      print se_pair_su
+
       # Two subplots: followed price changes and matching of competitor's price
       fig = plt.figure()
       
       ax1 = fig.add_subplot(2,1,1)
-      df_price[[indiv_id, comp_id]]['2013-02':].plot(ax=ax1)
+      #df_price[[indiv_id, comp_id]]['2013-02':].plot(ax=ax1)
+      df_price[[indiv_id, comp_id]].plot(ax=ax1)
       for day_ind in ls_two_res[-2]:
         line_0 = ax1.axvline(x=df_price.index[day_ind], lw=1, ls='--', c='b')
         line_0.set_dashes([10,2])
@@ -164,7 +165,8 @@ for k, case_id in enumerate(ls_case_studies):
       ax1.set_title("Followed price changes")
       
       ax2 = fig.add_subplot(2,1,2)
-      df_price[[indiv_id, comp_id]]['2013-02':].plot(ax=ax2)
+      #df_price[[indiv_id, comp_id]]['2013-02':].plot(ax=ax2)
+      df_price[[indiv_id, comp_id]].plot(ax=ax2)
       for day_ind in ls_sim_res[3]:
         line_2 = ax2.axvline(x=df_price.index[day_ind], lw=1, ls='--', c='g')
         line_2.set_dashes([10,2])

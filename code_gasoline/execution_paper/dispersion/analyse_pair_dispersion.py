@@ -87,8 +87,8 @@ for (indiv_id, comp_id), distance in ls_tuple_competitors:
     if np.abs(avg_spread) > diff_bound:
       #se_prices_1 = df_price_cl[indiv_id]
       #se_prices_2 = df_price_cl[comp_id]
-      se_prices_1 = df_prices_cl[indiv_id]
-      se_prices_2 = df_prices_cl[comp_id]
+      se_prices_1 = df_prices[indiv_id]
+      se_prices_2 = df_prices[comp_id]
     ls_comp_pd = get_pair_price_dispersion(se_prices_1.as_matrix(),
                                            se_prices_2.as_matrix(), light = False)
     ls_comp_chges = get_stats_two_firm_price_chges(se_prices_1.as_matrix(),
@@ -317,6 +317,13 @@ df_rrs_su_all = pd.merge(df_rrs_su_all, ls_df_rrs_su[2],\
                          right_index = True, left_index = True, suffixes=('', '_nota'))
 df_rrs_su_all = pd.merge(df_rrs_su_all, ls_df_rrs_su[3],\
                          right_index = True, left_index = True, suffixes=('', '_nodiff'))
+
+df_rrs_su_all[df_rrs_su_all['pct_rr_nota'] == np.inf] = np.nan
+print '\n', df_rrs_su_all['pct_rr_nota'].describe()
+print 'argmax', df_rrs_su_all['pct_rr_nota'].argmax()
+
+df_rrs_su_all[df_rrs_su_all['pct_rr_nodiff'] == np.inf] = np.nan
+print '\n', df_rrs_su_all['pct_rr_nodiff'].describe()
 
 plt.rcParams['figure.figsize'] = 16, 6
 ax = df_rrs_su_all[['pct_rr', 'pct_rr_ta', 'pct_rr_nota', 'pct_rr_nodiff']].plot()

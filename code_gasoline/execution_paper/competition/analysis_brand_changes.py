@@ -83,3 +83,14 @@ for indiv_id, indiv_info in master_price['dict_info'].items():
 
 for chge in ['TA', 'EE', 'AV', 'OT', 'NO']:
   print chge, len([indiv_id for indiv_id in dict_chge_brands[chge] if indiv_id in ls_candidates])
+
+# TOTAL ACCES => tough price competition
+# df_price[['60350001','60350002']].plot()
+
+# TOTAL ACCES => spurious rank reversals
+plt.rcParams['figure.figsize'] = 16, 6
+ax = df_price[['51520001','51000009', '51000007']].plot()
+handles, labels = ax.get_legend_handles_labels()
+ax.legend(handles, [u'Total Access', u'Intermarché', 'Esso'], loc = 1)
+plt.tight_layout()
+plt.show()

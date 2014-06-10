@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import add_to_path
+from add_to_path import path_data
 import os, sys
 import json
 import numpy as np
@@ -63,11 +65,11 @@ if os.path.exists(r'W:/Bureau/Etienne_work/Data'):
 else:
   path_data = r'C:/Users/etna/Desktop/Etienne_work/Data'
 # structure of the data folder should be the same
-folder_source_qlmc_json = '/data_qlmc/data_source/data_json'
-folder_built_qlmc_json = '/data_qlmc/data_built/data_json_qlmc'
+path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
+path_dir_source_qlmc_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json')
+path_dir_built_qlmc_json = os.path.join(path_dir_qlmc, 'data_built', 'data_json_qlmc')
 
-ls_ls_products = dec_json(path_data + folder_built_qlmc_json + r'/ls_ls_products')
-
+ls_ls_products = dec_json(os.path.join(path_dir_built_qlmc_json, 'ls_ls_products'))
 
 # Generates pandas dataframe
 for i, ls_products in enumerate(ls_ls_products):
@@ -80,8 +82,7 @@ df_products = pd.DataFrame(zip(*ls_ls_products_temp), title_cols).T # TODO: must
 # Set pandas dataframe print option to allow full display of columns etc.
 pd.set_option('display.max_columns', 10)
 pd.set_option('display.width', 200)
-pd.set_printoptions(max_colwidth=150)
-
+pd.set_option('display.max_colwidth', 150)
 
 # Products present in several periods before treatment
 print '\nProducts across periods before any treatment'
@@ -105,7 +106,7 @@ for per_ind in range(13):
 
 df_marques_count =  df_products['Marque'].value_counts()
 brand_example = u'Nutella'
-print '\nNom des produits à chaque période marque', brand_example
+print u'\nNom des produits à chaque période, marque', brand_example
 print df_products[['P','Produit']][df_products['Marque'] == brand_example]
 # 0  Nutella - Pâte à tartiner chocolat noisette , PotVerre 220g
 # 1            Nutella - Pâte à tartiner chocolat noisette, 220g
@@ -114,15 +115,24 @@ print df_products[['P','Produit']][df_products['Marque'] == brand_example]
 # 12        Nutella - Pâte à tartiner chocolat et noisettes, 220g
 # Hence: 1 => 11 except 9 seem standard, 0 and 12 are to be standardized
 
+# df_products[df_products['Produit'] == u'Nutella - Pâte à tartiner chocolat noisette, 750g']
+# df_products[df_products['Produit'] == u'Nutella - Pâte à tartiner chocolat noisette, 220g']
+# df_products[df_products['Produit'] == u'Nutella - Pâte à tartiner chocolat noisette, 400g']
+
 def print_brand_products(str_marque):
   df_brand_products = df_products[['P','Produit']][df_products['Marque'] == str_marque]
   df_brand_products = df_brand_products.sort(('Produit','P'))
   print df_brand_products.to_string()
 
-ls_marques_ex = [u'Fleury Michon', u'Lu', u'Tropicana', u'Volvic', u'Blédina', u'Président', u'Le Petit Marseillais']
+ls_marques_ex = [u'Fleury Michon',
+                 u'Lu', 
+                 u'Tropicana', 
+                 u'Volvic', 
+                 u'Blédina', 
+                 u'Président', 
+                 u'Le Petit Marseillais']
 # print_brand_products(ls_marques_ex[0])
 # print_brand_products(u'Heineken')
-
 
 # String standardization (general enough)
 # 1/ Supress all accents

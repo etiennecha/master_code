@@ -1,6 +1,8 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
+import add_to_path
+from add_to_path import path_data
 import os, sys
 import json
 import pprint
@@ -119,31 +121,24 @@ def compare_stores(store_a, store_b, df_period, period_ind, category):
                                 pd_df_merged['Prix_b'][pd_df_merged[category]== str_category])))
   return (ls_str_categories, ls_a_cheaper, ls_b_cheaper, ls_a_equal_b)
 
-# path_data: data folder at different locations at CREST vs. HOME
-# could do the same for path_code if necessary (import etc).
-if os.path.exists(r'W:/Bureau/Etienne_work/Data'):
-  path_data = r'W:/Bureau/Etienne_work/Data'
-elif os.path.exists(r'C:/Users/etna/Desktop/Etienne_work/Data'):
-  path_data = r'C:/Users/etna/Desktop/Etienne_work/Data'
-else:
-  path_data = r'/mnt/Data'
-# structure of the data folder should be the same
-folder_source_qlmc_json = '/data_qlmc/data_source/data_json'
-folder_built_qlmc_json = '/data_qlmc/data_built/data_json_qlmc'
+path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 
-list_files = [r'/200705_releves_QLMC',
-              r'/200708_releves_QLMC',
-              r'/200801_releves_QLMC',
-              r'/200804_releves_QLMC',
-              r'/200903_releves_QLMC',
-              r'/200909_releves_QLMC',
-              r'/201003_releves_QLMC',
-              r'/201010_releves_QLMC', 
-              r'/201101_releves_QLMC',
-              r'/201104_releves_QLMC',
-              r'/201110_releves_QLMC', # "No brand" starts to be massive
-              r'/201201_releves_QLMC',
-              r'/201206_releves_QLMC']
+path_dir_source_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json_qlmc')
+path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+
+list_files = [r'200705_releves_QLMC',
+              r'200708_releves_QLMC',
+              r'200801_releves_QLMC',
+              r'200804_releves_QLMC',
+              r'200903_releves_QLMC',
+              r'200909_releves_QLMC',
+              r'201003_releves_QLMC',
+              r'201010_releves_QLMC', 
+              r'201101_releves_QLMC',
+              r'201104_releves_QLMC',
+              r'201110_releves_QLMC', # "No brand" starts to be massive
+              r'201201_releves_QLMC',
+              r'201206_releves_QLMC']
 
 list_shop_brands = ['HYPER CHAMPION',
                     'CHAMPION',
@@ -177,8 +172,7 @@ list_brand_patches = [u'Pepito',
                       u'Ethiquable', 
                       u'Bn']
 
-# 32bit: can load up to 5 enriched files (8 w/o) 
-# 64 bit: all files can be loaded
+# 32bit: can load only up to 5 enriched files (8 w/o) 
 
 list_masters = []
 list_set_shop = []
@@ -187,9 +181,9 @@ list_set_city = []
 list_set_brand = []
 list_set_product = []
 
-for file in list_files[0:3]:
-  print '\n', file
-  master = dec_json(path_data + folder_source_qlmc_json + file)
+for file_name in list_files[0:5]:
+  print '\n', file_name
+  master = dec_json(os.path.join(path_dir_source_json, file_name))
   master = [row + get_split_chain_city(row[3], list_shop_brands) for row in master]
   master =  [row + get_split_brand_product(row[2], list_brand_patches) for row in master]
   list_masters.append(master)
@@ -199,16 +193,16 @@ for file in list_files[0:3]:
   list_set_brand.append(set([row[8] for row in master]))
   list_set_product.append(set([row[9] for row in master]))
 
-# enc_json(list_masters, path_data + folder_built_qlmc_json + r'/master_all_periods')
+# enc_json(list_masters, os.path.join(path_dir_built_json, 'master_all_periods'))
 
 # ########################
 # ALL PERIODS: STATS DES
 # ########################
 
-# TODO: write python object stats des generic functions
+# todo: write python object stats des generic functions
 
 # (Survival) Products across periods
-# TODO: check for minor product name differences? (e.g. within brands...?)
+# todo: check for minor product name differences? (e.g. within brands...?)
 dict_product_periods = {}
 for i, list_period in enumerate(list_set_product):
 	for product in list_period:
@@ -233,8 +227,7 @@ ls_ls_stores = [list(set_shop) for set_shop in list_set_shop]
 ls_ls_tuple_stores = []
 for list_stores in ls_ls_stores:
   ls_ls_tuple_stores.append([get_split_chain_city(store, list_shop_brands) for store in list_stores])
-path_ls_ls_tuple_stores = path_data + folder_built_qlmc_json + r'/ls_ls_tuple_stores'
-enc_json(ls_ls_tuple_stores, path_ls_ls_tuple_stores)
+# enc_json(ls_ls_tuple_stores, os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
 
 # # Encode file with product lists for product reconciliation across periods (TAKES TIME)
 # ls_ls_products = []
@@ -250,114 +243,130 @@ enc_json(ls_ls_tuple_stores, path_ls_ls_tuple_stores)
 # ONE PERIOD: STATS DES
 # #######################
 
-# # TODO: see if to be generalized or => pandas ?
-# master = list_masters[0]
+# todo: see if to be generalized or => pandas ?
+master = list_masters[0]
 
-# # dicts of indexes list
-# dict_dpt_ind      = get_dict_indexes(master, 0)
-# dict_subdpt_ind   = get_dict_indexes(master, 1)
-# dict_products_ind = get_dict_indexes(master, 2)
-# dict_magasins_ind = get_dict_indexes(master, 3)
+# dicts of indexes list
+dict_dpt_ind      = get_dict_indexes(master, 0)
+dict_subdpt_ind   = get_dict_indexes(master, 1)
+dict_products_ind = get_dict_indexes(master, 2)
+dict_magasins_ind = get_dict_indexes(master, 3)
 
-# # products which are available at all stores?
-# list_products_full = []
-# for product, list_product_ind in dict_products_ind.iteritems():
-  # if len(list_product_ind) == len(dict_magasins_ind):
-    # list_products_full.append(product)
+# products which are available at all stores?
+list_products_full = []
+for product, list_product_ind in dict_products_ind.iteritems():
+  if len(list_product_ind) == len(dict_magasins_ind):
+    list_products_full.append(product)
 
-# # dicts of category components (dict of list of string)
-# dict_dpt_subdpts = get_dict_components(master, 0, 1)
-# dict_dpt_products = get_dict_components(master, 0, 2)
-# dict_subdpt_products = get_dict_components(master, 1, 2)
-# dict_chain_stores = get_dict_components(master, 6, 3)
+# dicts of category components (dict of list of string)
+dict_dpt_subdpts = get_dict_components(master, 0, 1)
+dict_dpt_products = get_dict_components(master, 0, 2)
+dict_subdpt_products = get_dict_components(master, 1, 2)
+dict_chain_stores = get_dict_components(master, 6, 3)
 
-# # get price dispersion of a given subdpt's products
-# for subdpt in dict_subdpt_ind.keys()[0:2]:
-  # print '\n', subdpt
-  # list_products = dict_subdpt_products[subdpt]
-  # list_list_product_ind = [dict_products_ind[products] for products in list_products]
-  # list_price_dispersion = [[len(list_indexes)] + get_product_pd(master, list_indexes) \
-                                              # for list_indexes in list_list_product_ind]
-  # # print price dispersion of product list
-  # title_pd = ['nb', 'avg', 'rge', 'gfs', 'std', 'cfv']
-  # print "{:>5s}\t{:>5s}\t{:>5s}\t{:>5s}\t{:>5s}\t{:>5s}\t".format(*title_pd),\
-        # "{:12s}\t".format('Product Name')
-  # list_product_pd = [list_pd + [product] for (product, list_pd) in zip(list_products, list_price_dispersion)]
-  # list_product_pd_sorted = sorted(list_product_pd, key=lambda row: row[6])
-  # for row in list_product_pd_sorted:
-    # print u"{:5.0f}\t{:5.2f}\t{:5.2f}\t{:5.2f}\t{:5.2f}\t{:5.2f}\t{:s}".format(*row)
+# get price dispersion of a given subdpt's products
+for subdpt in dict_subdpt_ind.keys()[0:2]:
+  print '\n', subdpt
+  ls_products = dict_subdpt_products[subdpt]
+  ls_ls_product_ind = [dict_products_ind[products] for products in ls_products]
+  ls_price_dispersion = [[len(ls_indexes)] + get_product_pd(master, ls_indexes) \
+                              for ls_indexes in ls_ls_product_ind]
+  title_pd = ['nb', 'avg', 'rge', 'gfs', 'std', 'cfv']
+  print "{:>5s}\t{:>5s}\t{:>5s}\t{:>5s}\t{:>5s}\t{:>5s}\t".\
+           format(*title_pd), "{:12s}\t".format('Product Name')
+  ls_product_pd = [ls_pd + [product] for (product, ls_pd) in zip(ls_products, ls_price_dispersion)]
+  ls_product_pd_sorted = sorted(ls_product_pd, key=lambda row: row[6])
+  for row in ls_product_pd_sorted:
+    print u"{:5.0f}\t{:5.2f}\t{:5.2f}\t{:5.2f}\t{:5.2f}\t{:5.2f}\t{:s}".format(*row)
 
 # #######################
 # ANALYSIS WITH PANDAS
 # #######################
 
-# TODO: load first period(s) data in pandas and do stats descs
-# TODO: evaluate differences in product labels across periods
-# TODO: explanation of price levels
-# TODO: relation between price level and dispersion within store (randomization over margins)
-# TODO: store's expensiveness vs. nearby competitors (Pairs over time?)
-# TODO: price dispersion within chains
-# TODO: price dispersion within dpts/sub-dpts/brands
-# TODO: seek normal pricing products vs. others etc. (price distributions)
+# load first period(s) data in pandas and do stats descs
+# evaluate differences in product labels across periods
+# explanation of price levels (nb of prods recorded as a proxy for store size???)
+# relation between price level and dispersion within store (randomization over margins)
+# store's expensiveness vs. nearby competitors (Pairs over time?)
+# price dispersion within chains
+# price dispersion within dpts/sub-dpts/brands
+# seek normal pricing products vs. others etc. (price distributions)
 
 # do not include "Libelle" and "Date" (5 and 9 before P added)
-# title_cols = ['P', 'Rayon', 'Famille', 'Produit', 'Magasin', 'Prix', 'Date', 'Enseigne', 'Ville', 'Marque', 'Libelle']
-title_cols = ['P', 'Rayon', 'Famille', 'Produit', 'Magasin', 'Prix', 'Enseigne', 'Ville', 'Marque']
-list_masters_per = [[[i] + row[:5] + row[6:9] for row in master_per] for i, master_per in enumerate(list_masters)]
-list_master = [a for b in list_masters_per for a in b]
-df_period = pd.DataFrame(zip(*list_master), title_cols).T # TODO: must be a more direct way...
+#ls_columns = ['P', 'Rayon', 'Famille', 'Produit', 'Magasin',
+#              'Prix', 'Date', 'Enseigne', 'Ville', 'Marque', 'Libelle']
+ls_columns = ['P', 'Rayon', 'Famille', 'Produit', 'Magasin',
+              'Prix', 'Enseigne', 'Ville', 'Marque']
+ls_master_periods = [[[i] + row[:5] + row[6:9] for row in master_per]\
+                       for i, master_per in enumerate(list_masters)]
+ls_master = [a for b in ls_master_periods for a in b]
+df_period = pd.DataFrame(ls_master, columns = ls_columns)
 df_period['Prix'] = df_period['Prix'].astype(np.float32)
 
-# # df_period['Rayon'] = df_period['Rayon'].map(lambda x: x.encode('utf-8'))
-# # df_period[df_period['Rayon'] == 'Boissons']
-# # df_period[(df_period['Rayon'] == 'Boissons') & (df_period['P'] == 0)]
-# # len(df_period[(df_period['Rayon'] == 'Boissons') & (df_period['P'] == 0)]['Produit'].unique())
+# df_period['Rayon'] = df_period['Rayon'].map(lambda x: x.encode('utf-8'))
+# df_period[df_period['Rayon'] == 'Boissons']
+# df_period[(df_period['Rayon'] == 'Boissons') & (df_period['P'] == 0)]
+# len(df_period[(df_period['Rayon'] == 'Boissons') & (df_period['P'] == 0)]['Produit'].unique())
 
-# df_period['Produit']=df_period['Produit'].map(lambda x: x.lower().replace(u'.', u',').replace(u' ,', u','))
-# df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(u'\xb0', u' degr\xe9s', x))
-# df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(u'gazeuze', u'gazeuse', x))
-# df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(pack|,\s+)bo\xeete', ur'\1 ', x))
-# df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)bouteilles?', ur'\1 ', x))
-# df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)pet', ur'\1 ', x))
-# df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)bocal', ur'\1 ', x))
-# df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)bidon', ur'\1 ', x))
-# df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)brique', ur'\1 ', x))
-# df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)plastique', ur'\1 ', x))
-# df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)verre', ur'\1 ', x))
-# df_period['Produit']=df_period['Produit'].map(lambda x: ' '.join(x.split()))
+df_period['Produit']=df_period['Produit'].map(lambda x: x.lower().replace(u'.', u',').replace(u' ,', u','))
+df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(u'\xb0', u' degr\xe9s', x))
+df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(u'gazeuze', u'gazeuse', x))
+df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(pack|,\s+)bo\xeete', ur'\1 ', x))
+df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)bouteilles?', ur'\1 ', x))
+df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)pet', ur'\1 ', x))
+df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)bocal', ur'\1 ', x))
+df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)bidon', ur'\1 ', x))
+df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)brique', ur'\1 ', x))
+df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)plastique', ur'\1 ', x))
+df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)verre', ur'\1 ', x))
+df_period['Produit']=df_period['Produit'].map(lambda x: ' '.join(x.split()))
 
-# # TODO: re.sub 'Bocal', 'Pet', 'Bidon' ?
-# # 'barquettes?' '1 assiette', 'paquet', 'sachet', 'coffret'
-# # brand u'b\xe9n\xe9dicta' => benedicta, ', 2 briques - 60cl' =>  '2 - 60cl'
-# # brand u'bl\xe9did\xe9j' => u"bl\xe9di'dej (?) , '2 - 50cl' => '2*50cl'
-# # TODO : harmonize '1.5L' vs '1,5L' (temporary fix... to be improved)
-# # TODO: may want to remove 'Bouteille(s)', 'Pet' and likes before removing ','
-# # TODO... would be better to generally ignore text in the quantity part ! 
+# todo: re.sub 'Bocal', 'Pet', 'Bidon' ?
+# 'barquettes?' '1 assiette', 'paquet', 'sachet', 'coffret'
+# brand u'b\xe9n\xe9dicta' => benedicta, ', 2 briques - 60cl' =>  '2 - 60cl'
+# brand u'bl\xe9did\xe9j' => u"bl\xe9di'dej (?) , '2 - 50cl' => '2*50cl'
+# todo : harmonize '1.5L' vs '1,5L' (temporary fix... to be improved)
+# todo: may want to remove 'Bouteille(s)', 'Pet' and likes before removing ','
+# todo... would be better to generally ignore text in the quantity part ! 
 
-list_list_boissons = []
+ls_ls_boissons = []
+for i in range(3):
+	ls_ls_boissons.append(df_period[(df_period['Rayon'] == 'Boissons') &\
+                           (df_period['P'] == i)]['Produit'].unique())
+
+ls_boissons_0 = [x for x in ls_ls_boissons[0] if x in ls_ls_boissons[1]]
+ls_boissons_1 = [x for x in ls_ls_boissons[1] if x in ls_ls_boissons[2]]
+ls_boissons_2 = [x for x in ls_boissons_0 if x in ls_boissons_1]
+
+ls_ls_sale = []
+for i in range(3):
+	ls_ls_sale.append(\
+    df_period[(df_period['Rayon'] == u'Epicerie sal\xe9e') &\
+              (df_period['P'] == i)]['Produit'].unique())
+
+ls_sale_0 = [x for x in ls_ls_sale[0] if x in ls_ls_sale[1]]
+ls_sale_1 = [x for x in ls_ls_sale[1] if x in ls_ls_sale[2]]
+ls_sale_2 = [x for x in ls_sale_0 if x in ls_sale_1]
+
+# Stores which survive (all stores for now...)
+ls_ls_stores_2 = []
 for i in range(0,3):
-	list_list_boissons.append(df_period[(df_period['Rayon'] == 'Boissons') & (df_period['P'] == i)]['Produit'].unique())
+  ls_ls_stores_2.append(df_period[df_period['P'] == i]['Magasin'].unique())
+ls_lasting_stores = [x for x in ls_ls_stores_2[0] if x in ls_ls_stores_2[1]]
 
-boissons_0 = [elt for elt in list_list_boissons[0] if elt in list_list_boissons[1]]
-boissons_1 = [elt for elt in list_list_boissons[1] if elt in list_list_boissons[2]]
-boissons_2 = [elt for elt in boissons_0 if elt in boissons_1]
+ls_prod_0 = df_period['Produit'][(df_period['Magasin'] == ls_lasting_stores[0]) &\
+                                 (df_period['P'] == 0)].values
+ls_prod_1 = df_period['Produit'][(df_period['Magasin'] == ls_lasting_stores[0]) &\
+                                 (df_period['P'] == 1)].values
+ls_lasting_prods = [x for x in ls_prod_0 if x in ls_prod_1]
 
-list_list_sale = []
-for i in range(0,3):
-	list_list_sale.append(\
-    df_period[(df_period['Rayon'] == u'Epicerie sal\xe9e') & (df_period['P'] == i)]['Produit'].unique())
-
-sale_0 = [elt for elt in list_list_sale[0] if elt in list_list_sale[1]]
-sale_1 = [elt for elt in list_list_sale[1] if elt in list_list_sale[2]]
-sale_2 = [elt for elt in sale_0 if elt in sale_1]
-
-# Stores which survive
-ls_ls_lasting_stores = []
-for i in range(0,3):
-  ls_ls_lasting_stores.append(df_period[df_period['P'] == i]['Magasin'].unique())
+df_auchan_arras = df_period[(df_period['Magasin'] == ls_lasting_stores[0])]
+for prod in ls_lasting_prods[0:10]:
+	print df_auchan_arras[['Produit', 'Prix']]\
+          [df_auchan_arras['Produit'] == prod].to_string(index=False)
 
 # Find stores in same location
-ls_ls_store_insee = dec_json(path_data + folder_built_qlmc_json + r'/ls_ls_store_insee')
+ls_ls_store_insee = dec_json(os.path.join(path_dir_built_json, 'ls_ls_store_insee'))
 ls_ls_pairs = []
 for ls_store_insee in ls_ls_store_insee:
   ls_pairs = []
@@ -371,12 +380,13 @@ for i, ls_pairs in enumerate(ls_ls_pairs):
   for (j,k) in ls_pairs:
     print ls_ls_stores[i][j], ls_ls_stores[i][k]
 
-# TODO: see if product prices are available at these stores across all periods (or 2 at least..)
+# todo: see if product prices are available at these stores across all periods (or 2 at least..)
 
 store_a = 'GEANT BEZIERS'
 store_b = 'AUCHAN MONTAUBAN'
 test = compare_stores(store_a, store_b, df_period, 0, 'Rayon')
 
+pd.options.display.float_format = '{:,.2f}'.format
 ls_ls_comparisons = []
 for per_ind, ls_pairs in enumerate(ls_ls_pairs):
   ls_comparisons = []
@@ -385,18 +395,20 @@ for per_ind, ls_pairs in enumerate(ls_ls_pairs):
     comparison_result = compare_stores(store_a, store_b, df_period, per_ind, 'Rayon')
     ls_comparisons.append(zip(*comparison_result))
     print '\n', store_a, store_b
-    pprint.pprint(zip(*comparison_result))
-    for rayon in zip(*comparison_result):
-      print u'{0:20s} Nb products: {1:>3.0f}   A cheaper: {2:>3.0f}%   B cheaper: {3: 3.0f}%   A equal B {4: 3.0f}%'.\
-                format(rayon[0],\
-                sum(rayon[1:]),float(rayon[1])/sum(rayon[1:])*100,\
-                float(rayon[2])/sum(rayon[1:])*100,\
-                float(rayon[3])/sum(rayon[1:])*100)
+    ls_columns = ['Category', '#PA<PB', '#PA>PB', '#PA=PB']
+    df_comparison = pd.DataFrame(zip(*comparison_result), columns = ls_columns)
+    df_comparison['%PA<PB'] = df_comparison['#PA<PB'] /\
+                                df_comparison[['#PA<PB', '#PA>PB', '#PA=PB']].sum(1)
+    df_comparison['%PA>PB'] = df_comparison['#PA>PB'] /\
+                                df_comparison[['#PA<PB', '#PA>PB', '#PA=PB']].sum(1)
+    df_comparison['%PA=PB'] = df_comparison['#PA=PB'] /\
+                                df_comparison[['#PA<PB', '#PA>PB', '#PA=PB']].sum(1)
+    print df_comparison.to_string(index=False)
   ls_ls_comparisons.append(ls_comparisons)
 
-# TODO: take amount into account (enrich function...)
-# TODO: see if all categories equally concerned (average...)
-# TODO: see if specific products concerned ? (for which stores...?)
+# todo: take amount into account (enrich function...)
+# todo: see if all categories equally concerned (average...)
+# todo: see if specific products concerned ? (for which stores...?)
 
 # #####################
 # Some reminder (temp)
