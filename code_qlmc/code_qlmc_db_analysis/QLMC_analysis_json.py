@@ -20,9 +20,9 @@ def enc_json(database, chemin):
   with open(chemin, 'w') as fichier:
     json.dump(database, fichier)
 
-def get_split_chain_city(string_to_split, list_split_string):
+def get_split_chain_city(string_to_split, ls_split_string):
   result = []
-  for split_string in list_split_string:
+  for split_string in ls_split_string:
     split_search = re.search('%s' %split_string, string_to_split)
     if split_search:
       result = [string_to_split[:split_search.end()].strip(),\
@@ -32,7 +32,7 @@ def get_split_chain_city(string_to_split, list_split_string):
     print 'Could not split on chain:', string_to_split
   return result
 
-def get_split_brand_product(string_to_split, list_brand_patches):
+def get_split_brand_product(string_to_split, ls_brand_patches):
   """
   word_1 = u'Liebig,'
   word_2 = u'Liebig - '
@@ -44,7 +44,7 @@ def get_split_brand_product(string_to_split, list_brand_patches):
     result = [string_to_split[:split_search.start()].strip(),\
               string_to_split[split_search.end():].strip()]
   else:
-    for brand_patch in list_brand_patches:
+    for brand_patch in ls_brand_patches:
       brand_patch_corr = brand_patch + u' - '
       string_to_split = re.sub(ur'^%s\s?,\s?(.*)' %brand_patch,\
                                ur'%s\1' %brand_patch_corr,\
@@ -91,34 +91,39 @@ def get_product_pd(master, list_indexes):
   # array_result = np.around(np.array(tuple_result), 2)
   return  tuple_result
 
+def compute_price_dispersion(se_prices):
+  price_mean = se_prices.mean()
+  price_std = se_prices.std()
+  coeff_var = se_prices.std() / se_prices.mean()
+  price_range = se_prices.max() - se_prices.min()
+  gain_from_search = se_prices.mean() - se_prices.min()
+  return [len(se_prices), se_prices.min(), se_prices.max(), price_mean, 
+          price_std, coeff_var, price_range, gain_from_search]
+
 def compare_stores(store_a, store_b, df_period, period_ind, category):
   # pandas df for store a
-  pd_df_test_a= df_period[['Prix','Produit','Rayon','Famille']]\
-                         [(df_period['Magasin'] == store_a) & (df_period['P']==period_ind)]
-  pd_df_test_a['Prix_a'] = pd_df_test_a['Prix']
-  pd_df_test_a = pd_df_test_a.set_index('Produit')
-  pd_df_test_a = pd_df_test_a[['Prix_a', 'Rayon', 'Famille']]
+  df_store_a= df_period[['Prix','Produit','Rayon','Famille']]\
+                    [(df_period['Magasin'] == store_a) & (df_period['P']==period_ind)]
+  df_store_a['Prix_a'] = df_store_a['Prix']
+  df_store_a = df_store_a.set_index('Produit')
+  df_store_a = df_store_a[['Prix_a', 'Rayon', 'Famille']]
   # pandas df for store b
-  pd_df_test_b= df_period[['Prix','Produit','Magasin']]\
+  df_store_b = df_period[['Prix','Produit','Magasin']]\
                          [(df_period['Magasin'] == store_b) & (df_period['P']==period_ind)]
-  pd_df_test_b['Prix_b'] = pd_df_test_b['Prix']
-  pd_df_test_b = pd_df_test_b.set_index('Produit')
-  pd_df_test_b = pd_df_test_b[['Prix_b']]
+  df_store_b['Prix_b'] = df_store_b['Prix']
+  df_store_b = df_store_b.set_index('Produit')
+  df_store_b= df_store_b[['Prix_b']]
   # merge pandas df a and b
-  pd_df_merged = pd_df_test_a.join(pd_df_test_b)
+  df_both = df_store_a.join(df_store_b)
   # analysis of price dispersion
-  ls_a_cheaper = []
-  ls_b_cheaper = []
-  ls_a_equal_b = []
   ls_str_categories = []
-  for str_category in np.unique(pd_df_merged[category]):
+  ls_a_cheaper, ls_b_cheaper, ls_a_equal_b = [], [], []
+  for str_category in df_both[category].unique():
+    df_cat = df_both[df_both[category] == str_category]
     ls_str_categories.append(str_category)
-    ls_a_cheaper.append(np.sum((pd_df_merged['Prix_a'][pd_df_merged[category]== str_category] <\
-                                pd_df_merged['Prix_b'][pd_df_merged[category]== str_category])))
-    ls_b_cheaper.append(np.sum((pd_df_merged['Prix_a'][pd_df_merged[category]== str_category] >\
-                                pd_df_merged['Prix_b'][pd_df_merged[category]== str_category])))
-    ls_a_equal_b.append(np.sum((pd_df_merged['Prix_a'][pd_df_merged[category]== str_category] ==\
-                                pd_df_merged['Prix_b'][pd_df_merged[category]== str_category])))
+    ls_a_cheaper.append(len(df_cat[df_cat['Prix_a'] < df_cat['Prix_b']]))
+    ls_b_cheaper.append(len(df_cat[df_cat['Prix_a'] > df_cat['Prix_b']]))
+    ls_a_equal_b.append(len(df_cat[df_cat['Prix_a'] == df_cat['Prix_b']]))
   return (ls_str_categories, ls_a_cheaper, ls_b_cheaper, ls_a_equal_b)
 
 path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
@@ -303,23 +308,40 @@ ls_master = [a for b in ls_master_periods for a in b]
 df_period = pd.DataFrame(ls_master, columns = ls_columns)
 df_period['Prix'] = df_period['Prix'].astype(np.float32)
 
+# Check product dispersion
+ex_product = u'Nutella - Pâte à tartiner chocolat noisette, 400g'
+ex_se_prices = df_period[u'Prix'][(df_period[u'Produit'] == ex_product) &\
+                                   (df_period[u'P'] == 1)]
+ex_pd = compute_price_dispersion(ex_se_prices)
+df_ex_pd = pd.DataFrame(ex_pd, ['N', 'min', 'max', 'mean', 'std', 'cv', 'range', 'gfs'])
+print df_ex_pd
+
 # df_period['Rayon'] = df_period['Rayon'].map(lambda x: x.encode('utf-8'))
 # df_period[df_period['Rayon'] == 'Boissons']
 # df_period[(df_period['Rayon'] == 'Boissons') & (df_period['P'] == 0)]
 # len(df_period[(df_period['Rayon'] == 'Boissons') & (df_period['P'] == 0)]['Produit'].unique())
 
-df_period['Produit']=df_period['Produit'].map(lambda x: x.lower().replace(u'.', u',').replace(u' ,', u','))
-df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(u'\xb0', u' degr\xe9s', x))
-df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(u'gazeuze', u'gazeuse', x))
-df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(pack|,\s+)bo\xeete', ur'\1 ', x))
-df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)bouteilles?', ur'\1 ', x))
-df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)pet', ur'\1 ', x))
-df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)bocal', ur'\1 ', x))
-df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)bidon', ur'\1 ', x))
-df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)brique', ur'\1 ', x))
-df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)plastique', ur'\1 ', x))
-df_period['Produit']=df_period['Produit'].map(lambda x: re.sub(ur'(,\s+)verre', ur'\1 ', x))
-df_period['Produit']=df_period['Produit'].map(lambda x: ' '.join(x.split()))
+def clean_product(product):
+  ls_replace = [(u'.', u','),
+                (u' ,', u','),
+                (u'\xb0', u' degr\xe9s'),
+                (u'gazeuze', u'gazeuse')]
+  ls_sub = [ur'(pack|,\s+)bo\xeete',
+            ur'(,\s+)bouteilles?',
+            ur'(,\s+)pet',
+            ur'(,\s+)bocal',
+            ur'(,\s+)bidon',
+            ur'(,\s+)brique',
+            ur'(,\s+)plastique',
+            ur'(,\s+)verre']
+  product = product.lower()
+  for tup_repl in ls_replace:
+    product = product.replace(tup_repl[0], tup_repl[1])
+  for str_sub in ls_sub:
+    product = re.sub(str_sub, ur'\1 ', product)
+  return ' '.join(product.split())
+
+df_period['Produit']=df_period['Produit'].map(lambda x: clean_product(x))
 
 # todo: re.sub 'Bocal', 'Pet', 'Bidon' ?
 # 'barquettes?' '1 assiette', 'paquet', 'sachet', 'coffret'
