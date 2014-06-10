@@ -20,7 +20,7 @@ def enc_json(database, chemin):
   with open(chemin, 'w') as fichier:
     json.dump(database, fichier)
 
-def get_split_brand_product(string_to_split, list_brand_patches):
+def get_split_brand_product(string_to_split, ls_brand_patches):
   """
   word_1 = u'Liebig,'
   word_2 = u'Liebig - '
@@ -32,7 +32,7 @@ def get_split_brand_product(string_to_split, list_brand_patches):
     result = [string_to_split[:split_search.start()].strip(),\
               string_to_split[split_search.end():].strip()]
   else:
-    for brand_patch in list_brand_patches:
+    for brand_patch in ls_brand_patches:
       brand_patch_corr = brand_patch + u' - '
       string_to_split = re.sub(ur'^%s\s?,\s?(.*)' %brand_patch,\
                                ur'%s\1' %brand_patch_corr,\
@@ -48,36 +48,55 @@ def get_split_brand_product(string_to_split, list_brand_patches):
       # print 'No brand:', result
   return result
 
-list_brand_patches = [u'Pepito',
-                      u'Liebig',
-                      u'Babette',
-                      u'Grany',
-                      u'Père Dodu',
-                      u'Lustucru',
-                      u'La Baleine',
-                      u'Ethiquable', 
-                      u'Bn']
+def clean_product(product):
+  ls_replace = [(u'.', u','),
+                (u' ,', u','),
+                (u'\xb0', u' degr\xe9s'),
+                (u'gazeuze', u'gazeuse')]
+  ls_sub = [ur'(pack|,\s+)bo\xeete',
+            ur'(,\s+)bouteilles?',
+            ur'(,\s+)pet',
+            ur'(,\s+)bocal',
+            ur'(,\s+)bidon',
+            ur'(,\s+)brique',
+            ur'(,\s+)plastique',
+            ur'(,\s+)verre']
+  product = product.lower()
+  for tup_repl in ls_replace:
+    product = product.replace(tup_repl[0], tup_repl[1])
+  for str_sub in ls_sub:
+    product = re.sub(str_sub, ur'\1 ', product)
+  return ' '.join(product.split())
 
-# path_data: data folder at different locations at CREST vs. HOME
-# could do the same for path_code if necessary (import etc).
-if os.path.exists(r'W:/Bureau/Etienne_work/Data'):
-  path_data = r'W:/Bureau/Etienne_work/Data'
-else:
-  path_data = r'C:/Users/etna/Desktop/Etienne_work/Data'
-# structure of the data folder should be the same
+def print_brand_products(str_marque):
+  df_brand_products = df_products[['P','Produit']][df_products['Marque'] == str_marque]
+  df_brand_products = df_brand_products.sort(('Produit','P'))
+  print df_brand_products.to_string()
+
+ls_brand_patches = [u'Pepito',
+                    u'Liebig',
+                    u'Babette',
+                    u'Grany',
+                    u'Père Dodu',
+                    u'Lustucru',
+                    u'La Baleine',
+                    u'Ethiquable', 
+                    u'Bn']
+
 path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_source_qlmc_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json')
-path_dir_built_qlmc_json = os.path.join(path_dir_qlmc, 'data_built', 'data_json_qlmc')
 
-ls_ls_products = dec_json(os.path.join(path_dir_built_qlmc_json, 'ls_ls_products'))
+path_dir_source_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json_qlmc')
+path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+
+ls_ls_products = dec_json(os.path.join(path_dir_built_json, 'ls_ls_products'))
 
 # Generates pandas dataframe
 for i, ls_products in enumerate(ls_ls_products):
-  ls_ls_products[i] =  [row + get_split_brand_product(row[2], list_brand_patches) for row in ls_products]
-title_cols = ['P', 'Rayon', 'Famille', 'Produit', 'Marque', 'Libelle']
+  ls_ls_products[i] =  [row + get_split_brand_product(row[2], ls_brand_patches) for row in ls_products]
+ls_columns = ['P', 'Rayon', 'Famille', 'Produit', 'Marque', 'Libelle']
 ls_ls_products_temp = [[[i] + row for row in ls_products] for i, ls_products in enumerate(ls_ls_products)]
-ls_ls_products_temp = [a for b in ls_ls_products_temp for a in b]
-df_products = pd.DataFrame(zip(*ls_ls_products_temp), title_cols).T # TODO: must be a more direct way...
+ls_rows = [a for b in ls_ls_products_temp for a in b]
+df_products = pd.DataFrame(ls_rows, columns = ls_columns)
 
 # Set pandas dataframe print option to allow full display of columns etc.
 pd.set_option('display.max_columns', 10)
@@ -111,18 +130,13 @@ print df_products[['P','Produit']][df_products['Marque'] == brand_example]
 # 0  Nutella - Pâte à tartiner chocolat noisette , PotVerre 220g
 # 1            Nutella - Pâte à tartiner chocolat noisette, 220g
 # ... same as 1
-# 9 nothing ! (TODO: check if because problem with Marque...)
+# 9 nothing ! (todo: check if because problem with Marque...)
 # 12        Nutella - Pâte à tartiner chocolat et noisettes, 220g
 # Hence: 1 => 11 except 9 seem standard, 0 and 12 are to be standardized
 
 # df_products[df_products['Produit'] == u'Nutella - Pâte à tartiner chocolat noisette, 750g']
 # df_products[df_products['Produit'] == u'Nutella - Pâte à tartiner chocolat noisette, 220g']
 # df_products[df_products['Produit'] == u'Nutella - Pâte à tartiner chocolat noisette, 400g']
-
-def print_brand_products(str_marque):
-  df_brand_products = df_products[['P','Produit']][df_products['Marque'] == str_marque]
-  df_brand_products = df_brand_products.sort(('Produit','P'))
-  print df_brand_products.to_string()
 
 ls_marques_ex = [u'Fleury Michon',
                  u'Lu', 
@@ -143,7 +157,7 @@ ls_marques_ex = [u'Fleury Michon',
 # 5bis/ Take into account ' Fleury Michon - Filets de poulet fines herbes 4 tranches fines , Barquette 120g, viande'
 # 6/ Can check results with some more standardization: remove 'et' etc.
 
-# TODO: other stuffs (more speficic...)
+# todo: other stuffs (more speficic...)
 # 'Filet de poulet rà´ti 4 tranches' at period 7
 
 def get_product_format(str_product):
@@ -164,12 +178,12 @@ df_products['Format'] = df_products['Produit'].map(get_product_format)
 
 ls_formats_test = list(np.unique(df_products['Format']))
 # pprint.pprint(ls_formats_test)
-# TODO: Check Garnier, Panzani, Dim, Amora, Maille => No format but internally consistent..
+# todo: Check Garnier, Panzani, Dim, Amora, Maille => No format but internally consistent..
 
 df_format_null = df_products[df_products['Format'].isnull()]
 # print df_format_null['Produit'].to_string()
-# TODO: Check products with  remaining ',' (also '-'?)
+# todo: Check products with  remaining ',' (also '-'?)
 
-# TODO: match products after standardization of format: 
-# TODO: require equality (more or less) on product name (w/o format) and format
-# TODO: check that relation 1 to 1 between original product and product name + stdzed format
+# todo: match products after standardization of format: 
+# todo: require equality (more or less) on product name (w/o format) and format
+# todo: check that relation 1 to 1 between original product and product name + stdzed format
