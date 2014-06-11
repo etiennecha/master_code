@@ -142,7 +142,75 @@ ls_match = [[[u'SYSTEME U', u'BARALLE MARQUION'], ['BARALLE', '62860', 'PAS DE C
             [[u'INTERMARCHE', u'CLERMONT FERRAND FONTGIEVE'], ['CLERMONT FERRAND', '63000', 'PUY DE DOME', '63113']],
             [[u'INTERMARCHE', u'ST AMBROIX'], ['ST AMBROIX', '30500', 'GARD', '30227']],
             [[u'CENTRE E. LECLERC', u'BETTING'], ['FREYMING MERLEBACH', '57800', 'MOSELLE', '57240']],
-            [[u'AUCHAN', u'CASTRES'], ['CASTRES', '81100', 'TARN', '81065']]]
+            [[u'AUCHAN', u'CASTRES'], ['CASTRES', '81100', 'TARN', '81065']],
+            [[u'CHAMPION', u'TOURS 501E REGT INFANTERIE'], ['TOURS', '37000', 'INDRE ET LOIRE', '37261']], # fourth period
+            [[u'INTERMARCHE', u'ST NAZAIRE'], ['ST NAZAIRE', '44600', 'LOIRE ATLANTIQUE', '44184']], # several st nazaire but...
+            [[u'CHAMPION', u'La Crau'], ['LA CRAU', '83260', 'VAR', '83047']],
+            [[u'CHAMPION', u'LILLE FIVES'], ['LILLE', '59800', 'NORD', '59350']],
+            [[u'INTERMARCHE', u'MOULINS'], ['MOULINS', '03000', 'ALLIER', '03190']],
+            [[u'SUPER U', u"L'ISLE JOURDAIN"], ['L ISLE JOURDAIN', '32600', 'GERS', '32160']],
+            [[u'CENTRE E. LECLERC', u'BERGERAC PASTEUR'], ['BERGERAC', '24100', 'DORDOGNE', '24037']],
+            [[u'CHAMPION', u'MARSEILLE 12 AMARYLLIS'], ['MARSEILLE 12EME ARRONDISS', '13012', 'BOUCHES DU RHONE', '13212']],
+            [[u'SUPER U', u'SAINT MAXIMIN'], ['ST MAXIMIN LA STE BAUME', '83470', 'VAR', '83116']], # not clear vs. st maximin
+            [[u'INTERMARCHE', u'ETRECHY'], ['ETRECHY', '91580', 'ESSONNE', '91226']], # several
+            [[u'INTERMARCHE', u'ST LOUIS'], ['ST LOUIS', '68300', 'HAUT RHIN', '68297']],
+            [[u'INTERMARCHE', u'ROCHEFORT'], ['ROCHEFORT', '17300', 'CHARENTE MARITIME', '17299']],
+            [[u'SUPER U', u'ROUILLAC'], ['ROUILLAC', '16170', 'CHARENTE', '16286']],
+            [[u'CENTRE E. LECLERC', u'LAVAL'], ['LAVAL', '53000', 'MAYENNE', '53130']],
+            [[u'SUPER U', u'MONTREUIL'], ['MONTREUIL', '93100', 'SEINE SAINT DENIS', '93048']],
+            [[u'CENTRE E. LECLERC', u'ERSTEIN CEDEX'], ['ERSTEIN', '67150', 'BAS RHIN', '67130']],
+            [[u'CHAMPION', u"LES SABLES D'OLONNE GARLIERE"],  ['LES SABLES D OLONNE', '85100', 'VENDEE', '85194']],
+            [[u'CHAMPION', u'ST CYPRIEN'], ['ST CYPRIEN', '24220', 'DORDOGNE', '24396']],
+            [[u'HYPER U', u'RUMILLY'], ['RUMILLY', '74150', 'HAUTE SAVOIE', '74225']],
+            [[u'SUPER U', u'PRADES'], ['PRADES', '66500', 'PYRENEES ORIENTALES', '66149']],
+            [[u'SUPER U', u'STE GENEVIEVE'], ['STE GENEVIEVE', '60730', 'OISE', '60575']],
+            [[u'CHAMPION', u'TOURS LES FONTAINES'], ['TOURS', '37200', 'INDRE ET LOIRE', '37261']],
+            [[u'SUPER U', u'EGUZON CHANTOME'], ['EGUZON-CHANTOME', '36270', 'INDRE', '36070']],
+            [[u'SUPER U', u'ILLARS LES DOMBES'], [('VILLARS LES DOMBES', '01330', 'AIN', '01443')]], # mispelled
+            [[u'CHAMPION', u'ECUELLES'], ['ECUELLES', '77250', 'SEINE ET MARNE', '77166']],
+            [[u'SUPER U', u'CAMBLANES'], ['CAMBLANES ET MEYNAC', '33360', 'GIRONDE', '33085']],
+            [[u'INTERMARCHE', u'BORDES'], ['BORDES', '64510', 'PYRENEES ATLANTIQUES', '64138']],
+            [[u'INTERMARCHE', u'CARCASSONNE PORTES CAMARGUE'], ['CARCASSONNE', '11000', 'AUDE', '11069']],
+            [[u'CHAMPION', u'ST GRATIEN'], ['ST GRATIEN', '95210', "VAL D'OISE", '95555']],
+            [[u'CHAMPION', u'RAILLENCOURT SAINTE OLLE'], ['RAILLENCOURT STE OLLE', '59554', 'NORD', '59488']],
+            [[u'SUPER U', u'MARSEILLE 5 SAKAKINI'], ['MARSEILLE 5EME ARRONDISSE', '13005', 'BOUCHES DU RHONE', '13205']],
+            [[u'CHAMPION', u'NEVERS COLBERT'], ['NEVERS', '58000', 'NIEVRE', '58194']],
+            [[u'SUPER U', u'PONT DE BEAUVOISIN'], ['LE PONT DE BEAUVOISIN', '73330', 'SAVOIE', '73204']],
+            [[u'CHAMPION', u'COURBEVOIE CHARRAS'], ['COURBEVOIE', '92400', 'HAUTS DE SEINE', '92026']],
+            [[u'SUPER U', u'NOZAY'], ['NOZAY', '44170', 'LOIRE ATLANTIQUE', '44113']],
+            [[u'GEANT CASINO', u'ST NAZAIRE'], ['ST NAZAIRE', '44600', 'LOIRE ATLANTIQUE', '44184']], #fifth period
+            [[u'HYPER CHAMPION', u'SAUSSAY'], ['SAUSSAY', '28260', 'EURE ET LOIR', '28371']],
+            [[u'SUPER U', u'ANGERS L. JOUVET'], ['ANGERS', '49000', 'MAINE ET LOIRE', '49007']],
+            [[u'LECLERC', u'ST RAPHAEL'], ['ST RAPHAEL', '83700', 'VAR', '83118']],
+            [[u'INTERMARCHE', u'EVREUX FAUVILLE'], ['EVREUX', '27000', 'EURE', '27229']],
+            [[u'INTERMARCHE', u'CLERMONT'],  ['CLERMONT', '60600', 'OISE', '60157']], # not absolutely sure
+            [[u'GEANT CASINO', u'CARCASSONNE SOUV. Fran\xe7ais'], ['CARCASSONNE', '11000', 'AUDE', '11069']],
+            [[u'CARREFOUR', u'GOUSSAINVILLE'], ['GOUSSAINVILLE', '95190', "VAL D'OISE", '95280']],
+            [[u'LECLERC', u'CLAMECY'], ['CLAMECY', '58500', 'NIEVRE', '58079']],
+            [[u'INTERMARCHE', u'MURAT'], ['MURAT', '15300', 'CANTAL', '15138']],
+            [[u'LECLERC', u'VITRE'], ['VITRE', '35500', 'ILLE ET VILAINE', '35360']],
+            [[u'INTERMARCHE', u'BERNAY GOMBERT'], ['BERNAY', '27300', 'EURE', '27056']],
+            [[u'AUCHAN', u'FLOIRAC'], ['FLOIRAC', '33270', 'GIRONDE', '33167']], # or ('BOULIAC', '33270', 'GIRONDE', '33065')
+            [[u'LECLERC', u'SAINT DIZIER'], ['ST DIZIER', '52100', 'HAUTE MARNE', '52448']],
+            [[u'SUPER U', u'L ISLE JOURDAIN'], ['L ISLE JOURDAIN', '32600', 'GERS', '32160']],
+            [[u'SUPER U', u'NEUVILLE AUX BOIS'], ['NEUVILLE AUX BOIS', '45170', 'LOIRET', '45224']],
+            [[u'CHAMPION', u'CIVRAY'], ['CIVRAY', '86400', 'VIENNE', '86078']],
+            [[u'CARREFOUR MARKET', u'MARLY'], ['MARLY', '59770', 'NORD', '59383']], # not 100% sure (marly moselle or..)
+            [[u'LECLERC', u'SAINT LUBIN DES JONCHERETS'], ['ST LUBIN DES JONCHERETS', '28350', 'EURE ET LOIR', '28348']],
+            [[u'GEANT CASINO', u'ANGERS CC ANJOU'], ['ANGERS', '49000', 'MAINE ET LOIRE', '49007']],
+            [[u'LECLERC', u"RAON L'ETAPE"], ['RAON L ETAPE', '88110', 'VOSGES', '88372']],
+            [[u'CHAMPION', u'PARIS 13 CC Italie 2'], ['PARIS 13EME ARRONDISSEMENT', '75013', 'PARIS', '75113']],
+            [[u'GEANT CASINO', u'ANGERS LA ROSERAIE'], ['ANGERS', '49000', 'MAINE ET LOIRE', '49007']],
+            [[u'LECLERC', u'LA SEYNE SUR MER LES SABLETTES'], ['LA SEYNE SUR MER', '83500', 'VAR', '83126']],
+            [[u'CHAMPION', u'ST PRIEST'], ['ST PRIEST', '69800', 'RHONE', '69290']],
+            [[u'AUCHAN', u'OLIVET'], ['OLIVET', '45160', 'LOIRET', '45232']],
+            [[u'CHAMPION', u'PESSAC MORIN'], ['PESSAC', '33600', 'GIRONDE', '33318']],
+            [[u'INTERMARCHE', u'ST FLOUR'], ['ST FLOUR', '15100', 'CANTAL', '15187']],
+            [[u'CHAMPION', u'PESSAC DULOUT'], ['PESSAC', '33600', 'GIRONDE', '33318']],
+            [[u'CHAMPION', u'NIORT PARIS'], ['NIORT', '79000', 'DEUX SEVRES', '79191']], 
+            [[u'SUPER U', u'ANGERS BOURG DE PAILLE'], ['BEAUCOUZE', '49070', 'MAINE ET LOIRE', '49020']], # suburb of Angers
+            [[u'LECLERC', u'ST LOUIS'], ['ST LOUIS', '68300', 'HAUT RHIN', '68297']],
+            [[u'INTERMARCHE', u'BERNAY THIERS'], ['BERNAY', '27300', 'EURE', '27056']]]
 
 path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')

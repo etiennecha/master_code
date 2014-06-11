@@ -68,9 +68,6 @@ ls_chain_full = [ 'list_auchan_full_info',
 ls_kml = ['monoprix.kml',
           'intermarche.kml']
 
-# TODO: Localize each store in the sample
-# TODO: First step is to identify city (or/then use list of stores from brands etc)
-
 ls_ls_tuple_stores = dec_json(os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
 
 # ##############################################
@@ -93,16 +90,19 @@ for i, (commune, zip_code, department, insee_code) in enumerate(correspondence):
     insee_code = '0%s' %insee_code
     correspondence[i] = (commune, zip_code, department, insee_code)
 # Dict not of much help in this case a priori
-dict_cpostal_insee = {}
-for (city, cpostal, dpt, cinsee) in correspondence:
-  dict_cpostal_insee.setdefault(cpostal, []).append((city, cpostal, dpt, cinsee))
-dict_dpt = {}
-for (city, cpostal, dpt, cinsee) in correspondence:
-  dict_dpt.setdefault(cpostal[:-3], []).append((city, cpostal, dpt, cinsee))
+dict_insee_zip = {}
+for (city, zip_code, dpt, cinsee) in correspondence:
+  dict_insee_zip.setdefault(zip_code, []).append((city, zip_code, dpt, cinsee))
+dict_insee_dpt = {}
+for (city, zip_code, dpt, cinsee) in correspondence:
+  dict_insee_dpt.setdefault(zip_code[:-3], []).append((city, zip_code, dpt, cinsee))
+dict_insee_city = {}
+for (city, zip_code, dpt, cinsee) in correspondence:
+  dict_insee_city.setdefault(city, []).append((city, zip_code, dpt, cinsee))
 
 # Match store's city vs. all city names in correspondence (position 0)
 # NB: City names can be ambiguous (several cities with same name...)
-nb_periods = 4
+nb_periods = 5
 ls_ls_ls_store_insee = []
 for ls_tuple_stores in ls_ls_tuple_stores[:nb_periods]:
   ls_ls_store_insee_temp = []
@@ -141,14 +141,13 @@ for period_ind, ls_results in enumerate(ls_ls_ls_store_insee):
   ls_ls_pbms.append(ls_pbms)
   print 'Period', period_ind, 'Got', c, 'out of', len(ls_results)
 
-# TODO: Continue corrections
-# TODO: Drop shop if empty result though correction already done (city could not be identified for sure)
+# todo: drop store if empty result though correction already done (city could not be identified for sure)
 
 # ####################################################
 # MATCH STORE'S CITY WITH ADDRESS / GPS (IN PROGRESS)
 # ####################################################
 
-# TODO: Use brands' list of stores with addresses and gps coordinates
+# todo: Use brands' list of stores with addresses and gps coordinates
 
 ls_chain_general_info = []
 for file_general_info in ls_chain_general:
@@ -178,14 +177,14 @@ master_1 = ls_chain_full_info[:4]
 master_2 = ls_chain_general_info[4:8]
 master_3 = ls_chain_general_info[8:] # reconcile gps (not needed a priori for qlmc)
 
-# TODO: areas of stores... use the few xls files found + try with OSM (area of building polygons...)
+# todo: areas of stores... use the few xls files found + try with OSM (area of building polygons...)
 
 # ####################
 # PLOT STORES' MAPS
 # ####################
 
-# TODO: Use basemap: either IGN Geo or Routes (?)
-# TODO: Beware to display all stores when several in a town!
+# todo: Use basemap: either IGN Geo or Routes (?)
+# todo: Beware to display all stores when several in a town!
 
 # France
 x1 = -5.
