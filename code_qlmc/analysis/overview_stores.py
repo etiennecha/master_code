@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import add_to_path
+from add_to_path import path_data
 import os, sys
 import json
 import numpy as np
@@ -14,7 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.collections import PatchCollection
 import matplotlib.font_manager as fm
-import shapefile
+# import shapefile
 from mpl_toolkits.basemap import Basemap
 from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 from shapely.prepared import prep
@@ -38,54 +40,50 @@ def parse_kml(kml_str):
     ls_kml_data.append((name, coordinates))
   return ls_kml_data
 
-# path_data: data folder at different locations at CREST vs. HOME
-# could do the same for path_code if necessary (import etc).
-if os.path.exists(r'W:/Bureau/Etienne_work/Data'):
-  path_data = r'W:/Bureau/Etienne_work/Data'
-else:
-  path_data = r'C:/Users/etna/Desktop/Etienne_work/Data'
-# structure of the data folder should be the same
-folder_source_qlmc_json = '/data_qlmc/data_source/data_json'
-folder_built_qlmc_json = '/data_qlmc/data_built/data_json_qlmc'
-folder_source_chains = '/data_qlmc/data_source/data_chain_websites'
-folder_source_kml = '/data_qlmc/data_source/data_kml'
+path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
+path_dir_source_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json_qlmc')
+path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+path_dir_source_chains = os.path.join(path_dir_qlmc, 'data_source', 'data_chain_websites')
+path_dir_source_kml = os.path.join(path_dir_qlmc, 'data_source', 'data_kml')
 
-list_chain_general = ['/list_auchan_general_info',
-                      '/list_carrefour_general_info',
-                      '/list_leclerc_general_info',
-                      '/list_geant_casino_general_info',
-                      '/list_u_general_info', # contains gps
-                      '/list_cora_general_info', # contains gps
-                      '/list_franprix_general_info', # contains gps (small stores though?)
-                      '/list_super_casino_general_info', # contains gps...
-                      '/list_monoprix_general_info', # gps in kml (for now)
-                      '/list_intermarche_general_info'] # gps in kml (for now)
+path_dir_insee = os.path.join(path_data, 'data_insee')
+path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
 
-list_chain_full = [ '/list_auchan_full_info',
-                    '/list_carrefour_full_info',
-                    '/list_leclerc_full_info',
-                    '/list_geant_casino_full_info']
+ls_chain_general = ['list_auchan_general_info',
+                    'list_carrefour_general_info',
+                    'list_leclerc_general_info',
+                    'list_geant_casino_general_info',
+                    'list_u_general_info', # contains gps
+                    'list_cora_general_info', # contains gps
+                    'list_franprix_general_info', # contains gps (small stores though?)
+                    'list_super_casino_general_info', # contains gps...
+                    'list_monoprix_general_info', # gps in kml (for now)
+                    'list_intermarche_general_info'] # gps in kml (for now)
+
+ls_chain_full = [ 'list_auchan_full_info',
+                  'list_carrefour_full_info',
+                  'list_leclerc_full_info',
+                  'list_geant_casino_full_info']
                     
-list_kml = ['/monoprix.kml',
-            '/intermarche.kml']
+ls_kml = ['monoprix.kml',
+          'intermarche.kml']
 
 # TODO: Localize each store in the sample
 # TODO: First step is to identify city (or/then use list of stores from brands etc)
 
-path_ls_ls_tuple_stores = path_data + folder_built_qlmc_json + r'/ls_ls_tuple_stores'
-ls_ls_tuple_stores = dec_json(path_ls_ls_tuple_stores)
+ls_ls_tuple_stores = dec_json(os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
 
 # ##############################################
 # MATCH STORE'S CITY WITH CITY (INSEE CORRES.)
 # ##############################################
 
 # Load Correspondence File (Improvements for gas stations kept)
-file_correspondence = open(path_data + r'\data_insee\corr_cinsee_cpostal','r')
+file_correspondence = open(os.path.join(path_dir_insee_match, 'corr_cinsee_cpostal'),'r')
 correspondence = file_correspondence.read().split('\n')[1:-1]
-file_correspondence_update = open(path_data + r'\data_insee\corr_cinsee_cpostal_update','r')
+file_correspondence_update = open(os.path.join(path_dir_insee_match, 'corr_cinsee_cpostal_update'),'r')
 correspondence_update = file_correspondence_update.read().split('\n')[1:]
 correspondence += correspondence_update
-file_correspondence_gas_path = open(path_data + r'\data_insee\corr_cinsee_cpostal_gas_patch','r')
+file_correspondence_gas_path = open(os.path.join(path_dir_insee_match, 'corr_cinsee_cpostal_gas_patch'),'r')
 correspondence_gas_patch = file_correspondence_gas_path.read().split('\n')
 correspondence += correspondence_gas_patch
 correspondence = [row.split(';') for row in correspondence]
@@ -103,8 +101,10 @@ for (city, cpostal, dpt, cinsee) in correspondence:
   dict_dpt.setdefault(cpostal[:-3], []).append((city, cpostal, dpt, cinsee))
 
 # Match store's city vs. all city names in correspondence (position 0)
+# NB: City names can be ambiguous (several cities with same name...)
+nb_periods = 4
 ls_ls_ls_store_insee = []
-for ls_tuple_stores in ls_ls_tuple_stores[0:3]:
+for ls_tuple_stores in ls_ls_tuple_stores[:nb_periods]:
   ls_ls_store_insee_temp = []
   for (brand, city) in ls_tuple_stores:
     ls_store_insee = []
@@ -115,13 +115,13 @@ for ls_tuple_stores in ls_ls_tuple_stores[0:3]:
   ls_ls_ls_store_insee.append(ls_ls_store_insee_temp)  
 
 # Check problems and, aside, manually establish a list of corrections
-list_city_match = dec_json(path_data + folder_source_qlmc_json + r'/other/list_city_match')
-# TODO: check if corrections made at previous perdiods...
-list_list_pbms = []
-for period_ind, list_results in enumerate(ls_ls_ls_store_insee):
+ls_city_match = dec_json(os.path.join(path_dir_built_json, 'ls_city_match'))
+# todo: check if corrections made at previous perdiods...
+ls_ls_pbms = []
+for period_ind, ls_results in enumerate(ls_ls_ls_store_insee):
   c = 0
-  list_pbms = []
-  for ind_store, results in enumerate(list_results):
+  ls_pbms = []
+  for ind_store, results in enumerate(ls_results):
     if len(results) == 1:
       c+=1
     elif (len(results) > 1) and (all(result[3] == results[0][3] for result in results)):
@@ -129,7 +129,7 @@ for period_ind, list_results in enumerate(ls_ls_ls_store_insee):
       c+=1
     else:
       pb_bool = True
-      for store, row_insee in list_city_match:
+      for store, row_insee in ls_city_match:
         if ls_ls_tuple_stores[period_ind][ind_store] == store:
           ls_ls_ls_store_insee[period_ind][ind_store] = row_insee
           pb_bool = False
@@ -137,9 +137,9 @@ for period_ind, list_results in enumerate(ls_ls_ls_store_insee):
       if pb_bool == False:
         c+=1
       else:
-        list_pbms.append((ls_ls_tuple_stores[period_ind][ind_store], results))
-  list_list_pbms.append(list_pbms)
-  print 'Period', period_ind, 'Got', c, 'out of', len(list_results)
+        ls_pbms.append((ls_ls_tuple_stores[period_ind][ind_store], results))
+  ls_ls_pbms.append(ls_pbms)
+  print 'Period', period_ind, 'Got', c, 'out of', len(ls_results)
 
 # TODO: Continue corrections
 # TODO: Drop shop if empty result though correction already done (city could not be identified for sure)
@@ -151,16 +151,17 @@ for period_ind, list_results in enumerate(ls_ls_ls_store_insee):
 # TODO: Use brands' list of stores with addresses and gps coordinates
 
 ls_chain_general_info = []
-for file_general_info in list_chain_general:
-  ls_chain_general_info.append(dec_json(path_data + folder_source_chains + file_general_info))
+for file_general_info in ls_chain_general:
+  ls_chain_general_info.append(dec_json(os.path.join(path_dir_source_chains, file_general_info)))
 
 ls_chain_full_info = []
-for file_full_info in list_chain_full:
-  ls_chain_full_info.append(dec_json(path_data + folder_source_chains + file_full_info))
+for file_full_info in ls_chain_full:
+  ls_chain_full_info.append(dec_json(os.path.join(path_dir_source_chains, file_full_info)))
 
 ls_chain_kml = []
-for file_kml in list_kml:
-  ls_chain_kml.append(parse_kml(open(path_data + folder_source_kml + file_kml, 'r').read()))
+for file_kml in ls_kml:
+  ls_chain_kml.append(parse_kml(open(os.path.join(path_dir_source_kml, file_kml), 'r').read()))
+
 # reconcile:
 # [x[1].upper() for x in master_3[0]]
 # [x[0] for x in ls_chain_kml[0]]
@@ -208,48 +209,48 @@ m_fra = Basemap(resolution='i',
 path_commune = r'\data_maps\GEOFLA_COM_WGS84'
 m_fra.readshapefile(path_data + path_commune + '\COMMUNE', 'communes_fr', color = 'none', zorder=2)
 
-# TODO: see if commune file is recent enough (matching of INSEE codes with current INSEE data)
-# TODO: if recent enough: do matching vs commune rather than my creepy correspondence file...
+# todo: see if commune file is recent enough (matching of INSEE codes with current INSEE data)
+# todo: if recent enough: do matching vs commune rather than my creepy correspondence file...
 
-# TODO: fix matching problems: Corsica ? DOM-TOM (or just forget about this creepy file?)
-list_shp_insee = [row['INSEE_COM'] for row in m_fra.communes_fr_info]
-list_unmatched_general = [row for row in correspondence if row[3] not in list_shp_insee]
+# todo: fix matching problems: Corsica ? DOM-TOM (or just forget about this creepy file?)
+ls_shp_insee = [row['INSEE_COM'] for row in m_fra.communes_fr_info]
+ls_unmatched_general = [row for row in correspondence if row[3] not in ls_shp_insee]
 # enc_json(list_unmatched_general, path_data + r'/temp_file_obs_and_drop')
 
-# TODO: write proper code
-ls_ls_unmatched_store_cities = [[] for i in range(0,3)]
-# TODO: speficify ard Paris / Marseilles / Lyon + fix 'PLAN DE CAMPAGNE' / 'BIHOREL'
-for i in range(0,3):
+for i in range(nb_periods):
   ls_ls_ls_store_insee[i] = [elt[0] if len(elt)==1 else elt for elt in ls_ls_ls_store_insee[i]]
-# temp corrections
-ls_ls_ls_store_insee[0][55][3]  = u'13210' # 13010
-ls_ls_ls_store_insee[0][106][3] = u'75116' # 75016
-ls_ls_ls_store_insee[0][119][3] = u'13209' # 13009
-ls_ls_ls_store_insee[0][159][3] = u'69387' # 69007
-ls_ls_ls_store_insee[0][177][3] = u'13208' # 13008
-ls_ls_ls_store_insee[0][184][3] = u'13212' # 13012
-ls_ls_ls_store_insee[0][339][3] = u'75113' # 75013
+# Specify Ardts for Paris/Marseille/Lyon + fix two cities
+# Got to be cautious not to write to correspondence (essentially ls_ls... points to corresp)
+ls_ls_ls_store_insee[0][55]  = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13210'] # 13010
+ls_ls_ls_store_insee[0][106] = ['PARIS', '75000', 'PARIS', u'75116'] # 75016
+ls_ls_ls_store_insee[0][119] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13209'] # 13009
+ls_ls_ls_store_insee[0][159] = ['LYON', '69000', 'RHONE', u'69387'] # 69007
+ls_ls_ls_store_insee[0][177] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13208'] # 13008
+ls_ls_ls_store_insee[0][184] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13212'] # 13012
+ls_ls_ls_store_insee[0][339] = ['PARIS', '75000', 'PARIS', u'75113'] # 75013
 
-ls_ls_ls_store_insee[1][60][3] = u'69383' # 69003
-ls_ls_ls_store_insee[1][86][3] = u'13207' # 13007
-ls_ls_ls_store_insee[1][160][3] = u'13071' # 13170
-ls_ls_ls_store_insee[1][249][3] = u'13211' # 13011
+ls_ls_ls_store_insee[1][60]  = ['LYON', '69000', 'RHONE', u'69383'] # 69003
+ls_ls_ls_store_insee[1][86]  = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13207'] # 13007
+ls_ls_ls_store_insee[1][160] = ['PLAN DE CAMPAGNE', '13170', 'BOUCHES DU RHONE', u'13071'] # 13170
+ls_ls_ls_store_insee[1][249] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13211'] # 13011
 
-ls_ls_ls_store_insee[2][77][3] = u'75113' # 75013
-ls_ls_ls_store_insee[2][157][3] = u'76108' # 76230
+ls_ls_ls_store_insee[2][77]  = ['PARIS', '75000', 'PARIS', u'75113'] # 75013
+ls_ls_ls_store_insee[2][157] = ['BIHOREL', '76420', 'SEINE MARITIME', u'76108'] # 76230
 
-for i in range(0,3):
+ls_ls_unmatched_store_cities = [[] for i in range(nb_periods)]
+for i in range(nb_periods):
   ls_ls_ls_store_insee[i] = [elt[0] if len(elt)==1 else elt for elt in ls_ls_ls_store_insee[i]]
   ls_ls_unmatched_store_cities[i] = [(indiv_ind, row, ls_ls_tuple_stores[i][indiv_ind]) \
                                           for indiv_ind, row in enumerate(ls_ls_ls_store_insee[i]) \
-                                          if row and row[3] not in list_shp_insee]
+                                          if row and row[3] not in ls_shp_insee]
 
 ls_ls_store_insee = ls_ls_ls_store_insee
-enc_stock_json(ls_ls_store_insee, path_data + folder_built_qlmc_json + r'/ls_ls_store_insee')
+#enc_stock_json(ls_ls_store_insee, os.path.join(folder_built_qlmc_json, 'ls_ls_store_insee'))
                                           
 # Build dict_city_polygon (some have same insee code ?)
 # TODO if too long to build: only those which are needed
-ls_required_insee_codes = [store[3] for ls_stores in ls_ls_ls_store_insee for store in ls_stores if store]
+ls_required_insee_codes = [store[3] for ls_stores in ls_ls_ls_store_insee\
+                             for store in ls_stores if store]
 dict_city_polygons = {}
 for city_info, city_gps in zip(m_fra.communes_fr_info, m_fra.communes_fr):
   if city_info['INSEE_COM'] in ls_required_insee_codes:
@@ -266,16 +267,18 @@ for ls_stores in ls_ls_ls_store_insee:
     ls_store_gps_b.append(repr_point)
   ls_ls_store_gps_b.append(ls_store_gps_b)
 
-ls_gps_b_draw = [gps_b for ls_store_gps_b in ls_ls_store_gps_b for gps_b in ls_store_gps_b if gps_b]
+ls_gps_b_draw = [gps_b for ls_store_gps_b in ls_ls_store_gps_b\
+                   for gps_b in ls_store_gps_b if gps_b]
 
 dev = m_fra.scatter([gps_b[0] for gps_b in ls_gps_b_draw],
                     [gps_b[1] for gps_b in ls_gps_b_draw],
-                     3, marker = 'o', lw=0.25, facecolor = '#1E90FF', edgecolor = 'w', alpha = 0.5,
-                     antialiased = True, zorder = 3)
+                     3, marker = 'o', lw=0.25,
+                     facecolor = '#1E90FF', edgecolor = 'w',
+                     alpha = 0.5, antialiased = True, zorder = 3)
 
 m_fra.drawcountries()
 m_fra.drawcoastlines()  
-plt.savefig(path_data + r'\data_maps\graphs\test_supermarches.png' , dpi=700)
+#plt.savefig(path_data + r'\data_maps\graphs\test_supermarches.png' , dpi=700)
 
 #TODO: match vs chain lists... going to be difficult though
 

@@ -175,7 +175,7 @@ ls_describe_columns = [(u'store', 3),
                        (u'brand', 8),
                        (u'product', 9)]
 dict_describe = {}
-for json_file in ls_json_files[0:5]:
+for json_file in ls_json_files[:]:
   print '\n', json_file
   ls_records = dec_json(os.path.join(path_dir_source_json, json_file))
   ls_records = [row + get_split_chain_city(row[3], ls_chain_brands) for row in ls_records]
@@ -218,7 +218,7 @@ ls_ls_stores = [list(set_stores) for set_stores in dict_describe['store']]
 ls_ls_tuple_stores = []
 for list_stores in ls_ls_stores:
   ls_ls_tuple_stores.append([get_split_chain_city(store, ls_chain_brands) for store in list_stores])
-# enc_json(ls_ls_tuple_stores, os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
+enc_json(ls_ls_tuple_stores, os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
 
 # Encode file with product lists for product reconciliation across periods (TAKES TIME)
 ls_ls_products = []
