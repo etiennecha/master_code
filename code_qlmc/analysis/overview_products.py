@@ -145,6 +145,7 @@ ls_marques_ex = [u'Fleury Michon',
                  u'Blédina', 
                  u'Président', 
                  u'Le Petit Marseillais']
+
 # print_brand_products(ls_marques_ex[0])
 # print_brand_products(u'Heineken')
 
@@ -187,3 +188,27 @@ df_format_null = df_products[df_products['Format'].isnull()]
 # todo: match products after standardization of format: 
 # todo: require equality (more or less) on product name (w/o format) and format
 # todo: check that relation 1 to 1 between original product and product name + stdzed format
+
+ls_display = ['P', 'Produit', 'Marque']
+# print df_products[ls_display][0:1000].to_string()
+# df_products['Marque'][df_products['P'] == 0].value_counts()
+per = 1
+for rayon in df_products['Rayon'][df_products['P'] == per].unique():
+  print '\n', rayon, len(df_products[(df_products['P'] == per) & (df_products['Rayon'] == rayon)])
+  print df_products['Marque'][(df_products['P'] == per) &\
+                              (df_products['Rayon'] == rayon)].value_counts()[0:10].to_string()
+
+ls_alive_products = df_products['Produit'][df_products['P'] == 1].unique()
+ls_dead_products = []
+for period in range(1,9):
+  ls_products = df_products['Produit'][df_products['P'] == period].unique()
+  ls_dead_products.append([x for x in ls_alive_products if x not in ls_products])
+  ls_alive_products = [x for x in ls_alive_products if x in ls_products]
+  print period, len(ls_alive_products)
+
+# Inspect Contrex, Evian, Taillefine, Boursin, St Moret, Bledina (accents?) at per 2: disappear...
+marque = 'Contrex'
+for period in range(0,5):
+  print df_products[ls_display][(df_products['Marque'] == marque) & (df_products['P'] == period)]
+# Contrex: pbm with presence or not of word "plate'
+# Taillefine: "0% de mg" vs. "0% de matière grasse"
