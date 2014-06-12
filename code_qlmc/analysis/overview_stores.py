@@ -102,7 +102,7 @@ for (city, zip_code, dpt, cinsee) in correspondence:
 
 # Match store's city vs. all city names in correspondence (position 0)
 # NB: City names can be ambiguous (several cities with same name...)
-nb_periods = 5
+nb_periods = 6
 ls_ls_ls_store_insee = []
 for ls_tuple_stores in ls_ls_tuple_stores[:nb_periods]:
   ls_ls_store_insee_temp = []
@@ -261,8 +261,11 @@ for ls_stores in ls_ls_ls_store_insee:
   for store in ls_stores:
     repr_point = []
     if store:
-      repr_point = dict_city_polygons[store[3]].representative_point()
-      repr_point = [repr_point.x, repr_point.y]
+      try:
+        repr_point = dict_city_polygons[store[3]].representative_point()
+        repr_point = [repr_point.x, repr_point.y]
+      except:
+        print store, ': check insee code'
     ls_store_gps_b.append(repr_point)
   ls_ls_store_gps_b.append(ls_store_gps_b)
 
