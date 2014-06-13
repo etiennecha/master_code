@@ -3,6 +3,7 @@
 
 import add_to_path
 from add_to_path import path_data
+from functions_string import *
 import os, sys
 import json
 import numpy as np
@@ -102,7 +103,7 @@ for (city, zip_code, dpt, cinsee) in correspondence:
 
 # Match store's city vs. all city names in correspondence (position 0)
 # NB: City names can be ambiguous (several cities with same name...)
-nb_periods = 8
+nb_periods = 10
 ls_ls_ls_store_insee = []
 for ls_tuple_stores in ls_ls_tuple_stores[:nb_periods]:
   ls_ls_store_insee_temp = []
@@ -116,7 +117,6 @@ for ls_tuple_stores in ls_ls_tuple_stores[:nb_periods]:
 
 # Check problems and, aside, manually establish a list of corrections
 ls_city_match = dec_json(os.path.join(path_dir_built_json, 'ls_city_match'))
-# todo: check if corrections made at previous perdiods...
 ls_ls_pbms = []
 for period_ind, ls_results in enumerate(ls_ls_ls_store_insee):
   c = 0
@@ -140,8 +140,6 @@ for period_ind, ls_results in enumerate(ls_ls_ls_store_insee):
         ls_pbms.append((ls_ls_tuple_stores[period_ind][ind_store], results))
   ls_ls_pbms.append(ls_pbms)
   print 'Period', period_ind, 'Got', c, 'out of', len(ls_results)
-
-# todo: drop store if empty result though correction already done (city could not be identified for sure)
 
 # ####################################################
 # MATCH STORE'S CITY WITH ADDRESS / GPS (IN PROGRESS)
@@ -236,53 +234,100 @@ ls_ls_ls_store_insee[1][249] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'1321
 ls_ls_ls_store_insee[2][77]  = ['PARIS', '75000', 'PARIS', u'75113'] # 75013
 ls_ls_ls_store_insee[2][157] = ['BIHOREL', '76420', 'SEINE MARITIME', u'76108'] # 76230
 
-ls_ls_unmatched_store_cities = [[] for i in range(nb_periods)]
-for i in range(nb_periods):
-  ls_ls_ls_store_insee[i] = [elt[0] if len(elt)==1 else elt for elt in ls_ls_ls_store_insee[i]]
-  ls_ls_unmatched_store_cities[i] = [(indiv_ind, row, ls_ls_tuple_stores[i][indiv_ind]) \
-                                          for indiv_ind, row in enumerate(ls_ls_ls_store_insee[i]) \
-                                          if row and row[3] not in ls_shp_insee]
-
+ls_ls_unmatched_store_cities = []
+ls_rows = []
+for period_ind, (ls_ls_store_insee, ls_tuple_stores) in enumerate(zip(ls_ls_ls_store_insee,
+                                                                      ls_ls_tuple_stores)):
+  ls_ls_store_insee = [ls_store_insee[0] if len(ls_store_insee)==1 else ls_store_insee\
+                         for ls_store_insee in ls_ls_store_insee]
+  ls_ls_unmatched_store_cities.append([(indiv_ind, row, ls_tuple_stores[indiv_ind]) \
+                                          for indiv_ind, row in enumerate(ls_ls_store_insee) \
+                                          if row and row[3] not in ls_shp_insee])
+  for ls_store_insee, tuple_store in zip(ls_ls_store_insee, ls_tuple_stores):
+    ls_rows.append([period_ind] + list(tuple_store) + list(ls_store_insee))
 ls_ls_store_insee = ls_ls_ls_store_insee
 #enc_stock_json(ls_ls_store_insee, os.path.join(folder_built_qlmc_json, 'ls_ls_store_insee'))
-                                          
+
+# BUILD STORE DATAFRAME
+
+ls_columns = ['P', 'Enseigne', 'Commune', 'INSEE_Commune', 'INSEE_ZIP', 'INSEE_Dpt', 'INSEE_Code']
+df_stores = pd.DataFrame(ls_rows, columns = ls_columns)
+#print df_stores[df_stores['INSEE_ZIP'].str.slice(stop=2) == '75'].to_string()
+#print df_stores[(df_stores['Commune'].str.contains('carcassonne', case=False)) |\
+#                (df_stores['INSEE_Commune'].str.contains('carcassonne', case=False))]
+## C.C. CITE2 is SOUVENIR FRANCAIS
+
+# EXAMINE WEBSITE CHAIN DATA
+
+# Intermarche
+ls_itm = ls_chain_general_info[9]
+ls_itm_kml = ls_chain_kml[1]
+
+# quick check (todo: get rid of accents etc)
+ls_itm_kml_names = [x[0].lower() for x in ls_itm_kml]
+ls_itm_matched_q = [x[0] for x in ls_itm if x[0].lower() in ls_itm_kml_names]
+ls_itm_no_q = [x[0] for x in ls_itm if x[0].lower() not in ls_itm_kml_names]
+
+# built df intermarche website data
+df_itm = pd.DataFrame([x[0:2] for x in ls_chain_general_info[9]],
+                              columns = ['Nom', 'Adresse'])
+df_itm['Nom_std'] = df_itm['Nom'].apply(lambda x: standardize_intermarche(str_low_noacc(x)))
+se_itm_vc = df_itm['Nom_std'].value_counts()
+se_itm_unique = se_itm_vc[se_itm_vc == 1]
+str_unique = u'|'.join(se_itm_unique.index)
+df_itm = df_itm[df_itm['Nom_std'].str.contains(str_unique)]
+
+# build df intermarche kml data
+df_itm_kml = pd.DataFrame(ls_itm_kml,
+                          columns = ['Nom', 'Gps'])
+df_itm_kml['Nom_std'] = df_itm_kml['Nom'].apply(lambda x: standardize_intermarche(\
+                                                            str_low_noacc(x.decode('latin-1'))))
+se_itm_kml_vc = df_itm_kml['Nom_std'].value_counts()
+se_itm_kml_unique = se_itm_kml_vc[se_itm_kml_vc == 1]
+str_kml_unique = u'|'.join(se_itm_kml_unique.index)
+df_itm_kml = df_itm_kml[df_itm_kml['Nom_std'].str.contains(str_kml_unique)]
+
+# match
+ls_itm_matched = [x for x in df_itm['Nom_std'].values if x in  df_itm_kml['Nom_std'].values]
+ls_itm_no = [x for x in df_itm['Nom_std'].values if x not in df_itm_kml['Nom_std'].values]
+
+# todo: join and see what's left: check with osm geocoding / osm extraction ... and google
+
 # Build dict_city_polygon (some have same insee code ?)
-# TODO if too long to build: only those which are needed
 ls_required_insee_codes = [store[3] for ls_stores in ls_ls_ls_store_insee\
                              for store in ls_stores if store]
-dict_city_polygons = {}
-for city_info, city_gps in zip(m_fra.communes_fr_info, m_fra.communes_fr):
-  if city_info['INSEE_COM'] in ls_required_insee_codes:
-    dict_city_polygons[city_info['INSEE_COM']] = Polygon(city_gps)
 
-ls_ls_store_gps_b = []
-for ls_stores in ls_ls_ls_store_insee:
-  ls_store_gps_b = []
-  for store in ls_stores:
-    repr_point = []
-    if store:
-      try:
-        repr_point = dict_city_polygons[store[3]].representative_point()
-        repr_point = [repr_point.x, repr_point.y]
-      except:
-        print store, ': check insee code'
-    ls_store_gps_b.append(repr_point)
-  ls_ls_store_gps_b.append(ls_store_gps_b)
-
-ls_gps_b_draw = [gps_b for ls_store_gps_b in ls_ls_store_gps_b\
-                   for gps_b in ls_store_gps_b if gps_b]
-
-dev = m_fra.scatter([gps_b[0] for gps_b in ls_gps_b_draw],
-                    [gps_b[1] for gps_b in ls_gps_b_draw],
-                     3, marker = 'o', lw=0.25,
-                     facecolor = '#1E90FF', edgecolor = 'w',
-                     alpha = 0.5, antialiased = True, zorder = 3)
-
-m_fra.drawcountries()
-m_fra.drawcoastlines()  
-#plt.savefig(path_data + r'\data_maps\graphs\test_supermarches.png' , dpi=700)
-
-#TODO: match vs chain lists... going to be difficult though
+#dict_city_polygons = {}
+#for city_info, city_gps in zip(m_fra.communes_fr_info, m_fra.communes_fr):
+#  if city_info['INSEE_COM'] in ls_required_insee_codes:
+#    dict_city_polygons[city_info['INSEE_COM']] = Polygon(city_gps)
+#
+#ls_ls_store_gps_b = []
+#for ls_stores in ls_ls_ls_store_insee:
+#  ls_store_gps_b = []
+#  for store in ls_stores:
+#    repr_point = []
+#    if store:
+#      try:
+#        repr_point = dict_city_polygons[store[3]].representative_point()
+#        repr_point = [repr_point.x, repr_point.y]
+#      except:
+#        print store, ': check insee code'
+#    ls_store_gps_b.append(repr_point)
+#  ls_ls_store_gps_b.append(ls_store_gps_b)
+#
+#ls_gps_b_draw = [gps_b for ls_store_gps_b in ls_ls_store_gps_b\
+#                   for gps_b in ls_store_gps_b if gps_b]
+#
+#dev = m_fra.scatter([gps_b[0] for gps_b in ls_gps_b_draw],
+#                    [gps_b[1] for gps_b in ls_gps_b_draw],
+#                     3, marker = 'o', lw=0.25,
+#                     facecolor = '#1E90FF', edgecolor = 'w',
+#                     alpha = 0.5, antialiased = True, zorder = 3)
+#
+#m_fra.drawcountries()
+#m_fra.drawcoastlines()  
+##plt.savefig(path_data + r'\data_maps\graphs\test_supermarches.png' , dpi=700)
 
 # ##################################################################################
 # DEPRECATED (TEST OF geocode_via_google VS. geocode_via_google_textsearch (best))
