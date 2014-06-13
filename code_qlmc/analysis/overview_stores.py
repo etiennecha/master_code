@@ -102,7 +102,7 @@ for (city, zip_code, dpt, cinsee) in correspondence:
 
 # Match store's city vs. all city names in correspondence (position 0)
 # NB: City names can be ambiguous (several cities with same name...)
-nb_periods = 7
+nb_periods = 8
 ls_ls_ls_store_insee = []
 for ls_tuple_stores in ls_ls_tuple_stores[:nb_periods]:
   ls_ls_store_insee_temp = []
@@ -205,8 +205,8 @@ m_fra = Basemap(resolution='i',
                 llcrnrlon=x1,
                 urcrnrlon=x2)
 
-path_commune = r'\data_maps\GEOFLA_COM_WGS84'
-m_fra.readshapefile(path_data + path_commune + '\COMMUNE', 'communes_fr', color = 'none', zorder=2)
+path_dir_geofla = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84')
+m_fra.readshapefile(os.path.join(path_dir_geofla, 'COMMUNE'), 'communes_fr', color = 'none', zorder=2)
 
 # todo: see if commune file is recent enough (matching of INSEE codes with current INSEE data)
 # todo: if recent enough: do matching vs commune rather than my creepy correspondence file...
