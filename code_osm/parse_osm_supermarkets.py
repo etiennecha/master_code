@@ -77,7 +77,9 @@ m_fra = Basemap(resolution='i',
                 llcrnrlon=x1,
                 urcrnrlon=x2)
 
-path_dir_geofla_com = 'C:\Users\etna\Desktop\Etienne_work\Data\data_maps\GEOFLA_COM_WGS84\COMMUNE'
+# path_dir_geofla_com = 'C:\Users\etna\Desktop\Etienne_work\Data\data_maps\GEOFLA_COM_WGS84\COMMUNE'
+path_dir_geofla_com = '\\ulysse\users\echamayou\Bureau\Etienne_work\Data\data_maps\GEOFLA_COM_WGS84\COMMUNE'
+
 m_fra.readshapefile(path_dir_geofla_com, 'communes_fr', color = 'none', zorder=2)
 
 df_com = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.communes_fr],
