@@ -264,11 +264,11 @@ ls_itm = ls_chain_general_info[9]
 ls_itm_kml = ls_chain_kml[1]
 
 # quick check (todo: get rid of accents etc)
-ls_itm_kml_names = [x[0].lower() for x in ls_itm_kml]
+ls_itm_kml_names = [x[0].decode('latin-1').lower() for x in ls_itm_kml]
 ls_itm_matched_q = [x[0] for x in ls_itm if x[0].lower() in ls_itm_kml_names]
 ls_itm_no_q = [x[0] for x in ls_itm if x[0].lower() not in ls_itm_kml_names]
 
-# built df intermarche website data
+# built df intermarche website data: pbm with "'"... rubish data..
 df_itm = pd.DataFrame([x[0:2] for x in ls_chain_general_info[9]],
                               columns = ['Nom', 'Adresse'])
 df_itm['Nom_std'] = df_itm['Nom'].apply(lambda x: standardize_intermarche(str_low_noacc(x)))
@@ -290,6 +290,10 @@ df_itm_kml = df_itm_kml[df_itm_kml['Nom_std'].str.contains(str_kml_unique)]
 # match
 ls_itm_matched = [x for x in df_itm['Nom_std'].values if x in  df_itm_kml['Nom_std'].values]
 ls_itm_no = [x for x in df_itm['Nom_std'].values if x not in df_itm_kml['Nom_std'].values]
+
+df_itm.index = df_itm['Nom_std']
+df_itm_kml.index = df_itm_kml['Nom_std']
+df_itm_all = df_itm.join(df_itm_kml, rsuffix='kml')
 
 # todo: join and see what's left: check with osm geocoding / osm extraction ... and google
 

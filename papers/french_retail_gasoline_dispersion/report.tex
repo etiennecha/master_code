@@ -42,7 +42,7 @@
 \onehalfspacing
 
 \textbf{Abstract:}
-This article studies price dispersion on the French retail gasoline market, discussing the methodology employed by \cite{TAP11} to seek evidence related to a standard prediction of consumer search models: randomized pricing. Changes in price ranking are found to occur frequently among pairs of competing gas stations, with more changes occurring between stations which are separated by a higher distance i.e. where the consumer information problem is arguably more significant. This provides support for the connection between price dispersion and consumer search. Price dispersion furthermore decreases with cost and increases with the number of firms. These findings are consistent with predictions from a model a la \cite{VAR80}.
+This article studies price dispersion on the French retail gasoline market, discussing the methodology employed by \cite{TAP11} to seek support for a standard prediction of consumer search models: randomized pricing. Changes in price ranking are found to occur frequently among pairs of competing gas stations, with more changes occurring between pairs which are separated by a higher distance, namely these for which consumer search costs are more likely to play a role. This provides support for the connection between price dispersion and consumer search. Price dispersion furthermore decreases with cost and increases with the number of firms. These findings are consistent with predictions from a model a la \cite{VAR80}.
 
 \strut
 
@@ -56,17 +56,16 @@ This article studies price dispersion on the French retail gasoline market, disc
 \doublespacing
 
 \section{Introduction}
-\setcounter{page}{1}
 
-The seminal paper of the consumer search literature, \cite{STI61}, draws attention to the link between price dispersion, namely the persistence of different prices for a homogeneous product, and the "ignorance in the market", namely the necessity for consumers to acquire information about prices, generally at some cost. While the paper only provides evidence of static price dispersion (e.g. retailers posting different prices for a given car model in a suburb), thus leaving room for discussions whether differentiation alone may in fact explain such findings, the empirical literature would soon make the case stronger by considering temporal price dispersion. The ranking of prices displayed by different sellers within a market would indeed typically be found to change significantly over time, making it actually difficult for a consumer to purchase the good at the cheapest price. This was long done essentially by considering panel data of standard goods sold at various stores, introducing fixed effects to account for potential store differentiation, and producing statistics to account for changes of rank in the distribution of prices (e.g. quantile to quantile changes). Shortcomings typically included the fact that price distributions included sellers that were not necessarily operating in the very same environment.
+The seminal paper of the consumer search literature, \cite{STI61}, draws attention to the link between the "ignorance in the market", namely the necessity for consumers to acquire information about prices, and price dispersion, i.e. the persistence over time of different prices for a homogeneous good. While the paper only provides evidence of static price dispersion e.g. retailers posting different prices for a given car model in a suburb, thus leaving room for discussions whether differentiation alone may explain such findings, the empirical literature would soon make the case stronger by considering temporal price dispersion. The ranking of prices posted by different sellers would indeed often be found to change over time, making it actually difficult for consumers to purchase goods at the cheapest price (e.g. quantile to quantile changes between periods). Shortcomings of such studies yet typically included the fact that empirical price distributions considered included sellers that were not actually operating in the same local market, for lack of adequate price data.
 
-As argued by \cite{TAP11}, the retail gasoline market appears to be particularly relevant to a discussion about the role of consumer search. The presence of sustained retail price variations due to oil cost fluctuations generates an information issue that consumers cannot ignore. High product homogeneity offers the opportunity to work with raw prices rather than prices which may have been cleaned inadequately. And most importantly, current data allow to compare prices posted by sellers which are actually competing within the same market.
+As argued by \cite{TAP11}, the retail gasoline market is particularly relevant to a discussion about the role of consumer search. The presence of sustained retail price variations due to oil cost fluctuations generates an information issue that consumers cannot ignore. High product homogeneity offers the opportunity to work with raw prices and market transparency allows the observation of prices actually paid by consumers at various competing retailers.
 
-Competition in the retail gasoline market has attracted a lot of attention in France over last years. In 2006, a governmental website was launched by the Ministry of Economics with a view to increase transparency in the market. All stations having sold over 500m3 of gasoline in the previous year are since then required to keep prices posted on the website. In 2011, a large inquiry was ordered by the government as retail price adjustments to oil cost variations were suspected to be faster upwards than downwards (the "Rocket and feathers" hypothesis first investigated by \cite{BAC91} in the UK). Little evidence was yet found and the report rather emphasized signs pointing toward a significant degree of competitiveness. More recently, in August 2012, following an election promise, the governement of the then newly elected French President Francois Hollande implemented a 3c/l tax cut for 3 month, asking gasoline retailers on the market to produce the same effort. The French retail gasoline market thus tends to be thoroughly scrutinized.
+Competition in the retail gasoline market has attracted a lot of attention in France over last years. In 2006, a governmental website was launched by the Ministry of Economics with a view to increase transparency in the market. Since then, all stations having sold over 500m3 of gasoline in the previous year are required to keep prices posted on the website. In 2011, a large inquiry was ordered by the government as retail price adjustments to oil cost variations were suspected to occur faster upwards than downwards (the "Rocket and feathers" hypothesis first investigated by \cite{BAC91} in the UK). Little evidence was yet found and the report rather emphasized signs pointing toward a significant degree of competitiveness. More recently, in August 2012, following an election promise, the governement of the then newly elected French President Francois Hollande implemented a 3 Euro cents per litre tax cut during 3 months, asking gasoline retailers on the market to produce a similar effort. The French retail gasoline market thus tends to be thoroughly scrutinized.
 
-Though the effect of the governmental comparison website on competition has not been evaluated, probably for lack of data preceding the launch, the 2011 governmental report called for further development. Remarkably, Germany has taken a similar initiative in 2012. More generally, in a context where dynamic prices generate heightened debates (e.g. Amazon), the idea to monitor competition by constraining firms to increase transparency enjoys strong popularity among politicians. The theory of consumer search however tells us that measures affecting information are far from innocuous. On the one hand, in a situation of strong competition, aligned prices provide little incentive for consumers to search, thus undermining the stability of such an equilibrium. Contrarily, collusion appears quite sustainable in a context where a reliable website makes monitoring costless and, again, aligned prices discourage search by consumers.
+Though the effect of the governmental comparison website on competition has not been evaluated, probably for lack of data preceding the launch, the 2011 governmental report has called for further initiatives favoring price transparency. Remarkably, Germany has taken a similar initiative for its retail gasoline market in 2012. More generally, in a context where dynamic prices generate heightened debates (e.g. Amazon), the idea to monitor competition by constraining firms to increase transparency enjoys strong popularity among politicians. Nevertheless, economic theory shows that measures affecting information can have adverse effects. Collusion is indeed even more sustainable in a context where a reliable website makes monitoring costless, while aligned prices provide little incentive for consumers to become or remain informed.
 
-With a long term goal of being able able to achieve a better understanding of local competition contexts, the paper investigates price dispersion in the French market. Between stations exhibiting little differentiation, price dispersion is found to significantly increase with distance between stations (very close competitors vs. competitors located a bit further), providing support for the connection between consumer information and price dispersion. The effect is significantly weaker for differentiated competitors. At the market level, price dispersion is found to increase with the number of competitors and decrease with price level. Overall, despite very different characteristics, results are close to those obtained by \cite{TAP11} on US data.
+With a long term goal of being able able to achieve a better understanding of local competition contexts, the paper investigates price dispersion in the French retail gasoline market. Among pairs of competing stations exhibiting little differentiation, price dispersion is found to significantly increase with distance separating stations (very close competitors vs. competitors located a bit further), providing support for the connection between consumer information and price dispersion. The effect is significantly weaker for differentiated competitors. At the market level, price dispersion is found to increase with the number of competitors and decrease with price level. Overall, despite very different market characteristics, results point in the same direction as those of \cite{TAP11} with US data.
 
 \section{Literature}
 
@@ -111,15 +110,15 @@ Data about daily diesel prices, gas station locations, opening hours and ameniti
 
 The period covered is marked by two significant events of different natures. One is a change of pricing strategy by a leading retail brand affecting the whole country and the other is a governmental intervention.
 
-The first event is the progressive conversion by the oil company "Total" of c. 600 of its gas stations to low cost gas stations branded "Total Access" i.e. gas stations whose prices are aligned with supermarket gas stations. About half the conversions occur during the period covered by the paper. Though these conversions are obviously not heterogeneous shocks to the market, they yet involve a significant number of gas stations lowering their price by c. 0.10 \euro per liter virtually overnight.
+The first event is the progressive conversion by the oil company "Total" of c. 600 of its gas stations to low cost gas stations branded "Total Access" i.e. gas stations whose prices are aligned with supermarket gas stations. About half the conversions occur during the period covered by the paper. Though these conversions are obviously not heterogeneous shocks to the market, they yet involve a significant number of gas stations lowering their price by c. 10 Euro cents per liter virtually overnight.
 
-The second event is of political nature. On August 29, 2012, a decrease in price of 6c per litre was announced by the government, following an election promise made by Francois Hollande. This decrease was (to be) achieved by a decrease of tax of 3c per litre and an equivalent "effort" by gas station operators. Also, it must be noted that a small portion of the tax on gasoline is set by regions on an annual basis.
+The second event is of political nature. On August 29, 2012, a decrease in price of 6 Euro cents per litre was announced by the government, following an election promise made by Francois Hollande. This decrease was (to be) achieved by a decrease of tax of 3 Euro cents per litre and an equivalent "effort" by gas station operators. Also, it must be noted that a small portion of the tax on gasoline is set by regions on an annual basis.
 
 \subsection{Descriptive statistics}
 
 \subsubsection{Retail price vs. wholesale cost of diesel}
 
-Descriptive statistics are provided for a period of 640 days starting September 9, 2011 and ending May 6, 2013. Four subperiods of data are missing whose respective day lengths are 11 (2012/07/08-2012/07/18), 10 (2012/08/13-2012/08/22), 49 (2012/12/04-2013/01/21) and 6 (2013/04/04-2013/04/09). The end of the period studied has been determined arbitrarily to avoid including another missing subperiod and keep the database to a reasonable size.
+Descriptive statistics are provided for a period of 640 days starting September 9, 2011 and ending May 6, 2013. Four subperiods of data are yet missing for various technical reasons, thus reducing the number of observed days to 564\footnote{Respective day lengths of missing subperiods are 11 (2012/07/08-2012/07/18), 10 (2012/08/13-2012/08/22), 49 (2012/12/04-2013/01/21) and 6 (2013/04/04-2013/04/09).}. The end of the period studied has been determined arbitrarily to avoid including another missing subperiod and to keep the database to a reasonable size.
 
 \begin{figure}[!h]
     \caption{Diesel prices and retail gross margin (09/2011-06/2013)}
@@ -129,7 +128,7 @@ Descriptive statistics are provided for a period of 640 days starting September 
 
 \subsubsection{Price ridigity}
 
-Data include prices at 9,932 gas stations in Mainland France, of which 421 are identified as highway gas stations and thus excluded from the analysis. Additionnally, 381 stations are excluded due to apparent poor data quality (less than 10 prices observed or less than a price change per month). Overall, the number of prices observed varies between 8,715 and 8,965 across days in the period studied. On average, c. 1,500 gas stations (c. 18\% of gas stations observed) change prices within a day. The average gas station changes price a little less than every week.
+Data include prices at 9,932 gas stations in Mainland France, of which 421 are identified as highway gas stations and thus excluded from the analysis. Additionnally, 381 stations are excluded due to apparent poor data quality (less than 10 prices observed or less than a price change per month). Overall, the number of prices retained in the analysis varies between 8,715 and 8,965 across days within the period studied. On average, c. 1,500 gas stations (c. 18\% of gas stations observed and retained) change prices within a day. The average gas station changes price a little less than every week.
 
 \begin{figure}[!h]
     \caption{Daily number of price changes (09/2011-06/2012)}
@@ -150,11 +149,11 @@ A simple way to measure temporal price dispersion between two stations with dail
 r_{ij} = \frac{1}{T_{ij}} \sum_{t=1}^{T_{ij}} \mathbbm{1}_{p_{jt} > p_{it}}
 \end{align*}
 
-Depending on market definitions, a database can then be built in which observations are pairs of stations assumed to compete within the same market. In the following analysis, distance as the crow flies is used with an upper distance limit of 3km (robustness checks are joined in appendix). Rank reversals are thus computed for all gas stations in the database separated by a distance of less than 3km.
+A database is built in which observations are pairs of stations assumed to compete within the same market. In the following analysis, distance as the crow flies is used with an upper distance limit of 3km (robustness checks are joined in appendix). Rank reversals are thus computed for all gas stations in the database separated by a distance of less than 3km.
 
-A second sensitive issue which arises in the empirical analysis is the treatment of differentiation, here broadly understood as lasting differences in prices. Such an issue is traditionally addressed by working with price residuals (i.e. after taking out time and gas station fixed effects), which likely introduce errors in data. The analysis is thus performed with raw prices whenever differentiation is limited, and with residual prices when differentiation requires it.
+A sensitive issue in the empirical analysis is the treatment of differentiation, broadly understood as lasting differences in prices. Such an issue is traditionally addressed by working with price residuals (i.e. after taking out time and gas station fixed effects), which likely introduce errors in data. The analysis is thus performed with raw prices whenever differentiation is found to be relatively small, and with residual prices when differentiation requires it.
 
-A last issue that must be mentioned before the exposition of results is the presence in the data of significant changes in price policies. Such changes are found to be associated with a change of brand "Total" for "Total Access", the low cost brand of Total. In order to avoid spurious rank reversals (cf. appendix), all concerned pairs are excluded from the analysis. It has also been checked that no competitor's margin was affected in a different way vs. other sellers in the market whenever a change occurs.
+Finally, French data raise the issue of the nature of rank reversals measured by the statistic previously described. Indeed, the transformation by the firm "Total" of a significant number of its gas stations to low cost gas stations generates rank reversals which are clearly unrelated to the use of randomized pricing (cf. appendix). In order to avoid including "spurious rank reversals" in the analysis, the frequency of changes in price ranking was also considered in the analysis. Conservatively, pairs of gas stations involving such a brand and price policy change have been excluded from the analysis. It has also been checked that price policies implemented by competitors of rebranded gas stations were not significantly affected.
 
 \begin{figure}[!h]
     \caption{Percentage of rank reversals among pairs}
@@ -163,11 +162,11 @@ A last issue that must be mentioned before the exposition of results is the pres
     \floatfoot{Series represent for each day the percentage of pairs observed where the usual price order is not respected (reversed rank). No differentiation implies that pairs exhibit an average price difference below 2c/l.}
 \end{figure}
 
-Among pairs of gas stations built with a maximum distance of 3km, the percentage of reversed pairs fluctuates between 5.4\% and 15.3\% over the period studied (mean 8.1\%). The maximum of is reached on the day of the government's tax cut implementation. Figure 3 shows that one needs to be careful when computing rank reversals as data can be significantly biased by exogeneous factors. In the case in point, the development of "Total Access" with a change in price policy leads to measure spurious rank reversals (cf. Appendix for more details). The "No differentiation" series results from a focus on pairs which exhibit an average price difference below 2c/l. Among this pairs, the minimum percentage of reversed pairs fluctuates between 13.8\% and 29.3\% (mean 19.5\%).
+Figure 3 displays the percentage of pairs of gas stations whose price rank is reversed on each day of the period studied. It illustrates how a naive use of rank reversals may lead to overestimate price dispersion ("All pairs" vs. "All but Total Access"). Among pairs of gas stations built with a maximum distance of 3km, the percentage of reversed pairs fluctuates between 5.4\% and 15.3\%  (mean 8.1\%). A large portion of pairs yet involve differentiated competitors (supermarkets are typically less expensive and thus always cheaper than most oil company gas stations). The "No differentiation" series results from a focus on pairs which exhibit an average price difference below 2c/l. Among these pairs, the minimum percentage of reversed pairs fluctuates between 13.8\% and 29.3\% (mean 19.5\%). From a consumer viewpoint, this translates in one chance in five to pay the highest price upon patronizing among two competitors of similar price level the one which is cheaper most of the time.
 
 Using maximum 3km and 5km allows to build databases containing respectively 13,846 and 28,433 pairs of gas stations. As expected, rank reversals between two stations decreases in the average spread between their prices, with a large number exhibiting no rank reversals. In order to reduce the influence of static dispersion, the sample is subset based on the value of the average spread between prices. Results are presented for a maximum average spread of 0.02c/l i.e. a 1\% to 2\% average difference in prices. 
 
-\begin{figure}
+\begin{table}
 \caption{Pair rank reversals}
 % {\renewcommand{\arraystretch}{0.8}
 \centering
@@ -195,7 +194,7 @@ Median & 0.02 & 0.01 & 0.19 & 044 & 0.46 \\
 \multicolumn{6}{l}{\small Pairs including a Total Access gas station are excluded in the three last columns}\\
 \end{tabular}
 %\end{center}
-\end{figure}
+\end{table}
 
 A clear ranking of empirical distribution functions of rank reversals can be observed among pairs of gas stations depending on distances. This is consistent with the idea that nearby gas stations compete in a (virtually) complete information setting, where there is no particular reason to expect rank reversals. Conversely, distance can create an information issue for other pairs, leading to the inexistence of an equilibrium in pure strategies.
 
@@ -227,13 +226,13 @@ In order to evaluate the hypothesis according to which information is connected 
 \hline
 OLS: distance             &  0.014\sym{***}  &  0.020\sym{***}  &  0.001\sym{}\\
 {}                        & (0.002)          & (0.002)          & (0.001)   \\
-OLS: dummy                & -0.024\sym{***}  & -0.034\sym{***}  & -0.006\sym{***}\\
+OLS: same corner                & -0.024\sym{***}  & -0.034\sym{***}  & -0.006\sym{***}\\
 {}                        & (0.007)          & (0.006)          & (0.002) \\
-Quantile 0.25: dummy      & -0.027\sym{***}  & -0.067\sym{***}  & -0.007\sym{***}\\
+Quantile 0.25: same corner      & -0.027\sym{***}  & -0.067\sym{***}  & -0.007\sym{***}\\
 {}                        & (0.008)          & (0.010)          & (0.003)  \\
-Quantile 0.50: dummy      & -0.024\sym{*}    & -0.030\sym{***}  & -0.007\sym{**}\\
+Quantile 0.50: same corner      & -0.024\sym{*}    & -0.030\sym{***}  & -0.007\sym{**}\\
 {}                        & (0.011)          & (0.005)          & (0.002)    \\
-Quantile 0.75: dummy      & -0.027\sym{*}    & -0.007\sym{*}    & -0.002\sym{}\\
+Quantile 0.75: same corner      & -0.027\sym{*}    & -0.007\sym{*}    & -0.002\sym{}\\
 {}                        & (0.014)          & (0.003)          & (0.001)   \\
 \hline
 N                         & 4,183            &   4,183          &     8,312    \\
@@ -241,9 +240,10 @@ N                         & 4,183            &   4,183          &     8,312    \
 \multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
 \multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
 \end{tabular}
+\floatfoot{The "same corner" variable is a dummy variable that takes value one for pairs of gas stations separated by a distance of less than 500 meters, namely those for which consumers are expected to be relatively well informed about prices at each retailer.}\\
 \end{table}
 
-Overall, results support the connection between price dispersion and consumer information. Pairs separated by a short distance exhibit less rank reversals, while the average price difference tends to be smaller. Though significant, the effect is weaker for differentiated gas stations. This might partly be due to errors introduced by the cleaning of prices, but the latter is shown not to affect results obtained with raw prices.
+Overall, results seem to support the connection between price dispersion and consumer information. Pairs separated by a short distance exhibit less rank reversals, while the average price difference tends to be smaller. Though significant, the effect is weaker for differentiated gas stations. This might partly be due to errors introduced by the cleaning of prices. However, for pairs exhibiting little or no differentiation, results do not diffe significantly whether raw prices or residual prices are taken into account.
 
 \section{Market price dispersion}
 
@@ -251,10 +251,8 @@ While the emphasis has so far been laid on examining empirical evidence about th
 
 The methodology employed by \cite{TAP11} consists in considering each gas station successively as the center of a market delimited by a circle of a given radius (robustness of results to variations in radius size is checked). Various statistics accounting for price dispersion can then be computed for each market and period. If one observes $N$ stations close to each other (e.g. with a limit radius of 2km: if no two stations are separated by a distance of more than 2 km) and with prices posted over $T$ periods, this will result in $N*T$ observations as each station is successively considered and, for each station, a statistic representing price dispersion is computed at each period. An expected consequence is that it tends to over represent markets with higher gas station density (typically cities).
 
-\begin{figure}[H]
+\begin{table}[h]
 \caption{Overview of market price dispersion}
-% {\renewcommand{\arraystretch}{0.8}
-\begin{center}
 \begin{tabular}{lrrr}
 \hline
 {} & Radius 5km & Radius 3km & No overlap\\
@@ -275,15 +273,15 @@ Market gain from search & 0.017 & 0.014 & 0.010 \\
 Market price std & 0.011 & 0.011 & 0.010 \\
 \hline
 \end{tabular}
-\end{center}
 \floatfoot{Each statistic accounting for price dispersion is first computed for each local market across time. The table reports averages across markets. At the market level, price dispersion has been computed only for days when more than two thirds of competitors' prices were available. Only markets with more than 50 days of data are then taken into account to compute reported statistics.}
-\end{figure}
+\end{table}
+
 
 Regressions are then run using raw prices and cleaned prices. Also, in order to address the issue of overlapping markets, regression are performed on dispersion data generated in a way that prevents market overlap. Descriptive statistics performed on raw prices are provided.
 
 Standard market dispersion statistics such as range and standard deviation are strongly influenced by static price dispersion. As a consequence, contrarily to the previous section where descriptives statistics performed on raw prices arguably provided a most conservative first idea of price dispersion, clean prices are now to be preferred despite their shortcomings. Results are reported with clean prices, raw prices for markets obtained with radiuses of respectively 3 and 5km. Additionnally, results are reported for non overlapping markets built in a way that is detailed in appendix.
 
-\begin{table}[H]\centering
+\begin{table}[!htbp]
 \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
 \caption{Regressions of market dispersion}
 \begin{tabular}{lcccc }
@@ -339,7 +337,13 @@ Estimation results show that dispersion is increasing in the number of firm and 
 
 \section{Conclusion}
 
-This paper discusses the methodology of \cite{TAP11} to measure price dispersion in the field and see how it compares with potential theoretical explanations. Remarkably, results obtained with French data are relatively consistent with theirs on US data. Beyond the connection between consumer information and price dispersion, there appears to be significant heterogeneity in competition outcomes across markets. This calls for further analysis with other data and enrichment of the set of methods used to characterize competition.
+This paper discusses the methodology of \cite{TAP11} to measure price dispersion in the field and see how it compares with potential theoretical explanations. The presence of differentiation in the French retail gasoline market yet requires to work both with raw and residual prices. 
+
+Rank reversals are generally found to be less frequent for pairs gas stations separated by a short distance i.e. competitors whose prices are easy to compare for consumers, hence supporting the connection between consumer information and price dispersion. When differentiation is significant, regressions performed on residual prices show a weaker effect of distance. This suggests that one should be cautious when there is differentiation despite the high number of rank reversals that one obtains with residual prices.
+
+At the market level, price dispersion is found to increase with the number of competitors, and decrease with cost. This is consistant with predictions of a model a la \cite{VAR80}. Importantly, in the presence of significant differentiation, working with raw prices typically leads to overestimate price dispersion reflecting randomized pricing. The average gain from search across markets and time over the period computed with residual prices varies between 1.7 and 1.0 Euro cents per litre meaning that knowing all prices in the market allows to spare on average between 50 and 85 Euro cents for a gas tank of 50L.
+
+Further research remains to be undertaken in two directions: one is the investigation of the heterogeneity in local market price patterns and the other is the combined analysis of price dispersion together with data about consumer search (e.g. price comparison website frequentation over time if data are released). 
 
 \newpage
 
@@ -351,8 +355,9 @@ This paper discusses the methodology of \cite{TAP11} to measure price dispersion
 
 \section{Spurious rank reversals}
 
-The following graphs illustrates the conversion of a Total gas station to a Total Access in the middle of the period studied. It is easy to see that naively measuring rank reversals of the Total Access gas station vs. Intermarche or Esso over the whole period would generate spurious rank reversals. Whenever the change in price policy is so clear cut, the analysis could be made before and after the change. Conservatively, such pairs are rather excluded from the analysis. More generally, such spurious rank reversals can be detected by looking for pairs which display a high percentage of rank reversals, but a low number of price series crossings. Total Access conversions are found to account for the bulk of "unwanted" rank reversals.
+The following figure displays prices posted at a gas station which is rebranded "Total Access" (low cost brand of Total) in the middle of the period studied and at two nearby gas stations. It is easily seen how naively considering the percentage of rank reversals of the rebranded gas station vs. each of its competitors over the whole period would lead to record spurious price dispersion. The price level indeed changes abruptly in a way that cannot go unnoticed by consumers. It thus clearly does not reflect any used of randomized pricing and such rank reversals are thus excluded from the analysis. More generally, this suggests the need to control the frequency of changes in price ranking so as to limit the risk of capturing dispersion reflecting such deterministic changes in pricing policies.
 
+\ \\
 \begin{figure}[H]
     \caption{Prices of three stations in Chalons-en-Champagne}
 	\centering
@@ -360,9 +365,11 @@ The following graphs illustrates the conversion of a Total gas station to a Tota
 	\floatfoot{}
 \end{figure}
 
+\newpage
+
 \section{Additionnal regression results}
 
-\begin{table}[H]\centering
+\begin{table}[!htbp]\centering
 \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
 \caption{Regression of standard deviation in spread}
 \begin{tabular}{lrrr}
@@ -388,11 +395,5 @@ N      &     4,183         &     4,183      &     8,312    \\
 \multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
 \end{tabular}
 \end{table}
-
-\section{Consumer search vs. price levels and dispersion}
-
-Zagaz.com and Prix-carburant.gouv.fr offer the opportunity to observe trend in user registrations and/or trafic. Such information can then be merged with price data to study the relation between proxies for consumer search efforts and price levels or dispersion.
-
-Insert figure + analysis
 
 \end{document}
