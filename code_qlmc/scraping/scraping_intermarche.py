@@ -33,7 +33,8 @@ if __name__=="__main__":
   # urllib2.install_opener(opener)
   
   # Brand (intermarche) page
-  brand_url = r'http://www.intermarche.com/tous-nos-magasins'
+  #brand_url = r'http://www.intermarche.com/tous-nos-magasins'
+  brand_url = r'http://web.archive.org/web/20140508151019/http://www.intermarche.com/tous-nos-magasins'
   response = urllib2.urlopen(brand_url)
   data = response.read()
   soup = BeautifulSoup(data)
@@ -48,22 +49,22 @@ if __name__=="__main__":
     name_address_block = store_block.find('a', {'href' : re.compile('/magasin_accueil')})
     store_name = name_address_block.string
     store_welcome_url = name_address_block['href']
-    store_name_address = name_address_block['title']
+    store_name_address =  re.search(u'title=(.*?)>', unicode(name_address_block)).group(1) # name_address_block['title']
     store_address = store_name_address.replace(store_name, '').strip()
     store_info_url = store_block.find('a', {'href' : re.compile('/magasin_infos_pratiques')})['href']
     list_store_general_info.append((store_name, store_address, list_zip_city, store_welcome_url, store_info_url))
     
-  # enc_json(list_store_general_info, path_data + folder_source_qlmc_chains + r'/list_intermarche_general_info')
+  # enc_json(list_store_general_info, path_data + folder_source_qlmc_chains + r'/list_intermarche_general_info_alt')
   
   # Visit store pages and extract infos pratiques
   
-  list_store_full_info = []
-  
-  for (store_name, store_address, list_zip_city, store_welcome_url, store_info_url) in list_store_general_info[0:1]:
-    store_url = r'http://www.intermarche.com/' + store_info_url
-    response_store = urllib2.urlopen(store_url)
-    data_store = response_store.read()
-    soup_store = BeautifulSoup(data_store)
+  #list_store_full_info = []
+  #
+  #for (store_name, store_address, list_zip_city, store_welcome_url, store_info_url) in list_store_general_info[0:2]:
+  #  store_url = r'http://www.intermarche.com/' + store_info_url
+  #  response_store = urllib2.urlopen(store_url)
+  #  data_store = response_store.read()
+  #  soup_store = BeautifulSoup(data_store)
       
     # # block_store_address = soup_store.find('div', {'class' : 'address'})
     # # store_address = []

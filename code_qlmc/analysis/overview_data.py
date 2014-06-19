@@ -178,7 +178,7 @@ ls_describe_columns = [(u'store', 3),
                        (u'brand', 8),
                        (u'product', 9)]
 dict_describe = {}
-for json_file in ls_json_files[:]:
+for json_file in ls_json_files[:10]:
   print '\n', json_file
   ls_records = dec_json(os.path.join(path_dir_source_json, json_file))
   ls_records = [row + get_split_chain_city(row[3], ls_chain_brands) for row in ls_records]
@@ -221,7 +221,7 @@ ls_ls_stores = [list(set_stores) for set_stores in dict_describe['store']]
 ls_ls_tuple_stores = []
 for list_stores in ls_ls_stores:
   ls_ls_tuple_stores.append([get_split_chain_city(store, ls_chain_brands) for store in list_stores])
-enc_json(ls_ls_tuple_stores, os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
+# enc_json(ls_ls_tuple_stores, os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
 
 # Encode file with product lists for product reconciliation across periods (TAKES TIME)
 ls_ls_products = []
@@ -231,7 +231,7 @@ for ls_records in ls_ls_records:
     if record[0:3] not in ls_products:
       ls_products.append(record[0:3])
   ls_ls_products.append(ls_products)
-enc_json(ls_ls_products, os.path.join(path_dir_built_json, 'ls_ls_products'))
+# enc_json(ls_ls_products, os.path.join(path_dir_built_json, 'ls_ls_products'))
 
 # #######################
 # ANALYSIS WITH PANDAS

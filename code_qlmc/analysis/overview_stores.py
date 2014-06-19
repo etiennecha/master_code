@@ -4,15 +4,14 @@
 import add_to_path
 from add_to_path import path_data
 from functions_string import *
+from functions_geocoding import *
 import os, sys
 import json
 import numpy as np
 import re
 import ast
 import pprint
-from functions_geocoding import *
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.collections import PatchCollection
@@ -58,8 +57,9 @@ ls_chain_general = ['list_auchan_general_info',
                     'list_cora_general_info', # contains gps
                     'list_franprix_general_info', # contains gps (small stores though?)
                     'list_super_casino_general_info', # contains gps...
-                    'list_monoprix_general_info', # gps in kml (for now)
-                    'list_intermarche_general_info'] # gps in kml (for now)
+                    'list_monoprix_general_info', # gps in kml (for now: todo: collect)
+                    'list_intermarche_general_info', # gps in kml (for now)
+                    'list_intermarche_general_info_new'] # need geocoding / osm ?
 
 ls_chain_full = [ 'list_auchan_full_info',
                   'list_carrefour_full_info',
@@ -259,7 +259,7 @@ df_stores = pd.DataFrame(ls_rows, columns = ls_columns)
 
 # EXAMINE WEBSITE CHAIN DATA
 
-# Intermarche
+# Intermarche (specific... no gps but POI...)
 ls_itm = ls_chain_general_info[9]
 ls_itm_kml = ls_chain_kml[1]
 
@@ -294,6 +294,53 @@ ls_itm_no = [x for x in df_itm['Nom_std'].values if x not in df_itm_kml['Nom_std
 df_itm.index = df_itm['Nom_std']
 df_itm_kml.index = df_itm_kml['Nom_std']
 df_itm_all = df_itm.join(df_itm_kml, rsuffix='kml')
+
+# Auchan (135)
+ls_rows_auchan = [[x['name'], [x['gps'][1], x['gps'][3]], x['list_opening_address'][1]]\
+                    if x.get('gps')\
+                    else [x['name'], [None, None], x['list_opening_address'][1]]\
+                    for x in ls_chain_full_info[0]]
+df_auchan = pd.DataFrame(ls_rows_auchan)
+# print df_auchan.to_string() # a few missing but not bad a priori
+
+# Carrefour (1079 Carrefour and Carrefour markets: keep only hyper)
+ls_rows_carrefour = [[x['type'], x['name'], x['gps'], x['city'], x['zip'], x['address']]\
+                      for x in ls_chain_full_info[1]]
+df_carrefour = pd.DataFrame(ls_rows_carrefour)
+# print df_carrefour[0:10].to_string()
+# print len(df_carrefour[(df_carrefour[0] == 'Carrefour') | (df_carrefour[0] == 'Carrefour Market')])
+
+# Leclerc (591... majority of hypermarches... dunno exactly)
+ls_rows_leclerc = [[x['name'], x['city'], x['gps'], x['zip'], x['city'], x['address']]\
+                      for x in ls_chain_full_info[2]]
+df_leclerc = pd.DataFrame(ls_rows_leclerc)
+# print df_leclerc[0:100].to_string()
+
+# Geant (110: all are hyper... super casino for both?)
+ls_rows_geant = [[x['name'], x['city'], x['gps'], x['zip'], x['city'], x['address']]\
+                  for x in ls_chain_full_info[3]]
+df_geant = pd.DataFrame(ls_rows_geant)
+# print df_geant[0:10].to_string()
+
+# U (1147 of which 47 hypers)
+ls_rows_u = [[x['type'], x['name'], x['city'], x['gps'], x['zip'], x['city'], x['street']]\
+                  for x in ls_chain_general_info[4]]
+df_u = pd.DataFrame(ls_rows_u)
+# len(df_u[df_u[0] == 'Hyper U'])
+
+# Cora (59)
+ls_rows_cora = [[x['name'], x['zip_city'], x['gps'], x['street']] for x in ls_chain_general_info[5]]
+df_cora = pd.DataFrame(ls_rows_cora)
+
+# Intermarché
+ls_rows_intermarche = [[x[1], x[2]] for x in ls_chain_general_info[10]]
+# todo: clean/format and reconcile
+
+# Super casino
+ls_rows_casino = [[x['name'], x['address'][1], x.get('gps'), x['address'][0]]\
+                    for x in ls_chain_general_info[7]]
+df_casino = pd.DataFrame(ls_rows_casino)
+# todo : duplicate detection + a lot of gps missing?
 
 # todo: join and see what's left: check with osm geocoding / osm extraction ... and google
 

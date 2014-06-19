@@ -61,13 +61,13 @@ if __name__=="__main__":
         pattern_block_google_map = ur'google\.load\("maps", "2\.x"\).*?google\.setOnLoadCallback\(initialize\)'
         block_google_map = re.search(pattern_block_google_map, dpt_data, re.DOTALL)
         if block_google_map:
-          pattern_gps = ur'\smarkers\[.*?google\.maps\.LatLng\([0-9]{0,2}\.[0-9]{0,20},[0-9]{0,2}\.[0-9]{0,20}\),'
+          pattern_gps = ur'\smarkers\[.*?google\.maps\.LatLng\(-?[0-9]{0,2}\.[0-9]{0,20},-?[0-9]{0,2}\.[0-9]{0,20}\),'
           list_gps_blocks = re.findall(pattern_gps, block_google_map.group(0))
           if list_gps_blocks:
             dict_gps = {}
             for gps_block in list_gps_blocks:
               marker = re.search(ur'markers\[(.*?)\]', gps_block).group(1)
-              gps = re.search(ur'LatLng\(([0-9]{0,2}\.[0-9]{0,20},[0-9]{0,2}\.[0-9]{0,20})\)', gps_block).group(1)
+              gps = re.search(ur'LatLng\((-?[0-9]{0,2}\.[0-9]{0,20},-?[0-9]{0,2}\.[0-9]{0,20})\)', gps_block).group(1)
               gps = map(lambda x: float(x), gps.split(','))
               dict_gps[marker] = gps
           else:
