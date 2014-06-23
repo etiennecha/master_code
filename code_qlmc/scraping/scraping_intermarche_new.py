@@ -48,13 +48,13 @@ if __name__=="__main__":
   
   # load existing and avoid collecting those which are already here
   
-  ls_store_full_info = dec_json(path_data + folder_source_qlmc_chains + r'/list_intermarche_full_info_new')
-  # ls_store_full_info = []
+  ls_store_full_info = []
+  ls_todo_urls = ls_store_urls
+  #ls_store_full_info = dec_json(path_data + folder_source_qlmc_chains + r'/list_intermarche_full_info_new')
+  #ls_done_urls = [x[0] for x in ls_store_full_info]
+  #ls_todo_urls = [x for x in ls_store_urls if x not in ls_done_urls]
   
-  ls_done_urls = [x[0] for x in ls_store_full_info]
-  ls_todo_urls = [x for x in ls_store_urls if x not in ls_done_urls]
-  
-  for store_url in ls_todo_urls: # ls_store_urls:
+  for store_url in ls_todo_urls[0:1]: # ls_store_urls:
     store_full_url = r'https://www.intermarche.com' + store_url
     response_store = urllib2.urlopen(store_full_url)
     data_store = response_store.read()

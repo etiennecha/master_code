@@ -123,7 +123,6 @@ for dict_store in ls_chain_general_info[4]:
 df_u = pd.DataFrame(ls_rows_u)
 
 # SUPER CASINO (update... may not have changed and quite a few gps missing)
-
 def get_casino_type_name(word):
   ls_casino_types = [u'Hyper Casino',
                      u'Géant Casino',
@@ -217,7 +216,6 @@ df_intermarche = pd.DataFrame(ls_rows_intermarche, columns = ls_columns)
 # print df_intermarche[df_intermarche['type'] == u'Intermarché Hyper'].to_string()
 
 # INTERMARCHE: OLD DATA + POI/KML FILE
-
 ls_itm = ls_chain_general_info[9]
 ls_itm_kml = ls_chain_kml[1]
 ls_itm_kml_names = [x[0].decode('latin-1').lower() for x in ls_itm_kml]
@@ -259,6 +257,10 @@ ls_itm_no = [x for x in df_itm['name_2'].values if x not in df_itm_kml['name_2']
 df_itm.index = df_itm['name_2']
 df_itm_kml.index = df_itm_kml['name_2']
 df_itm_all = df_itm.join(df_itm_kml, rsuffix='_kml')
+#df_itm_all_o = df_itm.join(df_itm_kml, rsuffix='_kml', how='outer')
 df_itm_all['gps'] = df_itm_all['gps_kml']
 del(df_itm_all['gps_kml'])
 print df_itm_all[ls_columns].to_string()
+
+# todo: correct in kml
+# "a. midel" => "midel"
