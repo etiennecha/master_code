@@ -169,9 +169,18 @@ for dict_store in ls_chain_general_info[5]:
                                 dict_store['zip_city'][6:].replace(u'&lt;br&gt;', u''),
                                 flags=re.IGNORECASE)[0].strip(),
                        dict_store['street']])
-df_cora = pd.DataFrame(ls_rows_cora)
+df_cora = pd.DataFrame(ls_rows_cora, columns = ls_columns)
 
 # MONOPRIX
+ls_rows_monoprix = []
+for ls_store in ls_chain_general_info[8]:
+  ls_rows_monoprix.append([ls_store[0],
+                           ls_store[1],
+                           '',
+                           ls_store[3][1],
+                           ls_store[3][0],
+                           ls_store[3][2]])
+df_monoprix = pd.DataFrame(ls_rows_monoprix, columns = ls_columns)
 
 # FRANPRIX (supermarkets or smaller?... scrap zip code too?)
 ls_rows_franprix = []
