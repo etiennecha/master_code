@@ -29,7 +29,9 @@ if __name__=="__main__":
   # build urllib2 opener
   cookie_jar = cookielib.LWPCookieJar()
   opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
-  opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11')]
+  opener.addheaders = [(u'User-agent',
+                        u'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11' +\
+                          u'(KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11')]
   urllib2.install_opener(opener)
   
   brand_url = r'http://www.leaderprice.fr/listes-des-magasins-en-france'
@@ -46,46 +48,41 @@ if __name__=="__main__":
                                       td_store.findAll(text=True)])
 
   list_store_full_info = []
-  for store_url_ext, ls_store_address in list_store_general_info[0:1]:
-    store_url = u'http://www.leaderprice.fr/%s' %store_url_ext
-    response = urllib2.urlopen(store_url)
-    data = response.read()
-    soup = BeautifulSoup(data)
+  for store_url_ext, ls_store_address in list_store_general_info:
+    try:
+      store_url = u'http://www.leaderprice.fr/%s' %store_url_ext
+      response = urllib2.urlopen(store_url)
+      data = response.read()
+      soup = BeautifulSoup(data)
+      
+      store_name = soup.title.text
 
-  #  ls_js_blocs = soup.findAll('script', {'type' : 'text/javascript'})
-  #  for js_bloc in ls_js_blocs:
-  #    if re.search(u'/\\*<!\\[CDATA\\[\\*/\s\\\n\svar\sgeocoder', js_bloc.text):
-  #      str_stores = js_bloc.text
-  #      break
-  #  
-  #  # get list of store blocs
-  #  #ls_store_blocks = re.findall(u"markerContent\s=\s'(.*?)';\\\n\s\s\s\sinfoWindow.setContent\(markerContent\)", str_stores)
-  #  ls_bloc_stores = re.findall(u"marker\[[0-9]{1,4}\]\s=\snew google.maps.Marker\({"+\
-  #                                u".*?"+\
-  #                                u"infoWindow.setContent\(markerContent\);\\\n\s\s\s\sinfoWindow.open\(map,\sthis\);\s\s\s\s\\\n}\);",
-  #                              str_stores,
-  #                              re.DOTALL)
-  #  # for each store
-  #  for bloc_store in ls_bloc_stores:
-  #    re_gps = re.search(u'position:\snew google\.maps\.LatLng\(([-0-9.]*),\s([-0-9.]*)\)', bloc_store)
-  #    ls_store_gps = []
-  #    if re_gps:
-  #      ls_store_gps = [re_gps.group(1), re_gps.group(2)]
-  #    re_store_info = re.search(u"markerContent\s=\s'(.*?)';\\\n\s\s\s\sinfoWindow.setContent\(markerContent\)", bloc_store)
-  #    ls_store_name, ls_store_address = [], []
-  #    if re_store_info:
-  #      bloc_store_info = BeautifulSoup(re_store_info.group(1))
-  #      ls_store_name = bloc_store_info.find('a', {'href' : '###LIEN_DETAIL###'}).findAll(text=True)
-  #      ls_store_address = bloc_store_info.find('p', {'class' : 'address'}).findAll(text=True)
-  #    bloc_details = bloc_store_info.find('div', {'class' : 'detail'})
-  #    ls_store_details = []
-  #    if bloc_details:
-  #      ls_store_details = bloc_details.findAll(text=True)
-  #    list_store_general_info.append([ls_store_name,
-  #                                    ls_store_gps,
-  #                                    ls_store_address,
-  #                                    ls_store_details])
-                                  
-  # enc_json(list_store_general_info, path_data + folder_source_qlmc_chains + r'/list_leaderprice_general_info')
-  
-  # enc_json(list_store_full_info, path_data + folder_source_qlmc_chains + r'/list_dia_full_info')
+      bloc_store_info = soup.find('div', {'class' : 'fichemagasin'})
+      
+      ls_address = bloc_store_info.find('div', {'class' : 'adresse'}).findAll(text=True)
+      ls_hours = bloc_store_info.find('div', {'class' : 'horaires'}).findAll(text=True)
+      bloc_access = bloc_store_info.find('div', {'class' : 'access'})
+      ls_gps = []
+      if bloc_access:
+        bloc_map = bloc_access.find('script', {'type' : 'text/javascript'})
+        if bloc_map:
+          str_map = bloc_map.text
+          re_gps = re.search(u'var\smagPoint\s=\snew\sgoogle\.maps\.LatLng\(([-0-9.]*),\s([-0-9.]*)\)',
+                             str_map)
+          if re_gps:
+            ls_gps = [re_gps.group(1), re_gps.group(2)]
+      list_store_full_info.append([store_name,
+                                   ls_gps,
+                                   [x.replace(u'\n', u'').replace(u'\t', u'') for x in ls_address\
+                                      if x.replace(u'\n', u'').replace(u'\t', u'')],
+                                   [x.replace(u'\n', u'').replace(u'\t', u'') for x in ls_hours\
+                                      if x.replace(u'\n', u'').replace(u'\t', u'')],
+                                   store_url_ext,
+                                   ls_store_address])
+    except:
+      print store_url, 'not collected'
+
+  #enc_json(list_store_general_info,
+  #         path_data + folder_source_qlmc_chains + r'/list_leaderprice_general_info')
+  #enc_json(list_store_full_info,
+  #         path_data + folder_source_qlmc_chains + r'/list_leaderprice_full_info')
