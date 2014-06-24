@@ -1,0 +1,17 @@
+TODO:
+
+Crucial:
+- Franprix: visit small links to get zip code
+- Matching of supermarket location data vs. qlmc supermarkets
+- Matching of supermarket location data vs. INSEE data (either gps or zip/city)
+
+Less urgent:
+- create folder for standardization of scraped info (incl. kml and matching intermarche etc)
+- check info on hours: drop or add for all stores (except at least aldi... or specific scraping)
+- Netto: geocoding? google text search if not too many?
+- Norma: 72 stores (quite a few sold recently): check with google text search (e.g. Paris/Lyon)
+- Geant: 3 HD stores (Geant Discount) 2005-2011: Boissy St Leger, Marmande, Toulouse Basso Cambo...
+
+REMARKS:
+- Google text search can be used a posteriori to check coverage of competition
+- OSM: both a priori (todo) and a posteriori to check coverage of competition
