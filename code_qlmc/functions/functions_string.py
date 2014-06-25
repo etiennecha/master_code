@@ -5,7 +5,7 @@ import os, sys
 import re
 import json
 
-def str_low_noacc(word):
+def str_low_noacc(word, basic_std = True):
   # Just for comparison's sake: no accent and word-word (maybe insufficient?)
   word = word.lower()
   accents  = {u'a': [u'â', u'à', u'ã', u'á'],
@@ -18,9 +18,10 @@ def str_low_noacc(word):
   for (char, accented_chars) in accents.iteritems():
     for accented_char in accented_chars:
       word = word.replace(accented_char, char)
-  word = re.sub(ur'\b-\b', ur' ', word)
-  word = word.replace(u"'", u" ").replace(u'"', u' ')
-  word = u' '.join(word.split())
+  if basic_std:
+    word = re.sub(ur'\b-\b', ur' ', word)
+    word = word.replace(u"'", u" ").replace(u'"', u' ')
+    word = u' '.join(word.split())
   return word.strip()
 
 def standardize_intermarche(word):

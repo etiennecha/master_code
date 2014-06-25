@@ -359,6 +359,24 @@ df_ppd[(df_ppd['brand_2_e_1'] != df_ppd['brand_2_e_2']) &\
 
 # todo: add same brand pair var to make lighter + get rid of/signal abnormal obs (rigid prices)
 
+# Examine support through spread
+
+# todo: add order (always do more expensive less cheaper...)
+# todo: need to round diff before value count
+ls_rows_spread = []
+for count, row in df_ppd.iterrows():
+  id_1, id_2 = row['id_1'], row['id_2']
+  se_spread = df_prices[id_1] - df_prices[id_2]
+  se_spread = se_spread.round(3) # no price has more than 3 digits
+  ls_rows_spread.append([id_1, id_2, se_spread.value_counts()])
+
+#for id_1, id_2, se_vc in ls_rows_spread:
+#  if se_vc.max() / float(se_vc.sum()) > 0.5:
+#    print '\n', id_1, id_2
+#    print se_vc.iloc[0:min(len(se_vc, 5)]
+
+# DEPRECATED
+
 # #######################################
 # PAIR PRICE DISPERSION: NORMALIZED PRICES
 # ########################################

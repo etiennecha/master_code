@@ -193,7 +193,8 @@ ls_disp_itm = ['name', 'street', 'zip', 'city', 'name_o', 'gps_o', 'city_o']
 # todo: correct in kml
 # "a. midel" => "midel"
 
-df_intermarche_all.drop(['name_o', 'city_o', 'gps'], 1, inplace = True)
+# df_intermarche_all.drop(['name_o', 'city_o', 'gps'], 1, inplace = True)
+df_intermarche_all.drop(['gps'], 1, inplace = True)
 df_intermarche_all.rename(columns = {'gps_o' : 'gps'}, inplace = True)
 
 # CONTROLS
@@ -231,3 +232,24 @@ df_itm_kml['city'] = df_itm_kml['insee_code'].apply(\
                        lambda x: df_com[df_com['com_code'] == x].iloc[0]['com_name'])
 
 # NB: can be two rows with same com_code: communes in several parts (but same commune etc)
+
+# Check if more pairs can be found with city (no insee code for now...)
+df_itm_all = df_itm.join(df_itm_kml, rsuffix='_kml', how='outer')
+# some harmonization: enough?
+df_itm_all['city_noacc'] = df_itm_all['city'].apply(\
+                             lambda x: str_low_noacc(x, basic_std=False)\
+                               if isinstance(x, unicode) else x)
+
+# todo: add check that city is unique
+for city in df_itm_all['city_kml'][pd.isnull(df_itm_all['name'])].values:
+  df_city_match = df_itm_all[(pd.isnull(df_itm_all['city_kml'])) &\
+                             (df_itm_all['city_noacc'] == city.lower())]
+  if len(df_city_match) == 1:
+    print '\n', city
+    print df_city_match.to_string(index=False, header=False)
+    print df_itm_all[(df_itm_all['city_kml'] == city) &\
+                     (pd.isnull(df_itm_all['name']))].to_string(index=False, header=False)
+
+# todo: add match: update entity name in kml
+# can check a posteriori with reverse geocoding
+
