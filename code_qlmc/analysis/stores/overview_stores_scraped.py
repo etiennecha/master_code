@@ -343,7 +343,8 @@ len(df_stores_france[(df_stores_france['gps'] == '') | (pd.isnull(df_stores_fran
 
 print df_stores_france[ls_columns].to_string()
 
-# df_itm_all[df_itm_all['city'] == 'volgelsheim']
+df_itm_all.reset_index(drop = True, inplace = True)
+df_itm_all[df_itm_all['city'] == 'volgelsheim']
 # duplicate ???
 
 # todo: DF HD: dia, leaderprice, lidl, aldi, netto
