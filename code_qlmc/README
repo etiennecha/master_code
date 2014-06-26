@@ -1,11 +1,12 @@
 TODO:
 
 Crucial:
-- Franprix: visit small links to get zip code
-- Matching of supermarket location data vs. qlmc supermarkets
+- Matching Monoprix vs. kml
 - Matching of supermarket location data vs. INSEE data (either gps or zip/city)
+- Matching of supermarket location data vs. qlmc supermarkets
 
 Less urgent:
+- Franprix: visit small links to get zip code
 - create folder for standardization of scraped info (incl. kml and matching intermarche etc)
 - check info on hours: drop or add for all stores (except at least aldi... or specific scraping)
 - Netto: geocoding? google text search if not too many?
