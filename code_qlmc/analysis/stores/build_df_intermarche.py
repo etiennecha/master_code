@@ -252,4 +252,3 @@ for city in df_itm_all['city_kml'][pd.isnull(df_itm_all['name'])].values:
 
 # todo: add match: update entity name in kml
 # can check a posteriori with reverse geocoding
-

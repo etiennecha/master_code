@@ -264,6 +264,11 @@ df_itm_kml['gps'] = df_itm_kml['gps'].apply(lambda y: ' '.join(\
 se_itm_kml_vc = df_itm_kml['name_2'].value_counts()
 se_itm_kml_unique = se_itm_kml_vc[se_itm_kml_vc == 1]
 str_kml_unique = u'|'.join(se_itm_kml_unique.index)
+ls_replace = [[u'(', u'\('],
+              [u')', u'\)'],
+              [u'.', u'\.']]
+for old, new in ls_replace:
+  str_kml_unique = str_kml_unique.replace(old, new)
 df_itm_kml = df_itm_kml[df_itm_kml['name_2'].str.contains(str_kml_unique)]
 
 # match: old intermarche website (including entity names) vs. kml
@@ -296,8 +301,10 @@ df_intermarche['street'] = df_intermarche['street'].apply(lambda x: clean_itm_st
 
 df_intermarche['street_zip'] = df_intermarche['street'] + u' ' + df_intermarche['zip']
 df_itm_all['street_zip'] = df_itm_all['street'] + u' ' + df_itm_all['zip']
-ls_itm_matched_2 = [x for x in df_intermarche['street_zip'].values if x in df_itm_all['street_zip'].values]
-ls_itm_no_2 = [x for x in df_intermarche['street_zip'].values if x not in df_itm_all['street_zip'].values]
+ls_itm_matched_2 = [x for x in df_intermarche['street_zip'].values\
+                      if x in df_itm_all['street_zip'].values]
+ls_itm_no_2 = [x for x in df_intermarche['street_zip'].values\
+                 if x not in df_itm_all['street_zip'].values]
 
 df_itm_all.set_index('street_zip', inplace = True)
 df_intermarche.set_index('street_zip', inplace = True)
