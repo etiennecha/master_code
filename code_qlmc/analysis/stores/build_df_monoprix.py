@@ -66,7 +66,7 @@ ls_monoprix_general_info = dec_json(os.path.join(path_dir_source_chains,
 ls_monoprix_kml = parse_kml(open(os.path.join(path_dir_source_kml,
                                                 u'monoprix.kml'), 'r').read())
 
-# build df monoprix
+# BUILD DF MONOPRIX
 ls_columns = ['type', 'name', 'gps', 'street', 'zip', 'city']
 ls_rows_monoprix = []
 for ls_store in ls_monoprix_general_info:
@@ -77,16 +77,17 @@ for ls_store in ls_monoprix_general_info:
                            ls_store[3][1],
                            ls_store[3][0]])
 df_monoprix = pd.DataFrame(ls_rows_monoprix, columns = ls_columns)
-df_monoprix['name_2'] = df_monoprix.apply(lambda x: x['name'][len(x['type'])+1:]\
-                                            if re.match(x['type'], x['name']) else None, axis = 1)
-df_monoprix['name_2'] = df_monoprix['name_2'].apply(lambda x: x.encode('raw_unicode_escape').decode('utf-8'))
+df_monoprix['name_2'] = df_monoprix.apply(\
+                           lambda x: x['name'][len(x['type'])+1:]\
+                                       if re.match(x['type'], x['name']) else None, axis = 1)
+df_monoprix['name_2'] = df_monoprix['name_2'].apply(\
+                          lambda x: x.encode('raw_unicode_escape').decode('utf-8').upper())
 
 ## Représentation unicode ds chaine unicode...
 # v = u'Monoprix ASNIERES MARCH\xc3\xa9'.encode('raw_unicode_escape')
 # v.decode('utf-8')
 
-# build df kml
-
+# BUILD DF MONOPRIX KML
 ls_monoprix_kml_types = [u'SUPER MONOPRIX',
                          u'MONOPRIX',
                          u'BEAUTY MONOP',
@@ -97,8 +98,8 @@ ls_monoprix_kml_clean = []
 for monoprix_kml in ls_monoprix_kml:
   for kml_type in ls_monoprix_kml_types:
     monoprix_kml_2 = [monoprix_kml[0].decode('latin-1'), monoprix_kml[1]]
-    if kml_type in monoprix_kml_2[0]:
-      store_type, store_city = kml_type, monoprix_kml_2[0].lstrip(kml_type).strip()
+    if re.match(kml_type, monoprix_kml_2[0]):
+      store_type, store_city = kml_type, monoprix_kml_2[0][len(kml_type)+1:].strip()
   ls_monoprix_kml_clean.append([store_type, store_city,  monoprix_kml_2[1]])
 
 df_monoprix_kml = pd.DataFrame(ls_monoprix_kml_clean,
@@ -109,6 +110,57 @@ df_monoprix_kml['gps'] = df_monoprix_kml['gps'].apply(lambda y: ' '.join(\
 #df_monoprix_kml['city'] = df_monoprix_kml['city'].apply(lambda x: standardize_intermarche(\
 #                                                            str_low_noacc(x.decode('latin-1'))))
 ## print df_monoprix_kml.to_string()
+
+# todo: corre following
+ls_replace_name_kml = [[u'ANNECY Courrier', 'ANNECY Courier']]
+
+# MATCHING MONOPRIX VS. MONOPRIX KML
+df_monoprix_kml.sort('name', inplace = True)
+df_monoprix.sort('name_2', inplace = True)
+
+se_monoprix_vc = df_monoprix['name_2'].value_counts()
+se_monoprix_unique = se_monoprix_vc[se_monoprix_vc == 1]
+str_monoprix_unique = u'|'.join(se_monoprix_unique.index)
+ls_re_replace = [[u'(', u'\('],
+                 [u')', u'\)'],
+                 [u'.', u'\.']]
+for old, new in ls_re_replace:
+  str_monoprix_unique = str_monoprix_unique.replace(old, new)
+df_monoprix_unique = df_monoprix[df_monoprix['name_2'].str.contains(str_monoprix_unique)]
+
+se_monoprix_kml_vc = df_monoprix_kml['name'].value_counts()
+se_monoprix_kml_unique = se_monoprix_kml_vc[se_monoprix_kml_vc == 1]
+str_monoprix_kml_unique = u'|'.join(se_monoprix_kml_unique.index)
+ls_re_replace = [[u'(', u'\('],
+                 [u')', u'\)'],
+                 [u'.', u'\.']]
+for old, new in ls_re_replace:
+  str_monoprix_kml_unique = str_monoprix_kml_unique.replace(old, new)
+df_monoprix_kml_unique =\
+  df_monoprix_kml[df_monoprix_kml['name'].str.contains(str_monoprix_kml_unique)]
+
+df_monoprix_unique.index = df_monoprix_unique['name_2']
+df_monoprix_kml_unique.index = df_monoprix_kml_unique['name'].str.upper()
+df_monoprix_all = df_monoprix_unique.join(df_monoprix_kml_unique,
+                                          rsuffix = u'_kml',
+                                          how='outer')
+df_monoprix_all['gps'] = df_monoprix_all['gps_kml']
+del(df_monoprix_all['gps_kml'])
+
+pd.set_option('display.max_colwidth', 30)
+ls_disp_all = ['type', 'name_2', 'street', 'zip', 'city', 'type_kml', 'name_kml', 'gps']
+print df_monoprix_all[ls_disp_all].to_string(index=False)
+
+# Check loss: 246 gps matched out of 283 available from kml... ok
+print len(df_monoprix_kml)
+print len(df_monoprix_all[(~pd.isnull(df_monoprix_all['type'])) &\
+                          (~pd.isnull(df_monoprix_all['gps']))])
+
+# Match with original df_monoprix on name_2 (since no duplicates in df_monoprix_all)
+df_monoprix_all = df_monoprix_all[~pd.isnull(df_monoprix_all['type'])]
+del(df_monoprix['gps'])
+df_monoprix.index = df_monoprix['name_2']
+df_monoprix_final = df_monoprix.join(df_monoprix_all[['gps']])
 
 # todo: only for unique names (disregard type, hope won't be a pbm else???)
 # match on names... geocode remaining (check address)

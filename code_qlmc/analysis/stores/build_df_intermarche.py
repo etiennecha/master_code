@@ -100,7 +100,7 @@ ls_re_replace = [[u'(', u'\('],
                  [u'.', u'\.']]
 for old, new in ls_re_replace:
   str_itm_unique = str_itm_unique.replace(old, new)
-df_itm = df_itm[df_itm['name_2'].str.contains(str_unique)]
+df_itm = df_itm[df_itm['name_2'].str.contains(str_itm_unique)]
 
 # build df intermarche kml data
 df_itm_kml = pd.DataFrame(ls_intermarche_kml,
@@ -253,7 +253,6 @@ df_intermarche_all = df_intermarche.join(df_itm_all[['name', 'gps', 'city']],
                                          how = 'outer')
 df_intermarche_all.reset_index(drop = True, inplace = True)
 
-
 pd.set_option('display.max_colwidth', 30)
 ls_disp_itm = ['name', 'street', 'zip', 'city', 'name_o', 'gps', 'city_o']
 # print df_intermarche_all[ls_disp_itm][0:100].to_string()
@@ -267,19 +266,15 @@ print 'First matching'
 print len(df_intermarche_all[(~pd.isnull(df_intermarche_all['name_o'])) &\
                              (~pd.isnull(df_intermarche_all['gps']))])
 
-# Restult for full matching
+# Result for full matching
 print 'Full matching'
 len(df_intermarche_all[(~pd.isnull(df_intermarche_all['type'])) &\
                         (~pd.isnull(df_intermarche_all['gps']))])
 
-## CONTROLS
-#df_itm_all.reset_index(drop = True, inplace = True)
-#df_itm_all[df_itm_all['city'] == 'volgelsheim']
-print df_intermarche_all[ls_disp_itm][(pd.isnull(df_intermarche_all['type'])) &\
-                                      (~pd.isnull(df_intermarche_all['gps']))].to_string()
+### CONTROLS
+##df_itm_all.reset_index(drop = True, inplace = True)
+##df_itm_all[df_itm_all['city'] == 'volgelsheim']
+#print df_intermarche_all[ls_disp_itm][(pd.isnull(df_intermarche_all['type'])) &\
+#                                      (~pd.isnull(df_intermarche_all['gps']))].to_string()
 
-# todo: DF HD: dia, leaderprice, lidl, aldi, netto
-
-
-# todo: add match: update entity name in kml
 # can check a posteriori with reverse geocoding
