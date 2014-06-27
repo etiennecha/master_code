@@ -77,7 +77,13 @@ for ls_store in ls_monoprix_general_info:
                            ls_store[3][1],
                            ls_store[3][0]])
 df_monoprix = pd.DataFrame(ls_rows_monoprix, columns = ls_columns)
+df_monoprix['name_2'] = df_monoprix.apply(lambda x: x['name'][len(x['type'])+1:]\
+                                            if re.match(x['type'], x['name']) else None, axis = 1)
+df_monoprix['name_2'] = df_monoprix['name_2'].apply(lambda x: x.encode('raw_unicode_escape').decode('utf-8'))
 
+## Représentation unicode ds chaine unicode...
+# v = u'Monoprix ASNIERES MARCH\xc3\xa9'.encode('raw_unicode_escape')
+# v.decode('utf-8')
 
 # build df kml
 
@@ -87,13 +93,22 @@ ls_monoprix_kml_types = [u'SUPER MONOPRIX',
                          u"MONOP'",
                          u'INNO']
 
-df_monoprix_kml = pd.DataFrame(ls_monoprix_kml,
-                               columns = ['name', 'gps'])
-df_monoprix_kml['name_2'] = df_monoprix_kml['name'].apply(lambda x: standardize_intermarche(\
-                                                            str_low_noacc(x.decode('latin-1'))))
+ls_monoprix_kml_clean = []
+for monoprix_kml in ls_monoprix_kml:
+  for kml_type in ls_monoprix_kml_types:
+    monoprix_kml_2 = [monoprix_kml[0].decode('latin-1'), monoprix_kml[1]]
+    if kml_type in monoprix_kml_2[0]:
+      store_type, store_city = kml_type, monoprix_kml_2[0].lstrip(kml_type).strip()
+  ls_monoprix_kml_clean.append([store_type, store_city,  monoprix_kml_2[1]])
+
+df_monoprix_kml = pd.DataFrame(ls_monoprix_kml_clean,
+                               columns = ['type', 'name', 'gps'])
+
 df_monoprix_kml['gps'] = df_monoprix_kml['gps'].apply(lambda y: ' '.join(\
                                               map(lambda x: u'{:2.4f}'.format(float(x)), y)))
-# print df_monoprix_kml.to_string()
+#df_monoprix_kml['city'] = df_monoprix_kml['city'].apply(lambda x: standardize_intermarche(\
+#                                                            str_low_noacc(x.decode('latin-1'))))
+## print df_monoprix_kml.to_string()
 
 # todo: only for unique names (disregard type, hope won't be a pbm else???)
 # match on names... geocode remaining (check address)
