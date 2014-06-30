@@ -6,6 +6,7 @@ import re
 import json
 import urllib2
 import time
+import numpy as np
 
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
@@ -57,6 +58,7 @@ def geocode_via_mapquest(location):
   geocoding_response = urllib2.urlopen(url)
   json_response = json.loads(geocoding_response.read())
   return json_response
+
 
 # path_data: data folder at different locations at CREST vs. HOME
 if os.path.exists(r'W:\Bureau\Etienne_work\Data'):

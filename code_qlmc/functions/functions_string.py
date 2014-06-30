@@ -48,3 +48,13 @@ def str_low_standardize(word):
   word = re.sub(ur"(^|\s|,)st(e?)(\s|$)", ur"\1 saint\2 ", word) 
   word = ' '.join(word.split())
   return word.strip()
+
+def str_insee_harmonization(word):
+  # Just for comparison's sake: no accent and word-word (maybe insufficient?)
+  word = word.lower()
+  word = re.sub(ur"(^|\s)st(s?)(\s|$|-)", ur" saint\2 ", word)
+  word = re.sub(ur"(^|\s)ste(s?)(\s|$|-)", ur" sainte\2 ", word)
+  word = word.replace("'", " ")
+  word = word.replace("-", " ")
+  word = ' '.join(word.split())
+  return word.strip()

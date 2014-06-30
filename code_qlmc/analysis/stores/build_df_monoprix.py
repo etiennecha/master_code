@@ -26,6 +26,8 @@ path_dir_source_kml = os.path.join(path_dir_qlmc, 'data_source', 'data_kml')
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
 
+path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+
 # LOAD COMMUNES
 
 # todo: Use basemap: either IGN Geo or Routes (?)
@@ -164,3 +166,9 @@ df_monoprix_final = df_monoprix.join(df_monoprix_all[['gps']])
 
 # todo: only for unique names (disregard type, hope won't be a pbm else???)
 # match on names... geocode remaining (check address)
+
+df_monoprix_final.drop(['name_2'], axis = 1, inplace=True)
+
+fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
+fra_stores['df_monoprix'] = df_monoprix_final
+fra_stores.close()

@@ -21,6 +21,8 @@ path_dir_source_kml = os.path.join(path_dir_qlmc, 'data_source', 'data_kml')
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
 
+path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+
 ls_chain_general = ['list_auchan_general_info',
                     'list_carrefour_general_info',
                     'list_leclerc_general_info',
@@ -212,9 +214,18 @@ df_stores_france = pd.concat(ls_df_stores_france, ignore_index = True)
 
 # No gps
 len(df_stores_france[(df_stores_france['gps'] == '') | (pd.isnull(df_stores_france['gps']))])
-
 print df_stores_france[ls_columns].to_string()
 
-# duplicate ???
+# Reads or creates
+fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
+fra_stores['df_auchan'] = df_auchan
+fra_stores['df_carrefour'] = df_carrefour
+fra_stores['df_u'] = df_u
+fra_stores['df_casino'] = df_casino
+fra_stores['df_cora'] = df_cora
+fra_stores['df_franprix'] = df_franprix
+fra_stores.close()
 
-# todo: DF HD: dia, leaderprice, lidl, aldi, netto
+# TODO:
+# duplicate ???
+# DF HD: dia, leaderprice, lidl, aldi, netto
