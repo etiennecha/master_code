@@ -52,8 +52,8 @@ path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
 fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 
-# BUILD DF FRA STORES
-
+## BUILD DF FRA STORES
+#
 ## print fra_stores.keys()
 #ls_df_chain_names = ['/df_auchan',
 #                     '/df_carrefour',
@@ -71,7 +71,7 @@ fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 #ls_columns = ['type', 'name', 'gps', 'street', 'zip', 'city']
 #pd.set_option('display.max_colwidth', 30)
 #print fra_stores['df_fra_stores'][ls_columns].to_string()
-
+#
 ## LOAD COMMUNES & GET INSEE CODES VIA GPS
 #
 ## todo: Use basemap: either IGN Geo or Routes (?)
@@ -106,10 +106,12 @@ fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 #                       'reg_code' : [d['CODE_REG'] for d in m_fra.communes_fr_info]})
 #
 #df_fra_stores = fra_stores['df_fra_stores']
+## takes a bit of time
 #df_fra_stores['insee_code'] = df_fra_stores['gps'].apply(\
 #                                lambda x: gps_to_locality(x, m_fra, df_com, 'com_code'))
 #
 #fra_stores['df_fra_stores'] = df_fra_stores # necessary
+#fra_stores.close()
 
 # LOAD CORRESP INSEE & GET INSEE CODES VIA CITY NAME
 
@@ -145,24 +147,28 @@ for (city, zip_code, department, insee_code)  in correspondence:
 
 # matching
 ls_matching = []
+ls_no_matching = []
 for i, row in df_fra_stores[0:100].iterrows():
 	# print row['zip'], row['city']
-  zip_code, city = row['zip'], row['city']
-  found_indicator = False
-  for city_insee, zip_insee, dpt_insee, code_insee  in dict_corr_zip_insee[zip_code]:
-    if str_insee_harmonization(str_low_noacc(city)) == str_insee_harmonization(city_insee):
-      ls_matching.append((i, zip_code, code_insee))
-      found_indicator = True
-      break
-  if not found_indicator:
+  try:
+    zip_code, city = row['zip'], row['city']
+    found_indicator = False
     for city_insee, zip_insee, dpt_insee, code_insee  in dict_corr_zip_insee[zip_code]:
-      if str_insee_harmonization(str_low_noacc(city)) in str_insee_harmonization(city_insee):
+      if str_insee_harmonization(str_low_noacc(city)) == str_insee_harmonization(city_insee):
         ls_matching.append((i, zip_code, code_insee))
-        print 'Matched', city, city_insee, zip_insee, '(', i, ')'
         found_indicator = True
         break
-  if not found_indicator:
-      print i, zip_insee, city, 'not matched'
+    if not found_indicator:
+      for city_insee, zip_insee, dpt_insee, code_insee  in dict_corr_zip_insee[zip_code]:
+        if str_insee_harmonization(str_low_noacc(city)) in str_insee_harmonization(city_insee):
+          ls_matching.append((i, zip_code, code_insee))
+          print 'Matched', city, city_insee, zip_insee, '(', i, ')'
+          found_indicator = True
+          break
+    if not found_indicator:
+        print i, zip_insee, city, 'not matched'
+  except:
+    ls_no_matching.append((i, zip_code, city))
 
 ## Check best matching based on zip: first if same city name then if contained
 #ls_matching = []
