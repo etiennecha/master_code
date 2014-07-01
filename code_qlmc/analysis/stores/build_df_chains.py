@@ -102,6 +102,19 @@ for x in ls_chain_full_info[1]:
                             x['address'], # fix and regeocode
                             x['zip'],
                             x['city']])
+ls_rows_carrefour[1085] = [u'Carrefour Contact',
+                           u'Contact Allonnes',
+                           u'47.293 0.029',
+                           u'25 rue Albert Pottier',
+                           u'49650',
+                           u'ALLONNES'] # VIBRAYE (some default value?)
+ls_rows_carrefour[2004] = [u'Carrefour Express',
+                           u'Express Boulogne',
+                           u'50.727 1.618',
+                           u'31 rue Porte Neuve',
+                           u'62200',
+                           u'BOULOGNE SUR MER'] # VIBRAYE (some default value?)
+
 df_carrefour = pd.DataFrame(ls_rows_carrefour, columns = ls_columns)
 
 # LECLERC (591... majority of hypermarches... dunno exactly)
@@ -124,6 +137,19 @@ for dict_store in ls_chain_general_info[4]:
                     dict_store['street'],
                     dict_store['zip'],
                     dict_store['city']])
+# todo: fix scraping script
+ls_rows_u[663] = [u'U Express',
+                  u'U Express - STRASBOURG ROBERTSAU',
+                  u'48.6007 7.7805',
+                  u'67 rue Boecklin',
+                  u'67000',
+                  u'STRASBOURG']
+ls_rows_u[821] = [u'Super U',
+                  u'Super U - SAINT GERMAIN LEMBRON',
+                  u'45.4606 3.2542',
+                  u'ZAC des Coustilles ',
+                  u'63340',
+                  u'SAINT GERMAIN LEMBRON']
 df_u = pd.DataFrame(ls_rows_u, columns = ls_columns)
 
 # SUPER CASINO (update... may not have changed and quite a few gps missing)
@@ -216,7 +242,7 @@ df_stores_france = pd.concat(ls_df_stores_france, ignore_index = True)
 len(df_stores_france[(df_stores_france['gps'] == '') | (pd.isnull(df_stores_france['gps']))])
 print df_stores_france[ls_columns].to_string()
 
-# Reads or creates
+## Reads or creates
 fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 fra_stores['df_auchan'] = df_auchan
 fra_stores['df_carrefour'] = df_carrefour

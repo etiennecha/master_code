@@ -52,8 +52,8 @@ path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
 fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 
-# BUILD DF FRA STORES
-
+## BUILD DF FRA STORES
+#
 ## print fra_stores.keys()
 #ls_df_chain_names = ['/df_auchan',
 #                     '/df_carrefour',
@@ -71,7 +71,7 @@ fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 #ls_columns = ['type', 'name', 'gps', 'street', 'zip', 'city']
 #pd.set_option('display.max_colwidth', 30)
 #print fra_stores['df_fra_stores'][ls_columns].to_string()
-
+#
 ## LOAD COMMUNES & GET INSEE CODES VIA GPS
 #
 ## todo: Use basemap: either IGN Geo or Routes (?)
@@ -111,6 +111,52 @@ fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 #
 #fra_stores['df_fra_stores'] = df_fra_stores # necessary
 
+# INSPECT ZIP CODE & CITY
+
+df_fra_stores = fra_stores['df_fra_stores']
+
+for i, row in df_fra_stores.iterrows():
+	if not re.match(u'^[0-9]{5}$', row['zip']):
+		print i, row['zip'], row['city']
+
+def clean_zip_code(zip_code):
+  zip_code = zip_code.replace(u' ', u'').replace(u"'", u'')
+  if re.search(u'^[0-9]{4}$', zip_code):
+    zip_code  = u'0%s' %zip_code
+  if not re.match(u'[0-9]{5}$', zip_code):
+    print zip_code
+  return zip_code
+
+df_fra_stores['zip'] = df_fra_stores['zip'].apply(lambda x: clean_zip_code(x))
+
+for i, row in df_fra_stores.iterrows():
+	if re.search(u'CEDEX', row['city'], re.IGNORECASE):
+		print i, row['zip'], row['city']
+  #elif re.search(u'[0-9]', row['city']):
+  #  print i, row['zip'], row['city']
+
+#ls_big_cities = [u'PARIS', u'MARSEILLE', u'LYON', u'TOULOUSE', u'LILLE', u'NANTES',
+#                 u'STRASBOURG', u'MONTPELLIER', u'BORDEAUX', u'RENNES', 'LE HAVRE',
+#                 u'REIMS', u'LILLE']
+#for i, row in df_fra_stores.iterrows():
+#  for big_city in ls_big_cities:
+#    if re.search(big_city, row['city'], re.IGNORECASE):
+#      print i, row['zip'], row['city']
+#      break
+
+def clean_city(city):
+  # does not solve pbm allone: CEDEX => specific zip code
+  re_cedex = re.search(u'CEDEX', city, flags=re.IGNORECASE)
+  if re_cedex:
+    city = city[:re_cedex.start()].strip()
+  return city
+
+df_fra_stores['city'] = df_fra_stores['city'].apply(lambda x: clean_city(x))
+
+fra_stores['df_fra_stores'] = df_fra_stores
+
+# Serious pbms: 1220, 6895
+
 # LOAD CORRESP INSEE & GET INSEE CODES VIA CITY NAME
 
 df_fra_stores = fra_stores['df_fra_stores']
@@ -134,6 +180,7 @@ correspondence = [row.split(';') for row in correspondence]
 # Corrections: standardize insee codes to 5 chars (zip assumed to be ok)
 correspondence = [(commune, zip_code, department, insee_code.rjust(5, '0'))\
                     for(commune, zip_code, department, insee_code) in correspondence]
+
 # Generate dict (key: zip code) with correspondence file
 dict_corr_zip_insee = {}
 for (city, zip_code, department, insee_code) in correspondence:
@@ -143,50 +190,92 @@ dict_corr_dpt_insee = {}
 for (city, zip_code, department, insee_code)  in correspondence:
   dict_corr_dpt_insee.setdefault(zip_code[:-3], []).append((city, zip_code, department, insee_code))
 
+# Generate dict of non unique cities by dpt
+ls_corr_insee_columns = ['city', 'zip_code', 'dpt', 'insee_code']
+df_corr_insee = pd.DataFrame(correspondence, columns = ls_corr_insee_columns)
+df_corr_insee = df_corr_insee[df_corr_insee['city']!='Commune'] # CHECK ISSUE
+df_corr_insee.reset_index(drop=True, inplace=True)
+df_corr_insee['dpt_code'] = df_corr_insee['zip_code'].str.slice(stop=2)
+
+dict_dpt_ls_non_unique_cities = {}
+
+# Seems most have same insee code... could keep them
+for dpt_code in df_corr_insee['dpt_code'].unique():
+  df_dpt_corr_insee = df_corr_insee[df_corr_insee['dpt_code'] == dpt_code]
+  se_dpt_city_vc = df_dpt_corr_insee['city'].value_counts()
+  df_dpt_corr_insee.index = df_dpt_corr_insee['city']
+  df_dpt_corr_insee['nb_city'] = se_dpt_city_vc # todo: check robustness
+  dict_dpt_ls_non_unique_cities[dpt_code] = []
+  for i, row in df_dpt_corr_insee[df_dpt_corr_insee['nb_city'] > 1].iterrows():
+    dict_dpt_ls_non_unique_cities[dpt_code].append(row['city'])
+
+ls_tup_big_cities = [[u'PARIS', u'75'],
+                     [u'MARSEILLE', u'13'],
+                     [u'LYON', u'69'],
+                     [u'TOULOUSE', u'31'],
+                     [u'NICE', '06'],
+                     [u'NANTES', u'44'],
+                     [u'STRASBOURG', u'67'],
+                     [u'MONTPELLIER', u'34'],
+                     [u'BORDEAUX', u'33'],
+                     [u'RENNES', u'35'],
+                     ['LE HAVRE', u'76'],
+                     [u'REIMS', u'51'],
+                     [u'LILLE', u'59']]
+
 # matching
+print u'\nMatching Zip/City vs. INSEE codes'
 ls_matching = []
-for i, row in df_fra_stores[0:100].iterrows():
+ls_no_zip_match = []
+ls_no_city_match = []
+for i, row in df_fra_stores.iterrows():
+  found_indicator = False
 	# print row['zip'], row['city']
   zip_code, city = row['zip'], row['city']
-  found_indicator = False
-  for city_insee, zip_insee, dpt_insee, code_insee  in dict_corr_zip_insee[zip_code]:
-    if str_insee_harmonization(str_low_noacc(city)) == str_insee_harmonization(city_insee):
-      ls_matching.append((i, zip_code, code_insee))
-      found_indicator = True
-      break
-  if not found_indicator:
-    for city_insee, zip_insee, dpt_insee, code_insee  in dict_corr_zip_insee[zip_code]:
-      if str_insee_harmonization(str_low_noacc(city)) in str_insee_harmonization(city_insee):
+  try:
+    for city_insee, zip_insee, dpt_insee, code_insee in dict_corr_zip_insee[zip_code]:
+      if str_insee_harmonization(str_low_noacc(city)) == str_insee_harmonization(city_insee):
         ls_matching.append((i, zip_code, code_insee))
-        print 'Matched', city, city_insee, zip_insee, '(', i, ')'
         found_indicator = True
         break
-  if not found_indicator:
-      print i, zip_insee, city, 'not matched'
-
-## Check best matching based on zip: first if same city name then if contained
-#ls_matching = []
-#for indiv_id, ls_addresses in master_addresses.iteritems():
-#  if ls_addresses:
-#    for address in ls_addresses:
-#      zip_and_city = re.match('([0-9]{5,5}) (.*)', address[1])
-#      zip_code = zip_and_city.group(1)
-#      city = zip_and_city.group(2)
-#      found_indicator = False
-#      for city_insee, zip_insee, dpt_insee, code_insee  in dict_corr_zip_insee[zip_code]:
-#        if str_insee_harmonization(str_low_noacc(city)) == str_insee_harmonization(city_insee):
-#          ls_matching.append((indiv_id, zip_code, code_insee))
-#          found_indicator = True
-#          break
-#      if not found_indicator:
-#        for city_insee, zip_insee, dpt_insee, code_insee  in dict_corr_zip_insee[zip_code]:
-#          if str_insee_harmonization(str_low_noacc(city)) in str_insee_harmonization(city_insee):
-#            ls_matching.append((indiv_id, zip_code, code_insee))
-#            print 'Matched', city, city_insee, zip_insee, '(', indiv_id, ')'
-#            found_indicator = True
-#            break
-#      if found_indicator:
-#        break
-#    if not found_indicator:
-#      print indiv_id, zip_insee, city, dict_corr_zip_insee[zip_code]
-#      print 'Could not match', str_insee_harmonization(str_low_noacc(city))
+    if not found_indicator:
+      for city_insee, zip_insee, dpt_insee, code_insee in dict_corr_zip_insee[zip_code]:
+        if str_insee_harmonization(str_low_noacc(city)) in str_insee_harmonization(city_insee):
+          ls_matching.append((i, zip_code, code_insee))
+          print 'Matched', city, city_insee, zip_insee, '(', i, ')'
+          found_indicator = True
+          break
+    if not found_indicator:
+      for big_city, big_city_dpt in ls_tup_big_cities:
+        if re.match(big_city, city_insee, flags=re.IGNORECASE) and zip_code[:2] == big_city_dpt:
+          for city_insee, zip_insee, dpt_insee, code_insee in dict_corr_dpt_insee[big_city_dpt]:
+            if re.match(big_city, city_insee, flags=re.IGNORECASE) and zip_code == zip_insee:
+              ls_matching.append((i, zip_code, code_insee))
+              print 'Matched', city, city_insee, zip_insee, '(', i, ')'
+              found_indicator = True
+              break
+    if not found_indicator:
+      ls_no_city_match.append([i, zip_insee, city])
+  except:
+    try:
+      for city_insee, zip_insee, dpt_insee, code_insee in dict_corr_dpt_insee[zip_code[:2]]:
+          if (city_insee not in dict_dpt_ls_non_unique_cities[zip_code[:2]]) and\
+             (str_insee_harmonization(str_low_noacc(city)) == str_insee_harmonization(city_insee)):
+            ls_matching.append((i, zip_code, code_insee))
+            print 'Matched (dpt)', city, city_insee, zip_insee, '(', i, ')'
+            found_indicator = True
+            break
+      # Pbm: Cedex: no ardt for big cities...
+      if not found_indicator:
+        for big_city, big_city_dpt in ls_tup_big_cities:
+          if re.match(big_city, city_insee, flags=re.IGNORECASE) and zip_code[:2] == big_city_dpt:
+            for city_insee, zip_insee, dpt_insee, code_insee in dict_corr_dpt_insee[big_city_dpt]:
+              if re.match(big_city, city_insee, flags=re.IGNORECASE):
+                ls_matching.append((i, zip_code, code_insee))
+                print 'Matched (dpt-big city)', city, city_insee, zip_insee, '(', i, ')'
+                found_indicator = True
+                break
+      if not found_indicator:
+         ls_no_zip_match.append([i, zip_code, city])
+    except:
+      print 'WHAAAT', zip_code, city 
