@@ -246,6 +246,7 @@ print df_stores_france[ls_columns].to_string()
 fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 fra_stores['df_auchan'] = df_auchan
 fra_stores['df_carrefour'] = df_carrefour
+fra_stores['df_leclerc'] = df_leclerc
 fra_stores['df_u'] = df_u
 fra_stores['df_casino'] = df_casino
 fra_stores['df_cora'] = df_cora

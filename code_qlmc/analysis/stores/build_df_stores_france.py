@@ -46,6 +46,7 @@ path_dir_source_kml = os.path.join(path_dir_qlmc, 'data_source', 'data_kml')
 
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
+path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
 path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
 
 path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
@@ -53,7 +54,7 @@ path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 
 ## BUILD DF FRA STORES
-#
+#print fra_stores.keys()
 ## print fra_stores.keys()
 #ls_df_chain_names = ['/df_auchan',
 #                     '/df_carrefour',
@@ -61,6 +62,7 @@ fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 #                     '/df_cora',
 #                     '/df_franprix',
 #                     '/df_intermarche',
+#                     '/df_leclerc',
 #                     '/df_monoprix',
 #                     '/df_u']
 #ls_df_chains = [fra_stores[df_chain_name] for df_chain_name in ls_df_chain_names]
@@ -110,50 +112,50 @@ fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 #                                lambda x: gps_to_locality(x, m_fra, df_com, 'com_code'))
 #
 #fra_stores['df_fra_stores'] = df_fra_stores # necessary
-#
-## INSPECT ZIP CODE & CITY
-#
-#df_fra_stores = fra_stores['df_fra_stores']
-#
+
+# INSPECT ZIP CODE & CITY
+
+df_fra_stores = fra_stores['df_fra_stores']
+
+for i, row in df_fra_stores.iterrows():
+	if not re.match(u'^[0-9]{5}$', row['zip']):
+		print i, row['zip'], row['city']
+
+def clean_zip_code(zip_code):
+  zip_code = zip_code.replace(u' ', u'').replace(u"'", u'')
+  if re.search(u'^[0-9]{4}$', zip_code):
+    zip_code  = u'0%s' %zip_code
+  if not re.match(u'[0-9]{5}$', zip_code):
+    print zip_code
+  return zip_code
+
+df_fra_stores['zip'] = df_fra_stores['zip'].apply(lambda x: clean_zip_code(x))
+
+for i, row in df_fra_stores.iterrows():
+	if re.search(u'CEDEX', row['city'], re.IGNORECASE):
+		print i, row['zip'], row['city']
+  #elif re.search(u'[0-9]', row['city']):
+  #  print i, row['zip'], row['city']
+
+#ls_big_cities = [u'PARIS', u'MARSEILLE', u'LYON', u'TOULOUSE', u'LILLE', u'NANTES',
+#                 u'STRASBOURG', u'MONTPELLIER', u'BORDEAUX', u'RENNES', 'LE HAVRE',
+#                 u'REIMS', u'LILLE']
 #for i, row in df_fra_stores.iterrows():
-#	if not re.match(u'^[0-9]{5}$', row['zip']):
-#		print i, row['zip'], row['city']
-#
-#def clean_zip_code(zip_code):
-#  zip_code = zip_code.replace(u' ', u'').replace(u"'", u'')
-#  if re.search(u'^[0-9]{4}$', zip_code):
-#    zip_code  = u'0%s' %zip_code
-#  if not re.match(u'[0-9]{5}$', zip_code):
-#    print zip_code
-#  return zip_code
-#
-#df_fra_stores['zip'] = df_fra_stores['zip'].apply(lambda x: clean_zip_code(x))
-#
-#for i, row in df_fra_stores.iterrows():
-#	if re.search(u'CEDEX', row['city'], re.IGNORECASE):
-#		print i, row['zip'], row['city']
-#  #elif re.search(u'[0-9]', row['city']):
-#  #  print i, row['zip'], row['city']
-#
-##ls_big_cities = [u'PARIS', u'MARSEILLE', u'LYON', u'TOULOUSE', u'LILLE', u'NANTES',
-##                 u'STRASBOURG', u'MONTPELLIER', u'BORDEAUX', u'RENNES', 'LE HAVRE',
-##                 u'REIMS', u'LILLE']
-##for i, row in df_fra_stores.iterrows():
-##  for big_city in ls_big_cities:
-##    if re.search(big_city, row['city'], re.IGNORECASE):
-##      print i, row['zip'], row['city']
-##      break
-#
-#def clean_city(city):
-#  # does not solve pbm allone: CEDEX => specific zip code
-#  re_cedex = re.search(u'CEDEX', city, flags=re.IGNORECASE)
-#  if re_cedex:
-#    city = city[:re_cedex.start()].strip()
-#  return city
-#
-#df_fra_stores['city'] = df_fra_stores['city'].apply(lambda x: clean_city(x))
-#
-#fra_stores['df_fra_stores'] = df_fra_stores
+#  for big_city in ls_big_cities:
+#    if re.search(big_city, row['city'], re.IGNORECASE):
+#      print i, row['zip'], row['city']
+#      break
+
+def clean_city(city):
+  # does not solve pbm allone: CEDEX => specific zip code
+  re_cedex = re.search(u'CEDEX', city, flags=re.IGNORECASE)
+  if re_cedex:
+    city = city[:re_cedex.start()].strip()
+  return city
+
+df_fra_stores['city'] = df_fra_stores['city'].apply(lambda x: clean_city(x))
+
+fra_stores['df_fra_stores'] = df_fra_stores
 
 # Serious pbms: 1220, 6895
 
@@ -295,10 +297,9 @@ for i, row in df_fra_stores.iterrows():
 se_matching = pd.Series([x[2] for x in ls_matching], index = [x[0] for x in ls_matching])
 df_fra_stores['insee_code_2'] = se_matching
 
-print df_fra_stores[(pd.isnull(df_fra_stores['insee_code'])) &\
-                    (pd.isnull(df_fra_stores['insee_code_2']))].to_string()
+pd.set_option('display.max_colwidth', 30)
 
-# Can add to correspondence (could be usefull later...)
+# Can add to correspondence (could be useful later...)
 ls_city_replace = [[u'Decines', u'Decines Charpieu'],
                    [u'Saint-Maries de la Mer', u'Stes Maries de la Mer'],
                    [u'Waldighoffen', u'Waldighofen'],
@@ -312,3 +313,71 @@ ls_city_replace = [[u'Decines', u'Decines Charpieu'],
                    [u'Lambres-lez-Aire', u'Lambres'],
                    [u'Seynes les Alpes', u'Seyne'],
                    [u'LE PERREUX/M', u'Le Perreux sur Marne']] # fix store city?
+
+# Stores with no insee code at all
+print df_fra_stores[(pd.isnull(df_fra_stores['insee_code'])) &\
+                    (pd.isnull(df_fra_stores['insee_code_2']))].to_string()
+
+# Stores with two different insee codes
+print df_fra_stores[(~pd.isnull(df_fra_stores['insee_code'])) &\
+                    (~pd.isnull(df_fra_stores['insee_code_2'])) &\
+                    (df_fra_stores['insee_code'] != df_fra_stores['insee_code_2'])].to_string()
+
+# load insee data extract
+df_insee = pd.read_csv(os.path.join(path_dir_insee_extracts, 'data_insee_extract.csv'),
+                       encoding = 'utf-8',
+                       dtype= str)
+## excludes dom tom
+#df_insee = df_insee[~df_insee[u'CODGEO'].str.contains('^97')]
+df_insee['POP_MUN_2007_COM'] = \
+  df_insee['POP_MUN_2007_COM'].apply(lambda x: float(x))
+#ls_mic_1 = [x for x in df_fra_stores['insee_code'].unique() if x not in df_insee['CODGEO'].values]
+#ls_mic_2 = [x for x in df_fra_stores['insee_code_2'].unique() if x not in df_insee['CODGEO'].values]
+
+df_fra_stores['insee_code_final'] = df_fra_stores['insee_code']
+df_fra_stores['insee_code_final'][pd.isnull(df_fra_stores['insee_code_final'])] =\
+   df_fra_stores['insee_code_2']
+
+# Check that no ambiguity in corsica
+ls_corsica_icA = list(df_insee['CODGEO'][df_insee['CODGEO'].str.slice(stop=2) == '2A'].values)
+ls_corsica_icA0 = [x.replace('A', '0') for x in ls_corsica_icA]
+ls_corsica_icB = list(df_insee['CODGEO'][df_insee['CODGEO'].str.slice(stop=2) == '2B'].values)
+ls_corsica_icB0 = [x.replace('B', '0') for x in ls_corsica_icB]
+ls_corsica_amb = [x for x in ls_corsica_icA0 if x in ls_corsica_icB0]
+dict_corsica_ic = {x.replace(u'A', u'0').replace(u'B', '0'): x\
+                     for x in ls_corsica_icA + ls_corsica_icB}
+# need to be sure all codes have 5 figures
+df_fra_stores['insee_code_final'] = df_fra_stores['insee_code_final'].apply(\
+                                      lambda x: dict_corsica_ic[x] if (not pd.isnull(x)) and\
+                                                                      (x[:2] == '20') else x)
+
+ls_mic = [x for x in df_fra_stores['insee_code_final'].unique() if x not in df_insee['CODGEO'].values]
+ls_mic.sort()
+print ls_mic
+# pbms apart for 3 cities with ardts:
+ls_update_ic = [['66910', '66008'],
+                ['79017', '79195']]
+for old, new in ls_update_ic:
+  df_fra_stores['insee_code_final'][df_fra_stores['insee_code_final'] == old] = new
+
+# for now: drops a bit too many stores
+df_fra_stores = df_fra_stores[(~pd.isnull(df_fra_stores['insee_code_final'])) &\
+                              (df_fra_stores['insee_code_final'].str.slice(stop=2) != '96') &\
+                              (df_fra_stores['insee_code_final'].str.slice(stop=2) != '97') &\
+                              (df_fra_stores['insee_code_final'].str.slice(stop=2) != '98') &\
+                              (df_fra_stores['insee_code_final'].str.slice(stop=2) != '99')]
+
+# No gps
+print 'No gps': len(df_fra_stores[(pd.isnull(df_fra_stores['gps'])) |\
+                                  (df_fra_stores['gps'] == '')])
+#print df_fra_stores[(pd.isnull(df_fra_stores['gps'])) |\
+#                                  (df_fra_stores['gps'] == '')].to_string()
+
+# Example: Clermont Ferrand
+print df_fra_stores[df_fra_stores['insee_code_final'] == '63113'].to_string()
+
+#fra_stores['df_fra_stores'] = df_fra_stores
+#fra_stores.close()
+
+# todo: match with BV, AU, UU
+# todo: build BV, AU, UU datasets (AND COMMUNE)
