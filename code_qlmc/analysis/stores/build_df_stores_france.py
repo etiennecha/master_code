@@ -50,6 +50,7 @@ path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
 path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
 
 path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built', 'data_csv')
 
 fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 
@@ -375,6 +376,33 @@ print 'No gps:', len(df_fra_stores[(pd.isnull(df_fra_stores['gps'])) |\
 
 # Example: Clermont Ferrand
 print df_fra_stores[df_fra_stores['insee_code_final'] == '63113'].to_string()
+
+# Output to CSV
+def clean_str_temp(word):
+  word = word.replace(u'\t', u' ').replace(u'\n', u' ').replace(u'\r', u' ') 
+  word = word.replace(u'&#039;', u"'").replace(u'\x92', u"'").replace(u'\u03ab', u'Y')
+  word = word.replace(u'<br />', u', ').replace(u'&quot', u"'")
+  word = word.replace(u'"', u"'") # use of " in csv
+  word = u' '.join([x for x in word.split(u' ') if x])
+  return word.strip()
+
+df_fra_stores['name'] = df_fra_stores['name'].apply(lambda x: clean_str_temp(x))
+df_fra_stores['street'] = df_fra_stores['street'].apply(lambda x: clean_str_temp(x))
+df_fra_stores['zip'] = df_fra_stores['zip'].apply(lambda x: clean_str_temp(x))
+df_fra_stores['city'] = df_fra_stores['city'].apply(lambda x: clean_str_temp(x))
+df_fra_stores['type'] = df_fra_stores['type'].apply(lambda x: clean_str_temp(x))
+df_fra_stores['insee_code'] = df_fra_stores['insee_code_final']
+df_fra_stores.drop(['insee_code_2', 'insee_code_final'], axis = 1, inplace=True)
+
+fra_stores['df_fra_stores_current'] = df_fra_stores
+fra_stores.close()
+
+df_fra_stores.to_csv(os.path.join(path_dir_built_csv, 'df_fra_stores.csv'),
+                     index_label='index',
+                     sep=',',
+                     na_rep='',
+                     encoding = 'cp1252',
+                     quotechar='"')
 
 #fra_stores['df_fra_stores'] = df_fra_stores
 #fra_stores.close()

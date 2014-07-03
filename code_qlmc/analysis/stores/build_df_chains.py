@@ -242,16 +242,16 @@ df_stores_france = pd.concat(ls_df_stores_france, ignore_index = True)
 len(df_stores_france[(df_stores_france['gps'] == '') | (pd.isnull(df_stores_france['gps']))])
 print df_stores_france[ls_columns].to_string()
 
-## Reads or creates
-fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
-fra_stores['df_auchan'] = df_auchan
-fra_stores['df_carrefour'] = df_carrefour
-fra_stores['df_leclerc'] = df_leclerc
-fra_stores['df_u'] = df_u
-fra_stores['df_casino'] = df_casino
-fra_stores['df_cora'] = df_cora
-fra_stores['df_franprix'] = df_franprix
-fra_stores.close()
+### Reads or creates
+#fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
+#fra_stores['df_auchan'] = df_auchan
+#fra_stores['df_carrefour'] = df_carrefour
+#fra_stores['df_leclerc'] = df_leclerc
+#fra_stores['df_u'] = df_u
+#fra_stores['df_casino'] = df_casino
+#fra_stores['df_cora'] = df_cora
+#fra_stores['df_franprix'] = df_franprix
+#fra_stores.close()
 
 # TODO:
 # duplicate ???

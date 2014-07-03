@@ -199,5 +199,5 @@ print df_nu[ls_disp_uu].ix[0:10].to_string()
 
 # print df_stores[df_stores['INSEE_Code'] == '63113'].to_string()
 
-qlmc_data['qlmc_stores'] = df_stores
+qlmc_data['df_qlmc_stores'] = df_stores
 qlmc_data.close()

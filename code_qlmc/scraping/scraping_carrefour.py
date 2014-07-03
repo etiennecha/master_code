@@ -26,11 +26,13 @@ if __name__=="__main__":
   # structure of the data folder should be the same
   folder_source_qlmc_chains = '/data_qlmc/data_source/data_chain_websites'
   
-  # # Build urllib2 opener
-  # cookie_jar = cookielib.LWPCookieJar()
-  # opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
-  # opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11')]
-  # urllib2.install_opener(opener)
+  ## Build urllib2 opener
+  #cookie_jar = cookielib.LWPCookieJar()
+  #opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
+  #opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64)'+\
+  #                                    'AppleWebKit/537.11 (KHTML, like Gecko)'+\
+  #                                    'Chrome/23.0.1271.64 Safari/537.11')]
+  #urllib2.install_opener(opener)
   
   # Brand (carrefour) page
   brand_url = r'http://www.carrefour.fr/nos-magasins/liste-carrefour'
@@ -50,20 +52,23 @@ if __name__=="__main__":
     soup_type = BeautifulSoup(data_type)
     block_stores = soup_type.find('ul', {'id' : 'brand-store-names'})
     list_store_blocks = block_stores.findAll('a', {'href' : re.compile(r'/magasin/.*')})
-    list_store_temp = [(store_block.string, store_block['href'], type_name) for store_block in list_store_blocks]
+    list_store_temp = [(store_block.string, store_block['href'], type_name)\
+                         for store_block in list_store_blocks]
     list_store_general_info += list_store_temp
   
-  # enc_json(list_store_general_info, path_data + folder_source_qlmc_chains + r'/list_carrefour_general_info')
+  #enc_json(list_store_general_info,
+  #         path_data + folder_source_qlmc_chains + r'/list_carrefour_general_info')
   
   # Visit store pages and extract infos pratiques
   # 2358 pages to visit hence split the job (slightly varies...)
   
-  # list_store_full_info = []
-  list_store_full_info = dec_json(path_data + folder_source_qlmc_chains + r'/list_carrefour_full_info')
+  list_store_full_info = []
+  #list_store_full_info = dec_json(path_data + folder_source_qlmc_chains +\
+  #                                r'/list_carrefour_full_info')
   
-  for (store_name, store_url_extension, store_type) in list_store_general_info:
+  for (store_name, store_url_extension, store_type) in list_store_general_info[0:1]:
     if store_url_extension not in [store['url'] for store in list_store_full_info]:
-      store_url = r'http://www.carrefour.fr' + store_url_extension
+      store_url = r'http://www.carrefour.fr/magasin/epinal'
       response_store = urllib2.urlopen(store_url)
       data_store = response_store.read()
       soup_store = BeautifulSoup(data_store)
@@ -73,7 +78,7 @@ if __name__=="__main__":
       # if block_store_address:
         # store_address = [elt.strip() for elt in block_store_address.findAll(text = True)]
       
-      # # TODO: visit pages '/services'... otherwise incomplete
+      # # todo: visit pages '/services'... otherwise incomplete
       # block_store_services = soup_store.find('div', {'id' : 'store-services-block'})
       # store_services = None
       
@@ -106,4 +111,6 @@ if __name__=="__main__":
                     'hours' : list_store_opening}
       
       list_store_full_info.append(store_info)
-  # enc_json(list_store_full_info, path_data + folder_source_qlmc_chains + r'/list_carrefour_full_info')
+
+  #enc_json(list_store_full_info,
+  #         path_data + folder_source_qlmc_chains + r'/list_carrefour_full_info')
