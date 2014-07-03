@@ -22,6 +22,10 @@ path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
 
+path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+
+qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+
 # MATCH STORES WITH INSEE COMMUNE
 
 # Load Correspondence File (Improvements for gas stations kept)
@@ -192,3 +196,8 @@ ls_disp_uu = ['UU2010', 'P', 'Enseigne', 'Commune', 'LIBUU2010', 'POP_MUN_07_UU'
 # View UU
 df_nu.sort(['UU2010', 'P', 'Enseigne'], inplace = 1)
 print df_nu[ls_disp_uu].ix[0:10].to_string()
+
+# print df_stores[df_stores['INSEE_Code'] == '63113'].to_string()
+
+qlmc_data['qlmc_stores'] = df_stores
+qlmc_data.close()

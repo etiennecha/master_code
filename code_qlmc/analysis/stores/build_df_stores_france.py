@@ -368,7 +368,7 @@ df_fra_stores = df_fra_stores[(~pd.isnull(df_fra_stores['insee_code_final'])) &\
                               (df_fra_stores['insee_code_final'].str.slice(stop=2) != '99')]
 
 # No gps
-print 'No gps': len(df_fra_stores[(pd.isnull(df_fra_stores['gps'])) |\
+print 'No gps:', len(df_fra_stores[(pd.isnull(df_fra_stores['gps'])) |\
                                   (df_fra_stores['gps'] == '')])
 #print df_fra_stores[(pd.isnull(df_fra_stores['gps'])) |\
 #                                  (df_fra_stores['gps'] == '')].to_string()
