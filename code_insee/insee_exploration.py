@@ -173,14 +173,18 @@ if __name__=="__main__":
   
   # Adding columns with aggregated data using groupby
   # check : http://bconnelly.net/2013/10/22/summarizing-data-in-python-with-pandas/
-  ls_columns_interest = ['P10_LOG', 'P10_MEN', 'P10_PMEN', 'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P']
+  ls_columns_interest = ['P10_LOG', 'P10_MEN', 'P10_PMEN',
+                         'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P']
   for column in ls_columns_interest:
     df_insee[column] = df_insee[column].apply(lambda x: float(x) if x else float('nan'))
   df_uu_agg = df_insee.groupby('UU2010')[ls_columns_interest].sum()
   df_insee = pd.merge(df_insee, df_uu_agg, left_on = "UU2010",
                       right_index = True, suffixes = ('_COM', '_UU'))
   print '\nINSEE EXTRACT ENRICHED\n', df_insee.info() 
-   
+  
+  # http://pandas.pydata.org/pandas-docs/dev/groupby.html
+  # todo: read # http://stackoverflow.com/questions/15262134/apply-different-functions-to-different-items-in-group-object-python-pandas
+
   ## If only one: series
   #se_uu_men = df_insee.groupby('UU2010')['P10_MEN'].sum()
   #df_uu_men = pd.Series(se_uu_men, name = 'P10_MEN_UU').reset_index()
