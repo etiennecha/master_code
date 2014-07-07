@@ -89,16 +89,16 @@ def compute_price_dispersion(se_prices):
   return [len(se_prices), se_prices.min(), se_prices.max(), price_mean, 
           price_std, coeff_var, price_range, gain_from_search]
 
-def compare_stores(store_a, store_b, df_period, period_ind, category):
+def compare_stores(store_a, store_b, df_qlmc, period_ind, category):
   # pandas df for store a
-  df_store_a= df_period[['Prix','Produit','Rayon','Famille']]\
-                    [(df_period['Magasin'] == store_a) & (df_period['P'] == period_ind)]
+  df_store_a= df_qlmc[['Prix','Produit','Rayon','Famille']]\
+                    [(df_qlmc['Magasin'] == store_a) & (df_qlmc['P'] == period_ind)]
   df_store_a['Prix_a'] = df_store_a['Prix']
   df_store_a = df_store_a.set_index('Produit')
   df_store_a = df_store_a[['Prix_a', 'Rayon', 'Famille']]
   # pandas df for store b
-  df_store_b = df_period[['Prix','Produit','Magasin']]\
-                         [(df_period['Magasin'] == store_b) & (df_period['P'] == period_ind)]
+  df_store_b = df_qlmc[['Prix','Produit','Magasin']]\
+                         [(df_qlmc['Magasin'] == store_b) & (df_qlmc['P'] == period_ind)]
   df_store_b['Prix_b'] = df_store_b['Prix']
   df_store_b = df_store_b.set_index('Produit')
   df_store_b= df_store_b[['Prix_b']]
@@ -224,14 +224,21 @@ for list_stores in ls_ls_stores:
 # enc_json(ls_ls_tuple_stores, os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
 
 # Encode file with product lists for product reconciliation across periods (TAKES TIME)
+#ls_ls_products = []
+#for ls_records in ls_ls_records:
+#  ls_products = []
+#  for record in ls_records:
+#    if record[0:3] not in ls_products:
+#      ls_products.append(record[0:3])
+#  ls_ls_products.append(ls_products)
+# enc_json(ls_ls_products, os.path.join(path_dir_built_json, 'ls_ls_products'))
+
 ls_ls_products = []
 for ls_records in ls_ls_records:
-  ls_products = []
+  set_products = set()
   for record in ls_records:
-    if record[0:3] not in ls_products:
-      ls_products.append(record[0:3])
-  ls_ls_products.append(ls_products)
-# enc_json(ls_ls_products, os.path.join(path_dir_built_json, 'ls_ls_products'))
+    set_products.add(tuple(record[0:3]))
+  ls_ls_products.append([list(x) for x in list(set_products)])
 
 # #######################
 # ANALYSIS WITH PANDAS
@@ -254,23 +261,23 @@ ls_columns = ['P', 'Rayon', 'Famille', 'Produit', 'Magasin',
 ls_ls_rows = [[[i] + row[:5] + row[6:9] for row in ls_records]\
                        for i, ls_records in enumerate(ls_ls_records)]
 ls_rows = [row for ls_rows in ls_ls_rows for row in ls_rows]
-df_period = pd.DataFrame(ls_rows, columns = ls_columns)
-df_period['Prix'] = df_period['Prix'].astype(np.float32)
+df_qlmc = pd.DataFrame(ls_rows, columns = ls_columns)
+df_qlmc['Prix'] = df_qlmc['Prix'].astype(np.float32)
 
 # Check product dispersion
 ex_product = u'Nutella - Pâte à tartiner chocolat noisette, 400g'
-ex_se_prices = df_period[u'Prix'][(df_period[u'Produit'] == ex_product) &\
-                                   (df_period[u'P'] == 1)]
+ex_se_prices = df_qlmc[u'Prix'][(df_qlmc[u'Produit'] == ex_product) &\
+                                   (df_qlmc[u'P'] == 1)]
 ex_pd = compute_price_dispersion(ex_se_prices)
 df_ex_pd = pd.DataFrame(ex_pd, ['N', 'min', 'max', 'mean', 'std', 'cv', 'range', 'gfs'])
 print df_ex_pd
 
-# df_period['Rayon'] = df_period['Rayon'].map(lambda x: x.encode('utf-8'))
-# df_period[df_period['Rayon'] == 'Boissons']
-# df_period[(df_period['Rayon'] == 'Boissons') & (df_period['P'] == 0)]
-# len(df_period[(df_period['Rayon'] == 'Boissons') & (df_period['P'] == 0)]['Produit'].unique())
+# df_qlmc['Rayon'] = df_qlmc['Rayon'].map(lambda x: x.encode('utf-8'))
+# df_qlmc[df_qlmc['Rayon'] == 'Boissons']
+# df_qlmc[(df_qlmc['Rayon'] == 'Boissons') & (df_qlmc['P'] == 0)]
+# len(df_qlmc[(df_qlmc['Rayon'] == 'Boissons') & (df_qlmc['P'] == 0)]['Produit'].unique())
 
-df_period['Produit'] = df_period['Produit'].map(lambda x: clean_product(x))
+df_qlmc['Produit'] = df_qlmc['Produit'].map(lambda x: clean_product(x))
 
 # todo: re.sub 'Bocal', 'Pet', 'Bidon' ?
 # 'barquettes?' '1 assiette', 'paquet', 'sachet', 'coffret'
@@ -282,8 +289,8 @@ df_period['Produit'] = df_period['Produit'].map(lambda x: clean_product(x))
 
 ls_ls_boissons = []
 for i in range(3):
-	ls_ls_boissons.append(df_period[(df_period['Rayon'] == 'Boissons') &\
-                           (df_period['P'] == i)]['Produit'].unique())
+	ls_ls_boissons.append(df_qlmc[(df_qlmc['Rayon'] == 'Boissons') &\
+                           (df_qlmc['P'] == i)]['Produit'].unique())
 
 ls_boissons_0 = [x for x in ls_ls_boissons[0] if x in ls_ls_boissons[1]]
 ls_boissons_1 = [x for x in ls_ls_boissons[1] if x in ls_ls_boissons[2]]
@@ -292,8 +299,8 @@ ls_boissons_2 = [x for x in ls_boissons_0 if x in ls_boissons_1]
 ls_ls_sale = []
 for i in range(3):
 	ls_ls_sale.append(\
-    df_period[(df_period['Rayon'] == u'Epicerie sal\xe9e') &\
-              (df_period['P'] == i)]['Produit'].unique())
+    df_qlmc[(df_qlmc['Rayon'] == u'Epicerie sal\xe9e') &\
+            (df_qlmc['P'] == i)]['Produit'].unique())
 
 ls_sale_0 = [x for x in ls_ls_sale[0] if x in ls_ls_sale[1]]
 ls_sale_1 = [x for x in ls_ls_sale[1] if x in ls_ls_sale[2]]
@@ -302,60 +309,60 @@ ls_sale_2 = [x for x in ls_sale_0 if x in ls_sale_1]
 # Stores which survive (all stores for now...)
 ls_ls_stores_2 = []
 for i in range(0,3):
-  ls_ls_stores_2.append(df_period[df_period['P'] == i]['Magasin'].unique())
+  ls_ls_stores_2.append(df_qlmc[df_qlmc['P'] == i]['Magasin'].unique())
 ls_lasting_stores = [x for x in ls_ls_stores_2[0] if x in ls_ls_stores_2[1]]
 
-ls_prod_0 = df_period['Produit'][(df_period['Magasin'] == ls_lasting_stores[0]) &\
-                                 (df_period['P'] == 0)].values
-ls_prod_1 = df_period['Produit'][(df_period['Magasin'] == ls_lasting_stores[0]) &\
-                                 (df_period['P'] == 1)].values
+ls_prod_0 = df_qlmc['Produit'][(df_qlmc['Magasin'] == ls_lasting_stores[0]) &\
+                               (df_qlmc['P'] == 0)].values
+ls_prod_1 = df_qlmc['Produit'][(df_qlmc['Magasin'] == ls_lasting_stores[0]) &\
+                               (df_qlmc['P'] == 1)].values
 ls_lasting_prods = [x for x in ls_prod_0 if x in ls_prod_1]
 
-df_auchan_arras = df_period[(df_period['Magasin'] == ls_lasting_stores[0])]
+df_auchan_arras = df_qlmc[(df_qlmc['Magasin'] == ls_lasting_stores[0])]
 for prod in ls_lasting_prods[0:10]:
-	print df_auchan_arras[['Produit', 'Prix']]\
+	print df_auchan_arras[['P', 'Produit', 'Prix']]\
           [df_auchan_arras['Produit'] == prod].to_string(index=False)
 
-# Find stores in same location
-ls_ls_store_insee = dec_json(os.path.join(path_dir_built_json, 'ls_ls_store_insee'))
-ls_ls_pairs = []
-for ls_store_insee in ls_ls_store_insee:
-  ls_pairs = []
-  for j, store in enumerate(ls_store_insee):
-    for k, store_2 in enumerate(ls_store_insee[j+1:], start = j+1):
-      if store and store_2 and store[0] == store_2[0]:
-        ls_pairs.append((j,k))
-  ls_ls_pairs.append(ls_pairs)
-
-for i, ls_pairs in enumerate(ls_ls_pairs):
-  for (j,k) in ls_pairs:
-    print ls_ls_stores[i][j], ls_ls_stores[i][k]
-
-# todo: see if product prices are available at these stores across all periods (or 2 at least..)
-
-store_a = 'GEANT BEZIERS'
-store_b = 'AUCHAN MONTAUBAN'
-test = compare_stores(store_a, store_b, df_period, 0, 'Rayon')
-
-pd.options.display.float_format = '{:,.2f}'.format
-ls_ls_comparisons = []
-for per_ind, ls_pairs in enumerate(ls_ls_pairs):
-  ls_comparisons = []
-  for (i,j) in ls_pairs:
-    store_a, store_b = ls_ls_stores[per_ind][i], ls_ls_stores[per_ind][j]
-    comparison_result = compare_stores(store_a, store_b, df_period, per_ind, 'Rayon')
-    ls_comparisons.append(zip(*comparison_result))
-    print '\n', store_a, store_b
-    ls_columns = ['Category', '#PA<PB', '#PA>PB', '#PA=PB']
-    df_comparison = pd.DataFrame(zip(*comparison_result), columns = ls_columns)
-    df_comparison['%PA<PB'] = df_comparison['#PA<PB'] /\
-                                df_comparison[['#PA<PB', '#PA>PB', '#PA=PB']].sum(1)
-    df_comparison['%PA>PB'] = df_comparison['#PA>PB'] /\
-                                df_comparison[['#PA<PB', '#PA>PB', '#PA=PB']].sum(1)
-    df_comparison['%PA=PB'] = df_comparison['#PA=PB'] /\
-                                df_comparison[['#PA<PB', '#PA>PB', '#PA=PB']].sum(1)
-    print df_comparison.to_string(index=False)
-  ls_ls_comparisons.append(ls_comparisons)
+## Find stores in same location
+#ls_ls_store_insee = dec_json(os.path.join(path_dir_built_json, 'ls_ls_store_insee'))
+#ls_ls_pairs = []
+#for ls_store_insee in ls_ls_store_insee:
+#  ls_pairs = []
+#  for j, store in enumerate(ls_store_insee):
+#    for k, store_2 in enumerate(ls_store_insee[j+1:], start = j+1):
+#      if store and store_2 and store[0] == store_2[0]:
+#        ls_pairs.append((j,k))
+#  ls_ls_pairs.append(ls_pairs)
+#
+#for i, ls_pairs in enumerate(ls_ls_pairs):
+#  for (j,k) in ls_pairs:
+#    print ls_ls_stores[i][j], ls_ls_stores[i][k]
+#
+## todo: see if product prices are available at these stores across all periods (or 2 at least..)
+#
+#store_a = 'GEANT BEZIERS'
+#store_b = 'AUCHAN MONTAUBAN'
+#test = compare_stores(store_a, store_b, df_qlmc, 0, 'Rayon')
+#
+#pd.options.display.float_format = '{:,.2f}'.format
+#ls_ls_comparisons = []
+#for per_ind, ls_pairs in enumerate(ls_ls_pairs):
+#  ls_comparisons = []
+#  for (i,j) in ls_pairs:
+#    store_a, store_b = ls_ls_stores[per_ind][i], ls_ls_stores[per_ind][j]
+#    comparison_result = compare_stores(store_a, store_b, df_qlmc, per_ind, 'Rayon')
+#    ls_comparisons.append(zip(*comparison_result))
+#    print '\n', store_a, store_b
+#    ls_columns = ['Category', '#PA<PB', '#PA>PB', '#PA=PB']
+#    df_comparison = pd.DataFrame(zip(*comparison_result), columns = ls_columns)
+#    df_comparison['%PA<PB'] = df_comparison['#PA<PB'] /\
+#                                df_comparison[['#PA<PB', '#PA>PB', '#PA=PB']].sum(1)
+#    df_comparison['%PA>PB'] = df_comparison['#PA>PB'] /\
+#                                df_comparison[['#PA<PB', '#PA>PB', '#PA=PB']].sum(1)
+#    df_comparison['%PA=PB'] = df_comparison['#PA=PB'] /\
+#                                df_comparison[['#PA<PB', '#PA>PB', '#PA=PB']].sum(1)
+#    print df_comparison.to_string(index=False)
+#  ls_ls_comparisons.append(ls_comparisons)
 
 # todo: take amount into account (enrich function...)
 # todo: see if all categories equally concerned (average...)

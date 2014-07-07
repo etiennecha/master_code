@@ -161,6 +161,13 @@ ls_marques_ex = [u'Fleury Michon',
 # todo: other stuffs (more speficic...)
 # 'Filet de poulet rà´ti 4 tranches' at period 7
 
+print df_products['Libelle'][df_products['Libelle'].str.contains(u'.*?,.*?,')].value_counts()
+# seems there are unnecessary u','
+# might implicate two different product names for same product
+# get rid of those u','
+df_products['Libelle_2'] = df_products['Libelle'].apply(\
+                             lambda x: re.sub(u'([0-9]),([0-9])', u'\\1.\\2',x))
+
 def get_product_format(str_product):
   # pattern = re.compile(',[^,]*[0-9]+[^,]*$|,[^,][0-9]+\s?,\s?[0-9]+[^,]$,')
   pattern = re.compile(',[^,]*[0-9]+[^,]*$|,[^,][0-9]+\s?,\s?[0-9]+[^,]$|-\s?[0-9]+\s?k?g$|-\s?[0-9]+\s?c?l$')
