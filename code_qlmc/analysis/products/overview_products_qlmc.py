@@ -115,3 +115,10 @@ for lib in ls_sim_libs:
   print '\n', lib
   print df_products[ls_disp_3][(df_products['P'] == per) &\
                                (df_products['Libelle_nf'] == lib)].to_string()
+
+# todo:
+# 1/ Split brand product
+# 2/ Check: two or more ',' and comparison between product names (only differ by ',')
+# 3/ Clean product name and format name (print all format name per period etc)
+# 4/ Check products across periods? (string or tuple comparison)
+# 5/ Check products: several formats for same product? 

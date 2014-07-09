@@ -192,3 +192,5 @@ for x in ls_matching:
 
 # todo: iterate over each enseigne_qlmc: first result then second
 # todo: check how can be improved... + closed stores / changes in brand
+
+# matched stores, top insee bv/au/uu?
