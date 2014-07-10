@@ -93,6 +93,47 @@ def get_product_format(str_product):
     str_format = None
   return str_format
 
+def get_marque_and_libelle(product, ls_brand_patches):
+  """
+  word_1 = u'Liebig,'
+  word_2 = u'Liebig - '
+  string_of_interest = u'Liebig, Pursoup velouté légumes, 1L'
+  re.sub(ur'^%s\s?,\s?(.*)' %word_1, ur'%s\1' %word_2, string_of_interest)
+  """
+  split_search = re.search('(\s-)|(-\s)|(-\s-)', product)
+  if split_search:
+    ls_marque_libelle = [product[:split_search.start()].strip(),
+                         product[split_search.end():].strip()]
+  else:
+    for brand_patch in ls_brand_patches:
+      brand_patch_corr = brand_patch + u' - '
+      product = re.sub(ur'^%s\s?,\s?(.*)' %brand_patch,\
+                       ur'%s\1' %brand_patch_corr,\
+                       product)
+    split_search = re.search('(\s-)|(-\s)|(-\s-)', product)
+    if split_search:
+      ls_marque_libelle = [product[:split_search.start()].strip(),
+                           product[split_search.end():].strip()]
+      # print 'Correction brand:', result
+    else:
+      ls_marque_libelle = [u'',\
+                           product.strip()]
+      # print 'No brand:', result
+  return ls_marque_libelle
+
+def get_nom_and_format(libelle):
+  # pattern = re.compile(',[^,]*[0-9]+[^,]*$|,[^,][0-9]+\s?,\s?[0-9]+[^,]$|-\s?[0-9]+\s?k?g$|-\s?[0-9]+\s?c?l$')
+  pattern = re.compile(u'-\s?[0-9]+(\.\s?[0-9]+)?\s?(c?\s?l$|m?\s?l$|k?\s?g$)|'+\
+                       u',[^,]*[0-9]+(\.\s?[0-9]+)?[^,]*$', flags=re.IGNORECASE)
+  re_result = pattern.search(libelle)
+  if re_result:
+    ls_nom_format = [libelle[:re_result.start()].strip(),
+                     re_result.group(0)]
+  else:
+    ls_nom_format = [libelle,
+                     u'']
+  return ls_nom_format
+
 def compute_price_dispersion(se_prices):
   price_mean = se_prices.mean()
   price_std = se_prices.std()

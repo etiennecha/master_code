@@ -38,33 +38,120 @@ ls_columns = ['P', 'Rayon', 'Famille', 'Produit', 'Marque', 'Libelle']
 df_products = pd.DataFrame(ls_rows, columns = ls_columns)
 
 ls_disp_1 = ['P', 'Rayon', 'Famille', 'Produit']
-ls_disp_2 = ['P', 'Rayon', 'Marque', 'Libelle']
-ls_disp_3 = ['P', 'Rayon', 'Famille', 'Produit_bu']
-ls_disp_4 = ['P', 'Rayon', 'Famille', 'Produit_bu', 'Format']
-
-# STANDARDIZATION OF PRODUCT TITLES
+ls_disp_2 = ['P', 'Rayon', 'marque', 'libelle']
+ls_disp_3 = ['P', 'Rayon', 'Famille', 'Produit']
+ls_disp_4 = ['P', 'Rayon', 'Famille', 'Produit', 'Format']
 
 pd.set_option('display.max_colwidth', 80) # default 50 ? 
-#print df_products[ls_disp][df_products['P'] == 2].to_string()
 
-df_products['Produit_bu'] = df_products['Produit']
-df_products['Produit'] = df_products['Produit'].map(lambda x: clean_product(x))
-# todo: clean Marque and Libelle too
+# STANDARDIZE PRODUCTS
 
-# PRODUCT FORMAT
+# Ad hoc cleaning
+ls_fixed_products = [[u'mozzarella 19% mat. gr. environ - 125 g environ',
+                      u'mozzarella 19% mat. gr. environ, 125 g environ'],
+                     [u'Mozzarella 19% mat. gr. environ - 125 g environ',
+                      u'Mozzarella 19% mat. gr. environ, 125 g environ'],
+                     [u'mozzarella 18% mat. gr. minimum - 125 g environ',
+                      u'mozzarella 18% mat. gr. minimum, 125 g environ']]
+def fix_produit(product, ls_replace_products = ls_fixed_products):
+  for old, new in ls_replace_products:
+    if product == old:
+      return new
+  return product
+df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit(x))
 
-df_products['Format'] = df_products['Produit'].map(get_product_format)
-df_format_null = df_products[df_products['Format'].isnull()]
-#print df_format_null[ls_disp_4].to_string()
-#print df_products['Format'].value_counts()[-100:].to_string()
-## looks ok but get rid of format in Libelle_light
+ls_replace_products = [[u'gazeuze', u'gazeuse'],
+                       #[u'\xb0', u' degrés'], # pbm with u'n°5' need to check if alcool
+                       [u', ,', u','],
+                       [u' ,', u',']]
+def fix_produit_2(product, ls_replace_products = ls_replace_products):
+  for old, new in ls_replace_products:
+    product = product.replace(old, new)
+  return u' '.join([x for x in product.split(u' ') if x])
+df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit_2(x))
+
+## Check ',' right after int + 'x'
+#for x in df_products['Produit'].unique():
+#	if re.search(u'[0-9]x,', x, re.IGNORECASE):
+#		print x
+## fix but might want to check if 6*0.16=1L or 6*1L=6L
+df_products['Produit'] = df_products['Produit'].apply(\
+                           lambda x: re.sub(u'([0-9])x,\s?', '\\1x', x, re.IGNORECASE))
+
+# Check spaces between ints...
+for x in df_products['Produit'].unique():
+  if re.search(u'[0-9]\s[0-9]', x):
+    print x
+# todo: fix u'Vieux Papes - Vin de table rouge Vieux Papes 12°, 7 5cl' etc.
+
+# SPLIT marque AND libelle
+
+df_products['marque'], df_products['libelle'] =\
+  zip(*df_products['Produit'].map(\
+    lambda x: get_marque_and_libelle(x, ls_brand_patches = ls_brand_patches)))
+## Inspect marque
+#print df_products['marque'].value_counts().to_string()
+
+# STANDARDIZE marque
+
+# todo: standardize accents and small variations generating duplicates
+
+# STANDARDIZE libelle
+
+df_products['libelle'] = df_products['libelle'].apply(lambda x: re.sub(u',\s?viande$', u'', x).strip())
+
+## todo: inspect ',' between two ints: safe to transform it to '.'?
+## there are generally many spaces... so must be a float if ',' between ints
+def convert_float(libelle):
+  # avoid: u'Levure boulangère spécial pain Francine x6,30g'
+  if not re.search(u'\sx[0-9]+,[0-9]+[a-z]$', libelle, flags=re.IGNORECASE):
+    libelle = re.sub(u'([0-9]),([0-9])', u'\\1.\\2', libelle)
+  else:
+    print libelle
+  return libelle
+df_products['libelle'] = df_products['libelle'].apply(lambda x: convert_float(x))
+
+## inspect no ',' in libelle
+## u'Eau de javel traditionnelle 3 doses de 250ml'
+## u'salami danois 20 tranches 200g'
+## u'Moutarde Forte en verre de 195g'
+#for libelle in df_products['Libelle'].values:
+#  if (not u',' in libelle) and (not u'-' in libelle):
+#    print libelle
+
+# SPLIT nom AND format
+
+df_products['nom'], df_products['format'] =\
+  zip(*df_products['libelle'].map(lambda x: get_nom_and_format(x)))
+df_products['format'] = df_products['format'].apply(lambda x: x.lstrip(u',').lstrip(u'-').strip())
+
+#print df_products[['marque', 'nom', 'format']][df_products['P'] == 0].to_string()
+print '\n', df_products['nom'][(df_products['P'] == 0) &\
+                               (df_products['format'] == u'')].to_string()
+## caution: some have a format which is wrong:
+#print '\n', df_products.ix[2165] # replace ',' by '.' in float to avoid such pbms!
+
+ls_sub_format = [u'bouteilles?',
+                 u'pet',
+                 u'bocal',
+                 u'bidon',
+                 u'(maxi-)?brique',
+                 u'plastique',
+                 u'boîte',
+                 u'flacon',
+                 u'atomiseur']
+def clean_format(str_format, ls_sub_format = ls_sub_format):
+  for sub_format in ls_sub_format:
+    str_format = re.sub(sub_format, u'', str_format, flags=re.IGNORECASE)
+  return u' '.join([x for x in str_format.split(u' ') if x])
+df_products['format'] = df_products['format'].apply(lambda x: clean_format(x))
 
 # PRODUCT TURNOVER
 
 ls_alive_products = df_products['Produit'][df_products['P'] == 1].unique()
 ls_dead_products = []
 per_start, per_end = 1, 9
-print u'Product turnover (products surviving per period)', per_start, 'to', per_end
+print u'\nProduct turnover (products surviving per period)', per_start, 'to', per_end
 for period in range(per_start, per_end):
   ls_products = df_products['Produit'][df_products['P'] == period].unique()
   ls_dead_products.append([x for x in ls_alive_products if x not in ls_products])
@@ -74,51 +161,73 @@ for period in range(per_start, per_end):
 # Inspect Contrex, Evian, Taillefine, Boursin, St Moret, Bledina (accents?) at per 2: disappear...
 per_start, per_end = 1, 9
 marque = 'Contrex'
+df_products['marque_nom'] = df_products['marque'] + u' ' + df_products['nom']
+
 print u'\nProduct of brand', marque, 'from period', per_start, 'to', per_end
 for period in range(per_start, per_end):
-  print '\n', df_products[ls_disp_1][(df_products['Marque'] == marque) &\
+  print '\n', df_products[ls_disp_1][(df_products['marque'] == marque) &\
                                      (df_products['P'] == period)].to_string()
+print df_products[['P', 'marque', 'nom', 'format']]\
+        [df_products['marque_nom'] == u'Contrex Eau minérale naturelle plate']
 # Contrex: pbm with presence or not of word "plate'
 # Taillefine: "0% de mg" vs. "0% de matière grasse"
 
 # MOST POPULAR BRANDS (PER PERIOD)
 
-per = 2
-print '\nMost popular brands at period', per
-for rayon in df_products['Rayon'][df_products['P'] == per].unique():
-  print '\n', rayon, len(df_products[(df_products['P'] == per) & (df_products['Rayon'] == rayon)])
-  print df_products['Marque'][(df_products['P'] == per) &\
+per_ind = 2
+print '\nMost popular brands at period', per_ind
+for rayon in df_products['Rayon'][df_products['P'] == per_ind].unique():
+  print '\n', rayon, len(df_products[(df_products['P'] == per_ind) & (df_products['Rayon'] == rayon)])
+  print df_products['marque'][(df_products['P'] == per_ind) &\
                               (df_products['Rayon'] == rayon)].value_counts()[0:10].to_string()
 
-# PRODUCTS WITH MOST FORMAT (PER PERIOD)
+# PRODUCTS WITH SAME CONTENT/DIFFERENT FORMATS (PER PERIOD)
 
-per = 2
-df_products['Libelle_nf'] = df_products.apply(lambda x: clean_product(x['Libelle']).\
-                                                rstrip(x['Format']),
-                                              axis = 1)
+per_ind = 2
+ls_disp_expl = ['marque', 'nom', 'format']
 
-# Caution... seems that multi brands in fact
-print df_products['Libelle_nf'][df_products['P'] == 2].value_counts()[0:10]
+print '\nProducts with different formats (similar content a priori)'
+# Multi brand with same name... need marque_nom
+df_products['marque_nom'] = df_products['marque'] + u' ' + df_products['nom']
+ls_several_formats = list(df_products['marque_nom']\
+                            [df_products['P'] == per_ind].value_counts().index[0:10])
+for marque_nom in ls_several_formats:
+  print '\n', marque_nom
+  print df_products[ls_disp_expl][(df_products['P'] == per_ind) &\
+                                  (df_products['marque_nom'] == marque_nom)].to_string()
 
-# for period 2 (could get rid and simply loop over 10 most popular)
-ls_sim_libs = [u'eau minérale naturelle',
-               u'eau minérale naturelle gazeuse',
-               u'lait uht demi-écrémé',
-               u'coca cola avec caféine',
-               u'ricard pastis 45 degrés',
-               u'ravioli pur boeuf',
-               u'spagheto sauce pleine saveur bolognaise',
-               u'thon albacore naturel entier']
-
-print '\nProducts with similar libelles (sev. Marque/Format)'
-for lib in ls_sim_libs:
-  print '\n', lib
-  print df_products[ls_disp_3][(df_products['P'] == per) &\
-                               (df_products['Libelle_nf'] == lib)].to_string()
+se_mn_vc = df_products['marque_nom'][df_products['P'] == per_ind].value_counts()
+se_mn_multi = se_mn_vc[se_mn_vc > 1]
+# print se_mn_multi.to_string() # can merge back to df_products...
 
 # todo:
 # 1/ Split brand product
-# 2/ Check: two or more ',' and comparison between product names (only differ by ',')
 # 3/ Clean product name and format name (print all format name per period etc)
 # 4/ Check products across periods? (string or tuple comparison)
-# 5/ Check products: several formats for same product? 
+# todo: lower case... possibly no accent for product nom...
+# todo: loopup in other periods levenshtein stat vs. other products of same format (if standardized)
+# todo: 'else': most popular name per marque
+
+# e.g.
+# u'Lesieur Huile Tournesol 1ère Pression' # 0-7
+# u'Lesieur Huile tournesol 1ère Pression' # 8-11 (compare lower case)
+# u'Lesieur Huile de tournesol 1ère pression' # 12 (compare lower case and get rid of 'de')
+
+df_products['produit'] = df_products['marque'].str.lower() + u' _ ' +\
+                         df_products['nom'].str.lower() + u' _ ' +\
+                         df_products['format'].str.lower()
+
+se_produits_vc = df_products['produit'].value_counts()
+
+print '\nNb products across all periods:', len(se_produits_vc[se_produits_vc == 13])
+
+print '\nProducts which lack one period'
+print se_produits_vc[se_produits_vc == 12][0:10] # look missing one...
+
+print df_products['produit'][(df_products['Marque'] == u'Hénaff') & (df_products['P'] == 0)]
+print df_products['produit'][(df_products['Marque'] == u'Hénaff') & (df_products['P'] == 1)]
+
+prod = u"schweppes _ schweppes agrum' boisson gazeuse agrume _ 6x33cl"
+print df_products[['P', 'produit']][df_products['produit'] == prod].to_string()
+
+# Check if products with 10/11/12 records follow same period pattern
