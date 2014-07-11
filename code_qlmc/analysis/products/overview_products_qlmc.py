@@ -271,4 +271,3 @@ print df_products[['marque', 'nom', 'format']][(df_products['marque'] == u'Le St
 
 prod = u"schweppes _ schweppes agrum' boisson gazeuse agrume _ 6x33cl"
 print df_products[['P', 'produit']][df_products['produit'] == prod].to_string()
-
