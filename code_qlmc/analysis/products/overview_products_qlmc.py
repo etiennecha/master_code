@@ -70,6 +70,16 @@ def fix_produit_2(product, ls_replace_products = ls_replace_products):
   return u' '.join([x for x in product.split(u' ') if x])
 df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit_2(x))
 
+# Alcool: u'degré' vs. u'\xb0' => check robustness
+def fix_alcool(product):
+  product = re.sub(u'\xb0C?', u' degrés', product)
+  return u' '.join([x for x in product.split(u' ') if x])
+
+df_products['Produit'][(df_products['Rayon'] == u'Boissons') |\
+                       (df_products['Rayon'] == u'Bières et alcool')] = \
+  df_products['Produit'][(df_products['Rayon'] == u'Boissons') |\
+                         (df_products['Rayon'] == u'Bières et alcool')].apply(lambda x: fix_alcool(x))
+
 ## Check ',' right after int + 'x'
 #for x in df_products['Produit'].unique():
 #	if re.search(u'[0-9]x,', x, re.IGNORECASE):
@@ -139,7 +149,28 @@ ls_sub_format = [u'bouteilles?',
                  u'plastique',
                  u'boîte',
                  u'flacon',
-                 u'atomiseur']
+                 u'atomiseur',
+                 u'barquette',
+                 u'sachet',
+                 u'pot',
+                 u'cellophane',
+                 u'paquet(-carton)?',
+                 u'pack',
+                 u'plaquette',
+                 u'paquets?',
+                 u'packets?',
+                 u'blister',
+                 u'tube',
+                 u'sticks?',
+                 u'berlingot',
+                 u'bloc',
+                 u'plateau'
+                 u'filet',
+                 u'tablette',
+                 u'verre',
+                 u'papier',
+                 u'carton',
+                 u'relief']
 def clean_format(str_format, ls_sub_format = ls_sub_format):
   for sub_format in ls_sub_format:
     str_format = re.sub(sub_format, u'', str_format, flags=re.IGNORECASE)
@@ -224,10 +255,20 @@ print '\nNb products across all periods:', len(se_produits_vc[se_produits_vc == 
 print '\nProducts which lack one period'
 print se_produits_vc[se_produits_vc == 12][0:10] # look missing one...
 
-print df_products['produit'][(df_products['Marque'] == u'Hénaff') & (df_products['P'] == 0)]
-print df_products['produit'][(df_products['Marque'] == u'Hénaff') & (df_products['P'] == 1)]
+# Check if products with 10/11/12 records follow same period pattern
+ls_pmp = []
+for prod in se_produits_vc[se_produits_vc == 12].index:
+  ls_prod_pers = df_products['P'][df_products['produit'] == prod].values
+  ls_pmp.append((prod, [i for i in range(13) if i not in ls_prod_pers]))
+
+# With 11 (since 12 seems mostly due to period 9 where fewer products collected)
+# (u'melitta _ filtres \xe0 caf\xe9 papier filtration cors\xe9e 1x4 + d\xe9tartrant _ x 80', [2, 9])
+# pbm 'x 80' vs 'x80'
+# clear pattern of exit too...
+
+print df_products[['marque', 'nom', 'format']][(df_products['marque'] == u'Le Ster') &\
+                                               (df_products['P'] == 0)].to_string()
 
 prod = u"schweppes _ schweppes agrum' boisson gazeuse agrume _ 6x33cl"
 print df_products[['P', 'produit']][df_products['produit'] == prod].to_string()
 
-# Check if products with 10/11/12 records follow same period pattern
