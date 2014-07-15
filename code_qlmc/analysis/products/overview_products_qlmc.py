@@ -52,7 +52,27 @@ ls_fixed_products = [[u'mozzarella 19% mat. gr. environ - 125 g environ',
                      [u'Mozzarella 19% mat. gr. environ - 125 g environ',
                       u'Mozzarella 19% mat. gr. environ, 125 g environ'],
                      [u'mozzarella 18% mat. gr. minimum - 125 g environ',
-                      u'mozzarella 18% mat. gr. minimum, 125 g environ']]
+                      u'mozzarella 18% mat. gr. minimum, 125 g environ'],
+                     [u'Evian - Eau minérale naturelle, 1,5L',
+                      u'Evian - Eau minérale naturelle plate, 1,5L'],
+                     [u'Evian - Eau minéralenaturelle, 1L',
+                      u'Evian - Eau minérale plate naturelle, 1L'],
+                     [u'Evian - Eau minérale naturelle, 6x1,5L',
+                      u'Evian - Eau minérale naturelle plate, 6x1,5L'],
+                     [u'Evian - Eau minérale naturelle, 6x0,5L',
+                      u'Evian - Eau minérale naturelle plate, 6 x 0,5L'], # not all periods
+                     [u'Courmayeur - Eau minérale naturelle, 1,5L',
+                      u'Courmayeur - Eau minérale plate naturelle, 1,5L'],
+                     [u'Hepar - Eau minérale naturelle, 1L',
+                      u'Hepar - Eau minérale naturelle plate, 1L'],
+                     [u'Contrex - Eau minérale naturelle, 6x50cl',
+                      u'Contrex - Eau minérale plate naturelle, 6x50cl'],
+                     [u'Contrex - Eau minérale naturelle plate, 6x50cl',
+                      u'Contrex - Eau minérale plate naturelle, 6x50cl'],
+                     [u'Contrex - Eau minérale naturelle, 6x1,5L',
+                      u'Contrex - Eau minérale naturelle plate, 6x1,5L'],
+                     [u'Contrex - Eau minérale naturelle, 1,5L',
+                      u'Contrex - Eau minérale naturelle plate, 1,5L']]
 def fix_produit(product, ls_replace_products = ls_fixed_products):
   for old, new in ls_replace_products:
     if product == old:
@@ -74,11 +94,17 @@ df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit_2(x)
 def fix_alcool(product):
   product = re.sub(u'\xb0C?', u' degrés', product)
   return u' '.join([x for x in product.split(u' ') if x])
-
 df_products['Produit'][(df_products['Rayon'] == u'Boissons') |\
                        (df_products['Rayon'] == u'Bières et alcool')] = \
   df_products['Produit'][(df_products['Rayon'] == u'Boissons') |\
                          (df_products['Rayon'] == u'Bières et alcool')].apply(lambda x: fix_alcool(x))
+df_products['Produit'][df_products['Produit'].str.contains(u'vinaigre', case=False)] =\
+  df_products['Produit'][df_products['Produit'].str.contains(u'vinaigre', case=False)].apply(\
+    lambda x: fix_alcool(x))
+
+# MG / u'matière grasse' (see case etc)
+df_products['Produit'] = df_products['Produit'].apply(\
+                           lambda x: re.sub(u'% de MG', u'% de matière grasse', x))
 
 ## Check ',' right after int + 'x'
 #for x in df_products['Produit'].unique():
@@ -108,7 +134,8 @@ df_products['marque'], df_products['libelle'] =\
 
 # STANDARDIZE libelle
 
-df_products['libelle'] = df_products['libelle'].apply(lambda x: re.sub(u',\s?viande$', u'', x).strip())
+df_products['libelle'] = df_products['libelle'].apply(\
+                           lambda x: re.sub(u',\s?viande$', u'', x).strip())
 
 ## todo: inspect ',' between two ints: safe to transform it to '.'?
 ## there are generally many spaces... so must be a float if ',' between ints
@@ -133,7 +160,8 @@ df_products['libelle'] = df_products['libelle'].apply(lambda x: convert_float(x)
 
 df_products['nom'], df_products['format'] =\
   zip(*df_products['libelle'].map(lambda x: get_nom_and_format(x)))
-df_products['format'] = df_products['format'].apply(lambda x: x.lstrip(u',').lstrip(u'-').strip())
+df_products['format'] = df_products['format'].apply(\
+                          lambda x: x.lstrip(u',').lstrip(u'-').strip())
 
 #print df_products[['marque', 'nom', 'format']][df_products['P'] == 0].to_string()
 print '\n', df_products['nom'][(df_products['P'] == 0) &\
@@ -177,6 +205,10 @@ def clean_format(str_format, ls_sub_format = ls_sub_format):
   return u' '.join([x for x in str_format.split(u' ') if x])
 df_products['format'] = df_products['format'].apply(lambda x: clean_format(x))
 
+# Conservative fix for u'x 80' => u'x80' (other spaces pbms to deal with)
+df_products['format'] = df_products['format'].apply(\
+                          lambda x: re.sub(u'^x ([0-9])', u'x\\1', x, flags=re.IGNORECASE))
+                          
 # PRODUCT TURNOVER
 
 ls_alive_products = df_products['Produit'][df_products['P'] == 1].unique()
@@ -259,7 +291,7 @@ print se_produits_vc[se_produits_vc == 12][0:10] # look missing one...
 ls_pmp = []
 for prod in se_produits_vc[se_produits_vc == 12].index:
   ls_prod_pers = df_products['P'][df_products['produit'] == prod].values
-  ls_pmp.append((prod, [i for i in range(13) if i not in ls_prod_pers]))
+  ls_pmp.append(([i for i in range(13) if i not in ls_prod_pers], prod))
 
 # With 11 (since 12 seems mostly due to period 9 where fewer products collected)
 # (u'melitta _ filtres \xe0 caf\xe9 papier filtration cors\xe9e 1x4 + d\xe9tartrant _ x 80', [2, 9])

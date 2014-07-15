@@ -30,6 +30,10 @@ fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 df_fra_stores = fra_stores['df_fra_stores_current']
 df_qlmc_stores = qlmc_data['df_qlmc_stores']
 
+# temp: correct upon building df
+df_fra_stores['insee_code'][(df_fra_stores['name'] == u'Franprix CHATEAUROUX') &\
+                            (df_fra_stores['zip'] == '36000')] = u'36044'
+
 # todo: add adequate Brand/Type for matching in df_fra_stores
 # lookup each qlmc_store in df_fra_stores based on INSEE Code and Brand/Type
 
