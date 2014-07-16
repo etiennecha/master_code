@@ -15,6 +15,7 @@ path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 
 path_dir_source_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json_qlmc')
 path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
 
 ls_json_files = [u'200705_releves_QLMC',
                  u'200708_releves_QLMC',
@@ -303,3 +304,8 @@ print df_products[['marque', 'nom', 'format']][(df_products['marque'] == u'Le St
 
 prod = u"schweppes _ schweppes agrum' boisson gazeuse agrume _ 6x33cl"
 print df_products[['P', 'produit']][df_products['produit'] == prod].to_string()
+
+# Output for visual check
+ls_output_csv =['P', 'Rayon', 'Famille', 'Produit', 'produit', 'marque', 'nom', 'format']
+df_products[ls_output_csv].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_products.csv'),
+                                  float_format='%.2f', encoding='utf-8', index=False)

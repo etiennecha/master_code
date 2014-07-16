@@ -12,55 +12,56 @@ path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_communes = os.path.join(path_dir_insee, 'communes')
 
 # #######################
-# AIRES URBAINES 2010
+# BASSINS DE VIE 2012
 # #######################
 
-path_xls_au = os.path.join(path_dir_communes,
-                           'AiresUrbaines',
-                           'AU2010.xls')
-wb_au = xlrd.open_workbook(path_xls_au)
-print 'Sheets in file', wb_au.sheet_names()
+path_xls_bv = os.path.join(path_dir_communes,
+                           'BassinsVie',
+                           'bv-2012.xls')
+wb_bv = xlrd.open_workbook(path_xls_bv)
+print 'Sheets in file', wb_bv.sheet_names()
 
 # Sheet: aires urbaines (info par au)
-sh_au_info = wb_au.sheet_by_name(u'Zonage en aires urbaines 2010')
-ls_columns = sh_au_info.row_values(1)
-ls_rows = [sh_au_info.row_values(i) for i in range(2, sh_au_info.nrows)]
-df_au_info = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+sh_bv_info = wb_bv.sheet_by_name(u'Liste des bassins de vie 2012')
+ls_columns = sh_bv_info.row_values(1)
+ls_rows = [sh_bv_info.row_values(i) for i in range(2, sh_bv_info.nrows)]
+ls_rows = [row[:3] for row in ls_rows[:1666]] # ad hoc fix...
+df_bv_info = pd.DataFrame(ls_rows, columns = ls_columns[:3], dtype = str)
 
 # Sheet: communes (appartenance des communes aux au)
-sh_au_com = wb_au.sheet_by_name(u'Composition communale')
-ls_columns = sh_au_com.row_values(1)
-ls_rows = [sh_au_com.row_values(i) for i in range(2, sh_au_com.nrows)]
-df_au_com = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+sh_bv_com = wb_bv.sheet_by_name(u'Communes')
+ls_columns = sh_bv_com.row_values(1)
+ls_rows = [sh_bv_com.row_values(i) for i in range(2, sh_bv_com.nrows)]
+ls_rows = [row[:6] for row in ls_rows] # ad hoc fix...
+df_bv_com = pd.DataFrame(ls_rows, columns = ls_columns[:6], dtype = str)
 
-## No need to merge: all info in df_au_com
-#df_au = df_au_com
+## No need to merge: all info in df_uu_com
+#df_uu = df_uu_com
 
 # Identification of Commune at center of Aire Urbaine (if any)
-ls_libgeo_1 = df_au_com['LIBAU2010'][df_au_com['LIBGEO'] == df_au_com['LIBAU2010']].values
-ls_libgeo_2 = df_au_com['LIBAU2010'][\
-                df_au_com['LIBAU2010'].str.contains(u'\(partie française\)')].unique()
-ls_ok = set(list(ls_libgeo_1) + list(ls_libgeo_2))
-# print df_au_com['LIBAU2010'][df_au_com['LIBAU2010'].str.contains(u' - ')].value_counts()
-ls_check = [x for x in df_au_info['LIBGEO'].values if x not in ls_ok]
-# Check if 'LIBGEO' in 'LIBAU2010'
-# (ok for AU with two central cities + '(partie française)')
-# i.e. can be two AU centers
-df_au_com['AU_Center'] = df_au_com.apply(\
-                           lambda row: 'YES' if row['LIBGEO'] in row['LIBAU2010']\
+ls_libgeo_1 = df_bv_com['LIBBV'][df_bv_com['LIB_COM'] == df_bv_com['LIBBV']].values
+ls_ok = set(list(ls_libgeo_1))
+# print df_uu_com['LIBBV'][df_uu_com['LIBBV'].str.contains(u' - ')].value_counts()
+ls_check = [x for x in df_bv_info['LIBBV'].values if x not in ls_ok]
+# Check if 'LIBGEO' in 'LIBUU2010'
+# (ok for UU with two central cities + '(partie française)')
+# i.e. can be two UU centers
+df_bv_com['BV_Center'] = df_bv_com.apply(\
+                           lambda row: 'YES' if row['LIB_COM'] in row['LIBBV']\
                                              else 'NO', axis=1)
-# print df_au_com[['AU2010', 'CODGEO']][df_au_com['AU_Center'] == 'YES'].to_string()
-df_corr_center = df_au_com[['AU2010', 'CODGEO']][df_au_com['AU_Center'] == 'YES']
-se_au_vc = df_corr_center['AU2010'].value_counts()
-print se_au_vc[se_au_vc > 1] # AU with more than one central city
-# Might be more reasonable to exclude those.. e.g. "Marseille - Aix-en-Provence"
-df_corr_ucenter =  df_corr_center.groupby(df_corr_center['AU2010']).first()
+## print df_au_com[['LIBCOM', 'LIBBV']][df_au_com['AU_Center'] == 'YES'].to_string()
+#df_corr_center = df_bv_com[['UU2010', 'CODGEO']][df_bv_com['UU_Center'] == 'YES']
+#se_bv_vc = df_corr_center['UU2010'].value_counts()
+#print se_bv_vc[se_bv_vc > 1] # UU with more than one central city
+## Might be more reasonable to exclude those.. e.g. "Marseille - Aix-en-Provence"
+#df_corr_ucenter =  df_corr_center.groupby(df_corr_center['UU2010']).first()
 
-# Merge back central city codgeo with df_au
-df_au_com.index = df_au_com['AU2010']
-df_corr_ucenter.index = df_corr_ucenter['AU2010']
-df_au_com['CODGEO_Center'] = df_corr_ucenter['CODGEO']
-df_au_com.index = df_au_com['CODGEO'] # set index back to CODGEO
+## Merge back central city codgeo with df_au
+#df_bv_com.index = df_bv_com['UU2010']
+#df_corr_ucenter.index = df_corr_ucenter['UU2010']
+#df_uu_com['CODGEO_Center'] = df_corr_ucenter['CODGEO']
+
+df_bv_com.index = df_bv_com['COM'] # set index back to CODGEO
 
 # ##################
 # COMMUNE LEVEL DATA
@@ -149,63 +150,66 @@ ls_revenus_select_columns = [u'CODGEO', u'MENFIS10', u'PMENFIS10', u'MENIMP10',
 df_revenus = df_revenus[ls_revenus_select_columns] 
 df_revenus.index = df_revenus['CODGEO']
 
-# Stats provided at AU (& UU) level!
-sh_revenus_au = wb_revenus.sheet_by_name(u'REVME_AU2010')
-ls_columns = sh_revenus_au.row_values(5)
-ls_rows = [sh_revenus_au.row_values(i) for i in range(6, sh_revenus_au.nrows)]
-df_revenus_au = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
-df_revenus_au = df_revenus_au[ls_revenus_select_columns] 
-df_revenus_au.set_index('CODGEO', inplace=True)
+## Stats provided at AU (& UU) level!
+#sh_revenus_uu = wb_revenus.sheet_by_name(u'REVME_UU2010')
+#ls_columns = sh_revenus_uu.row_values(5)
+#ls_rows = [sh_revenus_uu.row_values(i) for i in range(6, sh_revenus_uu.nrows)]
+#df_revenus_uu = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+#df_revenus_uu = df_revenus_uu[ls_revenus_select_columns] 
+#df_revenus_uu.set_index('CODGEO', inplace=True)
 
 # ######################
-# BUILD DF AU AGGREGATED
+# BUILD DF BV AGGREGATED
 # ######################
 
 # population variables
 ls_population_var_names = ['P10_POP', 'SUPERF']
 for var_name in ls_population_var_names:
-  df_au_com[var_name] = df_population[var_name].convert_objects(convert_numeric = True)
-df_au_com['POPDENSITY10'] = df_au_com['P10_POP'] / df_au_com['SUPERF']
+  df_bv_com[var_name] = df_population[var_name].convert_objects(convert_numeric = True)
+df_bv_com['POPDENSITY10'] = df_bv_com['P10_POP'] / df_bv_com['SUPERF']
 # logement variables
 ls_logement_var_names = [u'P10_LOG', u'P10_MEN', u'P10_PMEN',
                          u'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P']
 for var_name in ls_logement_var_names:
-  df_au_com[var_name] = df_logement[var_name].convert_objects(convert_numeric = True)
+  df_bv_com[var_name] = df_logement[var_name].convert_objects(convert_numeric = True)
 
 # could do more elaborate groupby (with dedicated function)
 # http://pandas.pydata.org/pandas-docs/dev/groupby.html
 # http://stackoverflow.com/questions/15262134/ (ctd on next line)
 # apply-different-functions-to-different-items-in-group-object-python-pandas
-df_au_agg = df_au_com[['AU2010'] +\
+df_bv_agg = df_bv_com[['BV'] +\
                       ls_population_var_names +\
-                      ls_logement_var_names].groupby('AU2010').sum()
-df_au_agg['POPDENSITY10'] = df_au_agg['P10_POP'] / df_au_agg['SUPERF']
+                      ls_logement_var_names].groupby('BV').sum()
+df_bv_agg['POPDENSITY10'] = df_bv_agg['P10_POP'] / df_bv_agg['SUPERF']
 ## next two lines for temp display / can be dropped if better groupby
-#df_au_info.index = df_au_info['CODGEO']
-#df_au_agg['LIBAU2010'] = df_au_info['LIBGEO']
-df_au_agg = pd.merge(df_au_agg, df_revenus_au, left_index = True, right_index = True)
+#df_bv_info.index = df_bv_info['UU2010']
+#df_bv_agg['LIBUU2010'] = df_bv_info['LIBUU2010']
+#df_bv_agg = pd.merge(df_bv_agg, df_revenus_uu, left_index = True, right_index = True)
+
+df_bv_info.index = df_bv_info['BV']
+df_bv_agg['NB_COMBV'] = df_bv_info['NB_COM']
 
 pd.set_option('float_format', '{:10,.0f}'.format)
-#print df_au_agg.to_string()
+#print df_bv_agg.to_string()
 
 # ###################
-# BUILD FINAL DF AU
+# BUILD FINAL DF BV
 # ###################
 
 # need df with au info at commune level (i.e. index = insee code)
-# keep TAU2010, CATAEU2010 and if commune = center or not
-df_au_com_final = df_au_com[['LIBGEO', 'AU2010', 'LIBAU2010',
-                             'TAU2010', 'CATAEU2010',
-                             'AU_Center', 'CODGEO_Center']]
-df_au_com_final = pd.merge(df_au_com_final, df_au_agg, how='left', # check how...
-                           left_on = 'AU2010', right_index = True)
-df_au_com_final.sort(inplace=True) # sort by index (was sorted by AU2010)
-#print df_au_final[0:100].to_string()
+# keep TYPE AND STATUT and if commune = center or not
+df_bv_com_final = df_bv_com[['LIB_COM', 'BV', 'LIBBV']]
+df_bv_com_final = pd.merge(df_bv_com_final, df_bv_agg, how='left', # check how...
+                           left_on = 'BV', right_index = True)
+df_bv_com_final.sort(inplace=True) # sort by index (was sorted by AU2010)
+#print df_bv_com_final[0:100].to_string()
 
 path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
-df_au_com_final.to_csv(os.path.join(path_dir_insee_built, 'df_au_com_final.csv'),
+df_bv_com_final.to_csv(os.path.join(path_dir_insee_built, 'df_bv_com_final.csv'),
                        float_format='%.2f', encoding='utf-8', 
-                       index=True, index_label=u'CODGEO')
+                       index=True, index_label=u'COM')
+
+# todo: add info on population revenu... e.g. central city only
 
 ## BACKUP
 
