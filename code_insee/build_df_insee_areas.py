@@ -86,7 +86,8 @@ df_bv_com = pd.DataFrame(ls_rows, columns = ls_columns[:6], dtype = str)
 # BUILD DF INSEE AREAS
 # ####################
 
-df_insee_areas = df_uu_com[['CODGEO', 'LIBGEO', 'UU2010']].copy()
+df_insee_areas = df_uu_com[['CODGEO', 'LIBGEO', 'UU2010',
+                            'TYPE_2010', 'STATUT_2010', 'POP_MUN_2007']].copy()
 df_insee_areas.set_index('CODGEO', inplace = True)
 
 df_au_com.set_index('CODGEO', inplace = True)
@@ -96,16 +97,20 @@ df_bv_com.set_index('COM', inplace = True)
 df_insee_areas['BV'] = df_bv_com['BV']
 
 # get rid of meaningless UU2010 & AU2010 (i.e. no real area)
+df_insee_areas['UU2010_O'] = df_insee_areas['UU2010']
 ls_uu2010_drop = [u'%02d000' %i for i in range(1, 96)] +\
+                 [u'2A000', u'2B000'] +\
                  [u'9%s000' %i for i in ['A', 'B', 'C', 'D', 'E', 'F']]
 df_insee_areas['UU2010'] = df_insee_areas['UU2010'].apply(\
                              lambda x: x if x not in ls_uu2010_drop else '')
 
+df_insee_areas['AU2010_O'] = df_insee_areas['AU2010']
 ls_au2010_drop = [u'000', u'997', u'998']
 df_insee_areas['AU2010'] = df_insee_areas['AU2010'].apply(\
                              lambda x: x if x not in ls_au2010_drop else '')
 
-ls_disp = ['CODGEO', 'LIBGEO', 'AU2010', 'UU2010', 'BV']
+ls_disp = ['CODGEO', 'LIBGEO', 'TYPE_2010', 'STATUT_2010', 'POP_MUN_2007',
+           'AU2010', 'UU2010', 'BV', 'AU2010_O', 'UU2010_O']
 
 df_insee_areas.reset_index(inplace=True)
 df_insee_areas[ls_disp].to_csv(os.path.join(path_dir_insee_built, 'df_insee_areas.csv'),
@@ -135,8 +140,9 @@ df_insee_areas_2 = pd.merge(df_bv_info[['BV', 'LIBBV']],
                             how='right')
 
 df_insee_areas_2.sort('CODGEO', inplace = True)
-ls_disp_2 = ['CODGEO', 'LIBGEO', 'AU2010', 'LIBAU2010',
-             'UU2010', 'LIBUU2010', 'BV', 'LIBBV']
+ls_disp_2 = ['CODGEO', 'LIBGEO', 'TYPE_2010', 'STATUT_2010', 'POP_MUN_2007',
+             'AU2010', 'LIBAU2010', 'UU2010', 'LIBUU2010', 'BV', 'LIBBV',
+             'AU2010_O', 'UU2010_O']
 # print df_insee_areas_2[ls_disp][0:500].to_string()
 
 df_insee_areas_2[ls_disp_2].to_csv(os.path.join(path_dir_insee_built, 'df_insee_areas_w_libs.csv'),

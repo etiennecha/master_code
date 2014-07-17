@@ -10,6 +10,7 @@ import pandas as pd
 
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_communes = os.path.join(path_dir_insee, 'communes')
+path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
 
 # #######################
 # AIRES URBAINES 2010
@@ -185,8 +186,21 @@ df_au_agg['POPDENSITY10'] = df_au_agg['P10_POP'] / df_au_agg['SUPERF']
 #df_au_agg['LIBAU2010'] = df_au_info['LIBGEO']
 df_au_agg = pd.merge(df_au_agg, df_revenus_au, left_index = True, right_index = True)
 
+df_au_info.rename(columns={'CODGEO': 'AU2010', 'LIBGEO' : 'LIBAU2010'},
+                  inplace=True)
+df_au_info.index = df_au_info['AU2010']
+df_au_agg_final = pd.merge(df_au_info,
+                           df_au_agg,
+                           left_index = True,
+                           right_index = True,
+                           how = 'right')
+# todo: add check with nb communes actually found in insee info files
+df_au_agg_final.to_csv(os.path.join(path_dir_insee_built, 'df_au_agg_final.csv'),
+                       float_format='%.2f', encoding='utf-8', 
+                       index=False)
+
 pd.set_option('float_format', '{:10,.0f}'.format)
-#print df_au_agg.to_string()
+#print df_uu_agg.to_string()
 
 # ###################
 # BUILD FINAL DF AU
@@ -202,10 +216,10 @@ df_au_com_final = pd.merge(df_au_com_final, df_au_agg, how='left', # check how..
 df_au_com_final.sort(inplace=True) # sort by index (was sorted by AU2010)
 #print df_au_final[0:100].to_string()
 
-path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
-df_au_com_final.to_csv(os.path.join(path_dir_insee_built, 'df_au_com_final.csv'),
-                       float_format='%.2f', encoding='utf-8', 
-                       index=True, index_label=u'CODGEO')
+#path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
+#df_au_com_final.to_csv(os.path.join(path_dir_insee_built, 'df_au_com_final.csv'),
+#                       float_format='%.2f', encoding='utf-8', 
+#                       index=True, index_label=u'CODGEO')
 
 ## BACKUP
 

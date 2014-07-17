@@ -10,6 +10,7 @@ import pandas as pd
 
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_communes = os.path.join(path_dir_insee, 'communes')
+path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
 
 # #######################
 # BASSINS DE VIE 2012
@@ -187,14 +188,26 @@ df_bv_agg['POPDENSITY10'] = df_bv_agg['P10_POP'] / df_bv_agg['SUPERF']
 #df_bv_agg = pd.merge(df_bv_agg, df_revenus_uu, left_index = True, right_index = True)
 
 df_bv_info.index = df_bv_info['BV']
-df_bv_agg['NB_COMBV'] = df_bv_info['NB_COM']
 
-pd.set_option('float_format', '{:10,.0f}'.format)
-#print df_bv_agg.to_string()
+ls_disp_info = ['BV', 'LIBBV']
+df_bv_agg_final = pd.merge(df_bv_info[ls_disp_info],
+                           df_bv_agg,
+                           left_index = True,
+                           right_index = True,
+                           how = 'left')
+# todo: add check with nb communes actually found in insee info files
+df_bv_agg_final.to_csv(os.path.join(path_dir_insee_built, 'df_bv_agg_final.csv'),
+                       float_format='%.2f', encoding='utf-8', 
+                       index=False)
 
 # ###################
 # BUILD FINAL DF BV
 # ###################
+
+df_bv_agg['NB_COMBV'] = df_bv_info['NB_COM']
+
+pd.set_option('float_format', '{:10,.0f}'.format)
+#print df_bv_agg.to_string()
 
 # need df with au info at commune level (i.e. index = insee code)
 # keep TYPE AND STATUT and if commune = center or not

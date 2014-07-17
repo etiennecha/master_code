@@ -10,6 +10,7 @@ import pandas as pd
 
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_communes = os.path.join(path_dir_insee, 'communes')
+path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
 
 # #######################
 # UNITES URBAINES 2010
@@ -186,16 +187,30 @@ df_uu_agg['POPDENSITY10'] = df_uu_agg['P10_POP'] / df_uu_agg['SUPERF']
 df_uu_agg = pd.merge(df_uu_agg, df_revenus_uu, left_index = True, right_index = True)
 
 df_uu_info.index = df_uu_info['UU2010']
+
+# todo: check missing UU... mainly DOMTOM: all info avail included??
+ls_disp_info = ['UU2010', 'LIBUU2010', 'NB_COM',
+                'TAILLE', 'TYPE', 'POP_MUN_2007']
+df_uu_agg_final = pd.merge(df_uu_info[ls_disp_info],
+                           df_uu_agg,
+                           left_index = True,
+                           right_index = True,
+                           how = 'left')
+# todo: add check with nb communes actually found in insee info files
+df_uu_agg_final.to_csv(os.path.join(path_dir_insee_built, 'df_uu_agg_final.csv'),
+                       float_format='%.2f', encoding='utf-8', 
+                       index=False)
+
+# ######################
+# BUILD FINAL DF UU COM
+# ######################
+
 df_uu_agg['NB_COMUU'] = df_uu_info['NB_COM']
 df_uu_agg['TAILLEUU'] = df_uu_info['TAILLE']
 df_uu_agg['TYPEUU'] = df_uu_info['TYPE']
 
 pd.set_option('float_format', '{:10,.0f}'.format)
 #print df_uu_agg.to_string()
-
-# ###################
-# BUILD FINAL DF AU
-# ###################
 
 # need df with au info at commune level (i.e. index = insee code)
 # keep TYPE AND STATUT and if commune = center or not
@@ -207,10 +222,9 @@ df_uu_com_final = pd.merge(df_uu_com_final, df_uu_agg, how='left', # check how..
 df_uu_com_final.sort(inplace=True) # sort by index (was sorted by AU2010)
 #print df_uu_com_final[0:100].to_string()
 
-path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
-df_uu_com_final.to_csv(os.path.join(path_dir_insee_built, 'df_uu_com_final.csv'),
-                       float_format='%.2f', encoding='utf-8', 
-                       index=True, index_label=u'CODGEO')
+#df_uu_com_final.to_csv(os.path.join(path_dir_insee_built, 'df_uu_com_final.csv'),
+#                       float_format='%.2f', encoding='utf-8', 
+#                       index=True, index_label=u'CODGEO')
 
 ## BACKUP
 
