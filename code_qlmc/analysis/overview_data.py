@@ -119,6 +119,7 @@ path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 
 path_dir_source_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json_qlmc')
 path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
 
 ls_json_files = [u'200705_releves_QLMC',
                  u'200708_releves_QLMC',
@@ -216,12 +217,12 @@ dict_store_stats = {key: value for key, value in [i for i in itertools.product(r
 for shop, ls_store_periods in dict_store_periods.iteritems():
   dict_store_stats[len(ls_store_periods)] += 1
 
-# Encode file with store lists for geocoding
-ls_ls_stores = [list(set_stores) for set_stores in dict_describe['store']]
-ls_ls_tuple_stores = []
-for list_stores in ls_ls_stores:
-  ls_ls_tuple_stores.append([get_split_chain_city(store, ls_chain_brands) for store in list_stores])
-# enc_json(ls_ls_tuple_stores, os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
+## Encode file with store lists for geocoding
+#ls_ls_stores = [list(set_stores) for set_stores in dict_describe['store']]
+#ls_ls_tuple_stores = []
+#for list_stores in ls_ls_stores:
+#  ls_ls_tuple_stores.append([get_split_chain_city(store, ls_chain_brands) for store in list_stores])
+## enc_json(ls_ls_tuple_stores, os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
 
 # Encode file with product lists for product reconciliation across periods (TAKES TIME)
 #ls_ls_products = []
@@ -264,6 +265,19 @@ ls_rows = [row for ls_rows in ls_ls_rows for row in ls_rows]
 df_qlmc = pd.DataFrame(ls_rows, columns = ls_columns)
 df_qlmc['Prix'] = df_qlmc['Prix'].astype(np.float32)
 
+# Output to csv
+## All
+#df_qlmc.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all.csv'),
+#               float_format='%.3f', encoding='utf-8', index=False)
+## Light
+#ls_qlmc_light = ['P', 'Rayon', 'Famille', 'Produit', 'Prix', 'Enseigne', 'Prix']
+#df_qlmc[ls_qlmc_light].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all_light.csv'),
+#                              float_format='%.3f', encoding='utf-8', index=False)
+# Each period
+for i in range(9):
+  df_qlmc[df_qlmc['P'] == i].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_per_%s.csv' %i),
+                                    float_format='%.3f', encoding='utf-8', index=False)
+
 # Check product dispersion
 ex_product = u'Nutella - Pâte à tartiner chocolat noisette, 400g'
 ex_se_prices = df_qlmc[u'Prix'][(df_qlmc[u'Produit'] == ex_product) &\
@@ -277,34 +291,34 @@ print df_ex_pd
 # df_qlmc[(df_qlmc['Rayon'] == 'Boissons') & (df_qlmc['P'] == 0)]
 # len(df_qlmc[(df_qlmc['Rayon'] == 'Boissons') & (df_qlmc['P'] == 0)]['Produit'].unique())
 
-df_qlmc['Produit'] = df_qlmc['Produit'].map(lambda x: clean_product(x))
-
-# todo: re.sub 'Bocal', 'Pet', 'Bidon' ?
-# 'barquettes?' '1 assiette', 'paquet', 'sachet', 'coffret'
-# brand u'b\xe9n\xe9dicta' => benedicta, ', 2 briques - 60cl' =>  '2 - 60cl'
-# brand u'bl\xe9did\xe9j' => u"bl\xe9di'dej (?) , '2 - 50cl' => '2*50cl'
-# todo : harmonize '1.5L' vs '1,5L' (temporary fix... to be improved)
-# todo: may want to remove 'Bouteille(s)', 'Pet' and likes before removing ','
-# todo... would be better to generally ignore text in the quantity part ! 
-
-ls_ls_boissons = []
-for i in range(3):
-	ls_ls_boissons.append(df_qlmc[(df_qlmc['Rayon'] == 'Boissons') &\
-                           (df_qlmc['P'] == i)]['Produit'].unique())
-
-ls_boissons_0 = [x for x in ls_ls_boissons[0] if x in ls_ls_boissons[1]]
-ls_boissons_1 = [x for x in ls_ls_boissons[1] if x in ls_ls_boissons[2]]
-ls_boissons_2 = [x for x in ls_boissons_0 if x in ls_boissons_1]
-
-ls_ls_sale = []
-for i in range(3):
-	ls_ls_sale.append(\
-    df_qlmc[(df_qlmc['Rayon'] == u'Epicerie sal\xe9e') &\
-            (df_qlmc['P'] == i)]['Produit'].unique())
-
-ls_sale_0 = [x for x in ls_ls_sale[0] if x in ls_ls_sale[1]]
-ls_sale_1 = [x for x in ls_ls_sale[1] if x in ls_ls_sale[2]]
-ls_sale_2 = [x for x in ls_sale_0 if x in ls_sale_1]
+#df_qlmc['Produit'] = df_qlmc['Produit'].map(lambda x: clean_product(x))
+#
+## todo: re.sub 'Bocal', 'Pet', 'Bidon' ?
+## 'barquettes?' '1 assiette', 'paquet', 'sachet', 'coffret'
+## brand u'b\xe9n\xe9dicta' => benedicta, ', 2 briques - 60cl' =>  '2 - 60cl'
+## brand u'bl\xe9did\xe9j' => u"bl\xe9di'dej (?) , '2 - 50cl' => '2*50cl'
+## todo : harmonize '1.5L' vs '1,5L' (temporary fix... to be improved)
+## todo: may want to remove 'Bouteille(s)', 'Pet' and likes before removing ','
+## todo... would be better to generally ignore text in the quantity part ! 
+#
+#ls_ls_boissons = []
+#for i in range(3):
+#	ls_ls_boissons.append(df_qlmc[(df_qlmc['Rayon'] == 'Boissons') &\
+#                           (df_qlmc['P'] == i)]['Produit'].unique())
+#
+#ls_boissons_0 = [x for x in ls_ls_boissons[0] if x in ls_ls_boissons[1]]
+#ls_boissons_1 = [x for x in ls_ls_boissons[1] if x in ls_ls_boissons[2]]
+#ls_boissons_2 = [x for x in ls_boissons_0 if x in ls_boissons_1]
+#
+#ls_ls_sale = []
+#for i in range(3):
+#	ls_ls_sale.append(\
+#    df_qlmc[(df_qlmc['Rayon'] == u'Epicerie sal\xe9e') &\
+#            (df_qlmc['P'] == i)]['Produit'].unique())
+#
+#ls_sale_0 = [x for x in ls_ls_sale[0] if x in ls_ls_sale[1]]
+#ls_sale_1 = [x for x in ls_ls_sale[1] if x in ls_ls_sale[2]]
+#ls_sale_2 = [x for x in ls_sale_0 if x in ls_sale_1]
 
 # Stores which survive (all stores for now...)
 ls_ls_stores_2 = []

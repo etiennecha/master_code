@@ -22,6 +22,8 @@ path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
 
+path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
+
 path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
 qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
@@ -30,9 +32,16 @@ fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 df_fra_stores = fra_stores['df_fra_stores_current']
 df_qlmc_stores = qlmc_data['df_qlmc_stores']
 
-# temp: correct upon building df
-df_fra_stores['insee_code'][(df_fra_stores['name'] == u'Franprix CHATEAUROUX') &\
-                            (df_fra_stores['zip'] == '36000')] = u'36044'
+# Seems that I need to proceed via index to fix data (check)
+print u"\nTo be fixed: insee code u'14225'"
+print df_fra_stores['insee_code'][(df_fra_stores['type'] == u'Hyper U') &\
+                                  (df_fra_stores['city'] == u'DIVES SUR MER') &\
+                                  (df_fra_stores['street'] == u'Boulevard Maurice Thorez')]
+df_fra_stores.ix[6715]['insee_code'] = '14225'
+
+## temp: correct upon building df
+#df_fra_stores['insee_code'][(df_fra_stores['name'] == u'Franprix CHATEAUROUX') &\
+#                            (df_fra_stores['zip'] == '36000')] = u'36044'
 
 # todo: add adequate Brand/Type for matching in df_fra_stores
 # lookup each qlmc_store in df_fra_stores based on INSEE Code and Brand/Type
@@ -137,12 +146,6 @@ for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc)
 # PRELIMINARY MATCHING: ALL PERIODS
 # Meant for specific enough brands found in both df
 
-# Seems that I need to proceed via index to fix data (check)
-print u"\nTo be fixed: insee code u'14225'"
-print df_fra_stores['insee_code'][(df_fra_stores['type'] == u'Hyper U') &\
-                                  (df_fra_stores['city'] == u'DIVES SUR MER') &\
-                                  (df_fra_stores['street'] == u'Boulevard Maurice Thorez')]
-df_fra_stores.ix[6715]['insee_code'] = '14225'
 
 ls_spe_matched = []
 enseigne_qlmc, enseigne_fra = u'HYPER U', u'Hyper U'
@@ -156,45 +159,75 @@ for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc)
     print '\n', row['Enseigne'], row['Commune'], row['INSEE_Code']
     print df_city_stores.to_string()
 
-# SYSTEMATIC MATCHING
-dict_matched = {}
-dict_nmatched = {}
+## SYSTEMATIC MATCHING
+#dict_matched = {}
+#dict_nmatched = {}
+#for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
+#  dict_matched[enseigne_qlmc], dict_nmatched[enseigne_qlmc] = [[],[]], [[], []]
+#  for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc)].iterrows():
+#    insee_code = row['INSEE_Code']
+#    df_city_stores = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
+#                                   (df_fra_stores['type'] == enseigne_fra)]
+#    if len(df_city_stores) == 1:
+#      dict_matched[enseigne_qlmc][0].append([row['Enseigne'],
+#                                             row['Commune'], 
+#                                             df_city_stores['name']])
+#    else:
+#      dict_nmatched[enseigne_qlmc][0].append([row['Enseigne'],
+#                                              row['Commune'],
+#                                              row['INSEE_Code'],
+#                                              df_city_stores])
+#    df_city_stores_alt = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
+#                                       (df_fra_stores['type_alt'] == enseigne_fra_alt)]
+#    if len(df_city_stores_alt) == 1:
+#      dict_matched[enseigne_qlmc][1].append([row['Enseigne'],
+#                                             row['Commune'], 
+#                                             df_city_stores_alt['name']])
+#    else:
+#      dict_nmatched[enseigne_qlmc][1].append([row['Enseigne'],
+#                                              row['Commune'],
+#                                              row['INSEE_Code'],
+#                                              df_city_stores_alt])
+#
+      
+#print '\nSuccesful Matching'
+#for x in ls_matching:
+#	print x[0], len(dict_matched[x[0]][0]), len(dict_matched[x[0]][1])
+#
+#print '\nNo match or ambiguity'
+#for x in ls_matching:
+#	print x[0], len(dict_nmatched[x[0]][0]), len(dict_nmatched[x[0]][1])
+#
+## todo: iterate over each enseigne_qlmc: first result then second
+## todo: check how can be improved... + closed stores / changes in brand
+
+ls_matched_stores = []
 for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
-  dict_matched[enseigne_qlmc], dict_nmatched[enseigne_qlmc] = [[],[]], [[], []]
   for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc)].iterrows():
     insee_code = row['INSEE_Code']
     df_city_stores = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
                                    (df_fra_stores['type'] == enseigne_fra)]
     if len(df_city_stores) == 1:
-      dict_matched[enseigne_qlmc][0].append([row['Enseigne'],
-                                             row['Commune'], 
-                                             df_city_stores['name']])
+      ls_matched_stores.append((int(row['P']),
+                                row['Enseigne'],
+                                row['Commune'],
+                                df_city_stores.index[0]))
     else:
-      dict_nmatched[enseigne_qlmc][0].append([row['Enseigne'],
-                                              row['Commune'],
-                                              row['INSEE_Code'],
-                                              df_city_stores])
-    df_city_stores_alt = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
-                                       (df_fra_stores['type_alt'] == enseigne_fra_alt)]
-    if len(df_city_stores_alt) == 1:
-      dict_matched[enseigne_qlmc][1].append([row['Enseigne'],
-                                             row['Commune'], 
-                                             df_city_stores_alt['name']])
-    else:
-      dict_nmatched[enseigne_qlmc][1].append([row['Enseigne'],
-                                              row['Commune'],
-                                              row['INSEE_Code'],
-                                              df_city_stores_alt])
+      df_city_stores_alt = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
+                                         (df_fra_stores['type_alt'] == enseigne_fra_alt)]
+      if len(df_city_stores_alt) == 1:
+        ls_matched_stores.append((int(row['P']),
+                                  row['Enseigne'],
+                                  row['Commune'],
+                                  df_city_stores_alt.index[0]))
 
-print '\nSuccesful Matching'
-for x in ls_matching:
-	print x[0], len(dict_matched[x[0]][0]), len(dict_matched[x[0]][1])
+df_matched = pd.DataFrame(ls_matched_stores,
+                          columns = ['P', 'Enseigne', 'Commune', 'ind_fra_stores'])
 
-print '\nNo match or ambiguity'
-for x in ls_matching:
-	print x[0], len(dict_nmatched[x[0]][0]), len(dict_nmatched[x[0]][1])
+df_qlmc_stores_matched = pd.merge(df_matched, df_qlmc_stores,
+                                  on = ['P', 'Enseigne', 'Commune'],
+                                  how = 'right')
 
-# todo: iterate over each enseigne_qlmc: first result then second
-# todo: check how can be improved... + closed stores / changes in brand
-
-# matched stores, top insee bv/au/uu?
+# Output for merger with price file
+#df_qlmc_stores_matched.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_stores_matched.csv'),
+#                              float_format='%.0f', encoding='utf-8', index=False)

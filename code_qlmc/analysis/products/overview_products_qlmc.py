@@ -47,6 +47,8 @@ pd.set_option('display.max_colwidth', 80) # default 50 ?
 
 # STANDARDIZE PRODUCTS
 
+df_products['Produit_O'] = df_products['Produit']
+
 # Ad hoc cleaning
 ls_fixed_products = [[u'mozzarella 19% mat. gr. environ - 125 g environ',
                       u'mozzarella 19% mat. gr. environ, 125 g environ'],
@@ -73,7 +75,9 @@ ls_fixed_products = [[u'mozzarella 19% mat. gr. environ - 125 g environ',
                      [u'Contrex - Eau minérale naturelle, 6x1,5L',
                       u'Contrex - Eau minérale naturelle plate, 6x1,5L'],
                      [u'Contrex - Eau minérale naturelle, 1,5L',
-                      u'Contrex - Eau minérale naturelle plate, 1,5L']]
+                      u'Contrex - Eau minérale naturelle plate, 1,5L'],
+                     [u"Ballantines - Whisky blend ecossais 7 ans d'âge 40%, 70cl", # more to do...
+                      u"Ballantines - Whisky blend écossais 7ans d'âge 40 degrés, 70cl"]]
 def fix_produit(product, ls_replace_products = ls_fixed_products):
   for old, new in ls_replace_products:
     if product == old:
@@ -305,7 +309,17 @@ print df_products[['marque', 'nom', 'format']][(df_products['marque'] == u'Le St
 prod = u"schweppes _ schweppes agrum' boisson gazeuse agrume _ 6x33cl"
 print df_products[['P', 'produit']][df_products['produit'] == prod].to_string()
 
-# Output for visual check
 ls_output_csv =['P', 'Rayon', 'Famille', 'Produit', 'produit', 'marque', 'nom', 'format']
-df_products[ls_output_csv].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_products.csv'),
-                                  float_format='%.2f', encoding='utf-8', index=False)
+
+## Output for visual check
+#df_products[ls_output_csv].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_products.csv'),
+#                                  float_format='%.2f', encoding='utf-8', index=False)
+
+# Output for merger with original data
+df_products = df_products[['Produit_O', 'marque', 'nom', 'format']]
+df_products.rename(columns={'Produit_O': 'Produit'}, inplace = True)
+df_products.drop_duplicates(cols='Produit', take_last=True, inplace=True)
+
+## Output for merger with price file
+#df_products.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_products_for_merger.csv'),
+#                   float_format='%.2f', encoding='utf-8', index=False)
