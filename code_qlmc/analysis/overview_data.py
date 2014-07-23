@@ -221,7 +221,8 @@ for shop, ls_store_periods in dict_store_periods.iteritems():
 #ls_ls_stores = [list(set_stores) for set_stores in dict_describe['store']]
 #ls_ls_tuple_stores = []
 #for list_stores in ls_ls_stores:
-#  ls_ls_tuple_stores.append([get_split_chain_city(store, ls_chain_brands) for store in list_stores])
+#  ls_ls_tuple_stores.append([get_split_chain_city(store, ls_chain_brands)\
+#                               for store in list_stores])
 ## enc_json(ls_ls_tuple_stores, os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
 
 # Encode file with product lists for product reconciliation across periods (TAKES TIME)
@@ -381,6 +382,23 @@ for prod in ls_lasting_prods[0:10]:
 # todo: take amount into account (enrich function...)
 # todo: see if all categories equally concerned (average...)
 # todo: see if specific products concerned ? (for which stores...?)
+
+## Evo of prices among surviving stores (generalize)
+#ls_prod_0 = df_qlmc['Produit'][df_qlmc['P'] == 0].unique()
+#ls_prod_8 = df_qlmc['Produit'][df_qlmc['P'] == 8].unique()
+#ls_prod_08 = [x for x in ls_prod_0 if x in ls_prod_8]
+#ls_store_0 = df_qlmc['Magasin'][df_qlmc['P'] == 0].unique()
+#ls_store_8 = df_qlmc['Magasin'][df_qlmc['P'] == 8].unique()
+#ls_store_08 = [x for x in ls_store_0 if x in ls_store_8]
+#for x in ls_store_08:
+#  df_mag_prod = df_qlmc[(df_qlmc['Magasin'] == x) & (df_qlmc['Produit'] == ls_prod_08[0])]
+#  ls_mag_prod_periods = df_mag_prod['P'].unique()
+#  if 0 in ls_mag_prod_periods and 8 in ls_mag_prod_periods:
+#    print '\n', x
+#    print df_mag_prod[['P', 'Produit', 'Prix']]
+
+## Can check evolution of products of same brand
+## Draw evo of prices of different formats of Coca Cola at various stores
 
 ## ###########
 ## Pyper
