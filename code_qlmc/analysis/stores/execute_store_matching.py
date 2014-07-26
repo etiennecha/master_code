@@ -15,16 +15,12 @@ import pprint
 
 path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
-
-ls_ls_tuple_stores = dec_json(os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
+path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
+path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
-
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
 qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
 fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
@@ -32,24 +28,23 @@ fra_stores = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'fra_stores.h5'))
 df_fra_stores = fra_stores['df_fra_stores_current']
 df_qlmc_stores = qlmc_data['df_qlmc_stores']
 
-# Seems that I need to proceed via index to fix data (check)
-print u"\nTo be fixed: insee code u'14225'"
+# Ad hoc corrections (temp): to be improved!
+# Seems that I need to proceed via index to fix data
+print u'\nTo be fixed: ix 6715, insee code 14225'
 print df_fra_stores['insee_code'][(df_fra_stores['type'] == u'Hyper U') &\
                                   (df_fra_stores['city'] == u'DIVES SUR MER') &\
                                   (df_fra_stores['street'] == u'Boulevard Maurice Thorez')]
-df_fra_stores.ix[6715]['insee_code'] = '14225'
-
-## temp: correct upon building df
-#df_fra_stores['insee_code'][(df_fra_stores['name'] == u'Franprix CHATEAUROUX') &\
-#                            (df_fra_stores['zip'] == '36000')] = u'36044'
-
-# todo: add adequate Brand/Type for matching in df_fra_stores
-# lookup each qlmc_store in df_fra_stores based on INSEE Code and Brand/Type
+df_fra_stores.ix[6715]['insee_code'] = u'14225'
+print u'\nTo be fixed: ix 3177, insee code 36044'
+print df_fra_stores['insee_code'][(df_fra_stores['name'] == u'Franprix CHATEAUROUX') &\
+                                  (df_fra_stores['zip'] == '36000')]
+df_fra_stores.ix[3177]['insee_code'] = u'36044'
 
 # STORE BRAND/TYPE IN EACH DF: NEED TO HARMONIZE
 
-# types in df_qlmc_stores
-df_qlmc_stores['Enseigne'].value_counts()
+## types in df_qlmc_stores
+#print df_qlmc_stores['Enseigne'].value_counts()
+
 # INTERMARCHE          745 : keep => rgp in df_fra_stores
 # AUCHAN               705 : keep => same in df_fra_stores
 # SUPER U              610 : keep or SYSTEME U (HYPER U + SUPER U?) in df_fra_stores
@@ -72,8 +67,8 @@ df_qlmc_stores['Enseigne'].value_counts()
 # CENTRE LECLERC         1 : LECLERC
 # CARREFOUR CITY         1 : keep or CARREFOUR CITY?
 
-# types in df_fra_stores
-df_fra_stores['type'].value_counts()
+## types in df_fra_stores
+#print df_fra_stores['type'].value_counts()
 
 dict_fra_stores_alt_brand = {u'Intermarché Super': u'Intermarché',
                              u'Intermarché Contact': u'Intermarché',
@@ -92,9 +87,11 @@ dict_fra_stores_alt_brand = {u'Intermarché Super': u'Intermarché',
                              u'Supermarché Casino' : u'Casino',
                              u'Hyper Casino': u'Casino',
                              u'Géant Casino' : u'Casino'}
-df_fra_stores['type_alt'] = df_fra_stores['type'].apply(lambda x: dict_fra_stores_alt_brand[x]\
-                                                          if dict_fra_stores_alt_brand.get(x)\
-                                                          else x)
+
+df_fra_stores['type_alt'] = df_fra_stores['type'].apply(\
+                              lambda x: dict_fra_stores_alt_brand[x]\
+                                          if dict_fra_stores_alt_brand.get(x)\
+                                          else x)
 
 ls_matching = [[u'INTERMARCHE', u'Intermarché Super', u'Intermarché'],
                [u'AUCHAN', u'Auchan', u'Auchan'],
@@ -115,37 +112,8 @@ ls_matching = [[u'INTERMARCHE', u'Intermarché Super', u'Intermarché'],
                [u'CENTRE LECLERC', u'Leclerc', u'Leclerc'],
                [u'CARREFOUR CITY', u'Carrefour City', u'Carrefour']]
 
-# PRELIMINARY MATCHING BY PERIOD
-
-ls_matched = []
-enseigne_qlmc, enseigne_fra = u'E.LECLERC', u'Leclerc' 
-# enseigne_qlmc, enseigne_fra = u'AUCHAN', u'Auchan'
-# enseigne_qlmc, enseigne_fra = u'CARREFOUR', u'Carrefour'
-# enseigne_qlmc, enseigne_fra = u'SYSTEME U', u'Hyper U'
-# enseigne_qlmc, enseigne_fra = u'SYSTEME U', u'Super U' # => NEED TO REGROUP
-## Need to work with both... check disambiguation with prices (can we?)
-
-for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc) &\
-                          (df_qlmc_stores['P'] == 0)].iterrows():
-  insee_code = row['INSEE_Code']
-  df_city_stores = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
-                                 (df_fra_stores['type'] == enseigne_fra)]
-  if len(df_city_stores) == 1:
-    ls_matched.append([row['Enseigne'], row['Commune'], df_city_stores['name']])
-  else:
-    print '\n', row['Enseigne'], row['Commune'], row['INSEE_Code']
-    print df_city_stores.to_string()
-
-#print df_fra_stores[(df_fra_stores['type'] == 'Auchan') &\
-#                    (df_fra_stores['zip'].str.slice(stop=2)=='59')].to_string()
-
-# add Auchan La Seyne sur Mer: travaux...
-# http://www.varmatin.com/la-seyne-sur-mer/le-futur-auchan-de-la-seyne-se-devoile.1490487.html
-# add Auchan Montgeron Vigneux sur Seine: no idea why not in data
-
-# PRELIMINARY MATCHING: ALL PERIODS
+# PRELIMINARY MATCHING
 # Meant for specific enough brands found in both df
-
 
 ls_spe_matched = []
 enseigne_qlmc, enseigne_fra = u'HYPER U', u'Hyper U'
@@ -159,7 +127,110 @@ for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc)
     print '\n', row['Enseigne'], row['Commune'], row['INSEE_Code']
     print df_city_stores.to_string()
 
+#print df_fra_stores[(df_fra_stores['type'] == 'Auchan') &\
+#                    (df_fra_stores['zip'].str.slice(stop=2)=='59')].to_string()
+
+# add Auchan La Seyne sur Mer: travaux...
+# http://www.varmatin.com/la-seyne-sur-mer/le-futur-auchan-de-la-seyne-se-devoile.1490487.html
+# add Auchan Montgeron Vigneux sur Seine: no idea why not in data
+
 ## SYSTEMATIC MATCHING
+
+ls_matched_stores = []
+for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
+  for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc)].iterrows():
+    insee_code = row['INSEE_Code']
+    df_city_stores = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
+                                   (df_fra_stores['type'] == enseigne_fra)]
+    if len(df_city_stores) == 1:
+      ls_matched_stores.append((int(row['P']),
+                                row['Enseigne'],
+                                row['Commune'],
+                                df_city_stores.index[0]))
+    else:
+      df_city_stores_alt = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
+                                         (df_fra_stores['type_alt'] == enseigne_fra_alt)]
+      if len(df_city_stores_alt) == 1:
+        ls_matched_stores.append((int(row['P']),
+                                  row['Enseigne'],
+                                  row['Commune'],
+                                  df_city_stores_alt.index[0]))
+
+df_matched = pd.DataFrame(ls_matched_stores,
+                          columns = ['P', 'Enseigne', 'Commune', 'ind_fra_stores'])
+
+df_qlmc_stores_ma = pd.merge(df_matched, df_qlmc_stores,
+                             on = ['P', 'Enseigne', 'Commune'],
+                             how = 'right')
+
+# Disambiguiation: big communes
+df_unmatched = df_qlmc_stores_ma[pd.isnull(df_qlmc_stores_ma['ind_fra_stores'])]
+print df_unmatched['INSEE_Code'].value_counts()[0:10]
+print df_qlmc_stores_ma[df_qlmc_stores_ma['INSEE_Code'] == u'49007'].to_string()
+
+ls_fix_ms = [[[u'452'   , u'2784' , u"Avenue Montaigne"],
+              [u'ANGERS CC ANJOU',
+               u'ANGERS CC ESPACE ANJOU',
+               u'ANGERS ESPACE ANJOU']],
+             [[u'12507' , u'2785' , u"172 rue Létanduère" ],
+              [u'ANGERS LA ROSERAIE']], # P 10 is ROSERAIE by deduction... 1/7/9 still pbm
+             [[u'123'   , u'141'  , u"Boulevard Gaston Ramon"],
+              [u'ANGERS CC ST SERGE']],
+             [[u'603'   , u'140'  , u"Centre commercial Grand Maine - Rue du Grand Launay"],
+              [u'ANGERS CC GD MAINE']], # detail seulement en P8, sinon un non precise
+             [[u'3028'  , u'7264' , u"6 Square Louis Jouvet"],
+              [u'ANGERS L. JOUVET']], # detail seulement en P4, sinon un non precise
+             [[u'446'   , u'2718' , u"504 avenue du Mas d'Argelliers"],
+              [u"MONTPELLIER ARGELLIERS",
+               u"MONTPELLIER AV ARGELLIERS",
+               u"MONTPELLIER AVE ARGELLIERS",
+               u"MONTPELLIER MAS ARGELLIERS",
+               u"MONTPELLIER D''ARGELLIERS",
+               u"MONTPELLIER MAS D''ARGE",
+               u"MONTPELLIER MAS D''ARGELLIERS"]],
+             [[u'3475'  , u'2719' , u"129 bis abvenue de Lodève"], # fix?
+              [u"MONTPELLIER LODEVE",
+               u"MONTPELLIER AV LODEVE",
+               u"MONTPELLIER AV DE LODEVE",
+               u"MONTPELLIER AVE DE LODEVE",
+               u"MONTPELLIER AVE LODEVE",
+               u"MONTPELLIER AVENUE DE LODÈVE"]],
+             [[u'171296', u'2721' , u'Rue G. Melies'],
+              [u'MONTPELLIER CC ODYSSEUM',
+               u'MONTPELLIER C C ODYSSEUM',
+               u'MONTPELLIER PLACE LISBONNE',
+               u'MONTPELLIER ODYSSEUM']], # P 0 can not be identified
+             [[u'503'   , u'2704 ', u"Avenue du Souvenir Français"],
+              [u'CARCASSONNE C.C. CITE2',
+               u'CARCASSONNE SOUV. Français',
+               u'CARCASSONNE AV S.FRANCAIS',
+               u'CARCASSONNE AVE DU SOUVENIR',
+               u'CARCASSONNE SOUV.FRANCAIS',
+               u'CARCASSONNE AV DU SOUVENIR',
+               u'CARCASSONNE SOUV. FRAN',
+               u'CARCASSONNE SOUVENIR Fr',
+               u'CARCASSONNE SOUVENIR FRANÇAIS']],
+             [[u'77'    , u'2703' , u"Centre Commercial Salvaza"],
+              [u'CARCASSONNE CC SALVAZA',
+                u'CARCASSONNE C C SALVAZA',
+                u'CARCASSONNE ZI LA BOURIETTE',
+                u'CARCASSONNE SALVAZA']],
+             [[u'333'   , u'', u""],
+              []]]
+
+
+# to be applied before corrections
+ls_fix_ms_2 = [[u'10', u'GEANT CASINO', u'ANGERS', 'ANGERS LA ROSERAIE'],   #todo: check
+               [u'2' , u'GEANT CASINO', u'CARCASSONNE', u'CARCASSONE CC SALVAZA']] # todo: check
+
+
+# Output for merger with price file
+#df_qlmc_stores_matched.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_stores_matched.csv'),
+#                              float_format='%.0f', encoding='utf-8', index=False)
+
+
+# BACKUP SYSTEMATIC MATCHING
+
 #dict_matched = {}
 #dict_nmatched = {}
 #for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
@@ -200,34 +271,3 @@ for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc)
 #
 ## todo: iterate over each enseigne_qlmc: first result then second
 ## todo: check how can be improved... + closed stores / changes in brand
-
-ls_matched_stores = []
-for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
-  for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc)].iterrows():
-    insee_code = row['INSEE_Code']
-    df_city_stores = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
-                                   (df_fra_stores['type'] == enseigne_fra)]
-    if len(df_city_stores) == 1:
-      ls_matched_stores.append((int(row['P']),
-                                row['Enseigne'],
-                                row['Commune'],
-                                df_city_stores.index[0]))
-    else:
-      df_city_stores_alt = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
-                                         (df_fra_stores['type_alt'] == enseigne_fra_alt)]
-      if len(df_city_stores_alt) == 1:
-        ls_matched_stores.append((int(row['P']),
-                                  row['Enseigne'],
-                                  row['Commune'],
-                                  df_city_stores_alt.index[0]))
-
-df_matched = pd.DataFrame(ls_matched_stores,
-                          columns = ['P', 'Enseigne', 'Commune', 'ind_fra_stores'])
-
-df_qlmc_stores_matched = pd.merge(df_matched, df_qlmc_stores,
-                                  on = ['P', 'Enseigne', 'Commune'],
-                                  how = 'right')
-
-# Output for merger with price file
-#df_qlmc_stores_matched.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_stores_matched.csv'),
-#                              float_format='%.0f', encoding='utf-8', index=False)

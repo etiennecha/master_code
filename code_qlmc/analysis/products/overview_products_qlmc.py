@@ -16,32 +16,21 @@ path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 path_dir_source_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json_qlmc')
 path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
 path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
+path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
-ls_json_files = [u'200705_releves_QLMC',
-                 u'200708_releves_QLMC',
-                 u'200801_releves_QLMC',
-                 u'200804_releves_QLMC',
-                 u'200903_releves_QLMC',
-                 u'200909_releves_QLMC',
-                 u'201003_releves_QLMC',
-                 u'201010_releves_QLMC', 
-                 u'201101_releves_QLMC',
-                 u'201104_releves_QLMC',
-                 u'201110_releves_QLMC', # "No brand" starts to be massive
-                 u'201201_releves_QLMC',
-                 u'201206_releves_QLMC']
+qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
 
 ls_ls_products = dec_json(os.path.join(path_dir_built_json, 'ls_ls_products'))
-ls_rows = [[i] + product for i, ls_products in enumerate(ls_ls_products) for product in ls_products]
-ls_rows =  [row + get_split_brand_product(row[3], ls_brand_patches) for row in ls_rows]
+ls_rows = [[i] + product for i, ls_products\
+             in enumerate(ls_ls_products)\
+               for product in ls_products]
+ls_rows =  [row + get_split_brand_product(row[3], ls_brand_patches)\
+              for row in ls_rows]
 
 ls_columns = ['P', 'Rayon', 'Famille', 'Produit', 'Marque', 'Libelle']
 df_products = pd.DataFrame(ls_rows, columns = ls_columns)
 
 ls_disp_1 = ['P', 'Rayon', 'Famille', 'Produit']
-ls_disp_2 = ['P', 'Rayon', 'marque', 'libelle']
-ls_disp_3 = ['P', 'Rayon', 'Famille', 'Produit']
-ls_disp_4 = ['P', 'Rayon', 'Famille', 'Produit', 'Format']
 
 pd.set_option('display.max_colwidth', 80) # default 50 ? 
 
@@ -76,8 +65,9 @@ ls_fixed_products = [[u'mozzarella 19% mat. gr. environ - 125 g environ',
                       u'Contrex - Eau minérale naturelle plate, 6x1,5L'],
                      [u'Contrex - Eau minérale naturelle, 1,5L',
                       u'Contrex - Eau minérale naturelle plate, 1,5L'],
-                     [u"Ballantines - Whisky blend ecossais 7 ans d'âge 40%, 70cl", # more to do...
+                     [u"Ballantines - Whisky blend ecossais 7 ans d'âge 40%, 70cl", # more to do
                       u"Ballantines - Whisky blend écossais 7ans d'âge 40 degrés, 70cl"]]
+
 def fix_produit(product, ls_replace_products = ls_fixed_products):
   for old, new in ls_replace_products:
     if product == old:
@@ -86,7 +76,6 @@ def fix_produit(product, ls_replace_products = ls_fixed_products):
 df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit(x))
 
 ls_replace_products = [[u'gazeuze', u'gazeuse'],
-                       #[u'\xb0', u' degrés'], # pbm with u'n°5' need to check if alcool
                        [u', ,', u','],
                        [u' ,', u',']]
 def fix_produit_2(product, ls_replace_products = ls_replace_products):
@@ -102,7 +91,8 @@ def fix_alcool(product):
 df_products['Produit'][(df_products['Rayon'] == u'Boissons') |\
                        (df_products['Rayon'] == u'Bières et alcool')] = \
   df_products['Produit'][(df_products['Rayon'] == u'Boissons') |\
-                         (df_products['Rayon'] == u'Bières et alcool')].apply(lambda x: fix_alcool(x))
+                         (df_products['Rayon'] == u'Bières et alcool')].apply(\
+                            lambda x: fix_alcool(x))
 df_products['Produit'][df_products['Produit'].str.contains(u'vinaigre', case=False)] =\
   df_products['Produit'][df_products['Produit'].str.contains(u'vinaigre', case=False)].apply(\
     lambda x: fix_alcool(x))
@@ -226,7 +216,7 @@ for period in range(per_start, per_end):
   ls_alive_products = [x for x in ls_alive_products if x in ls_products]
   print period, len(ls_alive_products)
 
-# Inspect Contrex, Evian, Taillefine, Boursin, St Moret, Bledina (accents?) at per 2: disappear...
+# Inspect Contrex, Evian, Taillefine, Boursin, St Moret, Bledina (accents?) at per 2: disappear
 per_start, per_end = 1, 9
 marque = 'Contrex'
 df_products['marque_nom'] = df_products['marque'] + u' ' + df_products['nom']
@@ -245,7 +235,8 @@ print df_products[['P', 'marque', 'nom', 'format']]\
 per_ind = 2
 print '\nMost popular brands at period', per_ind
 for rayon in df_products['Rayon'][df_products['P'] == per_ind].unique():
-  print '\n', rayon, len(df_products[(df_products['P'] == per_ind) & (df_products['Rayon'] == rayon)])
+  print '\n', rayon, len(df_products[(df_products['P'] == per_ind) &\
+                                     (df_products['Rayon'] == rayon)])
   print df_products['marque'][(df_products['P'] == per_ind) &\
                               (df_products['Rayon'] == rayon)].value_counts()[0:10].to_string()
 
@@ -273,7 +264,7 @@ se_mn_multi = se_mn_vc[se_mn_vc > 1]
 # 3/ Clean product name and format name (print all format name per period etc)
 # 4/ Check products across periods? (string or tuple comparison)
 # todo: lower case... possibly no accent for product nom...
-# todo: loopup in other periods levenshtein stat vs. other products of same format (if standardized)
+# todo: loopup in other periods levenshtein stat vs. other products of same format (if stded)
 # todo: 'else': most popular name per marque
 
 # e.g.
@@ -310,16 +301,18 @@ prod = u"schweppes _ schweppes agrum' boisson gazeuse agrume _ 6x33cl"
 print df_products[['P', 'produit']][df_products['produit'] == prod].to_string()
 
 ls_output_csv =['P', 'Rayon', 'Famille', 'Produit', 'produit', 'marque', 'nom', 'format']
-
 ## Output for visual check
 #df_products[ls_output_csv].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_products.csv'),
 #                                  float_format='%.2f', encoding='utf-8', index=False)
 
-# Output for merger with original data
+# Prepare for merger with df_qlmc
 df_products = df_products[['Produit_O', 'marque', 'nom', 'format']]
 df_products.rename(columns={'Produit_O': 'Produit'}, inplace = True)
 df_products.drop_duplicates(cols='Produit', take_last=True, inplace=True)
 
-## Output for merger with price file
+# HDF5: output for merger with df_qlmc
+qlmc_data['df_qlmc_products'] = df_products
+
+## CSV: output for merger with df_qlmc
 #df_products.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_products_for_merger.csv'),
 #                   float_format='%.2f', encoding='utf-8', index=False)

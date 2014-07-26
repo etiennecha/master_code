@@ -59,14 +59,22 @@ for (city, zip_code, dpt, cinsee) in correspondence:
 
 # Match store's city vs. all city names in correspondence (position 0)
 # NB: City names can be ambiguous (several cities with same name...)
-nb_periods = 12
+ls_str_insee_replace = [[u'\xc9', u'E'],
+                        [u'\xc8', u'E'],
+                        [u'\xca', u'E'],
+                        [u'\xd4', u'O'],
+                        [u'\xc2', u'A'],
+                        [u'\xce', u'I'],
+                        [u"''", u" "],
+                        [u"'", u" "]]
 ls_rows = []
-for i, ls_stores in enumerate(ls_ls_stores[:nb_periods]):
+for i, ls_stores in enumerate(ls_ls_stores):
   for store in ls_stores:
     chain, city = get_split_chain_city(store, ls_chain_brands)
     row = [i, chain, city, []]
     city_standardized = re.sub(u'^SAINT(E\s|\s)', u'ST\\1', city.replace(u'-', u' '))
-    city_standardized = city_standardized.replace(u"''", u" ")
+    for old, new in ls_str_insee_replace:
+      city_standardized = city_standardized.replace(old, new)
     # todo: get rid of accents for period 11
     for corr_row in correspondence:
       if city_standardized == corr_row[0]:

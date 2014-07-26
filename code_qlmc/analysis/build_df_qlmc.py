@@ -81,26 +81,33 @@ df_qlmc = pd.DataFrame(ls_rows, columns = ls_columns)
 
 df_qlmc['Prix'] = df_qlmc['Prix'].astype(np.float32)
 
+# STORE IDENTIFICATION
+
 df_stores = qlmc_data['df_qlmc_stores']
 df_stores['Magasin'] = df_stores['Enseigne'] + u' ' + df_stores['Commune']
 df_qlmc = pd.merge(df_stores, df_qlmc, on = ['P', 'Magasin'], how = 'right')
+## Check those with no insee code (ambiguity in city identification)
+# df_qlmc['Magasin'][pd.isnull(df_qlmc['INSEE_Code'])].value_counts()
 
-## Split magasin to get chain and city (takes time)
+# todo: Paris/Lyon/Marseilles ardts?
+
+## Split magasin to get chain and city (takes time so merger prefered)
 #print u'\nSplitting store field into chain and city'
 #df_qlmc['Enseigne'], df_qlmc['Commune'] =\
 #  zip(*df_qlmc['Magasin'].map(\
 #    lambda x: get_split_chain_city(x, ls_chain_brands)))
-## todo: get insee code (+ index df_fra_stores?)
-#
-## Parse products: brand, format, product nature (takes time)
+
+# PRODUCT PARSING
+
+df_products = qlmc_data['df_qlmc_products']
+df_qlmc = pd.merge(df_products, df_qlmc, on = 'Produit', how = 'right')
+
+## Parse products: brand, format, product nature (takes time so merger prefered)
 #print u'\nSplitting product field into brand and name (incl. format)'
 #df_qlmc['marque'], df_qlmc['libelle'] =\
 #  zip(*df_qlmc['Produit'].map(\
 #    lambda x: get_marque_and_libelle(x, ls_brand_patches)))
 ## todo: integrate process elaborated in overview_products_qlmc
-
-# How would merger perform vs. such row level treament?
-# Maybe easier to modify product parsing this way?
 
 # ##############
 # STORE DF QLMC
@@ -112,15 +119,14 @@ df_qlmc = pd.merge(df_stores, df_qlmc, on = ['P', 'Magasin'], how = 'right')
 ## All
 #df_qlmc.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all.csv'),
 #               float_format='%.3f', encoding='utf-8', index=False)
-
 ## Light
-#ls_qlmc_light = ['P', 'Rayon', 'Famille', 'Produit', 'Enseigne', 'Ville', 'Prix']
+#ls_qlmc_light = ['P', 'Rayon', 'Famille', 'Produit', 'Enseigne', 'Commune', 'Prix']
 #df_qlmc[ls_qlmc_light].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all_light.csv'),
 #                              float_format='%.3f', encoding='utf-8', index=False)
-
 ## Each period (e.g. if want to read only 3 periods bc 32 bit op. sys)
 #for i in range(9):
-#  df_qlmc[df_qlmc['P'] == i].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_per_%s.csv' %i),
+#  df_qlmc[df_qlmc['P'] == i].to_csv(os.path.join(path_dir_built_csv,
+#                                                 'df_qlmc_per_%s.csv' %i),
 #                                    float_format='%.3f', encoding='utf-8', index=False)
 
 # ########################
