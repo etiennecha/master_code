@@ -176,88 +176,94 @@ df_to_extract = pd.concat(ls_df_toextract)
 df_to_extract.sort(columns=['INSEE_Code', 'Enseigne', 'Commune'], inplace = True)
 print df_to_extract.to_string()
 
-# Rather: create excel file... fill it and re-read it
-ls_fix_ms = [[[u'452'   , u'2784' , u"Avenue Montaigne"],
-              [u'GEANT CASINO'],
-              [u'ANGERS CC ANJOU',
-               u'ANGERS CC ESPACE ANJOU',
-               u'ANGERS ESPACE ANJOU']],
-             [[u'12507' , u'2785' , u"172 rue Létanduère" ],
-              [u'GEANT CASINO'],
-              [u'ANGERS LA ROSERAIE']], # P 10 is ROSERAIE by deduction... 1/7/9 still pbm
-             [[u'123'   , u'141'  , u"Boulevard Gaston Ramon"],
-              [u'CARREFOUR'],
-              [u'ANGERS CC ST SERGE']],
-             [[u'603'   , u'140'  , u"Centre commercial Grand Maine - Rue du Grand Launay"],
-              [u'CARREFOUR'],
-              [u'ANGERS CC GD MAINE']], # detail seulement en P8, sinon un non precise
-             [[u'3028'  , u'7264' , u"6 Square Louis Jouvet"],
-              ['SUPER U'],
-              [u'ANGERS L. JOUVET']], # detail seulement en P4, sinon un non precise
-             [[u'446'   , u'2718' , u"504 avenue du Mas d'Argelliers"],
-              [u'GEANT CASINO'],
-              [u"MONTPELLIER ARGELLIERS",
-               u"MONTPELLIER AV ARGELLIERS",
-               u"MONTPELLIER AVE ARGELLIERS",
-               u"MONTPELLIER MAS ARGELLIERS",
-               u"MONTPELLIER D''ARGELLIERS",
-               u"MONTPELLIER MAS D''ARGE",
-               u"MONTPELLIER MAS D''ARGELLIERS"]],
-             [[u'3475'  , u'2719' , u"129 bis abvenue de Lodève"], # fix?
-              [u'GEANT CASINO'],
-              [u"MONTPELLIER LODEVE",
-               u"MONTPELLIER AV LODEVE",
-               u"MONTPELLIER AV DE LODEVE",
-               u"MONTPELLIER AVE DE LODEVE",
-               u"MONTPELLIER AVE LODEVE",
-               u"MONTPELLIER AVENUE DE LODÈVE"]],
-             [[u'171296', u'2721' , u'Rue G. Melies'],
-              [u'GEANT CASINO'],
-              [u'MONTPELLIER CC ODYSSEUM',
-               u'MONTPELLIER C C ODYSSEUM',
-               u'MONTPELLIER PLACE LISBONNE',
-               u'MONTPELLIER ODYSSEUM']], # P 0 can not be identified
-             [[u'503'   , u'2704', u"Avenue du Souvenir Français"],
-              [u'GEANT CASINO'],
-              [u'CARCASSONNE C.C. CITE2',
-               u'CARCASSONNE SOUV. Français',
-               u'CARCASSONNE AV S.FRANCAIS',
-               u'CARCASSONNE AVE DU SOUVENIR',
-               u'CARCASSONNE SOUV.FRANCAIS',
-               u'CARCASSONNE AV DU SOUVENIR',
-               u'CARCASSONNE SOUV. FRAN',
-               u'CARCASSONNE SOUVENIR Fr',
-               u'CARCASSONNE SOUVENIR FRANÇAIS']],
-             [[u'77'    , u'2703' , u"Centre Commercial Salvaza"],
-              [u'GEANT CASINO'],
-              [u'CARCASSONNE CC SALVAZA',
-                u'CARCASSONNE C C SALVAZA',
-                u'CARCASSONNE ZI LA BOURIETTE',
-                u'CARCASSONNE SALVAZA']],
-             [[u'333'   , u'17'   , u"57, rue du Château d'eau"],
-              [u'AUCHAN'],
-              [u'BORDEAUX C.C. MERIADECK',
-               u'BORDEAUX CC MERIADECK',
-               u'BORDEAUX MERIADECK']],
-             [[u'114'   , u'18'   , u"Auchan Bordeaux Lac"],
-              [u'AUCHAN'],
-              [u'BORDEAUX CC LE LAC',
-               u'BORDEAUX QUARTIER DU LAC',
-               u'BORDEAUX LE LAC']],
-             [[u'49262' , u'473'  , u"13 RUE SAGET"],
-              [u'CARREFOUR MARKET'],
-              [u'BORDEAUX SAINT JEAN']]] # could be ambiguous
+## Rather: create excel file... fill it and re-read it
+#ls_fix_ms = [[[u'452'   , u'2784' , u"Avenue Montaigne"],
+#              [u'GEANT CASINO'],
+#              [u'ANGERS CC ANJOU',
+#               u'ANGERS CC ESPACE ANJOU',
+#               u'ANGERS ESPACE ANJOU']],
+#             [[u'12507' , u'2785' , u"172 rue Létanduère" ],
+#              [u'GEANT CASINO'],
+#              [u'ANGERS LA ROSERAIE']], # P 10 is ROSERAIE by deduction... 1/7/9 still pbm
+#             [[u'123'   , u'141'  , u"Boulevard Gaston Ramon"],
+#              [u'CARREFOUR'],
+#              [u'ANGERS CC ST SERGE']],
+#             [[u'603'   , u'140'  , u"Centre commercial Grand Maine - Rue du Grand Launay"],
+#              [u'CARREFOUR'],
+#              [u'ANGERS CC GD MAINE']], # detail seulement en P8, sinon un non precise
+#             [[u'3028'  , u'7264' , u"6 Square Louis Jouvet"],
+#              ['SUPER U'],
+#              [u'ANGERS L. JOUVET']], # detail seulement en P4, sinon un non precise
+#             [[u'446'   , u'2718' , u"504 avenue du Mas d'Argelliers"],
+#              [u'GEANT CASINO'],
+#              [u"MONTPELLIER ARGELLIERS",
+#               u"MONTPELLIER AV ARGELLIERS",
+#               u"MONTPELLIER AVE ARGELLIERS",
+#               u"MONTPELLIER MAS ARGELLIERS",
+#               u"MONTPELLIER D''ARGELLIERS",
+#               u"MONTPELLIER MAS D''ARGE",
+#               u"MONTPELLIER MAS D''ARGELLIERS"]],
+#             [[u'3475'  , u'2719' , u"129 bis abvenue de Lodève"], # fix?
+#              [u'GEANT CASINO'],
+#              [u"MONTPELLIER LODEVE",
+#               u"MONTPELLIER AV LODEVE",
+#               u"MONTPELLIER AV DE LODEVE",
+#               u"MONTPELLIER AVE DE LODEVE",
+#               u"MONTPELLIER AVE LODEVE",
+#               u"MONTPELLIER AVENUE DE LODÈVE"]],
+#             [[u'171296', u'2721' , u'Rue G. Melies'],
+#              [u'GEANT CASINO'],
+#              [u'MONTPELLIER CC ODYSSEUM',
+#               u'MONTPELLIER C C ODYSSEUM',
+#               u'MONTPELLIER PLACE LISBONNE',
+#               u'MONTPELLIER ODYSSEUM']], # P 0 can not be identified
+#             [[u'503'   , u'2704', u"Avenue du Souvenir Français"],
+#              [u'GEANT CASINO'],
+#              [u'CARCASSONNE C.C. CITE2',
+#               u'CARCASSONNE SOUV. Français',
+#               u'CARCASSONNE AV S.FRANCAIS',
+#               u'CARCASSONNE AVE DU SOUVENIR',
+#               u'CARCASSONNE SOUV.FRANCAIS',
+#               u'CARCASSONNE AV DU SOUVENIR',
+#               u'CARCASSONNE SOUV. FRAN',
+#               u'CARCASSONNE SOUVENIR Fr',
+#               u'CARCASSONNE SOUVENIR FRANÇAIS']],
+#             [[u'77'    , u'2703' , u"Centre Commercial Salvaza"],
+#              [u'GEANT CASINO'],
+#              [u'CARCASSONNE CC SALVAZA',
+#                u'CARCASSONNE C C SALVAZA',
+#                u'CARCASSONNE ZI LA BOURIETTE',
+#                u'CARCASSONNE SALVAZA']],
+#             [[u'333'   , u'17'   , u"57, rue du Château d'eau"],
+#              [u'AUCHAN'],
+#              [u'BORDEAUX C.C. MERIADECK',
+#               u'BORDEAUX CC MERIADECK',
+#               u'BORDEAUX MERIADECK']],
+#             [[u'114'   , u'18'   , u"Auchan Bordeaux Lac"],
+#              [u'AUCHAN'],
+#              [u'BORDEAUX CC LE LAC',
+#               u'BORDEAUX QUARTIER DU LAC',
+#               u'BORDEAUX LE LAC']],
+#             [[u'49262' , u'473'  , u"13 RUE SAGET"],
+#              [u'CARREFOUR MARKET'],
+#              [u'BORDEAUX SAINT JEAN']]] # could be ambiguous
+#
+#ls_rows_fix_ms = []
+#for ls_store_fix in ls_fix_ms:
+#  for magasin_libelle in ls_store_fix[2]:
+#    ls_rows_fix_ms.append(ls_store_fix[0] + ls_store_fix[1] + [magasin_libelle])
+#ls_columns = ['ind_lsa', 'ind_fra_stores_2', 'street_fra_stores', 'Enseigne', 'Commune']
+#df_fix_ms = pd.DataFrame(ls_rows_fix_ms, columns = ls_columns)
 
-ls_rows_fix_ms = []
-for ls_store_fix in ls_fix_ms:
-  for magasin_libelle in ls_store_fix[2]:
-    ls_rows_fix_ms.append(ls_store_fix[0] + ls_store_fix[1] + [magasin_libelle])
-ls_columns = ['ind_lsa', 'ind_fra_stores_2', 'street_fra_stores', 'Enseigne', 'Commune']
-df_fix_ms = pd.DataFrame(ls_rows_fix_ms, columns = ls_columns)
+ls_columns_fix_ms = ['P', 'Enseigne', 'Commune', 'INSEE_Code',
+                     'ind_fra_stores', 'ind_lsa', 'ind_fra_stores_2', 'street_fra_stores']
+ls_fix_ms = dec_json(os.path.join(path_dir_built_json, u'ls_fix_ms'))
+df_fix_ms = pd.DataFrame(ls_fix_ms, columns = ls_columns_fix_ms)
+df_fix_ms.drop(['ind_fra_stores', 'INSEE_Code'], axis = 1, inplace = True)
 
-df_to_extract = pd.merge(df_fix_ms, df_to_extract, on=['Enseigne', 'Commune'], how='right')
+df_to_extract = pd.merge(df_fix_ms, df_to_extract, on=['P', 'Enseigne', 'Commune'], how='right')
 df_to_extract.sort(columns = ['INSEE_Code', 'Enseigne', 'P', 'Commune'], inplace = True)
-ls_extract_disp = ['P', 'Enseigne', 'Commune',
+ls_extract_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code',
                    'ind_fra_stores', 'ind_lsa', 'ind_fra_stores_2', 'street_fra_stores']
 
 #http://stackoverflow.com/questions/20219254/
@@ -266,6 +272,24 @@ ls_extract_disp = ['P', 'Enseigne', 'Commune',
 writer = pd.ExcelWriter(os.path.join(path_dir_built_excel, 'output.xlsx'))
 df_to_extract[ls_extract_disp].to_excel(writer, index=False)
 writer.close()
+
+df_read_fix_ms = pd.read_excel(os.path.join(path_dir_built_excel, 'output.xlsx'),
+                               sheetname = 'Sheet1')
+df_read_fix_ms_fi = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['ind_lsa'])) |
+                                   (~pd.isnull(df_read_fix_ms['ind_fra_stores_2'])) |
+                                   (~pd.isnull(df_read_fix_ms['street_fra_stores']))]
+# df_read_fix_ms_fi['P'] = df_read_fix_ms_fi['P'].apply(lambda x: int(x))
+ls_read_fix_ms = [list(x) for x in df_read_fix_ms_fi.to_records(index=False)]
+ls_read_fix_ms = [[int(x[0])] + x[1:3] + [int(x[3])] + x[4:] for x in ls_read_fix_ms]
+
+# ls_fix_ms = dec_json(os.path.join(path_dir_built_json, u'ls_fix_ms'))
+ls_fix_ms = []
+# NB: no equality when nan (even in list)
+ls_fix_ms_check = [x[0:3] for x in ls_fix_ms]
+## overwrite forbidden (for now?)
+## todo: check unexpected duplicates => all hand written field as they should never be nan
+ls_fix_ms += [x for x in ls_read_fix_ms if x[0:3] not in ls_fix_ms_check]
+# enc_json(ls_fix_ms, os.path.join(path_dir_built_json, u'ls_fix_ms'))
 
 # to be applied before corrections
 ls_fix_ms_2 = [[u'10', u'GEANT CASINO', u'ANGERS', 'ANGERS LA ROSERAIE'],   #todo: check
