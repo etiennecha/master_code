@@ -262,6 +262,7 @@ ls_extract_disp = ['P', 'Enseigne', 'Commune',
 
 #http://stackoverflow.com/questions/20219254/
 #how-to-write-to-an-existing-excel-file-without-overwriting-data
+# pip install openpyxl==1.8.6
 writer = pd.ExcelWriter(os.path.join(path_dir_built_excel, 'output.xlsx'))
 df_to_extract[ls_extract_disp].to_excel(writer, index=False)
 writer.close()
@@ -269,7 +270,6 @@ writer.close()
 # to be applied before corrections
 ls_fix_ms_2 = [[u'10', u'GEANT CASINO', u'ANGERS', 'ANGERS LA ROSERAIE'],   #todo: check
                [u'2' , u'GEANT CASINO', u'CARCASSONNE', u'CARCASSONE CC SALVAZA']] # todo: check
-
 
 # Output for merger with price file
 #df_qlmc_stores_matched.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_stores_matched.csv'),
