@@ -259,6 +259,7 @@ ls_columns_fix_ms = ['P', 'Enseigne', 'Commune', 'INSEE_Code',
                      'ind_fra_stores', 'ind_lsa', 'ind_fra_stores_2', 'street_fra_stores']
 ls_fix_ms = dec_json(os.path.join(path_dir_built_json, u'ls_fix_ms'))
 df_fix_ms = pd.DataFrame(ls_fix_ms, columns = ls_columns_fix_ms)
+# INSEE_Code: pbm when reading from excel (read as number) hence must drop
 df_fix_ms.drop(['ind_fra_stores', 'INSEE_Code'], axis = 1, inplace = True)
 
 df_to_extract = pd.merge(df_fix_ms, df_to_extract, on=['P', 'Enseigne', 'Commune'], how='right')
@@ -266,21 +267,37 @@ df_to_extract.sort(columns = ['INSEE_Code', 'Enseigne', 'P', 'Commune'], inplace
 ls_extract_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code',
                    'ind_fra_stores', 'ind_lsa', 'ind_fra_stores_2', 'street_fra_stores']
 
-#http://stackoverflow.com/questions/20219254/
-#how-to-write-to-an-existing-excel-file-without-overwriting-data
-# pip install openpyxl==1.8.6
-writer = pd.ExcelWriter(os.path.join(path_dir_built_excel, 'output.xlsx'))
-df_to_extract[ls_extract_disp].to_excel(writer, index=False)
-writer.close()
+# READ MATCHED STORES FROM EXCEL FILE
 
-df_read_fix_ms = pd.read_excel(os.path.join(path_dir_built_excel, 'output.xlsx'),
+df_read_fix_ms = pd.read_excel(os.path.join(path_dir_built_excel, 'fix_store_matching.xlsx'),
                                sheetname = 'Sheet1')
 df_read_fix_ms_fi = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['ind_lsa'])) |
                                    (~pd.isnull(df_read_fix_ms['ind_fra_stores_2'])) |
                                    (~pd.isnull(df_read_fix_ms['street_fra_stores']))]
 # df_read_fix_ms_fi['P'] = df_read_fix_ms_fi['P'].apply(lambda x: int(x))
 ls_read_fix_ms = [list(x) for x in df_read_fix_ms_fi.to_records(index=False)]
-ls_read_fix_ms = [[int(x[0])] + x[1:3] + [int(x[3])] + x[4:] for x in ls_read_fix_ms]
+
+def get_as_str(some_number, missing = None):
+  # float are expected to be int or nan
+  if np.isnan(some_number):
+    return missing
+  else:
+    return u'{0:.0f}'.format(some_number)
+
+def get_cinsee_as_str(some_number):
+  cinsee = get_as_str(some_number)
+  if len(cinsee) == 5:
+    return cinsee
+  elif cinsee and len(cinsee) == 4:
+    return u'0' + cinsee
+  else:
+    print u'Can not convert', some_number
+    return None
+
+ls_read_fix_ms = [[int(x[0])] + x[1:3] + [get_cinsee_as_str(x[3])] +\
+                  map(get_as_str, x[4:7]) + x[7:8] for x in ls_read_fix_ms]
+
+# UPDATE JSON FILE WITH MATCHED STORES
 
 # ls_fix_ms = dec_json(os.path.join(path_dir_built_json, u'ls_fix_ms'))
 ls_fix_ms = []
@@ -290,6 +307,14 @@ ls_fix_ms_check = [x[0:3] for x in ls_fix_ms]
 ## todo: check unexpected duplicates => all hand written field as they should never be nan
 ls_fix_ms += [x for x in ls_read_fix_ms if x[0:3] not in ls_fix_ms_check]
 # enc_json(ls_fix_ms, os.path.join(path_dir_built_json, u'ls_fix_ms'))
+
+## TODO: RE-GENERATE EXCEL FILE WITH ALL MATCHED STORES
+##http://stackoverflow.com/questions/20219254/
+##how-to-write-to-an-existing-excel-file-without-overwriting-data
+## pip install openpyxl==1.8.6
+#writer = pd.ExcelWriter(os.path.join(path_dir_built_excel, 'fix_store_matching.xlsx'))
+#df_to_extract[ls_extract_disp].to_excel(writer, index=False)
+#writer.close()
 
 # to be applied before corrections
 ls_fix_ms_2 = [[u'10', u'GEANT CASINO', u'ANGERS', 'ANGERS LA ROSERAIE'],   #todo: check
