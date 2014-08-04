@@ -19,6 +19,8 @@ path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
 path_dir_built_excel = os.path.join(path_dir_qlmc, 'data_built' , 'data_excel')
 path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
+path_dir_source_lsa = os.path.join(path_dir_qlmc, 'data_source', 'data_lsa_xls')
+
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
@@ -308,6 +310,17 @@ ls_fix_ms_check = [x[0:3] for x in ls_fix_ms]
 ls_fix_ms += [x for x in ls_read_fix_ms if x[0:3] not in ls_fix_ms_check]
 # enc_json(ls_fix_ms, os.path.join(path_dir_built_json, u'ls_fix_ms'))
 
+# READ LSA FILE
+df_lsa_all = pd.read_excel(os.path.join(path_dir_source_lsa, '2014-07-30-export_CNRS.xlsx'),
+                           sheetname = 'Feuil1')
+# Exclude drive and hard discount for matching
+df_lsa = df_lsa_all[(df_lsa_all['Type'] == 'H') |\
+                    (df_lsa_all['Type'] == 'S') |\
+                    (df_lsa_all['Type'] == 'MP')]
+
+# Enseignes in LSA
+print df_lsa['Enseigne'].value_counts().to_string()
+
 ## TODO: RE-GENERATE EXCEL FILE WITH ALL MATCHED STORES
 ##http://stackoverflow.com/questions/20219254/
 ##how-to-write-to-an-existing-excel-file-without-overwriting-data
@@ -323,47 +336,3 @@ ls_fix_ms_2 = [[u'10', u'GEANT CASINO', u'ANGERS', 'ANGERS LA ROSERAIE'],   #tod
 # Output for merger with price file
 #df_qlmc_stores_matched.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_stores_matched.csv'),
 #                              float_format='%.0f', encoding='utf-8', index=False)
-
-
-# BACKUP SYSTEMATIC MATCHING
-
-#dict_matched = {}
-#dict_nmatched = {}
-#for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
-#  dict_matched[enseigne_qlmc], dict_nmatched[enseigne_qlmc] = [[],[]], [[], []]
-#  for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc)].iterrows():
-#    insee_code = row['INSEE_Code']
-#    df_city_stores = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
-#                                   (df_fra_stores['type'] == enseigne_fra)]
-#    if len(df_city_stores) == 1:
-#      dict_matched[enseigne_qlmc][0].append([row['Enseigne'],
-#                                             row['Commune'], 
-#                                             df_city_stores['name']])
-#    else:
-#      dict_nmatched[enseigne_qlmc][0].append([row['Enseigne'],
-#                                              row['Commune'],
-#                                              row['INSEE_Code'],
-#                                              df_city_stores])
-#    df_city_stores_alt = df_fra_stores[(df_fra_stores['insee_code'] == insee_code) &\
-#                                       (df_fra_stores['type_alt'] == enseigne_fra_alt)]
-#    if len(df_city_stores_alt) == 1:
-#      dict_matched[enseigne_qlmc][1].append([row['Enseigne'],
-#                                             row['Commune'], 
-#                                             df_city_stores_alt['name']])
-#    else:
-#      dict_nmatched[enseigne_qlmc][1].append([row['Enseigne'],
-#                                              row['Commune'],
-#                                              row['INSEE_Code'],
-#                                              df_city_stores_alt])
-#
-      
-#print '\nSuccesful Matching'
-#for x in ls_matching:
-#	print x[0], len(dict_matched[x[0]][0]), len(dict_matched[x[0]][1])
-#
-#print '\nNo match or ambiguity'
-#for x in ls_matching:
-#	print x[0], len(dict_nmatched[x[0]][0]), len(dict_nmatched[x[0]][1])
-#
-## todo: iterate over each enseigne_qlmc: first result then second
-## todo: check how can be improved... + closed stores / changes in brand
