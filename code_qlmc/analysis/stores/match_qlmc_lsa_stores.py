@@ -72,7 +72,7 @@ df_qlmc_stores['INSEE_Code'] = df_qlmc_stores['INSEE_Code'].apply(\
 # types in df_lsa_all / df_lsa
 # need to work with _no1900 at CREST for now (older versions of numpy/pandas/xlrd...?)
 df_lsa_stores_all = pd.read_excel(os.path.join(path_dir_source_lsa,
-                                               '2014-07-30-export_CNRS.xlsx'),
+                                               '2014-07-30-export_CNRS_no1900.xlsx'),
                                   sheetname = 'Feuil1')
 
 # Exclude drive and hard discount for matching
