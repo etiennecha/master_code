@@ -36,7 +36,7 @@ df_lsa_all = pd.read_excel(os.path.join(path_dir_source_lsa,
 # Exclude drive and hard discount for matching
 df_lsa = df_lsa_all[(df_lsa_all['Type'] == 'H') |\
                     (df_lsa_all['Type'] == 'S') |\
-                    (df_lsa_all['Type'] == 'MP')]
+                    (df_lsa_all['Type'] == 'MP')].copy()
 
 # Convert dates to pandas friendly format
 # Can not use np.datetime64() as missing value
@@ -44,7 +44,8 @@ for field in [u'DATE ouv', u'DATE ferm', u'DATE réouv',
               u'DATE chg enseigne', u'DATE chgt surf']:
   df_lsa[field] = df_lsa[field].apply(lambda x: x.replace(hour=0, minute=0,
                                                           second=0, microsecond=0)\
-                                        if type(x) is datetime.datetime\
+                                        if (type(x) is datetime.datetime) or\
+                                           (type(x) is pd.Timestamp)
                                         else pd.tslib.NaT)
 
 # Some stats decs
@@ -85,25 +86,26 @@ ls_qlmc_dates = ['2007-05',
 
 for qlmc_date in ls_qlmc_dates:
   df_lsa[qlmc_date] = df_lsa['Enseigne']
-  # Not opened yet
+  # Not opened yet (left untouched if DATE ouv is unknown)
   df_lsa[qlmc_date][df_lsa[u'DATE ouv'] > qlmc_date] = None
   # Closed and not reopened
   df_lsa[qlmc_date][(df_lsa[u'DATE ferm'] < qlmc_date) &
                     (pd.isnull(df_lsa[u'DATE réouv']))] = None
-  # Write previous enseigne if changed since then
+  # Write previous enseigne if changed since then (check consistency if missing data)
   df_lsa[qlmc_date][(qlmc_date > df_lsa[u'DATE ouv']) &\
                     (qlmc_date < df_lsa[u'DATE chg enseigne'])] = df_lsa['Ex enseigne']
 
-## FORMAT DATE AND OUTPUT TO EXCEL FILE
-#for field in [u'DATE ouv', u'DATE ferm', u'DATE réouv',
-#              u'DATE chg enseigne', u'DATE chgt surf']:
-#  df_lsa[field] = df_lsa[field].apply(lambda x: x.date()\
-#                                        if type(x) is pd.tslib.Timestamp\
-#                                        else pd.tslib.NaT)
-#
-#writer = pd.ExcelWriter(os.path.join(path_dir_built_csv, 'LSA_enriched.xlsx'))
-#df_lsa.to_excel(writer, index = False)
-#writer.close()
+# FORMAT DATE AND OUTPUT TO EXCEL FILE
+for field in [u'DATE ouv', u'DATE ferm', u'DATE réouv',
+              u'DATE chg enseigne', u'DATE chgt surf']:
+  df_lsa[field][df_lsa[field] < '1900'] = pd.tslib.NaT
+  df_lsa[field] = df_lsa[field].apply(lambda x: x.date()\
+                                        if type(x) is pd.tslib.Timestamp\
+                                        else pd.tslib.NaT)
+
+writer = pd.ExcelWriter(os.path.join(path_dir_built_csv, 'LSA_enriched.xlsx'))
+df_lsa.to_excel(writer, index = False)
+writer.close()
 
 # TODO: get ARDT for big cities thx to gps
 
