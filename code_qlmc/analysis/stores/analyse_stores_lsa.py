@@ -95,17 +95,17 @@ for qlmc_date in ls_qlmc_dates:
   df_lsa[qlmc_date][(qlmc_date > df_lsa[u'DATE ouv']) &\
                     (qlmc_date < df_lsa[u'DATE chg enseigne'])] = df_lsa['Ex enseigne']
 
-# FORMAT DATE AND OUTPUT TO EXCEL FILE
-for field in [u'DATE ouv', u'DATE ferm', u'DATE réouv',
-              u'DATE chg enseigne', u'DATE chgt surf']:
-  df_lsa[field][df_lsa[field] < '1900'] = pd.tslib.NaT
-  df_lsa[field] = df_lsa[field].apply(lambda x: x.date()\
-                                        if type(x) is pd.tslib.Timestamp\
-                                        else pd.tslib.NaT)
-
-writer = pd.ExcelWriter(os.path.join(path_dir_built_csv, 'LSA_enriched.xlsx'))
-df_lsa.to_excel(writer, index = False)
-writer.close()
+## FORMAT DATE AND OUTPUT TO EXCEL FILE
+#for field in [u'DATE ouv', u'DATE ferm', u'DATE réouv',
+#              u'DATE chg enseigne', u'DATE chgt surf']:
+#  df_lsa[field][df_lsa[field] < '1900'] = pd.tslib.NaT
+#  df_lsa[field] = df_lsa[field].apply(lambda x: x.date()\
+#                                        if type(x) is pd.tslib.Timestamp\
+#                                        else pd.tslib.NaT)
+#
+#writer = pd.ExcelWriter(os.path.join(path_dir_built_csv, 'LSA_enriched.xlsx'))
+#df_lsa.to_excel(writer, index = False)
+#writer.close()
 
 # TODO: get ARDT for big cities thx to gps
 

@@ -112,28 +112,30 @@ df_lsa_stores['type_alt'] = df_lsa_stores['type'].apply(\
                                           else x)
 
 ls_matching = [[u'INTERMARCHE', u'INTERMARCHE', u'INTERMARCHE'],
+               [u'INTERMARCHE SUPER', u'INTERMARCHE', u'INTERMARCHE'],
+               [u'INTERMARCHE HYPER', u'INTERMARCHE', u'INTERMARCHE'],
                [u'AUCHAN', u'AUCHAN', u'AUCHAN'],
-               [u'SUPER U', 'SUPER U', u'SYSTEME U'],
-               [u'GEANT CASINO', u'GEANT CASINO', u'GEANT CASINO'],
                [u'LECLERC', u'CENTRE E.LECLERC', u'LECLERC'],
                [u'E.LECLERC', u'CENTRE E.LECLERC', u'LERCLERC'],
-               [u'CARREFOUR MARKET', u'CARREFOUR MARKET', u'CARREFOUR MARKET'],
-               [u'CARREFOUR', u'CARREFOUR', u'CARREFOUR'],
-               [u'CORA', u'CORA', u'CORA'],
-               [u'CHAMPION', u'CARREFOUR MARKET', u'CARREFOUR MARKET'], # unsure...
-               [u'CENTRE E. LECLERC', u'CENTRE E.LECLERC', u'LECLERC'],
-               [u'GEANT', u'GEANT CASINO', u'GEANT CASINO'],
-               [u'HYPER CHAMPION', u'CARREFOUR', u'CARREFOUR'],
-               [u'GEANT DISCOUNT', u'HYPER CASINO', u'GEANT CASINO'],
-               [u'LECLERC EXPRESS', u'LECLERC EXPRESS', u'LECLERC'],
-               [u'U EXPRESS', u'U EXPRESS', u'SYSTEME U'],
-               [u'SYSTEME U', 'SUPER U', 'SYSTEME U'],
-               [u'MARCHE U', u'MARCHE U', u'SYSTEME U'],
+               [u'E. LECLERC', u'CENTRE E.LECLERC', u'LERCLERC'],
                [u'CENTRE LECLERC', u'CENTRE E.LECLERC', u'LECLERC'],
+               [u'CENTRE E. LECLERC', u'CENTRE E.LECLERC', u'LECLERC'],
+               [u'CARREFOUR', u'CARREFOUR', u'CARREFOUR'],
+               [u'CARREFOUR MARKET', u'CARREFOUR MARKET', u'CARREFOUR MARKET'],
                [u'CARREFOUR CITY', u'CARREFOUR CITY', u'CARREFOUR MARKET'],
-               [u'CARREFOUR PLANET', u'CARREFOUR', u'CARREFOUR'],
-               [u'GEANT DISCOUNT', u'HYPER CASINO', u'GEANT CASINO'],
-               [u'HYPER U', u'HYPER U', 'SYSTEME U']]
+               [u'CARREFOUR CONTACT', u'CARREFOUR CONTACT', u'CARREFOUR MARKET'],
+               [u'CARREFOUR PLANET', u'CARREFOUR', u'CARREFOUR MARKET'], # unsure
+               [u'HYPER CHAMPION', u'CARREFOUR', u'CARREFOUR MARKET'], # unsure
+               [u'CHAMPION', u'XXX', u'CARREFOUR MARKET'], # give up direct matching
+               [u'CORA', u'CORA', u'CORA'],
+               [u'GEANT', u'GEANT CASINO', u'GEANT CASINO'],
+               [u'GEANT CASINO', u'GEANT CASINO', u'GEANT CASINO'], # or HYPER
+               [u'GEANT DISCOUNT', u'GEANT CASINO', u'GEANT CASINO'], # or HYPER
+               [u'HYPER U', u'HYPER U', 'SYSTEME U'],
+               [u'SUPER U', 'SUPER U', u'SYSTEME U'],
+               [u'SYSTEME U', 'SUPER U', 'SYSTEME U'],
+               [u'U EXPRESS', u'U EXPRESS', u'SYSTEME U'],
+               [u'MARCHE U', u'MARCHE U', u'SYSTEME U']]
 
 ## SYSTEMATIC MATCHING
 
