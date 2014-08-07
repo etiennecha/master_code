@@ -57,19 +57,65 @@ print u'\nNb stores (dead or alive) with valid gps:'
 print len(df_lsa[(~pd.isnull(df_lsa['Longitude'])) &\
                  (~pd.isnull(df_lsa['Latitude']))])
 
+
+# STORES OPENED WITHIN QLMC DATA PERIOD
 ls_disp_1 = [u'Ident', u'Enseigne', u'ADRESSE1', u'Ville', 'Code INSEE',
              u'DATE ouv', u'DATE ferm', u'DATE réouv']
 
-print u'\nRecently opened stores'
-print df_lsa[ls_disp_1][df_lsa['DATE ouv'] > '2014-01-01'].to_string()
+print u'\nStores opened over qlmc period'
+df_lsa_opened = df_lsa[(df_lsa[u'DATE ouv'] > '2007-05') &\
+                       (df_lsa[u'DATE ouv'] < '2012-06')]
+print df_lsa_opened[ls_disp_1].to_string()
 
-ls_disp_2 = [u'Ident', u'Enseigne', u'ADRESSE1', u'Ville', 'Code INSEE',
-             u'DATE ouv', u'DATE chg enseigne', 'Ex enseigne']
+# CLOSED (AND NOT REOPENED) STORES WITHIN QLMC DATA PERIOD
+print u'\nStores closed over qlmc period'
+df_lsa_closed = df_lsa[(df_lsa[u'DATE ferm'] > '2007-05') &\
+                       (df_lsa[u'DATE ferm'] < '2012-06') &\
+                       (pd.isnull(df_lsa[u'DATE réouv']))]
+print df_lsa_closed[ls_disp_1].to_string()
 
-print u'\nStores with enseigne change within studied period'
-print df_lsa[ls_disp_2][('2009-09' > df_lsa[u'DATE ouv']) &\
-                        ('2009-09' < df_lsa[u'DATE chg enseigne'])].to_string()
+# STORES WITH SIGNIFICANT BRAND CHANGES WITHIN QLMC DATA PERIOD
+ls_disp_2 = [u'Ident', u'Enseigne', 'Ex enseigne',
+             u'ADRESSE1', u'Ville', 'Code INSEE',
+             u'DATE ouv', u'DATE chg enseigne']
 
+print u'\nStores with "significant" brand changes over qlmc period'
+#print df_lsa[ls_disp_2][(df_lsa['DATE chg enseigne'] > '2007-05') &\
+#                        (df_lsa['DATE chg enseigne'] < '2012-06')].to_string()
+df_lsa_chge = df_lsa[(df_lsa['DATE chg enseigne'] > '2007-05') &\
+                     (df_lsa['DATE chg enseigne'] < '2012-06')]
+df_lsa_chge = df_lsa_chge[~((df_lsa_chge['Ex enseigne'].str.contains('CHAMPION') |\
+                             df_lsa_chge['Ex enseigne'].str.contains('SHOPI')) &\
+                            (df_lsa_chge['Enseigne'].str.contains('CARREFOUR')))]
+df_lsa_chge = df_lsa_chge[~((df_lsa_chge['Ex enseigne'].str.contains('INTERMARCHE') |\
+                             df_lsa_chge['Ex enseigne'].str.contains('ECOMARCHE')) &\
+                            (df_lsa_chge['Enseigne'].str.contains('INTERMARCHE')))]
+df_lsa_chge = df_lsa_chge[~((df_lsa_chge['Ex enseigne'].str.contains('GEANT') |\
+                             df_lsa_chge['Ex enseigne'].str.contains('CASINO')) &\
+                            (df_lsa_chge['Enseigne'].str.contains('CASINO')))]
+# not full: check with regular expression
+df_lsa_chge = df_lsa_chge[~((df_lsa_chge['Ex enseigne'].str.contains('MARCHE U') |\
+                             df_lsa_chge['Ex enseigne'].str.contains('SUPER U')) &\
+                            (df_lsa_chge['Enseigne'].str.contains('U EXPRESS')))]
+print df_lsa_chge[ls_disp_2].to_string()
+
+# todo: detect duplicates
+# SIRET/SIREN
+df_lsa[u'N°Siren'] = df_lsa[u'N°Siren'].apply(\
+                       lambda x: u'{:09d}'.format(int(x)) if not pd.isnull(x)\
+                                                          else None)
+df_lsa[u'N°Siret'] = df_lsa[u'N°Siret'].apply(\
+                       lambda x: u'{:05d}'.format(int(x)) if not pd.isnull(x)\
+                                                          else None)
+df_lsa[u'Siret'] = df_lsa[u'N°Siren'] + df_lsa[u'N°Siret']
+se_siret_vc = df_lsa[u'Siret'].value_counts()
+df_lsa.set_index(u'Siret', inplace = True)
+df_lsa[u'dup'] = se_siret_vc
+
+# todo: increase in store surface?
+# todo: gps quality? missing data? distances? (google API)
+
+# GENERAT COLUMNS BY PERIOD WITH CURRENT ENSEIGNE WHEN STORE IS ACTIVE
 ls_qlmc_dates = ['2007-05',
                  '2007-08',
                  '2008-01',
@@ -141,13 +187,12 @@ plt.scatter(df_au_agg['P10_POP'][df_au_agg['AU2010']!='001'],
             df_au_agg['nb_stores'][df_au_agg['AU2010']!='001'])
 plt.show()
 
-
 ## Store density vs. pop density (# stores by head decreasing in population density?)
 #plt.scatter(df_au_agg['POPDENSITY10'][df_au_agg['AU2010']!='001'],
 #            df_au_agg['pop_by_store'][df_au_agg['AU2010']!='001'])
 #plt.show()
 
-# todo: take changes into account
+# STORE SURFACE BY AU (todo: take period into account)
 df_au_agg['surf_vente_cum'] = df_lsa[['AU2010', 'Surf Vente']].groupby('AU2010').sum()
 df_au_agg['pop_by_surf_vente'] = df_au_agg['P10_POP'] / df_au_agg['surf_vente_cum']
 print df_au_agg[ls_disp_au + ['surf_vente_cum', 'pop_by_surf_vente']][0:10].to_string()
