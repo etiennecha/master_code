@@ -109,6 +109,16 @@ df_qlmc = pd.merge(df_products, df_qlmc, on = 'Produit', how = 'right')
 #    lambda x: get_marque_and_libelle(x, ls_brand_patches)))
 ## todo: integrate process elaborated in overview_products_qlmc
 
+## ########################
+## DATE PARSING
+## ########################
+#
+#df_qlmc['Date_2'] = pd.to_datetime(df_qlmc['Date'], format = '%d/%m/%Y')
+#for i in range(13):
+#  print u'Beg of period {:2d}'.format(i), df_qlmc['Date_2'][df_qlmc['P'] == i].min()
+#  print u'End of period {:2d}'.format(i), df_qlmc['Date_2'][df_qlmc['P'] == i].max()
+## todo: check dates by store
+
 # ##############
 # STORE DF QLMC
 # ##############
@@ -116,18 +126,28 @@ df_qlmc = pd.merge(df_products, df_qlmc, on = 'Produit', how = 'right')
 
 # CSV
 
-## All
-#df_qlmc.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all.csv'),
-#               float_format='%.3f', encoding='utf-8', index=False)
+# All
+ls_qlmc_all = ['P', 'Rayon', 'Famille', 'Produit',
+               'Enseigne', 'Commune', 'Prix', 'Date',
+               'marque', 'nom', 'format']
+df_qlmc[ls_qlmc_all].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all.csv'),
+                            float_format='%.3f',
+                            encoding='utf-8', # 'latin-1' for stata
+                            index=False)
+
 ## Light
-#ls_qlmc_light = ['P', 'Rayon', 'Famille', 'Produit', 'Enseigne', 'Commune', 'Prix']
+#ls_qlmc_light = ['P', 'Rayon', 'Famille', 'Produit',
+#                 'Enseigne', 'Commune', 'Prix', 'Date']
 #df_qlmc[ls_qlmc_light].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all_light.csv'),
-#                              float_format='%.3f', encoding='utf-8', index=False)
-## Each period (e.g. if want to read only 3 periods bc 32 bit op. sys)
-#for i in range(9):
-#  df_qlmc[df_qlmc['P'] == i].to_csv(os.path.join(path_dir_built_csv,
-#                                                 'df_qlmc_per_%s.csv' %i),
-#                                    float_format='%.3f', encoding='utf-8', index=False)
+#                              float_format='%.3f',
+#                              encoding='utf-8',
+#                              index=False)
+
+# Each period (e.g. if want to read only 3 periods bc 32 bit op. sys)
+for i in range(9):
+  df_qlmc[df_qlmc['P'] == i].to_csv(os.path.join(path_dir_built_csv,
+                                                 'df_qlmc_per_%s.csv' %i),
+                                    float_format='%.3f', encoding='utf-8', index=False)
 
 # ########################
 # ALL PERIODS: STATS DES
