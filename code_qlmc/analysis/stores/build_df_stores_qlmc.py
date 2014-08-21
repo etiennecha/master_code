@@ -223,7 +223,24 @@ for insee_code in se_insee_vc[0:20].index:
 #qlmc_data['df_qlmc_stores'] = df_stores
 #qlmc_data.close()
 
+# LOAD QLMC STORE INFO
 
+df_stores['Magasin'] = df_stores['Enseigne'] + ' ' + df_stores['Commune']
+ls_ls_qlmc_store_info = dec_json(os.path.join(path_dir_built_json,
+                                              'ls_ls_qlmc_store_info'))
+# Store names in qlmc price files
+ls_ls_store_names = [list(df_stores['Magasin'][df_stores['P'] == i].values)\
+                       for i in range(13)]
+
+# Store names in info files
+ls_ls_store_info_names = [[x[0] for x in row] for row in ls_ls_qlmc_store_info]
+
+for i, ls_store_info_names in enumerate(ls_ls_store_info_names):
+  print u'\nSize of info file', len(ls_store_info_names)
+  print u'Size of intersection for info file:', i
+  for j in range(13):
+    set_isct = set(ls_store_info_names).intersection(set(ls_ls_store_names[j]))
+    print j, len(set_isct)
 
 ## LOAD INSEE DATA
 #path_data_insee_extract = os.path.join(path_dir_insee_extracts, 'data_insee_extract.csv')

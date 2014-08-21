@@ -130,9 +130,9 @@ df_qlmc = pd.merge(df_products, df_qlmc, on = 'Produit', how = 'right')
 ls_qlmc_all = ['P', 'Rayon', 'Famille', 'Produit',
                'Enseigne', 'Commune', 'Prix', 'Date',
                'marque', 'nom', 'format']
-df_qlmc[ls_qlmc_all].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all.csv'),
+df_qlmc[ls_qlmc_all].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all_latin-1.csv'),
                             float_format='%.3f',
-                            encoding='utf-8', # 'latin-1' for stata
+                            encoding='latin-1', # 'latin-1' for stata
                             index=False)
 
 ## Light
