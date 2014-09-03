@@ -307,6 +307,23 @@ df_final['Q'][pd.isnull(df_final['Q'])] = 'ambigu' # check
 df_final.drop(['ind_lsa_adhoc'], axis = 1, inplace = True)
 df_final.sort(columns=['P', 'INSEE_Code', 'Enseigne'], inplace = True)
 
-writer = pd.ExcelWriter(os.path.join(path_dir_built_csv, 'matching_qlmc_lsa_by_period.xlsx'))
-df_final.to_excel(writer, index = False)
-writer.close()
+# Check no two lsa index attributed to same store within period
+for per in df_final['P'].unique():
+	se_vc_ind_lsa = df_final['ind_lsa_stores'][df_final['P'] == per].value_counts()
+	print se_vc_ind_lsa.iloc[0:5]
+# Inspect pbms (clearly pbm with Geant Casino / Hyper Casino.. what else)
+ls_final_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code', 'ind_lsa_stores']
+print df_final[ls_final_disp][df_final['ind_lsa_stores'] == 51585].to_string()
+print df_final[ls_final_disp][df_final['ind_lsa_stores'] == 169094].to_string()
+print df_final[ls_final_disp][df_final['ind_lsa_stores'] == 48893].to_string()
+
+# OUTPUT TO EXCEL
+
+#writer = pd.ExcelWriter(os.path.join(path_dir_built_csv, 'matching_qlmc_lsa_by_period.xlsx'))
+#df_final.to_excel(writer, index = False)
+#writer.close()
+
+# OUTPUT TO HDF5
+
+qlmc_data['df_qlmc_lsa_stores'] = df_final
+qlmc_data.close()

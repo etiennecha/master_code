@@ -4,6 +4,8 @@
 import os, sys
 import json
 import re
+import math
+import numpy as np
 
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
@@ -168,6 +170,28 @@ def compare_stores(store_a, store_b, df_period, period_ind, category):
     ls_b_cheaper.append(len(df_cat[df_cat['Prix_a'] > df_cat['Prix_b']]))
     ls_a_equal_b.append(len(df_cat[df_cat['Prix_a'] == df_cat['Prix_b']]))
   return (ls_str_categories, ls_a_cheaper, ls_b_cheaper, ls_a_equal_b)
+
+def compute_distance(coordinates_A, coordinates_B):
+  d_lat = math.radians(float(coordinates_B[0]) - float(coordinates_A[0]))
+  d_lon = math.radians(float(coordinates_B[1]) - float(coordinates_A[1]))
+  lat_1 = math.radians(float(coordinates_A[0]))
+  lat_2 = math.radians(float(coordinates_B[0]))
+  a = math.sin(d_lat/2.0) * math.sin(d_lat/2.0) + \
+        math.sin(d_lon/2.0) * math.sin(d_lon/2.0) * math.cos(lat_1) * math.cos(lat_2)
+  c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+  distance = 6371 * c
+  return round(distance, 2)
+
+def get_ls_ls_cross_distances(ls_gps):
+  # Size can be lowered by filling only half the matrix
+  ls_ls_cross_distances = [[np.nan for gps in ls_gps] for gps in ls_gps]
+  for i, gps_i in enumerate(ls_gps):
+    for j, gps_j in enumerate(ls_gps[i+1:], start = i+1):
+      if gps_i and gps_j:
+        distance_i_j = compute_distance(gps_i, gps_j)
+        ls_ls_cross_distances[i][j] = distance_i_j
+        ls_ls_cross_distances[j][i] = distance_i_j
+  return ls_ls_cross_distances
 
 ls_chain_brands = [u'HYPER CHAMPION',
                    u'CHAMPION',

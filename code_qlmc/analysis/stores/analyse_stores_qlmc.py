@@ -26,6 +26,7 @@ path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
 
 path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
 
 # READ LSA EXCEL FILE
 # need to work with _no1900 at CREST for now (older versions of numpy/pandas/xlrd...?)
@@ -171,6 +172,71 @@ print df_lsa[ls_disp_1][df_lsa['DATE ouv'] == df_lsa['DATE ferm']].to_string()
 
 # todo: increase in store surface?
 # todo: gps quality? missing data? distances? (google API)
+
+# IMPORT QLMC DATA AND COMPARE
+
+df_qlmc_stores = qlmc_data['df_qlmc_lsa_stores']
+print u'\nUnique lsa indexes', len(df_qlmc_stores['ind_lsa_stores'].unique())
+print u'\nNb period * lsa indexes', len(df_qlmc_stores['ind_lsa_stores'])
+
+# Periods available for each store in qlmc price data
+dict_per_stores = {}
+for ind_lsa in df_qlmc_stores['ind_lsa_stores'].unique():
+  if not pd.isnull(ind_lsa):
+    dict_per_stores[int(ind_lsa)] =\
+      [int(x) for x in df_qlmc_stores['P'][df_qlmc_stores['ind_lsa_stores'] == ind_lsa].unique()]
+
+# Dates of closing
+ls_s_closed_date = [df_lsa['DATE ferm'][df_lsa['Ident'] == x].iloc[0] for x in ls_s_closed_ind]
+
+# List stores around opened/closed stores from qlmc
+ls_gps = zip(df_lsa['Latitude'].values, df_lsa['Longitude'].values)
+ls_idents = list(df_lsa['Ident'].values)
+ls_ls_close_comp = []
+for ident_closed in ls_s_closed_ind:
+  lon = df_lsa[df_lsa['Ident'] == ident_closed]['Longitude'].values[0]
+  lat = df_lsa[df_lsa['Ident'] == ident_closed]['Latitude'].values[0]
+  ls_close_comp = []
+  for (comp_ident, comp_gps) in zip(ls_idents, ls_gps):
+    distance = compute_distance((lat, lon), comp_gps)
+    if distance <= 10 and ident_closed != comp_ident:
+      ls_close_comp.append((comp_ident, distance))
+  ls_ls_close_comp.append(ls_close_comp)
+
+# todo: create column gps for easy computation
+ls_qlmc_dates = ['2007-05',
+                 '2007-08',
+                 '2008-01',
+                 '2008-04',
+                 '2009-03',
+                 '2009-09',
+                 '2010-03',
+                 '2010-10',
+                 '2011-01',
+                 '2011-04',
+                 '2011-10',
+                 '2012-01',
+                 '2012-06']
+
+dict_analyse = {}
+for ident_closed, closed_date, ls_close_comp in zip(ls_s_closed_ind,
+                                                    ls_s_closed_date,
+                                                    ls_ls_close_comp):
+  ls_analyse_ident = []
+  for comp_ident, distance in ls_close_comp:
+    if comp_ident in dict_per_stores:
+      date_beg = ls_qlmc_dates[min(dict_per_stores[comp_ident])]
+      date_end = ls_qlmc_dates[max(dict_per_stores[comp_ident])]
+      if (pd.to_datetime(date_beg) < closed_date) &\
+         (pd.to_datetime(date_end) > closed_date):
+        ls_analyse_ident.append((comp_ident, dict_per_stores[comp_ident]))
+  dict_analyse[ident_closed] = [closed_date, ls_analyse_ident]
+
+for k,v in dict_analyse.items():
+  if v[1]:
+    print k,v
+
+# Check: http://ac-franchise.com/article/le-top-100-des-hypermarches-en-france-partie-2
 
 ## GENERAT COLUMNS BY PERIOD WITH CURRENT ENSEIGNE WHEN STORE IS ACTIVE
 #ls_qlmc_dates = ['2007-05',

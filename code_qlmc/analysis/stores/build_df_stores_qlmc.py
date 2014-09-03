@@ -218,10 +218,6 @@ se_insee_vc = df_stores['INSEE_Code'].value_counts()
 for insee_code in se_insee_vc[0:20].index:
 	print '\n\n', df_stores[df_stores['INSEE_Code'] == insee_code].to_string()
 
-# STORE DF STORES
-
-#qlmc_data['df_qlmc_stores'] = df_stores
-#qlmc_data.close()
 
 # LOAD QLMC STORE INFO
 
@@ -241,6 +237,72 @@ for i, ls_store_info_names in enumerate(ls_ls_store_info_names):
   for j in range(13):
     set_isct = set(ls_store_info_names).intersection(set(ls_ls_store_names[j]))
     print j, len(set_isct)
+
+# 0th file => Little wit 0-3... check 4-5?
+# 1st file => Period 6 (100%)
+# 2d  file => Period 7 (100%)
+# 3d  file => Period 9 (100% match in price file but got more info: why?)
+# 4th file => Period 11 (100% match in price file but got more info: why?)
+# 5th file => Check that really not Period 12?
+
+# Global matching
+set_store_info_names = set([store for ls_stores in ls_ls_store_info_names for store in ls_stores])
+set_store_names = set([store for ls_stores in ls_ls_store_names for store in ls_stores])
+# elements in info not in price files : 878
+set_uselessinfo = set_store_info_names.difference(set_store_names)
+# elements in price file not in info at all (any period)
+print u'\nMatching of each price file name vs. all info'
+for i, ls_store_names in enumerate(ls_ls_store_names):
+  set_isct = set(ls_store_names).intersection(set_store_info_names)
+  print i, len(set_isct)
+
+# Check those in info not in price files of periods 9 and 11
+set_nomatch_9 = set(ls_ls_store_info_names[3]).difference(set(ls_ls_store_names[9]))
+# pprint.pprint(list(set_nomatch_9))
+set_nomatch_11 = set(ls_ls_store_info_names[4]).difference(set(ls_ls_store_names[11]))
+# pprint.pprint(list(set_nomatch_11))
+# For both: essentially hard discount: probably not enough products
+
+# todo: check those missing in price files of period 8, 10 (and 12)
+set_nomatch_8 = set(ls_ls_store_names[8]).difference(set_store_info_names)
+# pprint.pprint(list(set_nomatch_8))
+set_nomatch_10 = set(ls_ls_store_names[10]).difference(set_store_info_names)
+
+# todo: make sure never two stores with same name within info files
+ls_rows_qlmc_store_info  = [[i] + store for i, ls_store in enumerate(ls_ls_qlmc_store_info)\
+                              for store in ls_store]
+df_qlmc_store_info = pd.DataFrame(ls_rows_qlmc_store_info,
+                                  columns = ['P_info', 'Magasin', 'QLMC_Dpt', 'QLMC_Surface'])
+# print df_qlmc_stores.to_string()
+
+# todo: make sure never two stores with same name / diff dpt or surface across info files
+se_qsi_vc = df_qlmc_store_info['Magasin'].value_counts()
+#for x in se_qsi_vc[se_qsi_vc > 1].index:
+#  print df_qlmc_store_info[df_qlmc_store_info['Magasin'] == x]
+## presen of variations in surfaces (maybe precision issue sometimes but also chges)
+
+# Merge store_info with df_stores conservatively i.e. by period
+df_qlmc_store_info = df_qlmc_store_info[(df_qlmc_store_info['P_info'] != 0) &\
+                                        (df_qlmc_store_info['P_info'] != 5)]
+
+ls_replace_periods = [(1,6),
+                      (2,7),
+                      (3,9),
+                      (4,11)]
+for store_info_per, qlmc_per in ls_replace_periods:
+  df_qlmc_store_info['P_info'][df_qlmc_store_info['P_info'] == store_info_per] = qlmc_per
+df_qlmc_store_info.rename(columns = {'P_info' : 'P'}, inplace = True)
+
+# Turns out there is a duplicate in period 9: delete
+print df_qlmc_store_info[df_qlmc_store_info['Magasin'] == 'AUCHAN LAXOU']
+df_qlmc_store_info = df_qlmc_store_info[df_qlmc_store_info.index != 1983]
+
+df_stores_all = pd.merge(df_qlmc_store_info, df_stores, how = 'right', on = ['P', 'Magasin'])
+
+# STORE DF STORES
+
+#qlmc_data['df_qlmc_stores'] = df_stores
+#qlmc_data.close()
 
 ## LOAD INSEE DATA
 #path_data_insee_extract = os.path.join(path_dir_insee_extracts, 'data_insee_extract.csv')
