@@ -1,0 +1,200 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage{enumerate}
+\usepackage{setspace}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{bbm}
+\usepackage[round]{natbib}
+\usepackage[nohead]{geometry}
+\usepackage[bottom]{footmisc}
+\usepackage{indentfirst}
+\usepackage{endnotes}
+\usepackage{graphicx}%
+\usepackage{eurosym}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{bbold}
+% \usepackage[hidelinks]{hyperref}
+\usepackage{floatrow} %[capposition=top]
+\floatsetup{footposition=bottom,capposition=top}
+\renewcommand{\labelitemi}{--}
+\renewcommand{\labelitemii}{$\bullet$}
+\bibliographystyle{chicago}
+% \geometry{left=1in,right=1in,top=1.00in,bottom=1.0in}
+\let\olditemize\itemize
+\renewcommand{\itemize}{
+  \olditemize
+  \setlength{\itemsep}{-1pt}
+}
+
+\begin{document}
+
+\title{Consumer search and Price grid\ \\ \ \\(Very preliminary)}
+\author{Etienne Chamayou\thanks{e-mail:
+\textit{etienne.chamayou@ensae.fr}}\medskip\\{\normalsize CREST and Department of Economics, Ecole Polytechnique }}
+\maketitle
+
+\sloppy%
+
+\onehalfspacing
+
+\textbf{Abstract:}
+This note details how the model of consumer search and price dispersion exposed in \cite{VAR80} is affected by the introduction of a constraint for firm: the necessity to chose prices within a grid of prices. This restriction may be justified in two ways. A practical reason is the fact that sellers can't actually display and charge prices beyond a limited number of digits (up to 3 after the decimal point for gasoline). Another potential reason maybe the fact that consumers may not react to small price changes, making the restriction to a grid of prices a more realistic approach. TODO: describe results.
+
+\strut
+
+\textbf{Keywords:} Consumer search, Price dispersion
+
+\strut
+
+\textbf{JEL Classification Numbers:} L13
+
+\pagebreak%
+\doublespacing
+
+\section{Introduction}
+
+The setting is fundamentally similar to \cite{VAR80}: $N$ seller compete for $U$ uninformed customers and $I$ informed customers. The good is homogeneous and consumers desire only one unit of the good, the value of which is $v$ for all. Uninformed customers pick a store randomly hence each seller is at least patronized by $U/N$ customers. Informed customers purchase from the cheapest seller and split evenly among sellers in case of a draw at the cheapest price. Sellers have a unit cost $c$ for the good. The only departure from \cite{VAR80} at this stage is the fact that sellers must choose prices within a grid.
+
+\section{Existence of symmetric PSE}
+
+In \cite{VAR80}, a symmetric PSE at a price strictly above $s$ is trivially impossible as each seller would then be better off setting a slightly lower price in order to attract all shoppers, while not losing a significant amount on uninformed (loyal) customers. With a price grid, attracting shoppers at virtually no cost is no more an option: there is a clear trade-off between the loss of profit made on uninformed customers.
+
+For a seller which does not attract informed customers at a price $p$ but would do so with $p'=p-\delta$, there is a clear trade off between the loss of profit made with uninformed customers $-\delta(U/N)$ and the additional profit derived from selling to informed customers: $p' I)$.
+
+At $c$, it is clear as in \cite{VAR80} that no PSE can exist at both sellers make no profit and thus would rather charge any price available between $c$ and $v$. If only one is available, the latter is obviously a symmetric PSE.
+
+TODO: show symmetric PSE possible (cf example) but "fragile" (?).
+
+\section{Existence of asymmetric PSE}
+
+With two sellers, the existence of an asymmetric PSE requires that the high price seller does not find it profitable to undercut the other seller so as to attract informed customers, nor to increase its price to a higher price available in the grid (the price closest to $v$). It also requires that the low price seller does not find it profitable to increase its price, which it typically does to make more profit on all consumers while retaining informed customers. The low price must therefore be right below the high price in the grid.
+\ \\
+\ \\
+Formally, the low price firm does not want to match the high price if:
+\begin{align*}
+(p_L - c)(\frac{U}{N} + I) & > (p_H - c)(\frac{U}{N} + \frac{I}{2}) \\
+\text{i.e. } \frac{U}{N} (p_H - p_L) & > \frac{I}{2}(p_L - c)
+\end{align*}
+\ \\
+\ \\
+The high price firm does not want to undercut its competitor if:
+\begin{align*}
+\frac{U}{N}  (p_h - c) & > (p_L - c)(\frac{U}{N} + \frac{I}{2}) \\
+\text{i.e. } (p_L - c) \frac{I}{2} - (p_H - p_L) \frac{I}{2} & > \frac{U}{N} (p_H - p_L)
+\end{align*}
+\newpage
+
+Both constraint can't be satisfied hence an asymmetric equilibrium is not possible with two firms.
+
+\section{Existence of symmetric MSE}
+
+The conditions of existence of a symmetric MSE are closely related to arguments previously described. For any price $p$, it is necessary that it is profitable to either undercut so as to attract more customers or increase price so that the profit decrease resulting from the loss of informed customers can be offset by an increase of profit generated with uninformed customers. Both these conditions are easily understood in the following numerical exercise.
+
+\section{Comparison with \cite{VAR80} as more prices are allowed}
+
+Let us consider two symmetric firms with $U/2 = I = 1$, $c=1$, $v=1.5$. The profit of firm $i$ writes:
+\begin{align*}
+\Pi_i(p_i, p_j) = (p_i - c) (1 + 1 \mathbb{1}_{p_i < p_j} + \frac{1}{2} \mathbb{1}_{p_i = p_j})
+\end{align*}
+
+TODO: different proportions of informed and uninformed, different cost and reservation price if seems interesting?
+
+\subsection{Continuous price support}
+
+The model can be solved as exposed in \cite{VAR80}. There is no PSE and the unique symmetric MSE has a support devoid of holes or mass points. The upper bound of the equilibrium price support is the reservation price $1.5$ and, setting such a price, a seller only serves its share of uninformed customers with probability $1$ hence an expected profit of $0.5$. Furthermore, the seller must be indifferent between all prices in the equilibrium price support hence the condition:
+\begin{align*}
+\forall p \text{ } 0.5 & = (p-1) * (1*F(p) + 2*(1-F(p))) \\
+\text{which yields } F(p) & = 2 - \frac{1}{2(p-1)}
+\end{align*}
+and the lower bound of the support $\underline{p}$ must be so that $F(\underline{p})=0$ hence $\underline{p}=1.25$.
+
+\subsection{Grid of prices: grid unit 0.1}
+
+A restriction is now imposed on price strategies implemented by sellers: only prices with one digit after decimal point are allowed.
+
+\begin{figure}[h]
+\caption{Summary of payoffs with grid unit 0.1}
+\begin{singlespace}
+\begin{tabular}{lllll}
+   Equilibrium & Equilibrium & Undercut & Undercut & Other's  \\
+   Price       & Profit      & Price    & Profit   & Profit   \\
+   1.0         & 0.00        & 0.9      &-0.2      & 0.0      \\
+   1.1         & 0.15        & 1.0      & 0.0      & 0.1      \\
+   1.2         & 0.30        & 1.1      & 0.2      & 0.2      \\
+   1.3         & 0.45        & 1.2      & 0.4      & 0.3      \\
+   1.4         & 0.60        & 1.3      & 0.6      & 0.4      \\
+   1.5         & 0.75        & 1.4      & 0.8      & 0.5      \\
+\end{tabular}
+\end{singlespace}
+\end{figure}
+
+For each price in the first column, a symmetric equilibrium would yield a profit that can be read in the second column. In the third column, the "undercut price" is simply the price of the first column minus the grid unit i.e. the smallest possible undercut. The fourth column contains the profit obtained by the seller which deviates by undercutting the other seller, while the fifth column contains the profit of the seller which is undercut by its competitor.
+
+Starting at the maximum possible price i.e. the consumer reservation price $1.5$, a symmetric equilibrium would yield a profit of $0.75$ to each seller. However, deviating to a price of $1.4$ yields a profit of $0.8 > 0.75$ hence there is no symmetric equilibrium (1.5, 1.5). With prices (1.4 1.4), profit is $0.6$ for each seller, and undercutting to $1.3$ simply allows to reach the same profit. The last row of the last column indicates the profit that is made by a firm which gives up the undercutting game and maximizes profit on uninformed customers. It is therefore clear that any price below $1.4$ can't yield a symmetric equilibrium, and that $1.4$ is the minimum price that a seller would wish to undercut (weakly in the case in point).
+
+\begin{figure}[h]
+\caption{Payoffs in normal form (grid unit 0.1)}
+\begin{singlespace}
+\begin{tabular}{lllllll}
+   {}   & 1.0       & 1.1       & 1.2       & 1.3       & 1.4       & 1.5       \\
+   1.0  & 0.00 0.00 & 0.00 0.10 & 0.00 0.20 & 0.00 0.30 & 0.00 0.40 & 0.00 0.50 \\
+   1.1  & 0.10 0.00 & 0.15 0.15 & 0.20 0.20 & 0.20 0.30 & 0.20 0.40 & 0.20 0.50 \\
+   1.2  & 0.20 0.00 & 0.20 0.20 & 0.30 0.30 & 0.40 0.30 & 0.40 0.40 & 0.40 0.50 \\
+   1.3  & 0.30 0.00 & 0.30 0.20 & 0.30 0.40 & 0.45 0.45 & 0.60 0.40 & 0.60 0.50 \\
+   1.4  & 0.40 0.00 & 0.40 0.20 & 0.40 0.40 & 0.40 0.60 & 0.60 0.60 & 0.80 0.50 \\
+   1.5  & 0.50 0.00 & 0.50 0.20 & 0.50 0.40 & 0.50 0.60 & 0.50 0.80 & 0.75 0.75 \\
+\end{tabular}
+\end{singlespace}
+\end{figure}
+
+As noted previously, $1.0$, $1.1$ and $1.2$ are strictly dominated strategies. $1.4$ yields the unique symmetric PSE (yet non essential (?)) and there is no asymmetric PSE. . There is one MSE that can be found in the classic way: the lower bound price is $1.3$ and weights of prices in the support are c. (0.47 0.41 0.12 todo: add exact solution). Equilibrium profit is c. 0.529.
+
+A question of interest is how the strategy evolves as more precision is allowed, which can be checked up to a certain extent by solving games with the program Gambit.
+
+\subsection{Grid of prices: grid unit 0.05}
+
+The pay-off summary of the game with a grid unit of 0.05 is provided below. At the price of $1.20$, a seller is indifferent between undercutting or not (profit is $0.3$ in both cases). However, undercutting is then less profitable than giving up on informed customers and extracting all surplus from uninformed customers. The lowest price that a seller is willing to undercut is $1.3$, since (1.3 1.4) yields a profit of (0.5 0.4). It can however be noted that (1.3 1.3) is not satisfactory anyway as it yields a profit of $0.45$ for each seller, namely less than what they can make on uninformed players. As a consequence, it is easy to see that there is no PSE.
+
+\begin{figure}[h]
+\caption{Summary of payoffs with grid unit 0.05}
+\begin{singlespace}
+\begin{tabular}{lllll}
+   Equilibrium & Equilibrium & Undercut & Undercut & Other's  \\
+   Price       & Profit      & Price    & Profit   & Profit   \\
+   1.00        & 0.000       & 0.95     & -0.1     & 0.00     \\
+   1.05        & 0.075       & 1.00     &  0.0     & 0.05     \\
+   1.10        & 0.150       & 1.05     &  0.1     & 0.10     \\
+   1.15        & 0.225       & 1.10     &  0.2     & 0.15     \\
+   1.20        & 0.300       & 1.15     &  0.3     & 0.20     \\
+   1.25        & 0.375       & 1.20     &  0.4     & 0.25     \\
+   1.30        & 0.450       & 1.25     &  0.5     & 0.30     \\
+   1.35        & 0.525       & 1.30     &  0.6     & 0.35     \\
+   1.40        & 0.600       & 1.35     &  0.7     & 0.40     \\
+   1.45        & 0.675       & 1.40     &  0.8     & 0.45     \\
+   1.50        & 0.750       & 1.45     &  0.9     & 0.50     \\
+\end{tabular}
+\end{singlespace}
+\end{figure}
+
+In the MSE of the game, the lower bound of the support is $1.3$, with weights on the support as follows c. (0.37 0.15 0.24 0.06 0.18). Again the smallest price in the support has the biggest weight. However, the distribution of weights is no more monotonic, as the bulk of the weight is located at the extremities and in the middle. Equilibrium profit is c. 0.54.
+
+\section{Conclusion}
+
+This note shows that the main intuition of \cite{VAR80} generally holds in the case where sellers would restrict to a grid of prices: there is no pure strategy equilibrium but there is a unique strategy that may be computed (provided the price grid is not too detailed).
+
+\bibliography{references}
+
+\newpage
+
+\appendix
+
+\section{First section}
+
+Appendix here
+
+\end{document}
