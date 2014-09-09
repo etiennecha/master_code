@@ -83,7 +83,7 @@ df_qlmc['Prix'] = df_qlmc['Prix'].astype(np.float32)
 
 # STORE IDENTIFICATION
 
-df_stores = qlmc_data['df_qlmc_stores']
+df_stores = qlmc_data['df_qlmc_lsa_stores']
 df_stores['Magasin'] = df_stores['Enseigne'] + u' ' + df_stores['Commune']
 df_qlmc = pd.merge(df_stores, df_qlmc, on = ['P', 'Magasin'], how = 'right')
 ## Check those with no insee code (ambiguity in city identification)
@@ -109,20 +109,115 @@ df_qlmc = pd.merge(df_products, df_qlmc, on = 'Produit', how = 'right')
 #    lambda x: get_marque_and_libelle(x, ls_brand_patches)))
 ## todo: integrate process elaborated in overview_products_qlmc
 
+# PRODUCTS IN ALL PERIODS
+df_qlmc['Produit_norm'] = df_qlmc['marque'] + ' ' + df_qlmc['nom']+ ' ' + df_qlmc['format']
+ls_ls_prod = []
+for per in df_qlmc['P'].unique():
+  ls_ls_prod.append(list(df_qlmc['Produit_norm'][df_qlmc['P'] == per].unique()))
+set_prod = set(ls_ls_prod[0])
+for ls_prod in ls_ls_prod[1:]:
+	set_prod.intersection_update(set(ls_prod))
+ls_prod_allp = list(set_prod)
+
+# TEST BEFORE/AFTER: IMPACT OF STORE CLOSED
+
+# 14343 (lsa index) closed on 2009-10-31 i.e. between periods 5 and 6
+# impact for 1525 (0 to 12) and 1581 (1 and 6... short)
+
+# 10248 closed on 2011-01-01 i.e. beg of period 8 (?)
+# impact for 502 (0, 2, 4, 5, 8, 9, 10, 11, 12)
+
+# Comparison between two periods for one store
+df_temp_1 = df_qlmc[['Produit_norm', 'Prix']][(df_qlmc['P'] == 0) &\
+                                              (df_qlmc['ind_lsa_stores'] == 1525)].copy()
+df_temp_2 = df_qlmc[['Produit_norm', 'Prix']][(df_qlmc['P'] == 9) &\
+                                              (df_qlmc['ind_lsa_stores'] == 1525)].copy()
+df_temp_3 = pd.merge(df_temp_1, df_temp_2, on = 'Produit_norm',
+                     how = 'inner', suffixes = ('_1', '_2'))
+df_temp_3['D_value'] = df_temp_3['Prix_2'] - df_temp_3['Prix_1']
+df_temp_3['D_percent'] = df_temp_3['D_value'] / df_temp_3['Prix_1']
+
+# Comparison between all periods available for one store
+ind_store = 1525
+ls_store_per_ind = [int(x) for x in df_qlmc['P']\
+                     [df_qlmc['ind_lsa_stores'] == ind_store].unique()]
+df_store = df_qlmc[['Produit_norm', 'Prix']][(df_qlmc['P'] == ls_store_per_ind[0]) &\
+                                            (df_qlmc['ind_lsa_stores'] == ind_store)].copy()
+for per_ind in ls_store_per_ind[1:]:
+  df_temp = df_qlmc[['Produit_norm', 'Prix']]\
+              [(df_qlmc['P'] == per_ind) &\
+               (df_qlmc['ind_lsa_stores'] == ind_store)]
+  df_store = pd.merge(df_store, df_temp, on = 'Produit_norm',
+                      how = 'outer', suffixes = ('', '_%s' %per_ind))
+# Finally harmonize first Prix column name
+df_store.rename(columns = {'Prix': 'Prix_%s' %ls_store_per_ind[0]}, inplace = True)
+
+## TODO: get rid of products with several price records (either their mistake or my prod harmo)
+#print df_qlmc[['Produit_norm', 'P', 'Prix']]\
+#        [(df_qlmc['Produit_norm'] == 'Elle & Vire Beurre doux tendre 250g') &\
+#         (df_qlmc['ind_lsa_stores'] == 1525)].to_string()
+
+for prod_norm in se_vc_pn[se_vc_pn > 1].index:
+	df_store = df_store[df_store['Produit_norm'] != prod_norm]
+
+# Check high prices and divide by 100 (e.g. period 7)
+# Check with other Cora stores: same pool of products
+
+# #############################################
+# ONE LSA IND FOR TWO STORE NAMES WITHIN PERIOD
+# #############################################
+
+#len(df_qlmc[(df_qlmc['P'] == 9) &\
+#            (df_qlmc['Commune'] == 'CARREFOUR MARKET CLERMONT CARRE JAUDE')])
+#len(df_qlmc[(df_qlmc['P'] == 9) &\
+#            (df_qlmc['Commune'] == 'CARREFOUR MARKET CLERMONT FERRAND JAUDE')])
+#
+#len(df_qlmc[(df_qlmc['P'] == 5) & (df_qlmc['Magasin'] == 'CHAMPION ST GERMAIN DU PUY')])
+#len(df_qlmc[(df_qlmc['P'] == 5) & (df_qlmc['Magasin'] == 'CARREFOUR MARKET ST GERMAIN DU PUY')])
+#
+#len(df_qlmc[(df_qlmc['P'] == 4) & (df_qlmc['Magasin'] == 'SUPER U ANGERS BOURG DE PAILLE')])
+#len(df_qlmc[(df_qlmc['P'] == 4) & (df_qlmc['Magasin'] == 'SUPER U BEAUCOUZE')])
+#
+#df_pbm = df_qlmc[(df_qlmc['P'] == 4) & ((df_qlmc['Magasin'] == 'SUPER U BEAUCOUZE') |\
+#                                        (df_qlmc['Magasin'] == 'SUPER U ANGERS BOURG DE PAILLE'))].copy()
+#df_pbm.sort(columns = ['Produit'], inplace = True)
+#se_vc_pbms = df_pbm['Produit'].value_counts()
+#df_pbm[df_pbm['Produit'] == u'Elle & Vire - Beurre doux tendre, 250g']
+
+
+## ########################
+## DATE PARSING
+## ########################
+#
+#df_qlmc['Date_2'] = pd.to_datetime(df_qlmc['Date'], format = '%d/%m/%Y')
+#for i in range(13):
+#  print u'Beg of period {:2d}'.format(i), df_qlmc['Date_2'][df_qlmc['P'] == i].min()
+#  print u'End of period {:2d}'.format(i), df_qlmc['Date_2'][df_qlmc['P'] == i].max()
+## todo: check dates by store
+
 # ##############
 # STORE DF QLMC
 # ##############
 
-
 # CSV
 
 ## All
-#df_qlmc.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all.csv'),
-#               float_format='%.3f', encoding='utf-8', index=False)
+#ls_qlmc_all = ['P', 'Rayon', 'Famille', 'Produit',
+#               'Enseigne', 'Commune', 'Prix', 'Date',
+#               'marque', 'nom', 'format']
+#df_qlmc[ls_qlmc_all].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all_latin-1.csv'),
+#                            float_format='%.3f',
+#                            encoding='latin-1', # 'latin-1' for stata
+#                            index=False)
+
 ## Light
-#ls_qlmc_light = ['P', 'Rayon', 'Famille', 'Produit', 'Enseigne', 'Commune', 'Prix']
+#ls_qlmc_light = ['P', 'Rayon', 'Famille', 'Produit',
+#                 'Enseigne', 'Commune', 'Prix', 'Date']
 #df_qlmc[ls_qlmc_light].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_all_light.csv'),
-#                              float_format='%.3f', encoding='utf-8', index=False)
+#                              float_format='%.3f',
+#                              encoding='utf-8',
+#                              index=False)
+
 ## Each period (e.g. if want to read only 3 periods bc 32 bit op. sys)
 #for i in range(9):
 #  df_qlmc[df_qlmc['P'] == i].to_csv(os.path.join(path_dir_built_csv,
