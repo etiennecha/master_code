@@ -19,7 +19,7 @@ l_1, l_2 = 1, 1          # uninformed customers
 s = 1                    # informed customers
 c, c_1, c_2 = 1, 1, 1    # firms' unit cost
 v = 1.5                  # customer reserve price
-grid_unit = 0.050        # grid unit
+grid_unit = 0.100        # grid unit
 
 # PRICE GRID
 steps = (v-c+grid_unit)/grid_unit
@@ -74,13 +74,13 @@ for price, ls_temp in zip(ar_grid_prices, ls_ls_temp):
         u" & ".join([' '.join(map(lambda y: u"{:>.3f}".format(y), x)) for x in ls_temp]),\
         u"\\\\"
 
-## PRINT TWO FIRM PAYOFFS
-#ar_ar_profits = np.array(ls_ls_tup_profits)
-#print u'\nPayoffs'
-#print ar_ar_profits
-#ar_profits = np.reshape(ar_ar_profits, -1)
-## print len(ar_profits)
-#print ' '.join(["{:>.2f}".format(profit) for profit in ar_profits])
+# PRINT TWO FIRM PAYOFFS
+ar_ar_profits = np.array(ls_ls_tup_profits)
+print u'\nPayoffs'
+print ar_ar_profits
+ar_profits = np.reshape(ar_ar_profits, -1)
+# print len(ar_profits)
+print ' '.join(["{:>.4f}".format(profit) for profit in ar_profits])
 
 # NUMBER OF STRAT FOR EACH FIRM
 print u'\nNb of possible strats (Size of grid):', len(ar_grid_prices)
