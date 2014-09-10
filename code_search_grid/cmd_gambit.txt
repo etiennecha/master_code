@@ -1,0 +1,3 @@
+"C:\Program Files\Gambit\gambit-enummixed.exe" W:\Bureau\Etienne_work\Code\code_search_grid\gambit_games\grid_prices_basic_100.nfg > W:\Bureau\Etienne_work\Code\code_search_grid\gambit_games\grid_prices_basic_100.txt
+
+"C:\Program Files\Gambit\gambit-enummixed.exe" W:\Bureau\Etienne_work\Code\code_search_grid\gambit_games\grid_prices_basic_010.nfg > W:\Bureau\Etienne_work\Code\code_search_grid\gambit_games\grid_prices_basic_010.txt
