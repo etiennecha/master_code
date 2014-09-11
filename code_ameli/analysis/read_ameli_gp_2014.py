@@ -14,11 +14,17 @@ import pandas as pd
 import statsmodels as sm
 import statsmodels.formula.api as smf
 
-
 path_dir_ameli = os.path.join(path_data, u'data_ameli', 'data_source', 'ameli_2014')
+path_dir_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json')
 
-ls_ls_physicians = dec_json(os.path.join(path_dir_ameli, u'ls_ls_ophtalmologiste_75'))
-dict_physicians = dec_json(os.path.join(path_dir_ameli, u'dict_ophtalmologiste_75'))
+# file_extension = u'medecin-generaliste_75001'
+#ls_ls_physicians = dec_json(os.path.join(path_dir_ameli, u'ls_ls_%s' %file_extension))
+
+dict_physicians = {}
+for i in range(1, 21):
+  dict_physicians.update(\
+    dec_json(os.path.join(path_dir_ameli,
+                          u'dict_medecin-generaliste_750{:02d}'.format(i))))
 
 # Content for each physician: [ls_address_name, ls_places, ls_infos, ls_actes]
 # Explore field contents (all are lists, None are not counted)
@@ -34,7 +40,11 @@ for i, dict_counters in enumerate(ls_dict_counters):
 # Clean (0) name-address-phone component and (2) info component (checked always 3 same items)
 ls_formatted = []
 for id_physician, ls_physician in dict_physicians.items():
-  ind_name = ls_physician[0].index(u'Médecin ophtalmologiste')
+  # e.g. u"M\xe9decin g\xe9n\xe9raliste \u2013 Acupuncteur en mode d'exercice exclusif"
+  ind_name = None # breaks if following does not match
+  for i, elt in enumerate(ls_physician[0]):
+    if re.match(u'Médecin généraliste', elt):
+      ind_name = i
   ls_name = ls_physician[0][:ind_name]
   ls_address_phone = ls_physician[0][ind_name + 1:]
   if re.match(u'0[0-9]{9}$', ls_address_phone[-1]):
@@ -43,6 +53,7 @@ for id_physician, ls_physician in dict_physicians.items():
   else:
     ls_address = ls_address_phone
     phone = None
+  # specific to paris for now!
   if not re.match(u'75[0-9]{3}.*', ls_address[-1]):
     print 'Problem end of address, no zip:', ls_address
   # todo: further improve (not ok for geocoding now)
@@ -53,40 +64,59 @@ for id_physician, ls_physician in dict_physicians.items():
     ls_address = ls_address[-2:]
   dict_physicians[id_physician][0] = [ls_name, phone, ls_address]
   dict_physicians[id_physician][2] = [x for ls_x in ls_physician[2] for x in ls_x]
+# Check addresses with more than 2 components
+# Standard extraction: ls_address[0] => street, ls_address[-1] => zip_city
+# Fix if would yield bad result
+for k,v in dict_physicians.items():
+	if len(v[0][2]) != 2:
+		print v[0][2]
 
 # Clean (1) multiple location component
 ls_nb_other_locations = [len(v[1]) if v[1] else 0 for k,v in dict_physicians.items()]
 print u'\nPhysicians with multiple locations'
 print pd.Series(ls_nb_other_locations).value_counts()
-## Check with links to get real number of physicians in paris
-## Exploit address to have some liberal/mixte count?
-## Print addresses... a priori no need
-#for k,v in dict_physicians.items():
-#  if v[1]:
-#    for x in v[1]:
-#      print x[-1]
+# build mapping between id_physicians: how to work with it?
+dict_other_locations = {k:[re.search('autre-lieu-(.*?)-', x[0]).group(1) for x in v[1]]\
+                          if v[1] else [] for k,v in dict_physicians.items()}
+# check those not available i.e. a priori other location(s?) not in paris
+dict_not_paris = {}
+for k,v in dict_other_locations.items():
+	for x in v:
+		if x not in dict_other_locations.keys():
+			dict_not_paris.setdefault(k, []).append(x)
 
-# Clean (3) services/prices component
-ls_unique_services = []
-for id_physician, ls_physician in dict_physicians.items():
-  if ls_physician[3]:
-    for service in ls_physician[3]:
-      ls_unique_services.append(tuple(service[0][0]))
-ls_unique_services = list(set(ls_unique_services))
-ls_unique_services = [service[0] for service in ls_unique_services]
-# Can safely keep only first component as name of services i.e. service[0][0][0]
+# Can NOT safely keep only first component as name of services i.e. service[0][0][0]
 ls_secondary_title = []
 ls_all_physician_services = []
 for id_physician, ls_physician in dict_physicians.items():
   ls_physician_services = []
   if ls_physician[3]:
     for service in ls_physician[3]:
-      title = service[0][0][0]
+      # designed to break if not sure
+      title, ind_title_service = None, None
+      if service[0][0] == ['Consultation']:
+        title = u'Consultation'
+      else:
+        for i, x in enumerate(service[0][0]):
+          if (x == u'En savoir plus') |\
+             (x == u"Qu'est-ce que c'est?"):
+            ind_title_service = i
+            break
+        title = ' '.join(service[0][0][:ind_title_service])
       rembt = service[0][1]
       ls_secondary_title.append(service[0][2])
       ls_tarifs = zip(*[[' '.join(ls_elts) for ls_elts in ls_elt] for ls_elt in service[1]])
       ls_physician_services.append([title, rembt, ls_tarifs])
   dict_physicians[id_physician][3] = ls_physician_services
+
+# Clean (3) services/prices component
+ls_unique_services = []
+for id_physician, ls_physician in dict_physicians.items():
+  if ls_physician[3]:
+    for service in ls_physician[3]:
+      ls_unique_services.append(service[0])
+ls_unique_services = list(set(ls_unique_services))
+# ls_unique_services = [service[0] for service in ls_unique_services]
 
 # Seems ok: stats desc about service available and price (vs. sec 1. sec.2...)
 ls_consultations = []
@@ -109,28 +139,13 @@ ls_consultations_avg = [np.mean(map(lambda x:\
                                   ls_prices))\
                             for ls_prices in ls_consultations_prices]
 
-## DEPRECATE (done with dataframe)
-#print np.mean(ls_consultations_avg)
-#bins = range(20, 220, 20)
-#n, bins, patches = plt.hist(ls_consultations_avg, bins)
-#plt.show()
-#
-##bins = range(20, 220, 10)
-##n, bins, patches = plt.hist(ls_consultations_avg,
-##                            bins,
-##                            histtype='step',
-##                            normed = 1,
-##                            cumulative = True)
-##plt.ylim(0,1.05)
-##plt.show()
-### todo: improve design and make cut-offs clear: pby need to change bins)
-
 # BUILD DF PHYSICIANS
 
 ls_rows_physicians = []
 for id_physician, ls_physician in dict_physicians.items():
   ls_physician_info = [id_physician] +\
                       ls_physician[0][0] +\
+                      ls_physician[0][2][0:1]+\
                       ls_physician[0][2][-1:] +\
                       ls_physician[2]
   # prices
@@ -148,7 +163,7 @@ for id_physician, ls_physician in dict_physicians.items():
                               ls_service_prices))
       ls_physician_prices[service_ind] = avg_price
   ls_rows_physicians.append(ls_physician_info + ls_physician_prices)
-columns = ['id_physician', 'gender', 'name', 'surname', 
+columns = ['id_physician', 'gender', 'name', 'surname', 'street',
            'zip_city', 'convention', 'carte_vitale', 'status'] + ls_unique_services
 df_physicians = pd.DataFrame(ls_rows_physicians, columns = columns)
 df_physicians.set_index('id_physician', inplace= True)
@@ -156,29 +171,15 @@ df_physicians.set_index('id_physician', inplace= True)
 print u'\nPhysician dataframe'
 print df_physicians.info() #seems displays column count only if index set
 
+#print df_physicians[['gender', 'name', 'surname', 'street', 'zip_city',
+#                     'convention', 'carte_vitale', 'status', 'Consultation']].to_string() 
+
 # CLEAN DF TO IMPROVE DISPLAY
 
 # overview of fields to be standardized
 for field in ['gender', 'zip_city', 'convention', 'carte_vitale', 'status']:
   print u'\n', field
   print df_physicians[field].value_counts()
-
-# zip_city
-def standardize_string(dict_search_replace, str_to_std):
-  for k,v in dict_search_replace.items():
-    if re.search(k, str_to_std):
-      return v
-  return str_to_std
-# not sure if bad in case of geocoding to replace 75116 by 75016: check
-dict_zip_city_rep = {u'CEDEX 14' : u'75014 PARIS',
-                     u'CEDEX 12' : u'75012 PARIS',
-                     u'PARIS CEDEX 20': u'75020 PARIS',
-                     u'PARIS CEDEX 10' : u'75010 PARIS',
-                     u'75116 PARIS' : '75016 PARIS'}
-df_physicians['zip_city'] =\
-  df_physicians['zip_city'].apply(
-     lambda x: standardize_string(dict_zip_city_rep, x))
-df_physicians = df_physicians[df_physicians['zip_city'] != '75175 ROUEN CEDEX'].copy()
 
 # convention
 dict_convention_rep = {u"Conventionné secteur 2" : u'2',
@@ -210,19 +211,50 @@ df_physicians['status'] =\
 
 # Some standardization of service columns
 df_physicians.rename(\
-  columns = {u'Avis de consultant': u'Avis',
-             u"Fond d'oeil" : u"Fond",
-             u"Imagerie de la" : u"Imagerie",
-             u"Chirurgie de la cataracte" : u"Chirurgie"}, inplace = True)
+  columns = {u'Consultation' : 'consultation',
+             u'Consultation spécifique pour un enfant de moins de 2 ans' :\
+                u'consultation_0-2a',
+             u"Consultation spécifique pour un enfant entre 2 et 6 ans" :\
+                u"consultation_2-6a",
+             u"Électrocardiographie [ECG]" : "ecg"}, inplace = True)
+
+# zip_city
+def standardize_string(dict_search_replace, str_to_std):
+  for k,v in dict_search_replace.items():
+    if re.search(k, str_to_std):
+      return v
+  return str_to_std
+# not sure if bad in case of geocoding to replace 75116 by 75016: check
+dict_zip_city_rep = {u'CEDEX 14' : u'75014 PARIS',
+                     u'CEDEX 12' : u'75012 PARIS',
+                     u'PARIS CEDEX 20': u'75020 PARIS',
+                     u'PARIS CEDEX 10' : u'75010 PARIS',
+                     u'75116 PARIS' : '75016 PARIS'}
+df_physicians['zip_city'] =\
+  df_physicians['zip_city'].apply(
+     lambda x: standardize_string(dict_zip_city_rep, x))
+# df_physicians = df_physicians[df_physicians['zip_city'] != '75175 ROUEN CEDEX'].copy()
 
 # DISPLAY
+ls_disp_base_1 = ['gender','name', 'surname', 'street', 'zip_city',
+                  'convention', 'carte_vitale', 'status']
+ls_disp_base_2 = ['gender','name', 'surname', 'zip_city',
+                  'convention', 'carte_vitale', 'status']
+ls_disp_services = ['consultation', 'consultation_0-2a', 'consultation_2-6a', 'ecg']
 
-ls_disp_1 = ['gender','name', 'surname', 'zip_city',
-             'convention', 'carte_vitale', 'status',]
-ls_disp_services = ['Consultation', 'Avis', 'Fond', 'Imagerie', 'Chirurgie']
-print df_physicians[ls_disp_1 + ls_disp_services].to_string()
-# pprint.pprint(dict_physicians['B7c1mzE3MTOx'])
-# pbm with Chirurgie: truncated?
+#print df_physicians[ls_disp_base_1].to_string()
+#print df_physicians[ls_disp_base_2 + ls_disp_services].to_string()
+
+# DEAL WITH DUPLICATES I.E. PHYSICIANS WITH SEVERAL LOCATIONS
+# locations to be kept.. ok for several line but identify (propagate tarifs?)
+
+# STORE
+
+df_physicians = df_physicians[ls_disp_base_1 + ls_disp_services].copy()
+df_physicians.reset_index(inplace = True)
+ls_ls_physicians = [list(x) for x in df_physicians.values]
+enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, 'generaliste_75.json'))
+# todo: set id_physician back as index?
 
 # PRELIMINARY STATS DES
 
@@ -231,77 +263,33 @@ df_physicians_a = df_physicians[df_physicians['status'] != u'Hopital L'].copy()
 # old way => used pd
 print u'\nNb of Physicians, mean and median visit price by ardt'
 print u'-'*30
-print u'{0:12}{1:>8}{2:>10}{3:>10}'.format(u'Ardt', u'#Phys', u'Mean', u'Med')
+ls_title_print = [u'Ardt', u'#Phys', u'#Phys1', u'#Phys2', u'Mean', u'Med']
+print u'{0:12}{1:>10}{2:>10}{3:>10}{4:>10}{5:>10}'.format(*ls_title_print)
 for zc in df_physicians_a['zip_city'].unique():
   nb_physicians = len(df_physicians_a[df_physicians_a['zip_city'] == zc])
-  mean_consultation = df_physicians_a['Consultation'][df_physicians_a['zip_city'] == zc].mean()
-  med_consultation = df_physicians_a['Consultation'][df_physicians_a['zip_city'] == zc].median()
-  print u'{0:12}{1:8d}{2:10.2f}{3:10.2f}'.format(zc,
+  nb_physicians_1 = len(df_physicians_a[(df_physicians_a['zip_city'] == zc) &\
+                                        (df_physicians_a['convention'] == '1')]) 
+  nb_physicians_2 = len(df_physicians_a[(df_physicians_a['zip_city'] == zc) &\
+                                        (df_physicians_a['convention'] == '2')]) 
+  mean_consultation = df_physicians_a['consultation'][df_physicians_a['zip_city'] == zc].mean()
+  med_consultation = df_physicians_a['consultation'][df_physicians_a['zip_city'] == zc].median()
+  print u'{0:12}{1:10d}{2:10d}{3:10d}{4:10.2f}{5:10.2f}'.format(zc,
                                                  nb_physicians,
+                                                 nb_physicians_1,
+                                                 nb_physicians_2,
                                                  mean_consultation,
                                                  med_consultation)
 
 ## SYNTAX ELEMENTS
-##df_physicians[['zip_city', 'Consultation']].groupby('convention').agg([len, np.mean])
+##df_physicians[['zip_city', 'consultation']].groupby('convention').agg([len, np.mean])
 #gb_zip_city = df_physicians[['zip_city'] + ls_disp_services].groupby('zip_city')
 #df_ardt_count = gb_zip_city.count()
 #df_ardt_mean = gb_zip_city.mean()
 #df_ardt_med = gb_zip_city.median()
 ## print gb_zip_city.describe().to_string()
 
-# todo: stats des by ardt with groupby
-df_physicians[['zip_city', 'Consultation']].groupby('zip_city').aggregate([len, np.mean])
+## todo: stats des by ardt with groupby
+#df_physicians[['zip_city', 'consultation']].groupby('zip_city').aggregate([len, np.mean])
 
 # TODO: GEOCODING (?), LOAD INSEE DATA + INTEGRATE WITH OTHER PHYSICIAN DATA
 # TODO: PUT FOLLOWING IN ANOTHER SCRIPT (AND LOAD DF PHYSICIANS)
-
-## COMPANY CREATION DATE
-#dict_results = dec_json(os.path.join(path_dir_ameli, u'societe_dict_ophtalmo'))
-#ls_no_result = dec_json(os.path.join(path_dir_ameli, u'societe_ls_no_result_ophtalmo'))
-#
-#dict_ste_physicians = {}
-#for id_physician, info_physician in dict_results.items():
-#  if u'médecin' in info_physician[2][0]:
-#    dict_ste_physicians[id_physician] = info_physician[:2] +\
-#                                        [[elt.strip() if elt else elt\
-#                                           for elt in info_physician[3]]]
-#  else:
-#    dict_results[id_physician][2] =\
-#      [elt.strip() if elt else elt\
-#        for elt in info_physician[2][0].replace('\n', '').split(';')]
-#    dict_results[id_physician][3] =\
-#      [elt.strip() if elt else elt for elt in info_physician[3]]
-#    print '\n', id_physician
-#    pprint.pprint(dict_results[id_physician])
-#
-#df_physicians['immatriculation'] = None
-#for id_physician, info_physician in dict_ste_physicians.items():
-#  len_info_ste = len(info_physician[2])
-#  ls_titles = [info_physician[2][i] for i in range(len_info_ste) if i%2 == 0]
-#  ls_contents = [info_physician[2][i] for i in range(len_info_ste) if i%2 != 0]
-#  dict_info_ste = dict(zip(ls_titles, ls_contents))
-#  dict_ste_physicians[id_physician][2] = dict_info_ste 
-#  # print id_physician, dict_info_ste.get('Immatriculation')
-#  df_physicians.ix[id_physician, 'immatriculation'] = dict_info_ste.get('Immatriculation')
-#df_physicians['immatriculation'] =\
-#  df_physicians['immatriculation'].apply(lambda x: float(x[-4:]) if x else None)
-#
-##Stats desc:
-##df_temp[['convention', 'Consultation']].groupby('convention').agg([len, np.mean])
-#df_cross = df_physicians[['convention','immatriculation','Consultation']].\
-#             groupby(['convention','immatriculation'])
-#df_cross = df_cross.count()['Consultation'].unstack(0)
-#df_cross_cum = df_cross.cumsum()
-#df_cross_cum_graph = df_cross_cum.fillna(method='bfill').fillna(method='pad')
-#
-## todo: clean
-## Some info wrong: 1900 => 2000 after verification with other site
-#df_physicians['immatriculation'][pd_df_physicians['immatriculation'] == 1900] = 2000
-## Misses 5
-#df_physicians['zip_city'][df_physicians['zip_city'].str.startswith('75116')] = '75016 PARIS'
-#df_temp = df_physicians[~df_physicians['zip_city'].str.contains('CEDEX')]
-#formula = 'Consultation ~ C(zip_city) + immatriculation + C(convention)'
-#res01 = smf.ols(formula = formula, data = df_temp, missing= 'drop').fit()
-## todo: represent homogeneity within ardts
-#
-## CHECK OSM ROUTE SERVICE : http://wiki.openstreetmap.org/wiki/OpenRouteService
