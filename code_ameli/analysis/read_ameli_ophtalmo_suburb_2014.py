@@ -54,6 +54,7 @@ for id_physician, ls_physician in dict_physicians.items():
   if not re.match(u'[0-9]{5}.*', ls_address[-1]):
     print 'Problem end of address, no zip:', ls_address
   # todo: further improve (not ok for geocoding now)
+  # first pass: identify pbms... second pass: keep right chunk of address
   if not re.match(u'[0-9]+', ls_address[-2]):
     print 'Want to keep more than last two items?', ls_address
     ls_address = ls_address [-3:]
@@ -61,12 +62,13 @@ for id_physician, ls_physician in dict_physicians.items():
     ls_address = ls_address[-2:]
   dict_physicians[id_physician][0] = [ls_name, phone, ls_address]
   dict_physicians[id_physician][2] = [x for ls_x in ls_physician[2] for x in ls_x]
+
 # Check addresses with more than 2 components
 # Standard extraction: ls_address[0] => street, ls_address[-1] => zip_city
 # Fix if would yield bad result
 for k,v in dict_physicians.items():
-	if len(v[0][2]) != 2:
-		print v[0][2]
+  if len(v[0][2]) != 2:
+    print k, v[0][2]
 
 # Analysis of ls_address_phone
 ls_len_ap = []
