@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 # todo: medecins by insee code area (usual matching from commune + zip to insee code)
 # todo: are prices useless ? only share or non conv etc? (btw salaries? location?)
 
-path_folder_ameli = os.path.join(path_data, u'data_ameli', '2012')
+path_folder_ameli = os.path.join(path_data, 'data_ameli', u'data_source', 'ameli_2012')
 
 ls_ameli_file_names = [u'actes_medecins',
                        u'actes_medecins2',
@@ -51,7 +51,8 @@ for indiv_id, indiv_info in ls_files_ameli[0].items():
   indiv_name = indiv_info['name']
   indiv_zip, indiv_city = None, None
   #for i in range(5):
-  #  if len(indiv_info['address']) > i and re.match('([0-9]{5,5}) (.*)', indiv_info['address'][i]):
+  #  if (len(indiv_info['address']) > i) and\
+  #     (re.match('([0-9]{5,5}) (.*)', indiv_info['address'][i])):
   #    indiv_zip = re.match('([0-9]{5,5}) (.*)', indiv_info['address'][i]).group(1)
   #    indiv_city = re.match('([0-9]{5,5}) (.*)', indiv_info['address'][i]).group(2)
   #    break
@@ -97,24 +98,8 @@ print df_sectors_by_dpt.to_string()
 # plt.scatter(df_sectors_by_dpt['total'], df_sectors_by_dpt['secteur2'])
 # plt.show()
 
-# OTHER
-
-# Check Paris 16.. pbms
-
-#np.unique(df_ameli['zip_code'][df_ameli['dpt']=='75'])
-## PBM: Paris 16 only zip 75116... not 75016
-## TODO: collect Paris 16 and check for missing data in general
-## (nbs vs. official stats or current website)
-
-# Check Mayenne with all_out file... does not help
-
-## print ls_files_ameli[-1][ls_files_ameli[-1].keys()[0]]
-#ls_mayenne = []
-#ls_no_zip = []
-#for indiv_id, indiv_info in ls_files_ameli[-1].items():
-#  if re.search('([0-9]{5,5}) (.*)', indiv_info['address']):
-#    zip_code = re.search('([0-9]{5,5}) (.*)', indiv_info['address']).group(1)
-#    if zip_code[:2] == '53':
-#      ls_mayenne.append((indiv_id, indiv_info))
-#  else:
-#    ls_no_zip.append(indiv_id)
+# REMARKS:
+# Paris 16: only zip 75116... not 75016
+# Issue can be similar for other zip codes
+# Can bias nb of competitors for a physician/within an area
+# Still in any not too small area: should have a big enough sample of physicians (biases?)
