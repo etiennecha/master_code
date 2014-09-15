@@ -81,7 +81,9 @@ import statsmodels.formula.api as smf
 formula = 'consultation ~ C(zip_city) + immatriculation + C(convention)'
 res01 = smf.ols(formula = formula, data = df_temp, missing= 'drop').fit()
 print res01.summary()
-# todo: investigate immatriculation... would be better to have age probably
-# todo: represent nb of immatriculation per year (cf gasoline zagaz registrations)
+
+# todo: investigate immatriculation... might be better to use age
+# todo: represent nb of immatriculation (& status) per year (cf zagaz registrations)
+# todo: represent tarif by year of immatriculation...
 
 # CHECK OSM ROUTE SERVICE : http://wiki.openstreetmap.org/wiki/OpenRouteService
