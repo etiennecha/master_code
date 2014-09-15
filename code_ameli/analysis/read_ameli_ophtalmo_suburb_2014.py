@@ -273,7 +273,8 @@ ls_disp_base_2 = ['gender','name', 'surname', 'zip_city',
                   'convention', 'carte_vitale', 'status']
 ls_disp_services = ['consultation', 'avis', 'fond', 'imagerie', 'chirurgie_cat']
 print df_physicians[ls_disp_base_1].to_string()
-print df_physicians[ls_disp_base_2 + ls_disp_services[:3]].to_string()
+# print df_physicians[ls_disp_base_2 + ls_disp_services[:3]].to_string()
+
 # pprint.pprint(dict_physicians['B7c1mzE3MTOx'])
 # pbm with Chirurgie: truncated?
 
@@ -310,6 +311,10 @@ for dpt in df_physicians_a['dpt'].unique():
                                                                 nb_physicians_2,
                                                                 mean_consultation,
                                                                 med_consultation)
+
+## FIX ADDRESSES FOR GEOCODING (ZIP CODE CEDEX)
+#df_physicians['zip_city'][df_physicians['zip_city'].str.contains('CEDEX')]
+# todo: check also bis (e.g. "27B") and ter (same pattern)
 
 ### SYNTAX ELEMENTS
 ###df_physicians[['zip_city', 'consultation']].groupby('convention').agg([len, np.mean])
