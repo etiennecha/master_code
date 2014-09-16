@@ -108,12 +108,26 @@ http://learn.jquery.com/about-jquery/how-jquery-works/
         var mid_lat = (Math.min.apply(null, ar_lat) + Math.max.apply(null, ar_lat))/2;
         var mid_lng = (Math.min.apply(null, ar_lng) + Math.max.apply(null, ar_lng))/2;
         
-        var map = L.map('map').setView([mid_lat, mid_lng], 5);
+        var map = L.map('map'); //.setView([mid_lat, mid_lng], 2);
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-          }).addTo(map);
+        }).addTo(map);
+        
+        var myIcon = L.icon({
+          iconUrl: './images/marker-icon.png',
+          iconSize:     [10, 14], // size of the icon
+          //iconAnchor:   [22, 94], // point of the icon which will correspond to marker's location
+          //popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+        });
+        
+        var ar_markers = [];
         for (i = 0; i < ar_gps.length; i++) {
-        var marker = L.marker(ar_gps[i]).addTo(map);}
+          var marker = L.marker(ar_gps[i], {icon: myIcon}).addTo(map);
+          ar_markers.push(marker);
+        }
+        
+        var group = new L.featureGroup(ar_markers);
+        map.fitBounds(group.getBounds());
       };
       // http://paulcrickard.wordpress.com/2012/06/29/leaflet-js-interactivity-ii-allow-users-to-add-points/
       // http://stackoverflow.com/questions/19186428/refresh-leaflet-map-map-container-is-alreay-initialized

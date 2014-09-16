@@ -106,12 +106,11 @@ http://learn.jquery.com/about-jquery/how-jquery-works/
     <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
 	  <script>
 	  	var map = L.map('map').setView([48.856638, 2.352241], 10);
-	  	L.tileLayer('https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png', {
+	  	L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 	  		maxZoom: 18,
 	  		attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
 	  			'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-	  			'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-	  		id: 'examples.map-9ijuk24y'
+	  			'Imagery © <a href="http://mapbox.com">Mapbox</a>'
 	  	}).addTo(map);
 	  </script>
   </body>
