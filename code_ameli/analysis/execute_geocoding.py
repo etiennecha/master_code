@@ -25,7 +25,7 @@ ls_ls_physicians = dec_json(os.path.join(path_dir_built_json, '%s.json' %file_ex
 # ls_physicians : 0 is id_physician, 4 is street, 5 is zip_city (could be cedex?)
 
 # Update ls_ls_physicians with addresses fix
-path_dict_dict_fix_addresses = os.path.join(path_dir_built_json, 'dict_dict_fix_addresses')
+path_dict_dict_fix_addresses = os.path.join(path_dir_built_json, 'dict_dict_fix_addresses.json')
 dict_dict_fix_addresses = dec_json(path_dict_dict_fix_addresses)
 dict_fix_addresses = dict_dict_fix_addresses.get(file_extension, {})
 if dict_fix_addresses:
@@ -57,12 +57,12 @@ for ls_physician in ls_ls_physicians:
     dict_missing_addresses.setdefault(ls_physician[0], []).append(ls_physician[4:6])
 print '\nNb of id_physicians with missing addresses:', len(dict_missing_addresses)
 
-## USE WITH CAUTION : Update addresses in dict_gps (only for existing physicians)
-#for ls_physician in ls_ls_physicians:
-#  if (ls_physician[0] in dict_gps) and\
-#     (ls_physician[4:6] not in dict_gps[ls_physician[0]][0]):
-#    dict_gps[ls_physician[0]][0].append(ls_physician[4:6])
-#    dict_gps[ls_physician[0]][1].append([])
+# USE WITH CAUTION : Update addresses in dict_gps (only for existing physicians)
+for ls_physician in ls_ls_physicians:
+  if (ls_physician[0] in dict_gps) and\
+     (ls_physician[4:6] not in dict_gps[ls_physician[0]][0]):
+    dict_gps[ls_physician[0]][0].append(ls_physician[4:6])
+    dict_gps[ls_physician[0]][1].append([])
 
 # Geocode dict_gps
 over_query = False
@@ -92,7 +92,7 @@ for k,v in dict_gps_quality.items():
 
 # Inspect low quality
 print '\nLow quality geocoding results'
-for google_status in ['APPROXIMATE', 'GEOMETRIC_CENTER']:
+for google_status in ['APPROXIMATE', 'GEOMETRIC_CENTER', 'ZERO_RESULTS']:
   print '\n', google_status
   for id_physician in dict_gps_quality.get(google_status, []):
     print id_physician, dict_gps[id_physician][0]
