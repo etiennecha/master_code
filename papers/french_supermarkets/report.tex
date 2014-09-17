@@ -17,6 +17,7 @@
 \usepackage{booktabs}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{rotating}
 % \usepackage[hidelinks]{hyperref}
 \usepackage{floatrow} %[capposition=top]
 \floatsetup{footposition=bottom,capposition=top}
@@ -58,7 +59,7 @@ This note provides an overview of French grocery stores in 2014. All the analysi
 
 \section{Introduction}
 
-Data provided by LSA include17,254 French grocery stores. LSA provide three columns regarding the activity of stores over time: an opening date, a closing date and a reopenening date. Stores can thus be considered closed when they have a closing date but no reopening date. According to LSA data, beginning 2014, there were 15,086 hypermarkets, supermarkets, hard discount and "drive-through" stores operating in France.
+Data provided by LSA include17,254 French grocery stores. LSA provide three columns regarding the activity of stores over time: an opening date, a closing date and a reopenening date. Stores can thus be considered closed when they have a closing date but no reopening date. According to LSA data, beginning 2014, there were 15,086 hypermarkets, supermarkets, hard discount and "drive-through" stores operating in France. 
 
 \section{Overview of store population by type}
 
@@ -339,5 +340,124 @@ COCCINELLE             &          4 &          0 &          4 &          0 &    
 \end{table}
 
 \section{Store locations}
+
+The following section offers a brief overview of groups' store locations across France. "Drive-through" is not included.
+
+\subsection{Stores by group and region}
+
+\begin{table}[H]
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+
+\begin{tabular}{lrrrrrrrrrrrrr}
+\toprule
+{} &  CARR. &  CASI. &     MOUSQ. &       LIDL &  SYS.U &       ALDI &  LECL. &      AUCH. &       L.D. &      DIAP. &      COLR. &       OTH. &       TOT. \\
+\midrule
+Ile-de-France              &    454 &    793 &        132 &        162 &     58 &         57 &     50 &        130 &          7 &         72 &          3 &         22 &       1940 \\
+Rhone-Alpes                &    292 &    227 &        201 &        118 &     84 &         46 &     38 &         32 &          1 &          0 &          4 &         35 &       1078 \\
+PACA &    215 &    233 &        156 &        108 &     62 &         56 &     35 &         20 &          0 &          0 &          0 &         16 &        901 \\
+Nord-Pas-de-Calais         &    294 &     32 &        100 &        142 &     17 &        150 &     28 &         36 &         59 &          1 &          6 &          3 &        868 \\
+Bretagne                   &    114 &     76 &        182 &         96 &    124 &         19 &     60 &          0 &          2 &          5 &          3 &          3 &        684 \\
+Aquitaine                  &    120 &    102 &        170 &         93 &     49 &         30 &     58 &         25 &          0 &          0 &          2 &         30 &        679 \\
+Pays de la Loire           &    102 &     43 &        106 &         89 &    179 &         33 &     47 &          6 &          0 &         12 &          4 &         14 &        635 \\
+Midi-Pyrenees              &    112 &    101 &        162 &         79 &     44 &         50 &     34 &         12 &          0 &          1 &          0 &         11 &        606 \\
+Languedoc-Roussillon       &    111 &     95 &        137 &         89 &     53 &         33 &     12 &         11 &          1 &          6 &          0 &          4 &        552 \\
+Lorraine                   &     53 &     31 &         73 &         99 &     27 &         89 &     28 &         21 &         62 &          1 &         17 &         48 &        549 \\
+Centre                     &    107 &     49 &        112 &         56 &     61 &         39 &     31 &         42 &          2 &          8 &          8 &         13 &        528 \\
+Picardie                   &    110 &     31 &         85 &         48 &     11 &         53 &     24 &         24 &         12 &          2 &          3 &         23 &        426 \\
+Bourgogne                  &     51 &     49 &         80 &         37 &     15 &         46 &     22 &         82 &          2 &          0 &         13 &         16 &        413 \\
+Haute-Normandie            &     99 &     25 &         57 &         42 &     34 &         28 &     19 &         13 &          1 &          0 &          2 &         48 &        368 \\
+Alsace                     &     14 &     11 &         25 &         55 &     49 &         32 &     42 &         35 &         33 &          0 &          1 &         63 &        360 \\
+Poitou-Charentes           &     34 &     44 &         89 &         44 &     75 &         11 &     30 &          9 &          0 &          1 &          1 &          9 &        347 \\
+Basse-Normandie            &     96 &     17 &         49 &         45 &     39 &         22 &     20 &          6 &          1 &          4 &          6 &         23 &        328 \\
+Champagne-Ardenne          &     57 &     38 &         64 &         36 &      6 &         50 &     22 &         10 &          9 &          1 &          4 &          7 &        304 \\
+Franche-Comte              &     34 &     31 &         49 &         35 &     36 &         34 &      9 &         20 &          6 &          0 &         30 &         13 &        297 \\
+Auvergne                   &     63 &     35 &         65 &         32 &     12 &         25 &     10 &         25 &          2 &          0 &          3 &         12 &        284 \\
+Limousin                   &     28 &     37 &         46 &         17 &     24 &         14 &      7 &          6 &          1 &          2 &          0 &          6 &        188 \\
+Corse                      &     10 &     33 &          0 &          0 &      8 &          0 &     10 &          1 &          0 &          0 &          0 &          0 &         62 \\
+DOMTOM                     &     18 &     52 &          0 &          0 &     32 &          0 &     16 &          8 &          2 &          0 &          0 &         68 &        196 \\
+\midrule
+TOTAL & 2588 & 2185 & 2140 & 1522 & 1099 &  917 &  652 &  574 &  203 &  116 &  110 &  487 & 12593 \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+\subsection{Maps of groups' store locations}
+
+Supermarkets are represented with green dots and hypermarkets with red dots.
+
+\begin{figure}[!h]
+    \caption{CARREFOUR}
+	\centering
+		\includegraphics[width=16cm]{images/CARREFOUR.png}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{CASINO}
+	\centering
+		\includegraphics[width=16cm]{images/CASINO.png}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{MOUSQUETAIRES}
+	\centering
+		\includegraphics[width=16cm]{images/MOUSQUETAIRES.png}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{LIDL}
+	\centering
+		\includegraphics[width=16cm]{images/LIDL.png}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{SYSTEME U}
+	\centering
+		\includegraphics[width=16cm]{images/SYSTEME_U.png}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{ALDI}
+	\centering
+		\includegraphics[width=16cm]{images/ALDI.png}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{LECLERC}
+	\centering
+		\includegraphics[width=16cm]{images/LECLERC.png}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{AUCHAN}
+	\centering
+		\includegraphics[width=16cm]{images/AUCHAN.png}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{LOUIS DELHAIZE}
+	\centering
+		\includegraphics[width=16cm]{images/LOUIS_DELHAIZE.png}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{DIAPAR}
+	\centering
+		\includegraphics[width=16cm]{images/DIAPAR.png}
+\end{figure}
+
+
+\begin{figure}[!h]
+    \caption{COLRUYT}
+	\centering
+		\includegraphics[width=16cm]{images/COLRUYT.png}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{OTHER}
+	\centering
+		\includegraphics[width=16cm]{images/AUTRE.png}
+\end{figure}
 
 \end{document}

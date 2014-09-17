@@ -154,12 +154,12 @@ df_lsa['Ex groupe'] = df_lsa['Ex enseigne'].apply(\
 # Stores still operating (add for any date e.g. 01/01/2014)
 df_lsa_active = df_lsa[(pd.isnull(df_lsa[u'DATE ferm'])) |\
                        ((~pd.isnull(df_lsa[u'DATE ferm'])) &\
-                        (~pd.isnull(df_lsa[u'DATE réouv'])))]
+                        (~pd.isnull(df_lsa[u'DATE réouv'])))].copy()
 print u'Stores still operating: {0:5d}'.format(len(df_lsa_active))
 
 # Stores no more operating
 df_lsa_inactive = df_lsa[(~pd.isnull(df_lsa[u'DATE ferm'])) &\
-                         (pd.isnull(df_lsa[u'DATE réouv']))]
+                         (pd.isnull(df_lsa[u'DATE réouv']))].copy()
 print u'Stores no more operating: {0:5d}'.format(len(df_lsa_inactive))
 
 # Describe variables of operating stores
@@ -272,9 +272,42 @@ for retail_group in dict_groupes.keys():
 #                 (~pd.isnull(df_lsa['Latitude']))])
 #
 
-# OUTPUT FOR MAP CREATION
-df_lsa_active.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_active.csv'),
-                     encoding = 'UTF-8', , float_format='%.3f')
+# STATS ON NB OF STORES BY GROUP AND REGION
+
+dict_dpts_regions = dec_json(os.path.join(path_dir_insee,
+                                          'dpts_regions',
+                                          'dict_dpts_regions.json'))
+df_lsa_active['Dpt'] = df_lsa_active['Code INSEE'].str.slice(stop=-3)
+df_lsa_active['Reg'] = df_lsa_active['Dpt'].apply(\
+                         lambda x: dict_dpts_regions.get(x, 'DOMTOM'))
+df_reg = pd.DataFrame(columns = df_lsa_active['Reg'].unique()).T
+for groupe in df_lsa_active['Groupe'].unique():
+  se_reg_vc = df_lsa_active['Reg'][(df_lsa_active['Groupe'] == groupe) &
+                                   (df_lsa_active['Type'] != 'DRIN') &\
+                                   (df_lsa_active['Type'] != 'DRIVE')].value_counts()
+  df_reg[groupe] = se_reg_vc
+df_reg.fillna(0, inplace = True)
+df_reg['TOT.'] = df_reg.sum(axis = 1)
+df_reg.sort('TOT.', ascending = False, inplace = True)
+df_reg.rename(columns = {'CARREFOUR' : 'CARR.',
+                         'LECLERC' : 'LECL.',
+                         'AUCHAN' : 'AUCH.',
+                         'CASINO' : 'CASI.',
+                         'MOUSQUETAIRES': 'MOUSQ.',
+                         'SYSTEME U': 'SYS.U',
+                         'LOUIS DELHAIZE': 'L.D.',
+                         'COLRUYT' : 'COLR.',
+                         'DIAPAR' : 'DIAP.',
+                         'AUTRE' : 'OTH.'}, inplace = True)
+ls_reg_disp = ['CARR.', 'CASI.', 'MOUSQ.', 'LIDL', 'SYS.U', 'ALDI',
+               'LECL.', 'AUCH.', 'L.D.', 'DIAP.', 'COLR.', 'OTH.', 'TOT.']
+print df_reg[ls_reg_disp].to_latex()
+# row: TOT
+print 'TOTAL &', ' & '.join(map(lambda x: '{:4.0f}'.format(x),
+                            df_reg[ls_reg_disp].sum(axis = 0).values)), '\\\\'
+## OUTPUT FOR MAP CREATION
+#df_lsa_active.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_active.csv'),
+#                     encoding = 'UTF-8', float_format='%.3f')
 
 # INTER RETAIL GROUP BRAND CHANGES (ACTIVE STORES)
 
