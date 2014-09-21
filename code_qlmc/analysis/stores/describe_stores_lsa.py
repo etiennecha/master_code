@@ -198,6 +198,15 @@ for field in ['Surf Vente', 'Nbr de caisses', 'Nbr parking', 'Pompes']:
   df_surf.set_index('Type', inplace = True)
   print df_surf[ls_surf_disp].to_latex(index_names = False)
 
+# todo: inspect suspect values
+pd.set_option('display.max_columns', 50)
+#print df_lsa_active[df_lsa_active['Nbr de caisses'] > 100]
+#print df_lsa_active[(df_lsa_active['Type'] == 'X') &\
+#                    (df_lsa_active['Nbr de caisses'] > 20)]
+#print df_lsa_active[(df_lsa_active['Type'] == 'DRIVE') &\
+#                    (df_lsa_active['Nbr de caisses'] > 20)]
+#df_lsa_active[df_lsa_active['Nbr parking']<10]
+
 # STATS ON NB OF STORES AND SURFACE BY RETAIL GROUPS/CHAINS
 
 # Stats desc by retail group
@@ -308,6 +317,28 @@ print 'TOTAL &', ' & '.join(map(lambda x: '{:4.0f}'.format(x),
 ## OUTPUT FOR MAP CREATION
 #df_lsa_active.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_active.csv'),
 #                     encoding = 'UTF-8', float_format='%.3f')
+
+# INSPECT ACT ANNEXES / DRIVE
+ls_drive_temp = df_lsa_active['Act Annexes'][~pd.isnull(df_lsa_active['Act Annexes'])].values
+ls_drive_idents = []
+for x in ls_drive_temp:
+  if isinstance(x, unicode):
+    for y in x.split(','):
+      ls_drive_idents.append(int(y.strip()))
+  else:
+    ls_drive_idents.append(x)
+df_drive = df_lsa_active[df_lsa_active['Ident'].isin(ls_drive_idents)]
+
+#ls_acp_types = []
+#for x in ls_ident_drive:
+#  if isinstance(x, unicode):
+#    type_val = df_lsa_active['Type'][df_lsa_active['Ident'] ==\
+#                                       int(x.split(',')[-1].strip())].values
+#  else:
+#    type_val = df_lsa_active['Type'][df_lsa_active['Ident'] == x].values
+#  if type_val:
+#    ls_acp_types.append(type_val[0])
+## pd.Series(ls_acp_types).value_counts()
 
 # INTER RETAIL GROUP BRAND CHANGES (ACTIVE STORES)
 
