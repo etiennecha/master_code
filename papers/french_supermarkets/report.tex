@@ -48,7 +48,7 @@ This note provides an overview of French grocery stores in 2014. All the analysi
 
 \strut
 
-\textbf{Keywords:} 
+\textbf{Keywords:}
 
 \strut
 
@@ -59,7 +59,7 @@ This note provides an overview of French grocery stores in 2014. All the analysi
 
 \section{Introduction}
 
-Data provided by LSA include17,254 French grocery stores. LSA provide three columns regarding the activity of stores over time: an opening date, a closing date and a reopenening date. Stores can thus be considered closed when they have a closing date but no reopening date. According to LSA data, beginning 2014, there were 15,086 hypermarkets, supermarkets, hard discount and "drive-through" stores operating in France. 
+Data provided by LSA include17,254 French grocery stores. LSA provide three columns regarding the activity of stores over time: an opening date, a closing date and a reopenening date. Stores can thus be considered closed when they have a closing date but no reopening date. According to LSA data, beginning 2014, there were 15,086 hypermarkets, supermarkets, hard discount and "drive-through" stores operating in France.
 
 \section{Overview of store population by type}
 
@@ -70,18 +70,29 @@ Descriptive statistics on surface by type show that grocery stores with a surfac
 \begin{table}[H]
 \caption{Surface in $m^2$ by type of store}
 \small
-\begin{tabular}{lrrrrrrr}
+\begin{tabular}{lrrrrrrrrr}
 \toprule
-{} &       \#Tot &      \#Null &        Avg &        Med &        Min &        Max &        Cum \\
+{}            &    \#Total &   \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
 \midrule
-Supermarkets         &       5644 &        nan &       1277 &       1200 &        400 &       2499 &    7204724 \\
-Hard discount        &       4556 &        nan &        767 &        770 &        100 &       2400 &    3496484 \\
-Drive in             &       2055 &       1807 &       1390 &       1500 &         10 &       3900 &     344776 \\
-Hypermarkets         &       2013 &        nan &       5414 &       4115 &       2500 &      24000 &   10899121 \\
-Drive                &        438 &        nan &       1803 &       1800 &        100 &       7500 &     789814 \\
-"Magasins populaires &        380 &        nan &       1514 &       1422 &        210 &       5154 &     575345 \\
+Hypermarkets  &      1,969 &      1,969 &      2,500 &      2,511 &      4,100 &      5,431 &     12,354 &     24,000 & 10,694,169 \\
+Supermarkets  &      5,514 &      5,514 &        400 &        400 &      1,200 &      1,281 &      2,350 &      2,499 &  7,062,889 \\
+Hard discount &      4,477 &      4,477 &        100 &        318 &        770 &        772 &      1,171 &      2,000 &  3,455,127 \\
+\midrule
+All           &     11,960 &     11,960 &        100 &        400 &        990 &      1,774 &      6,076 &     24,000 & 21,212,185 \\
 \bottomrule
-\multicolumn{8}{l}{The "\#Null" colum indicates the number of missing values.} \\
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+{}       &    \#Total &   \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
+\midrule
+Drive in &      2,046 &        247 &         10 &         54 &      1,500 &      1,395 &      2,500 &      3,900 &    344,576 \\
+Drive    &        435 &        435 &        100 &        555 &      1,800 &      1,801 &      3,000 &      7,500 &    783,614 \\
+\midrule
+All      &      2,481 &        682 &         10 &        252 &      1,600 &      1,654 &      2,897 &      7,500 &  1,128,190 \\
+\bottomrule
 \end{tabular}
 \end{table}
 
@@ -90,18 +101,35 @@ Drive                &        438 &        nan &       1803 &       1800 &      
 \begin{table}[H]
 \caption{Number of checkouts by type of store}
 \small
-\begin{tabular}{lrrrrrrr}
+
+\begin{tabular}{lrrrrrrrrr}
 \toprule
-{} &       \#Tot &      \#Null &        Avg &        Med &        Min &        Max &        Cum \\
+{} &    \#Total &   \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
 \midrule
-Supermarkets         &       5644 &        nan &          7 &          6 &          1 &         25 &      37751 \\
-Hard discount        &       4556 &          1 &          4 &          4 &          1 &         42 &      19671 \\
-Drive in             &       2055 &        523 &          2 &          1 &          1 &         17 &       3533 \\
-Hypermarkets         &       2013 &          2 &         23 &         19 &          2 &        358 &      46858 \\
-Drive                &        438 &        nan &          7 &          7 &          1 &         85 &       3173 \\
-"Magasins populaires &        380 &        nan &         10 &          8 &          1 &         34 &       3855 \\
+Hypermarkets  &      1,969 &      1,968 &          5 &         10 &         19 &         23 &         51 &        358 &     45,963 \\
+Supermarkets  &      5,514 &      5,514 &          1 &          3 &          6 &          7 &         12 &         25 &     37,090 \\
+Hard discount &      4,477 &      4,476 &          1 &          2 &          4 &          4 &          8 &         42 &     19,495 \\
 \bottomrule
 \end{tabular}
+
+\end{table}
+
+\subsection{Number of employees}
+
+\begin{table}[H]
+\caption{Number of employees by type of store}
+\small
+
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+{} &    \#Total &   \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
+\midrule
+Hypermarkets  &      1,969 &      1,969 &         20 &         44 &        125 &        172 &        450 &      1,000 &    339,234 \\
+Supermarkets  &      5,514 &      5,514 &          1 &          6 &         25 &         28 &         60 &        200 &    155,055 \\
+Hard discount &      4,477 &      4,477 &          2 &          5 &          9 &         10 &         20 &        151 &     44,267 \\
+\bottomrule
+\end{tabular}
+
 \end{table}
 
 \subsection{Size of Parking by type}
@@ -109,18 +137,17 @@ Drive                &        438 &        nan &          7 &          7 &      
 \begin{table}[H]
 \caption{Size of parking by type of store}
 \small
-\begin{tabular}{lrrrrrrr}
+
+\begin{tabular}{lrrrrrrrrr}
 \toprule
-{} &       \#Tot &  \#Null &        Avg &        Med &        Min &        Max &        Cum \\
+{} &    \#Total &   \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
 \midrule
-Supermarkets         &       5644 &   1308 &        135 &        120 &          2 &       2577 &     584036 \\
-Hard discount        &       4556 &   3037 &         87 &         72 &          3 &       1200 &     132500 \\
-Drive in             &       2055 &   2055 &        nan &        nan &        nan &        nan &        nan \\
-Hypermarkets         &       2013 &     79 &        763 &        500 &         40 &       7660 &    1476596 \\
-Drive                &        438 &    436 &         39 &         39 &         38 &         40 &         78 \\
-"Magasins populaires &        380 &    308 &        254 &        100 &         15 &       3500 &      18320 \\
+Hypermarkets  &      1,969 &      1,906 &         40 &        180 &        500 &        765 &      2,196 &      7,660 &  1,458,006 \\
+Supermarkets  &      5,514 &      4,280 &          2 &         30 &        120 &        135 &        297 &      2,577 &    576,943 \\
+Hard discount &      4,477 &      1,509 &          3 &         29 &         73 &         87 &        200 &      1,200 &    131,833 \\
 \bottomrule
 \end{tabular}
+
 \end{table}
 
 \subsection{Number of gas pumps}
@@ -128,18 +155,17 @@ Drive                &        438 &    436 &         39 &         39 &         3
 \begin{table}[H]
 \caption{Number of gas pumps by type of store}
 \small
-\begin{tabular}{lrrrrrrr}
+
+\begin{tabular}{lrrrrrrrrr}
 \toprule
-{} &       \#Tot &  \#Null &        Avg &        Med &        Min &        Max &        Cum \\
+{} &    \#Total &   \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
 \midrule
-Supermarkets         &       5644 &   2732 &          4 &          4 &          0 &         16 &      11564 \\
-Hard discount        &       4556 &   4425 &          4 &          4 &          1 &         23 &        519 \\
-Drive in             &       2055 &     17 &          3 &          2 &          1 &         28 &       6801 \\
-Hypermarkets         &       2013 &    226 &          8 &          7 &          1 &         26 &      13958 \\
-Drive                &        438 &      1 &          9 &          8 &          2 &         35 &       3924 \\
-"Magasins populaires &        380 &    378 &          4 &          4 &          4 &          4 &          8 \\
+Hypermarkets  &      1,969 &      1,786 &          1 &          4 &          7 &          8 &         14 &         26 &     13,956 \\
+Supermarkets  &      5,514 &      2,910 &          0 &          2 &          4 &          4 &          7 &         16 &     11,560 \\
+Hard discount &      4,477 &        131 &        nan &          2 &          4 &          4 &          6 &        nan &        519 \\
 \bottomrule
 \end{tabular}
+
 \end{table}
 
 \section{Stores and surface by group and chain}
@@ -148,7 +174,7 @@ This section focuses on hypermarkets, supermarkets and hard discount stores (exc
 
 \subsection{Stores and surface by group}
 
-The following table shows the number of hypermarkets, supermarkets and hard discount stores operated by the main grocery store groups in France. 
+The following table shows the number of hypermarkets, supermarkets and hard discount stores operated by the main grocery store groups in France.
 
 \begin{table}[H]
 \footnotesize
@@ -177,6 +203,8 @@ OTHER          &        487 &          7 &        194 &        282 &          4 
 
 Except for Aldi and Lidl, stores are subdivided in retail chains based on criteria such as the size or the location (city center, suburb, countryside etc.).
 
+\subsubsection{Carrefour}
+
 \begin{table}[H]
 \footnotesize
 \setlength{\tabcolsep}{2pt}
@@ -202,6 +230,10 @@ HYPER CHAMPION     &          1 &          1 &          0 &          0 &        
 \bottomrule
 \end{tabular}
 \end{table}
+
+As of September 2014, Carrefour listed the following chains on its website: "Carrefour", "Carrefour market" (created in 2007 to replace "Champion"), "Carrefour contact" (created in 2008 for stores located in rural areas or in the periphery of cities), "Carrefour city" (created in 2009 for stores located in city centers, opening 6/7 days 7h-22h or 23h), "Carrefour montagne" (crated in 2009 for small stores located in the mountains), "Carrefour express" (created in 2007 for small stores, difference with "city" and "contact" is not clear) and "Market" (created in 2012, includes virtually all ex-"Hyper champion").
+
+\subsubsection{Casino}
 
 \begin{table}[H]
 \footnotesize
@@ -229,6 +261,8 @@ PETIT CASINO     &          3 &          0 &          3 &          0 &          
 \end{tabular}
 \end{table}
 
+\subsubsection{Les Mousquetaires}
+
 \begin{table}[H]
 \footnotesize
 \setlength{\tabcolsep}{2pt}
@@ -247,6 +281,8 @@ ECOMARCHE                &          2 &          0 &          2 &          0 &  
 \end{tabular}
 \end{table}
 
+\subsubsection{Système U}
+
 \begin{table}[H]
 \footnotesize
 \setlength{\tabcolsep}{2pt}
@@ -263,6 +299,8 @@ MARCHE U  &         10 &          0 &         10 &          0 &          0 &    
 \end{tabular}
 \end{table}
 
+\subsubsection{Leclerc}
+
 \begin{table}[H]
 \footnotesize
 \setlength{\tabcolsep}{2pt}
@@ -275,6 +313,8 @@ LECLERC EXPRESS  &         71 &          1 &         70 &          0 &          
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsubsection{Auchan}
 
 \begin{table}[H]
 \footnotesize
@@ -295,6 +335,8 @@ EASY MARCHE         &          1 &          0 &          1 &          0 &       
 \end{tabular}
 \end{table}
 
+\subsubsection{Louis Delhaize}
+
 \begin{table}[H]
 \footnotesize
 \setlength{\tabcolsep}{2pt}
@@ -308,6 +350,8 @@ CORA              &         59 &         59 &          0 &          0 &         
 \end{tabular}
 \end{table}
 
+\subsubsection{Diapar}
+
 \begin{table}[H]
 \footnotesize
 \setlength{\tabcolsep}{2pt}
@@ -320,6 +364,8 @@ DIAGONAL &         16 &          0 &         16 &          0 &          0 &     
 SITIS    &          5 &          0 &          5 &          0 &          0 &        400 &        400 &        400 &        400 &       2000 \\
 \bottomrule
 \end{tabular}
+
+\subsubsection{Colruyt}
 
 \end{table}
 
