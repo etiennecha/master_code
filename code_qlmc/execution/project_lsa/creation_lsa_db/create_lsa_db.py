@@ -246,8 +246,14 @@ for field in ['Statut', 'Type_alt', 'Enseigne_alt', 'Ex enseigne', 'Groupe']:
 # STATS BY TYPE OF STORE 
 # ######################
 
-df_lsa['Pompes'][pd.isnull(df_lsa['Pompes'])] = np.nan
+#df_lsa['Pompes'][pd.isnull(df_lsa['Pompes'])] = np.nan
 # solve pbm: why min and max on grouby return nan...
+
+def pdmin(x):
+  return x.min()
+
+def pdmax(x):
+  return x.max()
 
 def quant_05(x):
   return x.quantile(0.05)
@@ -272,16 +278,16 @@ for field in ['Surf Vente', 'Nbr emp', 'Nbr de caisses', 'Nbr parking', 'Pompes'
   print field
   gbt = df_lsa_int[['Type_alt', field]].groupby('Type_alt',
                                                       as_index = False)
-  df_surf = gbt.agg([len, np.mean, min, quant_05,
-                     np.median, quant_95, max, np.sum])[field]
+  df_surf = gbt.agg([len, np.mean, pdmin, quant_05,
+                     np.median, quant_95, pdmax, np.sum])[field]
   df_surf.sort('len', ascending = False, inplace = True)
   se_null_vc = df_lsa_int['Type_alt'][~pd.isnull(df_lsa_int[field])].value_counts()
   df_surf[u'\#Avail.'] = se_null_vc.apply(lambda x: float(x)) # float format...
   df_surf.rename(columns = {'len' : u'\#Total',
                             'mean': u'Avg',
                             'median': u'Med',
-                            'min': u'Min',
-                            'max': u'Max',
+                            'pdmin': u'Min',
+                            'pdmax': u'Max',
                             'quant_05': u'Q05',
                             'quant_95': u'Q95',
                             'sum': u'Cum'}, inplace = True)
