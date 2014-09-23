@@ -3,14 +3,19 @@
 
 import os, sys
 
-path = os.path.abspath(os.path.dirname(sys.argv[0]))
-path_global_dir = os.path.dirname(os.path.dirname(path))
+path_current_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+
+# add_to_path should exist as long as not at global_dir level
+path_global_dir = path_current_dir
+while os.path.exists(os.path.join(path_global_dir, 'add_to_path.py')):
+  path_global_dir = os.path.dirname(path_global_dir)
 
 # 1/ Set functions directory on path
 
 path_dir = os.path.join(path_global_dir, 'functions')
 sys.path.append(path_dir)
-ls_subdir_names = [f for f in os.listdir(path_dir) if not os.path.isfile(os.path.join(path_dir, f))]
+ls_subdir_names = [f for f in os.listdir(path_dir)\
+                     if not os.path.isfile(os.path.join(path_dir, f))]
 for subdir_name in ls_subdir_names:
   sys.path.append(os.path.join(path_dir, subdir_name))
 
