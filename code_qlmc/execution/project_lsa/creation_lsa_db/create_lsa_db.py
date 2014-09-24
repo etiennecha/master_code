@@ -253,10 +253,10 @@ for field in ['Statut', 'Type_alt', 'Enseigne_alt', 'Ex enseigne', 'Groupe']:
 # solve pbm: why min and max on grouby return nan...
 
 def pdmin(x):
-  return x.min()
+  return x.min(skipna = True)
 
 def pdmax(x):
-  return x.max()
+  return x.max(skipna = True)
 
 def quant_05(x):
   return x.quantile(0.05)
@@ -515,5 +515,5 @@ print df_reg_2[ls_reg_disp].to_latex()
 ## OUTPUT FOR MAP CREATION
 ## #######################
 
-df_lsa_int.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_int.csv'),
-                     encoding = 'UTF-8', float_format='%.3f')
+#df_lsa_int.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_int.csv'),
+#                     encoding = 'UTF-8', float_format='%.3f')

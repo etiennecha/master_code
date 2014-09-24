@@ -68,10 +68,14 @@ m_fra = Basemap(resolution='i',
                 lat_2 = 49.,
                 lat_0 = 46.5,
                 lon_0 = 3,
-                llcrnrlat=y1 - extra * h,
-                urcrnrlat=y2 + extra * h,
-                llcrnrlon=x1 - extra * w,
-                urcrnrlon=x2 + extra * w)
+                llcrnrlat=y1,
+                urcrnrlat=y2,
+                llcrnrlon=x1,
+                urcrnrlon=x2)
+#                llcrnrlat=y1 - extra * h,
+#                urcrnrlat=y2 + extra * h,
+#                llcrnrlon=x1 - extra * w,
+#                urcrnrlon=x2 + extra * w)
 
 path_dir_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
 m_fra.readshapefile(path_dir_dpt, 'departements_fr', color = 'none', zorder=2)
@@ -88,8 +92,10 @@ df_dpt['patches'] = df_dpt['poly'].map(lambda x: PolygonPatch(x,
 df_lsa_gps['point'] = df_lsa_gps[['Longitude', 'Latitude']].apply(\
                         lambda x: Point(m_fra(x[0], x[1])), axis = 1)
 
-# TODO: improve design and loop to generate group maps
-# TODO: by commune / dpt / region / au / uu maps (with clear scale)
+
+# #########################
+# HEATMAPS BY RETAIL GROUP
+# #########################
 
 import scipy.ndimage as ndi
 #ll_corner = m_fra(x1 - extra *w, y1 - extra *1)
@@ -112,7 +118,7 @@ for retail_group in df_lsa_gps['Groupe'].unique():
   img = ndi.gaussian_filter(img, (100,100))
   plt.clf()
   fig = plt.figure()
-  ax = fig.add_subplot(111, axisbg = 'w', frame_on = False)
+  ax = fig.add_subplot(111, frame_on = False)
   plt.imshow(img,
              origin = 'lower',
              zorder = 0,
@@ -125,5 +131,8 @@ for retail_group in df_lsa_gps['Groupe'].unique():
                                     match_original = True))
   # plt.show()
   plt.axis('off')
-  plt.savefig(os.path.join(path_dir_built_png, '%s.png' % retail_group),
-              bbox_inches = 'tight')
+  plt.tight_layout()
+  plt.savefig(os.path.join(path_dir_built_png, '%s.png' % retail_group))
+
+# TODO: by commune / dpt / region / au / uu maps (with clear scale)
+
