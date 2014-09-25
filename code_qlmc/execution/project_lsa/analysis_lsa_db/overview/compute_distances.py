@@ -148,7 +148,7 @@ store_lng = df_lsa_gps['Longitude'].iloc[0]
 com_lat = df_com['lat_cl'].iloc[0]
 com_lng = df_com['lng_cl'].iloc[0]
 
-# todo: finish coding and iterate over stores (or communes?)
+# todo: finish coding and iterate over communes (or stores)
 
 df_com['lat_store'] = store_lat
 df_com['lng_store'] = store_lng
