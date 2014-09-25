@@ -79,11 +79,18 @@ m_fra = Basemap(resolution='i',
 #                llcrnrlon=x1 - extra * w,
 #                urcrnrlon=x2 + extra * w)
 
-path_dir_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
-path_dir_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
+path_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
+path_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
 
-m_fra.readshapefile(path_dir_dpt, 'departements_fr', color = 'none', zorder=2)
-m_fra.readshapefile(path_dir_com, 'communes_fr', color = 'none', zorder=2)
+m_fra.readshapefile(path_dpt, 'departements_fr', color = 'none', zorder=2)
+m_fra.readshapefile(path_com, 'communes_fr', color = 'none', zorder=2)
+
+path_dir_120 = os.path.join(path_data, 'data_maps', 'ROUTE120_WGS84')
+path_120_rte = os.path.join(path_dir_120, 'TRONCON_ROUTE')
+path_120_nod = os.path.join(path_dir_120, 'NOEUD_ROUTIER')
+
+m_fra.readshapefile(path_120_rte, 'routes_fr', color = 'none', zorder=2)
+m_fra.readshapefile(path_120_nod, 'noeuds_fr', color = 'none', zorder=2)
 
 #df_dpt = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.departements_fr],
 #                       'dpt_name' : [d['NOM_DEPT'] for d in m_fra.departements_fr_info],
@@ -122,12 +129,12 @@ print u'\nTest with commune', df_com['commune'].iloc[0]
 x_test, y_test = df_com['x_center'].iloc[0], df_com['y_center'].iloc[0]
 print convert_from_ign(x_test, y_test)
 
-df_com[['lng_ct', 'lat_ct']] = df_com[['x_center', 'y_center']].apply(\
+df_com[['lat_ct', 'lng_ct']] = df_com[['x_center', 'y_center']].apply(\
                                  lambda x: convert_from_ign(x['x_center'],\
                                                             x['y_center']),\
                                  axis = 1)
 
-df_com[['lng_cl', 'lat_cl']] = df_com[['x_cl', 'y_cl']].apply(\
+df_com[['lat_cl', 'lng_cl']] = df_com[['x_cl', 'y_cl']].apply(\
                                  lambda x: convert_from_ign(x['x_cl'],\
                                                             x['y_cl']),\
                                  axis = 1)
@@ -141,5 +148,12 @@ store_lng = df_lsa_gps['Longitude'].iloc[0]
 com_lat = df_com['lat_cl'].iloc[0]
 com_lng = df_com['lng_cl'].iloc[0]
 
-print compute_distance((store_lat, store_lng),\
-                       (com_lat, com_lng))
+# todo: finish coding and iterate over stores (or communes?)
+
+df_com['lat_store'] = store_lat
+df_com['lng_store'] = store_lng
+
+df_com['dist'] = compute_distance_ar(df_com['lat_store'],
+                                     df_com['lng_store'],
+                                     df_com['lng_ct'],
+                                     df_com['lat_ct'])
