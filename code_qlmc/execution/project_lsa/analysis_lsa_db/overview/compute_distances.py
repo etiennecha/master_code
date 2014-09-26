@@ -129,12 +129,12 @@ print u'\nTest with commune', df_com['commune'].iloc[0]
 x_test, y_test = df_com['x_center'].iloc[0], df_com['y_center'].iloc[0]
 print convert_from_ign(x_test, y_test)
 
-df_com[['lat_ct', 'lng_ct']] = df_com[['x_center', 'y_center']].apply(\
+df_com[['lng_ct', 'lat_ct']] = df_com[['x_center', 'y_center']].apply(\
                                  lambda x: convert_from_ign(x['x_center'],\
                                                             x['y_center']),\
                                  axis = 1)
 
-df_com[['lat_cl', 'lng_cl']] = df_com[['x_cl', 'y_cl']].apply(\
+df_com[['lng_cl', 'lat_cl']] = df_com[['x_cl', 'y_cl']].apply(\
                                  lambda x: convert_from_ign(x['x_cl'],\
                                                             x['y_cl']),\
                                  axis = 1)
@@ -142,18 +142,58 @@ df_com[['lat_cl', 'lng_cl']] = df_com[['x_cl', 'y_cl']].apply(\
 df_com['dpt'] = df_com['code_insee'].str.slice(stop=-3)
 df_com = df_com[~df_com['dpt'].isin(['2A', '2B'])]
 
-store_lat = df_lsa_gps['Latitude'].iloc[0]
-store_lng = df_lsa_gps['Longitude'].iloc[0]
+# Store centered: distance to all communes
+#df_com['lat_store'] = df_lsa_gps['Latitude'].iloc[0]
+#df_com['lng_store'] = df_lsa_gps['Longitude'].iloc[0]
+#df_com['dist'] = compute_distance_ar(df_com['lat_store'],
+#                                     df_com['lng_store'],
+#                                     df_com['lng_ct'],
+#                                     df_com['lat_ct'])
+## todo: finish coding and iterate over communes (or stores)
 
-com_lat = df_com['lat_cl'].iloc[0]
-com_lng = df_com['lng_cl'].iloc[0]
+# COMMUNE CENTERED: DISTANCE TO ALL STORES AND AVAIL. SURFACE
+df_lsa_gps['lat_com'] = df_com['lat_cl'].iloc[0]
+df_lsa_gps['lng_com'] = df_com['lng_cl'].iloc[0]
+df_lsa_gps['dist'] = compute_distance_ar(df_lsa_gps['Latitude'],
+                                         df_lsa_gps['Longitude'],
+                                         df_lsa_gps['lat_com'],
+                                         df_lsa_gps['lng_com'])
+ls_disp_a = ['Enseigne', 'ADRESSE1', 'Ville',
+                'Latitude', 'Longitude', 'dist']
+ls_disp_b = ls_disp_a + ['Surf Vente' , 'wgt_surf']
+print df_lsa_gps[ls_disp_a][df_lsa_gps['dist'] < 10].to_string()
+# Compute surface weighted by distance
+df_lsa_gps['wgt_surf'] = np.exp(-df_lsa_gps['dist']/10) * df_lsa_gps['Surf Vente']
+print df_lsa_gps[ls_disp_b][df_lsa_gps['dist'] < 10].to_string()
+store_avail_surface = df_lsa_gps['wgt_surf'].sum()
 
-# todo: finish coding and iterate over communes (or stores)
+# ITERATION OVER COMMUNES
+df_com['avail_surf'] = np.nan
+for store_type in ['H', 'X', 'S']:
+  df_com['%s_ens' %store_type] = None
+  df_com['%s_dist' %store_type] = np.nan
 
-df_com['lat_store'] = store_lat
-df_com['lng_store'] = store_lng
+for i, row in df_com.iterrows():
+  df_lsa_gps['lat_com'] = row['lat_cl']
+  df_lsa_gps['lng_com'] = row['lng_cl']
+  df_lsa_gps['dist'] = compute_distance_ar(df_lsa_gps['Latitude'],
+                                           df_lsa_gps['Longitude'],
+                                           df_lsa_gps['lat_com'],
+                                           df_lsa_gps['lng_com'])
+  df_lsa_gps['wgt_surf'] = np.exp(-df_lsa_gps['dist']/10) * df_lsa_gps['Surf Vente']
+  df_com['avail_surf'].ix[i] = df_lsa_gps['wgt_surf'].sum()
+  # writing may be costly => put in list, and merge dfs?
+  for store_type in ['H', 'X', 'S']:
+    store_ind = df_lsa_gps['dist'][df_lsa_gps['Type_alt'] == '%s' %store_type].argmin()
+    df_com['%s_ens' %store_type].ix[i] = df_lsa_gps['Enseigne'].loc[store_ind]
+    df_com['%s_dist' %store_type].ix[i] = df_lsa_gps['dist'].loc[store_ind]
 
-df_com['dist'] = compute_distance_ar(df_com['lat_store'],
-                                     df_com['lng_store'],
-                                     df_com['lng_ct'],
-                                     df_com['lat_ct'])
+#df_com.drop('poly', axis = 1 ,inplace = True)
+#ls_disp_c = ['code_insee', 'commune', 'avail_surf',
+#             'H_ens', 'H_dist', 'S_ens', 'S_dist', 'X_ens', 'X_dist']
+#print df_com[ls_disp_c][df_com['code_insee'].str.slice(stop=-3) == '92'].to_string()
+#print df_com[ls_disp_c][df_com['code_insee'].str.slice(stop=-3) == '75'].to_string()
+
+# todo: output and perform stats descs
+
+# ITERATION OVER ALL STORES

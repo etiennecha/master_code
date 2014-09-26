@@ -148,7 +148,10 @@ dict_rat_com = {}
 for rat_com in m_fra.rat_communes_fr_info:
   dict_rat_com.setdefault(rat_com['ID_RTE120'],
                           {})[rat_com['ID_ND_RTE']] = rat_com['DISTANCE']
+
 # todo:
 # dict_rat_com[1] => {22256: 5.4, 22222: 5.3, 21950: 5.6}
 # Commune d'identifiant 1 doit dc etre attachee a 3 noeuds ac les poids renseignes
 # Question: what do coordinates in rat_com mean? (vs. those of node?)
+
+# Match stores with closest node or project store on nearest road?
