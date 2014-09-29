@@ -53,105 +53,196 @@ m_fra = Basemap(resolution='i',
                 urcrnrlon=x2)
 
 path_dir_120 = os.path.join(path_data, 'data_maps', 'ROUTE120_WGS84')
-path_120_rte = os.path.join(path_dir_120, 'TRONCON_ROUTE')
-path_120_nod = os.path.join(path_dir_120, 'NOEUD_ROUTIER')
-path_120_com = os.path.join(path_dir_120, 'COMMUNE')
-path_120_rat = os.path.join(path_dir_120, 'RATTACHEMENT_COMMUNE')
 
-m_fra.readshapefile(path_120_rte, 'routes_fr', color = 'none', zorder=2)
-m_fra.readshapefile(path_120_nod, 'noeuds_fr', color = 'none', zorder=2)
-m_fra.readshapefile(path_120_com, 'communes_fr', color = 'none', zorder=2)
-m_fra.readshapefile(path_120_rat, 'rat_communes_fr', color = 'none', zorder=2)
+ls_files_120 = [('TRONCON_ROUTE', 'routes'),
+                ('NOEUD_ROUTIER', 'noeuds'),
+                ('COMMUNE', 'communes'),
+                ('RATTACHEMENT_COMMUNE', 'rat_com')]
+
+for file_120_orig, file_120_dest in ls_files_120:
+  m_fra.readshapefile(os.path.join(path_dir_120, file_120_orig),
+                      file_120_dest,
+                      color = 'none',
+                      zorder = 2)
 
 # http://professionnels.ign.fr/sites/default/files/DC_ROUTE120-1-1.pdf
 
-## Nod is "ponctuel" and Rte "lineaire" acoording to official doc
-## Check it though...
-#dict_nod_rte = {}
-#for i, ls_nod_coord in enumerate(m_fra.noeuds_fr):
-#  for j, ls_ls_rte_coord in enumerate(m_fra.routes_fr):
-#    if ls_nod_coord in ls_ls_rte_coord:
-#      dict_nod_rte.setdefault(i, []).append(j)
-#enc_json(dict_120_nod_rte, os.path.join(path_built, 'dict_nod_rte.json'))
+# Base files for which ID_RTE_2010 is a key
+ls_120_main = [('routes', m_fra.routes, m_fra.routes_info),
+               ('noeuds', m_fra.noeuds, m_fra.noeuds_info),
+               ('communes', m_fra.communes, m_fra.communes_info)]
+dict_120_main = {}
+for field, ls_field_geo, ls_field_info in ls_120_main:
+  dict_120_main[field] = {}
+  # position i should not be used... just bu
+  for i, (geo, info) in enumerate(zip(ls_field_geo, ls_field_info)):
+    dict_120_main[field][info['ID_RTE120']] = [geo, info, i]
 
-dict_nod_rte = dec_json(os.path.join(path_built, 'dict_120_nod_rte.json'))
+# Annex files which refer to base files via ID_RTE_2010 (tgus not nec. unique)
+ls_120_sub = [('rat_com', m_fra.rat_com, m_fra.rat_com_info)]
+dict_120_sub = {}
+for field, ls_field_geo, ls_field_info in ls_120_sub:
+  dict_120_sub[field] = {}
+  for i, (geo, info) in enumerate(zip(ls_field_geo, ls_field_info)):
+    dict_120_sub[field].setdefault(info['ID_RTE120'], []).append([geo, info, i])
 
-# JSON stores keys as string
+## Noeud is "ponctuel" and Route "lineaire" acoording to official doc
+## Building graph requires to know connections between nodes
+## i.e. check if node coordinates are in roads (takes c. 10 mins this way at CREST)
+#dict_120_node_routes, dict_120_route_nodes = {}, {}
+#for node_id, node_info in dict_120_main['noeuds'].items():
+#  for road_id, road_info in dict_120_main['routes'].items():
+#    if node_info[0] in road_info[0]:
+#      dict_120_node_routes.setdefault(node_id, []).append(road_id)
+#      dict_120_route_nodes.setdefault(road_id, []).append(node_id)
+#enc_json(dict_120_node_routes, os.path.join(path_built, 'dict_120_node_routes.json'))
+#enc_json(dict_120_route_nodes, os.path.join(path_built, 'dict_120_route_nodes.json'))
 
-dict_rte_nod = {}
-for nod, ls_rtes in dict_nod_rte.items():
-  for rte in ls_rtes:
-    dict_rte_nod.setdefault(rte, []).append(nod)
+dict_120_node_routes = dec_json(os.path.join(path_built, 'dict_120_node_routes.json'))
+dict_120_route_nodes = dec_json(os.path.join(path_built, 'dict_120_route_nodes.json'))
 
-# check nb of nodes per road... hopefully one or two
-dict_nb_nod = {}
-for rte, ls_nods in dict_rte_nod.items():
-  dict_nb_nod.setdefault(len(ls_nods), []).append(rte)
+# JSON stores keys as string: convert back?
+for k,v in dict_120_node_routes.items():
+  dict_120_node_routes[int(k)] = v
+  del(dict_120_node_routes[k])
+
+for k,v in dict_120_route_nodes.items():
+  dict_120_route_nodes[int(k)] = v
+  del(dict_120_route_nodes[k])
+
+# Nb of nodes per road
+dict_nb_route_nodes = {}
+for route_id, ls_node_ids in dict_120_route_nodes.items():
+  dict_nb_route_nodes.setdefault(len(ls_node_ids), []).append(route_id)
 # 1 node : 7 (check?), 2 nodes: 41948 (normal)
 # 4 nodes: 1 road, 3 nodes: 73 roads... see what to do
 
-# temp fix: real weight for extremities... ortherwise somewhat random
-# would be good to visualize them
+# todo: take care of cases with more than 2 nodes (build graph + dijkstra)
 
-# todo: dict of dict: node to node with weight (double sens?)
+# Dict node to node with weight (double sens?)
+
+# Only if two nodes (todo: restriction to first and last should be ok)
+dict_graph, dict_graph_nx = {}, {}
+for route_id, ls_node_ids in dict_120_route_nodes.items():
+  ls_node_ids = ls_node_ids[:1] + ls_node_ids[-1:]
+  if len(ls_node_ids) == 2:
+    # simple dist weight so far, no unique sense
+    dist = dict_120_main['routes'][route_id][1]['LONGUEUR']
+    dict_graph.setdefault(ls_node_ids[0], {}).update({ls_node_ids[1] : dist})
+    dict_graph.setdefault(ls_node_ids[1], {}).update({ls_node_ids[0] : dist})
+    dict_graph_nx.setdefault(ls_node_ids[0], {}).\
+        update({ls_node_ids[1] : {'weight' : dist}})
+    dict_graph_nx.setdefault(ls_node_ids[1], {}).\
+        update({ls_node_ids[0] : {'weight' : dist}})
+
+# ARTISANAL:
 # http://code.activestate.com/recipes/119466-dijkstras-algorithm-for-shortest-paths/
+#from shortest_path import *
+#print shortestPath(dict_graph, '0', '1000')
 
-# for now: only if two nodes
-dict_graph = {}
-for rte, ls_nods in dict_rte_nod.items():
-  # Weight by type of road: time?
-  dist = m_fra.routes_fr_info[rte]['LONGUEUR']
-  if len(ls_nods) == 2:
-    # Sens unique?
-    dict_graph.setdefault(ls_nods[0], {}).update({ls_nods[1] : dist})
-    dict_graph.setdefault(ls_nods[1], {}).update({ls_nods[0] : dist})
-
-# Try to visualize a dpt or region with reasonable nb of communes
-
-from shortest_path import *
-print shortestPath(dict_graph, '0', '1000')
-
-# still need to compute distance
-# pbm: shortest path to all nodes?
-# interesting: compare results with simple distance
-# todo: visualize result (how to display road? just segments?)
-
+# NETWORKX (PACKAGE)
 # http://en.wikipedia.org/wiki/Shortest_path_problem
 # all pairs: http://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
 # http://en.wikipedia.org/wiki/NetworkX
-
+# networkx reference doc: p316
+# might want to use a directed graph
 import networkx as nx
-
-# Caution: with simple dict_graph, weight not taken into account
-dict_graph_nx = {}
-for k,dict_v in dict_graph.items():
-  for l, u in dict_v.items():
-    dict_graph_nx.setdefault(k, {})[l] = {'weight' : u}
-
 G = nx.Graph(dict_graph_nx)
-print nx.dijkstra_path(G,'0','1000')
-
-## might want to use a directed graph
-## networkx reference doc: p316
-#test_all_len = nx.all_pairs_dijkstra_path_length(G)
+print nx.dijkstra_path(G, 1, 1000)
+# test_all_len = nx.all_pairs_dijkstra_path_length(G)
 ## took roughly half a day
-## need to add communes to graph
-## compute shortest path between communes (only those nodes to consider)
+
+# Each commune attached to a node
+# Option 1: compute shortest path between all nodes
+# Option 2: compute shortest path only beween nodes associated to a commune
+# Then by commune check min dist by adding dist to connection nodes
+
+# Stores: add distance to chef lieu of commune? Neglect it first?
+
+# CHECK RESULTS
+# Shortest way from Wissant to Denain
 
 # No offset/scale pbm in L93 coordinates
-print '\n', m_fra.communes_fr_info[0]
-lng, lat = m_fra(*m_fra.communes_fr[0], inverse = True)
+print '\n', m_fra.communes[0]
+lng, lat = m_fra(*m_fra.communes[0], inverse = True)
 print lat, lng
 
-# Rattachement des communes au reseau
-dict_rat_com = {}
-for rat_com in m_fra.rat_communes_fr_info:
-  dict_rat_com.setdefault(rat_com['ID_RTE120'],
-                          {})[rat_com['ID_ND_RTE']] = rat_com['DISTANCE']
+# Load administrative limits
+path_dir_dpts = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84')
+m_fra.readshapefile(os.path.join(path_dir_dpts, 'DEPARTEMENT'),
+                    'dpt',
+                    color = 'none',
+                    zorder = 2)
 
-# todo:
-# dict_rat_com[1] => {22256: 5.4, 22222: 5.3, 21950: 5.6}
-# Commune d'identifiant 1 doit dc etre attachee a 3 noeuds ac les poids renseignes
-# Question: what do coordinates in rat_com mean? (vs. those of node?)
+## Build dpt df with multi polygons
+#dict_dpts = {}
+#for dpt_geo, dpt_info in zip(m_fra.dpt, m_fra.dpt_info):
+#  dict_dpts.setdefault(dpt_info['NOM_DEPT'], [[],[]])
+#  dict_dpts[dpt_info['NOM_DEPT']][0].append(dpt_geo)
+#  dict_dpts[dpt_info['NOM_DEPT']][1].append(dpt_info)
+##import pprint
+##pprint.pprint(dict_dpts['VENDEE'][1])
+### info same except for RINGNUM thus ok to drop
+#region_vendee = MultiPolygon([Polygon(ls_xy) for ls_xy in dict_dpts['VENDEE'][0]])
 
-# Match stores with closest node or project store on nearest road?
+df_dpt = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.dpt],
+                       'dpt_name' : [d['NOM_DEPT'] for d in m_fra.dpt_info],
+                       'dpt_code' : [d['CODE_DEPT'] for d in m_fra.dpt_info],
+                       'region_name' : [d['NOM_REGION'] for d in m_fra.dpt_info],
+                       'region_code' : [d['CODE_REG'] for d in m_fra.dpt_info]})
+# print df_dpt[['code_dpt', 'dpt_name','code_region', 'region_name']].to_string()
+# Some regions broken in multi polygons: appear mult times (138 items, all France Metr)
+region_multipolygon = MultiPolygon(list(df_dpt[df_dpt['region_name'] ==\
+                                          "NORD-PAS-DE-CALAIS"]['poly'].values))
+region_multipolygon_prep = prep(region_multipolygon)
+region_bounds = region_multipolygon.bounds
+
+#for k,v in dict_120_main['communes'].items():
+#  if v[1]['NOM_COMM'] == 'WISSANT' or v[1]['NOM_COMM'] == 'DENAIN':
+#    print k,v
+## Find nearest node(s) via dict_120_sub['rat_com'] (can be several!)
+#print dict_120_sub['rat_com'][23216]
+#print dict_120_sub['rat_com'][25781]
+
+ls_node_ids_wd = nx.dijkstra_path(G, 1168, 124)
+ls_coord = [dict_120_main['noeuds'][node_id][0] for node_id in ls_node_ids_wd]
+m_fra.scatter([x[0] for x in ls_coord],
+              [x[1] for x in ls_coord])
+
+for shape, shape_info in zip(m_fra.routes, m_fra.routes_info):
+  if not region_multipolygon.disjoint(MultiPoint(shape)):
+    xx, yy = zip(*shape)
+    temp = m_fra.plot(xx, yy, linewidth = 0.1, color = 'k')
+
+m_fra.drawcountries()
+m_fra.drawcoastlines()
+plt.xlim((region_bounds[0], region_bounds[2]))
+plt.ylim((region_bounds[1], region_bounds[3]))
+plt.show()
+
+# AMBIGUITY CHECKS: road with multiple nodes, sens unique, restriction trafic
+
+## ROAD WITH MORE THAN TWO NODES (BTW: one node???)
+## CL: Keep only extremities (also true for sens unique?)
+#print dict_nb_route_nodes[4]
+#m_fra(*dict_120_main['routes'][27078][0][0], inverse = True)
+#region_multipolygon = MultiPolygon(list(df_dpt[df_dpt['region_name'] ==\
+#                                          "RHONE-ALPES"]['poly'].values))
+#region_bounds = region_multipolygon.bounds
+#xx, yy = zip(*dict_main['routes'][27078][0])
+#temp = m_fra.plot(xx, yy, linewidth = 0.1, color = 'k')
+#m_fra.drawcountries()
+#m_fra.drawcoastlines()
+#plt.xlim((region_bounds[0], region_bounds[2]))
+#plt.ylim((region_bounds[1], region_bounds[3]))
+#plt.show()
+
+## SENS UNIQUE (a.e. two points only i.e. very short road...)
+## most likely no issue here but hard to know if order = road direction
+## check that with 500 km...
+#for route_id, route_info in dict_120_main['routes'].items():
+#  if route_info[1]['SENS'] == 'Sens unique':
+#    ls_su.append(route_id)
+#print dict_120_main['routes'][553]
+#print m_fra(*dict_120_main['routes'][553][0][0], inverse = True)
+#print m_fra(*dict_120_main['routes'][553][0][-1], inverse = True)
