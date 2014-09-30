@@ -83,12 +83,25 @@ for field, ls_field_geo, ls_field_info in ls_km_main:
 # Noeud is "ponctuel" and Route "lineaire" acoording to official doc
 # Building graph requires to know connections between nodes
 # i.e. check if node coordinates are in roads (takes c. 10 mins this way at CREST)
-dict_km_node_routes, dict_km_route_nodes = {}, {}
+
+#dict_km_node_routes, dict_km_route_nodes = {}, {}
+#for node_id, node_info in dict_km_main['noeuds'].items():
+#  for road_id, road_info in dict_km_main['routes'].items():
+#    if node_info[0] in road_info[0]:
+#      dict_km_node_routes.setdefault(node_id, []).append(road_id)
+#      dict_km_route_nodes.setdefault(road_id, []).append(node_id)
+
+# Try to speed up process => Multiprocessing?
+# Check threading : http://www.fevrierdorian.com
+#                   /blog/post/2012/04/04/Python-multiprocessing-vs-threading
+
+dict_routes_temp = {k: v[0][:1] + v[0][-1:] for k,v in dict_km_main['routes'].items()}
+ls_node_routes = []
 for node_id, node_info in dict_km_main['noeuds'].items():
-  for road_id, road_info in dict_km_main['routes'].items():
-    if node_info[0] in road_info[0]:
-      dict_km_node_routes.setdefault(node_id, []).append(road_id)
-      dict_km_route_nodes.setdefault(road_id, []).append(node_id)
+  for road_id, road_info in dict_routes_temp.items():
+    if node_info[0] in road_info:
+      ls_node_routes.append((node_id, road_id))
+
 #enc_json(dict_km_node_routes,
 #         os.path.join(path_built, 'dict_%s_node_routes.json' %geofla_km))
 #enc_json(dict_km_route_nodes,
