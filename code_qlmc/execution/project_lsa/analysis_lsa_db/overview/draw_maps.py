@@ -63,35 +63,30 @@ m_fra = Basemap(resolution='i',
 path_dir_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
 m_fra.readshapefile(path_dir_dpt, 'dpt', color = 'none', zorder=2)
 
-df_dpt = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.dpt],
+df_dpt = pd.DataFrame({'poly'     : [Polygon(xy) for xy in m_fra.dpt],
                        'dpt_name' : [d['NOM_DEPT'] for d in m_fra.dpt_info],
                        'dpt_code' : [d['CODE_DEPT'] for d in m_fra.dpt_info],
-                       'region_name' : [d['NOM_REGION'] for d in m_fra.dpt_info],
-                       'region_code' : [d['CODE_REG'] for d in m_fra.dpt_info]})
+                       'reg_name' : [d['NOM_REGION'] for d in m_fra.dpt_info],
+                       'reg_code' : [d['CODE_REG'] for d in m_fra.dpt_info]})
 
-df_dpt['patches'] = df_dpt['poly'].map(lambda x: PolygonPatch(x,
-                                                              facecolor='#FFFFFF', # '#555555'
-                                                              edgecolor='#555555', # '#787878'
-                                                              lw=.25, alpha=.3, zorder=1))
+df_dpt = df_dpt[df_dpt['reg_name'] != 'CORSE']
 
 # Communes
 path_dir_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
 m_fra.readshapefile(path_dir_dpt, 'com', color = 'none', zorder=2)
 
-df_com = pd.DataFrame({'poly'      : [Polygon(xy) for xy in m_fra.com],
-                       'insee_com' : [d['INSEE_COM'] for d in m_fra.com_info],
-                       'nom_com'   : [d['NOM_COMM'] for d in m_fra.com_info],
-                       'nom_dpt'   : [d['NOM_DEPT'] for d in m_fra.com_info],
-                       'nom_reg'   : [d['NOM_REGION'] for d in m_fra.com_info],
-                       'pop'       : [d['POPULATION'] for d in m_fra.com_info],
-                       'surf'      : [d['SUPERFICIE'] for d in m_fra.com_info],
-                       'x_cl'      : [d['X_CHF_LIEU'] for d in m_fra.com_info],
-                       'y_cl'      : [d['Y_CHF_LIEU'] for d in m_fra.com_info]})
+df_com = pd.DataFrame({'poly'       : [Polygon(xy) for xy in m_fra.com],
+                       'insee_code' : [d['INSEE_COM'] for d in m_fra.com_info],
+                       'com_name'   : [d['NOM_COMM'] for d in m_fra.com_info],
+                       'dpt_name'   : [d['NOM_DEPT'] for d in m_fra.com_info],
+                       'reg_name'   : [d['NOM_REGION'] for d in m_fra.com_info],
+                       'pop'        : [d['POPULATION'] for d in m_fra.com_info],
+                       'surf'       : [d['SUPERFICIE'] for d in m_fra.com_info],
+                       'x_cl'       : [d['X_CHF_LIEU'] for d in m_fra.com_info],
+                       'y_cl'       : [d['Y_CHF_LIEU'] for d in m_fra.com_info]})
 
-df_com['patches'] = df_com['poly'].map(lambda x: PolygonPatch(x,
-                                                              facecolor='#FFFFFF', # '#555555'
-                                                              edgecolor='#555555', # '#787878'
-                                                              lw=.25, alpha=.3, zorder=2))
+df_com = df_com[df_com['reg_name'] != 'CORSE']
+
 
 # LSA Data
 df_lsa_int = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_int.csv'),
@@ -106,57 +101,111 @@ df_lsa_gps['point'] = df_lsa_gps[['Longitude', 'Latitude']].apply(\
 # MAPS
 # #########################
 
-#MAPS BY COMMUNES
+# MAPS BY COMMUNES
 
-#fig, ax = plt.figure()
-#ax = fig.add_subplot(111, frame_on = False)
-fig, ax = plt.subplots()
-p = PatchCollection(df_com['patches'].values, match_original = True)
-ax.add_collection(p)
-#m_fra.drawcountries()
-#m_fra.drawcoastlines()
-#plt.show()
-
-# replicate to understand:
-# http://matplotlib.org/examples/api/patch_collection.html
-
-# HEATMAP
-
-#import scipy.ndimage as ndi
-##ll_corner = m_fra(x1 - extra *w, y1 - extra *1)
-##ur_corner = m_fra(x2 + extra *w, y2 + extra * h)
-#ll_corner = m_fra(x1, y1)
-#ur_corner = m_fra(x2, y2)
-#w2 = ur_corner[0] - ll_corner[0]
-#h2 = ur_corner[1] - ll_corner[1]
+## FRA
 #
-#for retail_group in df_lsa_gps['Groupe'].unique():
-#  c = 0
-#  img = np.zeros((h2/1000, w2/1000))
-#  for station in df_lsa_gps['point'][df_lsa_gps['Groupe'] == retail_group]:
-#    yn = (station.y - ll_corner[1]) / 1000
-#    xn = (station.x - ll_corner[0]) / 1000
-#    try:
-#      img[yn, xn] += 1
-#    except:
-#      c=+1
-#  img = ndi.gaussian_filter(img, (100,100))
-#  plt.clf()
-#  fig = plt.figure()
-#  ax = fig.add_subplot(111, frame_on = False)
-#  plt.imshow(img,
-#             origin = 'lower',
-#             zorder = 0,
-#             extent = [ll_corner[0],
-#                       ur_corner[0],
-#                       ll_corner[1],
-#                       ur_corner[1]])
-#  #plt.imshow(img, origin = 'lower', zorder = 0,  extent = [0, ur_corner[0], 0, ur_corner[1]]) 
-#  ax.add_collection(PatchCollection(df_dpt['patches'].values,
-#                                    match_original = True))
-#  # plt.show()
-#  plt.axis('off')
-#  plt.tight_layout()
-#  plt.savefig(os.path.join(path_dir_built_png, '%s.png' % retail_group))
+#df_com['patches'] = df_com['poly'].map(\
+#                      lambda x: PolygonPatch(x,
+#                                             facecolor='#FFFFFF', # '#555555'
+#                                             edgecolor='#787878', # '#787878'
+#                                             lw=.1, alpha=.3, zorder=2))
+#
+#fig = plt.figure()
+#ax = fig.add_subplot(111, aspect = 'equal') #, frame_on = False)
+#p = PatchCollection(df_com['patches'].values, match_original = True)
+#ax.add_collection(p)
+##m_fra.drawcountries()
+##m_fra.drawcoastlines()
+#ax.autoscale_view(True, True, True)
+#ax.axis('off')
+#plt.tight_layout()
+## plt.show()
+#plt.savefig(os.path.join(path_data, 'data_maps', 'data_built',
+#                         'graphs', 'lsa', 'fra_com.png'),
+#            transparent = True,
+#            dpi=700)
+
+
+#MAPS BY DPT
+
+## FRA
+#
+#df_dpt['patches'] = df_dpt['poly'].map(\
+#                      lambda x: PolygonPatch(x,
+#                                             facecolor='#FFFFFF', # '#555555'
+#                                             edgecolor='#787878', # '#787878'
+#                                             lw=.2, alpha=.3, zorder=1))
+#fig = plt.figure()
+#ax = fig.add_subplot(111, aspect = 'equal') #, frame_on = False)
+#p = PatchCollection(df_dpt['patches'].values, match_original = True)
+#ax.add_collection(p)
+##m_fra.drawcountries()
+##m_fra.drawcoastlines()
+#ax.autoscale_view(True, True, True)
+#ax.axis('off')
+#plt.tight_layout()
+## plt.show()
+#plt.savefig(os.path.join(path_data, 'data_maps', 'data_built',
+#                         'graphs', 'lsa', 'fra_dpt.png'),
+#            transparent = True,
+#            dpi=700)
+
+
+# HEATMAPS
+
+path_dir_heatmaps = os.path.join(path_data, 'data_maps', 'data_built',
+                                 'graphs', 'lsa', 'heatmaps')
+
+# use dpt path as background
+df_dpt['patches'] = df_dpt['poly'].map(\
+                      lambda x: PolygonPatch(x,
+                                             facecolor='#FFFFFF', # '#555555'
+                                             edgecolor='#787878', # '#787878'
+                                             lw=.2, alpha=.3, zorder=1))
+
+import scipy.ndimage as ndi
+ll_corner = m_fra(x1, y1)
+ur_corner = m_fra(x2, y2)
+w2 = ur_corner[0] - ll_corner[0]
+h2 = ur_corner[1] - ll_corner[1]
+
+for retail_group in df_lsa_gps['Groupe'].unique():
+  c = 0
+  img = np.zeros((h2/1000, w2/1000))
+  for station in df_lsa_gps['point'][df_lsa_gps['Groupe'] == retail_group]:
+    yn = (station.y - ll_corner[1]) / 1000
+    xn = (station.x - ll_corner[0]) / 1000
+    try:
+      img[yn, xn] += 1
+    except:
+      c=+1
+  img = ndi.gaussian_filter(img, (100,100))
+
+  plt.clf()
+  fig = plt.figure()
+  ax = fig.add_subplot(111, aspect='equal', frame_on = False)
+  plt.imshow(img,
+             origin = 'lower',
+             zorder = 0,
+             extent = [ll_corner[0],
+                       ur_corner[0],
+                       ll_corner[1],
+                       ur_corner[1]])
+  plt.axis('off')
+  ##plt.imshow(img, origin = 'lower', zorder = 0,  extent = [0, ur_corner[0], 0, ur_corner[1]]) 
+  ax.add_collection(PatchCollection(df_dpt['patches'].values,
+                                    match_original = True))
+
+  # plt.tight_layout()
+  # plt.show()
+  #ax.set_axes(plt.Axes(fig, [0., 0., 1., 1.])) # work on this line to get rid of black
+  ax.set_axis_off()
+  #ax.autoscale(False)
+  ax.autoscale_view(True, True, True)
+  extent = ax.get_window_extent().transformed(plt.gcf().dpi_scale_trans.inverted())
+  plt.savefig(os.path.join(path_dir_heatmaps, '%s.png' % retail_group),
+              transparent = True,
+              bbox_inches = extent)
 
 # todo: by commune / dpt / region / au / uu maps (with clear scale)
