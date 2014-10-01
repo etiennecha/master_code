@@ -135,7 +135,7 @@ def compute_weight(road_length, road_type):
                 u'Nationale' : 100.0,
                 u'Départementale' : 80.0,
                 u'Sans objet': 60.0}
-  return road_length / dict_speed[road_type]
+  return np.round(road_length / dict_speed[road_type], 2)
 
 # Only if two nodes (todo: restriction to first and last should be ok)
 dict_graph, dict_graph_nx = {}, {}
@@ -185,12 +185,14 @@ com_node_i = ls_com_nodes[0]
 for com_node_j in ls_com_nodes[1:]:
   # graph appears not to be connected (islands?)
   try:
-    trip_len = nx.dijkstra_path_length(G, com_node_i, com_node_j)
+    trip_len = np.round(nx.dijkstra_path_length(G, com_node_i, com_node_j), 2)
   except:
     trip_len = np.nan
   ls_trip_len.append((com_node_i,
                       com_node_j,
                       trip_len))
+
+# todo: built dict commune => node (several but ok...)
 
 ## CHECK RESULTS
 ## Shortest way from Wissant to Denain
