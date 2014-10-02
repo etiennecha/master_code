@@ -46,7 +46,7 @@ df_lsa_int = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_int.csv'),
 
 # change name?
 df_lsa_gps = df_lsa_int[(df_lsa_int['Type_alt'] != 'DRIN') &\
-                        (df_lsa_int['Type_alt'] != 'DRIVE')]
+                        (df_lsa_int['Type_alt'] != 'DRIVE')].copy()
 
 # #############
 # FRANCE MAP

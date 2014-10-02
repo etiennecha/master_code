@@ -4,19 +4,28 @@
 import add_to_path
 from add_to_path import path_data
 import os, sys
+import json
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.collections import PatchCollection
 import matplotlib.font_manager as fm
-# import fiona
-import shapefile
 from mpl_toolkits.basemap import Basemap
 from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 from shapely.prepared import prep
 from descartes import PolygonPatch
-import simplekml
+# import fiona
+# import shapefile
+# import simplekml
+
+def dec_json(chemin):
+  with open(chemin, 'r') as fichier:
+    return json.loads(fichier.read())
+
+def enc_json(database, chemin):
+  with open(chemin, 'w') as fichier:
+    json.dump(database, fichier)
 
 # France
 x1 = -5.
@@ -53,72 +62,76 @@ df_com = pd.DataFrame({'poly'       : [Polygon(xy) for xy in m_fra.com],
 
 df_com = df_com[df_com['reg_name'] != 'CORSE']
 
-# LOAD INSEE REGROUPMENTS
+# LOAD INSEE AREAS
 
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
-df_insee_areas = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_insee_areas.csv'),
-                             encoding = 'UTF-8')
+df_insee_a = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_insee_areas.csv'),
+                         encoding = 'UTF-8')
 
-df_insee_areas = [df_insee_areas['CODGEO'].str.slice(stop = -3) == '2A' |
+# Add big city ardts
+ls_insee_ardts = [['75056', ['{:5d}'.format(i) for i in range(75101, 75121)]],
+                  ['69123', ['{:5d}'.format(i) for i in range(69381, 69390)]],
+                  ['13055', ['{:5d}'.format(i) for i in range(13201, 13217)]]]
+for ic_main, ls_ic_ardts in ls_insee_ardts:
+  df_temp = df_insee_a[df_insee_a['CODGEO'] == ic_main].copy()
+  for ic_ardt in ls_ic_ardts:
+    df_temp['CODGEO'] = ic_ardt
+    df_insee_a = pd.concat([df_insee_a, df_temp])
+
+# Get rid of Corsica and DOMTOM
+df_insee_a = df_insee_a[~(df_insee_a['CODGEO'].str.slice(stop = -3).isin(['2A', '2B', '97']))]
 
 # check match between geofla insee codes and insee data
-ls_geofla_ic = list(df_com['insee_code'].values)
-ls_insee_ic = list(df_insee_areas['CODGEO'].values)
-#ls_pbms_1 = [ic for ic in ls_geofla_ic if ic not in ls_insee_ic] # easy fix: enrich insee areas
-ls_pbms_2 = [ic for ic in ls_insee_ic if ic not in ls_geofla_ic]
-
-## KML COMMUNES
-
-#kml = simplekml.Kml()
-#
-#for com_ind, com_row in df_com.iterrows():
-#  shapely_polygon = com_row['poly']
-#  outerboundary = [m_france(*point_coord, inverse = 'True')\
-#                     for point_coord in list(shapely_polygon.exterior.coords)]
-#  innerboundary = [m_france(*point_coord, inverse = 'True')\
-#                     for point_coord in list(shapely_polygon.interiors)]
-#  name = '%s (%s)' %(com_row['NOM_COMM'], com_row['INSEE_COM'])
-#  pol = kml.newpolygon(name = name,
-#                       outerboundaryis = outerboundary,
-#                       innerboundaryis = innerboundary)
-#
-#kml.save(os.path.join(path_data, 'data_maps', 'kml_files', 'communes.kml'))
+set_geofla_ic = set(df_com['insee_code'].values)
+set_insee_ic = set(df_insee_a['CODGEO'].values)
+set_pbms_1 = set_geofla_ic.difference(set_insee_ic)
+# Missing in insee areas: ['52266', '52124', '52033', '52465', '52278']
+set_pbms_2 = set_insee_ic.difference(set_geofla_ic)
+# Missing in geofla : [u'69123', u'28042', u'75056', u'76095', u'13055']
 
 ## UNION OF POLYGONS
-#
-#pol1 = df_com['poly'][df_com['INSEE_COM'] == '92050'].values[0]  # nanterre
-#pol2 = df_com['poly'][df_com['INSEE_COM'] == '92063'].values[0]  # rueil
+#pol1 = df_com['poly'][df_com['insee_code'] == '92050'].values[0]  # nanterre
+#pol2 = df_com['poly'][df_com['insee_code'] == '92063'].values[0]  # rueil
 #pol3 = pol1.union(pol2)
-#
-#pol4 = df_com['poly'][df_com['INSEE_COM'] == '78646'].values[0]  # versailles
-#pol5 = pol3.union(pol4)
-#
-#pol6 = df_com['poly'][df_com['INSEE_COM'] == '92076'].values[0]  # vaucresson (should connect)
-#pol7 = pol5.union(pol6) # seems to worl => Polygon, not MultiPolygon !
+#pol4 = df_com['poly'][df_com['insee_code'] == '78646'].values[0]  # versailles
+#pol5 = pol3.union(pol4) 
+## error with path=PolygonPatch(pol5) since not connected
+#pol6 = df_com['poly'][df_com['insee_code'] == '92076'].values[0]  # vaucresson
+#pol7 = pol5.union(pol6) 
+#patch = PolygonPatch(pol7)
+## works since this one is connected
+##fig = plt.figure()
+##ax = fig.add_subplot(111)
+##ax.add_patch(patch)
+##ax.autoscale_view(True, True, True)
+##plt.show()
 
-#kml = simplekml.Kml()
-#ls_uu_pbms = []
-#for code_uu2010 in ls_codes_uu2010:
-#  ls_uu_codegeos = df_insee[u'Département - Commune CODGEO']\
-#                     [df_insee[u"Code géographique de l'unité urbaine UU2010"] == code_uu2010].values.tolist()
-#  ls_uu_codegeos = [codegeo for codegeo in ls_uu_codegeos if codegeo in ls_ign_codegeo]
-#  if ls_uu_codegeos: 
-#    polygon_uu = df_com['poly'][df_com['INSEE_COM'] == ls_uu_codegeos[0]].values[0]
-#    for uu_codegeo in ls_uu_codegeos:
-#      for row_ind, row_info in df_com[df_com['INSEE_COM'] == uu_codegeo].iterrows():
-#        polygon_uu = polygon_uu.union(row_info['poly'])
-#    try: 
-#      shapely_polygon = polygon_uu
-#      name = df_insee[u"Libellé de l'unité urbaine LIBUU2010"]\
-#               [df_insee[u'Département - Commune CODGEO'] == uu_codegeo].values[0]
-#      outerboundary = [m_france(*point_coord, inverse = 'True')\
-#                         for point_coord in list(shapely_polygon.exterior.coords)]
-#      ## innerboundary: can't keep since several polygons 
-#      #innerboundary = [m_france(*point_coord, inverse = 'True')\
-#      #                   for point_coord in list(shapely_polygon.interiors)]
-#      pol = kml.newpolygon(name = name,
-#                           outerboundaryis = outerboundary,
-#                           innerboundaryis = [])
-#    except:
-#      ls_uu_pbms.append(code_uu2010)
+# build dict of area coords
+area = 'BV'
+dict_uu_polygons = {}
+ls_uu_polygons, ls_uu_pbms = [], []
+for uu2010 in df_insee_a[area].unique():
+  ls_uu_codegeos = df_insee_a[u'CODGEO'][df_insee_a[area] == uu2010].values.tolist()
+  ls_uu_codegeos = list(set(ls_uu_codegeos).intersection(set_insee_ic))
+  if ls_uu_codegeos: 
+    polygon_uu = df_com['poly'][df_com['insee_code'] == ls_uu_codegeos[0]].values[0]
+    for uu_codegeo in ls_uu_codegeos:
+      for row_ind, row_info in df_com[df_com['insee_code'] == uu_codegeo].iterrows():
+        polygon_uu = polygon_uu.union(row_info['poly'])
+    try:
+      patch = PolygonPatch(polygon_uu) # check if connected (really?)
+      shapely_polygon = polygon_uu
+    except:
+      ls_uu_pbms.append(uu2010)
+      shapely_polygon = polygon_uu.convex_hull # if not connected
+    ls_uu_polygons.append(shapely_polygon)
+    # neglect interior if any
+    dict_uu_polygons[uu2010] = zip(shapely_polygon.exterior.coords.xy[0].tolist(),
+                                   shapely_polygon.exterior.coords.xy[1].tolist())
+
+enc_json(dict_uu_polygons, os.path.join(path_dir_insee,
+                                        'insee_areas',
+                                        'dict_%s_l93_coords.json' %area))
+
+# try to improve on convex_hull: keep several polygons

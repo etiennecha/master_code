@@ -511,6 +511,95 @@ df_reg_2 = df_reg_2.T
 df_reg_2.rename(index = {u"Provence-Alpes-Cote-d'Azur" : 'PACA'}, inplace = True)
 print df_reg_2[ls_reg_disp].to_latex()
 
+# #########################################
+# SURFACE BY GROUP AND REGION
+# #########################################
+
+df_reg_surf = pd.DataFrame(index = df_lsa_gps['Reg'].unique())
+for groupe in df_lsa_gps['Groupe'].unique():
+  df_groupe = df_lsa_gps[df_lsa_gps['Groupe'] == groupe] 
+  df_groupe_rs = df_groupe[['Reg', 'Surf Vente']].\
+                   groupby('Reg', as_index = False).sum()
+  df_groupe_rs.set_index('Reg', inplace = True)
+  df_reg_surf[groupe] = df_groupe_rs['Surf Vente']
+
+df_reg_surf.fillna(0, inplace = True)
+df_reg_surf['TOT.'] = df_reg_surf.sum(axis = 1)
+df_reg_surf.sort('TOT.', ascending = False, inplace = True)
+df_reg_surf.rename(columns = {'CARREFOUR' : 'CARR.',
+                         'LECLERC' : 'LECL.',
+                         'AUCHAN' : 'AUCH.',
+                         'CASINO' : 'CASI.',
+                         'MOUSQUETAIRES': 'MOUS.',
+                         'SYSTEME U': 'SYS.U',
+                         'LOUIS DELHAIZE': 'L.D.',
+                         'COLRUYT' : 'COLR.',
+                         'DIAPAR' : 'DIAP.',
+                         'AUTRE' : 'OTH.'}, inplace = True)
+ls_reg_disp = ['CARR.', 'CASI.', 'MOUS.', 'LIDL', 'SYS.U', 'ALDI',
+               'LECL.', 'AUCH.', 'L.D.', 'DIAP.', 'COLR.', 'OTH.', 'TOT.']
+
+df_reg_surf_2 = df_reg_surf.copy()
+
+# Share of each group by region
+df_reg_surf.loc['TOT.'] = df_reg_surf.sum(axis = 0)
+for groupe in ls_reg_disp:
+  df_reg_surf[groupe] = df_reg_surf[groupe] / df_reg_surf['TOT.'] * 100
+df_reg_surf.rename(index = {u"Provence-Alpes-Cote-d'Azur" : 'PACA'}, inplace = True)
+print df_reg_surf[ls_reg_disp].to_latex()
+#print 'TOTAL &', ' & '.join(map(lambda x: '{:4.0f}'.format(x),
+#                            df_reg_surf[ls_reg_disp].sum(axis = 0).values)), '\\\\'
+
+# Share of each region by group
+df_reg_surf_2 = df_reg_surf_2.T
+df_reg_surf_2['TOT.'] = df_reg_surf_2.sum(axis = 1)
+for region in list(df_lsa_gps['Reg'].unique()) + ['TOT.']:
+  df_reg_surf_2[region] = df_reg_surf_2[region] / df_reg_surf_2['TOT.'] * 100
+df_reg_surf_2 = df_reg_surf_2.T
+df_reg_surf_2.rename(index = {u"Provence-Alpes-Cote-d'Azur" : 'PACA'}, inplace = True)
+print df_reg_surf_2[ls_reg_disp].to_latex()
+
+# CR2 table
+
+def compute_cr(s, num):
+  tmp = s.order(ascending=False)[:num]
+  return tmp.sum()
+
+def hhi(s):
+  tmp = (s / 100.0)**2
+  return tmp.sum()
+
+se_cr1_n = df_reg[ls_reg_disp[:-2]].apply(lambda x: compute_cr(x, 1), axis = 1)
+se_cr2_n = df_reg[ls_reg_disp[:-2]].apply(lambda x: compute_cr(x, 2), axis = 1)
+se_cr3_n = df_reg[ls_reg_disp[:-2]].apply(lambda x: compute_cr(x, 3), axis = 1)
+se_cr4_n = df_reg[ls_reg_disp[:-2]].apply(lambda x: compute_cr(x, 4), axis = 1)
+
+se_cr1_s = df_reg_surf[ls_reg_disp[:-2]].apply(lambda x: compute_cr(x, 1), axis = 1)
+se_cr2_s = df_reg_surf[ls_reg_disp[:-2]].apply(lambda x: compute_cr(x, 2), axis = 1)
+se_cr3_s = df_reg_surf[ls_reg_disp[:-2]].apply(lambda x: compute_cr(x, 3), axis = 1)
+se_cr4_s = df_reg_surf[ls_reg_disp[:-2]].apply(lambda x: compute_cr(x, 4), axis = 1)
+
+se_hhi_n = df_reg[ls_reg_disp[:-2]].apply(lambda x: hhi(x), axis = 1)
+se_hhi_s = df_reg_surf[ls_reg_disp[:-2]].apply(lambda x: hhi(x), axis = 1)
+
+df_reg_cr = pd.DataFrame({'CR1_n' : se_cr1_n,
+                          'CR2_n' : se_cr2_n,
+                          'CR3_n' : se_cr3_n,
+                          'CR4_n' : se_cr4_n,
+                          'CR1_s' : se_cr1_s,
+                          'CR2_s' : se_cr2_s,
+                          'CR3_s' : se_cr3_s,
+                          'CR4_s' : se_cr4_s,
+                          'HHI_n' : se_hhi_n,
+                          'HHI_s' : se_hhi_s})
+
+ls_disp = ['CR1_n' , 'CR2_n', 'CR3_n', 'CR4_n',
+           'CR1_s' , 'CR2_s', 'CR3_s', 'CR4_s',
+           'HHI_n', 'HHI_s']
+
+# pbm: need to precise display for HHI columns + pbms with small brands
+print df_reg_cr[ls_disp].to_string()
+
 ## #######################
 ## OUTPUT FOR MAP CREATION
 ## #######################
