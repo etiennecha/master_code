@@ -182,7 +182,7 @@ ls_com_nodes = list(set(ls_com_nodes))
 
 ls_trip_len = []
 com_node_i = ls_com_nodes[0]
-for com_node_j in ls_com_nodes[1:]:
+for com_node_j in ls_com_nodes[1:1000]:
   # graph appears not to be connected (islands?)
   try:
     trip_len = np.round(nx.dijkstra_path_length(G, com_node_i, com_node_j), 2)
