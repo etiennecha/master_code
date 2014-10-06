@@ -612,21 +612,21 @@ for retail_group in dict_groupes.keys():
 # OUTPUT TO CSV
 # ###############
 
-## ALL
-#df_lsa.to_csv(os.path.join(path_dir_built_csv, 'df_lsa.csv'),
-#              encoding = 'UTF-8', float_format='%.3f')
-#
-## ACTIVE STORES IN METROPOLITAN FRANCE
-#df_lsa_active_fm.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm.csv'),
-#                        encoding = 'UTF-8', float_format='%.3f')
-#
-## ACTIVE STORES H/S/X IN METROPOLITAN FRANCE
-#df_lsa_a_f_hsx.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
-#                     encoding = 'UTF-8', float_format='%.3f')
-#
-## H/S/X IN METROPOLITAN FRANCE
-#df_lsa_fm_hsx.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_fm_hsx.csv'),
-#                     encoding = 'UTF-8', float_format='%.3f')
+# ALL
+df_lsa.to_csv(os.path.join(path_dir_built_csv, 'df_lsa.csv'),
+              encoding = 'UTF-8', float_format='%.3f')
+
+# ACTIVE STORES IN METROPOLITAN FRANCE
+df_lsa_active_fm.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm.csv'),
+                        encoding = 'UTF-8', float_format='%.3f')
+
+# ACTIVE STORES H/S/X IN METROPOLITAN FRANCE
+df_lsa_a_f_hsx.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
+                     encoding = 'UTF-8', float_format='%.3f')
+
+# H/S/X IN METROPOLITAN FRANCE
+df_lsa_fm_hsx.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_fm_hsx.csv'),
+                     encoding = 'UTF-8', float_format='%.3f')
 
 # ###############
 # OUTPUT TO EXCEL
