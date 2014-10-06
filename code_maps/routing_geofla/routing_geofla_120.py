@@ -165,7 +165,9 @@ for route_id, ls_node_ids in dict_120_route_nodes.items():
 import networkx as nx
 G = nx.Graph(dict_graph_nx)
 print nx.dijkstra_path(G, 1, 1000)
-# test_all_len = nx.all_pairs_dijkstra_path_length(G)
+test_all_len = nx.all_pairs_dijkstra_path_length(G)
+enc_json(dict_all_len, os.path.join(path_built, 'dict_all_len_hours.json'))
+
 ## took roughly half a day
 
 # Each commune attached to a node
@@ -180,17 +182,17 @@ for commune_id, commune_rat_info in dict_120_sub['rat_com'].items():
     ls_com_nodes.append(rat[1]['ID_ND_RTE'])
 ls_com_nodes = list(set(ls_com_nodes))
 
-ls_trip_len = []
-com_node_i = ls_com_nodes[0]
-for com_node_j in ls_com_nodes[1:]:
-  # graph appears not to be connected (islands?)
-  try:
-    trip_len = np.round(nx.dijkstra_path_length(G, com_node_i, com_node_j), 2)
-  except:
-    trip_len = np.nan
-  ls_trip_len.append((com_node_i,
-                      com_node_j,
-                      trip_len))
+#ls_trip_len = []
+#com_node_i = ls_com_nodes[0]
+#for com_node_j in ls_com_nodes[1:]:
+#  # graph appears not to be connected (islands?)
+#  try:
+#    trip_len = np.round(nx.dijkstra_path_length(G, com_node_i, com_node_j), 2)
+#  except:
+#    trip_len = np.nan
+#  ls_trip_len.append((com_node_i,
+#                      com_node_j,
+#                      trip_len))
 
 # todo: built dict commune => node (several but ok...)
 

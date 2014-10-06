@@ -143,11 +143,14 @@ ls_consultations_avg = [np.mean(map(lambda x:\
 
 ls_rows_physicians = []
 for id_physician, ls_physician in dict_physicians.items():
+  # [1] : Gender, Last Name, First Name, [2] : Street, [3]: Zip, City
+  # [4] : Convention, Carte vitale, Status, [5] : Nb of locations
   ls_physician_info = [id_physician] +\
                       ls_physician[0][0] +\
                       ls_physician[0][2][0:1]+\
-                      ls_physician[0][2][-1:] +\
-                      ls_physician[2]
+                      ls_physician[0][2][-1:]+\
+                      ls_physician[2]+\
+                      [len(ls_physician[1]) + 1 if ls_physician[1] else 1]
   # prices
   ls_physician_prices = [None for i in ls_unique_services]
   for service in ls_physician[3]:
@@ -164,7 +167,8 @@ for id_physician, ls_physician in dict_physicians.items():
       ls_physician_prices[service_ind] = avg_price
   ls_rows_physicians.append(ls_physician_info + ls_physician_prices)
 columns = ['id_physician', 'gender', 'name', 'surname', 'street',
-           'zip_city', 'convention', 'carte_vitale', 'status'] + ls_unique_services
+           'zip_city', 'convention', 'carte_vitale', 'status', 'nb_loc'] +\
+          ls_unique_services
 df_physicians = pd.DataFrame(ls_rows_physicians, columns = columns)
 df_physicians.set_index('id_physician', inplace= True)
 
@@ -237,9 +241,9 @@ df_physicians['zip_city'] =\
 
 # DISPLAY
 ls_disp_base_1 = ['gender','name', 'surname', 'street', 'zip_city',
-                  'convention', 'carte_vitale', 'status']
+                  'convention', 'carte_vitale', 'status', 'nb_loc']
 ls_disp_base_2 = ['gender','name', 'surname', 'zip_city',
-                  'convention', 'carte_vitale', 'status']
+                  'convention', 'carte_vitale', 'status', 'nb_loc']
 ls_disp_services = ['consultation', 'consultation_0-2a', 'consultation_2-6a', 'ecg']
 
 #print df_physicians[ls_disp_base_1].to_string()
@@ -260,7 +264,7 @@ enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, 'generaliste_75.jso
 
 df_physicians_a = df_physicians[df_physicians['status'] != u'Hopital L'].copy()
 
-# old way => used pd
+#  Overview Paris (compare with official stats?)
 print u'\nNb of Physicians, mean and median visit price by ardt'
 print u'-'*30
 ls_title_print = [u'Ardt', u'#Phys', u'#Phys1', u'#Phys2', u'Mean', u'Med']
@@ -271,14 +275,23 @@ for zc in df_physicians_a['zip_city'].unique():
                                         (df_physicians_a['convention'] == '1')]) 
   nb_physicians_2 = len(df_physicians_a[(df_physicians_a['zip_city'] == zc) &\
                                         (df_physicians_a['convention'] == '2')]) 
-  mean_consultation = df_physicians_a['consultation'][df_physicians_a['zip_city'] == zc].mean()
-  med_consultation = df_physicians_a['consultation'][df_physicians_a['zip_city'] == zc].median()
+  mean_consultation = df_physicians_a['consultation']\
+                        [df_physicians_a['zip_city'] == zc].mean()
+  med_consultation = df_physicians_a['consultation']\
+                       [df_physicians_a['zip_city'] == zc].median()
   print u'{0:12}{1:10d}{2:10d}{3:10d}{4:10.2f}{5:10.2f}'.format(zc,
                                                  nb_physicians,
                                                  nb_physicians_1,
                                                  nb_physicians_2,
                                                  mean_consultation,
                                                  med_consultation)
+
+# Display consultations in Paris
+print df_physicians_a[ls_disp_base_2 + ['consultation', 'id_physician']]\
+        [df_physicians_a['zip_city'].str.slice(start = -5) == 'PARIS'].to_string()
+# incoherence
+print dict_physicians['B7c1mjI4ODa7']
+print dict_physicians['B7c1ljE3MjSw']
 
 ## SYNTAX ELEMENTS
 ##df_physicians[['zip_city', 'consultation']].groupby('convention').agg([len, np.mean])
