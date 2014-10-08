@@ -291,9 +291,11 @@ ls_disp_services = ['c_base', 'c_proba', 'c_min', 'c_max',
 
 # STORE
 
+file_extension = 'generaliste_75_2014'
+
 # CSV
-df_physicians[ls_disp_base_1 + ls_disp_services[:4]].\
-  to_csv(os.path.join(path_dir_built_csv, 'gp_2014.csv'),
+df_physicians[ls_disp_base_1 + ls_disp_services].\
+  to_csv(os.path.join(path_dir_built_csv, '%s.csv' %file_extension),
          encoding = u'utf-8',
          float_format = u'%.1f')
 
@@ -301,11 +303,12 @@ df_physicians[ls_disp_base_1 + ls_disp_services[:4]].\
 df_physicians = df_physicians[ls_disp_base_1 + ls_disp_services].copy()
 df_physicians.reset_index(inplace = True)
 ls_ls_physicians = [list(x) for x in df_physicians.values]
-#enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, 'generaliste_75.json'))
+#enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, '%s_2014.json' %file_extension))
 ## todo: set id_physician back as index?
 
 # PRELIMINARY STATS DES
 
+# exclude these?
 df_physicians_a =\
   df_physicians[(df_physicians['status'] != u'Hopital L')].copy()
 

@@ -122,6 +122,14 @@ df_communes = pd.merge(df_communes,
                        left_index = True,
                        right_index = True)
 
+df_communes.reset_index(inplace = True)
 df_communes.to_csv(os.path.join(path_dir_insee_built, 'df_communes.csv'),
-                   float_format='%.2f', encoding='utf-8', 
-                   index=True, index_label=u'CODGEO')
+                   float_format='%.2f',
+                   encoding='utf-8',
+                   index=False)
+
+#df_communes.to_csv(os.path.join(path_dir_insee_built, 'df_communes.csv'),
+#                   float_format='%.2f',
+#                   encoding='utf-8',
+#                   index=True,
+#                   index_label=u'CODGEO')
