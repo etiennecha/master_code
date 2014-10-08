@@ -16,9 +16,10 @@ path_dir_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json
 
 ls_file_extensions = [u'ophtalmologiste_75',
                       u'generaliste_75',
-                      u'gynecologue-medical_75']
+                      u'gynecologue-medical_75',
+                      u'ophtalmologiste_suburb']
 
-file_extension = ls_file_extensions[2]
+file_extension = ls_file_extensions[3]
 path_ls_ls_physicians = os.path.join(path_dir_built_json, '%s.json' %file_extension)
 path_dict_gps = os.path.join(path_dir_built_json, 'dict_gps_%s.json' %file_extension)
 

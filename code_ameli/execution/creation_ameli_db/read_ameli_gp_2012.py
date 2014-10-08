@@ -44,19 +44,23 @@ for file_ameli_name, file_ameli in zip(ls_ameli_file_names, ls_files_ameli):
   ls_indiv_ids += file_ameli.keys()
 ls_unique_indiv_ids = list(set(ls_indiv_ids))
 
+# Check medecins
+dict_medecins = {}
+for indiv_id, indiv_info in ls_files_ameli[0].items():
+  dict_medecins.setdefault(indiv_info['med_spe'], []).append(indiv_id)
+
 # Check services
 dict_services = {}
 for indiv_id, indiv_info in ls_files_ameli[0].items():
   for service in indiv_info['services']:
     dict_services.setdefault(service['titre_prestation'], []).append(indiv_id)
-
 ls_services_todf = []
 for k,v in dict_services.items():
   if len(v) > 1000:
     # print k, len(v)
     ls_services_todf.append(k)
 
-# Check consultation
+# Check consultation (OLD)
 print u'\nSecteur 1 with depassements:'
 ls_consultations = []
 ls_consultations_prices = []
@@ -67,16 +71,19 @@ for indiv_id, indiv_info in ls_files_ameli[0].items():
       ls_consultations.append((indiv_id, service['prix_prestation']))
       if len(service['prix_prestation']) == 1:
         # ls_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][0][1])
-        ls_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\s?\u20ac', service['prix_prestation'][0])
+        ls_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\s?\u20ac',
+                               service['prix_prestation'][0])
       else:
         # ls_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][1][1])
-        ls_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\s?\u20ac', service['prix_prestation'][1])
+        ls_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\s?\u20ac',
+                               service['prix_prestation'][1])
         # check depassements for secteur1?
         if (indiv_id in ls_files_ameli[4]) and\
            (ls_files_ameli[4][indiv_id]['convention'] == 'secteur1'):
           print indiv_id, service['prix_prestation']
       ls_consultations_prices.append(ls_prices)
-      avg_price = np.mean(map(lambda x: float(x.rstrip(u'\u20ac').replace(u',', u'.')), ls_prices))
+      avg_price = np.mean(map(lambda x: float(x.rstrip(u'\u20ac').replace(u',', u'.')),
+                              ls_prices))
 ls_consultations_avg = [np.mean(map(lambda x:\
                                     float(x.rstrip(u'\u20ac').replace(u',', u'.')),
                                   ls_prices))\
@@ -88,7 +95,7 @@ ls_consultations_avg = [np.mean(map(lambda x:\
 ls_services_todf.remove('Consultation')
 
 print u'\nCollect info to build df (print exceptions)'
-ls_columns = ['name', 'zip_code', 'city', 'sector', 'card']
+ls_columns = ['name', 'zip_code', 'city', 'sector', 'card', 'spe']
 ls_c_cols = ['c_norm', 'c_occu', 'c_min', 'c_max']
 ls_indexes = []
 ls_ls_df_indiv_info = []
@@ -112,9 +119,11 @@ for indiv_id, indiv_info in ls_files_ameli[0].items():
     print indiv_id, indiv_info['address']
   indiv_secteur = None
   indiv_carte_vitale = None
+  # other files if not there?
   if indiv_id in ls_files_ameli[4]:
     indiv_secteur = ls_files_ameli[4][indiv_id]['convention']
     indiv_carte_vitale = ls_files_ameli[4][indiv_id]['carte_vitale']
+  indiv_spe = indiv_info['med_spe'].replace(u'\u2013', u'-')
   ls_physician_prices = [None for i in ls_services_todf]
   ls_consultation_prices = [None, None, None, None]
   for service in indiv_info['services']:
@@ -133,43 +142,10 @@ for indiv_id, indiv_info in ls_files_ameli[0].items():
       ls_physician_prices[service_ind] = avg_price
     # Consultation
     elif service['titre_prestation'] == 'Consultation':
-      normal_price, occu_np, min_price, max_price = None, None, None, None
-      if len(service['prix_prestation']) == 1:
-        normal_price = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\s?\u20ac',
-                            service['prix_prestation'][0])
-        if len(ls_normal_prices) == 1:
-          normal_price = ls_normal_prices[0].rstrip(u'\u20ac').replace(u',', u'.')
-        else:
-          print 'Pbm too many normal prices:', id_physician, service['prix_prestation']
-        occu_np, min_price, max_price = '10', normal_price, normal_price
-        ls_consultation_prices = [normal_price, occu_np, min_price, max_price]
-      elif len(service['prix_prestation']) == 2:
-        # normal price
-        ls_normal_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\s?\u20ac',
-                                      service['prix_prestation'][1]) 
-        if len(ls_normal_prices) == 1:
-          normal_price = ls_normal_prices[0].rstrip(u'\u20ac').replace(u',', u'.')
-        else:
-          print 'Pbm too many normal prices:', id_physician, service['prix_prestation']
-        # occurence of normal price
-        re_occu_np = re.search(u'\(([0-9]) cas', service['prix_prestation'][1])
-        if re_occu_np:
-          occu_np = re_occu_np.group(1)
-        else:
-          print service['prix_prestation'][1]
-        # min and max prices
-        ls_minmax_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\s?\u20ac',
-                                      service['prix_prestation'][0]) 
-        if len(ls_minmax_prices) == 2:
-          min_price = ls_minmax_prices[0].rstrip(u'\u20ac').replace(u',', u'.')
-          max_price = ls_minmax_prices[1].rstrip(u'\u20ac').replace(u',', u'.')
-        else:
-          print 'Pbm no min / max prices:', id_physician, service['prix_prestation']
-        ls_consultation_prices = [normal_price, occu_np, min_price, max_price]
-      else:
-        print 'Pbm too many lines:', id_physician, service['prix_prestation']
+      ls_consultation_prices = get_service_price(indiv_id,
+                                                 service['prix_prestation'])
   ls_df_indiv_info = [indiv_name, indiv_zip, indiv_city,
-                      indiv_secteur, indiv_carte_vitale]+\
+                      indiv_secteur, indiv_carte_vitale, indiv_spe]+\
                      ls_consultation_prices +\
                      ls_physician_prices
   ls_ls_df_indiv_info.append(ls_df_indiv_info)
@@ -178,23 +154,53 @@ df_ameli = pd.DataFrame(ls_ls_df_indiv_info,
                         index = ls_indexes,
                         columns = ls_columns + ls_c_cols + ls_services_todf)
 
+df_ameli = df_ameli[df_ameli['spe'] != u"Médecin gériatre"].copy()
+
+smg = u"Médecin généraliste"
+dict_spe_rep =\
+ {smg : u'MG',
+  u"%s - Homéopathe en mode d'exercice particulier" %smg : u"MG - Hom MEP",
+  u"%s - Acupuncteur en mode d'exercice particulier" %smg : u"MG - Acu MEP",
+  u"%s - Angiologue en mode d'exercice particulier" %smg : u"MG - Ang MEP",
+  u"%s - Angiologue en mode d'exercice exclusif" %smg : u"MG - Ang MEE",
+  u"%s - Médecine appliquée aux sports" %smg +\
+    "en mode d'exercice particulier" : u"MG - Spo MEP",
+  u"%s - Allergologue en mode d'exercice particulier" %smg : u"MG - All MEP",
+  u"%s - Allergologue en mode d'exercice exclusif" %smg : u"MG - All MEE",
+  u"%s - Thermaliste en mode d'exercice particulier" %smg : u"MG - The MEP",
+  u"%s - Acupuncteur en mode d'exercice exclusif" %smg : u"MG - Acu MEE",
+  u"%s - Échographiste en mode d'exercice particulier" %smg : u"MG - Ech MEP",
+  u"%s - Homéopathe en mode d'exercice exclusif" % smg : u"MG - Hom MEE",
+  u"%s - Échographiste en mode d'exercice exclusif" % smg : u"MG - Ech MEE",
+  u"%s - Médecine appliquée aux sports" %smg +\
+    u"en mode d'exercice exclusif" : "MG - Spo MEE",
+  u"%s - Thermaliste en mode d'exercice exclusif" %smg : "MG - The MEE"}
+df_ameli['spe'] =\
+  df_ameli['spe'].apply(
+     lambda x: dict_spe_rep.get(x, None))
+
+# Excludes non GP (a priori)
+#df_gp_2012 = df_ameli[(~df_ameli['spe'].str.contains('exclusif')) &\
+#                      (df_ameli['spe'] != u'Médecin gériatre')].copy()
+df_gp_2012 = df_ameli[df_ameli['spe'] == u'MG'].copy()
+
 # Number by sector
 print u'\nNb of physicians by "secteur"'
-print df_ameli['sector'].value_counts()
+print df_gp_2012['sector'].value_counts()
 
 ## Overview
-#print df_ameli[(df_ameli['dpt'] == '01') & (df_ameli['sector'] == 'secteur2')]\
+#print df_gp_2012[(df_gp_2012['dpt'] == '01') & (df_gp_2012['sector'] == 'secteur2')]\
 #        [ls_columns + ['Consultation']].to_string()
 
 # Number by dpt and sector
 print u'\nNb of physicians by "département" and "secteur"'
-df_ameli['dpt'] = df_ameli['zip_code'].apply(lambda x: x[:2])
-se_nb_by_dpt_and_sector = df_ameli.groupby(['sector', 'dpt']).size()
+df_gp_2012['dpt'] = df_gp_2012['zip_code'].apply(lambda x: x[:2])
+se_nb_by_dpt_and_sector = df_gp_2012.groupby(['sector', 'dpt']).size()
 # print se_nb_by_dpt_and_sector.to_string()
 ls_str_sectors = ('nonconv', 'secteur2', 'secteur1')
 ls_se_sectors_by_dpt = []
 for str_sector in ls_str_sectors:
-  df_sector = df_ameli[df_ameli['sector'] == str_sector]
+  df_sector = df_gp_2012[df_gp_2012['sector'] == str_sector]
   ls_se_sectors_by_dpt.append(df_sector.groupby('dpt').size())
 df_sectors_by_dpt = pd.concat(dict(zip(ls_str_sectors, ls_se_sectors_by_dpt)), axis= 1)
 df_sectors_by_dpt = df_sectors_by_dpt.fillna(0)

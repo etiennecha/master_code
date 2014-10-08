@@ -172,6 +172,7 @@ ls_consultations_avg = [np.mean(map(lambda x:\
 
 # BUILD DF PHYSICIANS
 
+ls_unique_services.remove('Consultation')
 ls_rows_physicians = []
 for id_physician, ls_physician in dict_physicians.items():
   ls_physician_info = [id_physician] +\
@@ -180,22 +181,30 @@ for id_physician, ls_physician in dict_physicians.items():
                       ls_physician[0][2][-1:] +\
                       ls_physician[2]
   # prices
-  ls_physician_prices = [None for i in ls_unique_services]
+  ls_consultation_prices = [None, None, None, None]
+  ls_other_prices = [None for i in ls_unique_services]
   for service in ls_physician[3]:
-    service_ind = ls_unique_services.index(service[0])
-    if service[2]:
-      if len(service[2]) == 1:
-        # ls_service_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][0][1])
-        ls_service_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\u20ac', service[2][0][1])
-      else:
-        # ls_service_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][1][1])
-        ls_service_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\u20ac', service[2][1][1])
-      avg_price = np.mean(map(lambda x: float(x.rstrip(u'\u20ac').replace(u',', u'.')),
-                              ls_service_prices))
-      ls_physician_prices[service_ind] = avg_price
-  ls_rows_physicians.append(ls_physician_info + ls_physician_prices)
+    if service[0] == 'Consultation':
+      ls_consultation_prices = get_service_price(id_physician,
+                                                 [ls_x[-1] for ls_x in service[2]])
+    else:
+      service_ind = ls_unique_services.index(service[0])
+      ls_service_prices = get_service_price(id_physician,
+                                                 [ls_x[-1] for ls_x in service[2]])
+      #if len(service[2]) == 1:
+      #  # ls_service_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][0][1])
+      #  ls_service_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\u20ac', service[2][0][1])
+      #else:
+      #  # ls_service_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][1][1])
+      #  ls_service_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\u20ac', service[2][1][1])
+      #avg_price = np.mean(map(lambda x: float(x.rstrip(u'\u20ac').replace(u',', u'.')),
+      #                        ls_service_prices))
+      ls_other_prices[service_ind] = ls_service_prices[0]
+  ls_rows_physicians.append(ls_physician_info + ls_consultation_prices + ls_other_prices)
 columns = ['id_physician', 'gender', 'name', 'surname', 'street',
-           'zip_city', 'convention', 'carte_vitale', 'status'] + ls_unique_services
+           'zip_city', 'convention', 'carte_vitale', 'status'] +\
+          ['c_base', 'c_proba', 'c_min', 'c_max'] +\
+          ls_unique_services
 df_physicians = pd.DataFrame(ls_rows_physicians, columns = columns)
 df_physicians.set_index('id_physician', inplace= True)
 
@@ -271,7 +280,8 @@ ls_disp_base_1 = ['gender','name', 'surname', 'street', 'zip_city',
                   'convention', 'carte_vitale', 'status']
 ls_disp_base_2 = ['gender','name', 'surname', 'zip_city',
                   'convention', 'carte_vitale', 'status']
-ls_disp_services = ['consultation', 'avis', 'fond', 'imagerie', 'chirurgie_cat']
+ls_disp_services = ['c_base', 'c_proba', 'c_min', 'c_max',
+                    'avis', 'fond', 'imagerie', 'chirurgie_cat']
 print df_physicians[ls_disp_base_1].to_string()
 # print df_physicians[ls_disp_base_2 + ls_disp_services[:3]].to_string()
 
@@ -282,11 +292,18 @@ print df_physicians[ls_disp_base_1].to_string()
 # locations to be kept.. ok for several line but identify (propagate tarifs?)
 
 ## STORE
-#
-#df_physicians.reset_index(inplace = True)
-#ls_ls_physicians = [list(x) for x in df_physicians.values]
-#enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, '%s.json' %file_extension))
-## todo: set id_physician back as index?
+
+# Add base price when only min and max provided
+df_physicians['c_base'][(pd.isnull(df_physicians['c_base'])) &\
+                          (~(pd.isnull(df_physicians['c_min'])))] =\
+  df_physicians[['c_min', 'c_max']][(pd.isnull(df_physicians['c_base'])) &\
+                            (~(pd.isnull(df_physicians['c_min'])))].mean(axis = 1)
+
+df_physicians.reset_index(inplace = True)
+ls_ls_physicians = [list(x) for x in df_physicians.values]
+file_extension = u'ophtalmologiste_suburb' # exception: several files...
+enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, '%s.json' %file_extension))
+# todo: set id_physician back as index?
 
 # PRELIMINARY STATS DES
 
@@ -303,8 +320,8 @@ for dpt in df_physicians_a['dpt'].unique():
                                         (df_physicians_a['convention'] == '1')]) 
   nb_physicians_2 = len(df_physicians_a[(df_physicians_a['dpt'] == dpt) &\
                                         (df_physicians_a['convention'] == '2')]) 
-  mean_consultation = df_physicians_a['consultation'][df_physicians_a['dpt'] == dpt].mean()
-  med_consultation = df_physicians_a['consultation'][df_physicians_a['dpt'] == dpt].median()
+  mean_consultation = df_physicians_a['c_base'][df_physicians_a['dpt'] == dpt].mean()
+  med_consultation = df_physicians_a['c_base'][df_physicians_a['dpt'] == dpt].median()
   print u'{0:12}{1:10d}{2:10d}{3:10d}{4:10.2f}{5:10.2f}'.format(dpt,
                                                                 nb_physicians,
                                                                 nb_physicians_1,

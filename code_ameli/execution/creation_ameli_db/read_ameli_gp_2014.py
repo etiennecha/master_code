@@ -45,6 +45,7 @@ for id_physician, ls_physician in dict_physicians.items():
   for i, elt in enumerate(ls_physician[0]):
     if re.match(u'Médecin généraliste', elt):
       ind_name = i
+      specialty = elt.replace(u'\u2013', u'-')
   ls_name = ls_physician[0][:ind_name]
   ls_address_phone = ls_physician[0][ind_name + 1:]
   if re.match(u'0[0-9]{9}$', ls_address_phone[-1]):
@@ -63,7 +64,8 @@ for id_physician, ls_physician in dict_physicians.items():
   else:
     ls_address = ls_address[-2:]
   dict_physicians[id_physician][0] = [ls_name, phone, ls_address]
-  dict_physicians[id_physician][2] = [x for ls_x in ls_physician[2] for x in ls_x]
+  dict_physicians[id_physician][2] = [x for ls_x in ls_physician[2] for x in ls_x] +\
+                                     [specialty]
 # Check addresses with more than 2 components
 # Standard extraction: ls_address[0] => street, ls_address[-1] => zip_city
 # Fix if would yield bad result
@@ -133,7 +135,8 @@ for id_physician, ls_physician in dict_physicians.items():
         # ls_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][1][1])
         ls_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\u20ac', service[2][1][1])
       ls_consultations_prices.append(ls_prices)
-      avg_price = np.mean(map(lambda x: float(x.rstrip(u'\u20ac').replace(u',', u'.')), ls_prices))
+      avg_price = np.mean(map(lambda x: float(x.rstrip(u'\u20ac').replace(u',', u'.')),
+                          ls_prices))
 ls_consultations_avg = [np.mean(map(lambda x:\
                                     float(x.rstrip(u'\u20ac').replace(u',', u'.')),
                                   ls_prices))\
@@ -141,10 +144,12 @@ ls_consultations_avg = [np.mean(map(lambda x:\
 
 # BUILD DF PHYSICIANS
 
+ls_unique_services.remove('Consultation')
+
 ls_rows_physicians = []
 for id_physician, ls_physician in dict_physicians.items():
   # [1] : Gender, Last Name, First Name, [2] : Street, [3]: Zip, City
-  # [4] : Convention, Carte vitale, Status, [5] : Nb of locations
+  # [4] : Convention, Carte vitale, Status, Specialty [5] : Nb of locations
   ls_physician_info = [id_physician] +\
                       ls_physician[0][0] +\
                       ls_physician[0][2][0:1]+\
@@ -152,22 +157,28 @@ for id_physician, ls_physician in dict_physicians.items():
                       ls_physician[2]+\
                       [len(ls_physician[1]) + 1 if ls_physician[1] else 1]
   # prices
-  ls_physician_prices = [None for i in ls_unique_services]
+  ls_consultation_prices = [None, None, None, None]
+  ls_other_prices = [None for i in ls_unique_services]
   for service in ls_physician[3]:
-    service_ind = ls_unique_services.index(service[0])
-    if service[2]:
-      if len(service[2]) == 1:
-        # ls_service_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][0][1])
-        ls_service_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\u20ac', service[2][0][1])
-      else:
-        # ls_service_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][1][1])
-        ls_service_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\u20ac', service[2][1][1])
-      avg_price = np.mean(map(lambda x: float(x.rstrip(u'\u20ac').replace(u',', u'.')),
-                              ls_service_prices))
-      ls_physician_prices[service_ind] = avg_price
-  ls_rows_physicians.append(ls_physician_info + ls_physician_prices)
+    if service[0] == u'Consultation':
+      ls_consultation_prices = get_service_price(id_physician,
+                                                 [ls_x[-1] for ls_x in service[2]])
+    else:
+      service_ind = ls_unique_services.index(service[0])
+      if service[2]:
+        if len(service[2]) == 1:
+          # ls_service_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][0][1])
+          ls_service_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\u20ac', service[2][0][1])
+        else:
+          # ls_service_prices = re.findall(u'[0-9]{2,3}\u20ac', service[2][1][1])
+          ls_service_prices = re.findall(u'[0-9]{2,4}(?:,[0-9]{0,2})?\u20ac', service[2][1][1])
+        avg_price = np.mean(map(lambda x: float(x.rstrip(u'\u20ac').replace(u',', u'.')),
+                                ls_service_prices))
+        ls_other_prices[service_ind] = avg_price
+  ls_rows_physicians.append(ls_physician_info + ls_consultation_prices + ls_other_prices)
 columns = ['id_physician', 'gender', 'name', 'surname', 'street',
-           'zip_city', 'convention', 'carte_vitale', 'status', 'nb_loc'] +\
+           'zip_city', 'convention', 'carte_vitale', 'status', 'spe', 'nb_loc'] +\
+          ['c_base', 'c_proba', 'c_min', 'c_max'] +\
           ls_unique_services
 df_physicians = pd.DataFrame(ls_rows_physicians, columns = columns)
 df_physicians.set_index('id_physician', inplace= True)
@@ -213,13 +224,37 @@ df_physicians['status'] =\
   df_physicians['status'].apply(
      lambda x: dict_status_rep.get(x, None))
 
+# specialty
+smg = u"Médecin généraliste"
+dict_spe_rep =\
+ {smg : u'MG',
+  u"%s - Homéopathe en mode d'exercice particulier" %smg : u"MG - Hom MEP",
+  u"%s - Acupuncteur en mode d'exercice particulier" %smg : u"MG - Acu MEP",
+  u"%s - Angiologue en mode d'exercice particulier" %smg : u"MG - Ang MEP",
+  u"%s - Angiologue en mode d'exercice exclusif" %smg : u"MG - Ang MEE",
+  u"%s - Médecine appliquée aux sports" %smg +\
+    "en mode d'exercice particulier" : u"MG - Spo MEP",
+  u"%s - Allergologue en mode d'exercice particulier" %smg : u"MG - All MEP",
+  u"%s - Allergologue en mode d'exercice exclusif" %smg : u"MG - All MEE",
+  u"%s - Thermaliste en mode d'exercice particulier" %smg : u"MG - The MEP",
+  u"%s - Acupuncteur en mode d'exercice exclusif" %smg : u"MG - Acu MEE",
+  u"%s - Échographiste en mode d'exercice particulier" %smg : u"MG - Ech MEP",
+  u"%s - Homéopathe en mode d'exercice exclusif" % smg : u"MG - Hom MEE",
+  u"%s - Échographiste en mode d'exercice exclusif" % smg : u"MG - Ech MEE",
+  u"%s - Médecine appliquée aux sports" %smg +\
+    u"en mode d'exercice exclusif" : "MG - Spo MEE",
+  u"%s - Thermaliste en mode d'exercice exclusif" %smg : "MG - The MEE"}
+df_physicians['spe'] =\
+  df_physicians['spe'].apply(
+     lambda x: dict_spe_rep.get(x, None))
+
 # Some standardization of service columns
 df_physicians.rename(\
-  columns = {u'Consultation' : 'consultation',
+  columns = {# u'Consultation' : 'consultation',
              u'Consultation spécifique pour un enfant de moins de 2 ans' :\
-                u'consultation_0-2a',
+                u'c_0-2a',
              u"Consultation spécifique pour un enfant entre 2 et 6 ans" :\
-                u"consultation_2-6a",
+                u"c_2-6a",
              u"Électrocardiographie [ECG]" : "ecg"}, inplace = True)
 
 # zip_city
@@ -241,10 +276,11 @@ df_physicians['zip_city'] =\
 
 # DISPLAY
 ls_disp_base_1 = ['gender','name', 'surname', 'street', 'zip_city',
-                  'convention', 'carte_vitale', 'status', 'nb_loc']
+                  'convention', 'carte_vitale', 'status', 'spe', 'nb_loc']
 ls_disp_base_2 = ['gender','name', 'surname', 'zip_city',
-                  'convention', 'carte_vitale', 'status', 'nb_loc']
-ls_disp_services = ['consultation', 'consultation_0-2a', 'consultation_2-6a', 'ecg']
+                  'convention', 'carte_vitale', 'status', 'spe', 'nb_loc']
+ls_disp_services = ['c_base', 'c_proba', 'c_min', 'c_max',
+                    'c_0-2a', 'c_2-6a', 'ecg']
 
 #print df_physicians[ls_disp_base_1].to_string()
 #print df_physicians[ls_disp_base_2 + ls_disp_services].to_string()
@@ -257,12 +293,13 @@ ls_disp_services = ['consultation', 'consultation_0-2a', 'consultation_2-6a', 'e
 df_physicians = df_physicians[ls_disp_base_1 + ls_disp_services].copy()
 df_physicians.reset_index(inplace = True)
 ls_ls_physicians = [list(x) for x in df_physicians.values]
-enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, 'generaliste_75.json'))
-# todo: set id_physician back as index?
+#enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, 'generaliste_75.json'))
+## todo: set id_physician back as index?
 
 # PRELIMINARY STATS DES
 
-df_physicians_a = df_physicians[df_physicians['status'] != u'Hopital L'].copy()
+df_physicians_a =\
+  df_physicians[(df_physicians['status'] != u'Hopital L')].copy()
 
 #  Overview Paris (compare with official stats?)
 print u'\nNb of Physicians, mean and median visit price by ardt'
@@ -275,9 +312,9 @@ for zc in df_physicians_a['zip_city'].unique():
                                         (df_physicians_a['convention'] == '1')]) 
   nb_physicians_2 = len(df_physicians_a[(df_physicians_a['zip_city'] == zc) &\
                                         (df_physicians_a['convention'] == '2')]) 
-  mean_consultation = df_physicians_a['consultation']\
+  mean_consultation = df_physicians_a['c_base']\
                         [df_physicians_a['zip_city'] == zc].mean()
-  med_consultation = df_physicians_a['consultation']\
+  med_consultation = df_physicians_a['c_base']\
                        [df_physicians_a['zip_city'] == zc].median()
   print u'{0:12}{1:10d}{2:10d}{3:10d}{4:10.2f}{5:10.2f}'.format(zc,
                                                  nb_physicians,
@@ -285,13 +322,20 @@ for zc in df_physicians_a['zip_city'].unique():
                                                  nb_physicians_2,
                                                  mean_consultation,
                                                  med_consultation)
+# Secteur 2 in paris
+df_physicians.sort('zip_city', inplace = True)
+print df_physicians[['id_physician'] + ls_disp_base_2 + ls_disp_services]\
+        [(df_physicians['convention'] == '2') &\
+         (df_physicians['spe'] == 'MG')].to_string()
 
-# Display consultations in Paris
-print df_physicians_a[ls_disp_base_2 + ['consultation', 'id_physician']]\
-        [df_physicians_a['zip_city'].str.slice(start = -5) == 'PARIS'].to_string()
-# incoherence
-print dict_physicians['B7c1mjI4ODa7']
-print dict_physicians['B7c1ljE3MjSw']
+# TODO: either drop pediatrie or generalize price extraction
+
+## Display consultations in Paris
+#print df_physicians_a[ls_disp_base_2 + ['consultation', 'id_physician']]\
+#        [df_physicians_a['zip_city'].str.slice(start = -5) == 'PARIS'].to_string()
+## incoherence
+#print dict_physicians['B7c1mjI4ODa7']
+#print dict_physicians['B7c1ljE3MjSw']
 
 ## SYNTAX ELEMENTS
 ##df_physicians[['zip_city', 'consultation']].groupby('convention').agg([len, np.mean])
