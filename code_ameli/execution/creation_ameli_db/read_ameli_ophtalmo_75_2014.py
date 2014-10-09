@@ -261,17 +261,17 @@ df_physicians['c_base'][(pd.isnull(df_physicians['c_base'])) &\
   df_physicians[['c_min', 'c_max']][(pd.isnull(df_physicians['c_base'])) &\
                             (~(pd.isnull(df_physicians['c_min'])))].mean(axis = 1)
 
-# CSV
-df_physicians[ls_disp_base_1 + ls_disp_services[:4]].\
-  to_csv(os.path.join(path_dir_built_csv, '%s_2014.csv' %file_extension),
-         encoding = u'utf-8',
-         float_format = u'%.1f')
+## CSV
+#df_physicians[ls_disp_base_1 + ls_disp_services[:4]].\
+#  to_csv(os.path.join(path_dir_built_csv, '%s_2014.csv' %file_extension),
+#         encoding = u'utf-8',
+#         float_format = u'%.1f')
 
-# JSON
-df_physicians.reset_index(inplace = True)
-ls_ls_physicians = [list(x) for x in df_physicians.values]
+## JSON
+#df_physicians.reset_index(inplace = True)
+#ls_ls_physicians = [list(x) for x in df_physicians.values]
 #enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, '%s_2014.json' %file_extension))
-## todo: set id_physician back as index?
+### todo: set id_physician back as index?
 
 # PRELIMINARY STATS DES
 

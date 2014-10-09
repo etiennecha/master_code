@@ -18,6 +18,7 @@ import matplotlib.ticker as tkr
 path_dir_ameli = os.path.join(path_data, u'data_ameli', 'data_source', 'ameli_2014')
 path_dir_built_csv= os.path.join(path_data, u'data_ameli', 'data_built', 'csv')
 path_dir_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json')
+path_dir_built_png = os.path.join(path_data, u'data_ameli', 'data_built', 'png')
 #path_dir_built_hdf5 = os.path.join(path_data, u'data_ameli', 'data_built', 'hdf5')
 #ameli_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'ameli_data.h5'))
 
@@ -28,6 +29,7 @@ df_physicians = pd.read_csv(os.path.join(path_dir_built_csv, '%s.csv' %file_exte
 ## BIAS?
 for field in ['c_base', 'c_proba', 'c_min', 'c_max']:
   df_physicians[field][df_physicians['status'] == 'Hopital L'] = np.nan
+df_physicians = df_physicians[df_physicians['status'] != 'Hopital L'].copy()
 
 ## todo: geog and distance in other script (try to separate creation vs. analysis)
 #dict_gps = dec_json(os.path.join(path_dir_built_json, 'dict_gps_%s.json' %file_extension))
@@ -94,32 +96,43 @@ print df_ardts[['CODGEO', 'nb_phy', 'phy_density', 'phy_s2_density'] +\
 
 phy = 'ophtalmologists'
 
-## Scatter: Density of GPs vs. Median revenue
-#df_ardts['ardt'] = df_ardts['CODGEO'].str.slice(start = 3)
-#fig, ax = plt.subplots()
-#ax.scatter(df_ardts['QUAR2UC10'], df_ardts['phy_density'])
-#for row_i, row in df_ardts.iterrows():
-#  ax.annotate(row['ardt'], (row['QUAR2UC10'], row['phy_density'] + 2))
-#x_format = tkr.FuncFormatter('{:,.0f}'.format)
-#ax.xaxis.set_major_formatter(x_format)
-#plt.xlabel('Median fiscal revenue by household (euros)')
-## Add precision about households
-#plt.ylabel('Nb of %s per 100,000 inhab.' %phy)
+dpi = 300
+width, height = 12, 5
+
+# Scatter: Density of GPs vs. Median revenue
+df_ardts['ardt'] = df_ardts['CODGEO'].str.slice(start = 3)
+fig, ax = plt.subplots()
+ax.scatter(df_ardts['QUAR2UC10'], df_ardts['phy_density'])
+for row_i, row in df_ardts.iterrows():
+  ax.annotate(row['ardt'], (row['QUAR2UC10'], row['phy_density'] + 2))
+x_format = tkr.FuncFormatter('{:,.0f}'.format)
+ax.xaxis.set_major_formatter(x_format)
+plt.xlabel('Median fiscal revenue by household (euros)')
+plt.ylabel('Nb of %s per 100,000 inhab.' %phy)
 #plt.title('Density of %s vs. revenue by district' %phy)
+plt.tight_layout() 
+fig.set_size_inches(width, height)
+plt.savefig(os.path.join(path_dir_built_png, 'Ophtalmo_Ardt_DensityVsRevenue.png'),
+            dpi = dpi)
+plt.close()
 #plt.show()
-#
-## Scatter: Density of Sector 1 GPs vs. Median revenue
-#df_ardts['ardt'] = df_ardts['CODGEO'].str.slice(start = 3)
-#fig, ax = plt.subplots()
-#ax.scatter(df_ardts['QUAR2UC10'], df_ardts['phy_s1_density'])
-#for row_i, row in df_ardts.iterrows():
-#  ax.annotate(row['ardt'], (row['QUAR2UC10'], row['phy_s1_density'] + 2))
-#x_format = tkr.FuncFormatter('{:,.0f}'.format)
-#ax.xaxis.set_major_formatter(x_format)
-#plt.xlabel('Median fiscal revenue by household (euros)')
-## Add precision about households
-#plt.ylabel('Nb of Sector 1 %s per 100,000 inhab.' %phy)
+
+# Scatter: Density of Sector 1 GPs vs. Median revenue
+df_ardts['ardt'] = df_ardts['CODGEO'].str.slice(start = 3)
+fig, ax = plt.subplots()
+ax.scatter(df_ardts['QUAR2UC10'], df_ardts['phy_s1_density'])
+for row_i, row in df_ardts.iterrows():
+  ax.annotate(row['ardt'], (row['QUAR2UC10'], row['phy_s1_density'] + 2))
+x_format = tkr.FuncFormatter('{:,.0f}'.format)
+ax.xaxis.set_major_formatter(x_format)
+plt.xlabel('Median fiscal revenue by household (euros)')
+plt.ylabel('Nb of Sector 1 %s per 100,000 inhab.' %phy)
 #plt.title('Density of Sector 1 %s vs. revenue by district' %phy)
+plt.tight_layout() 
+fig.set_size_inches(width, height)
+plt.savefig(os.path.join(path_dir_built_png, 'Ophtalmo_Ardt_DensityS1VsRevenue.png'),
+            dpi = dpi)
+plt.close()
 #plt.show()
 
 # Scatter: Density of Sector 2 GPs vs. Median revenue
@@ -133,8 +146,13 @@ ax.xaxis.set_major_formatter(x_format)
 plt.xlabel('Median fiscal revenue by household (euros)')
 # Add precision about households
 plt.ylabel('Nb of Sector 2 %s per 100,000 inhab.' %phy)
-plt.title('Density of Sector 2 %s vs. revenue by district' %phy)
-plt.show()
+#plt.title('Density of Sector 2 %s vs. revenue by district' %phy)
+plt.tight_layout() 
+fig.set_size_inches(width, height)
+plt.savefig(os.path.join(path_dir_built_png, 'Ophtalmo_Ardt_DensityS2VsRevenue.png'),
+            dpi = dpi)
+plt.close()
+#plt.show()
 
 # Scatter: Average consultation price vs. Median revenue
 df_ardts['ardt'] = df_ardts['CODGEO'].str.slice(start = 3)
@@ -145,21 +163,39 @@ for row_i, row in df_ardts.iterrows():
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
 plt.xlabel('Median fiscal revenue by household (euros)')
-# Add precision about households
 plt.ylabel('Average sector 2 consultation price (euros)')
-plt.title('Average consultation price vs. revenue by district')
-plt.show()
+#plt.title('Average consultation price vs. revenue by district')
+plt.tight_layout() 
+fig.set_size_inches(width, height)
+plt.savefig(os.path.join(path_dir_built_png, 'Ophtalmo_Ardt_ConsultationS2VsRevenue.png'),
+            dpi = dpi)
+plt.close()
+#plt.show()
 
-# Check spread
-df_physicians['spread'] = df_physicians['c_max'] - df_physicians['c_base']
+
+# Seems differences linked largely to status / convention
+
+import statsmodels.formula.api as smf
+df_physicians_s2 = df_physicians[df_physicians['convention'] == '2'].copy()
+df_physicians_s2 = pd.merge(df_physicians_s2, df_ardts, left_on = 'CODGEO', right_on = 'CODGEO')
+
+formula = 'c_base ~ C(status) + phy_density + QUAR2UC10'
+res01 = smf.ols(formula = formula, data = df_physicians_s2, missing= 'drop').fit()
+print res01.summary()
+
+# ADD age
+
+# Check spread (s2 only... investigate status differences)
+df_physicians_s2['spread'] = df_physicians_s2['c_max'] - df_physicians_s2['c_base']
 ls_spread = []
-for ardt in df_physicians['CODGEO'].unique():
-	ls_spread.append(df_physicians['spread'][df_physicians['CODGEO'] == ardt].describe())
-df_spread = pd.concat(ls_spread, axis = 1, keys = df_physicians['CODGEO'].unique()).T
+for ardt in df_physicians_s2['CODGEO'].unique():
+	ls_spread.append(df_physicians_s2['spread'][df_physicians_s2['CODGEO'] == ardt].describe())
+df_spread = pd.concat(ls_spread, axis = 1, keys = df_physicians_s2['CODGEO'].unique()).T
 df_spread.sort('count', ascending = False, inplace = True)
 print df_spread.to_string()
 
-# Seems differences linked largely to status / convention
+plt.scatter(df_physicians_s2['spread'], df_physicians_s2['c_proba'])
+plt.show()
 
 # UPDATE FOLLOWING
 
