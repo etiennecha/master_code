@@ -4,6 +4,7 @@
 import add_to_path
 from add_to_path import path_data
 from generic_ameli import *
+from matching_insee import *
 import numpy as np
 import pandas as pd
 import pprint
@@ -46,6 +47,30 @@ df_inscom = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_communes.csv')
 ls_disp_base = ['gender','name', 'surname', 'zip_city',
                 'convention', 'carte_vitale', 'status', 'spe', 'nb_loc']
 
+# LOAD INSEE CORRESPONDENCE (get rid)
+
+path_dir_match_insee = os.path.join(path_data, u'data_insee', 'match_insee_codes')
+
+# Load zip code - insee code correspondence file
+file_correspondence = open(os.path.join(path_dir_match_insee,
+                                        'corr_cinsee_cpostal'),'r')
+correspondence = file_correspondence.read().split('\n')[1:-1]
+
+# Update changes in city codes (correspondence is a bit old)
+file_correspondence_update = open(os.path.join(path_dir_match_insee,
+                                               'corr_cinsee_cpostal_update'),'r')
+correspondence_update = file_correspondence_update.read().split('\n')[1:]
+correspondence += correspondence_update
+
+# Patch ad hoc for gas station cedexes
+file_correspondence_gas_path = open(os.path.join(path_dir_match_insee,
+                                                 'corr_cinsee_cpostal_gas_patch'),'r')
+correspondence_gas_patch = file_correspondence_gas_path.read().split('\n')
+correspondence += correspondence_gas_patch
+correspondence = [row.split(';') for row in correspondence]
+
+correspondence = format_correspondence(correspondence)
+
 # ############
 # STATS DES
 # ############
@@ -62,7 +87,29 @@ df_physicians['city'] = df_physicians['zip_city'].apply(\
                           lambda x: re.match(pat_city, x).group(1).\
                                       replace('CEDEX', '').strip())
 
+# Add hoc corrections
+ls_city_fix = [(u'GRETZ ARMAINVILLERS', u'GRETZ ARMAINVILLIERS'),
+               (u'MAREUILS LES MEAUX', u'MAREUIL LES MEAUX')]
+for old, new in ls_city_fix:
+  df_physicians['city'][df_physicians['city'] == old] = new
+
 # todo: automated insee code matching based on dpt and commune name
+ls_match_res = []
+for row_i, row in df_physicians.iterrows():
+  city, dpt_code, zip_code = format_str_city_insee(row['city']), row['dpt'], row['zip']
+  match_res = match_insee_code(correspondence, city, dpt_code, zip_code)
+  ls_match_res.append(match_res)
+# if several matched: check if only one code insee, if not: None + error message
+ls_rows = []
+for match_res in ls_match_res:
+  if (len(match_res[0]) == 1) or\
+     ([x[2] == match_res[0][0][2] for x in match_res[0]]):
+    ls_rows.append(match_res[0][0][2])
+  else:
+    ls_rows.append(None)
+se_insee_codes = pd.Series(ls_rows, index = df_physicians.index)
+df_physicians['CODGEO'] = se_insee_codes
+
 
 ## ARDT
 #

@@ -183,3 +183,19 @@ for commune_id, commune_rat_info in dict_120_sub['rat_com'].items():
 ls_com_nodes = list(set(ls_com_nodes))
 
 dict_all_len = dec_json(os.path.join(path_built, 'dict_all_len_hours.json'))
+
+## Nodes connected to municipalities
+#ls_com_nodes_str = ['%s' %x for x in ls_com_nodes]
+#ls_com_len = [[dict_all_len[i].get(j, np.nan) for j in ls_com_nodes_str]\
+#                for i in ls_com_nodes_str]
+#ar_com_len = np.array(ls_com_len)
+#np.save(os.path.join(path_built, 'ar_com_len_hours.npy'), ar_com_len)
+#enc_json(ls_com_nodes_str, os.path.join(path_built, 'ls_com_nodes_str.json'))
+
+## All nodes
+#ls_all_nodes_str = dict_all_len.keys()
+#ls_all_len = [[dict_all_len[i].get(j, np.nan) for j in ls_all_nodes_str]\
+#                for i in ls_all_nodes_str]
+#ar_all_len = np.array(ls_all_len)
+#np.save(os.path.join(path_built, 'ar_all_len_hours.npy'), ar_all_len)
+#enc_json(ls_all_nodes_str, os.path.join(path_built, 'ls_all_nodes_str.json'))
