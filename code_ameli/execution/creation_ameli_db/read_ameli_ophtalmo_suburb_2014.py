@@ -15,10 +15,10 @@ import statsmodels as sm
 import statsmodels.formula.api as smf
 
 path_dir_ameli = os.path.join(path_data, u'data_ameli', 'data_source', 'ameli_2014')
+path_dir_built_csv= os.path.join(path_data, u'data_ameli', 'data_built', 'csv')
 path_dir_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json')
-
-#file_extension = u'ophtalmologiste_75'
-#ls_ls_physicians = dec_json(os.path.join(path_dir_ameli, u'ls_ls_%s' %file_extension))
+#path_dir_built_hdf5 = os.path.join(path_data, u'data_ameli', 'data_built', 'hdf5')
+#ameli_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'ameli_data.h5'))
 
 dict_physicians = {}
 for i in [77, 78, 92, 93, 94, 95]:
@@ -299,11 +299,19 @@ df_physicians['c_base'][(pd.isnull(df_physicians['c_base'])) &\
   df_physicians[['c_min', 'c_max']][(pd.isnull(df_physicians['c_base'])) &\
                             (~(pd.isnull(df_physicians['c_min'])))].mean(axis = 1)
 
-df_physicians.reset_index(inplace = True)
-ls_ls_physicians = [list(x) for x in df_physicians.values]
-file_extension = u'ophtalmologiste_suburb' # exception: several files...
-enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, '%s.json' %file_extension))
-# todo: set id_physician back as index?
+file_extension = u'ophtalmologiste_suburb_2014' # exception: several files...
+
+## CSV
+#df_physicians.\
+#  to_csv(os.path.join(path_dir_built_csv, '%s.csv' %file_extension),
+#         encoding = u'utf-8',
+#         float_format = u'%.1f')
+#
+## JSON
+#df_physicians.reset_index(inplace = True)
+#ls_ls_physicians = [list(x) for x in df_physicians.values]
+#enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, '%s.json' %file_extension))
+## todo: set id_physician back as index?
 
 # PRELIMINARY STATS DES
 
