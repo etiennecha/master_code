@@ -182,7 +182,9 @@ for commune_id, commune_rat_info in dict_120_sub['rat_com'].items():
     ls_com_nodes.append(rat[1]['ID_ND_RTE'])
 ls_com_nodes = list(set(ls_com_nodes))
 
-dict_all_len = dec_json(os.path.join(path_built, 'dict_all_len_hours.json'))
+# DONE (LONG EXECUTION TIME)
+
+# dict_all_len = dec_json(os.path.join(path_built, 'dict_all_len_hours.json'))
 
 ## Nodes connected to municipalities
 #ls_com_nodes_str = ['%s' %x for x in ls_com_nodes]
@@ -199,3 +201,19 @@ dict_all_len = dec_json(os.path.join(path_built, 'dict_all_len_hours.json'))
 #ar_all_len = np.array(ls_all_len)
 #np.save(os.path.join(path_built, 'ar_all_len_hours.npy'), ar_all_len)
 #enc_json(ls_all_nodes_str, os.path.join(path_built, 'ls_all_nodes_str.json'))
+
+# IN PROGRESS
+# todo: load ar_com len and ls_com_nodes_str
+
+ar_com_len = np.load(os.path.join(path_built, 'ar_com_len_hours.npy'))
+ls_com_nodes_str = dec_json(os.path.join(path_built, 'ls_com_nodes_str.json'))
+ls_com_nodes = [int(x) for x in ls_com_nodes_str]
+
+dict_node_cities = {}
+for k,v in dict_120_sub['rat_com'].items():
+  for x in v:
+    dict_node_cities.setdefault(x[1]['ID_ND_RTE'], []).append((x[1]['ID_RTE120'],
+                                                               x[1]['DISTANCE']))
+
+# cities on same node? google geocoding? (heterogeneity vs. rest?)
+dict_node_cities[ls_com_nodes[43]]
