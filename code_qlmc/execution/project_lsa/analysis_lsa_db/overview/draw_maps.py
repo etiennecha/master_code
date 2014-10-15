@@ -91,12 +91,10 @@ df_com = df_com[df_com['reg_name'] != 'CORSE']
 
 
 # LSA Data
-df_lsa_int = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_int.csv'),
-                         encoding = 'UTF-8')
-df_lsa_gps = df_lsa_int[(df_lsa_int['Type_alt'] != 'DRIN') &\
-                        (df_lsa_int['Type_alt'] != 'DRIVE')]
+df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
+                     encoding = 'UTF-8')
 
-df_lsa_gps['point'] = df_lsa_gps[['Longitude', 'Latitude']].apply(\
+df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
                         lambda x: Point(m_fra(x[0], x[1])), axis = 1)
 
 # ##############
@@ -106,8 +104,8 @@ df_lsa_gps['point'] = df_lsa_gps[['Longitude', 'Latitude']].apply(\
 # MATCH LSA INSEE CODES WITH GEO FLA COM INSEE CODES
 df_com.set_index('insee_code', inplace = True)
 
-df_lsa_gps['Code INSEE'] = df_lsa_gps['Code INSEE'].apply(lambda x : '{:05d}'.format(x))
-df_lsa_gps['Code postal'] = df_lsa_gps['Code postal'].apply(lambda x : '{:05d}'.format(x))
+df_lsa['Code INSEE'] = df_lsa['Code INSEE'].apply(lambda x : '{:05d}'.format(x))
+df_lsa['Code postal'] = df_lsa['Code postal'].apply(lambda x : '{:05d}'.format(x))
 
 def get_insee_from_zip_ardt(zip_code):
 # fix: ['75056', '13055', '69123']
@@ -118,20 +116,31 @@ def get_insee_from_zip_ardt(zip_code):
   return zip_code # actually an ardt insee code
 
 ls_insee_bc = ['75056', '13055', '69123']
-df_lsa_gps['Code INSEE'][df_lsa_gps['Code INSEE'].isin(ls_insee_bc)] =\
-    df_lsa_gps['Code postal'][df_lsa_gps['Code INSEE'].isin(ls_insee_bc)].apply(\
+df_lsa['Code INSEE'][df_lsa['Code INSEE'].isin(ls_insee_bc)] =\
+    df_lsa['Code postal'][df_lsa['Code INSEE'].isin(ls_insee_bc)].apply(\
        lambda x: get_insee_from_zip_ardt(x))
 
-df_lsa_gps[df_lsa_gps['Code INSEE'] == '76095'] = '76108' # fusion de communes
+df_lsa[df_lsa['Code INSEE'] == '76095'] = '76108' # fusion de communes
 
-se_com_vc = df_lsa_gps['Code INSEE'].value_counts()
-ls_pbms = [insee_code for insee_code in df_lsa_gps['Code INSEE'].unique()\
+se_com_vc = df_lsa['Code INSEE'].value_counts()
+ls_pbms = [insee_code for insee_code in df_lsa['Code INSEE'].unique()\
              if insee_code not in df_com.index]
 
 # Nb stores by commune
-se_ic_vc = df_lsa_gps['Code INSEE'].value_counts()
+se_ic_vc = df_lsa['Code INSEE'].value_counts()
 df_com['nb_stores'] = se_com_vc
 # for density map: want np.nan, not 0
+
+# Read df_com_comp
+df_com_comp = pd.read_csv(os.path.join(path_dir_built_csv,
+                                             'df_com_comp.csv'))
+# specify column types on (writing?) reading?
+df_com_comp['code_insee'] = df_com_comp['code_insee'].apply(\
+                              lambda x: "{:05d}".format(x)\
+                                if (type(x) == np.int64 or type(x) == long) else x)
+
+df_com = pd.merge(df_com, df_com_comp,
+                  left_index = True, right_on = 'code_insee')
 
 # #########################
 # MAPS
@@ -168,18 +177,22 @@ df_com['nb_stores'] = se_com_vc
 # todo: store density by com (do here or import?)
 
 # Calculate Jenks natural breaks for density
-breaks = nb(
-    df_com[df_com['nb_stores'].notnull()]['nb_stores'].values,
-    initial=300,
-    k=5)
+
+field = 'All_dist' # set relevant digits for jenks labels
+
+breaks = nb(df_com[df_com[field].notnull()][field].values,
+            initial=20,
+            k=5)
 # the notnull method lets us match indices when joining
-jb = pd.DataFrame({'jenks_bins': breaks.yb}, index=df_com[df_com['nb_stores'].notnull()].index)
+jb = pd.DataFrame({'jenks_bins': breaks.yb}, index=df_com[df_com[field].notnull()].index)
 df_com = df_com.join(jb)
 df_com.jenks_bins.fillna(-1, inplace=True)
 
-jenks_labels = ["<= {:0.0f} stores ({:d} mun.)".format(b, c) for b, c in zip(
-    breaks.bins, breaks.counts)]
-jenks_labels.insert(0, 'No store ({:5d} mun.)'.format(len(df_com[df_com['nb_stores'].isnull()])))
+jenks_labels = ["<= {:0.2f} {:s} ({:d} mun.)".format(b, field, c) for b, c in zip(
+                  breaks.bins, breaks.counts)]
+# if there are 0
+if len(df_com[df_com[field].isnull()]) != 0:
+  jenks_labels.insert(0, 'Null ({:5d} mun.)'.format(len(df_com[df_com[field].isnull()])))
 
 plt.clf()
 fig = plt.figure()
@@ -213,12 +226,13 @@ m_fra.drawmapscale(-3.,
 
 #ax.autoscale_view(True, True, True)
 #plt.axis('off')
-plt.title('Nb of stores by municipality')
+plt.title('%s by municipality' % field)
 plt.tight_layout()
 # fig.set_size_inches(7.22, 5.25) # set the image width to 722px
 plt.savefig(os.path.join(path_data, 'data_maps', 'data_built',
-                         'graphs', 'lsa', 'fra_com_nb_stores.png'),
+                         'graphs', 'lsa', 'fra_com_%s.png' %field),
             dpi=700, alpha=True)
+plt.close()
 #plt.show()
 
 #MAPS BY DPT
@@ -267,10 +281,10 @@ plt.savefig(os.path.join(path_data, 'data_maps', 'data_built',
 #w2 = ur_corner[0] - ll_corner[0]
 #h2 = ur_corner[1] - ll_corner[1]
 #
-#for retail_group in df_lsa_gps['Groupe'].unique():
+#for retail_group in df_lsa['Groupe'].unique():
 #  c = 0
 #  img = np.zeros((h2/1000, w2/1000))
-#  for station in df_lsa_gps['point'][df_lsa_gps['Groupe'] == retail_group]:
+#  for station in df_lsa['point'][df_lsa['Groupe'] == retail_group]:
 #    yn = (station.y - ll_corner[1]) / 1000
 #    xn = (station.x - ll_corner[0]) / 1000
 #    try:
