@@ -193,63 +193,63 @@ hhi = (df_rgps['market_share']**2).sum()
 # EXECUTION
 # ##########
 
-# SURFACE AVAILABLE TO EACH COMMUNE
-df_com['avail_surf'] = np.nan
-df_com['hhi'] = np.nan
-for store_type in ['H', 'X', 'S']:
-  df_com['%s_ens' %store_type] = None
-  df_com['%s_dist' %store_type] = np.nan
+## SURFACE AVAILABLE TO EACH COMMUNE
+#df_com['avail_surf'] = np.nan
+#df_com['hhi'] = np.nan
+#for store_type in ['H', 'X', 'S']:
+#  df_com['%s_ens' %store_type] = None
+#  df_com['%s_dist' %store_type] = np.nan
+#
+#for i, row in df_com.iterrows():
+#  df_lsa['lat_com'] = row['lat_cl']
+#  df_lsa['lng_com'] = row['lng_cl']
+#  df_lsa['dist'] = compute_distance_ar(df_lsa['Latitude'],
+#                                       df_lsa['Longitude'],
+#                                       df_lsa['lat_com'],
+#                                       df_lsa['lng_com'])
+#  df_lsa['wgt_surf'] = np.exp(-df_lsa['dist']/10) * df_lsa['Surf Vente']
+#  df_com['avail_surf'].ix[i] = df_lsa['wgt_surf'].sum()
+#
+#  df_rgps = df_lsa[['Groupe', 'wgt_surf']].groupby('Groupe').agg([sum])['wgt_surf']
+#  df_rgps['market_share'] = df_rgps['sum'] / df_rgps['sum'].sum()
+#  df_com['hhi'].ix[i] = (df_rgps['market_share']**2).sum()
+#  
+#  for store_type in ['H', 'X', 'S']:
+#    store_ind = df_lsa['dist'][df_lsa['Type_alt'] == '%s' %store_type].argmin()
+#    df_com['%s_ens' %store_type].ix[i] = df_lsa['Enseigne'].loc[store_ind]
+#    df_com['%s_dist' %store_type].ix[i] = df_lsa['dist'].loc[store_ind]
+#
+#df_com['All_dist'] = df_com[['H_dist', 'S_dist', 'X_dist']].min(axis = 1)
+#
+## output
+#ls_disp_com_comp = ['code_insee', 'avail_surf', 'hhi',
+#                    'All_dist', 'H_dist', 'S_dist', 'X_dist',
+#                    'H_ens', 'S_ens', 'X_ens']
+#df_com[ls_disp_com_comp].to_csv(os.path.join(path_dir_built_csv,
+#                                             'df_com_comp.csv'),
+#                                 index = False,
+#                                 encoding = 'utf-8')
 
-for i, row in df_com.iterrows():
-  df_lsa['lat_com'] = row['lat_cl']
-  df_lsa['lng_com'] = row['lng_cl']
-  df_lsa['dist'] = compute_distance_ar(df_lsa['Latitude'],
-                                       df_lsa['Longitude'],
-                                       df_lsa['lat_com'],
-                                       df_lsa['lng_com'])
-  df_lsa['wgt_surf'] = np.exp(-df_lsa['dist']/10) * df_lsa['Surf Vente']
-  df_com['avail_surf'].ix[i] = df_lsa['wgt_surf'].sum()
-
-  df_rgps = df_lsa[['Groupe', 'wgt_surf']].groupby('Groupe').agg([sum])['wgt_surf']
-  df_rgps['market_share'] = df_rgps['sum'] / df_rgps['sum'].sum()
-  df_com['hhi'].ix[i] = (df_rgps['market_share']**2).sum()
-  
-  for store_type in ['H', 'X', 'S']:
-    store_ind = df_lsa['dist'][df_lsa['Type_alt'] == '%s' %store_type].argmin()
-    df_com['%s_ens' %store_type].ix[i] = df_lsa['Enseigne'].loc[store_ind]
-    df_com['%s_dist' %store_type].ix[i] = df_lsa['dist'].loc[store_ind]
-
-df_com['All_dist'] = df_com[['H_dist', 'S_dist', 'X_dist']].min(axis = 1)
-
-## drop following?
-#df_com.drop('poly', axis = 1 ,inplace = True)
-#ls_disp_c = ['code_insee', 'commune', 'avail_surf',
-#             'H_ens', 'H_dist', 'S_ens', 'S_dist', 'X_ens', 'X_dist']
-#print df_com[ls_disp_c][df_com['code_insee'].str.slice(stop=-3) == '92'].to_string()
-#print df_com[ls_disp_c][df_com['code_insee'].str.slice(stop=-3) == '75'].to_string()
-
-# output
-ls_disp_com_comp = ['code_insee', 'avail_surf', 'hhi',
-                    'All_dist', 'H_dist', 'S_dist', 'X_dist',
-                    'H_ens', 'S_ens', 'X_ens']
-df_com[ls_disp_com_comp].to_csv(os.path.join(path_dir_built_csv,
-                                             'df_com_comp.csv'),
-                                 index = False,
-                                 encoding = 'utf-8')
-
-# read stored df_com_comp
+# READ STORED df_com_comp and MERGE BACK
 df_com_comp = pd.read_csv(os.path.join(path_dir_built_csv,
                                              'df_com_comp.csv'))
-# specify column types on (writing?) reading?
 df_com_comp['code_insee'] = df_com_comp['code_insee'].apply(\
                               lambda x: "{:05d}".format(x)\
                                 if (type(x) == np.int64 or type(x) == long) else x)
+df_com = pd.merge(df_com, df_com_comp,
+                  left_on = 'code_insee', right_on = 'code_insee')
 
 # stats descs
 dict_formatters = {'hhi' : format_float_float,
                    'avail_surf' : format_float_int}
 ls_percentiles = [.05, 0.25, 0.75, 0.95]
-
-# add min dist etc
 print df_com[['avail_surf', 'hhi', 'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe(\
         percentiles=ls_percentiles).T.to_string(formatters=dict_formatters)
+
+# Gini (draw normalized empirical distrib?)
+df_com.sort('avail_surf', ascending = True, inplace = True)
+df_com['i'] = df_com.index + 1
+df_com.reset_index(inplace = True)
+G = 2*(df_com['avail_surf']*df_com['i']).sum()/\
+    (df_com['i'].max()*df_com['avail_surf'].sum()) -\
+    (df_com['i'].max() + 1)/float(df_com['i'].max())
