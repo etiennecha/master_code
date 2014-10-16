@@ -247,9 +247,23 @@ print df_com[['avail_surf', 'hhi', 'All_dist', 'H_dist', 'S_dist', 'X_dist']].de
         percentiles=ls_percentiles).T.to_string(formatters=dict_formatters)
 
 # Gini (draw normalized empirical distrib?)
-df_com.sort('avail_surf', ascending = True, inplace = True)
-df_com['i'] = df_com.index + 1
-df_com.reset_index(inplace = True)
-G = 2*(df_com['avail_surf']*df_com['i']).sum()/\
-    (df_com['i'].max()*df_com['avail_surf'].sum()) -\
-    (df_com['i'].max() + 1)/float(df_com['i'].max())
+
+def get_Gini(df_interest, field):
+  df_gini = df_interest.copy()
+  df_gini.sort(field, ascending = True, inplace = True)
+  df_gini.reset_index(drop = True, inplace = True)
+  df_gini['i'] = df_gini.index + 1
+  G = 2*(df_gini[field]*df_gini['i']).sum()/\
+      (df_gini['i'].max()*df_gini[field].sum()) -\
+      (df_gini['i'].max() + 1)/float(df_gini['i'].max())
+  return np.round(G, 2), df_gini
+
+G, df_gini = get_Gini(df_com, 'avail_surf')
+G, df_gini = get_Gini(df_com, 'All_dist')
+
+#df_com.sort('avail_surf', ascending = True, inplace = True)
+#df_com.reset_index(inplace = True)
+#df_com['i'] = df_com.index + 1
+#G = 2*(df_com['avail_surf']*df_com['i']).sum()/\
+#    (df_com['i'].max()*df_com['avail_surf'].sum()) -\
+#    (df_com['i'].max() + 1)/float(df_com['i'].max())
