@@ -178,7 +178,7 @@ df_com = pd.merge(df_com, df_com_comp,
 
 # Calculate Jenks natural breaks for density
 
-field = 'All_dist' # set relevant digits for jenks labels
+field = 'CR3' # set relevant digits for jenks labels
 
 breaks = nb(df_com[df_com[field].notnull()][field].values,
             initial=20,
@@ -209,6 +209,11 @@ norm = Normalize()
 pc.set_facecolor(cmap(norm(df_com['jenks_bins'].values)))
 ax.add_collection(pc)
 
+df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
+                      PolygonPatch(x, fc = 'none', ec='#000000', lw=.2, alpha=1., zorder=1))
+pc_2 = PatchCollection(df_dpt['patches'], match_original=True)
+ax.add_collection(pc_2)
+
 # Add a colour bar
 cb = colorbar_index(ncolors=len(jenks_labels), cmap=cmap, shrink=0.5, labels=jenks_labels)
 cb.ax.tick_params(labelsize=6)
@@ -231,7 +236,7 @@ plt.tight_layout()
 # fig.set_size_inches(7.22, 5.25) # set the image width to 722px
 plt.savefig(os.path.join(path_data, 'data_maps', 'data_built',
                          'graphs', 'lsa', 'fra_com_%s.png' %field),
-            dpi=700, alpha=True)
+            dpi=500, alpha=True)
 plt.close()
 #plt.show()
 

@@ -41,15 +41,17 @@ pd.set_option('float_format', '{:10,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-# #############
-# READ CSV FILE
-# #############
+# ##############
+# READ CSV FILES
+# ##############
 
 df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
                      encoding = 'UTF-8')
 df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
                 (~pd.isnull(df_lsa['Longitude']))].copy()
 
+df_com_insee = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_communes.csv'),
+                           encoding = 'UTF-8', dtype = {'DEP': str, 'CODGEO' : str})
 # #############
 # FRANCE MAP
 # #############
@@ -117,7 +119,11 @@ df_com['poly_area'] = df_com['poly'].apply(lambda x: x.area)
 df_com.sort(columns = ['code_insee', 'poly_area'],
             ascending = False,
             inplace = True)
-df_com.drop_duplicates(subset = 'code_insee', inplace = True)
+
+if pd.__version__ in ['0.13.0', '0.13.1']:
+  df_com.drop_duplicates(cols = ['code_insee'], inplace = True)
+else:
+  df_com.drop_duplicates(subset = 'code_insee', inplace = True)
 
 #df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
 #                        lambda x: Point(m_fra(x[0], x[1])), axis = 1)
@@ -193,9 +199,13 @@ hhi = (df_rgps['market_share']**2).sum()
 # EXECUTION
 # ##########
 
-## SURFACE AVAILABLE TO EACH COMMUNE
+# SURFACE AVAILABLE TO EACH COMMUNE
+
 #df_com['avail_surf'] = np.nan
 #df_com['hhi'] = np.nan
+#df_com['CR1'] = np.nan
+#df_com['CR2'] = np.nan
+#df_com['CR3'] = np.nan
 #for store_type in ['H', 'X', 'S']:
 #  df_com['%s_ens' %store_type] = None
 #  df_com['%s_dist' %store_type] = np.nan
@@ -214,6 +224,11 @@ hhi = (df_rgps['market_share']**2).sum()
 #  df_rgps['market_share'] = df_rgps['sum'] / df_rgps['sum'].sum()
 #  df_com['hhi'].ix[i] = (df_rgps['market_share']**2).sum()
 #  
+#  df_rgps.sort('sum', ascending = False, inplace = True)
+#  df_com['CR1'].ix[i] = df_rgps['sum'][0:1].sum() / df_rgps['sum'].sum()
+#  df_com['CR2'].ix[i] = df_rgps['sum'][0:2].sum() / df_rgps['sum'].sum()
+#  df_com['CR3'].ix[i] = df_rgps['sum'][0:3].sum() / df_rgps['sum'].sum()
+#
 #  for store_type in ['H', 'X', 'S']:
 #    store_ind = df_lsa['dist'][df_lsa['Type_alt'] == '%s' %store_type].argmin()
 #    df_com['%s_ens' %store_type].ix[i] = df_lsa['Enseigne'].loc[store_ind]
@@ -221,14 +236,16 @@ hhi = (df_rgps['market_share']**2).sum()
 #
 #df_com['All_dist'] = df_com[['H_dist', 'S_dist', 'X_dist']].min(axis = 1)
 #
-## output
-#ls_disp_com_comp = ['code_insee', 'avail_surf', 'hhi',
+### output
+#ls_disp_com_comp = ['code_insee', 'avail_surf',
+#                    'hhi', 'CR1', 'CR2', 'CR3',
 #                    'All_dist', 'H_dist', 'S_dist', 'X_dist',
 #                    'H_ens', 'S_ens', 'X_ens']
 #df_com[ls_disp_com_comp].to_csv(os.path.join(path_dir_built_csv,
 #                                             'df_com_comp.csv'),
 #                                 index = False,
-#                                 encoding = 'utf-8')
+#                                 encoding = 'utf-8',
+#                                 float_format='%.3f')
 
 # READ STORED df_com_comp and MERGE BACK
 df_com_comp = pd.read_csv(os.path.join(path_dir_built_csv,
@@ -239,11 +256,19 @@ df_com_comp['code_insee'] = df_com_comp['code_insee'].apply(\
 df_com = pd.merge(df_com, df_com_comp,
                   left_on = 'code_insee', right_on = 'code_insee')
 
-# stats descs
+# Summary Table (include Gini?)
 dict_formatters = {'hhi' : format_float_float,
                    'avail_surf' : format_float_int}
 ls_percentiles = [.05, 0.25, 0.75, 0.95]
-print df_com[['avail_surf', 'hhi', 'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe(\
+# percentiles option only available in newest python
+
+if pd.__version__ in ['0.13.0', '0.13.1']:
+  print df_com[['avail_surf', 'hhi', 'CR1', 'CR2', 'CR3',
+                'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe().\
+          T.to_string(formatters=dict_formatters)
+else:
+  print df_com[['avail_surf', 'hhi', 'CR1', 'CR2', 'CR3',
+                'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe(\
         percentiles=ls_percentiles).T.to_string(formatters=dict_formatters)
 
 # Gini (draw normalized empirical distrib?)
@@ -258,12 +283,30 @@ def get_Gini(df_interest, field):
       (df_gini['i'].max() + 1)/float(df_gini['i'].max())
   return np.round(G, 2), df_gini
 
-G, df_gini = get_Gini(df_com, 'avail_surf')
-G, df_gini = get_Gini(df_com, 'All_dist')
+for field in ['avail_surf', 'hhi', 'CR1', 'CR2', 'CR3']:
+  G, df_gini = get_Gini(df_com, field)
+  print field, G
 
-#df_com.sort('avail_surf', ascending = True, inplace = True)
-#df_com.reset_index(inplace = True)
-#df_com['i'] = df_com.index + 1
-#G = 2*(df_com['avail_surf']*df_com['i']).sum()/\
-#    (df_com['i'].max()*df_com['avail_surf'].sum()) -\
-#    (df_com['i'].max() + 1)/float(df_com['i'].max())
+df_com.sort('avail_surf', ascending = True, inplace = True)
+df_com.reset_index(inplace = True)
+df_com['i'] = df_com.index + 1
+G = 2*(df_com['avail_surf']*df_com['i']).sum()/\
+    (df_com['i'].max()*df_com['avail_surf'].sum()) -\
+    (df_com['i'].max() + 1)/float(df_com['i'].max())
+
+
+# POP AVAIL TO EACH STORE
+
+#df_com = pd.merge(df_com_insee, df_com, how='right', left_on = 'CODGEO', right_on = 'code_insee')
+##df_com[['code_insee', 'commune']][pd.isnull(df_com['P10_POP'])]
+#
+#df_lsa['avail_pop'] = np.nan
+#for i, row in df_lsa.iterrows():
+#  df_com['Latitude'] = row['Latitude']
+#  df_com['Longitude'] = row['Longitude']
+#  df_com['dist'] = compute_distance_ar(df_com['Latitude'],
+#                                       df_com['Longitude'],
+#                                       df_com['lat_cl'],
+#                                       df_com['lng_cl'])
+#  df_com['wgt_pop'] = np.exp(-df_com['dist']/10) * df_com['P10_POP']
+#  df_lsa['avail_pop'].ix[i] = df_com['wgt_pop'].sum()

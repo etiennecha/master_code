@@ -89,6 +89,8 @@ All           &     12,279 &     12,279 &        100 &        400 &        990 &
 \end{table}
 
 
+
+
 \subsection{Number of employees}
 
 \begin{table}[H]
@@ -172,7 +174,29 @@ All           &     12,279 &      4,829 &          0 &          2 &          4 &
 
 \end{table}
 
+\section{Overview of competition}
 
+\begin{table}[H]
+\caption{Competition at the municipality level}
+\small
+
+\begin{tabular}{lrrrrrrrr}
+\toprule
+{} &      count &       mean &        std &        min &        25\% &        50\% &        75\% &        max \\
+\midrule
+avail\_surf &  36,253 &  29,958 &  53,296 &   1,027 &  11,516 &  18,319 &  30,173 & 800,164 \\
+hhi        &  36,253 &       0.19 &       0.04 &       0.10 &       0.16 &       0.19 &       0.21 &       0.48 \\
+CR1        &  36,253 &       0.30 &       0.07 &       0.14 &       0.25 &       0.29 &       0.33 &       0.67 \\
+CR2        &  36,253 &       0.51 &       0.08 &       0.28 &       0.45 &       0.51 &       0.56 &       0.87 \\
+CR3        &  36,253 &       0.66 &       0.08 &       0.41 &       0.61 &       0.66 &       0.72 &       0.95 \\
+All\_dist   &  36,253 &       5.43 &       3.62 &       0.00 &       2.82 &       5.05 &       7.49 &      27.14 \\
+H\_dist     &  36,253 &      10.78 &       6.89 &       0.00 &       5.70 &       9.58 &      14.57 &      51.92 \\
+S\_dist     &  36,253 &       6.16 &       3.93 &       0.00 &       3.38 &       5.71 &       8.36 &      27.43 \\
+X\_dist     &  36,253 &       8.28 &       5.37 &       0.00 &       4.37 &       7.44 &      11.25 &      40.71 \\
+\bottomrule
+\end{tabular}
+
+\end{table}
 
 \section{Stores and surface by group and chain}
 
@@ -220,30 +244,6 @@ AUTRE          &        419 &          8 &        186 &        225 &       0.35 
 \midrule
 ALL            &     12,279 &      2,031 &      5,771 &      4,477 &      21.76 &      10.89 &       7.42 &       3.46 &      5,360 &      1,286 &        772 \\
 \%             &        100 &         17 &         47 &         36 &        100 &         50 &         34 &         16 &            &            &            \\
-\bottomrule
-\end{tabular}
-
-\end{table}
-
-\subsection{Overview of competition at municipality level}
-
-\begin{table}[H]
-\caption{Competition at municipality level}
-\footnotesize
-\setlength{\tabcolsep}{2pt}
-
-\begin{tabular}{lrrrrrrrrrr}
-\toprule
-{} &      count &       mean &        std &        min &         5\% &        25\% &        50\% &        75\% &        95\% &        max \\
-\midrule
-Available surface &  36,253 &  29,958 &  53,296 &   1,027 &   5,477 &  11,516 &  18,319 &  30,173 &  79,193 & 800,164 \\
-HHI        &  36,253 &       0.19 &       0.04 &       0.11 &       0.14 &       0.16 &       0.19 &       0.21 &       0.26 &       0.48 \\
-\midrule
-\multicolumn{11}{l}{Distance to closest store:}\\
-All                       &  36,253 &       5.43 &       3.62 &       0.00 &       0.36 &       2.82 &       5.05 &       7.49 &      12.01 &      27.14 \\
-Hypermarkets    &  36,253 &      10.78 &       6.89 &       0.00 &       1.72 &       5.70 &       9.58 &      14.57 &      24.00 &      51.92 \\
-Supermarkets    &  36,253 &       6.16 &       3.93 &       0.00 &       0.49 &       3.38 &       5.71 &       8.36 &      13.37 &      27.43 \\
-Hard discount    &  36,253 &       8.28 &       5.37 &       0.00 &       0.92 &       4.37 &       7.44 &      11.25 &      18.39 &      40.71 \\
 \bottomrule
 \end{tabular}
 
@@ -785,6 +785,33 @@ For each group, on the first map, supermarkets are represented with green dots a
 	\centering
 		\includegraphics[width=9cm]{images/maps_group_dots/AUTRE.png}
         \includegraphics[width=12.8cm]{images/maps_group_heatmaps/AUTRE.png}
+\end{figure}
+
+\subsection{Competition}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=14cm]{images/maps_competition/fra_com_nb_stores.png}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=14cm]{images/maps_competition/fra_com_avail_surf.png}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=14cm]{images/maps_competition/fra_com_hhi.png}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=14cm]{images/maps_competition/fra_com_CR1.png}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=14cm]{images/maps_competition/fra_com_CR2.png}
 \end{figure}
 
 \section{Markets}
