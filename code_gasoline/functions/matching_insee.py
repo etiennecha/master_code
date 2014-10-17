@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import os, sys
-from generic_ameli import * # should not be necessary
 import pandas as pd # should not be necessary
+import re
 import itertools
 
 def format_str_low_noacc(word):
@@ -26,11 +26,8 @@ def format_str_low_noacc(word):
   word = ' '.join(word.split())
   return word.strip()
 
-def format_str_city_insee(word, del_accent = True):
-  # Just for comparison's sake: no accent and word-word (maybe insufficient?)
-  if del_accent:
-    word = format_str_low_noacc(word)
-  word = word.lower()
+def format_str_city_insee(word):
+  word = format_str_low_noacc(word)
   word = re.sub(ur"(^|\s)st(s?)(\s|$|-)", ur" saint\2 ", word)
   word = re.sub(ur"(^|\s)ste(s?)(\s|$|-)", ur" sainte\2 ", word)
   word = word.replace("'", " ")
@@ -38,38 +35,35 @@ def format_str_city_insee(word, del_accent = True):
   word = ' '.join(word.split())
   return word.strip()
 
-def format_correspondence(correspondence):
+def format_correspondence(ls_corr):
   """
   returns correspondence with 0 at beginning of insee_code if 4 chars only
   ---
   correspondence: list of tup (commune, zip_code, department, insee_code) 
   """
-  correspondence = [(format_str_city_insee(city_insee),
-                     zip_code_insee,
-                     department_insee,
-                     code_insee.rjust(5, '0')) for (city_insee,
-                                                    zip_code_insee,
-                                                    department_insee,
-                                                    code_insee) in correspondence]
-  #ls_correspondence = []
-  #for city_insee, zip_code_insee, department_insee, code_insee in correspondence:
-  #  ls_correspondence.append((city_insee, zip_code_insee, department_insee, code_insee))
-  return correspondence
+  ls_corr = [(format_str_city_insee(city_insee),
+              zip_code_insee.rjust(5, '0'),
+              department_insee,
+              code_insee.rjust(5, '0')) for (city_insee,
+                                             zip_code_insee,
+                                             department_insee,
+                                             code_insee) in ls_corr]
+  return ls_corr
 
-def match_insee_code(correspondence, city, dpt_code, zip_code = None):
+def match_insee_code(ls_corr, city, dpt_code, zip_code = None):
   """
   TODO: create class and keep dicts alive
   returns insee code corresponding to dpt, city
-  ---
-  need to make sure that city is no accent and harmonized insee way 
   """
+  city = format_str_city_insee(city)
+  zip_code, dpt_code = zip_code.rjust(5, '0'), dpt_code.rjust(2, '0')
   
   # Based on zip code and city name
   ls_matching = []
   found_indicator = False
   if zip_code:
     dict_corr_zip_insee = {}
-    for city_insee, zip_code_insee, department_insee, code_insee in correspondence:
+    for city_insee, zip_code_insee, department_insee, code_insee in ls_corr:
       dict_corr_zip_insee.setdefault(zip_code_insee, []).append((city_insee,
                                                                  zip_code_insee,
                                                                  department_insee,
@@ -92,7 +86,7 @@ def match_insee_code(correspondence, city, dpt_code, zip_code = None):
 
   # Based on dpt code and city name
   dict_corr_dpt_insee = {}
-  for city_insee, zip_code_insee, department_insee, code_insee in correspondence:
+  for city_insee, zip_code_insee, department_insee, code_insee in ls_corr:
     dict_corr_dpt_insee.setdefault(zip_code_insee[:-3], []).append((city_insee,
                                                                     zip_code_insee,
                                                                     department_insee,
@@ -123,32 +117,14 @@ if __name__ == "__main__":
 
   # LOAD CORRESPONDENCE
 
-  # Load zip code - insee code correspondence file
-  file_correspondence = open(os.path.join(path_dir_match_insee,
-                                          'corr_cinsee_cpostal'),'r')
-  correspondence = file_correspondence.read().split('\n')[1:-1]
-  
-  # Update changes in city codes (correspondence is a bit old)
-  file_correspondence_update = open(os.path.join(path_dir_match_insee,
-                                                 'corr_cinsee_cpostal_update'),'r')
-  correspondence_update = file_correspondence_update.read().split('\n')[1:]
-  correspondence += correspondence_update
-  
-  # Patch ad hoc for gas station cedexes
-  file_correspondence_gas_path = open(os.path.join(path_dir_match_insee,
-                                                   'corr_cinsee_cpostal_gas_patch'),'r')
-  correspondence_gas_patch = file_correspondence_gas_path.read().split('\n')
-  correspondence += correspondence_gas_patch
-  correspondence = [row.split(';') for row in correspondence]
-  
-  correspondence = format_correspondence(correspondence)
+  df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
+                        dtype = str)
+  ls_corr = [list(x) for x in df_corr.to_records(index = False)]
+  ls_corr = format_correspondence(ls_corr)
   
   # EXECUTE MATCHING
   
-  ls_ophtalmos = dec_json(os.path.join(path_dir_ameli_built_json,
-                                       'ophtalmologiste_suburb_2014.json'))
-  city, dpt = format_str_low_noacc(ls_ophtalmos[0][5][6:]), ls_ophtalmos[0][5][:2]
-  ls_matched = match_insee_code(correspondence, city, dpt)
+  ls_matched = match_insee_code(ls_corr, 'RUEIL-MALMAISON', '92')
   
   # LOAD CURRENT INSEE CODES
   
