@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import os, sys
-import pandas as pd # should not be necessary
 import re
 import itertools
+import pandas as pd
 
 def format_str_low_noacc(word):
   # Just for comparison's sake: no accent and word-word (maybe insufficient?)
@@ -56,8 +56,10 @@ def match_insee_code(ls_corr, city, dpt_code, zip_code = None):
   returns insee code corresponding to dpt, city
   """
   city = format_str_city_insee(city)
-  zip_code, dpt_code = zip_code.rjust(5, '0'), dpt_code.rjust(2, '0')
-  
+  dpt_code = dpt_code.rjust(2, '0')
+  if zip_code:
+    zip_code.rjust(5, '0')
+
   # Based on zip code and city name
   ls_matching = []
   found_indicator = False
@@ -108,6 +110,30 @@ def match_insee_code(ls_corr, city, dpt_code, zip_code = None):
   # No match
   return (None, 'no_match')
 
+def refine_insee_code(ls_fra_insee_codes, candidate):
+  dict_large_cities = dict(list(itertools.product(map(str,range(13201, 13217)), ['13055']))+\
+                           list(itertools.product(map(str,range(69381, 69390)), ['69123']))+\
+                           list(itertools.product(map(str,range(75101, 75121)), ['75056'])))
+  if candidate in ls_fra_insee_codes:
+    if candidate in dict_large_cities:
+      final_ic, final_ic_ardt = dict_large_cities[candidate], candidate
+    elif candidate in ['13055', '69123', '75056']:
+      final_ic, final_ic_ardt = candidate, None # could keep candidate
+    else:
+      final_ic, final_ic_ardt = candidate, candidate
+  elif candidate[:2] == '20':
+    candidate_A = candidate[:1] + 'A' + candidate[2:]
+    candidate_B = candidate[:1] + 'B' + candidate[2:]
+    if candidate_A in ls_fra_insee_codes:
+      final_ic, final_ic_ardt = candidate_A, candidate_A
+    elif candidate_B in ls_fra_insee_codes:
+      final_ic, final_ic_ardt = candidate_B, candidate_B
+    else:
+      final_ic, final_ic_ardt = None, None
+  else:
+    final_ic, final_ic_ardt = None, None
+  return final_ic, final_ic_ardt
+
 if __name__ == "__main__":
   
   path_data = os.path.join(u'W:\\', u'Bureau', 'Etienne_work', 'Data')
@@ -124,7 +150,7 @@ if __name__ == "__main__":
   
   # EXECUTE MATCHING
   
-  ls_matched = match_insee_code(ls_corr, 'RUEIL-MALMAISON', '92')
+  ls_matched = [match_insee_code(ls_corr, 'PARIS', '75006')]
   
   # LOAD CURRENT INSEE CODES
   
@@ -134,25 +160,4 @@ if __name__ == "__main__":
                          dtype = str)
   
   # CHECK INSEE CODES STILL IN USE
-  # list includes big city code and ardts
-  ls_fra_insee_codes = df_insee['CODGEO'].values
-  indiv_insee_code = ls_matched[0][0][2]
-  if indiv_insee_code in ls_fra_insee_codes:
-    final_insee_code = indiv_insee_code
-  elif indiv_insee_code[:2] == '20':
-    if indiv_insee_code[:1] + 'A' + indiv_insee_code[2:] in ls_france_insee_codes:
-      final_insee_code = indiv_insee_code[:1] + 'A' + indiv_insee_code[2:]
-    elif indiv_insee_code[:1] + 'B' + indiv_insee_code[2:] in ls_france_insee_codes:
-      final_insee_code = indiv_insee_code[:1] + 'B' + indiv_insee_code[2:]
-    else:
-      print 'Code geo:', invdiv_insee_code, 'absent from recent insee files'
-      final_insee_code = None
-  else:
-    print 'Code geo:', invdiv_insee_code, 'absent from recent insee files'
-    final_insee_code = None
-
-  # INSEE CODE big city vs ardt (should use zip if provided to add ardt)
-
-  dict_large_cities = dict(list(itertools.product(map(str,range(13201, 13217)), ['13055']))+\
-                           list(itertools.product(map(str,range(69381, 69390)), ['69123']))+\
-                           list(itertools.product(map(str,range(75101, 75121)), ['75056'])))
+  ic, ic_ardt = refine_insee_code(df_insee['CODGEO'].values, ls_matched[0][0][0][2])

@@ -17,7 +17,6 @@ def enc_stock_json(database, chemin):
 
 def geocode_via_mapquest(location):
   # systematic queries forbidden...
-  # TODO: box restriction
   location = urllib2.quote(location.encode('utf-8'))
   url = u'http://open.mapquestapi.com/nominatim/v1/search?q=%s&' %location +\
         u'format=json&polygon=1&addressdetails=1&countrycodes=fr&viewbox=-5.133333,51.0833,9.55,41.333333'
@@ -26,7 +25,6 @@ def geocode_via_mapquest(location):
   return json_response
 
 def geocode_via_google(location):
-  # TODO: add viewport restriction for France
   location += ', France'
   location = urllib2.quote(location.encode('utf-8'))
   url = u'http://maps.googleapis.com/maps/api/geocode/json?address=%s&region=FR&sensor=false' %location

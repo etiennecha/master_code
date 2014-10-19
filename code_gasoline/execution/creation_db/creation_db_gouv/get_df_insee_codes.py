@@ -12,6 +12,7 @@ path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'd
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 
 path_dir_match_insee = os.path.join(path_data, u'data_insee', 'match_insee_codes')
+path_dir_insee_extracts = os.path.join(path_data, u'data_insee', 'data_extracts')
 
 # LOAD GAS STATION ADDRESSES
 master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
@@ -46,7 +47,8 @@ print 'Issues with addresses / zip codes:'
 for k, v in dict_describe_addresses.items():
   print k, len(v)
 
-# LOAD INSEE CORRESPONDENCE
+# LOAD INSEE CORRESPONDENCE AND RUN MATCHING
+
 df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
                       dtype = str)
 ls_corr = [list(x) for x in df_corr.to_records(index = False)]
@@ -84,7 +86,29 @@ for k, v in dict_len.items():
 for id_indiv in dict_len[2]:
   pprint.pprint(ls_ls_match_res[id_indiv])
 
-# todo: drop if one is no more in use else hand pick?
+# CHECK INSEE CODES STILL IN USE + DISAMB BIG CITY ARDTS
+
+df_com = pd.read_csv(os.path.join(path_dir_insee_extracts,
+                                  u'df_communes.csv'),
+                     encoding = 'utf-8',
+                     dtype = str)
+
+ls_rows_final = []
+for row in ls_rows:
+  row_final = [refine_insee_code(df_com['CODGEO'].values, x) for x in row]
+  ls_rows_final.append([ic for ls_ic in row_final for ic in ls_ic])
+
+# BUILD DF INSEE CODE
+df_ci = pd.DataFrame(ls_rows_final,
+                     columns = ['ci_1',
+                                'ci_ardt_1',
+                                'ci_2',
+                                'ci_ardt_2'],
+                     index = master_addresses.keys())
+
+df_ci['ci_1'][pd.isnull(df_ci['ci_1'])] = df_ci['ci_2']
+df_ci['ci_ardt_1'][pd.isnull(df_ci['ci_ardt_1'])] = df_ci['ci_ardt_2']
+
 # todo: store csv with indiv_id and insee_code
 # todo: confront municipality polygon w/ gps (rather checkin gps...)
 # todo: check master_price not in master_info (i.e. short lived a priori...)

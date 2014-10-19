@@ -51,17 +51,17 @@ for df_temp in [df_corr, df_corr_gas]:
   for field in ['code_insee', 'code_postal']:
     df_temp[field] = df_temp[field].apply(lambda x: x.rjust(5, '0'))
 
-## TODO: think of (manual) update process
-#ls_csv_output = [(df_corr, 'df_corr.csv', 0),
-#                 (df_corr, 'df_corr_quotes.csv', 1),
-#                 (df_corr_gas, 'df_corr_gas.csv', 0),
-#                 (df_corr_gas, 'df_corr_gas_quotes.csv', 1)]
-#for df_temp, file_name, quoting in ls_csv_output:
-#  df_temp.to_csv(os.path.join(path_dir_match_insee,
-#                              file_name),
-#                 quoting = quoting,
-#                 encoding = 'UTF-8',
-#                 index = False)
+# TODO: think of (manual) update process
+ls_csv_output = [(df_corr, 'df_corr.csv', 0),
+                 (df_corr, 'df_corr_quotes.csv', 1),
+                 (df_corr_gas, 'df_corr_gas.csv', 0),
+                 (df_corr_gas, 'df_corr_gas_quotes.csv', 1)]
+for df_temp, file_name, quoting in ls_csv_output:
+  df_temp.to_csv(os.path.join(path_dir_match_insee,
+                              file_name),
+                 quoting = quoting,
+                 encoding = 'UTF-8',
+                 index = False)
 
 # ################################
 # COMPARE WITH CURRENT INSEE FILES
