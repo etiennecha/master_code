@@ -20,7 +20,7 @@ path_ls_duplicates = os.path.join(path_dir_source, 'data_other', 'ls_id_reconcil
 path_csv_insee_extract = os.path.join(path_dir_source, 'data_other', 'data_insee_extract.csv')
 
 path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_match_insee_codes = os.path.join(path_dir_insee, 'match_insee_codes')
+path_dir_match_insee_codes = os.path.join(path_dir_insee, 'match_insee_codes', 'backup')
 path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
 
 master_price = dec_json(path_diesel_price)
