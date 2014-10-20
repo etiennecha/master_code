@@ -10,6 +10,7 @@ import pprint
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
 path_dir_match_insee = os.path.join(path_data, u'data_insee', 'match_insee_codes')
 path_dir_insee_extracts = os.path.join(path_data, u'data_insee', 'data_extracts')
@@ -237,7 +238,8 @@ df_name_adr['adr_dpt'] = None
 df_name_adr['adr_dpt'][~pd.isnull(df_name_adr['adr_zip'])] =\
    df_name_adr['adr_zip'][~pd.isnull(df_name_adr['adr_zip'])].str.slice(stop = -3)
 
-pat_city = "[0-9]?[0-9AB][0-9]{3}\s([A-Za-z\s\-\']*)?"
+# normally no need to allow for A or B (code insee only)
+pat_city = "[0-9]?[0-9AB][0-9]{3}\s(.*)"
 df_name_adr['adr_city'] = df_name_adr['zip_city'].apply(\
                            lambda x: re.match(pat_city, x).group(1).\
                                        replace('CEDEX', '').strip() if x else x)
@@ -254,5 +256,10 @@ df_chars = pd.merge(df_chars, df_opening, left_index = True, right_index = True)
 df_chars['highway'] = se_highway
 
 # OUTPUT TO CSV
+df_chars.to_csv(os.path.join(path_dir_built_csv,
+                                      'df_chars.csv'),
+                         index_label = 'id_station',
+                         float_format= '%.3f',
+                         encoding = 'utf-8')
 
-# OUTPUT TO XLS (do it once brand info + activity data added)
+# print df_chars[['name', 'adr_street', 'adr_zip', 'adr_city', 'adr_dpt']].to_string()

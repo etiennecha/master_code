@@ -10,6 +10,7 @@ import pandas as pd
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
 # LOAD GAS STATION ADDRESSES
 master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
@@ -102,3 +103,10 @@ df_geocoding_ok = df_geocoding[~pd.isnull(df_geocoding['google_adr'])]
 df_geocoding_ok[~(df_geocoding_ok['google_adr'].str.contains('France'))]
 
 # todo: check France and get rid of it for readibility's sake
+
+# OUTPUT TO CSV
+df_geocoding.to_csv(os.path.join(path_dir_built_csv,
+                                      'df_geocoding.csv'),
+                    index_label = 'id_station',
+                    float_format = '%.3f',
+                    encoding = 'utf-8')

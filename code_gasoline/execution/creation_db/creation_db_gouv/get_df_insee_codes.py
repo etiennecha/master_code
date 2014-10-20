@@ -8,17 +8,19 @@ from generic_master_info import *
 from matching_insee import *
 import pprint
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
+path_dir_built_json = os.path.join(path_dir_built_paper, u'data_json')
+path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
-path_dir_match_insee = os.path.join(path_data, u'data_insee', 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_data, u'data_insee', 'data_extracts')
+path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
+path_dir_insee_extracts = os.path.join(path_data, u'data_insee', u'data_extracts')
+path_dir_insee_dpts_regions = os.path.join(path_data, u'data_insee', u'dpts_regions')
 
 # LOAD GAS STATION ADDRESSES
-master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel.json'))
-master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel_raw.json'))
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel.json'))
+master_price_raw = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel_raw.json'))
+master_price = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel.json'))
+master_info_raw = dec_json(os.path.join(path_dir_built_json, u'master_info_diesel_raw.json'))
+master_info = dec_json(os.path.join(path_dir_built_json, u'master_info_diesel.json'))
 
 # Build master_addresses (addresses corrected for html pbms and somewhat stdized)
 dict_addresses = {indiv_id: [indiv_info['address'][i]\
@@ -109,6 +111,17 @@ df_ci = pd.DataFrame(ls_rows_final,
 df_ci['ci_1'][pd.isnull(df_ci['ci_1'])] = df_ci['ci_2']
 df_ci['ci_ardt_1'][pd.isnull(df_ci['ci_ardt_1'])] = df_ci['ci_ardt_2']
 
+dict_dpts_regions = dec_json(os.path.join(path_dir_insee_dpts_regions,
+                                          'dict_dpts_regions.json'))
+df_ci['dpt'] = df_ci['ci_1'].str.slice(stop = 2)
+df_ci['reg'] = df_ci['dpt'].apply(lambda x: dict_dpts_regions[x])
+
 # todo: store csv with indiv_id and insee_code
 # todo: confront municipality polygon w/ gps (rather checkin gps...)
 # todo: check master_price not in master_info (i.e. short lived a priori...)
+
+df_ci.to_csv(os.path.join(path_dir_built_csv,
+                          'df_ci.csv'),
+             index_label = 'id_station',
+             float_format= '%.3f',
+             encoding = 'utf-8')

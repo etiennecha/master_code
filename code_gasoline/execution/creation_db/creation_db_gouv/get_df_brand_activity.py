@@ -10,6 +10,8 @@ import pprint
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 
 # ######################
@@ -116,7 +118,6 @@ df_brands = pd.DataFrame(ls_rows_brands,
 
 df_brand_activity = pd.merge(df_activity, df_brands, left_index = True, right_index = True)
 
-# df_brand_activity with dates
 for field in ['start', 'end', 'day_0', 'day_1', 'day_2']:
   df_brand_activity[field] = df_brand_activity[field].apply(\
                                lambda x: master_price['dates'][int(x)]\
@@ -129,6 +130,11 @@ for field in ['start', 'end', 'day_0', 'day_1', 'day_2']:
 #  print u'Nb starting after %s:' %year,\
 #        len(df_brand_activity[df_brand_activity['start'] > year])
 
-# todo: GROUP & BRAND chges
+# todo: group and brand
 
-# todo: output to csv and xls
+# OUTPUT TO CSV
+df_brand_activity.to_csv(os.path.join(path_dir_built_csv,
+                                      'df_brand_activity.csv'),
+                         index_label = 'id_station',
+                         float_format= '%.3f',
+                         encoding = 'utf-8')
