@@ -172,33 +172,87 @@ df_opening = pd.DataFrame(ls_rows_opening,
 
 # Check differences over time
 
-print len(df_opening[df_opening['hours_f'] != df_opening['hours_l']])
+print u'\nNb chges in days (all):',\
+      len(df_opening[df_opening['closed_days_f'] != df_opening['closed_days_l']])
 
 # Only 15 have changes (opened all days even before credit cards...)
-print len(df_opening[(~pd.isnull(df_opening['closed_days_f'])) &
+print u'Nb chges in days (non null):',\
+      len(df_opening[(~pd.isnull(df_opening['closed_days_f'])) &
                      (~pd.isnull(df_opening['closed_days_l'])) &
                      (df_opening['closed_days_f'] != df_opening['closed_days_l'])])
 
+print u'Extract: chge in days (non null):'
 print df_opening[(~pd.isnull(df_opening['closed_days_f'])) &
                  (~pd.isnull(df_opening['closed_days_l'])) &
-                 (df_opening['closed_days_f'] != df_opening['closed_days_l'])][0:100].to_string()
+                 (df_opening['closed_days_f'] != df_opening['closed_days_l'])][0:20].to_string()
 
 # Quite a few changes:
 # see earlier opening hours (winter /summer?)
 # also move to 24h/24h: check if Total Acces / Esso express (credit cards)
 
-print len(df_opening[(~pd.isnull(df_opening['hours_f'])) &
+print u'\nNb chges in hours (all):',\
+      len(df_opening[df_opening['hours_f'] != df_opening['hours_l']])
+
+print u'Nb chges in hours (non null):',\
+      len(df_opening[(~pd.isnull(df_opening['hours_f'])) &
                      (~pd.isnull(df_opening['hours_l'])) &
                      (df_opening['hours_f'] != df_opening['hours_l'])])
 
+print u'Extract: chge in hours (non null):'
 print df_opening[(~pd.isnull(df_opening['hours_f'])) &
                  (~pd.isnull(df_opening['hours_l'])) &
-                 (df_opening['hours_f'] != df_opening['hours_l'])][0:100].to_string()
+                 (df_opening['hours_f'] != df_opening['hours_l'])][0:20].to_string()
+
+# ###########################
+# STATION LATEST ADR AND NAME
+# ###########################
+
+ls_index, ls_rows_name_adr = [], []
+for indiv_id, indiv_info in master_info_raw.items():
+  ls_index.append(indiv_id)
+  res_name = get_latest_info(indiv_id, 'name', master_info_raw, non_null = True)
+  if type(res_name) == list:
+    res_name = res_name[0]
+  res_adr = get_latest_info(indiv_id, 'address', master_info_raw, non_null = True)
+  if (not res_adr) or (len(res_adr) != 2):
+    res_adr = [None, None]
+  ls_rows_name_adr.append([res_name] + res_adr)
+
+df_name_adr = pd.DataFrame(ls_rows_name_adr,
+                          index = ls_index,
+                          columns = ['name', 'adr_street', 'zip_city'])
+
+for field in ['name', 'adr_street', 'zip_city']:
+  df_name_adr[field] = df_name_adr[field].apply(lambda x: str_correct_html(x) if x else x)
+
+print u'\nNb with no address', len(df_name_adr[pd.isnull(df_name_adr['adr_street']) &\
+                                               pd.isnull(df_name_adr['zip_city'])])
+
+# Get zip, dpt, city
+pat_zip = u"([0-9]?[0-9AB][0-9]{3})\s"
+df_name_adr['adr_zip'] = df_name_adr['zip_city'].apply(\
+                          lambda x: re.match(pat_zip, x).group(1) if x else x)
+
+df_name_adr['adr_dpt'] = None
+df_name_adr['adr_dpt'][~pd.isnull(df_name_adr['adr_zip'])] =\
+   df_name_adr['adr_zip'][~pd.isnull(df_name_adr['adr_zip'])].str.slice(stop = -3)
+
+pat_city = "[0-9]?[0-9AB][0-9]{3}\s([A-Za-z\s\-\']*)?"
+df_name_adr['adr_city'] = df_name_adr['zip_city'].apply(\
+                           lambda x: re.match(pat_city, x).group(1).\
+                                       replace('CEDEX', '').strip() if x else x)
+
+df_name_adr = df_name_adr[['name', 'adr_street', 'adr_zip', 'adr_city', 'adr_dpt']]
 
 # ####################
 # BUILD DF CHARS
 # ####################
 
-df_chars = pd.merge(df_gps, df_services, left_index = True, right_index = True)
+df_chars = pd.merge(df_name_adr, df_gps, left_index = True, right_index = True)
+df_chars = pd.merge(df_chars, df_services, left_index = True, right_index = True)
 df_chars = pd.merge(df_chars, df_opening, left_index = True, right_index = True)
 df_chars['highway'] = se_highway
+
+# OUTPUT TO CSV
+
+# OUTPUT TO XLS (do it once brand info + activity data added)

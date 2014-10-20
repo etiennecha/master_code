@@ -68,14 +68,22 @@ for k, v in dict_describe_addresses.items():
 # 1: Search within same zip if city name matches
 
 # Load zip code - insee code correspondence file
-file_correspondence = open(os.path.join(path_dir_match_insee_codes, 'corr_cinsee_cpostal'),'r')
+file_correspondence = open(os.path.join(path_dir_match_insee_codes,
+                                        'corr_cinsee_cpostal'),
+                           'r')
 correspondence = file_correspondence.read().split('\n')[1:-1]
+
 # Update changes in city codes (correspondence is a bit old)
-file_correspondence_update = open(os.path.join(path_dir_match_insee_codes, 'corr_cinsee_cpostal_update'),'r')
+file_correspondence_update = open(os.path.join(path_dir_match_insee_codes,
+                                               'corr_cinsee_cpostal_update'),
+                                  'r')
 correspondence_update = file_correspondence_update.read().split('\n')[1:]
 correspondence += correspondence_update
+
 # Patch ad hoc for gas station cedexes
-file_correspondence_gas_path = open(os.path.join(path_dir_match_insee_codes, 'corr_cinsee_cpostal_gas_patch'),'r')
+file_correspondence_gas_path = open(os.path.join(path_dir_match_insee_codes,
+                                                 'corr_cinsee_cpostal_gas_patch'),
+                                    'r')
 correspondence_gas_patch = file_correspondence_gas_path.read().split('\n')
 correspondence += correspondence_gas_patch
 correspondence = [row.split(';') for row in correspondence]
@@ -399,7 +407,9 @@ for indiv_id, ls_addresses in master_addresses.items():
        master_info[indiv_id]['highway'][3] == 1:
       set_highway_ids.add(indiv_id)
 ls_mistakes_highway = ['93130007', '75017016', '56190007', '68127001', '7580002']
-ls_highway_indiv_ids = [indiv_id for indiv_id in list(set_highway_ids) if indiv_id not in ls_mistakes_highway]
+ls_highway_indiv_ids = [indiv_id for indiv_id in list(set_highway_ids)\
+                          if indiv_id not in ls_mistakes_highway]
+
 # for indiv_id in list(set_highway_ids):
   # if indiv_id in master_price['dict_info'].keys():
     # print indiv_id, master_price['dict_info'][indiv_id]['name'], master_addresses[indiv_id]

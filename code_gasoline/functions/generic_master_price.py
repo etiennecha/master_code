@@ -370,10 +370,13 @@ def get_str_no_accent_up(str_to_format):
       # str_to_format.encode('latin-1').replace(accented_char, char)
   return str_to_format.replace(u'&#039;', u' ').strip().upper()
 
-def get_latest_info(id, field, master_info):
-  list_info = [x for x in master_info[id][field]]
-  if list_info:
-    return list_info[-1]
+def get_latest_info(indiv_id, field, master_info, non_null = False):
+  if non_null:
+    ls_info = [x for x in master_info[indiv_id][field] if x]
+  else:
+    ls_info = [x for x in master_info[indiv_id][field] if x is not None]
+  if ls_info:
+    return ls_info[-1]
   else:
     return None
 
