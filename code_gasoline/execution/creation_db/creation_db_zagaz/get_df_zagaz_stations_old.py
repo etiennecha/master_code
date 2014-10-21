@@ -1,20 +1,24 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import add_to_path_sub
-from add_to_path_sub import path_data
+import add_to_path
+from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 from generic_competition import *
 from functions_string import *
 from BeautifulSoup import BeautifulSoup
-import copy
 import collections
+import copy
 
 def str_zagaz_corrections(word):
   word = word.lower()
-  word = re.sub(ur'(^|\s|,)r?\.?\s?d\.?\s?([0-9]{0,5})(\s|$|,)', ur'\1 route departementale \2 \3', word)
-  word = re.sub(ur'(^|\s|,)r?\.?\s?n\.?\s?([0-9]{0,5})(\s|$|,)', ur'\1 route nationale \2 \3', word) 
+  word = re.sub(ur'(^|\s|,)r?\.?\s?d\.?\s?([0-9]{0,5})(\s|$|,)',
+                ur'\1 route departementale \2 \3',
+                word)
+  word = re.sub(ur'(^|\s|,)r?\.?\s?n\.?\s?([0-9]{0,5})(\s|$|,)',
+                ur'\1 route nationale \2 \3',
+                word) 
   return word.strip()
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
@@ -93,15 +97,18 @@ dict_brands_update = {'OIL' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
 
 # Load zip code - insee code correspondence file
 file_correspondence = open(os.path.join(path_dir_match_insee_codes,
+                                        'backup',
                                         'corr_cinsee_cpostal'),'r')
 correspondence = file_correspondence.read().split('\n')[1:-1]
 # Update changes in city codes (correspondence is a bit old)
 file_correspondence_update = open(os.path.join(path_dir_match_insee_codes,
+                                               'backup',
                                                'corr_cinsee_cpostal_update'),'r')
 correspondence_update = file_correspondence_update.read().split('\n')[1:]
 correspondence += correspondence_update
 # Patch ad hoc for gas station cedexes
 file_correspondence_gas_path = open(os.path.join(path_dir_match_insee_codes,
+                                                 'backup',
                                                  'corr_cinsee_cpostal_gas_patch'),'r')
 correspondence_gas_patch = file_correspondence_gas_path.read().split('\n')
 correspondence += correspondence_gas_patch
@@ -202,10 +209,10 @@ df_zagaz['gps'] = df_zagaz['lon'].str.cat(df_zagaz['lat'], sep = ' ')
 del(df_zagaz['lon'], df_zagaz['lat'])
 df_zagaz = df_zagaz.set_index('id')
 
-# OUTPUT FOR DISPLAY
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
-df_zagaz.to_csv(os.path.join(path_dir_built_csv, 'df_info_locations_zagaz.csv'),
-                float_format='%.4f',
-                encoding='utf-8')
-
-# TODO: add region + competitors?
+## OUTPUT FOR DISPLAY
+#path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+#df_zagaz.to_csv(os.path.join(path_dir_built_csv, 'df_info_locations_zagaz.csv'),
+#                float_format='%.4f',
+#                encoding='utf-8')
+#
+## TODO: add region + competitors?
