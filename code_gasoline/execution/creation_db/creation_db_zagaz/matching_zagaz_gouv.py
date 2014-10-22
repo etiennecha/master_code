@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import add_to_path_sub
-from add_to_path_sub import path_data
+import add_to_path
+from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 from generic_competition import *
@@ -13,13 +13,17 @@ import collections
 
 def str_zagaz_corrections(word):
   word = word.lower()
-  word = re.sub(ur'(^|\s|,)r?\.?\s?d\.?\s?([0-9]{0,5})(\s|$|,)', ur'\1 route departementale \2 \3', word)
-  word = re.sub(ur'(^|\s|,)r?\.?\s?n\.?\s?([0-9]{0,5})(\s|$|,)', ur'\1 route nationale \2 \3', word) 
+  word = re.sub(ur'(^|\s|,)r?\.?\s?d\.?\s?([0-9]{0,5})(\s|$|,)',
+                ur'\1 route departementale \2 \3',
+                word)
+  word = re.sub(ur'(^|\s|,)r?\.?\s?n\.?\s?([0-9]{0,5})(\s|$|,)',
+                ur'\1 route nationale \2 \3',
+                word) 
   return word.strip()
 
-# LOAD ZAGAZ DATA
-
 path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
+path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built_paper, u'data_json')
 
 path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
 path_dir_insee_extracts = os.path.join(path_data, u'data_insee', u'data_extracts')
@@ -28,15 +32,48 @@ path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_dir_zagaz = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
 
 # ################
+# LOAD DF GOUV
+# ################
+
+#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
+#master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel.json'))
+master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel_raw.json'))
+master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel.json'))
+
+dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
+dict_brands_std = {v[0]: v[1:] for k,v in dict_brands.items()}
+# todo: replace 'AUTRE_IND' by 'INDEPENDENT' everywhere...
+
+dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0)\
+                               if indiv_info['address'][i]]\
+                    for indiv_id, indiv_info in master_info.items()}
+master_addresses = build_master_addresses(dict_addresses)
+
+df_info = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_station_info.csv'),
+                              encoding = 'utf-8',
+                              dtype = {'id_station' : str,
+                                       'adr_zip' : str,
+                                       'adr_dpt' : str,
+                                       'ci_1' : str,
+                                       'ci_ardt_1' :str,
+                                       'ci_2' : str,
+                                       'ci_ardt_2' : str,
+                                       'dpt' : str})
+df_info.set_index('id_station', inplace = True)
+
+# ################
 # LOAD DF ZAGAZ
 # ################
 
-df_zagaz = pd.read_csv(os.path.join(path_dir_built_csv, 'df_zagaz_stations_2012.csv'),
+df_zagaz = pd.read_csv(os.path.join(path_dir_built_csv,
+                                    'df_zagaz_stations_2012.csv'),
                        encoding='utf-8',
                        dtype = {'id_zagaz' : str,
                                 'zip' : str,
                                 'ci_1' : str,
                                 'ci_ardt_1' : str})
+df_zagaz.set_index('id_zagaz', inplace = True)
 
 # u'MATCH' => u'SUPERMARCHE MATCH'
 # u'SPAR' = u'SPAR STATION' or u'SUPERMARCHES SPAR' check if real difference
@@ -63,10 +100,6 @@ dict_brands_update = {'OIL' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
                       'MATCH' : [u'CORA', u'CORA', u'SUP'],
                       'PRIMAGAZ' : [u'AUTRE_IND', u'AUTRE_IND', u'IND']}
 
-# ################
-# LOAD DF GOUV
-# ################
-
 
 # #######################
 # MATCHING GOUV VS. ZAGAZ
@@ -87,180 +120,149 @@ dict_brands_update = {'OIL' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
 # produces a list with best match for each zagaz station within zip code are
 # can be more than 2 components... some seem to have standard format DXXX=NXX
 
-dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0)\
-                               if indiv_info['address'][i]]\
-                    for indiv_id, indiv_info in master_info.items()}
-master_addresses = build_master_addresses(dict_addresses)
-
-## MATCHING BASED ON ZIP 
-#dict_matches = {}
-#ls_zip_not_in_zagaz = []
-#for indiv_id, indiv_addresses in master_addresses.items():
-#  if indiv_addresses:
-#    zip_and_city = re.match('([0-9]{5,5}) (.*)', indiv_addresses[0][1])
-#    zip_code = zip_and_city.group(1)
-#    if zip_code in dict_zagaz_zip.keys():
-#      station_results = []
-#      for (id_zagaz, address_zagaz) in dict_zagaz_zip[zip_code]:
-#        ls_station_levenshtein = []
-#        for address in str_low_noacc(indiv_addresses[0][0]).split(' - '):
-#          for sub_address_zagaz in address_zagaz.split(' - '):
-#            if not ('=' in sub_address_zagaz):
-#              std_sub_address_zagaz = str_corr_low_std_noacc(sub_address_zagaz, False)
-#              levenshtein_tuple = get_levenshtein_tuple(address, std_sub_address_zagaz)
-#              ls_station_levenshtein.append(levenshtein_tuple)
-#            else:
-#              for sub_sub_address_zagaz in sub_address_zagaz.split('='):
-#                std_sub_sub_address_zagaz = str_corr_low_std_noacc(sub_sub_address_zagaz, False)
-#                std_sub_sub_address_zagaz = str_zagaz_corrections(std_sub_sub_address_zagaz)
-#                levenshtein_tuple = get_levenshtein_tuple(address, std_sub_sub_address_zagaz)
-#                ls_station_levenshtein.append(levenshtein_tuple)
-#        ls_station_levenshtein = sorted(ls_station_levenshtein, key=lambda tup: tup[0])
-#        station_results.append([id_zagaz] + list(ls_station_levenshtein[0]))
-#      dict_matches[indiv_id] = sorted(station_results, key=lambda tup: tup[1])
-#    else:
-#      ls_zip_not_in_zagaz.append((zip_code, indiv_id))
-#  else:
-#    print indiv_id, 'no address'
+# To make comparison easier
+df_zagaz['street'][pd.isnull(df_zagaz['street'])] = u''
 
 # MATCHING BASED ON INSEE CODE
-dict_geo_zagaz = {}
-for pair in ls_matching:
-  dict_geo_zagaz.setdefault(pair[-1], []).append((pair[0], pair[4]))
-
 dict_matches = {}
-ls_geo_not_in_zagaz = []
-for indiv_id, indiv_info in master_price['dict_info'].items():
-  if (indiv_id in master_addresses) and (master_addresses[indiv_id]): 
-    indiv_addresses = master_addresses[indiv_id]
-    if 'code_geo' in indiv_info:
-      code_geo = indiv_info['code_geo']
-      if code_geo not in dict_geo_zagaz.keys():
-        code_geo = indiv_info['code_geo_ardts']
-      if code_geo in dict_geo_zagaz.keys():
-        station_results = []
-        for (zagaz_id, zagaz_address) in dict_geo_zagaz[code_geo]:
-          ls_station_levenshtein = []
-          for address in str_low_noacc(indiv_addresses[0][0]).split(' - '):
-            for sub_zagaz_address in zagaz_address.split(' - '):
-              if not ('=' in sub_zagaz_address):
-                std_sub_zagaz_address = str_corr_low_std_noacc(sub_zagaz_address, False)
-                levenshtein_tuple = get_levenshtein_tuple(address, std_sub_zagaz_address)
+ls_ci_not_in_zag = []
+for gov_id, gov_row in df_info.iterrows():
+  if master_addresses.get(gov_id, None):
+    gov_addresses = master_addresses[gov_id]
+    # check if any zagaz station has same ci
+    if gov_row['ci_1'] in df_zagaz['ci_1'].unique():
+      ls_station_results = []
+      # loop on zagaz stations with same ci
+      for zag_id, zag_row in df_zagaz[df_zagaz['ci_1'] == gov_row['ci_1']].iterrows():
+        ls_station_levenshtein = []
+        # want to compare each sub gov address
+        for gov_street in str_low_noacc(gov_row['adr_street']).split(' - '):
+          for zag_street in zag_row['street'].split(' - '):
+            if not ('=' in zag_street):
+              std_zag_street = str_corr_low_std_noacc(zag_street, False)
+              levenshtein_tuple = get_levenshtein_tuple(gov_street, std_zag_street)
+              ls_station_levenshtein.append(levenshtein_tuple)
+            else:
+              for sub_zag_street in zag_street.split('='):
+                std_sub_zag_street = str_corr_low_std_noacc(sub_zag_street, False)
+                std_sub_zag_street = str_zagaz_corrections(std_sub_zag_street)
+                levenshtein_tuple = get_levenshtein_tuple(gov_street, std_sub_zag_street)
                 ls_station_levenshtein.append(levenshtein_tuple)
-              else:
-                for sub_sub_zagaz_address in sub_zagaz_address.split('='):
-                  std_sub_sub_zagaz_address = str_corr_low_std_noacc(sub_sub_zagaz_address, False)
-                  std_sub_sub_zagaz_address = str_zagaz_corrections(std_sub_sub_zagaz_address)
-                  levenshtein_tuple = get_levenshtein_tuple(address, std_sub_sub_zagaz_address)
-                  ls_station_levenshtein.append(levenshtein_tuple)
-          ls_station_levenshtein = sorted(ls_station_levenshtein, key=lambda tup: tup[0])
-          station_results.append([zagaz_id] + list(ls_station_levenshtein[0]))
-        dict_matches[indiv_id] = sorted(station_results, key=lambda tup: tup[1])
-      else:
-         ls_geo_not_in_zagaz.append((zip_code, indiv_id))
+        ls_station_levenshtein = sorted(ls_station_levenshtein, key=lambda tup: tup[0])
+        ls_station_results.append([zag_id] + list(ls_station_levenshtein[0]))
+      dict_matches[gov_id] = sorted(ls_station_results, key=lambda tup: tup[1])
     else:
-      print indiv_id, 'no code_geo'
+      ls_ci_not_in_zag.append(gov_id)
   else:
-    print indiv_id, 'no address'
-# todo: deal with short addresses ?
+    print gov_id, 'no address'
 
-# Results ranked? second can be right one?
-ls_accepted, ls_ambiguous, ls_rejected = [], [], []
-for gouv_id, ls_matches in dict_matches.items():
-  if ls_matches:
-    temp_res = [[gouv_id, ls_matches[0][0]],
-                [master_addresses[gouv_id][0][0], dict_zagaz_stations[ls_matches[0][0]][4]]]
-    if (1 - float(ls_matches[0][1])/float(ls_matches[0][3]) >= 0.5):
-      if (len(ls_matches) == 1) or\
-         (ls_matches[0][1] < ls_matches[1][1]):
-        ls_accepted.append(temp_res)
-      else:
-        ls_ambiguous.append(temp_res + [ls_matches[0][1], dict_zagaz_stations[ls_matches[1][0]][4]])
+# Results are ranked based on first but if short... second could be right one
+dict_matching_quality = {}
+for gov_id, ls_matches in dict_matches.items():
+  if not ls_matches:
+    pass
+  elif len(ls_matches) == 1:
+    if ls_matches[0][1] == 0:
+      dict_matching_quality.setdefault('ci_u_lev_top', []).append((gov_id, ls_matches[0][0]))
+    elif (min(*ls_matches[0][2:4]) >= 8) and\
+        (1 - float(ls_matches[0][1])/float(ls_matches[0][3]) >= 0.5):
+      dict_matching_quality.setdefault('ci_u_lev_ok', []).append((gov_id, ls_matches[0][0]))
     else:
-      ls_rejected.append(temp_res)
- 
+      dict_matching_quality.setdefault('ci_u_lev_bad', []).append((gov_id, ls_matches[0][0]))
+  else:
+    if ls_matches[0][1] == 0:
+      dict_matching_quality.setdefault('ci_m_lev_top', []).append((gov_id, ls_matches[0][0]))
+    elif (min(*ls_matches[0][2:4]) >= 8) and\
+        (1 - float(ls_matches[0][1])/float(ls_matches[0][3]) >= 0.5):
+      dict_matching_quality.setdefault('ci_m_lev_ok', []).append((gov_id, ls_matches[0][0]))
+    else:
+      dict_matching_quality.setdefault('ci_m_lev_bad', []).append((gov_id, ls_matches[0][0]))
+
+# Build df results (slight pbm... not gov address from master_address but df_info)
+ls_rows_matches = []
+for quality, ls_matches in dict_matching_quality.items():
+  for gov_id, zag_id in ls_matches:
+    ls_rows_matches.append([quality,
+                            gov_id,
+                            zag_id] +\
+                           list(df_info.ix[gov_id][['adr_street',
+                                                    'brand_0',
+                                                    'brand_1',
+                                                    'gps_lat_gov_1',
+                                                    'gps_lng_gov_1',
+                                                    'ci_1']]) +\
+                           list(df_zagaz.ix[zag_id][['street',
+                                                     'brand',
+                                                     'lat',
+                                                     'lng']]))
+                            
+ls_columns = ['quality', 'gov_id', 'zag_id',
+              'gov_street', 'gov_br_0', 'gov_br_1', 'gov_lat', 'gov_lng', 'ci',
+              'zag_street', 'zag_br', 'zag_lat', 'zag_lng']
+df_matches = pd.DataFrame(ls_rows_matches,
+                          columns = ls_columns)
+
+df_matches['dist'] = df_matches.apply(\
+                           lambda x: compute_distance(\
+                                            (x['gov_lat'], x['gov_lng']),
+                                            (x['zag_lat'], x['zag_lng'])), axis = 1)
+
+ls_match_display = ['quality',
+                    'gov_id', 'zag_id',
+                    'gov_street', 'zag_street',
+                    'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
+
+# todo: check on brand (flexibility?) + gps coordinates
+# get rid of pbms by observation
+# then restart procss on remaining stations
+
+# CHECK RESULT QUALITY WITH BRAND / GROUP
+
 # Update dict_brands with zagaz specific brands
 dict_brands.update(dict_brands_update)
- 
-# Check result quality with brand
-ls_accepted_2, ls_rejected_2 = [], []
-for row in ls_accepted:
-  gouv_id = row[0][0]
-  zagaz_id = row[0][1]
-  if gouv_id in master_price['dict_info'].keys():
-    ls_brand_gouv = [brand[0] for brand in master_price['dict_info'][gouv_id]['brand']]
-    ls_brand_gouv = [dict_brands[brand][1] for brand in ls_brand_gouv]
-    brand_zagaz = str_low_noacc(str_correct_html(dict_zagaz_stations[zagaz_id][1])).upper()
-    brand_zagaz = dict_brands[brand_zagaz][1]
-    if brand_zagaz not in ls_brand_gouv:
-      ls_rejected_2.append([row[0], row[1:], [brand_zagaz, ls_brand_gouv]])
-    else:
-      ls_accepted_2.append([row[0], row[1:], [brand_zagaz, ls_brand_gouv]])
-  else:
-    print gouv_id, 'not in master_price'
- 
-# Check those present twice ? => FIX BY HAND
-ls_gouv_ids = [station[0][0] for station in ls_accepted_2]
-print len(ls_gouv_ids), len(set(ls_gouv_ids))
-ls_zagaz_ids = [station[0][1] for station in ls_accepted_2]
-print len(ls_zagaz_ids), len(set(ls_zagaz_ids)) # some attributed twice !
+df_matches['zag_br'] = df_matches['zag_br'].apply(\
+                         lambda x: dict_brands[str_low_noacc(x).upper()][0])
 
-ls_pbms = [x for x, y in collections.Counter(ls_zagaz_ids).items() if y > 1]
-for pair in ls_accepted_2:
-  if pair[0][1] in ls_pbms:
-    print pair
-# looks like some are simply duplicates... check !
+# Top quality
+print 'Matched (top) and same brand:',\
+      len(df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
+                      (df_matches['quality'] == 'ci_m_lev_top')) &\
+                     ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
+                      (df_matches['zag_br'] == df_matches['gov_br_1']))])
 
-# len(ls_accepted_2) = 5988 (5869 new but total access etc?)
-# todo: check double attributions + gps consistency
+print 'Matched (top) and diff brand:',\
+      len(df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
+                      (df_matches['quality'] == 'ci_m_lev_top')) &\
+                     (df_matches['zag_br'] != df_matches['gov_br_0']) &\
+                     (df_matches['zag_br'] != df_matches['gov_br_1'])])
 
-# Check distance for accepted
-# print ls_accepted[0]
-# compute_distance(master_info['75014005']['gps'][-1], dict_zagaz[u'10112'][7][0:2])
-ls_distance = []
-for pair in ls_accepted_2:
-  gouv_id, zagaz_id = pair[0]
-  # todo: use dict_ls_ids_gps (gouv else geocoding)
-  if master_info[gouv_id]['gps'][4] and dict_zagaz_stations[zagaz_id][7][0:2]:
-    ls_distance.append([compute_distance(master_info[gouv_id]['gps'][4],
-                                        dict_zagaz_stations[zagaz_id][7][0:2])] + pair)
-# shows only one address from gouv data
-ls_distance = [ls_x[0:1] + ls_x[1] + ls_x[2][0] + [ls_x[3][0]] for ls_x in ls_distance]
-ls_columns = ['dist', 'gouv_id', 'zagaz_id', 'ad_1', 'ad_2', 'brand_zagaz']
-df_distance = pd.DataFrame(ls_distance, columns = ls_columns)
+print df_matches[ls_match_display[1:]][((df_matches['quality'] == 'ci_u_lev_top') |\
+                                        (df_matches['quality'] == 'ci_m_lev_top')) &\
+                                       (df_matches['zag_br'] != df_matches['gov_br_0']) &\
+                                       (df_matches['zag_br'] != df_matches['gov_br_1'])].to_string()
+
+# Medium quality (check beyond brand...)
+
+# CHECK DISTANCE BETWEEN MATCHED OCCURENCES
+# CHECK DUPLICATES
 
 # todo: exlude highway (and corsica?)
-ls_highway = [(k, v['highway'][-1]) for k,v in master_info.items()]
-df_highway = pd.DataFrame(ls_highway, columns = ['id', 'highway'])
-df_distance = pd.merge(df_distance, df_highway, how = 'inner', left_on = 'gouv_id', right_on ='id')
-# print df_distance[df_distance['highway'] == 1].to_string()
-df_distance = df_distance[df_distance['highway'] != 1]
-del(df_distance['id'], df_distance['highway'])
-df_distance = df_distance.sort(['dist'], ascending = [0])
 
-print df_distance[0:100].to_string()
-
-for row_ind, row in df_distance[0:10].iterrows():
-	print row_ind, row.dist, row.gouv_id, row.zagaz_id
-	print master_info[row.gouv_id]['address'][-1], master_info[row.gouv_id]['gps'][4],\
-        dict_zagaz_stations[row.zagaz_id][7][0:2]
-
-# Gouv error: 13115001 ("big" mistake still on website)
-# Correct zagaz error
-dict_zagaz_stations['14439'][7] = (dict_zagaz_stations['14439'][7][0],
-                                   str(-float(dict_zagaz_stations['14439'][7][1])),
-                                   dict_zagaz_stations['14439'][7][2]) # was fixed on zagaz already
-dict_zagaz_stations['19442'][7] = (u'46.527805',
-                                   u'5.60754',
-                                   dict_zagaz_stations['19442'][7][2]) # fixed it on zagaz
-
-# Stations out of France: short term fix for GFT/GMap output
-ls_temp_matching = {'4140001'  : '20101',
-                    '33830004' : '17259',
-                    '13115001' : '20072', # included in top mistakes found upon matching
-                    '20189002' : '1980',  # from here on: Corsica
-                    '20167010' : '13213',
-                    '20118004' : '13220',
-                    '20213004' : '13600',
-                    '20213003' : '17310'}
-
+## Distance : gouv error: 13115001 ("big" mistake still on website)
+## Correct zagaz error
+#dict_zagaz_stations['14439'][7] = (dict_zagaz_stations['14439'][7][0],
+#                                   str(-float(dict_zagaz_stations['14439'][7][1])),
+#                                   dict_zagaz_stations['14439'][7][2]) # was fixed on zagaz already
+#dict_zagaz_stations['19442'][7] = (u'46.527805',
+#                                   u'5.60754',
+#                                   dict_zagaz_stations['19442'][7][2]) # fixed it on zagaz
+#
+## Stations out of France: short term fix for GFT/GMap output
+#ls_temp_matching = {'4140001'  : '20101',
+#                    '33830004' : '17259',
+#                    '13115001' : '20072', # included in top mistakes found upon matching
+#                    '20189002' : '1980',  # from here on: Corsica
+#                    '20167010' : '13213',
+#                    '20118004' : '13220',
+#                    '20213004' : '13600',
+#                    '20213003' : '17310'}

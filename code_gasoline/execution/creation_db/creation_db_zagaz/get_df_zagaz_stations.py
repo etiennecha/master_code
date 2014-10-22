@@ -177,7 +177,7 @@ for indiv_id, ls_info in dict_zagaz_stations.items():
                  ls_info[8:9])
 
 ls_columns = ['brand', 'name', 'comment', 'street', 'zip', 'city',
-              'lng', 'lat', 'quality', 'highway'] 
+              'lat', 'lng', 'quality', 'highway'] 
 df_zagaz = pd.DataFrame(ls_rows,
                         index = ls_index,
                         columns = ls_columns)
