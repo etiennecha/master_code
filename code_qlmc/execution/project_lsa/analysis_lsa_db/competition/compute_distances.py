@@ -46,7 +46,8 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # ##############
 
 df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
-                     encoding = 'UTF-8')
+                     encoding = 'UTF-8',
+                     dtype = {'Code INSEE' : str})
 df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
                 (~pd.isnull(df_lsa['Longitude']))].copy()
 
@@ -199,8 +200,8 @@ hhi = (df_rgps['market_share']**2).sum()
 # EXECUTION
 # ##########
 
-# SURFACE AVAILABLE TO EACH COMMUNE
-
+## SURFACE AVAILABLE TO EACH COMMUNE
+#
 #df_com['avail_surf'] = np.nan
 #df_com['hhi'] = np.nan
 #df_com['CR1'] = np.nan
@@ -256,18 +257,34 @@ df_com_comp['code_insee'] = df_com_comp['code_insee'].apply(\
 df_com = pd.merge(df_com, df_com_comp,
                   left_on = 'code_insee', right_on = 'code_insee')
 
+# Add nb of stores and surf. by municipality
+
+se_nb_stores = df_lsa['Code INSEE'].value_counts()
+se_surf_stores = df_lsa[['Surf Vente', 'Code INSEE']].groupby('Code INSEE').agg(sum)['Surf Vente']
+
+df_com.set_index('code_insee', inplace = True)
+df_com['nb_stores'] = se_nb_stores
+df_com['surf'] = se_surf_stores
+df_com['nb_stores'].fillna(0, inplace = True) #necessary?
+df_com['surf'].fillna(0, inplace = True) #necessary?
+
+# Avail surf by pop
+df_com['nb_households'] = df_com_insee['P10_MEN']
+df_com[df_com['nb_households'] == 0] = np.nan
+df_com['avail_surf_by_h'] = df_com['avail_surf'] / df_com['nb_households']
+
 # Summary Table (include Gini?)
 dict_formatters = {'hhi' : format_float_float,
                    'avail_surf' : format_float_int}
-ls_percentiles = [.05, 0.25, 0.75, 0.95]
+ls_percentiles = [0.25, 0.75]
 # percentiles option only available in newest python
 
 if pd.__version__ in ['0.13.0', '0.13.1']:
-  print df_com[['avail_surf', 'hhi', 'CR1', 'CR2', 'CR3',
+  print df_com[['nb_stores', 'surf', 'avail_surf', 'hhi', 'CR1', 'CR2', 'CR3',
                 'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe().\
           T.to_string(formatters=dict_formatters)
 else:
-  print df_com[['avail_surf', 'hhi', 'CR1', 'CR2', 'CR3',
+  print df_com[['nb_stores', 'surf', 'avail_surf', 'avail_surf_by_h', 'hhi', 'CR1', 'CR2', 'CR3',
                 'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe(\
         percentiles=ls_percentiles).T.to_string(formatters=dict_formatters)
 

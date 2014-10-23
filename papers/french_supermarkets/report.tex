@@ -66,133 +66,100 @@ Data provided by LSA include17,254 French grocery stores. LSA provide three colu
 \section{Overview of store population by type}
 
 
-\subsection{Surface by type}
-
 Descriptive statistics on surface by type show that grocery stores with a surface between 400 and 2500 $m^2$ are categorized as supermarkets, while those with a surface exceeding 2500 $m^2$ are categorized as hypermarkets. The type "Magasins Populaires" is attributed to stores with a significant surface dedicated to non food products (most of them belong to the same retail chain as will be shown later).
 
 \begin{table}[H]
-\caption{Surface in $m^2$ by type of store}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Overview of store population}
 \small
 
 \begin{tabular}{lrrrrrrrrr}
 \toprule
-{} &     \#Total &    \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
+\toprule
+{} &     \# Obs. &        Avg &        Std &        Min &        Q05 &        Q50 &        Q95 &        Max &        Cum \\
 \midrule
-Hypermarkets  &      2,031 &      2,031 &      2,500 &      2,512 &      4,000 &      5,360 &     12,288 &     24,000 & 10,885,500 \\
-Supermarkets  &      5,771 &      5,771 &        400 &        406 &      1,200 &      1,286 &      2,346 &      2,499 &  7,422,118 \\
-Hard discount &      4,477 &      4,477 &        100 &        318 &        770 &        772 &      1,171 &      2,000 &  3,455,127 \\
+
+\multicolumn{10}{l}{\textbf{Surface in $m^2$ by type of store}} \\
 \midrule
-All           &     12,279 &     12,279 &        100 &        400 &        990 &      1,772 &      6,000 &     24,000 & 21,762,745 \\
+Hypermarkets  &      2,031 &      5,360 &      3,280 &      2,500 &      2,512 &      4,000 &     12,288 &     24,000 & 10,885,500 \\
+Supermarkets  &      5,771 &      1,286 &        620 &        400 &        406 &      1,200 &      2,346 &      2,499 &  7,422,118 \\
+Hard discount &      4,477 &        772 &        228 &        100 &        318 &        770 &      1,171 &      2,000 &  3,455,127 \\
+\midrule
+All           &     12,279 &      1,772 &      2,141 &        100 &        400 &        990 &      6,000 &     24,000 & 21,762,745 \\
+\midrule
+
+\multicolumn{10}{l}{\textbf{Number of employees by type of store}} \\
+\midrule
+Hypermarkets  &      2,031 &        171 &        138 &         20 &         45 &        125 &        450 &      1,000 &    346,928 \\
+Supermarkets  &      5,771 &         29 &         20 &          1 &          6 &         26 &         65 &        200 &    165,983 \\
+Hard discount &      4,477 &         10 &          7 &          2 &          5 &          9 &         20 &        151 &     44,267 \\
+\midrule
+All           &     12,279 &         45 &         81 &          1 &          5 &         17 &        200 &      1,000 &    557,178 \\
+\midrule
+
+\multicolumn{10}{l}{\textbf{Number of checkouts by type}} \\
+\midrule
+Hypermarkets  &      2,030 &         23 &         15 &          5 &         10 &         19 &         50 &        358 &     47,307 \\
+Supermarkets  &      5,771 &          7 &          3 &          1 &          3 &          6 &         12 &         27 &     39,332 \\
+Hard discount &      4,476 &          4 &          2 &          1 &          2 &          4 &          8 &         42 &     19,495 \\
+\midrule
+All           &     12,277 &          9 &          9 &          1 &          2 &          6 &         26 &        358 &    106,134 \\
+\midrule
+
+\multicolumn{10}{l}{\textbf{Size of parking by type of store}} \\
+\midrule
+Hypermarkets  &      1,933 &        759 &        780 &         18 &        170 &        500 &      2,191 &      7,660 &  1,467,088 \\
+Supermarkets  &      4,323 &        135 &        108 &          2 &         30 &        120 &        300 &      2,577 &    585,731 \\
+Hard discount &      1,509 &         87 &         69 &          3 &         29 &         73 &        200 &      1,200 &    131,833 \\
+\midrule
+All           &      7,765 &        281 &        485 &          2 &         30 &        140 &      1,100 &      7,660 &  2,184,652 \\
+\midrule
+
+\multicolumn{10}{l}{\textbf{Number of gas pumps}} \\
+\midrule
+Hypermarkets  &      1,786 &          8 &          3 &          1 &          4 &          7 &         14 &         26 &     13,956 \\
+Supermarkets  &      2,912 &          4 &          2 &          0 &          2 &          4 &          7 &         16 &     11,568 \\
+Hard discount &        131 &          4 &          2 &          1 &          2 &          4 &          6 &         23 &        519 \\
+\midrule
+All           &      4,829 &          5 &          3 &          0 &          2 &          4 &         12 &         26 &     26,043 \\
+\midrule
+
+\multicolumn{10}{l}{\textbf{Number of drives}} \\
+\midrule
+Hypermarkets  &   1,138 & \multicolumn{8}{c}{} \\
+Supermarkets  &   805 & \multicolumn{8}{c}{} \ \\
+Hard discount  &   119 & \multicolumn{8}{c}{} \ \\
+\midrule
+All           &    2,062&          5 &          3 &          0 &          2 &          4 &         12 &         26 &     26,043 \\
 \bottomrule
+
 \end{tabular}
 
 \end{table}
 
 
-
-
-\subsection{Number of employees}
-
-\begin{table}[H]
-\caption{Number of employees by type of store}
-\small
-
-\begin{tabular}{lrrrrrrrrr}
-\toprule
-{} &     \#Total &    \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
-\midrule
-Hypermarkets  &      2,031 &      2,031 &         20 &         45 &        125 &        171 &        450 &      1,000 &    346,928 \\
-Supermarkets  &      5,771 &      5,771 &          1 &          6 &         26 &         29 &         65 &        200 &    165,983 \\
-Hard discount &      4,477 &      4,477 &          2 &          5 &          9 &         10 &         20 &        151 &     44,267 \\
-\midrule
-All           &     12,279 &     12,279 &          1 &          5 &         17 &         45 &        200 &      1,000 &    557,178 \\
-\bottomrule
-\end{tabular}
-
-\end{table}
-
-
-\subsection{Number of checkouts by type}
-
-\begin{table}[H]
-\caption{Number of checkouts by type of store}
-\small
-
-\begin{tabular}{lrrrrrrrrr}
-\toprule
-{} &     \#Total &    \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
-\midrule
-Hypermarkets  &      2,031 &      2,030 &          5 &         10 &         19 &         23 &         50 &        358 &     47,307 \\
-Supermarkets  &      5,771 &      5,771 &          1 &          3 &          6 &          7 &         12 &         27 &     39,332 \\
-Hard discount &      4,477 &      4,476 &          1 &          2 &          4 &          4 &          8 &         42 &     19,495 \\
-\midrule
-All           &     12,279 &     12,277 &          1 &          2 &          6 &          9 &         26 &        358 &    106,134 \\
-\bottomrule
-\end{tabular}
-
-\end{table}
-
-
-\subsection{Size of Parking by type}
-
-\begin{table}[H]
-\caption{Size of parking by type of store}
-\small
-
-\begin{tabular}{lrrrrrrrrr}
-\toprule
-{} &     \#Total &    \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
-\midrule
-Hypermarkets  &      2,031 &      1,933 &         18 &        170 &        500 &        759 &      2,191 &      7,660 &  1,467,088 \\
-Supermarkets  &      5,771 &      4,323 &          2 &         30 &        120 &        135 &        300 &      2,577 &    585,731 \\
-Hard discount &      4,477 &      1,509 &          3 &         29 &         73 &         87 &        200 &      1,200 &    131,833 \\
-\midrule
-All           &     12,279 &      7,765 &          2 &         30 &        140 &        281 &      1,100 &      7,660 &  2,184,652 \\
-\bottomrule
-\end{tabular}
-
-\end{table}
-
-
-\subsection{Number of gas pumps}
-
-\begin{table}[H]
-\caption{Number of gas pumps by type of store}
-\small
-
-\begin{tabular}{lrrrrrrrrr}
-\toprule
-{} &     \#Total &    \#Avail. &        Min &        Q05 &        Med &        Avg &        Q95 &        Max &        Cum \\
-\midrule
-Hypermarkets  &      2,031 &      1,786 &          1 &          4 &          7 &          8 &         14 &         26 &     13,956 \\
-Supermarkets  &      5,771 &      2,912 &          0 &          2 &          4 &          4 &          7 &         16 &     11,568 \\
-Hard discount &      4,477 &        131 &          1 &          2 &          4 &          4 &          6 &         23 &        519 \\
-\midrule
-All           &     12,279 &      4,829 &          0 &          2 &          4 &          5 &         12 &         26 &     26,043 \\
-\bottomrule
-\end{tabular}
-
-\end{table}
 
 \section{Overview of competition}
 
 \begin{table}[H]
 \caption{Competition at the municipality level}
 \small
-
 \begin{tabular}{lrrrrrrrr}
 \toprule
 {} &      count &       mean &        std &        min &        25\% &        50\% &        75\% &        max \\
 \midrule
-avail\_surf &  36,253 &  29,958 &  53,296 &   1,027 &  11,516 &  18,319 &  30,173 & 800,164 \\
-hhi        &  36,253 &       0.19 &       0.04 &       0.10 &       0.16 &       0.19 &       0.21 &       0.48 \\
-CR1        &  36,253 &       0.30 &       0.07 &       0.14 &       0.25 &       0.29 &       0.33 &       0.67 \\
-CR2        &  36,253 &       0.51 &       0.08 &       0.28 &       0.45 &       0.51 &       0.56 &       0.87 \\
-CR3        &  36,253 &       0.66 &       0.08 &       0.41 &       0.61 &       0.66 &       0.72 &       0.95 \\
-All\_dist   &  36,253 &       5.43 &       3.62 &       0.00 &       2.82 &       5.05 &       7.49 &      27.14 \\
-H\_dist     &  36,253 &      10.78 &       6.89 &       0.00 &       5.70 &       9.58 &      14.57 &      51.92 \\
-S\_dist     &  36,253 &       6.16 &       3.93 &       0.00 &       3.38 &       5.71 &       8.36 &      27.43 \\
-X\_dist     &  36,253 &       8.28 &       5.37 &       0.00 &       4.37 &       7.44 &      11.25 &      40.71 \\
+nb\_stores       &  36,247 &       0.32 &       1.33 &       0.00 &       0.00 &       0.00 &       0.00 &      55.00 \\
+surf            &  36,247 &     582.32 &   2,685.34 &       0.00 &       0.00 &       0.00 &       0.00 &  84,832.00 \\
+avail\_surf      &  36,247 &  29,959 &  53,301 &   1,027 &  11,514 &  18,317 &  30,181 & 800,164 \\
+avail\_surf\_by\_h &  36,245 &     268.89 &     660.67 &       0.02 &      39.98 &     106.99 &     259.81 &  26,891.83 \\
+hhi             &  36,247 &       0.19 &       0.04 &       0.10 &       0.16 &       0.19 &       0.21 &       0.48 \\
+CR1             &  36,247 &       0.30 &       0.07 &       0.14 &       0.25 &       0.29 &       0.33 &       0.67 \\
+CR2             &  36,247 &       0.51 &       0.08 &       0.28 &       0.45 &       0.51 &       0.56 &       0.87 \\
+CR3             &  36,247 &       0.66 &       0.08 &       0.41 &       0.61 &       0.66 &       0.72 &       0.95 \\
+All\_dist        &  36,247 &       5.43 &       3.62 &       0.00 &       2.82 &       5.05 &       7.49 &      27.14 \\
+H\_dist          &  36,247 &      10.78 &       6.89 &       0.00 &       5.70 &       9.58 &      14.57 &      51.92 \\
+S\_dist          &  36,247 &       6.16 &       3.93 &       0.00 &       3.38 &       5.71 &       8.36 &      27.43 \\
+X\_dist          &  36,247 &       8.28 &       5.37 &       0.00 &       4.38 &       7.45 &      11.25 &      40.71 \\
 \bottomrule
 \end{tabular}
 

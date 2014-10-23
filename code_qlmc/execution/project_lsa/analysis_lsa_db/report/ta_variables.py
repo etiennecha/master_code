@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import pprint
 
 # Default float format: no digit after decimal point
-pd.set_option('float_format', '{:10.0f}'.format)
+pd.set_option('float_format', '{:10,.0f}'.format)
 # Float print functions for display
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
@@ -45,20 +45,21 @@ dict_type_out = {'S' : 'Supermarkets',
                  'X' : 'Hard discount',
                  'DRIVE' : 'Drive'}
 
-str_total, str_avail = u'#Total', u'#Avail.' # need '\#' if old pandas?
+str_total, str_avail = u'#Total', u'# Obs.' # need '\#' if old pandas?
 
 dict_rename_columns =  {'len' : str_total,
                         'mean': u'Avg',
-                        'median': u'Med',
+                        'std' : u'Std',
+                        'median': u'Q50',
                         'pdmin': u'Min',
                         'pdmax': u'Max',
                         'quant_05': u'Q05',
                         'quant_95': u'Q95',
                         'sum' : u'Cum'}
 
-ls_surf_disp = [str_total, str_avail,
-                u'Min', u'Q05', u'Med',
-                u'Avg', u'Q95', u'Max', u'Cum']
+ls_surf_disp = [str_avail, 'Avg',  'Std',
+                u'Min', u'Q05', u'Q50',
+                u'Q95', u'Max', u'Cum']
 
 ls_loc_hsx = ['Hypermarkets', 'Supermarkets', 'Hard discount']
 ls_loc_drive = ['Drive in', 'Drive']
@@ -68,7 +69,7 @@ for field in ['Surf Vente', 'Nbr emp', 'Nbr de caisses', 'Nbr parking', 'Pompes'
   print field
   gbt = df_lsa[['Type_alt', field]].groupby('Type_alt',
                                                       as_index = False)
-  df_surf = gbt.agg([len, np.mean, pdmin, quant_05,
+  df_surf = gbt.agg([len, np.mean, np.std, pdmin, quant_05,
                      np.median, quant_95, pdmax, np.sum])[field]
   df_surf.sort('len', ascending = False, inplace = True)
   se_null_vc = df_lsa['Type_alt'][~pd.isnull(df_lsa[field])].value_counts()
@@ -82,8 +83,8 @@ for field in ['Surf Vente', 'Nbr emp', 'Nbr de caisses', 'Nbr parking', 'Pompes'
                                          [['H', 'X', 'S'], ['DRIVE', 'DRIN']]):
     df_surf_hxs = df_lsa[df_lsa['Type_alt'].isin(ls_store_types)]\
                     [['Statut', field]].groupby('Statut', as_index = False).\
-                      agg([len, pdmin, quant_05, np.median,
-                           np.mean, quant_95, pdmax, np.sum])[field]
+                      agg([len, np.mean, np.std, pdmin, quant_05,
+                           np.median, quant_95, pdmax, np.sum])[field]
     df_surf_hxs[str_avail] = len(df_lsa[(df_lsa['Type_alt'].isin(ls_store_types)) &\
                                              (~pd.isnull(df_lsa[field]))])
     df_surf_hxs.rename(columns = dict_rename_columns,
@@ -93,3 +94,6 @@ for field in ['Surf Vente', 'Nbr emp', 'Nbr de caisses', 'Nbr parking', 'Pompes'
     df_surf_final = pd.concat([df_surf.loc[ls_loc_disp], df_surf_hxs])
     print '\n', df_surf_final[ls_surf_disp].loc[ls_loc_disp + ['All']].\
                   to_latex(index_names = False)
+
+# Drive with store
+df_lsa[['DRIVE', 'Type_alt']][df_lsa['DRIVE'] == 'OUI'].groupby('Type_alt').agg(len)
