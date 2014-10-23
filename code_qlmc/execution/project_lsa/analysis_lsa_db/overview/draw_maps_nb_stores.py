@@ -91,7 +91,10 @@ df_com = df_com[df_com['reg_name'] != 'CORSE']
 
 # LSA Data
 df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
-                     encoding = 'UTF-8')
+                     encoding = 'UTF-8',
+                     dtype = {'Code INSEE' : str,
+                              'Code INSEE ardt' : str,
+                              'Code postal' : str})
 
 df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
                         lambda x: Point(m_fra(x[0], x[1])), axis = 1)
@@ -103,8 +106,9 @@ df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
 # MATCH LSA INSEE CODES WITH GEO FLA COM INSEE CODES
 df_com.set_index('insee_code', inplace = True)
 
-df_lsa['Code INSEE ardt'] = df_lsa['Code INSEE ardt'].apply(lambda x : '{:05d}'.format(x))
-df_lsa['Code postal'] = df_lsa['Code postal'].apply(lambda x : '{:05d}'.format(x))
+#df_lsa['Code INSEE ardt'] = df_lsa['Code INSEE ardt'].apply(lambda x : u'{:05d}'.format(x))
+#df_lsa['Code INSEE'] = df_lsa['Code INSEE ardt'].apply(lambda x : u'{:05d}'.format(x))
+#df_lsa['Code postal'] = df_lsa['Code postal'].apply(lambda x : u'{:05d}'.format(x))
 
 se_ci_vc = df_lsa['Code INSEE ardt'].value_counts()
 ls_pbms = [insee_code for insee_code in df_lsa['Code INSEE ardt'].unique()\
@@ -181,7 +185,7 @@ len(df_lsa[pd.isnull(df_lsa['AU2010'])])
 # MAPS
 # #########################
 
-df_area, area = df_com[~pd.isnull(df_com['poly'])], 'com'
+df_area, area = df_uu[~pd.isnull(df_uu['poly'])], 'UU2010'
 
 # Calculate Jenks natural breaks for density
 breaks = nb(
