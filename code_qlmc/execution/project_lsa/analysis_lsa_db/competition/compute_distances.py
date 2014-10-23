@@ -53,6 +53,8 @@ df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
 
 df_com_insee = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_communes.csv'),
                            encoding = 'UTF-8', dtype = {'DEP': str, 'CODGEO' : str})
+df_com_insee.set_index('CODGEO', inplace = True)
+
 # #############
 # FRANCE MAP
 # #############
@@ -272,6 +274,9 @@ df_com['surf'].fillna(0, inplace = True) #necessary?
 df_com['nb_households'] = df_com_insee['P10_MEN']
 df_com[df_com['nb_households'] == 0] = np.nan
 df_com['avail_surf_by_h'] = df_com['avail_surf'] / df_com['nb_households']
+df_com['nb_h_by_stores'] = df_com['nb_households'] / df_com['nb_stores']
+df_com['surf_by_h'] = df_com['surf'] / df_com['nb_households']
+df_com.replace([np.inf, -np.inf], np.nan, inplace = True)
 
 # Summary Table (include Gini?)
 dict_formatters = {'hhi' : format_float_float,
@@ -287,6 +292,12 @@ else:
   print df_com[['nb_stores', 'surf', 'avail_surf', 'avail_surf_by_h', 'hhi', 'CR1', 'CR2', 'CR3',
                 'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe(\
         percentiles=ls_percentiles).T.to_string(formatters=dict_formatters)
+
+# Entropy
+for field in ['nb_stores', 'surf', 'avail_surf', 'avail_surf_by_h']:
+  df_com['norm_%s' %field] = df_com[field]/df_com[field].mean()
+  ent = (df_com['norm_%s' %field]*np.log(df_com['norm_%s' %field])).sum()
+  print u'Entropy of field %s: ' %field, ent
 
 # Gini (draw normalized empirical distrib?)
 

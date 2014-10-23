@@ -101,34 +101,10 @@ df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
 # DATA TREATMENT
 # ##############
 
-# MATCH LSA INSEE CODES WITH GEO FLA COM INSEE CODES
-df_com.set_index('insee_code', inplace = True)
-
-df_lsa['Code INSEE'] = df_lsa['Code INSEE'].apply(lambda x : '{:05d}'.format(x))
-df_lsa['Code postal'] = df_lsa['Code postal'].apply(lambda x : '{:05d}'.format(x))
-
-def get_insee_from_zip_ardt(zip_code):
-# fix: ['75056', '13055', '69123']
-# geofla only has arrondissements
-  zip_code = re.sub(u'750([0-9]{2})', u'751\\1', zip_code) # 75116 untouched
-  zip_code = re.sub(u'130([0-9]{2})', u'132\\1', zip_code)
-  zip_code = re.sub(u'6900([0-9])', u'6938\\1', zip_code)
-  return zip_code # actually an ardt insee code
-
-ls_insee_bc = ['75056', '13055', '69123']
-df_lsa['Code INSEE'][df_lsa['Code INSEE'].isin(ls_insee_bc)] =\
-    df_lsa['Code postal'][df_lsa['Code INSEE'].isin(ls_insee_bc)].apply(\
-       lambda x: get_insee_from_zip_ardt(x))
-
-df_lsa[df_lsa['Code INSEE'] == '76095'] = '76108' # fusion de communes
-
-se_com_vc = df_lsa['Code INSEE'].value_counts()
-ls_pbms = [insee_code for insee_code in df_lsa['Code INSEE'].unique()\
-             if insee_code not in df_com.index]
-
 # Nb stores by commune
-se_ic_vc = df_lsa['Code INSEE'].value_counts()
-df_com['nb_stores'] = se_com_vc
+se_ci_vc = df_lsa['Code INSEE ardt'].value_counts()
+df_com.set_index('insee_code', inplace = True)
+df_com['nb_stores'] = se_ci_vc
 # for density map: want np.nan, not 0
 
 # Read df_com_comp

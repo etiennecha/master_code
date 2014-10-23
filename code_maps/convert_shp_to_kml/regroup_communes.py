@@ -108,7 +108,7 @@ set_pbms_2 = set_insee_ic.difference(set_geofla_ic)
 ##plt.show()
 
 # build dict of area coords
-area = 'BV'
+area = 'AU2010'
 dict_uu_polygons = {}
 ls_uu_polygons, ls_uu_pbms = [], []
 for uu2010 in df_insee_a[area].unique():

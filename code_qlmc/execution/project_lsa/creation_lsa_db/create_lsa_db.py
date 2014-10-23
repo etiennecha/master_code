@@ -50,6 +50,32 @@ for field in [u'DATE ouv', u'DATE ferm', u'DATE réouv',
                                            (type(x) is pd.Timestamp)
                                         else pd.tslib.NaT)
 
+# ############
+# INSEE CODES
+# ############
+
+# TODO: read Code INSEE and Code postal as unicode
+
+# Check that INSEE codes are up to date
+# fusion de communes
+df_lsa['Code INSEE'] = df_lsa['Code INSEE'].apply(\
+                         lambda x: str(x).replace('76095', '76108'))
+
+def get_insee_from_zip_ardt(zip_code):
+# fix: ['75056', '13055', '69123']
+# geofla only has arrondissements
+  zip_code = re.sub(u'750([0-9]{2})', u'751\\1', zip_code) # 75116 untouched
+  zip_code = re.sub(u'130([0-9]{2})', u'132\\1', zip_code)
+  zip_code = re.sub(u'6900([0-9])', u'6938\\1', zip_code)
+  return zip_code # actually an ardt insee code
+
+ls_insee_bc = ['75056', '13055', '69123']
+
+df_lsa['Code INSEE ardt'] = df_lsa['Code INSEE']
+df_lsa['Code INSEE ardt'].loc[df_lsa['Code INSEE'].isin(ls_insee_bc)] =\
+    df_lsa['Code postal'].loc[df_lsa['Code INSEE'].isin(ls_insee_bc)].apply(\
+       lambda x: get_insee_from_zip_ardt(unicode(x)))
+
 # ############################
 # CREATE DPT AND REG VARIABLES
 # ############################
@@ -211,10 +237,9 @@ df_lsa['Enseigne_alt'] = df_lsa['Enseigne_alt'].apply(\
 
 # Drop if surface below 400m2, else either Supermarket or Hypermarket
 df_lsa = df_lsa[~((df_lsa['Type'] == 'MP') & (df_lsa['Surf Vente'] < 400))].copy()
-df_lsa['Type_alt'] = None
-df_lsa['Type_alt'][df_lsa['Type'] != 'MP'] = df_lsa['Type']
-df_lsa['Type_alt'][(df_lsa['Type'] == 'MP') & (df_lsa['Surf Vente'] < 2500)] = 'S'
-df_lsa['Type_alt'][(df_lsa['Type'] == 'MP') & (df_lsa['Surf Vente'] >= 2500)] = 'H'
+df_lsa['Type_alt'] = df_lsa['Type']
+df_lsa['Type_alt'].loc[(df_lsa['Type'] == 'MP') & (df_lsa['Surf Vente'] < 2500)] = 'S'
+df_lsa['Type_alt'].loc[(df_lsa['Type'] == 'MP') & (df_lsa['Surf Vente'] >= 2500)] = 'H'
 
 # ####################
 # BUILD DATAFRAMES

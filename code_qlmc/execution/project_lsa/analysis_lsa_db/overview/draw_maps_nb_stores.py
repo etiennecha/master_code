@@ -89,14 +89,11 @@ df_com = pd.DataFrame({'poly'       : [Polygon(xy) for xy in m_fra.com],
 
 df_com = df_com[df_com['reg_name'] != 'CORSE']
 
-
 # LSA Data
-df_lsa_int = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_int.csv'),
-                         encoding = 'UTF-8')
-df_lsa_gps = df_lsa_int[(df_lsa_int['Type_alt'] != 'DRIN') &\
-                        (df_lsa_int['Type_alt'] != 'DRIVE')].copy()
+df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
+                     encoding = 'UTF-8')
 
-df_lsa_gps['point'] = df_lsa_gps[['Longitude', 'Latitude']].apply(\
+df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
                         lambda x: Point(m_fra(x[0], x[1])), axis = 1)
 
 # ##############
@@ -106,31 +103,15 @@ df_lsa_gps['point'] = df_lsa_gps[['Longitude', 'Latitude']].apply(\
 # MATCH LSA INSEE CODES WITH GEO FLA COM INSEE CODES
 df_com.set_index('insee_code', inplace = True)
 
-df_lsa_gps['Code INSEE'] = df_lsa_gps['Code INSEE'].apply(lambda x : '{:05d}'.format(x))
-df_lsa_gps['Code postal'] = df_lsa_gps['Code postal'].apply(lambda x : '{:05d}'.format(x))
+df_lsa['Code INSEE ardt'] = df_lsa['Code INSEE ardt'].apply(lambda x : '{:05d}'.format(x))
+df_lsa['Code postal'] = df_lsa['Code postal'].apply(lambda x : '{:05d}'.format(x))
 
-def get_insee_from_zip_ardt(zip_code):
-# fix: ['75056', '13055', '69123']
-# geofla only has arrondissements
-  zip_code = re.sub(u'750([0-9]{2})', u'751\\1', zip_code) # 75116 untouched
-  zip_code = re.sub(u'130([0-9]{2})', u'132\\1', zip_code)
-  zip_code = re.sub(u'6900([0-9])', u'6938\\1', zip_code)
-  return zip_code # actually an ardt insee code
-
-ls_insee_bc = ['75056', '13055', '69123']
-df_lsa_gps['Code INSEE'][df_lsa_gps['Code INSEE'].isin(ls_insee_bc)] =\
-    df_lsa_gps['Code postal'][df_lsa_gps['Code INSEE'].isin(ls_insee_bc)].apply(\
-       lambda x: get_insee_from_zip_ardt(x))
-
-df_lsa_gps[df_lsa_gps['Code INSEE'] == '76095'] = '76108' # fusion de communes
-
-se_com_vc = df_lsa_gps['Code INSEE'].value_counts()
-ls_pbms = [insee_code for insee_code in df_lsa_gps['Code INSEE'].unique()\
+se_ci_vc = df_lsa['Code INSEE ardt'].value_counts()
+ls_pbms = [insee_code for insee_code in df_lsa['Code INSEE ardt'].unique()\
              if insee_code not in df_com.index]
 
 # NB STORES BY COMMUNE
-se_ic_vc = df_lsa_gps['Code INSEE'].value_counts()
-df_com['nb_stores'] = se_com_vc
+df_com['nb_stores'] = se_ci_vc
 # for density map: want np.nan, not 0
 
 # INSEE AREAS
@@ -148,11 +129,11 @@ for ic_main, ls_ic_ardts in ls_insee_ardts:
     df_temp['CODGEO'] = ic_ardt
     df_insee_a = pd.concat([df_insee_a, df_temp])
 
-df_lsa_gps = pd.merge(df_insee_a,
-                      df_lsa_gps,
-                      left_on = 'CODGEO',
-                      right_on = 'Code INSEE',
-                      how = 'right')
+df_lsa = pd.merge(df_insee_a,
+                  df_lsa,
+                  left_on = 'CODGEO',
+                  right_on = 'Code INSEE',
+                  how = 'right')
 
 # LOAD UU DATA
 df_uu = pd.read_csv(os.path.join(path_dir_insee_extracts,
@@ -163,7 +144,7 @@ dict_uu_coords = dec_json(os.path.join(path_dir_insee,
                                        'insee_areas',
                                        'dict_UU2010_l93_coords.json'))
 
-se_uu_vc = df_lsa_gps['UU2010'].value_counts()
+se_uu_vc = df_lsa['UU2010'].value_counts()
 df_uu.set_index('UU2010', inplace = True)
 df_uu['nb_stores'] = se_uu_vc
 
@@ -172,7 +153,7 @@ df_uu_coords = pd.DataFrame([(k, Polygon(v)) for k,v in dict_uu_coords.items()],
 df_uu_coords.set_index('UU2010', inplace = True)
 df_uu['poly'] = df_uu_coords['poly']
 # Stores out of UU
-len(df_lsa_gps[pd.isnull(df_lsa_gps['UU2010'])])
+len(df_lsa[pd.isnull(df_lsa['UU2010'])])
 
 # LOAD AU DATA
 df_au = pd.read_csv(os.path.join(path_dir_insee_extracts,
@@ -183,7 +164,7 @@ dict_au_coords = dec_json(os.path.join(path_dir_insee,
                                        'insee_areas',
                                        'dict_AU2010_l93_coords.json'))
 
-se_au_vc = df_lsa_gps['AU2010'].value_counts()
+se_au_vc = df_lsa['AU2010'].value_counts()
 df_au.set_index('AU2010', inplace = True)
 df_au['nb_stores'] = se_au_vc
 
@@ -192,7 +173,7 @@ df_au_coords = pd.DataFrame([(k, Polygon(v)) for k,v in dict_au_coords.items()],
 df_au_coords.set_index('AU2010', inplace = True)
 df_au['poly'] = df_au_coords['poly']
 # Stores out of AU
-len(df_lsa_gps[pd.isnull(df_lsa_gps['AU2010'])])
+len(df_lsa[pd.isnull(df_lsa['AU2010'])])
 
 # TODO: BV
 
