@@ -31,17 +31,20 @@ df_info = df_info[(df_info['start'] <= '2012-06-01') &\
 
 # Total Access in brands... but could no more be (check by concatenating)
 df_info['TA'] = 0
-df_info['TA'][(df_info['brand_0'] == 'TOTAL_ACCESS') |\
-              (df_info['brand_1'] == 'TOTAL_ACCESS') |\
-              (df_info['brand_2'] == 'TOTAL_ACCESS')] = 1
+df_info.loc[(df_info['brand_0'] == 'TOTAL_ACCESS') |\
+            (df_info['brand_1'] == 'TOTAL_ACCESS') |\
+            (df_info['brand_2'] == 'TOTAL_ACCESS'),
+            'TA'] = 1
 print u'Nb Total Access (assume no exit of brand nor dupl.):', df_info['TA'].sum()
 
 # Chge to Total Access recorded
 df_info['TA_chge'] = 0
-df_info['TA_chge'][(df_info['brand_0'] != 'TOTAL_ACCESS') &\
-                   (df_info['brand_1'] == 'TOTAL_ACCESS')] = 1
-df_info['TA_chge'][(df_info['brand_1'] != 'TOTAL_ACCESS') &\
-                   (df_info['brand_2'] == 'TOTAL_ACCESS')] = 1
+df_info.loc[(df_info['brand_0'] != 'TOTAL_ACCESS') &\
+            (df_info['brand_1'] == 'TOTAL_ACCESS'),
+            'TA_chge'] = 1
+df_info.loc[(df_info['brand_1'] != 'TOTAL_ACCESS') &\
+            (df_info['brand_2'] == 'TOTAL_ACCESS'),
+            'TA_chge'] = 1
 print u'Chge to Total Access:', df_info['TA_chge'].sum()
 
 # #########################
@@ -84,15 +87,20 @@ else:
 # TOTAL ACCESS WITH POLICY PRICE CHANGE
 # #####################################
 
-master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel.json'))
-master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel_raw.json'))
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel.json'))
+#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
+#master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel.json'))
+#master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel_raw.json'))
+#master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel.json'))
+#
+## LOAD df_prices
+#df_prices = pd.DataFrame(master_price['diesel_price'],
+#                         index = master_price['ids'],
+#                         columns = [pd.to_datetime(x) for x in master_price['dates']]).T
 
-# LOAD df_prices
-df_prices = pd.DataFrame(master_price['diesel_price'],
-                         index = master_price['ids'],
-                         columns = [pd.to_datetime(x) for x in master_price['dates']]).T
+df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc.csv'),
+                        parse_dates = ['date'])
+df_prices.set_index('date', inplace = True)
+
 se_mean_prices = df_prices.mean(1)
 df_diff = df_prices.apply(lambda x: x - se_mean_prices, axis = 0)
 

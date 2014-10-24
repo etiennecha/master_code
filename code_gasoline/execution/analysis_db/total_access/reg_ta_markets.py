@@ -13,9 +13,9 @@ path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', 
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
-# ###################
-# LOAD INFO STATIONS
-# ###################
+# #####################
+# LOAD INFO AND PRICES
+# #####################
 
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                            'df_station_info.csv'),
@@ -43,32 +43,34 @@ ls_ids_ctl_fra = df_info.index[(df_info['start'] <= '2011-09-05') &\
                                (df_info['dpt'] != 'Corse') &\
                                (pd.isnull(df_info['brand_1']))]
 
-# ###########################
-# LOAD PRICES AND COMPETITORS
-# ###########################
+# Work with prices before tax
+df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht.csv'),
+                        parse_dates = ['date'])
+df_prices.set_index('date', inplace = True)
 
-ls_ls_competitors = dec_json(os.path.join(path_dir_built_json, 'ls_ls_competitors.json'))
-ls_tuple_competitors = dec_json(os.path.join(path_dir_built_json, 'ls_tuple_competitors.json'))
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel.json'))
+# ###########################################
+# COMPARE ZONE AFFECTED BY CHGE VS. CONTROLS
+# ###########################################
 
-# might want to work with margins (chge in tax creates pbms for ctrl group)
-ls_columns = [pd.to_datetime(date) for date in master_price['dates']]
-df_prices = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_columns).T
-
+# PBM: CHGE TO TA DOES NOT IMPLY CHGE OF PRICE
+# LOAD DF_TA or DF_BRAND/PRICE_CHGE (todo: create) to have more info
 
 # Total Access in brands... but could no more be (check by concatenating)
 df_info['TA'] = 0
-df_info['TA'][(df_info['brand_0'] == 'TOTAL_ACCESS') |\
-              (df_info['brand_1'] == 'TOTAL_ACCESS') |\
-              (df_info['brand_2'] == 'TOTAL_ACCESS')] = 1
+df_info.loc[(df_info['brand_0'] == 'TOTAL_ACCESS') |\
+            (df_info['brand_1'] == 'TOTAL_ACCESS') |\
+            (df_info['brand_2'] == 'TOTAL_ACCESS'),
+            'TA'] = 1
 print u'Nb Total Access (assume no exit of brand nor dupl.):', df_info['TA'].sum()
 
 # Chge to Total Access recorded
 df_info['TA_chge'] = 0
-df_info['TA_chge'][(df_info['brand_0'] != 'TOTAL_ACCESS') &\
-                   (df_info['brand_1'] == 'TOTAL_ACCESS')] = 1
-df_info['TA_chge'][(df_info['brand_1'] != 'TOTAL_ACCESS') &\
-                   (df_info['brand_2'] == 'TOTAL_ACCESS')] = 1
+df_info.loc[(df_info['brand_0'] != 'TOTAL_ACCESS') &\
+            (df_info['brand_1'] == 'TOTAL_ACCESS'),
+            'TA_chge'] = 1
+df_info.loc[(df_info['brand_1'] != 'TOTAL_ACCESS') &\
+            (df_info['brand_2'] == 'TOTAL_ACCESS'),
+            'TA_chge'] = 1
 print u'Chge to Total Access:', df_info['TA_chge'].sum()
 
 # Keep non TA stations active over the whole period in both groups
@@ -80,7 +82,7 @@ ls_col_disp = ['name', 'adr_street', 'adr_city', # 'start', 'end',
 ls_ids_ta = df_info.index[(df_info['TA'] == 1) &\
                           (df_info['ci_1'] == '13001')]
 print df_info.ix[ls_ids_ta][ls_col_disp].to_string()
-df_prices[ls_ids_ta].plot()
+#df_prices[ls_ids_ta].plot()
 
 # Treated group
 ls_ids_treated = df_info.index[(df_info['start' ] <= '2011-09-05') &\
@@ -97,11 +99,16 @@ ls_ids_control = df_info.index[(df_info['start' ] <= '2011-09-05') &\
                                (df_info['dilettante'] == 0) &\
                                (df_info['TA'] == 0) &\
                                (df_info['dpt'] == '13') &\
-                               (df_info['ci_1'] != '13001') &\
+                               (df_info['ci_1'] != '75056') &\
                                (pd.isnull(df_info['brand_1']))]
 print df_info.ix[ls_ids_control][ls_col_disp].to_string()
 
 se_diff = df_prices[ls_ids_ctl_fra].mean(1) - df_prices[ls_ids_treated].mean(1)
+
+# Plot ctrl group vs treated
+ax = df_prices[ls_ids_treated].mean(1).plot(label = 'treated', legend = True)
+df_prices[ls_ids_control].mean(1).plot(ax = ax, label = 'control', legend = True)
+df_prices[ls_ids_ta].mean(1).plot(ax = ax, label = 'ta', legend = True)
 
 ## Check if corresponds to a change in brand
 ## todo: exclude highly rigid prices
