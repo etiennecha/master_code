@@ -10,17 +10,21 @@ path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', 
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 
+# #########################
+# LOAD INFO STATIONS
+# #########################
+
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
-                                           'df_station_info.csv'),
-                              encoding = 'utf-8',
-                              dtype = {'id_station' : str,
-                                       'adr_zip' : str,
-                                       'adr_dpt' : str,
-                                       'ci_1' : str,
-                                       'ci_ardt_1' :str,
-                                       'ci_2' : str,
-                                       'ci_ardt_2' : str,
-                                       'dpt' : str})
+                                   'df_station_info.csv'),
+                      encoding = 'utf-8',
+                      dtype = {'id_station' : str,
+                               'adr_zip' : str,
+                               'adr_dpt' : str,
+                               'ci_1' : str,
+                               'ci_ardt_1' :str,
+                               'ci_2' : str,
+                               'ci_ardt_2' : str,
+                               'dpt' : str})
 df_info.set_index('id_station', inplace = True)
 
 # Active gas stations? Pick arbitrary day for now
@@ -97,7 +101,7 @@ else:
 #                         index = master_price['ids'],
 #                         columns = [pd.to_datetime(x) for x in master_price['dates']]).T
 
-df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc.csv'),
+df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht.csv'),
                         parse_dates = ['date'])
 df_prices.set_index('date', inplace = True)
 
@@ -133,9 +137,29 @@ ax.axvline(x = se_res_argmax.ix[indiv_id], color = 'k', ls = 'dashed')
 plt.tight_layout()
 plt.show()
 
+# ########
+# MARGIN
+# ########
 
+df_quotations = pd.read_csv(os.path.join(path_dir_built_csv, 'df_quotations.csv'),
+                        parse_dates = ['date'])
+df_quotations.set_index('date', inplace = True)
 
+# Check graph 1
+ax = df_prices[indiv_id].plot()
+df_quotations['ULSD 10 CIF NWE R5 EL'].plot(ax=ax)
+plt.plot()
+
+# Check graph 2
+df_quotations['temp_prices'] = df_prices[indiv_id]
+df_quotations['temp_margin'] = df_quotations['temp_prices'] -\
+                                 df_quotations['ULSD 10 CIF NWE R5 EL']
+df_quotations['temp_margin'].plot()
+plt.show()
+
+# #####################
 # ARCHIVE: GRAPH SYNTAX
+# #####################
 
 #ax = df_price[['51520001','51000009', '51000007']].plot()
 #handles, labels = ax.get_legend_handles_labels()

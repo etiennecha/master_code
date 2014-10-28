@@ -30,6 +30,17 @@ def compute_distance(coordinates_A, coordinates_B):
   distance = 6371 * c
   return round(distance, 2)
 
+def compute_distance_ar(ar_lat_A, ar_lng_A, ar_lat_B, ar_lng_B):
+  d_lat = np.radians(ar_lat_B - ar_lat_A)
+  d_lng = np.radians(ar_lng_B - ar_lng_A)
+  lat_1 = np.radians(ar_lat_A)
+  lat_2 = np.radians(ar_lat_B)
+  ar_a = np.sin(d_lat/2.0) * np.sin(d_lat/2.0) + \
+           np.sin(d_lng/2.0) * np.sin(d_lng/2.0) * np.cos(lat_1) * np.cos(lat_2)
+  ar_c = 2 * np.arctan2(np.sqrt(ar_a), np.sqrt(1-ar_a))
+  ar_distance = 6371 * ar_c
+  return np.round(ar_distance, 2)
+
 def get_ls_ls_cross_distances(ls_gps):
   # Size can be lowered by filling only half the matrix
   ls_ls_cross_distances = [[np.nan for gps in ls_gps] for gps in ls_gps]
