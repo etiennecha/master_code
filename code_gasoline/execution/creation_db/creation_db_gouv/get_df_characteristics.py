@@ -59,10 +59,10 @@ for indiv_id in master_info_raw.keys():
   ls_rows_gps.append(ls_gps_gouv_0 + ls_gps_gouv_1)
 df_gps = pd.DataFrame(ls_rows_gps,
                       index = ls_index,
-                      columns = ['gps_lat_gov_0',
-                                 'gps_lng_gov_0',
-                                 'gps_lat_gov_1',
-                                 'gps_lng_gov_1'])
+                      columns = ['lat_gov_0',
+                                 'lng_gov_0',
+                                 'lat_gov_1',
+                                 'lng_gov_1'])
 
 # Load gps provided by Ronan (from prix-carburant.gouv.fr but older)
 df_rls = pd.read_csv(path_csv_rls, dtype = {'idpdv' : str})
@@ -71,8 +71,8 @@ df_rls.set_index('idpdv', inplace = True)
 # Get final df_gps
 df_gps = pd.merge(df_gps, df_rls[['latDeg', 'longDeg']],
                        left_index = True, right_index = True, how = 'left')
-df_gps.rename(columns = {'latDeg' : 'gps_lat_rls',
-                         'longDeg' : 'gps_lng_rls'}, inplace = True)
+df_gps.rename(columns = {'latDeg' : 'lat_rls',
+                         'longDeg' : 'lng_rls'}, inplace = True)
 df_gps = df_gps.apply(lambda x: np.round(x, 3))
 
 # #######################

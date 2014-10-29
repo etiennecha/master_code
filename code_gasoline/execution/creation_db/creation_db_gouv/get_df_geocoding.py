@@ -96,7 +96,7 @@ for indiv_id, geo_info in master_geocoding.items():
 
 df_geocoding = pd.DataFrame(ls_rows,
                             index = ls_ind,
-                            columns = ['lat', 'lng', 'quality', 'google_adr'])
+                            columns = ['lat_gc', 'lng_gc', 'quality', 'google_adr'])
 
 df_geocoding_ok = df_geocoding[~pd.isnull(df_geocoding['google_adr'])]
 # todo: could use geocoding result dict structure
