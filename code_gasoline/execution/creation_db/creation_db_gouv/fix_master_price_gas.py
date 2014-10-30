@@ -6,27 +6,24 @@ from add_to_path import path_data
 from generic_master_price import *
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
-
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
-path_gas_price_raw = os.path.join(path_dir_built_json, 'master_price_gas_raw.json')
-path_gas_price = os.path.join(path_dir_built_json, 'master_price_gas.json')
 
-# #############
-# GAS MASTER
-# #############
+master_price = dec_json(os.path.join(path_dir_built_json,
+                                     'master_price_gas_raw.json'))
 
-master_price = dec_json(path_gas_price_raw)
 # master_price_bu_sp95 = copy.deepcopy(master_price['sp95_price'])
 # master_price_bu_e10 = copy.deepcopy(master_price['e10_price'])
 master_price['sp95_price'] = get_num_ls_ls(master_price['sp95_price'])
 master_price['e10_price'] = get_num_ls_ls(master_price['e10_price'])
 
-master_price['sp95_price'], dict_cors_sp95, dict_ers_sp95 = fill_prices_using_dates(master_price['sp95_price'],
-                                                                                 master_price['sp95_date'],
-                                                                                 master_price['dates'])
-master_price['e10_price'], dict_cors_e10, dict_ers_e10 = fill_prices_using_dates(master_price['e10_price'],
-                                                                             master_price['e10_date'],
-                                                                             master_price['dates'])
+master_price['sp95_price'], dict_cors_sp95, dict_ers_sp95 =\
+  fill_prices_using_dates(master_price['sp95_price'],
+                          master_price['sp95_date'],
+                          master_price['dates'])
+master_price['e10_price'], dict_cors_e10, dict_ers_e10 =\
+  fill_prices_using_dates(master_price['e10_price'],
+                          master_price['e10_date'],
+                          master_price['dates'])
 
 master_price['sp95_price'], dict_cors_gaps_sp95 = fill_short_gaps(master_price['sp95_price'], 5)
 ls_abnormal_prices_sp95 = get_abnormal_price_values(master_price['sp95_price'], 1.0, 2.0)
@@ -104,7 +101,7 @@ dict_suspects_sp95, dict_suspects_single_sp95, master_price['sp95_price'] =\
   correct_abnormal_price_variations(master_price['sp95_price'], 0.1)
 
 dict_suspects_e10, dict_suspects_single_e10, master_price['e10_price'] =\
-  correct_abnormal_price_variations_nan(master_price['e10_price'], 0.1)
+  correct_abnormal_price_variations(master_price['e10_price'], 0.1)
 
 ls_ls_price_durations_sp95 = get_price_durations(master_price['sp95_price'])
 ls_duration_corrections_sp95, master_price['sp95_price'] =\
@@ -133,6 +130,7 @@ ls_start_end_e10, ls_nan_e10, dict_dilettante_e10 =\
 master_price['e10_price'] = get_rid_missing_periods(master_price['e10_price'], 2700)
 master_price['sp95_price'] = get_rid_missing_periods(master_price['sp95_price'], 5500)
 
-# TODO: read http://www.leparisien.fr/economie/pourquoi-le-sans-plomb-98-coute-t-il-plus-cher-que-le-sp95-01-05-2012-1979493.php
+# read http://www.leparisien.fr/economie/pourquoi-le-sans-plomb-98-coute-t-il-plus-cher-que-le-sp95-01-05-2012-1979493.php
 
-# enc_json(master_price, path_gas_price)
+enc_json(master_price, os.path.join(path_dir_built_json,
+                                    'master_price_gas_fixed.json'))

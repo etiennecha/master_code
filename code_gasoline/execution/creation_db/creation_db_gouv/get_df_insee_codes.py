@@ -17,15 +17,17 @@ path_dir_insee_extracts = os.path.join(path_data, u'data_insee', u'data_extracts
 path_dir_insee_dpts_regions = os.path.join(path_data, u'data_insee', u'dpts_regions')
 
 # LOAD GAS STATION ADDRESSES
-master_price_raw = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel_raw.json'))
-master_price = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel.json'))
-master_info_raw = dec_json(os.path.join(path_dir_built_json, u'master_info_diesel_raw.json'))
-master_info = dec_json(os.path.join(path_dir_built_json, u'master_info_diesel.json'))
+
+#master_price_raw = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel_raw.json'))
+#master_info_raw = dec_json(os.path.join(path_dir_built_json, u'master_info_raw.json'))
+
+master_price = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel_fixed.json'))
+master_info = dec_json(os.path.join(path_dir_built_json, u'master_info_fixed.json'))
 
 # Build master_addresses (addresses corrected for html pbms and somewhat stdized)
 dict_addresses = {indiv_id: [indiv_info['address'][i]\
                                for i in (5, 3, 4, 0) if indiv_info['address'][i]]\
-                    for (indiv_id, indiv_info) in master_info_raw.items()}
+                    for (indiv_id, indiv_info) in master_info.items()}
 master_addresses = build_master_addresses(dict_addresses)
 master_addresses['15400003'] = [(u'zone industrielle du sedour', u'15400 riom-\xc8s-montagnes')]
 master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')]

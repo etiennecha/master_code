@@ -102,10 +102,11 @@ path_dir_source_prices = os.path.join(path_data,
                                       'data_source',
                                       'data_prices')
 
-path_dir_built_master_json = os.path.join(path_data,
-                                          'data_gasoline',
-                                          'data_built',
-                                          'data_gasoline')
+path_dir_built_json = os.path.join(path_data,
+                                   'data_gasoline',
+                                   'data_built',
+                                   'data_paper',
+                                   'data_json')
 
 #DIESEL MASTER 2011-2013
 #Current master: (2011,9,4) to (2012,5,14) (Can do : (2011,9,4) to (2013,6,4))
@@ -120,9 +121,8 @@ dict_var_types = {'id' : 0,
                   'series' : [(4,'diesel_price'),
                               (5,'diesel_date')]}
 master = build_master(start_date, end_date, path_in, extension_in, dict_var_types)
-#enc_json(master, os.path.join(path_dir_built_master_json,
-#                              'master_diesel',
-#                              'master_price_diesel_raw')
+enc_json(master, os.path.join(path_dir_built_json,
+                              'master_price_diesel_raw.json'))
 
 ## GAS MASTER 2011-2013
 #start_date = date(2011,9,4)
@@ -138,6 +138,5 @@ master = build_master(start_date, end_date, path_in, extension_in, dict_var_type
 #                              (6,'e10_price'),
 #                              (7,'e10_date')]}
 #master = build_master(start_date, end_date, path_in, extension_in, dict_var_types)
-##enc_json(master, os.path.join(path_dir_built_master_json,
-##                              'master_gas',
-##                              'master_price_gas_raw')
+#enc_json(master, os.path.join(path_dir_built_json,
+#                              'master_price_gas_raw.json'))

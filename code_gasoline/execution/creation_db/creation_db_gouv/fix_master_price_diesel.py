@@ -6,16 +6,11 @@ from add_to_path import path_data
 from generic_master_price import *
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
-
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
-path_diesel_price_raw = os.path.join(path_dir_built_json, 'master_price_diesel_raw.json')
-path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
 
-# ##############
-# DIESEL MASTER
-# ##############
+master_price = dec_json(os.path.join(path_dir_built_json,
+                                     'master_price_diesel_raw.json'))
 
-master_price = dec_json(path_diesel_price_raw)
 master_price['diesel_price'] = get_num_ls_ls(master_price['diesel_price'])
 master_price_bu = copy.deepcopy(master_price['diesel_price'])
 
@@ -78,7 +73,8 @@ ls_start_end, ls_nan, dict_dilettante = get_overview_reporting_bis(master_price[
 # Get rid of periods with too few observations 
 master_price['diesel_price'] = get_rid_missing_periods(master_price['diesel_price'], 8000)
  
-# enc_json(master_price, path_diesel_price)
+enc_json(master_price, os.path.join(path_dir_built_json,
+                                    'master_price_diesel_fixed.json'))
  
 ## MOVE TO PRICE ANALYSIS
 #dict_sales = get_sales(ls_ls_price_variations, 3)

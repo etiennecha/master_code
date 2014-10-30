@@ -27,10 +27,11 @@ ls_dict_gouv_gps_file_names = ['20130117_ls_coordinates_essence.json',
 # LOAD GAS STATION DATA
 # ######################
 
-master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel.json'))
-master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel_raw.json'))
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel.json'))
+#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
+#master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_raw.json'))
+
+master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
+master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
 
 # BUILD master_addresses (addresses corrected for html pbms and somewhat stdized
 dict_addresses = {indiv_id: [indiv_info['address'][i]\

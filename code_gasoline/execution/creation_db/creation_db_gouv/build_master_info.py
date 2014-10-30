@@ -40,15 +40,14 @@ path_dir_gouv_stations = os.path.join(path_data,
                                       'data_gasoline',
                                       'data_source',
                                       'data_stations',
-                                      'data_gouv_stations',
-                                      'std')
+                                      'data_gouv_stations')
 
-ls_file_names = ['20111121_gouv_stations',
-                 '20120000_gouv_stations',
-                 '20120314_gouv_stations',
-                 '20120902_gouv_stations',
-                 '20130220_gouv_stations',
-                 '20130707_gouv_stations']
+ls_file_names = ['20111121_gouv_stations.json',
+                 '20120000_gouv_stations.json',
+                 '20120314_gouv_stations.json',
+                 '20120902_gouv_stations.json',
+                 '20130220_gouv_stations.json',
+                 '20130707_gouv_stations.json']
 
 list_info_keys = ['name',
                   'address', 
@@ -60,19 +59,19 @@ list_info_keys = ['name',
                   'gas_types']
 
 path_dir_built_json = os.path.join(path_data,
-                                   'data_gasoline'
+                                   'data_gasoline',
                                    'data_built',
-                                   'data_json_gasoline')
+                                   'data_paper',
+                                   'data_json')
 
 ls_file_paths = []
 master_files_info = [dec_json(os.path.join(path_dir_gouv_stations, file_name))\
                         for file_name in ls_file_names]
 master_info = build_master_info(master_files_info, list_info_keys)
 
-#enc_json(master_info, os.path.join(path_dir_built_json,
-#                                   'master_diesel',
-#                                   'master_info_diesel_raw.json')
+enc_json(master_info, os.path.join(path_dir_built_json,
+                                   'master_info_raw.json'))
 
-#enc_json(master_info, os.path.join(path_dir_built_json,
-#                                   'master_gas',
-#                                   'master_info_gas_raw.json')
+# No preliminary fix deemed necessary at this stage... could add (e.g. brands)
+enc_json(master_info, os.path.join(path_dir_built_json,
+                                   'master_info_fixed.json'))

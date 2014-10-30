@@ -13,14 +13,16 @@ path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
 # LOAD GAS STATION ADDRESSES
-master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel.json'))
-master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel_raw.json'))
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel.json'))
+
+#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
+#master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_raw.json'))
+
+master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
+master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
 
 #  Build master_addresses (addresses corrected for html pbms and somewhat stdized)
 dict_addresses = {}
-for indiv_id, station in master_info_raw.items():
+for indiv_id, station in master_info.items():
   dict_addresses[indiv_id] = [station['address'][i] for i in (5, 3, 4, 0) if station['address'][i]]
 master_addresses = build_master_addresses(dict_addresses)
 master_addresses['15400003'] = [(u'zone industrielle du sedour', u'15400 riom-\xc8s-montagnes')]
