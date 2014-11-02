@@ -12,9 +12,11 @@ path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_ls_duplicates = os.path.join(path_dir_source, 'data_other', 'ls_id_reconciliations.json')
+path_dir_other = os.path.join(path_dir_source, 'data_other')
 
-ls_tup_duplicates = dec_json(path_ls_duplicates)
+ls_tup_duplicates = dec_json(os.path.join(path_dir_other,
+                                          'ls_id_reconciliations.json'))
+
 ls_tup_duplicates_update = [('13010002', '13010010'),
                             ('13370001', '13370005'),
                             ('16300003', '16300004'), # CM => ITM (LSA)
@@ -85,36 +87,47 @@ df_prices_ttc.set_index('date', inplace = True)
 # DROP THOSE WITH NO PRICE INFO
 # ##############################
 
+df_info_bu = df_info.copy()
+df_prices_ttc_bu = df_prices_ttc.copy()
+df_prices_ht_bu = df_prices_ht.copy()
+
 for id_station in df_info.index[pd.isnull(df_info['start'])]:
 	if id_station in df_prices_ttc.columns:
 		df_prices_ttc.drop(id_station, 1, inplace = True)
 		df_prices_ht.drop(id_station, 1, inplace = True)
 df_info = df_info[~pd.isnull(df_info['start'])]
 
-# DETECT DUPLICATES
-first_date, last_date = df_info['start'].min(), df_info['end'].max()
+# adhoc fixes
+df_info.loc['51100035', 'brand_0'] = 'TOTAL_ACCESS'
+df_info.loc['51100035', 'brand_1'] = np.nan
+df_info.loc['51100035', 'day_1'] = np.nan
+df_info.loc['60230003', 'brand_0'] = 'TOTAL_ACCESS'
+df_info.loc['60230003', 'brand_1'] = np.nan
+df_info.loc['60230003', 'day_1'] = np.nan
 
-ls_check = []
-for ci_1 in df_info['ci_1'].unique():
-  # could check cross distances within and alert if 0 here
-  df_temp = df_info[(df_info['ci_1'] == ci_1) &
-                    ((df_info['start'] != first_date) | (df_info['end'] != last_date))].copy()
-  if len(df_temp) > 1:
-    df_ee = df_temp[(df_temp['start'] == first_date) & (df_temp['end'] != last_date)]
-    df_ls = df_temp[(df_temp['start'] != first_date) & (df_temp['end'] == last_date)]
-    df_sh = df_temp[(df_temp['start'] != first_date) & (df_temp['end'] != last_date)]
-    if (len(df_temp) != len(df_ee)) and (len(df_temp) != len(df_ls)):
-        ls_check.append(ci_1)
-        print '\n', '-'*30
-        print df_temp[ls_di1].to_string()
+## DETECT DUPLICATES
+#first_date, last_date = df_info['start'].min(), df_info['end'].max()
+#
+#ls_check = []
+#for ci_1 in df_info['ci_1'].unique():
+#  # could check cross distances within and alert if 0 here
+#  df_temp = df_info[(df_info['ci_1'] == ci_1) &
+#                    ((df_info['start'] != first_date) | (df_info['end'] != last_date))].copy()
+#  if len(df_temp) > 1:
+#    df_ee = df_temp[(df_temp['start'] == first_date) & (df_temp['end'] != last_date)]
+#    df_ls = df_temp[(df_temp['start'] != first_date) & (df_temp['end'] == last_date)]
+#    df_sh = df_temp[(df_temp['start'] != first_date) & (df_temp['end'] != last_date)]
+#    if (len(df_temp) != len(df_ee)) and (len(df_temp) != len(df_ls)):
+#        ls_check.append(ci_1)
+#        print '\n', '-'*30
+#        print df_temp[ls_di1].to_string()
+#
+#print '\nDuplicates about to be fixed:'
+#for x, y in ls_tup_duplicates:
+#  if x in df_info.index and y in df_info.index:
+#    print x,y
 
-# DETECTED DUPLICATES (NOT PRESENT ANYMORE SO FAR... PROBABLY FORGOT SOME?)
-print '\nDuplicates about to be fixed:'
-for x, y in ls_tup_duplicates:
-	if x in df_info.index and y in df_info.index:
-		print x,y
-
-# todo: DELETE DUPLICATES (W/O LOSING INFO: EX BRAND / EX ADDRESS ?)
+# DELETE DUPLICATES (W/O LOSING INFO: EX BRAND / EX ADDRESS ?)
 for x, y in ls_tup_duplicates:
   if x in df_info.index and y in df_info.index:
     # just to make sure:
@@ -131,6 +144,8 @@ for x, y in ls_tup_duplicates:
       df_prices_ttc.drop(x, axis = 1, inplace = True)
       df_prices_ht.drop(x, axis = 1, inplace = True)
       
+      # TODO: fix start date + other fields not to lose info
+
       # fix brand (assuming weird stuffs may be possible)
       ls_tup_x = [(df_info.ix[x]['brand_%s' %i],
                    df_info.ix[x]['day_%s' %i]) for i in range(3)\
@@ -154,4 +169,37 @@ for x, y in ls_tup_duplicates:
       # drop info
       df_info.drop(x, axis = 0, inplace = True)
 
-# Pbm: check 51100035 and 60230003
+# DETECT REMAINING DUPLICATES
+first_date, last_date = df_info['start'].min(), df_info['end'].max()
+
+ls_check = []
+for ci_1 in df_info['ci_1'].unique():
+  # could check cross distances within and alert if 0 here
+  df_temp = df_info[(df_info['ci_1'] == ci_1) &
+                    ((df_info['start'] != first_date) | (df_info['end'] != last_date))].copy()
+  if len(df_temp) > 1:
+    df_ee = df_temp[(df_temp['start'] == first_date) & (df_temp['end'] != last_date)]
+    df_ls = df_temp[(df_temp['start'] != first_date) & (df_temp['end'] == last_date)]
+    df_sh = df_temp[(df_temp['start'] != first_date) & (df_temp['end'] != last_date)]
+    if (len(df_temp) != len(df_ee)) and (len(df_temp) != len(df_ls)):
+        ls_check.append(ci_1)
+        print '\n', '-'*30
+        print df_temp[ls_di1].to_string()
+
+# OUTPUT
+
+df_info.to_csv(os.path.join(path_dir_built_csv,
+                                    'df_station_info_final.csv'),
+                       index_label = 'id_station',
+                       float_format= '%.3f',
+                       encoding = 'utf-8')
+
+df_prices_ttc.to_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
+                     index_label = 'date',
+                     float_format= '%.3f',
+                     encoding = 'utf-8')
+
+df_prices_ht.to_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
+                    index_label = 'date',
+                    float_format= '%.3f',
+                    encoding = 'utf-8')

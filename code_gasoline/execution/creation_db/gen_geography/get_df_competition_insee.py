@@ -1,39 +1,64 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import add_to_path_sub
-from add_to_path_sub import path_data
+import add_to_path
+from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
-from generic_competition import *
-from functions_string import *
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
-
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
-path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
-path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
-path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
-path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
+path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
-path_csv_insee_data = os.path.join(path_dir_source, 'data_other', 'data_insee_extract.csv')
+# ###############
+# LOAD DATA
+# ###############
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
+# LOAD DF INFO AND PRICES
 
-master_price = dec_json(path_diesel_price)
-master_info = dec_json(path_info)
-ls_ls_competitors = dec_json(path_ls_ls_competitors)
-ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
-dict_brands = dec_json(path_dict_brands)
-dict_dpts_regions = dec_json(path_dict_dpts_regions)
+df_info = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_station_info_final.csv'),
+                      encoding = 'utf-8',
+                      dtype = {'id_station' : str,
+                               'adr_zip' : str,
+                               'adr_dpt' : str,
+                               'ci_1' : str,
+                               'ci_ardt_1' :str,
+                               'ci_2' : str,
+                               'ci_ardt_2' : str,
+                               'dpt' : str},
+                      parse_dates = ['start', 'end', 'day_0', 'day_1', 'day_2'])
+df_info.set_index('id_station', inplace = True)
+
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ht.set_index('date', inplace = True)
+
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
+
+# LOAD JSON COMP FILES
+
+dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
+                                    'dict_ls_comp.json'))
+ls_comp_pairs = dec_json(os.path.join(path_dir_built_json,
+                                     'ls_comp_pairs.json'))
+
+# ####################
+# DEFINE MARKETS
+# ####################
+
+# CLOSED MARKETS BASED ON RADIUS (?)
 
 ls_dict_markets = []
-for distance in [3,4,5]:
+for distance in [3, 4, 5]:
   print '\nMarkets with distance', distance
-  ls_markets = get_ls_ls_distance_market_ids(master_price['ids'], ls_ls_competitors, distance)
+  ls_markets = []
+  for k,v in dict_ls_comp.items():
+    ls_comp_ids = [x[0] for x in v if x[1] <= distance]
+    if ls_comp_ids:
+      ls_markets.append([k] + ls_comp_ids)
   dict_market_ind = {ls_ids[0]: i for i, ls_ids in enumerate(ls_markets)}
   # todo: keep centers of market and periphery?
   ls_closed_markets = []
@@ -54,7 +79,8 @@ for distance in [3,4,5]:
   	print k, len(v)
   ls_dict_markets.append(dict_market_size)
 
-# Most stable markets
+# MOST STABLE MARKETS
+
 print '\nMarkets robust to distance vars'
 dict_refined, dict_rejected = {}, {}
 for market_size, ls_markets in ls_dict_markets[0].items():
@@ -70,26 +96,4 @@ for k, v in dict_refined.items():
 ls_ls_markets = [x for k,v in dict_refined.items() for x in v]
 # enc_json(ls_ls_markets, os.path.join(path_dir_built_json, 'ls_ls_markets.json'))
 
-
-
-# Import INSEE data
-pd_df_insee = pd.read_csv(path_csv_insee_data, encoding = 'utf-8', dtype= str)
-# excludes dom tom
-pd_df_insee = pd_df_insee[~pd_df_insee[u'Département - Commune CODGEO'].str.contains('^97')]
-pd_df_insee['Population municipale 2007 POP_MUN_2007'] = \
-  pd_df_insee['Population municipale 2007 POP_MUN_2007'].apply(lambda x: float(x))
-
-# Define INSEE homogeneous areas
-pd_df_insee['id_code_geo'] = pd_df_insee[u'Département - Commune CODGEO']
-pd_df_insee = pd_df_insee.set_index('id_code_geo')
-dict_markets_insee = {}
-dict_markets_au = {}
-dict_markets_uu = {}
-# some stations don't have code_geo (short spells which are not in master_info)
-for id_station, info_station in master_price['dict_info'].items():
-  if 'code_geo' in info_station:
-    dict_markets_insee.setdefault(info_station['code_geo'], []).append(id_station)
-    station_uu = pd_df_insee.ix[info_station['code_geo']][u"Code géographique de l'unité urbaine UU2010"]
-    dict_markets_uu.setdefault(station_uu, []).append(id_station)
-    station_au = pd_df_insee.ix[info_station['code_geo']][u'Code AU2010']
-    dict_markets_au.setdefault(station_au, []).append(id_station)
+# MERGE W/ INSEE AREAS

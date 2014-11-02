@@ -36,7 +36,7 @@ master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json
 # BUILD master_addresses (addresses corrected for html pbms and somewhat stdized
 dict_addresses = {indiv_id: [indiv_info['address'][i]\
                                for i in (5, 3, 4, 0) if indiv_info['address'][i]]\
-                    for (indiv_id, indiv_info) in master_info_raw.items()}
+                    for (indiv_id, indiv_info) in master_info.items()}
 master_addresses = build_master_addresses(dict_addresses)
 master_addresses['15400003'] = [(u'zone industrielle du sedour', u'15400 riom-\xc8s-montagnes')]
 master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')]
@@ -53,7 +53,7 @@ dict_20130117.update(ls_dict_gouv_gps[1])
 dict_20130724 = ls_dict_gouv_gps[2]
 dict_20130724.update(ls_dict_gouv_gps[3])
 ls_index, ls_rows_gps = [], []
-for indiv_id in master_info_raw.keys():
+for indiv_id in master_info.keys():
   ls_index.append(indiv_id)
   ls_gps_gouv_0 = dict_20130117.get(indiv_id, [np.nan, np.nan])
   ls_gps_gouv_1 = dict_20130724.get(indiv_id, [np.nan, np.nan])
@@ -85,7 +85,7 @@ for indiv_id, ls_addresses in master_addresses.items():
   for address in ls_addresses:
     if 'autoroute' in address[0] or\
        re.search('(^|\s|-)a\s?[0-9]{1,3}($|\s|-|,)', address[0]) or\
-       master_info_raw[indiv_id]['highway'][3] == 1:
+       master_info[indiv_id]['highway'][3] == 1:
       set_highway_ids.add(indiv_id)
 ls_mistakes_highway = ['93130007', '75017016', '56190007', '68127001', '7580002']
 ls_highway_indiv_ids = [indiv_id for indiv_id in list(set_highway_ids)\
@@ -95,9 +95,9 @@ ls_highway_indiv_ids = [indiv_id for indiv_id in list(set_highway_ids)\
     # print indiv_id, master_price['dict_info'][indiv_id]['name'], master_addresses[indiv_id]
 # # excluded: 93130007 (address incl. 'chasse a 3'), 75017016 ('6 a 8'),  56190007 (dummy 1), 
 # # excluded: 68127001 ('pres sortie...'), 7580002 (dummy 1, RN)
-ls_index = master_info_raw.keys()
+ls_index = master_info.keys()
 ls_rows_highway = [1 if indiv_id in ls_highway_indiv_ids else 0\
-                     for indiv_id in master_info_raw.keys()]
+                     for indiv_id in master_info.keys()]
 se_highway = pd.Series(ls_rows_highway, index = ls_index, name = 'highway')
 
 # ######################
@@ -105,9 +105,9 @@ se_highway = pd.Series(ls_rows_highway, index = ls_index, name = 'highway')
 # ######################
 
 # Explore services in each period
-ls_ls_period_services = [[service for indiv_id, indiv_info in master_info_raw.items()\
+ls_ls_period_services = [[service for indiv_id, indiv_info in master_info.items()\
                           if indiv_info['services'][i] for service in indiv_info['services'][i]]\
-                            for i in range(len(master_info_raw[master_info.keys()[0]]['services']))]
+                            for i in range(len(master_info[master_info.keys()[0]]['services']))]
 ls_ls_period_services = [list(set(ls_per_services)) for ls_per_services in ls_ls_period_services]
 for i, ls_period_services in enumerate(ls_ls_period_services[1:], start = 1):
   for service in ls_period_services:
@@ -118,12 +118,12 @@ for i, ls_period_services in enumerate(ls_ls_period_services[1:], start = 1):
 # put all periods together?
 
 # Keep only last period amenities in df for now
-ls_all_services = [service for indiv_id, indiv_info in master_info_raw.items()\
+ls_all_services = [service for indiv_id, indiv_info in master_info.items()\
                     if indiv_info['services'][-1] for service in indiv_info['services'][-1]]
 ls_unique_services = list(set(ls_all_services))
 
 ls_index, ls_rows_services = [], []
-for indiv_id, indiv_info in master_info_raw.items():
+for indiv_id, indiv_info in master_info.items():
   ls_index.append(indiv_id)
   # Caution [] and None are false but different here
   if indiv_info['services'][-1] is not None:
@@ -147,17 +147,17 @@ df_services = pd.DataFrame(ls_rows_services,
 # roughly c.2,000 stations are closed at least one day, c. 1,600 on Sunday (only)
 # 72 are supposed to be closed everyday (4th per) => no price... what happens?
 # maybe sometimes opening days were mistaken for closed days
-# TODO: check closed Sunday and closed every day (or so)
+# todo: check closed Sunday and closed every day (or so)
 # hours: roughly half 24/24h... otherwise large number of occurences, not much interest
-# TODO: check open 24/24h (equivalent to ATM?)
+# todo: check open 24/24h (equivalent to ATM?)
 
 # High heterogeneity in set of services offered
 # Services: pbm, can't know if it really changes or info is improved/corrected...
 # Date of change unknown so kinda impossible to check an effect... (rather would come from price)
-# TODO: check most standard service patterns... scarce services ... brand specificities...
+# todo: check most standard service patterns... scarce services ... brand specificities...
 
 ls_index, ls_rows_opening = [], []
-for indiv_id, indiv_info in master_info_raw.items():
+for indiv_id, indiv_info in master_info.items():
   ls_index.append(indiv_id)
   # Caution [] and None are false but different here
   ls_rows_opening.append([indiv_info['closed_days'][2],
@@ -210,12 +210,12 @@ print df_opening[(~pd.isnull(df_opening['hours_f'])) &
 # ###########################
 
 ls_index, ls_rows_name_adr = [], []
-for indiv_id, indiv_info in master_info_raw.items():
+for indiv_id, indiv_info in master_info.items():
   ls_index.append(indiv_id)
-  res_name = get_latest_info(indiv_id, 'name', master_info_raw, non_null = True)
+  res_name = get_latest_info(indiv_id, 'name', master_info, non_null = True)
   if type(res_name) == list:
     res_name = res_name[0]
-  res_adr = get_latest_info(indiv_id, 'address', master_info_raw, non_null = True)
+  res_adr = get_latest_info(indiv_id, 'address', master_info, non_null = True)
   if (not res_adr) or (len(res_adr) != 2):
     res_adr = [None, None]
   ls_rows_name_adr.append([res_name] + res_adr)
@@ -229,6 +229,10 @@ for field in ['name', 'adr_street', 'zip_city']:
 
 print u'\nNb with no address', len(df_name_adr[pd.isnull(df_name_adr['adr_street']) &\
                                                pd.isnull(df_name_adr['zip_city'])])
+
+# adhoc fix
+df_name_adr.loc[u'76170004', 'adr_street'] = u'autoroute a 29'
+df_name_adr.loc[u'76170004', 'zip_city']   = u'76210 bolleville'
 
 # Get zip, dpt, city
 pat_zip = u"([0-9]?[0-9AB][0-9]{3})\s"

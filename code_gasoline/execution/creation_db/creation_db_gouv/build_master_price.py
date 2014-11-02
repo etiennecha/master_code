@@ -29,7 +29,7 @@ def date_range(start_date, end_date):
   return list_dates
 
 def build_master(start_date, end_date, path_in, extension_in, dict_var_types):
-  # TODO: make constant and varying optional
+  # todo: make constant and varying optional
   """
   The function aggregates files i.e. lists of tuples to build a master
   ----
@@ -108,35 +108,35 @@ path_dir_built_json = os.path.join(path_data,
                                    'data_paper',
                                    'data_json')
 
-#DIESEL MASTER 2011-2013
-#Current master: (2011,9,4) to (2012,5,14) (Can do : (2011,9,4) to (2013,6,4))
-start_date = date(2011,9,4)
-end_date = date(2013,6,4)
-path_in = os.path.join(path_dir_source_prices, 'diesel_standardized_tuple_lists')
-extension_in = r'_diesel'
-dict_var_types = {'id' : 0,
-                  'constant': [(1, 'city'),
-                               (2, 'name')],
-                  'varying': [(3, 'brand')],
-                  'series' : [(4,'diesel_price'),
-                              (5,'diesel_date')]}
-master = build_master(start_date, end_date, path_in, extension_in, dict_var_types)
-enc_json(master, os.path.join(path_dir_built_json,
-                              'master_price_diesel_raw.json'))
-
-## GAS MASTER 2011-2013
+##DIESEL MASTER 2011-2013
+##Current master: (2011,9,4) to (2012,5,14) (Can do : (2011,9,4) to (2013,6,4))
 #start_date = date(2011,9,4)
 #end_date = date(2013,6,4)
-#path_in = os.path.join(path_dir_source_prices, 'gas_standardized_tuple_lists')
-#extension_in = r'_gas'
+#path_in = os.path.join(path_dir_source_prices, 'diesel_standardized_tuple_lists')
+#extension_in = r'_diesel'
 #dict_var_types = {'id' : 0,
 #                  'constant': [(1, 'city'),
 #                               (2, 'name')],
 #                  'varying': [(3, 'brand')],
-#                  'series' : [(4,'sp95_price'),
-#                              (5,'sp95_date'),
-#                              (6,'e10_price'),
-#                              (7,'e10_date')]}
+#                  'series' : [(4,'diesel_price'),
+#                              (5,'diesel_date')]}
 #master = build_master(start_date, end_date, path_in, extension_in, dict_var_types)
 #enc_json(master, os.path.join(path_dir_built_json,
-#                              'master_price_gas_raw.json'))
+#                              'master_price_diesel_raw.json'))
+
+# GAS MASTER 2011-2013
+start_date = date(2011,9,4)
+end_date = date(2013,6,4)
+path_in = os.path.join(path_dir_source_prices, 'gas_standardized_tuple_lists')
+extension_in = r'_gas'
+dict_var_types = {'id' : 0,
+                  'constant': [(1, 'city'),
+                               (2, 'name')],
+                  'varying': [(3, 'brand')],
+                  'series' : [(4,'sp95_price'),
+                              (5,'sp95_date'),
+                              (6,'e10_price'),
+                              (7,'e10_date')]}
+master = build_master(start_date, end_date, path_in, extension_in, dict_var_types)
+enc_json(master, os.path.join(path_dir_built_json,
+                              'master_price_gas_raw.json'))

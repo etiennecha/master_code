@@ -24,8 +24,6 @@ master_price['diesel_price'], dict_corrections, dict_errors =\
                           master_price['diesel_date'],
                           master_price['dates'])
 
-# todo: fill missing prices too if to be used later
-
 master_price['diesel_price'], dict_corrections_gaps =\
   fill_short_gaps(master_price['diesel_price'], 5)
 ls_abnormal_prices = get_abnormal_price_values(master_price['diesel_price'], 1.0, 2.0)
@@ -52,7 +50,8 @@ ls_corrections_diesel =  [(u'2400008' , 1.56 , [u'20120216', u'20120219']), # 0.
                           (u'93440003', 1.49 , [u'20120914', u'20120916']), #0.149
                           (u'93561001', 1.45 , [u'20111129'])] #0.145
 
-ls_corrections_diesel_e = expand_ls_price_corrections(ls_corrections_diesel, master_price['dates'])
+ls_corrections_diesel_e = expand_ls_price_corrections(ls_corrections_diesel,
+                                                      master_price['dates'])
 
 master_price['diesel_price'] = correct_abnormal_price_values(ls_corrections_diesel_e,
                                                              master_price['ids'],
@@ -64,13 +63,16 @@ dict_opposit, dict_single, master_price['diesel_price'] =\
 ls_ls_price_durations = get_price_durations(master_price['diesel_price'])
 ls_duration_corrections, master_price['diesel_price'] =\
   correct_abnormal_price_durations(master_price['diesel_price'], ls_ls_price_durations, 60)
+
 # Stats des after modifications
 ls_ls_price_durations = get_price_durations(master_price['diesel_price'])
 ls_ls_price_variations = get_price_variations(ls_ls_price_durations)
-ls_start_end, ls_nan, dict_dilettante = get_overview_reporting_bis(master_price['diesel_price'],
-                                                                   master_price['dates'],
-                                                                   master_price['missing_dates'])
-# Get rid of periods with too few observations 
+ls_start_end, ls_nan, dict_dilettante =\
+  get_overview_reporting_bis(master_price['diesel_price'],
+                             master_price['dates'],
+                             master_price['missing_dates'])
+
+# Get rid of periods with too few observations
 master_price['diesel_price'] = get_rid_missing_periods(master_price['diesel_price'], 8000)
  
 enc_json(master_price, os.path.join(path_dir_built_json,
