@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
-import add_to_path_sub
-from add_to_path_sub import path_data
+import add_to_path
+from add_to_path import path_data, path_dir
 import os, sys
 import subprocess
 from subprocess import PIPE, Popen
@@ -21,7 +21,7 @@ def read_pdftotext(path_file, path_pdftotext):
 path_dir_raw_stations = os.path.join(path_data, 'data_gasoline', 'data_raw', 'data_stations')
 
 #path_pdf_total_mvts = os.path.join(path_dir_raw_stations, 'data_other', 'mvts_stations_services.pdf') 
-#str_pdf = read_pdftotext(path_pdf_total_mvts, os.path.abspath(os.path.dirname(sys.argv[0])))
+#str_pdf = read_pdftotext(path_pdf_total_mvts, path_dir)
 #ls_pdf = str_pdf.split('\r\n')
 
 # file obtained with pdftohtml and options -i -c -noframes

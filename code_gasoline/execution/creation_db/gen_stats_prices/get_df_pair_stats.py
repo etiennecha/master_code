@@ -1,53 +1,42 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import add_to_path_sub
-from add_to_path_sub import path_data
+import add_to_path
+from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 from generic_competition import *
 import time
 
 path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
-
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
-path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
-path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
+path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
+
 path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
-path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
+path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_comp_pairs.json')
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
-path_csv_insee_data = os.path.join(path_dir_source, 'data_other', 'data_insee_extract.csv')
+ls_comp_pairs = dec_json(os.path.join(path_dir_built_json, 'ls_comp_pairs.json'))
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
-
-master_price = dec_json(path_diesel_price)
-master_info = dec_json(path_info)
-ls_ls_competitors = dec_json(path_ls_ls_competitors)
-ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
-dict_brands = dec_json(path_dict_brands)
-dict_dpts_regions = dec_json(path_dict_dpts_regions)
-
-zero_threshold = np.float64(1e-10)
-series = 'diesel_price'
-km_bound = 5
-
-ls_index = [pd.to_datetime(date) for date in master_price['dates']]
-df_prices = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_index).T
+# LOAD DF PRICES
+df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
+                        parse_dates = ['date'])
+df_prices.set_index('date', inplace = True)
 
 # PRICE CHANGES VS. COMPETITORS (MOVE ?)
 
 # Basic loop: followed price changes and prices matched by competitor
 start = time.clock()
+ls_df_price_ids = df_prices.columns
+km_bound = 5
 ls_ls_results = []
-for ((indiv_id, competitor_id), distance) in ls_tuple_competitors:
-  if distance < km_bound:
+for (indiv_id, competitor_id, distance) in ls_comp_pairs:
+  if (distance < km_bound) and\
+     (indiv_id in ls_df_price_ids) and\
+     (competitor_id in ls_df_price_ids):
     ls_followed_chges = get_stats_two_firm_price_chges(df_prices[indiv_id].values,
-                                                     df_prices[competitor_id].values)
+                                                       df_prices[competitor_id].values)
     ls_matched_prices = get_two_firm_similar_prices(df_prices[indiv_id].values,
-                                                df_prices[competitor_id].values)
+                                                    df_prices[competitor_id].values)
     ls_ls_results.append([[indiv_id, competitor_id, distance],
                           ls_followed_chges,
                           list(ls_matched_prices)])
@@ -63,9 +52,7 @@ ls_matched_prices_titles = ['nb_spread', 'nb_same', 'chge_to_same','lead_1', 'le
 ls_columns = ['id_1', 'id_2', 'distance'] + ls_followed_chges_titles + ls_matched_prices_titles
 df_comp_chges = pd.DataFrame(ls_rows, columns = ls_columns)
 
-# Dataframe enriched
-
-# followed price changes
+# Followed price changes
 df_comp_chges['nb_chges_min'] = df_comp_chges[['nb_chges_1', 'nb_chges_2']].min(axis=1)
 
 df_comp_chges['pct_sim_1'] = df_comp_chges['nb_sim_chges'] / df_comp_chges['nb_chges_1']
@@ -84,7 +71,7 @@ df_comp_chges['pct_close'] = df_comp_chges[['pct_close_1', 'pct_close_2']].max(a
 df_comp_chges['pct_close'] = df_comp_chges['pct_close'][df_comp_chges['nb_chges_min'] > 30]
 
 # matched prices
-ls_match_disp =['id_1', 'id_2', 'distance'] + ls_matched_prices_titles
+ls_match_disp = ['id_1', 'id_2', 'distance'] + ls_matched_prices_titles
 # include simultaneous changes?
 df_comp_chges['lead_both'] = df_comp_chges['lead_1'] + df_comp_chges['lead_2']
 df_comp_chges['pct_lead_1'] = df_comp_chges['lead_1'] / df_comp_chges['lead_both']

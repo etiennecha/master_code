@@ -83,14 +83,14 @@ for indiv_id, indiv_info in master_price['dict_info'].items():
 # fix what seems to be mistakes
 
 master_price['dict_info']['78150001']['brand'] =\
-    [[u'ELF', 0], [u'TOTAL ACCESS', 30]]
+    [[u'ELF', 0], [u'TOTAL_ACCESS', 30]]
 master_price['dict_info']['78150001']['brand_std'] =\
-    [[u'ELF', 0], [u'TOTAL ACCESS', 30]]
+    [[u'ELF', 0], [u'TOTAL_ACCESS', 30]]
 
 master_price['dict_info']['86360003']['brand'] =\
-   [[u'TOTAL', 0], [u'TOTAL ACCESS', 457]]
+   [[u'TOTAL', 0], [u'TOTAL_ACCESS', 457]]
 master_price['dict_info']['86360003']['brand_std'] =\
-   [[u'TOTAL', 0], [u'TOTAL ACCESS', 457]]
+   [[u'TOTAL', 0], [u'TOTAL_ACCESS', 457]]
 
 # could have been created by me (TA or duplicate merge?)
 
@@ -136,3 +136,5 @@ df_brand_activity.to_csv(os.path.join(path_dir_built_csv,
                          index_label = 'id_station',
                          float_format= '%.3f',
                          encoding = 'utf-8')
+
+# TODO: check ids not in master_info

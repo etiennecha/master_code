@@ -67,7 +67,14 @@ path_dir_built_json = os.path.join(path_data,
 ls_file_paths = []
 master_files_info = [dec_json(os.path.join(path_dir_gouv_stations, file_name))\
                         for file_name in ls_file_names]
+
+# Obvious error of unknown original (CAHORS => AULNAY SOUS BOIS...)
+master_files_info[5]['46000011']['address'] = master_files_info[4]['46000011']['address']
+
 master_info = build_master_info(master_files_info, list_info_keys)
+
+
+# OUTPUT TO CSV
 
 enc_json(master_info, os.path.join(path_dir_built_json,
                                    'master_info_raw.json'))
