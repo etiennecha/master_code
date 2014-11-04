@@ -178,6 +178,9 @@ for i, (id_station, gps_station) in enumerate(zip(ls_ids, ls_gps)[:-1]):
                                         df_temp['lng_1'])
   ls_se_distances.append(df_temp['dist'])
 df_distances = pd.concat(ls_se_distances, axis = 1, keys = ls_ids)
+# need to add first and last to complete index/columns
+df_distances.ix[ls_ids[0]] = np.nan
+df_distances[ls_ids[-1]] = np.nan
 print time.time() - start
 
 ## Check results
@@ -209,6 +212,9 @@ for id_station in df_distances.columns:
     ls_comp_pairs.append((id_station, id_station_alt, dist))
     dict_ls_comp.setdefault(id_station, []).append((id_station_alt, dist))
     dict_ls_comp.setdefault(id_station_alt, []).append((id_station, dist))
+
+# Sort each ls_comp on distance
+dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
 
 # 5/ STORE FILES
 

@@ -35,14 +35,11 @@ path_dir_zagaz = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
 # LOAD DF GOUV
 # ################
 
-#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-#master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel.json'))
-master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel_raw.json'))
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_diesel.json'))
+# duplicates within master_info... (hence might match dropped ids)
+master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
 
 dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
 dict_brands_std = {v[0]: v[1:] for k,v in dict_brands.items()}
-# todo: replace 'AUTRE_IND' by 'INDEPENDENT' everywhere...
 
 dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0)\
                                if indiv_info['address'][i]]\
@@ -88,18 +85,17 @@ df_zagaz.set_index('id_zagaz', inplace = True)
 # 'ANTARGAZ' / 'PRIMAGAZ' => Not in my data
 # 'DIVERS' (1394) => Indpt ss enseigne... or else?
 
-dict_brands_update = {'OIL' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
-                      'TEXACO' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
+dict_brands_update = {'OIL' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'TEXACO' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'ENI' : [u'AGIP', u'AGIP', u'OIL'],
-                      'IDS': [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
+                      'IDS': [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       '8 A HUIT' : [u'HUIT_A_HUIT', u'CARREFOUR', u'SUP'],
-                      'AS 24' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
+                      'AS 24' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'SPAR' : [u'CASINO', u'CASINO', u'SUP'],
-                      'ANTARGAZ' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
-                      'DIVERS' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
+                      'ANTARGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'DIVERS' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'MATCH' : [u'CORA', u'CORA', u'SUP'],
-                      'PRIMAGAZ' : [u'AUTRE_IND', u'AUTRE_IND', u'IND']}
-
+                      'PRIMAGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND']}
 
 # #######################
 # MATCHING GOUV VS. ZAGAZ
@@ -121,7 +117,7 @@ dict_brands_update = {'OIL' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
 # can be more than 2 components... some seem to have standard format DXXX=NXX
 
 # To make comparison easier
-df_zagaz['street'][pd.isnull(df_zagaz['street'])] = u''
+df_zagaz.loc[pd.isnull(df_zagaz['street']), 'street'] = u''
 
 # MATCHING BASED ON INSEE CODE
 dict_matches = {}
@@ -188,8 +184,8 @@ for quality, ls_matches in dict_matching_quality.items():
                            list(df_info.ix[gov_id][['adr_street',
                                                     'brand_0',
                                                     'brand_1',
-                                                    'gps_lat_gov_1',
-                                                    'gps_lng_gov_1',
+                                                    'lat_gov_1',
+                                                    'lng_gov_1',
                                                     'ci_1']]) +\
                            list(df_zagaz.ix[zag_id][['street',
                                                      'brand',
@@ -220,8 +216,22 @@ ls_match_display = ['quality',
 
 # Update dict_brands with zagaz specific brands
 dict_brands.update(dict_brands_update)
+
 df_matches['zag_br'] = df_matches['zag_br'].apply(\
                          lambda x: dict_brands[str_low_noacc(x).upper()][0])
+
+# Further normalize brands (applied to standardized brands)
+dict_brands_norm = {'SHOPI': ['CARREFOUR_MARKET', 'GMS'],
+                    'CARREFOUR_CONTACT': ['CARREFOUR_MARKET', 'GMS'],
+                    'ECOMARCHE' : ['INTERMARCHE', 'GMS'],
+                    'INTERMARCHE_CONTACT' : ['INTERMARCHE', 'GMS'],
+                    'MOUSQUETAIRES' : ['INTERMARCHE', 'GMS'],
+                    'ESSO_EXPRESS' : ['ESSO', 'OIL']}
+dict_brands_std.update(dict_brands_norm)
+df_matches['zag_br'] = df_matches['zag_br'].apply(\
+                         lambda x: dict_brands_std.get(x, [None, None])[0])
+df_matches['gov_br_0'] = df_matches['gov_br_0'].apply(\
+                         lambda x: dict_brands_std.get(x, [None, None])[0])
 
 # Top quality
 print 'Matched (top) and same brand:',\

@@ -78,17 +78,17 @@ print 'Zagaz brands not in dict_brands: ', dict_missing_brands.keys()
 # 'ANTARGAZ' / 'PRIMAGAZ' => Not in my data
 # 'DIVERS' (1394) => Indpt ss enseigne... or else?
 
-dict_brands_update = {'OIL' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
-                      'TEXACO' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
+dict_brands_update = {'OIL' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'TEXACO' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'ENI' : [u'AGIP', u'AGIP', u'OIL'],
-                      'IDS': [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
+                      'IDS': [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       '8 A HUIT' : [u'HUIT_A_HUIT', u'CARREFOUR', u'SUP'],
-                      'AS 24' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
+                      'AS 24' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'SPAR' : [u'CASINO', u'CASINO', u'SUP'],
-                      'ANTARGAZ' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
-                      'DIVERS' : [u'AUTRE_IND', u'AUTRE_IND', u'IND'],
+                      'ANTARGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'DIVERS' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'MATCH' : [u'CORA', u'CORA', u'SUP'],
-                      'PRIMAGAZ' : [u'AUTRE_IND', u'AUTRE_IND', u'IND']}
+                      'PRIMAGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND']}
 
 # Fix zagaz data based on observed matching pbms
 ls_fix_zip  = [[[u"Château-d'Olonne", u'85100'], u'85180'],

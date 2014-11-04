@@ -32,6 +32,9 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                       parse_dates = ['start', 'end', 'day_0', 'day_1', 'day_2'])
 df_info.set_index('id_station', inplace = True)
 
+# Get rid of highway
+df_info = df_info[df_info['highway'] != 1]
+
 df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
                         parse_dates = ['date'])
 df_prices_ht.set_index('date', inplace = True)
@@ -58,31 +61,32 @@ dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
 # MARKETS AROUND STATIONS
 # ########################
 
-# MARKETS BASED ON RADIUS
 # todo: integrate possibility to drop stations
+
+# NB COMP BASED ON RADIUS
 
 dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
                                      'dict_ls_comp.json'))
-dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
+# dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
 
 ls_max_dist = [5, 4, 3, 2, 1] # Need decreasing order
 ls_max_dist.sort(reverse = True)
-ls_rows_comp = []
+ls_rows_nb_comp = []
 for id_station in df_info.index:
   ls_comp = dict_ls_comp.get(id_station, None)
-  row_comp = []
+  row_nb_comp = []
   if ls_comp is not None:
     for max_dist in ls_max_dist:
       ls_comp = [comp for comp in ls_comp if comp[1] <= max_dist]
-      row_comp.append(len(ls_comp))
+      row_nb_comp.append(len(ls_comp))
   else:
-    row_comp = [np.nan for i in ls_max_dist]
-  ls_rows_comp.append(row_comp)
-df_comp = pd.DataFrame(ls_rows_comp,
+    row_nb_comp = [np.nan for i in ls_max_dist]
+  ls_rows_nb_comp.append(row_nb_comp)
+df_nb_comp = pd.DataFrame(ls_rows_nb_comp,
                        index = df_info.index,
                        columns = ['{:d}km'.format(i) for i in ls_max_dist])
 
-# MARKETS BASED ON INSEE AREAS
+# NB COMP BASED ON INSEE AREAS
 
 df_insee_areas = pd.read_csv(os.path.join(path_dir_insee_extracts,
                                           'df_insee_areas.csv'),
@@ -105,6 +109,39 @@ for area in ls_areas:
   df_area.set_index(area, inplace = True)
   df_area['M_%s' %area] = se_area
 df_area.set_index('id_station', inplace = True)
+
+# CLOSEST COMP, CLOSEST SUPERMARKET (move to get distances?)
+
+df_distances = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_distances.csv'),
+                           dtype = {'id_station' : str},
+                           encoding = 'utf-8')
+df_distances.set_index('id_station', inplace = True)
+## need to add first and last to complete index/columns
+#df_distances.ix['10000001'] = np.nan
+#df_distances['9700001'] = np.nan
+
+ls_ids_dist_sup = [id_station for id_station in df_info.index\
+                     if (dict_std_brands.get(df_info.ix[id_station]['brand_0'])[2] == 'SUP') and\
+                        (id_station in df_distances.columns)]
+
+ls_rows_clc = []
+for id_station in df_info.index:
+  if id_station in df_distances.columns:
+    se_dist = pd.concat([df_distances[id_station][~pd.isnull(df_distances[id_station])],
+                         df_distances.ix[id_station][~pd.isnull(df_distances.ix[id_station])]])
+    se_dist_sup = se_dist[ls_ids_dist_sup]
+    ls_rows_clc.append([se_dist.min(), se_dist_sup.min()])
+  else:
+    ls_rows_clc.append([np.nan, np.nan])
+df_clc = pd.DataFrame(ls_rows_clc,
+                      index = df_info.index,
+                      columns = ['dist_cl', 'dist_cl_sup'])
+
+# MERGE AND OUTPUT
+
+df_comp = pd.merge(df_nb_comp, df_area, left_index = True, right_index = True)
+df_comp = pd.merge(df_comp, df_clc, left_index = True, right_index = True)
 
 # #####################
 # MARKETS ON THEIR OWN
@@ -161,6 +198,6 @@ ls_ls_stable_markets = [x for k,v in dict_refined.items() for x in v]
 # STATS DES
 
 # have a look (tacit collusion?)
-ax = df_prices_ttc[dict_refined[3][1] + ['45240001', '45240002']].plot()
+ax = df_prices_ttc[[u'41700003', u'41700004', u'41700006'] + ['45240001', '45240002']].plot()
 df_prices_ttc.mean(1).plot(ax=ax)
 plt.show()

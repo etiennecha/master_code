@@ -117,3 +117,41 @@ for ls_results in ls_ls_results:
   ls_ls_final_2.append(ls_final_2)
 
 df_final_2 = pd.DataFrame(ls_ls_final_2[1:], columns = ls_ls_final_2[0])
+
+# #######################
+# CHECK AND EXPLOIT DATA
+# #######################
+
+# FERMETURES
+pd.set_option('display.max_colwidth', 30)
+ls_disp_ferm =['Type station', 'Type fermeture', 'Date fermeture',
+               'Date ouverture', 'Station', 'CP', 'Ville']
+
+#print df_final[ls_disp_ferm].to_string()
+
+#print df_final['Type station'].value_counts()
+#print df_final['Type fermeture'].value_counts()
+
+df_final['Type station'] = df_final['Type station'].apply(lambda x: x.lower())
+df_final['Type fermeture'] = df_final['Type fermeture'].apply(\
+                               lambda x: x.lower().replace(u'è', u'e'))
+
+df_ferm_access = df_final[(df_final['Type station'].str.contains('access')) |\
+                          (df_final['Type fermeture'].str.contains('access'))]
+
+df_ferm_noaccess = df_final[(~df_final['Type station'].str.contains('access')) &\
+                            (~df_final['Type fermeture'].str.contains('access'))]
+
+## Check no access
+#print df_ferm_noaccess[ls_disp_ferm].to_string()
+
+print '\nNb fermetures Access', len(df_ferm_access)
+print df_ferm_access[ls_disp_ferm].to_string()
+
+# todo: extract (elsewhere), match insee, format date, match vs. gouv data
+
+# OUVERTURES
+# just duplicate lines already above?
+print df_final_2.to_string()
+df_final_2['Type Station'] = df_final_2['Type Station'].apply(lambda x: x.lower())
+print 'Nb ouvetures Access:', len(df_final_2[df_final_2['Type Station'].str.contains('access')])
