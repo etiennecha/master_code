@@ -33,67 +33,6 @@ dict_dpts_regions = dec_json(path_dict_dpts_regions)
 # BRAND CHANGES (MOVE?)
 # #####################
 
-dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
-
-# Builds dict with keys: tuple of brand changes combinations, ctent: list of station ids
-dict_brand_chges = {}
-for indiv_id, indiv_info in master_price['dict_info'].items():
-  if len(indiv_info['brand_std']) > 1:
-    tup_indiv_brands = tuple([brand[0] for brand in indiv_info['brand_std']])
-    dict_brand_chges.setdefault(tup_indiv_brands, []).append(indiv_id)
-# Display significant brand changes
-print '\nBrand changes concerning at least 4 stations'
-for k, v in dict_brand_chges.items():
-  if len(v) >= 5: 
-    print k, len(v)
-# Print intra SUP changes
-print '\nBrand changes between supermarkets'
-for k, v in dict_brand_chges.items():
-  if all(dict_std_brands[x][2] == 'SUP' for x in k):
-    print k, len(v)
-# Print intra OIL changes
-print '\nBrand changes between oil stations'
-for k,v in dict_brand_chges.items():
-  if all(dict_std_brands[x][2] == 'OIL' for x in k):
-    print k, len(v)
-
-# Deal with temp chges ? e.g. (u'KAI', u'INDEPENDANT SANS ENSEIGNE', u'KAI', u'KAI')
-# Describe: Rebranding, chges with no impact on price, chges with impact on price, other
-
-# ###############
-# DF STATION INFO
-# ###############
-
-ls_ls_info = []
-for indiv_ind, indiv_id in enumerate(master_price['ids']):
-  # from master_price
-  indiv_dict_info = master_price['dict_info'][indiv_id]
-  city = indiv_dict_info['city']
-  zip_code = '%05d' %int(indiv_id[:-3]) # TODO: improve if must be used alone
-  region = dict_dpts_regions[zip_code[:2]]
-  code_geo = indiv_dict_info.get('code_geo')
-  code_geo_ardts = indiv_dict_info.get('code_geo_ardts')
-  brand_1_b = indiv_dict_info['brand_std'][0][0]
-  brand_2_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][1]
-  brand_type_b = dict_std_brands[indiv_dict_info['brand_std'][0][0]][2]
-  brand_1_e = indiv_dict_info['brand_std'][-1][0]
-  brand_2_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][1]
-  brand_type_e = dict_std_brands[indiv_dict_info['brand_std'][-1][0]][2]
-  # from master_info
-  highway = None
-  if master_info.get(indiv_id):
-    highway = master_info[indiv_id]['highway'][-1]
-  ls_ls_info.append([city, zip_code, code_geo, code_geo_ardts, region, highway,
-                     brand_1_b, brand_2_b, brand_type_b, brand_1_e, brand_2_e, brand_type_e])
-
-ls_columns = ['city', 'zip_code', 'code_geo', 'code_geo_ardts', 'region', 'highway',
-              'brand_1_b', 'brand_2_b', 'brand_type_b', 'brand_1_e', 'brand_2_e', 'brand_type_e']
-df_info = pd.DataFrame(ls_ls_info, master_price['ids'], ls_columns)
-print '\n', df_info.info()
-
-# ###############
-# DF COMPETITION
-# ##############
 
 # Rank each competitor list in distance increasing order
 # TODO: should distinguish None and [] in ls_ls_competitors

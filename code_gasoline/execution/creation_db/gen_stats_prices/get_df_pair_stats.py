@@ -12,9 +12,6 @@ path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'd
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
-path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
-path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_comp_pairs.json')
-
 ls_comp_pairs = dec_json(os.path.join(path_dir_built_json, 'ls_comp_pairs.json'))
 
 # LOAD DF PRICES
@@ -22,7 +19,7 @@ df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.cs
                         parse_dates = ['date'])
 df_prices.set_index('date', inplace = True)
 
-# PRICE CHANGES VS. COMPETITORS (MOVE ?)
+# GET DF PAIR STATS
 
 # Basic loop: followed price changes and prices matched by competitor
 start = time.clock()
