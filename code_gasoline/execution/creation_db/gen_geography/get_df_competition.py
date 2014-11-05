@@ -201,3 +201,6 @@ ls_ls_stable_markets = [x for k,v in dict_refined.items() for x in v]
 ax = df_prices_ttc[[u'41700003', u'41700004', u'41700006'] + ['45240001', '45240002']].plot()
 df_prices_ttc.mean(1).plot(ax=ax)
 plt.show()
+
+ax = df_prices_ttc[[u'73300001', u'73300002', u'73300004']].plot()
+plt.show()

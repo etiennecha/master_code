@@ -281,12 +281,20 @@ print df_matches[ls_ma_di_1][(df_matches['quality'] == 'ci_u_lev_bad') &\
                              (df_matches['zag_br'] != df_matches['gov_br_0']) &\
                              (df_matches['zag_br'] != df_matches['gov_br_1'])].to_string()
 
-# Medium quality (check beyond brand...)
+# OUTPUT ACCEPTED MATCHES
+df_output = df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
+                        (df_matches['quality'] == 'ci_u_lev_bad') |\
+                        (df_matches['quality'] == 'ci_m_lev_top')) &\
+                       ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
+                        (df_matches['zag_br'] == df_matches['gov_br_1']))]
 
-# CHECK DISTANCE BETWEEN MATCHED OCCURENCES
-# CHECK DUPLICATES
+df_output.to_csv(os.path.join(path_dir_built_csv,
+                              'df_zagaz_match_0.csv'),
+                 encoding = 'UTF-8')
 
-# todo: exlude highway (and corsica?)
+## ###########
+## DEPRECATED?
+## ###########
 
 ## Distance : gouv error: 13115001 ("big" mistake still on website)
 ## Correct zagaz error
