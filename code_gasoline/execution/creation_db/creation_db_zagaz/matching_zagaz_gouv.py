@@ -182,19 +182,23 @@ for quality, ls_matches in dict_matching_quality.items():
                             gov_id,
                             zag_id] +\
                            list(df_info.ix[gov_id][['adr_street',
+                                                    'adr_city',
                                                     'brand_0',
                                                     'brand_1',
                                                     'lat_gov_1',
                                                     'lng_gov_1',
                                                     'ci_1']]) +\
                            list(df_zagaz.ix[zag_id][['street',
+                                                     'city',
                                                      'brand',
                                                      'lat',
                                                      'lng']]))
-                            
+
 ls_columns = ['quality', 'gov_id', 'zag_id',
-              'gov_street', 'gov_br_0', 'gov_br_1', 'gov_lat', 'gov_lng', 'ci',
-              'zag_street', 'zag_br', 'zag_lat', 'zag_lng']
+              'gov_street', 'gov_city',
+              'gov_br_0', 'gov_br_1', 'gov_lat', 'gov_lng', 'ci',
+              'zag_street', 'zag_city',
+              'zag_br', 'zag_lat', 'zag_lng']
 df_matches = pd.DataFrame(ls_rows_matches,
                           columns = ls_columns)
 
@@ -202,11 +206,6 @@ df_matches['dist'] = df_matches.apply(\
                            lambda x: compute_distance(\
                                             (x['gov_lat'], x['gov_lng']),
                                             (x['zag_lat'], x['zag_lng'])), axis = 1)
-
-ls_match_display = ['quality',
-                    'gov_id', 'zag_id',
-                    'gov_street', 'zag_street',
-                    'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
 
 # todo: check on brand (flexibility?) + gps coordinates
 # get rid of pbms by observation
@@ -221,20 +220,19 @@ df_matches['zag_br'] = df_matches['zag_br'].apply(\
                          lambda x: dict_brands[str_low_noacc(x).upper()][0])
 
 # Further normalize brands (applied to standardized brands)
-dict_brands_norm = {'SHOPI': ['CARREFOUR_MARKET', 'GMS'],
-                    'CARREFOUR_CONTACT': ['CARREFOUR_MARKET', 'GMS'],
-                    'ECOMARCHE' : ['INTERMARCHE', 'GMS'],
-                    'INTERMARCHE_CONTACT' : ['INTERMARCHE', 'GMS'],
-                    'MOUSQUETAIRES' : ['INTERMARCHE', 'GMS'],
-                    'ESSO_EXPRESS' : ['ESSO', 'OIL']}
+dict_brands_norm = {u'SHOPI': [u'CARREFOUR', u'GMS'],
+                    u'CARREFOUR_CONTACT': [u'CARREFOUR', u'GMS'],
+                    u'ECOMARCHE' : [u'MOUSQUETAIRES', u'GMS'],
+                    u'INTERMARCHE_CONTACT' : [u'MOUSQUETAIRES', u'GMS'],
+                    u'INTERMARCHE' : [u'MOUSQUETAIRES', u'GMS'],
+                    u'ESSO_EXPRESS' : [u'ESSO', u'OIL']}
 dict_brands_std.update(dict_brands_norm)
-df_matches['zag_br'] = df_matches['zag_br'].apply(\
-                         lambda x: dict_brands_std.get(x, [None, None])[0])
-df_matches['gov_br_0'] = df_matches['gov_br_0'].apply(\
-                         lambda x: dict_brands_std.get(x, [None, None])[0])
+for field_brand in ['zag_br', 'gov_br_0', 'gov_br_1']:
+  df_matches[field_brand] = df_matches[field_brand].apply(\
+                              lambda x: dict_brands_std.get(x, [None, None])[0])
 
 # Top quality
-print 'Matched (top) and same brand:',\
+print '\nMatched (top) and same brand:',\
       len(df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
                       (df_matches['quality'] == 'ci_m_lev_top')) &\
                      ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
@@ -246,10 +244,42 @@ print 'Matched (top) and diff brand:',\
                      (df_matches['zag_br'] != df_matches['gov_br_0']) &\
                      (df_matches['zag_br'] != df_matches['gov_br_1'])])
 
-print df_matches[ls_match_display[1:]][((df_matches['quality'] == 'ci_u_lev_top') |\
-                                        (df_matches['quality'] == 'ci_m_lev_top')) &\
-                                       (df_matches['zag_br'] != df_matches['gov_br_0']) &\
-                                       (df_matches['zag_br'] != df_matches['gov_br_1'])].to_string()
+# Different brand: really not to be matched?
+
+ls_ma_di_0 = ['gov_id', 'zag_id',
+              'gov_street', 'zag_street',
+              'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
+
+print df_matches[ls_ma_di_0][((df_matches['quality'] == 'ci_u_lev_top') |\
+                               (df_matches['quality'] == 'ci_m_lev_top')) &\
+                              (df_matches['zag_br'] != df_matches['gov_br_0']) &\
+                              (df_matches['zag_br'] != df_matches['gov_br_1'])].to_string()
+
+# Unique possibility at code insee level but matching not great: just diff address?
+
+pd.set_option('display.max_colwidth', 30)
+
+print '\nMatched (bad) but unique at insee code level and same brand:',\
+      len(df_matches[(df_matches['quality'] == 'ci_u_lev_bad') &\
+                     ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
+                      (df_matches['zag_br'] == df_matches['gov_br_1']))])
+
+ls_ma_di_1 = ['gov_id', 'zag_id', 'gov_city', 'zag_city',
+              'gov_street', 'zag_street',
+              'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
+
+print df_matches[ls_ma_di_1][(df_matches['quality'] == 'ci_u_lev_bad') &\
+                             ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
+                              (df_matches['zag_br'] == df_matches['gov_br_1']))].to_string()
+
+print '\nMatched (bad) but unique at insee code level and diff brand:',\
+      len(df_matches[(df_matches['quality'] == 'ci_u_lev_bad') &\
+                     (df_matches['zag_br'] != df_matches['gov_br_0']) &\
+                     (df_matches['zag_br'] != df_matches['gov_br_1'])])
+
+print df_matches[ls_ma_di_1][(df_matches['quality'] == 'ci_u_lev_bad') &\
+                             (df_matches['zag_br'] != df_matches['gov_br_0']) &\
+                             (df_matches['zag_br'] != df_matches['gov_br_1'])].to_string()
 
 # Medium quality (check beyond brand...)
 
