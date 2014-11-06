@@ -121,7 +121,7 @@ ls_unmatched_gov_ids = [gov_id for gov_id in df_info.index\
 ls_unmatched_zag_ids = [zag_id for zag_id in df_zagaz.index\
                            if zag_id not in df_zagaz_match_0['zag_id'].values]
 
-df_info_un = df_info.ix[ls_unmatched_gov_ids].copy()
+df_info_um = df_info.ix[ls_unmatched_gov_ids].copy()
 df_zagaz_um = df_zagaz.ix[ls_unmatched_zag_ids].copy()
 
 ls_cols = 0
@@ -131,7 +131,7 @@ dict_no_match = {'zag_ci_n' : [],
 dict_matching_quality = {'zag_ci_u_ebr' : [],
                          'zag_ci_u_dbr' : [], # diff brand, match but not good?
                          'zag_ci_m_ebr' : []} # several in ci but only one of same brand
-for gov_id, gov_station in df_info_un.iterrows():
+for gov_id, gov_station in df_info_um.iterrows():
   gov_station_ci = gov_station['ci_1']
   brand_station = gov_station['brand_0']
   df_zagaz_ci = df_zagaz_um[df_zagaz_um['ci_1'] == gov_station_ci]
@@ -150,7 +150,7 @@ for gov_id, gov_station in df_info_un.iterrows():
       dict_no_match['zag_ci_m_nbr'].append(gov_id)
     elif len(df_zagaz_ci_br) == 1:
       dict_matching_quality['zag_ci_m_ebr'].append((gov_id,
-                                                    df_zagaz_ci.index[0]))
+                                                    df_zagaz_ci_br.index[0]))
     else:
       dict_no_match['zag_ci_m_mbr'].append(gov_id)
 
@@ -166,6 +166,100 @@ for k, v in dict_no_match.items():
 # ################
 # BUILD DF RESULTS
 # ################
+
+ls_hand_matching = [('10210001', '15803'),
+                    ('10270003',   '679'), # Total => Carrefour
+                    ('11390001', '15657'),
+                    ('11590001',   '757'), 
+                    ('1250001' ,    '35'),
+                    ('1250002' ,    '63'),
+                    ('12780002',   '908'),
+                    ('13130006',   '976'),
+                    ('1360001' , '19981'), # duplicates?
+                    ('1360002' , '19981'),
+                    ('14760001',  '1263'),
+                    ('15290001',  '1426'),
+                    ('15500002', '13814'),
+                    ('16230002',  '1544'),
+                    ('16270001',  '1560'),
+                    ('16400002', '13592'),
+                    ('16400002', '13592'), # check
+                    ('17110001',  '1705'),
+                    ('17120002',  '1610'),
+                    ('17139002', '13984'),
+                    ('17160002', '18328'),
+                    ('17360001',  '1693'),
+                    ('17420001',  '1720'),
+                    ('19800001',  '1908'),
+                    ('20156001',  '2086'),
+                    ('21240001',  '2222'),
+                    ('21800006',  '2197'),
+                    ('22290003', '15762'),
+                    ('22400002',  '2254'),
+                    ('24160001',  '2592'),
+                    ('24170002',  '2607'),
+                    ('25420004', '14978'),
+                    ('26170001', '18955'),
+                    ('27350003',  '3012'),
+                    ('27930003',  '2948'),
+                    ('2880001' ,   '156'),
+                    ('29160001',  '3213'),
+                    ('30210005',  '3461'), # check
+                    ('30340002',  '3540'),
+                    ('30960001',  '3474'),
+                    ('31240005',  '3630'),
+                    ('31420001', '18693'), # duplicates? 
+                    ('31420002', '18693'), # duplicates?
+                    ('32340001', '17370'), # check
+                    ('32460001', '17387'), # check
+                    ('32730003',  '3851'),
+                    ('33260010', '20220'), # check
+                    ('33290005',  '3890'),
+                    ('33480004', '13991'),
+                    ('33490001',  '4100'), # check
+                    ('34160001',  '4184'),
+                    ('34320003', '14487'), # check
+                    ('34620001',  '4299'), # check
+                    ('34670001',  '4155'), # check
+                    ('35111001', '18218'), # check
+                    ('35800001', '16640'),
+                    ('35850004', '18725'), # end of 0:100
+                    ('36110001',  '4621'),
+                    ('36290001', '17537'),
+                    ('37370001',  '4766'),
+                    ('38450001',  '5004'), # check
+                    ('38570001', '15002'),
+                    ('38850001',  '4840'), # check
+                    ('38850002',  '4835'),
+                    ('39170001',  '5100'),
+                    ('39230004', '16818'), # check
+                    ('39570007', ' 5087'),
+                    ('40140001', '15853'),
+                    ('40280004',  '5173'),
+                    ('40420003',  '5140'), # check
+                    ('4120002',  '19752'), # check
+                    ('44115001',  '5573'),
+                    ('44260003', '14170'), # check
+                    ('47300002', '15769'),
+                    ('49360001',  '6332'),
+                    ('50690001',  '6489'), # check
+                    ('51800004', '15968'), # check
+                    ('52400003', '16055'),
+                    ('56170001',  '7217'), # check
+                    ('56350003',  '7038'), # check
+                    ('57660001', '15228'),
+                    ('59110002',  '7649'),
+                    ('59223002',  '7729'),
+                    ('59260001',  '7668'),
+                    ('59279002', '15177'), 
+                    ('59370003', '13108'),
+                    ('59510002',  '7638'),
+                    ('59850002',  '7707'),
+                    ('60270002', '15825'),
+                    ('60300006', '15321'), # check just with ids
+                    ('60350001',  '7864'),
+                    ('62250006',  '8225'),
+                    ('62770001',  '8058')] # check, end of 100:200
 
 # Build df results (slight pbm... not gov address from master_address but df_info)
 ls_rows_matches = []
@@ -204,7 +298,20 @@ ls_ma_di_0 = ['gov_id', 'zag_id',
               'gov_street', 'zag_street',
               'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
 
-print df_matches[ls_ma_di_0][0:100].to_string()
+ls_ma_di_1 = ['gov_id', 'zag_id', 'gov_city', 'zag_city',
+              'gov_street', 'zag_street',
+              'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
+
+# may not want to keep one result but diff brand?
+print '\n One match in ci, different brands:'
+print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_u_dbr'].to_string()
+# todo: drop this from final matching and keep only handpicked selection
+
+print '\n One match in ci, same brands:'
+print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_u_ebr'][0:200].to_string()
+
+print '\n Mult match in ci, only one w/ same brande:'
+print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_m_ebr'][0:200].to_string()
 
 ## #######################
 ## MATCHING GOUV VS. ZAGAZ
