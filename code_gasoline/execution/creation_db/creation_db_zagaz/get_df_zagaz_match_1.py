@@ -313,6 +313,30 @@ print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_u_ebr'][0:200].to_
 print '\n Mult match in ci, only one w/ same brande:'
 print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_m_ebr'][0:200].to_string()
 
+# ############################
+# DF OUTPUT (DF ZAGAZ MATCH 1)
+# ############################
+
+# todo:
+# add matches manually detected
+
+df_output = pd.concat([df_zagaz_match_0,
+                       df_matches[df_matches['quality'] != 'zag_ci_u_dbr']])
+print df_output[ls_ma_di_1][0:10].to_string()
+
+# Inspect duplicates (can be only in zagaz)
+se_zag_id_vc = df_output['zag_id'].value_counts()
+se_zag_id_dup = se_zag_id_vc[se_zag_id_vc > 1]
+
+df_duplicates = df_output.copy()
+df_duplicates.set_index('zag_id', inplace = True)
+# caution: diff from .ix[] which does not get all
+df_duplicates = df_duplicates.loc[se_zag_id_dup.index]
+df_duplicates.reset_index(inplace = True)
+# might have want to be more careful before
+pd.set_option('display.max_colwidth', 30)
+print df_duplicates[ls_ma_di_1][0:100].to_string()
+
 ## #######################
 ## MATCHING GOUV VS. ZAGAZ
 ## #######################

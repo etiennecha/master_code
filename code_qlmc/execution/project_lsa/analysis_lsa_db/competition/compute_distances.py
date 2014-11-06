@@ -45,14 +45,18 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # READ CSV FILES
 # ##############
 
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
-                     encoding = 'UTF-8',
-                     dtype = {'Code INSEE' : str})
+df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
+                                  'df_lsa_active_fm_hsx.csv'),
+                     dtype = {'Code INSEE' : str},
+                     encoding = 'UTF-8')
 df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
                 (~pd.isnull(df_lsa['Longitude']))].copy()
 
-df_com_insee = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_communes.csv'),
-                           encoding = 'UTF-8', dtype = {'DEP': str, 'CODGEO' : str})
+df_com_insee = pd.read_csv(os.path.join(path_dir_insee_extracts,
+                                        'df_communes.csv'),
+                           dtype = {'DEP': str,
+                                    'CODGEO' : str},
+                           encoding = 'UTF-8')
 df_com_insee.set_index('CODGEO', inplace = True)
 
 # #############
@@ -289,7 +293,8 @@ if pd.__version__ in ['0.13.0', '0.13.1']:
                 'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe().\
           T.to_string(formatters=dict_formatters)
 else:
-  print df_com[['nb_stores', 'surf', 'avail_surf', 'avail_surf_by_h', 'hhi', 'CR1', 'CR2', 'CR3',
+  print df_com[['nb_stores', 'surf', 'avail_surf', 'avail_surf_by_h',
+                'hhi', 'CR1', 'CR2', 'CR3',
                 'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe(\
         percentiles=ls_percentiles).T.to_string(formatters=dict_formatters)
 
@@ -298,6 +303,41 @@ for field in ['nb_stores', 'surf', 'avail_surf', 'avail_surf_by_h']:
   df_com['norm_%s' %field] = df_com[field]/df_com[field].mean()
   ent = (df_com['norm_%s' %field]*np.log(df_com['norm_%s' %field])).sum()
   print u'Entropy of field %s: ' %field, ent
+
+# Entropy decomposition
+
+# add region to df_com (5 com left out)
+#df_com.set_index('code_insee', inplace = True)
+df_com['reg'] = df_com_insee['REG']
+df_com.reset_index()
+
+df_com = df_com[~pd.isnull(df_com['reg']) &\
+                ~pd.isnull(df_com['avail_surf'])]
+
+# get s_k
+df_reg_s = df_com[['reg', 'avail_surf']].groupby('reg').agg([len,
+                                                           np.mean])['avail_surf']
+df_reg_s['s_k'] = (df_reg_s['len'] * df_reg_s['mean']) /\
+                  (len(df_com) * df_com['avail_surf'].mean())
+
+# get T1_k
+def get_T1_k(se_inc):
+  se_norm_inc = se_inc / se_inc.mean()
+  return (se_norm_inc * np.log(se_norm_inc)).sum() / len(se_inc)
+df_reg_t = df_com[['reg', 'avail_surf']].groupby('reg').agg([len,
+                                                       get_T1_k])['avail_surf']
+df_reg_t['T1_k'] = df_reg_t['get_T1_k']
+
+# merge and final
+df_reg = df_reg_s[['mean', 's_k']].copy()
+df_reg['T1_k'] = df_reg_t['T1_k']
+
+T1 = (df_reg['s_k'] * df_reg['T1_k']).sum()  +\
+     (df_reg['s_k'] * np.log(df_reg['mean'] / df_com['avail_surf'].mean())).sum()
+
+T1_simple = (df_com['norm_avail_surf'] * np.log(df_com['norm_avail_surf'])).sum() /\
+            len(df_com)
+# Close enough! (Same as get_T1)
 
 # Gini (draw normalized empirical distrib?)
 
