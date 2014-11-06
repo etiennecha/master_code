@@ -34,8 +34,8 @@
 \begin{document}
 
 \title{French grocery stores\ \\ \ \\(Very preliminary)}
-\author{LEI\thanks{e-mail:
-\textit{etienne.chamayou@ensae.fr}}\medskip\\{\normalsize CREST and Department of Economics, Ecole Polytechnique }}
+\author{E. Chamayou\thanks{e-mail:
+\textit{etienne.chamayou@ensae.fr}}, L. Linnemer and T. Vergé\ \\ CREST-LEI}
 \maketitle
 
 \sloppy%
@@ -130,13 +130,12 @@ Hypermarkets  &   1,138 & \multicolumn{8}{c}{} \\
 Supermarkets  &   805 & \multicolumn{8}{c}{} \ \\
 Hard discount  &   119 & \multicolumn{8}{c}{} \ \\
 \midrule
-All           &    2,062&          5 &          3 &          0 &          2 &          4 &         12 &         26 &     26,043 \\
+All           &    2,062& \multicolumn{8}{c}{}  \\
 \bottomrule
 
 \end{tabular}
 
 \end{table}
-
 
 
 \section{Overview of competition}
@@ -146,24 +145,66 @@ All           &    2,062&          5 &          3 &          0 &          2 &   
 \small
 \begin{tabular}{lrrrrrrrr}
 \toprule
+\toprule
 {} &      count &       mean &        std &        min &        25\% &        50\% &        75\% &        max \\
 \midrule
-nb\_stores       &  36,247 &       0.32 &       1.33 &       0.00 &       0.00 &       0.00 &       0.00 &      55.00 \\
-surf            &  36,247 &     582.32 &   2,685.34 &       0.00 &       0.00 &       0.00 &       0.00 &  84,832.00 \\
-avail\_surf      &  36,247 &  29,959 &  53,301 &   1,027 &  11,514 &  18,317 &  30,181 & 800,164 \\
-avail\_surf\_by\_h &  36,245 &     268.89 &     660.67 &       0.02 &      39.98 &     106.99 &     259.81 &  26,891.83 \\
-hhi             &  36,247 &       0.19 &       0.04 &       0.10 &       0.16 &       0.19 &       0.21 &       0.48 \\
-CR1             &  36,247 &       0.30 &       0.07 &       0.14 &       0.25 &       0.29 &       0.33 &       0.67 \\
-CR2             &  36,247 &       0.51 &       0.08 &       0.28 &       0.45 &       0.51 &       0.56 &       0.87 \\
-CR3             &  36,247 &       0.66 &       0.08 &       0.41 &       0.61 &       0.66 &       0.72 &       0.95 \\
-All\_dist        &  36,247 &       5.43 &       3.62 &       0.00 &       2.82 &       5.05 &       7.49 &      27.14 \\
-H\_dist          &  36,247 &      10.78 &       6.89 &       0.00 &       5.70 &       9.58 &      14.57 &      51.92 \\
-S\_dist          &  36,247 &       6.16 &       3.93 &       0.00 &       3.38 &       5.71 &       8.36 &      27.43 \\
-X\_dist          &  36,247 &       8.28 &       5.37 &       0.00 &       4.38 &       7.45 &      11.25 &      40.71 \\
+Nb stores                       &  36,247 &       0.32 &       1.33 &       0.00 &       0.00 &       0.00 &       0.00 &      55.00 \\
+Nb stores wgt by hh.    &  36,247 &       7.26 &       10.94 &       0.00 &       0.00 &       3.00 &       9.00 &      55.00 \\
+Surface                         &  36,247 &     582 &   2,685 &       0 &       0 &       0 &       0.00 &  84,832 \\
+Surface wgt by hh.      &  36,247 &     12,095 &   17,303 &       0 &       0 &       4,458 &       16,699 &  84,832 \\
+Avail. surf.                    &  36,247 &  29,959 &  53,301 &   1,027 &  11,514 &  18,317 &  30,181 & 800,164 \\
+Avail. surf. by hh.        &  36,245 &        268 &        660 &           0 &             39 &       106 &          259 &  26,891 \\
+HHI                               &  36,247 &       0.19 &       0.04 &       0.10 &       0.16 &       0.19 &       0.21 &       0.48 \\
+CR1                              &  36,247 &       0.30 &       0.07 &       0.14 &       0.25 &       0.29 &       0.33 &       0.67 \\
+CR2                              &  36,247 &       0.51 &       0.08 &       0.28 &       0.45 &       0.51 &       0.56 &       0.87 \\
+CR3                              &  36,247 &       0.66 &       0.08 &       0.41 &       0.61 &       0.66 &       0.72 &       0.95 \\
+Min dist                        &  36,247 &       5.43 &       3.62 &       0.00 &       2.82 &       5.05 &       7.49 &      27.14 \\
+Min dist H                    &  36,247 &      10.78 &       6.89 &       0.00 &       5.70 &       9.58 &      14.57 &      51.92 \\
+Min dist S                     &  36,247 &       6.16 &       3.93 &       0.00 &       3.38 &       5.71 &       8.36 &      27.43 \\
+Min dist X                   &  36,247 &       8.28 &       5.37 &       0.00 &       4.38 &       7.45 &      11.25 &      40.71 \\
 \bottomrule
 \end{tabular}
 
 \end{table}
+
+TODO: explain method for avail. surface
+
+\begin{table}[H]
+\caption{Avail surface entropy decomposition by region}
+\footnotesize
+
+\begin{tabular}{lrr}
+\toprule
+\toprule
+Region &        $s_k$ &      $T_k(1)$ \\
+\midrule
+Ile-de-France              &       0.23 &       0.44 \\
+Rhone-Alpes                &       0.08 &       0.24 \\
+Nord-Pas-de-Calais         &       0.08 &       0.22 \\
+Picardie                   &       0.06 &       0.15 \\
+Lorraine                   &       0.06 &       0.21 \\
+Midi-Pyrenees              &       0.05 &       0.38 \\
+Aquitaine                  &       0.04 &       0.27 \\
+Haute-Normandie            &       0.04 &       0.12 \\
+Pays de la Loire           &       0.03 &       0.14 \\
+Alsace                     &       0.03 &       0.09 \\
+Franche-Comte              &       0.03 &       0.13 \\
+Basse-Normandie            &       0.03 &       0.15 \\
+Centre                     &       0.03 &       0.16 \\
+Bourgogne                  &       0.03 &       0.23 \\
+Languedoc-Roussillon       &       0.03 &       0.31 \\
+Bretagne                   &       0.03 &       0.10 \\
+Champagne-Ardenne          &       0.03 &       0.24 \\
+Provence-Alpes-Cote-d'Azur &       0.03 &       0.48 \\
+Poitou-Charentes           &       0.02 &       0.08 \\
+Auvergne                   &       0.02 &       0.31 \\
+Limousin                   &       0.01 &       0.23 \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+National entropy is 0.59 of which 45\% (0.27) is due to intra regional differences and 55\% (0.32) due to differences between regions.
 
 \section{Stores and surface by group and chain}
 
@@ -179,6 +220,7 @@ The following table shows the number of hypermarkets, supermarkets and hard disc
 \setlength{\tabcolsep}{2pt}
 
 \begin{tabular}{l|rrrr|rrrr|rrr}
+\toprule
 \toprule
 {}             & \multicolumn{4}{c|}{Nb} &   \multicolumn{4}{c|}{Cum Surf. (mil $m^2$)}   &   \multicolumn{3}{c}{Avg. Surf. ($m^2$)}\\
 {}             &        All &  Hyp       &        Sup &       Dis  &      All   & Hyp        &        Sup &        Dis &      Hyp   &       Sup  &    Dis \\
@@ -211,6 +253,37 @@ AUTRE          &        419 &          8 &        186 &        225 &       0.35 
 \midrule
 ALL            &     12,279 &      2,031 &      5,771 &      4,477 &      21.76 &      10.89 &       7.42 &       3.46 &      5,360 &      1,286 &        772 \\
 \%             &        100 &         17 &         47 &         36 &        100 &         50 &         34 &         16 &            &            &            \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+\subsection{Group potential national market shares based on store size on location}
+
+TODO: describe method to compute market share of each group at municipality level. Then use of INSEE household count and median revenue to estimate group revenues within each market.
+
+\begin{table}[H]
+\caption{Group potential national market shares}
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+
+\begin{tabular}{lr}
+\toprule
+\toprule
+Group &          National market share \\
+\midrule
+CARREFOUR      &       23\% \\
+CASINO         &       17\% \\
+MOUSQUETAIRES  &       14\% \\
+LECLERC        &       13\% \\
+AUCHAN         &       10\% \\
+SYSTEME U      &       9\% \\
+LIDL           &       6\% \\
+LOUIS DELHAIZE &       3\% \\
+ALDI           &       2\% \\
+OTHER & 2\% \\
+\midrule
+TOTAL & 100\% \\
 \bottomrule
 \end{tabular}
 
@@ -672,86 +745,78 @@ For each group, on the first map, supermarkets are represented with green dots a
 \begin{figure}[H]
     \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/CARREFOUR.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/CARREFOUR.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_CARREFOUR.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_CARREFOUR.png}
 \end{figure}
 
 \begin{figure}[H]
-    \caption{CASINO}
+    \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/CASINO.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/CASINO.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_CASINO.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_CASINO.png}
 \end{figure}
 
 \begin{figure}[H]
-    \caption{MOUSQUETAIRES}
+    \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/MOUSQUETAIRES.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/MOUSQUETAIRES.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_MOUSQUETAIRES.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_MOUSQUETAIRES.png}
 \end{figure}
 
 \begin{figure}[H]
-    \caption{LIDL}
+    \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/LIDL.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/LIDL.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_LIDL.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_LIDL.png}
 \end{figure}
 
 \begin{figure}[H]
-    \caption{SYSTEME U}
+    \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/SYSTEME_U.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/SYSTEME_U.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_SYSTEME_U.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_SYSTEME_U.png}
 \end{figure}
 
 \begin{figure}[H]
-    \caption{ALDI}
+    \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/ALDI.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/ALDI.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_ALDI.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_ALDI.png}
 \end{figure}
 
 \begin{figure}[H]
-    \caption{LECLERC}
+    \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/LECLERC.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/LECLERC.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_LECLERC.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_LECLERC.png}
 \end{figure}
 
 \begin{figure}[H]
-    \caption{AUCHAN}
+    \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/AUCHAN.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/AUCHAN.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_AUCHAN.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_AUCHAN.png}
 \end{figure}
 
 \begin{figure}[H]
-    \caption{LOUIS DELHAIZE}
+    \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/LOUIS_DELHAIZE.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/LOUIS_DELHAIZE.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_LOUIS_DELHAIZE.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_LOUIS_DELHAIZE.png}
 \end{figure}
 
 \begin{figure}[H]
-    \caption{DIAPAR}
+    \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/DIAPAR.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/DIAPAR.png}
-\end{figure}
-
-
-\begin{figure}[H]
-    \caption{COLRUYT}
-	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/COLRUYT.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/COLRUYT.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_DIAPAR.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_DIAPAR.png}
 \end{figure}
 
 \begin{figure}[H]
-    \caption{OTHER}
+    \caption{CARREFOUR}
 	\centering
-		\includegraphics[width=9cm]{images/maps_group_dots/AUTRE.png}
-        \includegraphics[width=12.8cm]{images/maps_group_heatmaps/AUTRE.png}
+		\includegraphics[width=15cm]{images/maps_surface/surf_COLRUYT.png}
+        \includegraphics[width=15cm]{images/maps_available_surface/avail_surf_COLRUYT.png}
 \end{figure}
 
 \subsection{Competition}
