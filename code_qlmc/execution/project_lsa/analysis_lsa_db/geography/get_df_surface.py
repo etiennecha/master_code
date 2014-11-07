@@ -406,3 +406,15 @@ for quantile in [0.25, 0.5, 0.75]:
   print 'Quantile', quantile, ':', weighted.quantile(df_com['surf'],
                                                      df_com['nb_households'],
                                                      quantile)
+
+# Nb of LSA stores with 0 dist to cl
+df_lsa = pd.merge(df_lsa, df_com[['code_insee', 'lat_cl', 'lng_cl']],
+                  left_on = 'Code INSEE ardt', right_on = 'code_insee',
+                  how = 'left')
+
+df_lsa['dist_cl'] = compute_distance_ar(df_lsa['Latitude'],
+                                        df_lsa['Longitude'],
+                                        df_lsa['lat_cl'],
+                                        df_lsa['lng_cl'])
+len(df_lsa[df_lsa['dist_cl'] < 0.01])
+len(df_lsa[df_lsa['dist_cl'] == 0]) # same: 81... need to check!
