@@ -31,13 +31,9 @@ path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc
 path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
 path_dir_built_png = os.path.join(path_dir_qlmc, 'data_built' , 'data_png')
 
-path_dir_source_lsa = os.path.join(path_dir_qlmc, 'data_source', 'data_lsa_xls')
-
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
-
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
 # #############
 # LOAD DATA
@@ -116,9 +112,12 @@ ls_pbms = [insee_code for insee_code in df_lsa['Code INSEE ardt'].unique()\
 
 # NB STORES BY COMMUNE
 df_com['nb_stores'] = se_ci_vc
-# for density map: want np.nan, not 0
 
-# INSEE AREAS
+# SURFACE BY COMMUNE
+df_com['store_surface'] =\
+   df_lsa[['Code INSEE ardt', 'Surf Vente']].groupby('Code INSEE ardt').agg(np.sum)['Surf Vente']
+
+# INSEE AREAS (TODO: check if necessary here: move?)
 df_insee_a = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_insee_areas.csv'),
                          encoding = 'UTF-8')
 # Get rid of Corsica and DOMTOM
@@ -139,104 +138,124 @@ df_lsa = pd.merge(df_insee_a,
                   right_on = 'Code INSEE',
                   how = 'right')
 
-# LOAD UU DATA
-df_uu = pd.read_csv(os.path.join(path_dir_insee_extracts,
-                                 'df_uu_agg_final.csv'),
+# LOAD DF AREAS
+ls_areas = [['df_au_agg_final.csv', 'dict_AU2010_l93_coords.json', 'AU2010'],
+            ['df_uu_agg_final.csv', 'dict_UU2010_l93_coords.json', 'UU2010'],
+            ['df_bv_agg_final.csv', 'dict_BV_l93_coords.json', 'BV']]
+
+dict_df_areas = {}
+for df_area_file, dict_area_coords_file, area in ls_areas:
+  df_area = pd.read_csv(os.path.join(path_dir_insee_extracts,
+                                     df_area_file),
                     encoding = 'UTF-8')
-
-dict_uu_coords = dec_json(os.path.join(path_dir_insee,
-                                       'insee_areas',
-                                       'dict_UU2010_l93_coords.json'))
-
-se_uu_vc = df_lsa['UU2010'].value_counts()
-df_uu.set_index('UU2010', inplace = True)
-df_uu['nb_stores'] = se_uu_vc
-
-df_uu_coords = pd.DataFrame([(k, Polygon(v)) for k,v in dict_uu_coords.items()],
-                            columns = ['UU2010', 'poly'])
-df_uu_coords.set_index('UU2010', inplace = True)
-df_uu['poly'] = df_uu_coords['poly']
-# Stores out of UU
-len(df_lsa[pd.isnull(df_lsa['UU2010'])])
-
-# LOAD AU DATA
-df_au = pd.read_csv(os.path.join(path_dir_insee_extracts,
-                                 'df_au_agg_final.csv'),
-                    encoding = 'UTF-8')
-
-dict_au_coords = dec_json(os.path.join(path_dir_insee,
-                                       'insee_areas',
-                                       'dict_AU2010_l93_coords.json'))
-
-se_au_vc = df_lsa['AU2010'].value_counts()
-df_au.set_index('AU2010', inplace = True)
-df_au['nb_stores'] = se_au_vc
-
-df_au_coords = pd.DataFrame([(k, Polygon(v)) for k,v in dict_au_coords.items()],
-                            columns = ['AU2010', 'poly'])
-df_au_coords.set_index('AU2010', inplace = True)
-df_au['poly'] = df_au_coords['poly']
-# Stores out of AU
-len(df_lsa[pd.isnull(df_lsa['AU2010'])])
-
-# TODO: BV
+  dict_area_coords = dec_json(os.path.join(path_dir_insee,
+                                         'insee_areas',
+                                         dict_area_coords_file))
+  
+  # nb stores
+  se_area_vc = df_lsa[area].value_counts()
+  df_area.set_index(area, inplace = True)
+  df_area['nb_stores'] = se_area_vc
+  
+  # cum store surface
+  df_area['store_surface'] =\
+     df_lsa[[area, 'Surf Vente']].groupby(area).agg(np.sum)['Surf Vente']
+  
+  df_area_coords = pd.DataFrame([(k, Polygon(v)) for k,v in dict_area_coords.items()],
+                                 columns = [area, 'poly'])
+  df_area_coords.set_index(area, inplace = True)
+  df_area['poly'] = df_area_coords['poly']
+  # Nb stores out of any area
+  print '\nNb stores out of {:s} {:4d}'.format(area,
+                                               len(df_lsa[pd.isnull(df_lsa[area])]))
+  dict_df_areas[area] = df_area
 
 # #########################
 # MAPS
 # #########################
 
-df_area, area = df_uu[~pd.isnull(df_uu['poly'])], 'UU2010'
+dict_df_areas['insee_code'] = df_com
 
-# Calculate Jenks natural breaks for density
-breaks = nb(
-    df_area[df_area['nb_stores'].notnull()]['nb_stores'].values,
-    initial=300,
-    k=5)
-# the notnull method lets us match indices when joining
-jb = pd.DataFrame({'jenks_bins': breaks.yb}, index=df_area[df_area['nb_stores'].notnull()].index)
-df_area = df_area.join(jb)
-df_area.jenks_bins.fillna(-1, inplace=True)
+dict_titles = {'nb_stores' : 'Nb of stores',
+               'store_surface' : 'Cumulated store surface'}
 
-jenks_labels = ["<= {:0.0f} stores ({:d} ar.)".format(b, c) for b, c in zip(
-    breaks.bins, breaks.counts)]
-jenks_labels.insert(0, 'No store ({:5d} ar.)'.format(len(df_area[df_area['nb_stores'].isnull()])))
-
-plt.clf()
-fig = plt.figure()
-ax = fig.add_subplot(111, axisbg='w', frame_on=False)
-
-# use a blue colour ramp - we'll be converting it to a map using cmap()
-cmap = plt.get_cmap('Blues')
-# draw wards with grey outlines
-df_area['patches'] = df_area['poly'].map(lambda x:\
-                      PolygonPatch(x, ec='#555555', lw=.1, alpha=1., zorder=4))
-pc = PatchCollection(df_area['patches'], match_original=True)
-# impose our colour map onto the patch collection
-norm = Normalize()
-pc.set_facecolor(cmap(norm(df_area['jenks_bins'].values)))
-ax.add_collection(pc)
-
-# Add a colour bar
-cb = colorbar_index(ncolors=len(jenks_labels), cmap=cmap, shrink=0.5, labels=jenks_labels)
-cb.ax.tick_params(labelsize=6)
-
-# Add scale
-m_fra.drawmapscale(-3.,
-                   43.,
-                   3.,
-                   46.5,
-                   100.,
-                   barstyle='fancy', labelstyle='simple',
-                   fillcolor1='w', fillcolor2='#555555',
-                   fontcolor='#555555',
-                   zorder=5)
-
-#ax.autoscale_view(True, True, True)
-#plt.axis('off')
-plt.title('Nb of stores by %s' %area)
-plt.tight_layout()
-# fig.set_size_inches(7.22, 5.25) # set the image width to 722px
-plt.savefig(os.path.join(path_data, 'data_maps', 'data_built',
-                         'graphs', 'lsa', 'fra_%s_nb_stores.png' %area),
-            dpi=700, alpha=True)
-#plt.show()
+# todo: generalize nb of stores and store surface (or other loop?)
+for area, df_area in dict_df_areas.items():
+  df_area_temp = df_area[~pd.isnull(df_area['poly'])].copy()
+  for field in ['nb_stores', 'store_surface']:
+    # Calculate Jenks natural breaks for density
+    breaks = nb(df_area_temp[df_area_temp[field].notnull()][field].values,
+                initial=300,
+                k=5)
+    
+    # zero excluded from natural breaks... specific class with val -1 (added later)
+    df_area_temp.replace(to_replace={field: {0: np.nan}}, inplace=True)
+    
+    # the notnull method lets us match indices when joining
+    jb = pd.DataFrame({'jenks_bins': breaks.yb},
+                      index=df_area_temp[df_area_temp[field].notnull()].index)
+    
+    # need to drop duplicate index in jb, TODO: check why need area here (MI?)
+    jb = jb.reset_index().drop_duplicates(subset=[area],
+                                          take_last=True).set_index(area)
+    # propagated to all rows in df_com with same index
+    df_area_temp['jenks_bins'] = jb['jenks_bins']
+    df_area_temp.jenks_bins.fillna(-1, inplace=True)
+    
+    jenks_labels = ["<= {:,.0f} {:s} ({:d} ar.)".format(b, field, c)\
+                      for b, c in zip(breaks.bins, breaks.counts)]
+    
+    # if there are 0
+    if len(df_area_temp[df_area_temp[field].isnull()]) != 0:
+      jenks_labels.insert(0, 'Null ({:5d} mun.)'.\
+           format(len(df_area_temp[df_area_temp[field].isnull()])))
+    
+    plt.clf()
+    fig = plt.figure()
+    ax = fig.add_subplot(111, axisbg='w', frame_on=False)
+    
+    # use a blue colour ramp - we'll be converting it to a map using cmap()
+    cmap = plt.get_cmap('Blues')
+    # draw wards with grey outlines
+    df_area_temp['patches'] = df_area_temp['poly'].map(lambda x:\
+                          PolygonPatch(x, ec='#555555', lw=.03, alpha=1., zorder=4))
+    pc = PatchCollection(df_area_temp['patches'], match_original=True)
+    # impose our colour map onto the patch collection
+    norm = Normalize()
+    pc.set_facecolor(cmap(norm(df_area_temp['jenks_bins'].values)))
+    ax.add_collection(pc)
+    
+    df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
+                          PolygonPatch(x, fc = 'none', ec='#000000', lw=.2, alpha=1., zorder=1))
+    pc_2 = PatchCollection(df_dpt['patches'], match_original=True)
+    ax.add_collection(pc_2)
+    
+    # Add a colour bar
+    cb = colorbar_index(ncolors=len(jenks_labels), cmap=cmap, shrink=0.5, labels=jenks_labels)
+    cb.ax.tick_params(labelsize=6)
+    
+    # Add scale
+    m_fra.drawmapscale(-3.,
+                       43.,
+                       3.,
+                       46.5,
+                       100.,
+                       barstyle='fancy', labelstyle='simple',
+                       fillcolor1='w', fillcolor2='#555555',
+                       fontcolor='#555555',
+                       zorder=5)
+    
+    #ax.autoscale_view(True, True, True)
+    #plt.axis('off')
+    plt.title(u'{:s} by {:s}'.format(dict_titles[field], area))
+    plt.tight_layout()
+    # fig.set_size_inches(7.22, 5.25) # set the image width to 722px
+    plt.savefig(os.path.join(path_data,
+                             'data_maps',
+                             'data_built',
+                             'graphs',
+                             'lsa',
+                             'insee_areas',
+                             '%s_%s.png' %(area, field)),
+                dpi=300,
+                alpha=True)

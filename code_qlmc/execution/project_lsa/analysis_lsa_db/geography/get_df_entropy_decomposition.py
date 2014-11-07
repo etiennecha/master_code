@@ -167,6 +167,6 @@ for field in ls_disp_com_st:
 
 df_entropy = pd.concat(ls_se_entropy, axis = 1, keys = ls_disp_com_st)
 print df_entropy[['avail_surf'] +\
-                 ['avail_surf_%s' %x for x in ['H', 'S', 'X']+\
+                 ['avail_surf_%s' %x for x in ['H', 'S', 'X']]+\
                  ['surf']+\
-                 ['surf_%s' %x for x in ['H', 'S', 'X']].to_latex()
+                 ['surf_%s' %x for x in ['H', 'S', 'X']]].to_latex()
