@@ -187,7 +187,7 @@ for retail_group in ls_rgs:
   cmap = plt.get_cmap('Blues')
   # draw wards with grey outlines
   df_com['patches'] = df_com['poly'].map(lambda x:\
-                        PolygonPatch(x, ec='#555555', lw=.05, alpha=1., zorder=4))
+                        PolygonPatch(x, ec='#555555', lw=.03, alpha=1., zorder=4))
   pc = PatchCollection(df_com['patches'], match_original=True)
   # impose our colour map onto the patch collection
   norm = Normalize()
@@ -225,8 +225,9 @@ for retail_group in ls_rgs:
                            'graphs',
                            'lsa',
                            'available_surface',
-                           '%s.png' %field),
-              dpi=200, alpha=True)
+                           '%s.png' %retail_group.replace(' ', '')),
+              dpi=100,
+              alpha=True)
   plt.close()
 
   # need to drop jenk_bins for next map
@@ -270,7 +271,7 @@ for retail_group in ls_rgs:
   cmap = plt.get_cmap('Blues')
   # draw wards with grey outlines
   df_com['patches'] = df_com['poly'].map(lambda x:\
-                        PolygonPatch(x, ec='#555555', lw=.05, alpha=1., zorder=4))
+                        PolygonPatch(x, ec='#555555', lw=.03, alpha=1., zorder=4))
   pc = PatchCollection(df_com['patches'], match_original=True)
   # impose our colour map onto the patch collection
   norm = Normalize()
@@ -308,8 +309,9 @@ for retail_group in ls_rgs:
                            'graphs',
                            'lsa',
                            'surface',
-                           '%s.png' %field),
-              dpi=200, alpha=True)
+                           '%s.png' %retail_group.replace(' ', '')),
+              dpi=100,
+              alpha=True)
   plt.close()
   
   # need to drop jenk_bins for next map
