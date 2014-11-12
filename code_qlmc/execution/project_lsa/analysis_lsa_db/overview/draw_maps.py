@@ -123,21 +123,26 @@ df_com = pd.merge(df_com, df_com_comp,
 # MAPS: COMPETITION
 # #########################
 
+# Pbm: 0 is replaced by nan to generate map
+# Get rid of 0 in Closest store or find a more general fix
+df_com.loc[df_com['All_dist'] == 0, 'All_dist'] = 0.01
+
 df_com.rename(columns = {'hhi' : 'HHI',
                          'All_dist' : 'Closest store',
                          'avail_surf': 'Available surface',
                          'nb_stores' : 'Nb stores'}, inplace = True)
 
-# TODO: check pbm with nb stores
-
+# TODO: format legend
 for field in ['CR1', 'CR2', 'CR3', 'HHI',
               'Nb stores', 'Closest store', 'Available surface']:
-  breaks = nb(df_com[df_com[field].notnull()][field].values,
-              initial=20,
-              k=5)
   
   # zero excluded from natural breaks... specific class with val -1 (added later)
   df_com.replace(to_replace={field: {0: np.nan}}, inplace=True)
+  
+  # generate natural breaks
+  breaks = nb(df_com[df_com[field].notnull()][field].values,
+              initial=20,
+              k=5)
   
   # the notnull method lets us match indices when joining
   jb = pd.DataFrame({'jenks_bins': breaks.yb},
