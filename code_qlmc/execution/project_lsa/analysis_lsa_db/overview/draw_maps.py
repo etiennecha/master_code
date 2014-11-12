@@ -128,6 +128,8 @@ df_com.rename(columns = {'hhi' : 'HHI',
                          'avail_surf': 'Available surface',
                          'nb_stores' : 'Nb stores'}, inplace = True)
 
+# TODO: check pbm with nb stores
+
 for field in ['CR1', 'CR2', 'CR3', 'HHI',
               'Nb stores', 'Closest store', 'Available surface']:
   breaks = nb(df_com[df_com[field].notnull()][field].values,
