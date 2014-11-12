@@ -55,7 +55,7 @@ enc_json(ls_ls_stores, os.path.join(path_dir_built_json, 'ls_ls_stores'))
 #  ls_ls_tuple_stores.append([get_split_chain_city(store, ls_chain_brands)\
 #                               for store in ls_stores])
 #enc_json(ls_ls_tuple_stores,
-#         os.path.join(path_dir_built_json, 'ls_ls_tuple_stores'))
+#         os.path.join(path_dir_built_json, 'ls_ls_tuple_stores.json'))
 
 # Encode file with products per period
 # Different order vs. first draft.. todo: add some sorting
@@ -67,7 +67,7 @@ for ls_records in ls_ls_records:
     set_products.add(tuple(record[0:3]))
   ls_ls_products.append([list(x) for x in list(set_products)])
 enc_json(ls_ls_products,
-         os.path.join(path_dir_built_json, 'ls_ls_products'))
+         os.path.join(path_dir_built_json, 'ls_ls_products.json'))
 
 # #######################
 # BUILD DF QLMC

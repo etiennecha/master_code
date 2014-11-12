@@ -1,11 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import add_to_path_sub
-from add_to_path_sub import *
+import add_to_path
+from add_to_path import *
 from functions_generic_qlmc import *
 from functions_geocoding import *
 from functions_string import *
+from matching_insee import *
 import os, sys
 import re
 import numpy as np
@@ -16,46 +17,21 @@ import pprint
 path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
 
-ls_ls_stores = dec_json(os.path.join(path_dir_built_json, 'ls_ls_stores'))
-
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
+path_dir_insee_extracts = os.path.join(path_data, u'data_insee', u'data_extracts')
+path_dir_insee_dpts_regions = os.path.join(path_data, u'data_insee', u'dpts_regions')
 
 path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
-qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+# LOAD DATA STORES
+ls_ls_stores = dec_json(os.path.join(path_dir_built_json, 'ls_ls_stores.json'))
+# qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
 
 # MATCH STORES WITH INSEE COMMUNE
-
-# Load Correspondence File (Improvements for gas stations kept)
-file_correspondence = open(os.path.join(path_dir_insee_match,
-                                        'corr_cinsee_cpostal'),'r')
-correspondence = file_correspondence.read().split('\n')[1:-1]
-file_correspondence_update = open(os.path.join(path_dir_insee_match,
-                                               'corr_cinsee_cpostal_update'),'r')
-correspondence_update = file_correspondence_update.read().split('\n')[1:]
-correspondence += correspondence_update
-file_correspondence_gas_path = open(os.path.join(path_dir_insee_match,
-                                                 'corr_cinsee_cpostal_gas_patch'),'r')
-correspondence_gas_patch = file_correspondence_gas_path.read().split('\n')
-correspondence += correspondence_gas_patch
-correspondence = [row.split(';') for row in correspondence]
-# Harmonize: 5 chars code_insee (beg 0) and Corsica: A and B (no mistake possible)
-for i, (commune, zip_code, department, insee_code) in enumerate(correspondence):
-  if len(insee_code) == 4:
-    insee_code = '0%s' %insee_code
-    correspondence[i] = (commune, zip_code, department, insee_code)
-# Dict not of much help in this case a priori
-dict_insee_zip = {}
-for (city, zip_code, dpt, cinsee) in correspondence:
-  dict_insee_zip.setdefault(zip_code, []).append((city, zip_code, dpt, cinsee))
-dict_insee_dpt = {}
-for (city, zip_code, dpt, cinsee) in correspondence:
-  dict_insee_dpt.setdefault(zip_code[:-3], []).append((city, zip_code, dpt, cinsee))
-dict_insee_city = {}
-for (city, zip_code, dpt, cinsee) in correspondence:
-  dict_insee_city.setdefault(city, []).append((city, zip_code, dpt, cinsee))
+df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
+                      dtype = str)
+ls_corr = [list(x) for x in df_corr.to_records(index = False)]
+ls_corr = format_correspondence(ls_corr)
 
 # Match store's city vs. all city names in correspondence (position 0)
 # NB: City names can be ambiguous (several cities with same name...)
@@ -72,17 +48,18 @@ for i, ls_stores in enumerate(ls_ls_stores):
   for store in ls_stores:
     chain, city = get_split_chain_city(store, ls_chain_brands)
     row = [i, chain, city, []]
-    city_standardized = re.sub(u'^SAINT(E\s|\s)', u'ST\\1', city.replace(u'-', u' '))
-    for old, new in ls_str_insee_replace:
-      city_standardized = city_standardized.replace(old, new)
-    # todo: get rid of accents for period 11
-    for corr_row in correspondence:
+    ## todo: refactor standardization
+    #city_standardized = re.sub(u'^SAINT(E\s|\s)', u'ST\\1', city.replace(u'-', u' '))
+    #for old, new in ls_str_insee_replace:
+    #  city_standardized = format_str_city_insee(city_standardized.replace(old, new))
+    city_standardized = format_str_city_insee(city.replace(u"''", u" "))
+    for corr_row in ls_corr:
       if city_standardized == corr_row[0]:
         row[3].append(corr_row)
     ls_rows.append(row)
 
 # Check problems and, aside, manually establish a list of corrections
-ls_city_match = dec_json(os.path.join(path_dir_built_json, 'ls_city_match'))
+ls_city_match = dec_json(os.path.join(path_dir_built_json, 'ls_city_match.json'))
 c = 0
 ls_pbms = []
 for row in ls_rows:
@@ -141,7 +118,7 @@ m_fra.readshapefile(os.path.join(path_dir_geofla, u'COMMUNE'),
                     zorder=2)
 
 ls_shp_insee = [row[u'INSEE_COM'] for row in m_fra.communes_fr_info]
-ls_unmatched_general = [row for row in correspondence if row[3] not in ls_shp_insee]
+ls_unmatched_general = [row for row in ls_corr if row[3] not in ls_shp_insee]
 # enc_json(ls_unmatched_general, os.path.join(path_data, u'temp_file_obs_and_drop'))
 
 # Specify Ardts for Paris/Marseille/Lyon + fix two cities
@@ -232,8 +209,8 @@ ls_ls_store_names = [list(df_stores['Magasin'][df_stores['P'] == i].values)\
 ls_ls_store_info_names = [[x[0] for x in row] for row in ls_ls_qlmc_store_info]
 
 for i, ls_store_info_names in enumerate(ls_ls_store_info_names):
-  print u'\nSize of info file', len(ls_store_info_names)
-  print u'Size of intersection for info file:', i
+  print u'\nSize of info file {:d}: {:d}'.format(i, len(ls_store_info_names))
+  print u'Matching vs each period price records:'
   for j in range(13):
     set_isct = set(ls_store_info_names).intersection(set(ls_ls_store_names[j]))
     print j, len(set_isct)
@@ -290,19 +267,23 @@ ls_replace_periods = [(1,6),
                       (3,9),
                       (4,11)]
 for store_info_per, qlmc_per in ls_replace_periods:
-  df_qlmc_store_info['P_info'][df_qlmc_store_info['P_info'] == store_info_per] = qlmc_per
+  df_qlmc_store_info.loc[df_qlmc_store_info['P_info'] == store_info_per,
+                         'P_info'] = qlmc_per
 df_qlmc_store_info.rename(columns = {'P_info' : 'P'}, inplace = True)
 
-# Turns out there is a duplicate in period 9: delete
-print df_qlmc_store_info[df_qlmc_store_info['Magasin'] == 'AUCHAN LAXOU']
+# Turns out there is a duplicate in period 9: delete (use duplicate suppr tool)
+print u'\n', df_qlmc_store_info[df_qlmc_store_info['Magasin'] == 'AUCHAN LAXOU']
 df_qlmc_store_info = df_qlmc_store_info[df_qlmc_store_info.index != 1983]
 
 df_stores_all = pd.merge(df_qlmc_store_info, df_stores, how = 'right', on = ['P', 'Magasin'])
 
 # STORE DF STORES
 
-#qlmc_data['df_qlmc_stores'] = df_stores
-#qlmc_data.close()
+qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+qlmc_data['df_qlmc_stores'] = df_stores
+qlmc_data.close()
+
+
 
 ## LOAD INSEE DATA
 #path_data_insee_extract = os.path.join(path_dir_insee_extracts, 'data_insee_extract.csv')

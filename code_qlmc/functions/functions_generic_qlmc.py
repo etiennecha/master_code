@@ -145,19 +145,21 @@ def compute_price_dispersion(se_prices):
   return [len(se_prices), se_prices.min(), se_prices.max(), price_mean, 
           price_std, coeff_var, price_range, gain_from_search]
 
-def compare_stores(store_a, store_b, df_period, period_ind, category):
+def compare_stores(store_a, store_b, df_prices, category, period_ind = None):
+  if period_ind:
+    df_prices_per = df_prices[df_prices['P'] == period_ind]
+  else:
+    df_prices_per = df_prices
   # pandas df for store a
-  df_store_a= df_period[['Prix','Produit','Rayon','Famille']]\
-                    [(df_period['Magasin'] == store_a) & (df_period['P'] == period_ind)]
-  df_store_a['Prix_a'] = df_store_a['Prix']
+  df_store_a= df_prices_per[['Prix','Produit','Rayon','Famille']]\
+                           [(df_prices_per['Magasin'] == store_a)].copy()
   df_store_a = df_store_a.set_index('Produit')
-  df_store_a = df_store_a[['Prix_a', 'Rayon', 'Famille']]
+  df_store_a.rename(columns = {'Prix' : 'Prix_a'}, inplace = True)
   # pandas df for store b
-  df_store_b = df_period[['Prix','Produit','Magasin']]\
-                         [(df_period['Magasin'] == store_b) & (df_period['P'] == period_ind)]
-  df_store_b['Prix_b'] = df_store_b['Prix']
+  df_store_b = df_prices_per[['Prix','Produit']]\
+                            [(df_prices_per['Magasin'] == store_b)].copy()
+  df_store_b.rename(columns = {'Prix' : 'Prix_b'}, inplace = True)
   df_store_b = df_store_b.set_index('Produit')
-  df_store_b= df_store_b[['Prix_b']]
   # merge pandas df a and b
   df_both = df_store_a.join(df_store_b)
   # analysis of price dispersion

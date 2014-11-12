@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import add_to_path_sub
-from add_to_path_sub import *
+import add_to_path
+from add_to_path import *
 from functions_generic_qlmc import *
 from functions_geocoding import *
 from functions_string import *
@@ -76,9 +76,11 @@ df_qlmc_stores['INSEE_Code'] = df_qlmc_stores['INSEE_Code'].apply(\
 #df_lsa_stores_all = pd.read_excel(os.path.join(path_dir_source_lsa,
 #                                               '2014-07-30-export_CNRS.xlsx'),
 #                                  sheetname = 'Feuil1')
-df_lsa_stores_all = pd.read_excel(os.path.join(path_dir_built_csv,
-                                               'LSA_enriched.xlsx'),
-                                  sheetname = 'Sheet1')
+#df_lsa_stores_all = pd.read_excel(os.path.join(path_dir_built_csv,
+#                                               'LSA_enriched.xlsx'),
+#                                  sheetname = 'Sheet1')
+df_lsa_stores_all = pd.read_csv(os.path.join(path_dir_built_csv,
+                                               'df_lsa.csv'))
 
 # Exclude drive and hard discount for matching
 df_lsa_stores = df_lsa_stores_all[(df_lsa_stores_all['Type'] == 'H') |\
