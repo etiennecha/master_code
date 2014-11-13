@@ -168,16 +168,17 @@ ls_qlmc_dates = ['2007-05',
 for qlmc_date in ls_qlmc_dates:
   df_lsa[qlmc_date] = df_lsa['Enseigne']
   # Not opened yet (left untouched if DATE ouv is unknown)
-  df_lsa[qlmc_date][df_lsa[u'DATE ouv'] > qlmc_date] = None
+  df_lsa.loc[df_lsa[u'DATE ouv'] > qlmc_date, qlmc_date] = None
   # Closed and not reopened
-  df_lsa[qlmc_date][(df_lsa[u'DATE ferm'] < qlmc_date) &
-                    (pd.isnull(df_lsa[u'DATE réouv']))] = None
+  df_lsa.loc[(df_lsa[u'DATE ferm'] < qlmc_date) &
+             (pd.isnull(df_lsa[u'DATE réouv'])), qlmc_date] = None
   # Write previous enseigne if changed since then (check consistency if missing data)
-  df_lsa[qlmc_date][(qlmc_date > df_lsa[u'DATE ouv']) &\
-                    (qlmc_date < df_lsa[u'DATE chg enseigne'])] = df_lsa['Ex enseigne']
+  df_lsa.loc[(qlmc_date >= df_lsa[u'DATE ouv']) &\
+             (qlmc_date < df_lsa[u'DATE chg enseigne']), qlmc_date] = df_lsa['Ex enseigne']
 
-# TODO: finish refactoring and encode to CSV (+ update other scripts accordingly)
-
+df_lsa.to_csv(os.path.join(path_dir_built_csv,
+                           'df_lsa_for_qlmc.csv'),
+              encoding = 'UTF-8')
 
 ## DEPRECATED (CSV PREFERED)
 

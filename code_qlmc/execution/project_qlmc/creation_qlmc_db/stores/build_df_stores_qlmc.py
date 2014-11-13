@@ -16,10 +16,9 @@ import pprint
 
 path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
 
 path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_data, u'data_insee', u'data_extracts')
-path_dir_insee_dpts_regions = os.path.join(path_data, u'data_insee', u'dpts_regions')
 
 path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
@@ -123,7 +122,8 @@ ls_unmatched_general = [row for row in ls_corr if row[3] not in ls_shp_insee]
 
 # Specify Ardts for Paris/Marseille/Lyon + fix two cities
 # Got to be cautious not to write to correspondence (essentially ls_ls... points to corresp)
-# TODO: fix this in a more robust way (avoid repetition also)
+
+# TODO: fix in a more robust way (avoid repetition also)
 
 #ls_ls_ls_store_insee[0][55]  = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13210'] # 13010
 #ls_ls_ls_store_insee[0][106] = ['PARIS', '75000', 'PARIS', u'75116'] # 75016
@@ -271,34 +271,23 @@ for store_info_per, qlmc_per in ls_replace_periods:
                          'P_info'] = qlmc_per
 df_qlmc_store_info.rename(columns = {'P_info' : 'P'}, inplace = True)
 
-# Turns out there is a duplicate in period 9: delete (use duplicate suppr tool)
-print u'\n', df_qlmc_store_info[df_qlmc_store_info['Magasin'] == 'AUCHAN LAXOU']
-df_qlmc_store_info = df_qlmc_store_info[df_qlmc_store_info.index != 1983]
+# Delete duplicate in period 9
+df_qlmc_store_info.drop_duplicates(subset = ['P', 'Magasin'], inplace = True)
 
 df_stores_all = pd.merge(df_qlmc_store_info, df_stores, how = 'right', on = ['P', 'Magasin'])
+df_stores_all['QLMC_Dpt'] = df_stores_all['QLMC_Dpt'].apply(lambda x: x.rjust(2,'0')\
+                                                              if not pd.isnull(x) else x)
+# any use?
+df_stores_all['P'] = df_stores_all['P'].apply(lambda x: int(x))
 
 # STORE DF STORES
 
+# HDF (abandon?)
 qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-qlmc_data['df_qlmc_stores'] = df_stores
+qlmc_data['df_qlmc_stores'] = df_stores_all
 qlmc_data.close()
 
-
-
-## LOAD INSEE DATA
-#path_data_insee_extract = os.path.join(path_dir_insee_extracts, 'data_insee_extract.csv')
-#df_insee = pd.read_csv(path_data_insee_extract, encoding = 'utf-8', dtype= str)
-#
-#df_stores.index = df_stores['INSEE_Code']
-#df_insee.index = df_insee['CODGEO']
-#
-#df_nu = df_stores.join(df_insee)
-#df_nu['CODGEO'] = df_nu.index
-#
-#ls_disp_uu = ['UU2010', 'P', 'Enseigne', 'Commune', 'LIBUU2010',
-#              'POP_MUN_07_UU', 'TAILLE_UU', 'TYPE_UU']
-## View UU
-#df_nu.sort(['UU2010', 'P', 'Enseigne'], inplace = 1)
-#print '\n', df_nu[ls_disp_uu].ix[0:10].to_string()
-
-# print df_stores[df_stores['INSEE_Code'] == '63113'].to_string()
+# CSV
+df_stores_all.to_csv(os.path.join(path_dir_built_csv,
+                                  'df_qlmc_stores_raw.csv'),
+                     encoding = 'UTF-8')

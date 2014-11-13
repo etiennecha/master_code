@@ -141,19 +141,19 @@ df_comp = df_comparison[df_comparison['Enseigne_A'] != df_comparison['Enseigne_B
 
 pd.set_option('float_format', '{:5.2f}'.format)
 
-print '\nPairs with product intersection < 100: Intersection size'
+print u'\nPairs with product intersection < 100: Intersection size'
 df_comp['Nb Products'][df_comp['Nb Products'] < 100].value_counts()
 
 # Restrict to sufficient intersection
-print '\nDesc statistics for pairs with sufficient product intersection'
+print u'\nDesc statistics for pairs with sufficient product intersection'
 df_comp = df_comp[df_comp['Nb Products'] >= 100].copy()
 print df_comp.describe()
 
 # INSPECTION (make function?)
-print '\nHighest number of product price equality:'
+print u'\nHighest number of product price equality:'
 print df_comp[df_comp['Equality'] == df_comp['Equality'].max()].T.to_string()
 
-print '\nInspect product price equalities'
+print u'\nInspect product price equalities'
 store_a, store_b, per_ind = 'CHAMPION LE MANS', 'INTERMARCHE LE MANS', 4
 df_store_a= df_qlmc[['Prix','Produit','Rayon','Famille']]\
                   [(df_qlmc['Magasin'] == store_a) & (df_qlmc['P'] == per_ind)].copy()
@@ -167,7 +167,20 @@ df_store_b = df_store_b.set_index('Produit')
 # merge pandas df a and b
 df_both = df_store_a.join(df_store_b)
 
-pd.set_option('display.max_colwidth', 30)
+pd.set_option('display.max_colwidth', 50)
+df_both.reset_index(inplace = True) # max_colwidth does not apply to index
 df_both['Spread_pct'] = (df_both['Prix_a'] - df_both['Prix_b']) / df_both['Prix_b']
-print df_both['Spread_pct'].describe()
-print len(df_both[df_both['Spread_pct'] == 0])
+
+#print df_both['Spread_pct'].describe()
+#print len(df_both[df_both['Spread_pct'] == 0])
+#ls_both_disp = ['Rayon', 'Famille', 'Produit', 'Prix_a', 'Prix_b', 'Spread_pct']
+#print df_both[ls_both_disp][0:10].to_string()
+## probably a mistake...?
+
+# HIGH SHARE OF EQUAL PRICES
+print '\nPairs with over 30% products with same price'
+print df_comp[df_comp['Equality'] > 0.3].to_string()
+
+# HIGH SHARE OF RANK REVERSALS
+print '\nPairs with over 30% rank reversals'
+print df_comp[df_comp['Rank reversals'] > 0.45].to_string()
