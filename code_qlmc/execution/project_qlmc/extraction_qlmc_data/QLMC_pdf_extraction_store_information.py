@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
-import add_to_path_sub
-from add_to_path_sub import *
+import add_to_path
+from add_to_path import *
 import os, sys
 import subprocess
 from subprocess import PIPE, Popen
@@ -72,6 +72,7 @@ for ls_qlmc_stores in ls_ls_qlmc_stores:
   print df_qlmc_stores.to_string()
 
 enc_json(ls_ls_qlmc_stores, os.path.join(path_qlmc_source_json,
-                                         'ls_ls_qlmc_store_info'))
+                                         'ls_ls_qlmc_store_info.json'))
+
 enc_json(ls_ls_qlmc_stores, os.path.join(path_qlmc_built_json,
-                                         'ls_ls_qlmc_store_info'))
+                                         'ls_ls_qlmc_store_info.json'))

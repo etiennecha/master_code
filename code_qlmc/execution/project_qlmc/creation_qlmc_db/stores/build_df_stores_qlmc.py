@@ -200,7 +200,7 @@ for insee_code in se_insee_vc[0:20].index:
 
 df_stores['Magasin'] = df_stores['Enseigne'] + ' ' + df_stores['Commune']
 ls_ls_qlmc_store_info = dec_json(os.path.join(path_dir_built_json,
-                                              'ls_ls_qlmc_store_info'))
+                                              'ls_ls_qlmc_store_info.json'))
 # Store names in qlmc price files
 ls_ls_store_names = [list(df_stores['Magasin'][df_stores['P'] == i].values)\
                        for i in range(13)]

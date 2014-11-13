@@ -292,7 +292,6 @@ df_read_fix_ms_2 = pd.read_csv(os.path.join(path_dir_built_excel,
                                         'id_fra_stores_2' : str},
                                encoding = 'latin-1')
 
-
 ## TODO: RE-GENERATE EXCEL FILE WITH ALL MATCHED STORES
 ##http://stackoverflow.com/questions/20219254/
 ##how-to-write-to-an-existing-excel-file-without-overwriting-data
