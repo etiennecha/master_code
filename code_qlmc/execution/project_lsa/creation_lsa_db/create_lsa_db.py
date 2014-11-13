@@ -231,6 +231,11 @@ df_lsa['Enseigne_alt'] = df_lsa['Enseigne_alt'].apply(\
                            lambda x: dict_alt_enseignes[x] if x in dict_alt_enseignes\
                                                            else x)
 
+df_lsa['Ex enseigne_alt'] = df_lsa['Ex enseigne']
+df_lsa['Ex enseigne_alt'] = df_lsa['Ex enseigne_alt'].apply(\
+                           lambda x: dict_alt_enseignes[x] if x in dict_alt_enseignes\
+                                                           else x)
+
 # ###############################
 # GET RID OF MAGASINS POPULAIRES
 # ###############################
