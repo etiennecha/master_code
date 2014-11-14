@@ -282,10 +282,10 @@ df_stores_all['P'] = df_stores_all['P'].apply(lambda x: int(x))
 
 # STORE DF STORES
 
-# HDF (abandon?)
-qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-qlmc_data['df_qlmc_stores'] = df_stores_all
-qlmc_data.close()
+## HDF (abandon?)
+#qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+#qlmc_data['df_qlmc_stores'] = df_stores_all
+#qlmc_data.close()
 
 # CSV
 df_stores_all.to_csv(os.path.join(path_dir_built_csv,
