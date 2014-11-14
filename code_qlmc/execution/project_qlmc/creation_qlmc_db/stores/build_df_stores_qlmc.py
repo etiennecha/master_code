@@ -20,8 +20,6 @@ path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
 
 path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
 
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-
 # LOAD DATA STORES
 ls_ls_stores = dec_json(os.path.join(path_dir_built_json, 'ls_ls_stores.json'))
 # qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
@@ -282,12 +280,14 @@ df_stores_all['P'] = df_stores_all['P'].apply(lambda x: int(x))
 
 # STORE DF STORES
 
-## HDF (abandon?)
-#qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-#qlmc_data['df_qlmc_stores'] = df_stores_all
-#qlmc_data.close()
+# HDF (abandon?)
+path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+qlmc_data['df_qlmc_stores'] = df_stores_all
+qlmc_data.close()
 
 # CSV
 df_stores_all.to_csv(os.path.join(path_dir_built_csv,
                                   'df_qlmc_stores_raw.csv'),
+                     index = False,
                      encoding = 'UTF-8')

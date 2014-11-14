@@ -42,24 +42,14 @@ for json_file in ls_json_files:
 # EXTRACT STORE AND PRODUCT LIST
 # ##############################
 
-## Encode file with stores per period
-# Different order vs. first draft.. todo: add some sorting
-print u'\nGetting stores per period'
+print u'\nExtract stores per period to json'
 ls_ls_stores = []
 for ls_records in ls_ls_records:
   ls_stores = list(set([record[3] for record in ls_records]))
   ls_ls_stores.append(ls_stores)
 enc_json(ls_ls_stores, os.path.join(path_dir_built_json, 'ls_ls_stores'))
 
-## Old: encoded stores already splitted in chain and city
-#  ls_ls_tuple_stores.append([get_split_chain_city(store, ls_chain_brands)\
-#                               for store in ls_stores])
-#enc_json(ls_ls_tuple_stores,
-#         os.path.join(path_dir_built_json, 'ls_ls_tuple_stores.json'))
-
-# Encode file with products per period
-# Different order vs. first draft.. todo: add some sorting
-print u'\nGetting products per period'
+print u'\nExtract products per period to json'
 ls_ls_products = []
 for ls_records in ls_ls_records:
   set_products = set()
@@ -73,7 +63,7 @@ enc_json(ls_ls_products,
 # BUILD DF QLMC
 # #######################
 
-print u'\nBuilding df_qlmc'
+print u'\nBuild df_qlmc prices'
 ls_columns = ['P', 'Rayon', 'Famille', 'Produit', 'Magasin', 'Prix', 'Date']
 ls_rows = [[i] + record for i, ls_records in enumerate(ls_ls_records)\
              for record in ls_records]
@@ -81,36 +71,46 @@ df_qlmc = pd.DataFrame(ls_rows, columns = ls_columns)
 
 df_qlmc['Prix'] = df_qlmc['Prix'].astype(np.float32)
 
-# STORE IDENTIFICATION
+# MERGE DF QLMC STORES
 
-df_stores = qlmc_data['df_qlmc_lsa_stores']
+print u'\nAdd store lsa indexes'
+df_stores = pd.read_csv(os.path.join(path_dir_built_csv,
+                             'df_qlmc_stores.csv'),
+                        dtype = {'id_lsa': str,
+                                 'INSE_ZIP' : str,
+                                 'INSEE_Dpt' : str,
+                                 'INSEE_Code' : str,
+                                 'QLMC_Dpt' : str},
+                        encoding = 'UTF-8')
+# todo: do before and drop
 df_stores['Magasin'] = df_stores['Enseigne'] + u' ' + df_stores['Commune']
-df_qlmc = pd.merge(df_stores, df_qlmc, on = ['P', 'Magasin'], how = 'right')
-## Check those with no insee code (ambiguity in city identification)
-# df_qlmc['Magasin'][pd.isnull(df_qlmc['INSEE_Code'])].value_counts()
+df_qlmc = pd.merge(df_stores,
+                   df_qlmc,
+                   on = ['P', 'Magasin'],
+                   how = 'right')
 
-# todo: Paris/Lyon/Marseilles ardts?
+# MERGE DF QLMC PRODUCTS
 
-## Split magasin to get chain and city (takes time so merger prefered)
-#print u'\nSplitting store field into chain and city'
-#df_qlmc['Enseigne'], df_qlmc['Commune'] =\
-#  zip(*df_qlmc['Magasin'].map(\
-#    lambda x: get_split_chain_city(x, ls_chain_brands)))
+print u'\nAdd product std names and info'
+df_products = pd.read_csv(os.path.join(path_dir_built_csv,
+                                       'df_qlmc_products.csv'),
+                          encoding='utf-8')
+df_qlmc = pd.merge(df_products,
+                   df_qlmc,
+                   on = 'Produit',
+                   how = 'right')
 
-# PRODUCT PARSING
-
-df_products = qlmc_data['df_qlmc_products']
-df_qlmc = pd.merge(df_products, df_qlmc, on = 'Produit', how = 'right')
-
-## Parse products: brand, format, product nature (takes time so merger prefered)
-#print u'\nSplitting product field into brand and name (incl. format)'
-#df_qlmc['marque'], df_qlmc['libelle'] =\
-#  zip(*df_qlmc['Produit'].map(\
-#    lambda x: get_marque_and_libelle(x, ls_brand_patches)))
-## todo: integrate process elaborated in overview_products_qlmc
+# #######################
+# DESC STATS (here?)
+# #######################
 
 # PRODUCTS IN ALL PERIODS
+
+# improve following... need empty for concat as it is
+for field in ['marque', 'nom', 'format']:
+  df_qlmc[field].fillna(u'', inplace = True)
 df_qlmc['Produit_norm'] = df_qlmc['marque'] + ' ' + df_qlmc['nom']+ ' ' + df_qlmc['format']
+
 ls_ls_prod = []
 for per in df_qlmc['P'].unique():
   ls_ls_prod.append(list(df_qlmc['Produit_norm'][df_qlmc['P'] == per].unique()))
@@ -127,38 +127,47 @@ ls_prod_allp = list(set_prod)
 # 10248 closed on 2011-01-01 i.e. beg of period 8 (?)
 # impact for 502 (0, 2, 4, 5, 8, 9, 10, 11, 12)
 
+id_lsa = '1525'
+
 # Comparison between two periods for one store
 df_temp_1 = df_qlmc[['Produit_norm', 'Prix']][(df_qlmc['P'] == 0) &\
-                                              (df_qlmc['ind_lsa_stores'] == 1525)].copy()
+                                              (df_qlmc['id_lsa'] == id_lsa)].copy()
 df_temp_2 = df_qlmc[['Produit_norm', 'Prix']][(df_qlmc['P'] == 9) &\
-                                              (df_qlmc['ind_lsa_stores'] == 1525)].copy()
+                                              (df_qlmc['id_lsa'] == id_lsa)].copy()
 df_temp_3 = pd.merge(df_temp_1, df_temp_2, on = 'Produit_norm',
                      how = 'inner', suffixes = ('_1', '_2'))
 df_temp_3['D_value'] = df_temp_3['Prix_2'] - df_temp_3['Prix_1']
 df_temp_3['D_percent'] = df_temp_3['D_value'] / df_temp_3['Prix_1']
 
 # Comparison between all periods available for one store
-ind_store = 1525
 ls_store_per_ind = [int(x) for x in df_qlmc['P']\
-                     [df_qlmc['ind_lsa_stores'] == ind_store].unique()]
+                     [df_qlmc['id_lsa'] == id_lsa].unique()]
 df_store = df_qlmc[['Produit_norm', 'Prix']][(df_qlmc['P'] == ls_store_per_ind[0]) &\
-                                            (df_qlmc['ind_lsa_stores'] == ind_store)].copy()
+                                             (df_qlmc['id_lsa'] == id_lsa)].copy()
 for per_ind in ls_store_per_ind[1:]:
   df_temp = df_qlmc[['Produit_norm', 'Prix']]\
               [(df_qlmc['P'] == per_ind) &\
-               (df_qlmc['ind_lsa_stores'] == ind_store)]
-  df_store = pd.merge(df_store, df_temp, on = 'Produit_norm',
-                      how = 'outer', suffixes = ('', '_%s' %per_ind))
-# Finally harmonize first Prix column name
-df_store.rename(columns = {'Prix': 'Prix_%s' %ls_store_per_ind[0]}, inplace = True)
+               (df_qlmc['id_lsa'] == id_lsa)]
+  df_store = pd.merge(df_store,
+                      df_temp,
+                      on = 'Produit_norm',
+                      how = 'outer', suffixes = ('', '_{:02d}'.format(per_ind)))
 
+# Finally harmonize first Prix column name
+df_store.rename(columns = {'Prix': 'Prix_00'}, inplace = True)
+df_store.columns = [x.replace('Prix_', 'P') for x in df_store.columns]
+
+# Trivial mistake in price reported: look for problems by product
+# might need to add price folder and work on prices
+
+print df_store[0:10].to_string()
 ## TODO: get rid of products with several price records (either their mistake or my prod harmo)
 #print df_qlmc[['Produit_norm', 'P', 'Prix']]\
 #        [(df_qlmc['Produit_norm'] == 'Elle & Vire Beurre doux tendre 250g') &\
 #         (df_qlmc['ind_lsa_stores'] == 1525)].to_string()
 
-for prod_norm in se_vc_pn[se_vc_pn > 1].index:
-	df_store = df_store[df_store['Produit_norm'] != prod_norm]
+#for prod_norm in se_vc_pn[se_vc_pn > 1].index:
+#  df_store = df_store[df_store['Produit_norm'] != prod_norm]
 
 # Check high prices and divide by 100 (e.g. period 7)
 # Check with other Cora stores: same pool of products

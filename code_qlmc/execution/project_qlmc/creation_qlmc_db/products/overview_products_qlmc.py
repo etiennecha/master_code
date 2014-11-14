@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
-import add_to_path_sub
-from add_to_path_sub import *
+import add_to_path
+from add_to_path import *
 from functions_generic_qlmc import *
 from functions_geocoding import *
 from functions_string import *
@@ -16,11 +16,10 @@ path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 path_dir_source_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json_qlmc')
 path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
 path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
-qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+# LOAD PRODUCTS (directly from original data?)
 
-ls_ls_products = dec_json(os.path.join(path_dir_built_json, 'ls_ls_products'))
+ls_ls_products = dec_json(os.path.join(path_dir_built_json, 'ls_ls_products.json'))
 ls_rows = [[i] + product for i, ls_products\
              in enumerate(ls_ls_products)\
                for product in ls_products]
@@ -82,20 +81,24 @@ def fix_produit_2(product, ls_replace_products = ls_replace_products):
   for old, new in ls_replace_products:
     product = product.replace(old, new)
   return u' '.join([x for x in product.split(u' ') if x])
+
 df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit_2(x))
 
 # Alcool: u'degré' vs. u'\xb0' => check robustness
 def fix_alcool(product):
   product = re.sub(u'\xb0C?', u' degrés', product)
   return u' '.join([x for x in product.split(u' ') if x])
-df_products['Produit'][(df_products['Rayon'] == u'Boissons') |\
-                       (df_products['Rayon'] == u'Bières et alcool')] = \
-  df_products['Produit'][(df_products['Rayon'] == u'Boissons') |\
-                         (df_products['Rayon'] == u'Bières et alcool')].apply(\
-                            lambda x: fix_alcool(x))
-df_products['Produit'][df_products['Produit'].str.contains(u'vinaigre', case=False)] =\
-  df_products['Produit'][df_products['Produit'].str.contains(u'vinaigre', case=False)].apply(\
-    lambda x: fix_alcool(x))
+df_products.loc[(df_products['Rayon'] == u'Boissons') |\
+                (df_products['Rayon'] == u'Bières et alcool'),
+                'Produit'] = \
+  df_products.loc[(df_products['Rayon'] == u'Boissons') |\
+                  (df_products['Rayon'] == u'Bières et alcool'),
+                  'Produit'].apply(lambda x: fix_alcool(x))
+
+df_products.loc[df_products['Produit'].str.contains(u'vinaigre', case=False),
+               'Produit'] =\
+  df_products.loc[df_products['Produit'].str.contains(u'vinaigre', case=False),
+                  'Produit'].apply(lambda x: fix_alcool(x))
 
 # MG / u'matière grasse' (see case etc)
 df_products['Produit'] = df_products['Produit'].apply(\
@@ -308,11 +311,18 @@ ls_output_csv =['P', 'Rayon', 'Famille', 'Produit', 'produit', 'marque', 'nom', 
 # Prepare for merger with df_qlmc
 df_products = df_products[['Produit_O', 'marque', 'nom', 'format']]
 df_products.rename(columns={'Produit_O': 'Produit'}, inplace = True)
-df_products.drop_duplicates(cols='Produit', take_last=True, inplace=True)
+df_products.drop_duplicates('Produit', take_last=True, inplace=True)
 
-# HDF5: output for merger with df_qlmc
+# OUTPUT
+
+# HDF5 (drop?)
+path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
 qlmc_data['df_qlmc_products'] = df_products
+qlmc_data.close()
 
-## CSV: output for merger with df_qlmc
-#df_products.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_products_for_merger.csv'),
-#                   float_format='%.2f', encoding='utf-8', index=False)
+# CSV
+df_products.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_products.csv'),
+                   float_format='%.2f',
+                   encoding='utf-8',
+                   index=False)

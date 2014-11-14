@@ -72,8 +72,8 @@ def get_insee_from_zip_ardt(zip_code):
 ls_insee_bc = ['75056', '13055', '69123']
 
 df_lsa['Code INSEE ardt'] = df_lsa['Code INSEE']
-df_lsa['Code INSEE ardt'].loc[df_lsa['Code INSEE'].isin(ls_insee_bc)] =\
-    df_lsa['Code postal'].loc[df_lsa['Code INSEE'].isin(ls_insee_bc)].apply(\
+df_lsa.loc[df_lsa['Code INSEE'].isin(ls_insee_bc), 'Code INSEE ardt'] =\
+    df_lsa.loc[df_lsa['Code INSEE'].isin(ls_insee_bc), 'Code postal'].apply(\
        lambda x: get_insee_from_zip_ardt(unicode(x)))
 
 # ############################
@@ -243,8 +243,10 @@ df_lsa['Ex enseigne_alt'] = df_lsa['Ex enseigne_alt'].apply(\
 # Drop if surface below 400m2, else either Supermarket or Hypermarket
 df_lsa = df_lsa[~((df_lsa['Type'] == 'MP') & (df_lsa['Surf Vente'] < 400))].copy()
 df_lsa['Type_alt'] = df_lsa['Type']
-df_lsa['Type_alt'].loc[(df_lsa['Type'] == 'MP') & (df_lsa['Surf Vente'] < 2500)] = 'S'
-df_lsa['Type_alt'].loc[(df_lsa['Type'] == 'MP') & (df_lsa['Surf Vente'] >= 2500)] = 'H'
+df_lsa.loc[(df_lsa['Type'] == 'MP') & (df_lsa['Surf Vente'] < 2500),
+           'Type_alt'] = 'S'
+df_lsa.loc[(df_lsa['Type'] == 'MP') & (df_lsa['Surf Vente'] >= 2500),
+           'Type_alt'] = 'H'
 
 # ####################
 # BUILD DATAFRAMES
@@ -335,7 +337,7 @@ ls_loc_hsx = ['Hypermarkets', 'Supermarkets', 'Hard discount']
 ls_loc_drive = ['Drive in', 'Drive']
 
 for field in ['Surf Vente', 'Nbr emp', 'Nbr de caisses', 'Nbr parking', 'Pompes']:
-  print u'\n', u'-'*120
+  print u'\n', u'-'*80
   print field
   gbt = df_lsa_active_fm[['Type_alt', field]].groupby('Type_alt',
                                                       as_index = False)
@@ -643,20 +645,32 @@ for retail_group in dict_groupes.keys():
 # ###############
 
 # ALL
-df_lsa.to_csv(os.path.join(path_dir_built_csv, 'df_lsa.csv'),
-              encoding = 'UTF-8', float_format='%.3f')
+df_lsa.to_csv(os.path.join(path_dir_built_csv,
+                           'df_lsa.csv'),
+              encoding = 'UTF-8',
+              float_format ='%.3f',
+              index = False)
 
 # ACTIVE STORES IN METROPOLITAN FRANCE
-df_lsa_active_fm.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm.csv'),
-                        encoding = 'UTF-8', float_format='%.3f')
+df_lsa_active_fm.to_csv(os.path.join(path_dir_built_csv,
+                                     'df_lsa_active_fm.csv'),
+                        encoding = 'UTF-8',
+                        float_format = '%.3f',
+                        index = False)
 
 # ACTIVE STORES H/S/X IN METROPOLITAN FRANCE
-df_lsa_a_f_hsx.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
-                     encoding = 'UTF-8', float_format='%.3f')
+df_lsa_a_f_hsx.to_csv(os.path.join(path_dir_built_csv,
+                                   'df_lsa_active_fm_hsx.csv'),
+                      encoding = 'UTF-8',
+                      float_format='%.3f',
+                      index = False)
 
 # H/S/X IN METROPOLITAN FRANCE
-df_lsa_fm_hsx.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_fm_hsx.csv'),
-                     encoding = 'UTF-8', float_format='%.3f')
+df_lsa_fm_hsx.to_csv(os.path.join(path_dir_built_csv,
+                                  'df_lsa_fm_hsx.csv'),
+                     encoding = 'UTF-8',
+                     float_format='%.3f',
+                     index = False)
 
 # ###############
 # OUTPUT TO EXCEL

@@ -31,6 +31,9 @@ path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 # need to work with _no1900 at CREST for now (older versions of numpy/pandas/xlrd...?)
 df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_lsa.csv'),
+                     dtype = {'Ident': str,
+                              'Code INSEE' : str,
+                              'Code INSEE ardt' : str},
                      parse_dates = [u'DATE ouv',
                                     u'DATE ferm',
                                     u'DATE réouv',
@@ -100,9 +103,9 @@ df_lsa_closed_a = df_lsa[(~pd.isnull(df_lsa[u'DATE ferm'])) &\
                          (pd.isnull(df_lsa[u'DATE réouv']))].copy()
 df_lsa_closed.sort(columns = ['Code INSEE', 'DATE ouv'], inplace = True)
 # Quite a few indec (siret) are NaN (see why) hence change index back to Ident
-df_lsa_closed_a['Siret'] = df_lsa_closed_a.index
+df_lsa_closed_a.reset_index(inplace = True)
 df_lsa_closed_a.index = df_lsa_closed_a['Ident']
-df_lsa['Siret'] = df_lsa.index
+df_lsa.reset_index(inplace = True)
 df_lsa.index = df_lsa['Ident']
 # Look for store opened after store closed within same INSEE area
 ls_suspects = []
@@ -178,6 +181,7 @@ for qlmc_date in ls_qlmc_dates:
 
 df_lsa.to_csv(os.path.join(path_dir_built_csv,
                            'df_lsa_for_qlmc.csv'),
+              index = False,
               encoding = 'UTF-8')
 
 ## DEPRECATED (CSV PREFERED)

@@ -24,7 +24,7 @@ path_dir_built_excel = os.path.join(path_dir_qlmc, 'data_built' , 'data_excel')
 
 df_qlmc_stores = pd.read_csv(os.path.join(path_dir_built_csv,
                                       'df_qlmc_stores_raw.csv'),
-                             dtype = {'P' : int,
+                             dtype = {'P' : str,
                                       'QLMC_Dpt': str,
                                       'INSEE_ZIP': str,
                                       'INSEE_Dpt' : str,
@@ -75,7 +75,8 @@ df_qlmc_stores = pd.read_csv(os.path.join(path_dir_built_csv,
 
 df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
                                   'df_lsa_for_qlmc.csv'),
-                     dtype = {'Code INSEE' : str,
+                     dtype = {'Ident': str,
+                              'Code INSEE' : str,
                               'Code INSEE ardt' : str,
                               'Siret' : str},
                      parse_dates = [u'DATE ouv',
@@ -84,6 +85,10 @@ df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
                                     u'DATE chg enseigne',
                                     u'DATE chgt surf'],
                      encoding = 'UTF-8')
+
+## todo: fix and drop
+#if u'Unnamed: 0' in df_lsa.columns:
+#  df_lsa.drop(u'Unnamed: 0', axis = 1, inplace = True)
 
 # Dates in LSA for matching by period
 ls_qlmc_dates = ['2007-05',
@@ -102,10 +107,8 @@ ls_qlmc_dates = ['2007-05',
 
 #qlmc_date = ls_qlmc_dates[date_ind]
 #print df_lsa[qlmc_date].value_counts().to_string()
-#
 #ls_disp_2 = [u'Ident', u'Enseigne', u'ADRESSE1', u'Ville', 'Code INSEE',
 #             u'DATE ouv', u'DATE chg enseigne', 'Ex enseigne']
-#
 #print df_lsa[ls_disp_2][df_lsa[qlmc_date] == 'CARREFOUR MARKET'][0:30].to_string()
 
 # ##########
@@ -170,27 +173,27 @@ for date_ind, qlmc_date in enumerate(ls_qlmc_dates):
   ls_matched_stores = []
   for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
     for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc) &\
-                                       (df_qlmc_stores['P'] == date_ind)].iterrows():
+                                       (df_qlmc_stores['P'] == '{:d}'.format(date_ind))].iterrows():
       insee_code = row['INSEE_Code']
       df_city_stores = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
-                                     (df_lsa['type'] == enseigne_fra)]
+                              (df_lsa['type'] == enseigne_fra)]
       if len(df_city_stores) == 1:
-        ls_matched_stores.append((int(row['P']),
+        ls_matched_stores.append((row['P'],
                                   row['Enseigne'],
                                   row['Commune'],
                                   df_city_stores.iloc[0]['Ident'],
                                   'direct'))
       elif len(df_city_stores) == 0:
         df_city_stores_alt = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
-                                           (df_lsa['type_alt'] == enseigne_fra_alt)]
+                                    (df_lsa['type_alt'] == enseigne_fra_alt)]
         if len(df_city_stores_alt) == 1:
-          ls_matched_stores.append((int(row['P']),
+          ls_matched_stores.append((row['P'],
                                     row['Enseigne'],
                                     row['Commune'],
                                     df_city_stores_alt.iloc[0]['Ident'],
                                     'indirect'))
         elif len(df_city_stores_alt) == 0:
-          ls_matched_stores.append((int(row['P']),
+          ls_matched_stores.append((row['P'],
                                     row['Enseigne'],
                                     row['Commune'],
                                     None,
@@ -206,15 +209,14 @@ df_qlmc_stores_ma = pd.merge(df_matched, df_qlmc_stores,
                              on = ['P', 'Enseigne', 'Commune'],
                              how = 'right')
 
-# Disambiguiation: big communes
+# INSPECT NO MATCH
 df_unmatched = df_qlmc_stores_ma[pd.isnull(df_qlmc_stores_ma['id_lsa'])]
-
 print '\nTop insee areas in terms of no match'
 print df_unmatched['INSEE_Code'].value_counts()[0:10]
-
 print '\nINSEE area with code 49007:'
 print df_qlmc_stores_ma[df_qlmc_stores_ma['INSEE_Code'] == u'49007'].to_string()
 
+# DIPLAY MAIN NO MATCH MUNICIPALITIES
 ls_df_toextract = []
 for insee_code in df_unmatched['INSEE_Code'].value_counts()[0:30].index:
   ls_df_toextract.append(df_qlmc_stores_ma[df_qlmc_stores_ma['INSEE_Code'] == insee_code])
@@ -222,96 +224,25 @@ df_to_extract = pd.concat(ls_df_toextract)
 df_to_extract.sort(columns=['INSEE_Code', 'Enseigne', 'Commune'], inplace = True)
 print df_to_extract.to_string()
 
-#ls_rows_fix_ms = []
-#for ls_store_fix in ls_fix_ms:
-#  for magasin_libelle in ls_store_fix[2]:
-#    ls_rows_fix_ms.append(ls_store_fix[0] + ls_store_fix[1] + [magasin_libelle])
-#ls_columns = ['id_lsa', 'id_lsa_2', 'street_lsa_stores', 'Enseigne', 'Commune']
-#df_fix_ms = pd.DataFrame(ls_rows_fix_ms, columns = ls_columns)
-
-ls_columns_fix_ms = ['P', 'Enseigne', 'Commune', 'INSEE_Code',
-                     'id_fra_stores', 'id_lsa', 'id_fra_stores_2', 'street_fra_stores']
-ls_fix_ms = dec_json(os.path.join(path_dir_built_json, u'ls_fix_ms'))
-df_fix_ms = pd.DataFrame(ls_fix_ms, columns = ls_columns_fix_ms)
-
-# INSEE_Code: pbm when reading from excel (read as number) hence must drop
-df_fix_ms.drop(['id_fra_stores', 'INSEE_Code'], axis = 1, inplace = True)
-
-df_to_extract = pd.merge(df_fix_ms, df_to_extract, on=['P', 'Enseigne', 'Commune'], how='right')
-df_to_extract.sort(columns = ['INSEE_Code', 'Enseigne', 'P', 'Commune'], inplace = True)
-ls_extract_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code',
-                   'id_fra_stores', 'id_lsa', 'id_fra_stores_2', 'street_fra_stores']
-
-# READ MATCHED STORES FROM EXCEL FILE
-
-df_read_fix_ms = pd.read_excel(os.path.join(path_dir_built_excel, 'fix_store_matching.xlsx'),
-                               sheetname = 'Sheet1')
-
-df_read_fix_ms_fi = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['id_lsa'])) |
-                                   (~pd.isnull(df_read_fix_ms['id_fra_stores_2'])) |
-                                   (~pd.isnull(df_read_fix_ms['street_fra_stores']))].copy()
-#df_read_fix_ms_fi['P'] = df_read_fix_ms_fi['P'].apply(lambda x: int(x))
-ls_read_fix_ms = [list(x) for x in df_read_fix_ms_fi.to_records(index=False)]
-
-def get_as_str(some_number, missing = None):
-  # float are expected to be int or nan
-  if np.isnan(some_number):
-    return missing
-  else:
-    return u'{0:.0f}'.format(some_number)
-
-def get_cinsee_as_str(some_number):
-  cinsee = get_as_str(some_number)
-  if len(cinsee) == 5:
-    return cinsee
-  elif cinsee and len(cinsee) == 4:
-    return u'0' + cinsee
-  else:
-    print u'Can not convert', some_number
-    return None
-
-ls_read_fix_ms = [[int(x[0])] + x[1:3] + [get_cinsee_as_str(x[3])] +\
-                  map(get_as_str, x[4:7]) + x[7:8] for x in ls_read_fix_ms]
-
-# UPDATE JSON FILE WITH MATCHED STORES
-
-# ls_fix_ms = dec_json(os.path.join(path_dir_built_json, u'ls_fix_ms'))
-ls_fix_ms = []
-# NB: no equality when nan (even in list)
-ls_fix_ms_check = [x[0:3] for x in ls_fix_ms]
-## overwrite forbidden (for now?)
-## todo: check unexpected duplicates => all hand written field as they should never be nan
-ls_fix_ms += [x for x in ls_read_fix_ms if x[0:3] not in ls_fix_ms_check]
-# enc_json(ls_fix_ms, os.path.join(path_dir_built_json, u'ls_fix_ms'))
-df_read_fix_ms_2 = pd.read_csv(os.path.join(path_dir_built_excel,
-                                            'fix_store_matching.csv'),
+# READ MATCHED STORES FROM CSV FILE AND UPDATE FIX
+df_read_fix_ms = pd.read_csv(os.path.join(path_dir_built_excel,
+                                          'fix_store_matching.csv'),
                                sep = ';',
-                               dtype = {'INSEE_Code' : str,
+                               dtype = {'P' : str,
+                                        'INSEE_Code' : str,
                                         'id_fra_stores' : str,
                                         'id_lsa' : str,
                                         'id_fra_stores_2' : str},
                                encoding = 'latin-1')
-
-## TODO: RE-GENERATE EXCEL FILE WITH ALL MATCHED STORES
-##http://stackoverflow.com/questions/20219254/
-##how-to-write-to-an-existing-excel-file-without-overwriting-data
-## pip install openpyxl==1.8.6
-#writer = pd.ExcelWriter(os.path.join(path_dir_built_excel, 'fix_store_matching.xlsx'))
-#df_to_extract[ls_extract_disp].to_excel(writer, index=False)
-#writer.close()
-
-# to be applied before corrections
-ls_fix_ms_2 = [[u'10', u'GEANT CASINO', u'ANGERS', 'ANGERS LA ROSERAIE'],   #todo: check
-               [u'2' , u'GEANT CASINO', u'CARCASSONNE', u'CARCASSONE CC SALVAZA']] # todo: check
-
-# Output for merger with price file
-#df_qlmc_stores_matched.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_stores_matched.csv'),
-#                              float_format='%.0f', encoding='utf-8', index=False)
+# keep only those with some added info
+df_read_fix_ms = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['id_lsa'])) |
+                                (~pd.isnull(df_read_fix_ms['id_fra_stores_2'])) |
+                                (~pd.isnull(df_read_fix_ms['street_fra_stores']))].copy()
 
 # OUTPUT RESULT FROM MATCHING (i.e. corr)
-# assume df_read_fix_ms_fi contains all ad hoc matching
-df_read_fix_ms_fi.rename(columns={'id_lsa' : 'id_lsa_adhoc'}, inplace = True)
-df_final = pd.merge(df_read_fix_ms_fi[['P', 'Enseigne', 'Commune', 'id_lsa_adhoc']] ,
+# df_read_fix_ms contains all ad hoc matching
+df_read_fix_ms.rename(columns={'id_lsa' : 'id_lsa_adhoc'}, inplace = True)
+df_final = pd.merge(df_read_fix_ms[['P', 'Enseigne', 'Commune', 'id_lsa_adhoc']] ,
                     df_qlmc_stores_ma, on = ['P', 'Enseigne', 'Commune'],
                     how = 'right')
 df_final.loc[~pd.isnull(df_final['id_lsa_adhoc']), 'Q'] = 'manuel'
@@ -332,24 +263,96 @@ for per in df_final['P'].unique():
 
 print '\nInspect problems (two stores with same lsa ind):'
 ls_final_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code', 'id_lsa']
-print df_final[ls_final_disp][df_final['id_lsa'] == 51585].to_string()
-print df_final[ls_final_disp][df_final['id_lsa'] == 169094].to_string()
-print df_final[ls_final_disp][df_final['id_lsa'] == 48893].to_string()
+print df_final[ls_final_disp][df_final['id_lsa'] == '51585'].to_string()
+print df_final[ls_final_disp][df_final['id_lsa'] == '169094'].to_string()
+print df_final[ls_final_disp][df_final['id_lsa'] == '48893'].to_string()
 
-# OUTPUT TO EXCEL
+# OUTPUT NO MATCH FOR POTENTIAL HAND WRITTEN UPDATES
 
-#writer = pd.ExcelWriter(os.path.join(path_dir_built_csv, 'matching_qlmc_lsa_by_period.xlsx'))
-#df_final.to_excel(writer, index = False)
-#writer.close()
+# OUTPUT
 
-# OUTPUT TO HDF5
-
-## HDF (abandon?)
-#qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-#qlmc_data['df_qlmc_stores'] = df_final
-#qlmc_data.close()
+# HDF (abandon?)
+path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+qlmc_data['df_qlmc_stores'] = df_final
+qlmc_data.close()
 
 # CSV
 df_final.to_csv(os.path.join(path_dir_built_csv,
                              'df_qlmc_stores.csv'),
+                index = False,
                 encoding = 'UTF-8')
+
+
+
+# DEPREACTED
+
+# ADD QLMC NO MATCH TO BE EXAMINED (MOVE ?)
+
+#df_to_extract = pd.merge(df_fix_ms, df_to_extract, on=['P', 'Enseigne', 'Commune'], how='right')
+#df_to_extract.sort(columns = ['INSEE_Code', 'Enseigne', 'P', 'Commune'], inplace = True)
+#ls_extract_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code',
+#                   'id_fra_stores', 'id_lsa', 'id_fra_stores_2', 'street_fra_stores']
+
+# UPDATE JSON FILE WITH MATCHED STORES
+
+## list for json
+#ls_read_fix_ms = [list(x) for x in df_read_fix_ms.to_records(index=False)]
+## NB: no equality when nan (even in list)
+#ls_fix_ms_check = [x[0:3] for x in ls_fix_ms]
+#ls_fix_ms += [x for x in ls_read_fix_ms if x[0:3] not in ls_fix_ms_check]
+# enc_json(ls_fix_ms, os.path.join(path_dir_built_json, u'ls_fix_ms.json'))
+
+## LOAD HAND WRITTEN LSA/QLMC MATCHES (JSON => DEPRECATE?)
+#ls_columns_fix_ms = ['P', 'Enseigne', 'Commune', 'INSEE_Code',
+#                     'id_fra_stores', 'id_lsa', 'id_fra_stores_2', 'street_fra_stores']
+#ls_fix_ms = dec_json(os.path.join(path_dir_built_json, u'ls_fix_ms.json'))
+#df_fix_ms = pd.DataFrame(ls_fix_ms, columns = ls_columns_fix_ms)
+#df_fix_ms.drop(['id_fra_stores', 'INSEE_Code'], axis = 1, inplace = True)
+
+## RE-GENERATE EXCEL FILE WITH ALL MATCHED STORES
+##http://stackoverflow.com/questions/20219254/
+##how-to-write-to-an-existing-excel-file-without-overwriting-data
+## pip install openpyxl==1.8.6
+#writer = pd.ExcelWriter(os.path.join(path_dir_built_excel, 'fix_store_matching.xlsx'))
+#df_to_extract[ls_extract_disp].to_excel(writer, index=False)
+#writer.close()
+
+## to be applied before corrections
+#ls_fix_ms_2 = [[u'10', u'GEANT CASINO', u'ANGERS', 'ANGERS LA ROSERAIE'],   #check
+#               [u'2' , u'GEANT CASINO', u'CARCASSONNE', u'CARCASSONE CC SALVAZA']] #check
+
+# Output for merger with price file
+#df_qlmc_stores_matched.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_stores_matched.csv'),
+#                              float_format='%.0f', encoding='utf-8', index=False)
+
+
+## READ MANUAL LSA MATCHING BASED ON XLS FILE
+
+#df_read_fix_ms = pd.read_excel(os.path.join(path_dir_built_excel, 'fix_store_matching.xlsx'),
+#                               sheetname = 'Sheet1')
+#df_read_fix_ms_fi = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['id_lsa'])) |
+#                                   (~pd.isnull(df_read_fix_ms['id_fra_stores_2'])) |
+#                                   (~pd.isnull(df_read_fix_ms['street_fra_stores']))].copy()
+##df_read_fix_ms_fi['P'] = df_read_fix_ms_fi['P'].apply(lambda x: int(x))
+#ls_read_fix_ms = [list(x) for x in df_read_fix_ms_fi.to_records(index=False)]
+#
+#def get_as_str(some_number, missing = None):
+#  # float are expected to be int or nan
+#  if np.isnan(some_number):
+#    return missing
+#  else:
+#    return u'{0:.0f}'.format(some_number)
+#
+#def get_cinsee_as_str(some_number):
+#  cinsee = get_as_str(some_number)
+#  if len(cinsee) == 5:
+#    return cinsee
+#  elif cinsee and len(cinsee) == 4:
+#    return u'0' + cinsee
+#  else:
+#    print u'Can not convert', some_number
+#    return None
+#
+#ls_read_fix_ms = [[int(x[0])] + x[1:3] + [get_cinsee_as_str(x[3])] +\
+#                  map(get_as_str, x[4:7]) + x[7:8] for x in ls_read_fix_ms]
