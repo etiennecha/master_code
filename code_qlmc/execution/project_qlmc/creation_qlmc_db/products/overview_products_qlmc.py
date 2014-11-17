@@ -176,7 +176,7 @@ ls_sub_format = [u'bouteilles?',
                  u'boîte',
                  u'flacon',
                  u'atomiseur',
-                 u'barquette',
+                 u'barquettes?',
                  u'sachet',
                  u'pot',
                  u'cellophane',
@@ -275,6 +275,7 @@ se_mn_multi = se_mn_vc[se_mn_vc > 1]
 # u'Lesieur Huile tournesol 1ère Pression' # 8-11 (compare lower case)
 # u'Lesieur Huile de tournesol 1ère pression' # 12 (compare lower case and get rid of 'de')
 
+# NB: non NaN here: no format => u''
 df_products['produit'] = df_products['marque'].str.lower() + u' _ ' +\
                          df_products['nom'].str.lower() + u' _ ' +\
                          df_products['format'].str.lower()
@@ -303,26 +304,34 @@ print df_products[['marque', 'nom', 'format']][(df_products['marque'] == u'Le St
 prod = u"schweppes _ schweppes agrum' boisson gazeuse agrume _ 6x33cl"
 print df_products[['P', 'produit']][df_products['produit'] == prod].to_string()
 
-ls_output_csv =['P', 'Rayon', 'Famille', 'Produit', 'produit', 'marque', 'nom', 'format']
-## Output for visual check
-#df_products[ls_output_csv].to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_products.csv'),
-#                                  float_format='%.2f', encoding='utf-8', index=False)
+# Visual Examination
+#pd.set_option('display.max_colwidth', 50)
+#print df_products[['P', 'marque', 'nom', 'format']][0:10].to_string()
+pd.set_option('display.max_colwidth', 100)
+df_temp = df_products[['produit', 'marque', 'nom', 'format']].copy()
+df_temp.drop_duplicates('produit', take_last=True, inplace=True)
+df_temp.sort(columns = ['marque', 'nom', 'format'], inplace = True)
+# todo: add value counts if possible (then need to load all)
+print df_temp[['marque', 'nom', 'format']][0:1000].to_string()
 
-# Prepare for merger with df_qlmc
-df_products = df_products[['Produit_O', 'marque', 'nom', 'format']]
-df_products.rename(columns={'Produit_O': 'Produit'}, inplace = True)
-df_products.drop_duplicates('Produit', take_last=True, inplace=True)
+# quite general pbms to be solved
+for str_pbm in [u'Å"', u'à´', u"à»", u"à¯"]:
+  print df_products['Produit'][df_products['Produit'].str.contains(str_pbm)].to_string()
 
 # OUTPUT
+df_products_op = df_products[['Produit_O', 'marque', 'nom', 'format']].copy()
+df_products_op.rename(columns={'Produit_O': 'Produit'}, inplace = True)
+df_products_op.drop_duplicates('Produit', take_last=True, inplace=True)
 
 # HDF5 (drop?)
 path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-qlmc_data['df_qlmc_products'] = df_products
+qlmc_data['df_qlmc_products'] = df_products_op
 qlmc_data.close()
 
-# CSV
-df_products.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_products.csv'),
-                   float_format='%.2f',
-                   encoding='utf-8',
-                   index=False)
+# CSV (no ',' in fields? how is it dealt with?)
+df_products_op.to_csv(os.path.join(path_dir_built_csv,
+                                   'df_qlmc_products.csv'),
+                      float_format='%.2f',
+                      encoding='utf-8',
+                      index=False)

@@ -104,13 +104,14 @@ df_qlmc = pd.merge(df_products,
 # DESC STATS (here?)
 # #######################
 
-# PRODUCTS IN ALL PERIODS
+pd.set_option('float_format', '{:4,.2f}'.format)
 
 # improve following... need empty for concat as it is
 for field in ['marque', 'nom', 'format']:
   df_qlmc[field].fillna(u'', inplace = True)
 df_qlmc['Produit_norm'] = df_qlmc['marque'] + ' ' + df_qlmc['nom']+ ' ' + df_qlmc['format']
 
+# PRODUCTS PRESENT IN ALL PERIODS
 ls_ls_prod = []
 for per in df_qlmc['P'].unique():
   ls_ls_prod.append(list(df_qlmc['Produit_norm'][df_qlmc['P'] == per].unique()))
@@ -119,7 +120,72 @@ for ls_prod in ls_ls_prod[1:]:
 	set_prod.intersection_update(set(ls_prod))
 ls_prod_allp = list(set_prod)
 
-# TEST BEFORE/AFTER: IMPACT OF STORE CLOSED
+
+
+# INSPECT/FIX PRICES
+
+df_qlmc.sort('Prix', ascending = False, inplace = True)
+print df_qlmc[['P', 'Produit_norm', 'Prix']][0:100].to_string()
+
+# Prices to be divided by 10 (which periods are concerned?)
+# todo: increase robustness?
+pr_exception = u'Philips - Cafeti\xe8re filtre Cucina lilas 1000W 1.2L (15 tasses) , X1'
+df_qlmc.loc[(df_qlmc['Prix'] > 35.5) &\
+            (df_qlmc['Produit'] != pr_exception) , 'Prix'] =\
+  df_qlmc.loc[(df_qlmc['Prix'] > 35.5) &\
+              (df_qlmc['Produit'] != pr_exception), 'Prix'] / 100.0
+
+# TODO: prices to be multiplied or erased?
+
+# Inspect prices by product (regarless of period)
+df_price_su = df_qlmc[['Produit_norm', 'Prix']].groupby('Produit_norm').\
+                agg([np.median, np.mean, np.std, min, max])['Prix']
+df_price_su.sort('mean', inplace = True, ascending = False)
+print df_price_su[0:20].to_string()
+
+# Inspect average product prices by period (regarless of period)
+print '\nProduct prices by period (highest variations)'
+ls_se_avg_prices = []
+for i in range(13):
+  df_qlmc_per = df_qlmc[df_qlmc['P'] == i]
+  se_avg_prices = df_qlmc_per[['Produit_norm', 'Prix']].groupby('Produit_norm').agg(np.mean)['Prix']
+  ls_se_avg_prices.append(se_avg_prices)
+df_per_prices = pd.DataFrame(ls_se_avg_prices, index = range(13)).T
+df_per_prices['spread'] = df_per_prices.max(axis = 1) - df_per_prices.min(axis = 1)
+df_per_prices.sort('spread', inplace = True, ascending = False)
+df_per_prices.reset_index(inplace = True)
+print df_per_prices[0:100].to_string()
+
+#pr_pbm, period_pbm = u"Gemey Volum'Express mascara noir 10ml", 6
+#print df_qlmc[['Magasin', 'Prix']][(df_qlmc['Produit_norm'] == pr_pbm) &\
+#                                   (df_qlmc['P'] == period_pbm)].to_string()
+#
+#pr_pbm, period_pbm = u"Viva Lait TGV demi-écrémé vitaminé 6x50cl", 6
+#print df_qlmc[['Magasin', 'Prix']][(df_qlmc['Produit_norm'] == pr_pbm) &\
+#                                   (df_qlmc['P'] == period_pbm)].to_string()
+
+## Period 6, 8, 9: no good for inter period comparison if price above 10?
+## Compare mean price with other periods and see if large difference...
+## Check if prices are consistent (/10 and rounded?)
+#for i in range(13):
+#  print '\n', i
+#  print df_qlmc[df_qlmc['P'] == i]['Prix'].describe()
+
+# Check good average price across periods => see pbms in 6, 8, 9
+
+# Get rid of products with several prices records
+#print df_qlmc[['Produit_norm', 'P', 'Prix']]\
+#        [(df_qlmc['Produit_norm'] == 'Elle & Vire Beurre doux tendre 250g') &\
+#         (df_qlmc['id_lsa'] == '1525')].to_string()
+
+# TODO: examine duplicates (associated with high/low price: way to solve!)
+se_dup_bool = df_qlmc.duplicated(subset = ['P', 'Magasin', 'Produit_norm'])
+df_test = df_qlmc[['P', 'Magasin', 'Produit_norm', 'Prix']][df_duplicates]
+#df_qlmc.drop_duplicates(subset = ['P', 'Magasin', 'Produit_norm'],
+#                        take_last = True,
+#                        inplace = True)
+
+# STORE LEVEL (could be suited to examine before after..)
 
 # 14343 (lsa index) closed on 2009-10-31 i.e. between periods 5 and 6
 # impact for 1525 (0 to 12) and 1581 (1 and 6... short)
@@ -160,41 +226,7 @@ df_store.columns = [x.replace('Prix_', 'P') for x in df_store.columns]
 # Trivial mistake in price reported: look for problems by product
 # might need to add price folder and work on prices
 
-pd.set_option('float_format', '{:4,.2f}'.format)
 print df_store[0:10].to_string()
-
-# Pbms with text: TODO: clean before extraction?
-# Bonduelle - Maà¯s doux en grain, 400g
-# Taillefine - Eau plate arà´me pêche, 1.5L
-# df_qlmc[df_qlmc['Produit'] == u'Bonduelle - Maà¯s doux en grain, 400g'].iloc[0]
-
-df_price_su = df_qlmc[['Produit_norm', 'Prix']].groupby('Produit_norm').\
-                agg([np.median, np.mean, np.std, min, max])['Prix']
-df_price_su.sort('mean', inplace = True, ascending = False)
-print df_price_su[0:1000].to_string()
-
-# Test: no good seems to have an average price above 50e... so easy general fix?
-df_qlmc.loc[df_qlmc['Prix'] > 50, 'Prix'] =\
-  df_qlmc.loc[df_qlmc['Prix'] > 50, 'Prix'] / 100.0
-
-# Check Philips Cafetière filtre Cucina lilas 1000W
-# Period 6, 8, 9: no good for inter period comparison if price above 10?
-# Compare mean price with other periods and see if large difference...
-# Check if prices are consistent (/10 and rounded?)
-for i in range(13):
-	print '\n', i
-	df_qlmc[df_qlmc['P'] == i]['Prix'].describe()
-
-## TODO: get rid of products with several price records (either their mistake or my prod harmo)
-#print df_qlmc[['Produit_norm', 'P', 'Prix']]\
-#        [(df_qlmc['Produit_norm'] == 'Elle & Vire Beurre doux tendre 250g') &\
-#         (df_qlmc['ind_lsa_stores'] == 1525)].to_string()
-
-#for prod_norm in se_vc_pn[se_vc_pn > 1].index:
-#  df_store = df_store[df_store['Produit_norm'] != prod_norm]
-
-# Check high prices and divide by 100 (e.g. period 7)
-# Check with other Cora stores: same pool of products
 
 # #############################################
 # ONE LSA IND FOR TWO STORE NAMES WITHIN PERIOD
