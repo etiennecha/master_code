@@ -160,7 +160,18 @@ df_store.columns = [x.replace('Prix_', 'P') for x in df_store.columns]
 # Trivial mistake in price reported: look for problems by product
 # might need to add price folder and work on prices
 
+pd.set_option('float_format', '{:4,.2f}'.format)
 print df_store[0:10].to_string()
+
+# Pbms with text: TODO: clean before extraction?
+# Bonduelle - Maà¯s doux en grain, 400g
+# Taillefine - Eau plate arà´me pêche, 1.5L
+# df_qlmc[df_qlmc['Produit'] == u'Bonduelle - Maà¯s doux en grain, 400g'].iloc[0]
+
+df_price_su = df_qlmc[['Produit', 'Prix']].groupby('Produit').\
+                agg([np.median, np.mean, np.std, min, max])['Prix']
+df_price_su.sort('mean', inplace = True, ascending = False)
+
 ## TODO: get rid of products with several price records (either their mistake or my prod harmo)
 #print df_qlmc[['Produit_norm', 'P', 'Prix']]\
 #        [(df_qlmc['Produit_norm'] == 'Elle & Vire Beurre doux tendre 250g') &\
