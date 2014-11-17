@@ -168,9 +168,22 @@ print df_store[0:10].to_string()
 # Taillefine - Eau plate arà´me pêche, 1.5L
 # df_qlmc[df_qlmc['Produit'] == u'Bonduelle - Maà¯s doux en grain, 400g'].iloc[0]
 
-df_price_su = df_qlmc[['Produit', 'Prix']].groupby('Produit').\
+df_price_su = df_qlmc[['Produit_norm', 'Prix']].groupby('Produit_norm').\
                 agg([np.median, np.mean, np.std, min, max])['Prix']
 df_price_su.sort('mean', inplace = True, ascending = False)
+print df_price_su[0:1000].to_string()
+
+# Test: no good seems to have an average price above 50e... so easy general fix?
+df_qlmc.loc[df_qlmc['Prix'] > 50, 'Prix'] =\
+  df_qlmc.loc[df_qlmc['Prix'] > 50, 'Prix'] / 100.0
+
+# Check Philips Cafetière filtre Cucina lilas 1000W
+# Period 6, 8, 9: no good for inter period comparison if price above 10?
+# Compare mean price with other periods and see if large difference...
+# Check if prices are consistent (/10 and rounded?)
+for i in range(13):
+	print '\n', i
+	df_qlmc[df_qlmc['P'] == i]['Prix'].describe()
 
 ## TODO: get rid of products with several price records (either their mistake or my prod harmo)
 #print df_qlmc[['Produit_norm', 'P', 'Prix']]\
