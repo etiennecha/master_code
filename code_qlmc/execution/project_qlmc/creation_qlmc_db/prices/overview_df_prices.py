@@ -185,6 +185,63 @@ for per in range(13):
 #print df_inspect[0:100].to_string()
 df_qlmc = df_qlmc[~((df_qlmc['P'] == 0) & (df_qlmc['Magasin'] == u'GEANT CARCASSONNE'))].copy()
 
+# Period 7
+## Look for highest legitimate price
+#print df_qlmc['Prix'][(df_qlmc['P'] == 7) &\
+#                      (df_qlmc['Produit_norm'] == u"Mumm Cordon rouge champagne brut 75cl")].max()
+## All those between 10 and 35 appear legit
+#print df_qlmc['Produit_norm'][(df_qlmc['P'] == 7) &\
+#                              (df_qlmc['Prix'] >= 10) &\
+#                              (df_qlmc['Prix'] <= 35)].value_counts()
+## Products the price of which is above 35 and should not
+#print df_qlmc['Produit_norm'][(df_qlmc['P'] == 7) &\
+#                              (df_qlmc['Prix'] >= 35)].value_counts().to_string()
+df_qlmc.loc[(df_qlmc['P'] == 7) &\
+            (df_qlmc['Prix'] >= 35), 'Prix'] =\
+  df_qlmc.loc[(df_qlmc['P'] == 7) &\
+              (df_qlmc['Prix'] >= 35), 'Prix'] / 100
+
+# Period 6, 8, 9:
+
+# Spread above 7/8 (makes sense... but won't capture high value goods)
+for per in [6, 8, 9]:
+  df_qlmc_per = df_qlmc[df_qlmc['P'] == per]
+  df_pero = df_qlmc_per[['Produit_norm', 'Prix']].groupby('Produit_norm').\
+              agg([len, np.median, np.mean, np.std, min, max])['Prix']
+  df_pero['spread'] = df_pero['max'] - df_pero['min']
+  ls_fix = list(df_pero.index[df_pero['spread'] > 8])
+  df_qlmc.loc[(df_qlmc['P'] == per) &\
+              (df_qlmc['Produit_norm'].isin(ls_fix)) &\
+              (df_qlmc['Prix'] <= 3.5), 'Prix'] =\
+    df_qlmc.loc[(df_qlmc['P'] == per) &\
+                (df_qlmc['Produit_norm'].isin(ls_fix)) &\
+                (df_qlmc['Prix'] <= 3.5), 'Prix'] * 10
+
+# High value goods... check Produit_norm with high prices of other periods
+set_hv = set()
+for i in range(6) + [7] + range(10,13):
+  df_qlmc_per = df_qlmc[df_qlmc['P'] == i]
+  df_pero = df_qlmc_per[['Produit_norm', 'Prix']].groupby('Produit_norm').\
+              agg([len, np.median, np.mean, np.std, min, max])['Prix']
+  set_hv.update(set(df_pero.index[df_pero['max'] >= 10]))
+
+# Find Produit_norm to fix (+ still need to check for goods not present in other periods)
+for per in [6, 8, 9]:
+  df_qlmc_per = df_qlmc[df_qlmc['P'] == per]
+  df_pero = df_qlmc_per[['Produit_norm', 'Prix']].groupby('Produit_norm').\
+              agg([len, np.median, np.mean, np.std, min, max])['Prix']
+  df_pero.reset_index(inplace = True)
+  ls_fix = list(df_pero['Produit_norm'][(df_pero['mean'] < 5) &\
+                                        (df_pero['Produit_norm'].isin(list(set_hv)))])
+  df_qlmc.loc[(df_qlmc['P'] == per) &\
+              (df_qlmc['Produit_norm'].isin(ls_fix)), 'Prix'] =\
+    df_qlmc.loc[(df_qlmc['P'] == per) &\
+                (df_qlmc['Produit_norm'].isin(ls_fix)), 'Prix'] * 10
+
+# Annoying duplicates (based on spread / relative spread) => drop low values?
+# "Viva Lait TGV demi-écrémé vitaminé 6x50cl"
+# in periods: 0, 1, 2, 3, 4, 5, 7, 8, 10
+
 # ##########################
 # OVERVIEW OF EACH PERIOD
 # ##########################

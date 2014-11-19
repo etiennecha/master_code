@@ -316,6 +316,8 @@ print df_temp[['marque', 'nom', 'format']][0:1000].to_string()
 
 # quite general pbms to be solved
 # "Marie - Paà«lla royale, 1,1kg"
+# "Nos villages Gros Å"ufs fermiers x6"
+# "Matines Å'ufs frais (...?)"
 for str_pbm in [u'Å"', u'à´', u"à»", u"à¯"]:
   print df_products['Produit'][df_products['Produit'].str.contains(str_pbm)].to_string()
 
