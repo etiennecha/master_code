@@ -83,90 +83,130 @@ len(df_com[pd.isnull(df_com['avail_surf'])])
 # Replace nan surface by 0 (not sure of proper syntax: flagged inplace = True )
 df_com.loc[:, ls_disp_com_st]= df_com.loc[:, ls_disp_com_st].fillna(0)
 
-# #######################
-# COMPUTE ENTROPY BY TYPE
-# #######################
+# Dict regions
+dict_regions =  {'Alsace' :'42',
+                 'Aquitaine': '72', 
+                 'Auvergne' : '83',
+                 'Basse-Normandie' : '25',
+                 'Bourgogne' : '26',
+                 'Bretagne' : '53',
+                 'Centre' : '24',
+                 'Champagne-Ardenne' : '21',
+                 'Corse' : '94',
+                 'Franche-Comte' : '43',
+                 'Haute-Normandie':'23',
+                 'Ile-de-France' : '11',
+                 'Languedoc-Roussillon' : '91',
+                 'Limousin' : '74',
+                 'Lorraine' : '41',
+                 'Midi-Pyrenees' : '73',
+                 'Nord-Pas-de-Calais': '31',
+                 'Pays de la Loire' : '52',
+                 'Picardie' : '22',
+                 'Poitou-Charentes' : '54',
+                 "Provence-Alpes-Cote-d'Azur" : '93',
+                 'Rhone-Alpes' : '82'}
 
+dict_regions = {v: k for k,v in dict_regions.items()}
 
+# ##############################
+# ENTROPY: AVAIL SURFACE vs. POP
+# ##############################
 
-ls_entropy = []
-ls_df_entropy_decomp = []
-ls_se_entropy = []
-
+field = 'avail_surf' # 'P10_MEN' 
 decomp = 'REG'
-for field in ls_disp_com_st:
 
-  
-  # get s_k
-  df_reg_s = df_com[[decomp, field]].groupby(decomp).agg([len,
-                                                         np.mean])[field]
-  df_reg_s['s_k'] = (df_reg_s['len'] * df_reg_s['mean']) /\
-                    (len(df_com) * df_com[field].mean())
-  
-  # get T1_k
-  def get_T1_k(se_inc):
-    se_norm_inc = se_inc / se_inc.mean()
-    return (se_norm_inc * np.log(se_norm_inc)).sum() / len(se_inc)
-  df_reg_t = df_com[[decomp, field]].groupby(decomp).agg([len,
-                                                        get_T1_k])[field]
-  df_reg_t['T1_k'] = df_reg_t['get_T1_k']
-  
-  # merge and final
-  df_reg = df_reg_s[['mean', 's_k']].copy()
-  df_reg['T1_k'] = df_reg_t['T1_k']
-  
-  T1 = (df_reg['s_k'] * df_reg['T1_k']).sum()  +\
-       (df_reg['s_k'] * np.log(df_reg['mean'] / df_com[field].mean())).sum()
-  
-  df_com['norm_%s' %field] = df_com[field] / df_com[field].mean()
-  T1_simple = (df_com['norm_%s' %field] * np.log(df_com['norm_%s' %field])).sum() /\
-              len(df_com)
-  # Close enough! (Same as get_T1)
-  
-  # Get table (todo: compare between types of stores)
-  dict_regions =  {'Alsace' :'42',
-                   'Aquitaine': '72', 
-                   'Auvergne' : '83',
-                   'Basse-Normandie' : '25',
-                   'Bourgogne' : '26',
-                   'Bretagne' : '53',
-                   'Centre' : '24',
-                   'Champagne-Ardenne' : '21',
-                   'Corse' : '94',
-                   'Franche-Comte' : '43',
-                   'Haute-Normandie':'23',
-                   'Ile-de-France' : '11',
-                   'Languedoc-Roussillon' : '91',
-                   'Limousin' : '74',
-                   'Lorraine' : '41',
-                   'Midi-Pyrenees' : '73',
-                   'Nord-Pas-de-Calais': '31',
-                   'Pays de la Loire' : '52',
-                   'Picardie' : '22',
-                   'Poitou-Charentes' : '54',
-                   "Provence-Alpes-Cote-d'Azur" : '93',
-                   'Rhone-Alpes' : '82'}
+# get s_k
+df_reg_s = df_com[[decomp, field]].groupby(decomp).agg([len,
+                                                       np.mean])[field]
+df_reg_s['s_k'] = (df_reg_s['len'] * df_reg_s['mean']) /\
+                  (len(df_com) * df_com[field].mean())
 
-  dict_regions = {v: k for k,v in dict_regions.items()}
-  df_reg.index = ['{:.0f}'.format(x) for x in df_reg.index]
-  df_reg.index = [dict_regions[x]for x in df_reg.index]
-  #df_reg.sort(columns = 's_k', ascending = False, inplace = True)
-  #print df_reg[['s_k', 'T1_k']].to_string()
-  
-  ls_entropy.append((T1_simple,
-                     T1,
-                     (df_reg['s_k'] * df_reg['T1_k']).sum(),
-                     (df_reg['s_k'] * np.log(df_reg['mean'] / df_com[field].mean())).sum()))
-  ls_df_entropy_decomp.append(df_reg)
-   
-  df_temp = df_reg.copy()
-  df_temp.loc['All', 'T1_k'] = T1
-  df_temp.loc['W/ Reg'] = (df_reg['s_k'] * df_reg['T1_k']).sum()
-  df_temp.loc['B/ Reg'] = (df_reg['s_k'] * np.log(df_reg['mean'] / df_com[field].mean())).sum()
-  ls_se_entropy.append(df_temp['T1_k'])
+# get T1_k
+def get_T1_k(se_inc):
+  se_norm_inc = se_inc / se_inc.mean()
+  return (se_norm_inc * np.log(se_norm_inc)).sum() / len(se_inc)
+df_reg_t = df_com[[decomp, field]].groupby(decomp).agg([len,
+                                                      get_T1_k])[field]
+df_reg_t['T1_k'] = df_reg_t['get_T1_k']
 
-df_entropy = pd.concat(ls_se_entropy, axis = 1, keys = ls_disp_com_st)
-print df_entropy[['avail_surf'] +\
-                 ['avail_surf_%s' %x for x in ['H', 'S', 'X']]+\
-                 ['surf']+\
-                 ['surf_%s' %x for x in ['H', 'S', 'X']]].to_latex()
+# merge and final
+df_reg = df_reg_s[['mean', 's_k']].copy()
+df_reg['T1_k'] = df_reg_t['T1_k']
+
+T1 = (df_reg['s_k'] * df_reg['T1_k']).sum()  +\
+     (df_reg['s_k'] * np.log(df_reg['mean'] / df_com[field].mean())).sum()
+
+df_com['norm_%s' %field] = df_com[field] / df_com[field].mean()
+T1_simple = (df_com['norm_%s' %field] * np.log(df_com['norm_%s' %field])).sum() /\
+            len(df_com)
+
+df_reg.index = ['{:.0f}'.format(x) for x in df_reg.index]
+df_reg.index = [dict_regions[x]for x in df_reg.index]
+df_reg.ix['France'] = [df_com[field].mean(), np.nan, T1]
+
+print df_reg.to_string()
+print 'Within regions:', (df_reg['s_k'] * df_reg['T1_k']).sum()
+print 'Inter regions:', (df_reg['s_k'] * np.log(df_reg['mean'] / df_com[field].mean())).sum()
+
+## ################################
+## ENTROPY: TABLE W/ ALL VARIABLES
+## ################################
+#
+#ls_entropy = []
+#ls_df_entropy_decomp = []
+#ls_se_entropy = []
+#
+#decomp = 'REG'
+#for field in ls_disp_com_st:
+#
+#  
+#  # get s_k
+#  df_reg_s = df_com[[decomp, field]].groupby(decomp).agg([len,
+#                                                         np.mean])[field]
+#  df_reg_s['s_k'] = (df_reg_s['len'] * df_reg_s['mean']) /\
+#                    (len(df_com) * df_com[field].mean())
+#  
+#  # get T1_k
+#  def get_T1_k(se_inc):
+#    se_norm_inc = se_inc / se_inc.mean()
+#    return (se_norm_inc * np.log(se_norm_inc)).sum() / len(se_inc)
+#  df_reg_t = df_com[[decomp, field]].groupby(decomp).agg([len,
+#                                                        get_T1_k])[field]
+#  df_reg_t['T1_k'] = df_reg_t['get_T1_k']
+#  
+#  # merge and final
+#  df_reg = df_reg_s[['mean', 's_k']].copy()
+#  df_reg['T1_k'] = df_reg_t['T1_k']
+#  
+#  T1 = (df_reg['s_k'] * df_reg['T1_k']).sum()  +\
+#       (df_reg['s_k'] * np.log(df_reg['mean'] / df_com[field].mean())).sum()
+#  
+#  df_com['norm_%s' %field] = df_com[field] / df_com[field].mean()
+#  T1_simple = (df_com['norm_%s' %field] * np.log(df_com['norm_%s' %field])).sum() /\
+#              len(df_com)
+#  # Close enough! (Same as get_T1)
+#  
+#  # Get table (todo: compare between types of stores)
+#  df_reg.index = ['{:.0f}'.format(x) for x in df_reg.index]
+#  df_reg.index = [dict_regions[x]for x in df_reg.index]
+#  #df_reg.sort(columns = 's_k', ascending = False, inplace = True)
+#  #print df_reg[['s_k', 'T1_k']].to_string()
+#  
+#  ls_entropy.append((T1_simple,
+#                     T1,
+#                     (df_reg['s_k'] * df_reg['T1_k']).sum(),
+#                     (df_reg['s_k'] * np.log(df_reg['mean'] / df_com[field].mean())).sum()))
+#  ls_df_entropy_decomp.append(df_reg)
+#   
+#  df_temp = df_reg.copy()
+#  df_temp.loc['All', 'T1_k'] = T1
+#  df_temp.loc['W/ Reg'] = (df_reg['s_k'] * df_reg['T1_k']).sum()
+#  df_temp.loc['B/ Reg'] = (df_reg['s_k'] * np.log(df_reg['mean'] / df_com[field].mean())).sum()
+#  ls_se_entropy.append(df_temp['T1_k'])
+#
+#df_entropy = pd.concat(ls_se_entropy, axis = 1, keys = ls_disp_com_st)
+#print df_entropy[['avail_surf'] +\
+#                 ['avail_surf_%s' %x for x in ['H', 'S', 'X']]+\
+#                 ['surf']+\
+#                 ['surf_%s' %x for x in ['H', 'S', 'X']]].to_latex()
