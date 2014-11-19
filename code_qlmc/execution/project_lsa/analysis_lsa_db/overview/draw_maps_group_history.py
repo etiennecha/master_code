@@ -145,13 +145,17 @@ df_lsa = pd.merge(df_insee_a,
 
 plt.clf()
 fig = plt.figure()
+#gs1 = matplotlib.gridspec.GridSpec(2, 2)
+#gs1.update(wspace=0.0, hspace=0.0)
 
 #ax = fig.add_subplot(111, axisbg='w', frame_on=False)
+rg = 'LIDL'
+ls_dates = ['1992', '1995', '2000', '2005', '2010', '2015']
 
 # UPPER LEFT
-ax1 = fig.add_subplot(221, aspect = 'equal') #, frame_on = False)
-se1 = df_lsa[(df_lsa['Groupe_alt']=='LIDL') &\
-             (df_lsa['DATE ouv'] <= '1995')]['point']
+ax1 = fig.add_subplot(321, aspect = 'equal') #, frame_on = False)
+se1 = df_lsa[(df_lsa['Groupe_alt'] == rg) &\
+             (df_lsa['DATE ouv'] <= ls_dates[0])]['point']
 ax1.scatter([store.x for store in se1],
             [store.y for store in se1],
             3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
@@ -164,12 +168,19 @@ ax1.autoscale_view(True, True, True)
 ax1.axis('off')
 
 # UPPER RIGHT
-ax2 = fig.add_subplot(222, aspect = 'equal') #, frame_on = False)
-se2 = df_lsa[(df_lsa['Groupe_alt']=='LIDL') &\
-             (df_lsa['DATE ouv'] <= '2000')]['point']
-ax2.scatter([store.x for store in se2],
-            [store.y for store in se2],
+ax2 = fig.add_subplot(322, aspect = 'equal') #, frame_on = False)
+se_b = df_lsa[(df_lsa['Groupe_alt']== rg) &\
+              (df_lsa['DATE ouv'] <= ls_dates[0])]['point']
+se_a = df_lsa[(df_lsa['Groupe_alt']== rg) &\
+              (df_lsa['DATE ouv'] > ls_dates[0]) &\
+              (df_lsa['DATE ouv'] <= ls_dates[1])]['point']
+ax2.scatter([store.x for store in se_b],
+            [store.y for store in se_b],
             3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
+            antialiased = True, zorder = 3)
+ax2.scatter([store.x for store in se_a],
+            [store.y for store in se_a],
+            3, marker = 'o', lw=0.25, facecolor = '#C80000', edgecolor = 'w', alpha = 0.9,
             antialiased = True, zorder = 3)
 df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
                       PolygonPatch(x, fc = '#FFFFFF', ec='#000000', lw=.2, alpha=1., zorder=1))
@@ -178,13 +189,20 @@ ax2.add_collection(pc_2)
 ax2.autoscale_view(True, True, True)
 ax2.axis('off')
 
-# LOWER LEFT
-ax3 = fig.add_subplot(223, aspect = 'equal') #, frame_on = False)
-se3 = df_lsa[(df_lsa['Groupe_alt']=='LIDL') &\
-             (df_lsa['DATE ouv'] <= '2005')]['point']
-ax3.scatter([store.x for store in se3],
-            [store.y for store in se3],
+# MID LEFT
+ax3 = fig.add_subplot(323, aspect = 'equal') #, frame_on = False)
+se_b = df_lsa[(df_lsa['Groupe_alt']== rg) &\
+              (df_lsa['DATE ouv'] <= ls_dates[1])]['point']
+se_a = df_lsa[(df_lsa['Groupe_alt']== rg) &\
+              (df_lsa['DATE ouv'] > ls_dates[1]) &\
+              (df_lsa['DATE ouv'] <= ls_dates[2])]['point']
+ax3.scatter([store.x for store in se_b],
+            [store.y for store in se_b],
             3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
+            antialiased = True, zorder = 3)
+ax3.scatter([store.x for store in se_a],
+            [store.y for store in se_a],
+            3, marker = 'o', lw=0.25, facecolor = '#C80000', edgecolor = 'w', alpha = 0.9,
             antialiased = True, zorder = 3)
 df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
                       PolygonPatch(x, fc = '#FFFFFF', ec='#000000', lw=.2, alpha=1., zorder=1))
@@ -193,13 +211,20 @@ ax3.add_collection(pc_2)
 ax3.autoscale_view(True, True, True)
 ax3.axis('off')
 
-
-# LOWER RIGHT
-ax4 = fig.add_subplot(224, aspect = 'equal') #, frame_on = False)
-se4 = df_lsa[(df_lsa['Groupe_alt']=='LIDL')]['point']
-ax4.scatter([store.x for store in se4],
-            [store.y for store in se4],
+# MID RIGHT
+ax4 = fig.add_subplot(324, aspect = 'equal') #, frame_on = False)
+se_b = df_lsa[(df_lsa['Groupe_alt']== rg) &\
+              (df_lsa['DATE ouv'] <= ls_dates[2])]['point']
+se_a = df_lsa[(df_lsa['Groupe_alt']== rg) &\
+              (df_lsa['DATE ouv'] > ls_dates[2]) &\
+              (df_lsa['DATE ouv'] <= ls_dates[3])]['point']
+ax4.scatter([store.x for store in se_b],
+            [store.y for store in se_b],
             3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
+            antialiased = True, zorder = 3)
+ax4.scatter([store.x for store in se_a],
+            [store.y for store in se_a],
+            3, marker = 'o', lw=0.25, facecolor = '#C80000', edgecolor = 'w', alpha = 0.9,
             antialiased = True, zorder = 3)
 df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
                       PolygonPatch(x, fc = '#FFFFFF', ec='#000000', lw=.2, alpha=1., zorder=1))
@@ -208,9 +233,52 @@ ax4.add_collection(pc_2)
 ax4.autoscale_view(True, True, True)
 ax4.axis('off')
 
+# LOW LEFT
+ax5 = fig.add_subplot(325, aspect = 'equal') #, frame_on = False)
+se_b = df_lsa[(df_lsa['Groupe_alt']== rg) &\
+              (df_lsa['DATE ouv'] <= ls_dates[3])]['point']
+se_a = df_lsa[(df_lsa['Groupe_alt']== rg) &\
+              (df_lsa['DATE ouv'] > ls_dates[3]) &\
+              (df_lsa['DATE ouv'] <= ls_dates[4])]['point']
+ax5.scatter([store.x for store in se_b],
+            [store.y for store in se_b],
+            3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
+            antialiased = True, zorder = 3)
+ax5.scatter([store.x for store in se_a],
+            [store.y for store in se_a],
+            3, marker = 'o', lw=0.25, facecolor = '#C80000', edgecolor = 'w', alpha = 0.9,
+            antialiased = True, zorder = 3)
+df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
+                      PolygonPatch(x, fc = '#FFFFFF', ec='#000000', lw=.2, alpha=1., zorder=1))
+pc_2 = PatchCollection(df_dpt['patches'], match_original=True)
+ax5.add_collection(pc_2)
+ax5.autoscale_view(True, True, True)
+ax5.axis('off')
+
+# LOW RIGHT
+ax6 = fig.add_subplot(326, aspect = 'equal') #, frame_on = False)
+se_b = df_lsa[(df_lsa['Groupe_alt']== rg) &\
+              (df_lsa['DATE ouv'] <= ls_dates[4])]['point']
+se_a = df_lsa[(df_lsa['Groupe_alt']== rg) &\
+              (df_lsa['DATE ouv'] > ls_dates[4]) &\
+              (df_lsa['DATE ouv'] <= ls_dates[5])]['point']
+ax6.scatter([store.x for store in se_b],
+            [store.y for store in se_b],
+            3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
+            antialiased = True, zorder = 3)
+ax6.scatter([store.x for store in se_a],
+            [store.y for store in se_a],
+            3, marker = 'o', lw=0.25, facecolor = '#C80000', edgecolor = 'w', alpha = 0.9,
+            antialiased = True, zorder = 3)
+df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
+                      PolygonPatch(x, fc = '#FFFFFF', ec='#000000', lw=.2, alpha=1., zorder=1))
+pc_2 = PatchCollection(df_dpt['patches'], match_original=True)
+ax6.add_collection(pc_2)
+ax6.autoscale_view(True, True, True)
+ax6.axis('off')
 
 plt.tight_layout()
-fig.set_size_inches(10, 10) # set the image width to 722px
+fig.set_size_inches(10, 15) # set the image width to 722px
 
 #plt.show()
 plt.savefig(os.path.join(path_data,
