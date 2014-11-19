@@ -157,6 +157,25 @@ df_qlmc['Produit_norm'] = df_qlmc['marque'] + ' ' + df_qlmc['nom']+ ' ' + df_qlm
 # REMEDIATION TO PERIOD PBMS
 # ##########################
 
+# Check min, max price by period
+print '\nPeriod min and max price:'
+for per in range(13):
+ df_per_prices = df_qlmc['Prix'][df_qlmc['P'] == per]
+ print 'Period', per, ':', df_per_prices.min(), df_per_prices.max()
+
+# Check if only one Famille/Rayon per product within each period
+print '\nExamination of Rayon and Famille by product:'
+for per in range(13):
+  ls_col_temp = ['P', 'Rayon', 'Famille', 'Produit_norm', 'marque', 'nom', 'format']
+  df_products_per_st = df_qlmc[ls_col_temp][df_qlmc['P'] == per].\
+                         drop_duplicates(subset = ['marque', 'nom', 'format', 'Rayon', 'Famille'])
+  df_products_per = df_qlmc[ls_col_temp][df_qlmc['P'] == per].\
+                      drop_duplicates(subset = ['marque', 'nom', 'format'])
+  if len(df_products_per) == len(df_products_per_st):
+    print 'Rayon / Famille regular for period:', per
+  else:
+    print 'Rayon / Famille can differ for the same product in period:', per
+
 # Period 0:
 ## Duplicates: probably two stores(check further)
 #df_inspect = df_qlmc[['Produit_norm', 'Prix', 'Date']]\
@@ -171,6 +190,7 @@ df_qlmc = df_qlmc[~((df_qlmc['P'] == 0) & (df_qlmc['Magasin'] == u'GEANT CARCASS
 # ##########################
 
 pd.set_option('float_format', '{:4,.2f}'.format)
+format_str = lambda x: u'{:}'.format(x[:20])
 
 for per in range(13):
   print '\n', u'-'*40, '\n'
@@ -179,13 +199,17 @@ for per in range(13):
   df_pero = df_qlmc_per[['Produit_norm', 'Prix']].groupby('Produit_norm').\
               agg([len, np.median, np.mean, np.std, min, max])['Prix']
   df_pero['spread'] = df_pero['max'] - df_pero['min']
+  df_pero['r_spread'] = (df_pero['max'] - df_pero['min']) / df_pero['mean']
+  df_pero['cv'] = df_pero['std'] / df_pero['mean']
   
   # Top XX most and least common products
   print '\nTop 10 most and least common products'
   df_pero.sort('len', inplace = True, ascending = False)
   #print df_pero[:10].to_string()
   #print df_pero[-10:].to_string()
-  print pd.concat([df_pero[0:10], df_pero[-10:]]).to_string()
+  df_temp = pd.concat([df_pero[0:10], df_pero[-10:]])
+  df_temp.reset_index(inplace = True)
+  print df_temp.to_string(formatters = {'Produit_norm' : format_str})
   
   # Top XX most and lest expensive products
   print '\nTop 10 most and least expensive products'
@@ -195,8 +219,8 @@ for per in range(13):
   print pd.concat([df_pero[0:10], df_pero[-10:]]).to_string()
   
   # Top XX highest spread (or else but look for errors!)
-  print '\nTop 20 highest spread products'
-  df_pero.sort('spread', inplace = True, ascending = False)
+  print '\nTop 20 highest relative spread products'
+  df_pero.sort('r_spread', inplace = True, ascending = False)
   print df_pero[0:20].to_string()
   
   # Products with duplicate records
