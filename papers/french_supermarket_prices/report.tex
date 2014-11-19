@@ -1,0 +1,106 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{enumerate}
+\usepackage{setspace}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{bbm}
+\usepackage[round]{natbib}
+\usepackage[nohead]{geometry}
+\usepackage[bottom]{footmisc}
+\usepackage{indentfirst}
+\usepackage{endnotes}
+\usepackage{graphicx}%
+\usepackage{eurosym}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{rotating}
+% \usepackage[hidelinks]{hyperref}
+\usepackage{floatrow} %[capposition=top]
+\floatsetup{footposition=bottom,capposition=top}
+\renewcommand{\labelitemi}{--}
+\renewcommand{\labelitemii}{$\bullet$}
+\bibliographystyle{chicago}
+% \geometry{left=1in,right=1in,top=1.00in,bottom=1.0in}
+\let\olditemize\itemize
+\renewcommand{\itemize}{
+  \olditemize
+  \setlength{\itemsep}{-1pt}
+}
+\pdfminorversion=5
+\pdfobjcompresslevel=3
+\pdfcompresslevel=9
+
+\begin{document}
+
+\title{French grocery store prices: What do we know?\ \\ \ \\(Very preliminary)}
+\author{E. Chamayou\thanks{e-mail:
+\textit{etienne.chamayou@ensae.fr}} \\ CREST-LEI}
+\maketitle
+
+\sloppy%
+
+\onehalfspacing
+
+\textbf{Abstract:}
+
+This note provides an overview of supermarket price data made available by the comparison website quiestlemoinscher.com.
+
+\strut
+
+\textbf{Keywords:}
+
+\strut
+
+\textbf{JEL Classification Numbers:} XXX
+
+\pagebreak%
+\doublespacing
+
+\section{Introduction}
+
+The price comparison website quiestlemoinscher.com was launched in XXX by the retail grocery store group Leclerc with a view to prove to consumers that Leclerc was cheaper than all its competitors.
+
+\section{General overview}
+
+Data mainly consist of 13 pdf files containing prices observed at various grocery stores across France. The original purpose of these data was to create indexes reflecting the price level of the main competitors of Leclerc.
+
+\begin{table}[H]
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Overview of period files}
+\small
+
+\begin{tabular}{rllrrrr}
+\toprule
+\toprule
+  P &  Date start &    Date end &  Nb rows &  Nb stores &  Nb products &  Avg nb products \\
+\multicolumn{6}{c}{}&  by store \\
+\midrule
+  0 &  09/05/2007 &  25/05/2007 &  554,691 &        344 &        2,325 &                  1,612 \\
+  1 &  10/08/2007 &  31/08/2007 &  570,193 &        335 &        2,384 &                  1,702 \\
+  2 &  21/01/2008 &  12/02/2008 &  544,366 &        318 &        2,374 &                  1,712 \\
+  3 &  04/04/2008 &  30/04/2008 &  417,272 &        246 &        2,443 &                  1,696 \\
+  4 &  01/04/2009 &  30/04/2009 &  414,911 &        701 &        1,471 &                    592 \\
+  5 &  01/09/2009 &  28/09/2009 &  432,510 &        726 &        1,463 &                    596 \\
+  6 &  05/03/2010 &  03/04/2010 &  446,309 &        739 &        1,466 &                    604 \\
+  7 &  18/10/2010 &  16/11/2010 &  385,253 &        624 &        1,479 &                    617 \\
+  8 &  28/01/2011 &  22/02/2011 &  357,188 &        634 &        1,383 &                    563 \\
+  9 &  28/04/2011 &  20/05/2011 &  240,710 &        637 &          954 &                    378 \\
+ 10 &  17/10/2011 &  09/11/2011 &  430,968 &        640 &        1,674 &                    673 \\
+ 11 &  30/01/2011 &  22/02/2011 &  464,604 &        617 &        1,657 &                    753 \\
+ 12 &  12/05/2012 &  01/06/2012 &  607,185 &        605 &        1,805 &                  1,004 \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+TODO (here or later?)
+
+\section{Overview of each period}
+
+
+
+\end{document}

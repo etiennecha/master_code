@@ -160,7 +160,7 @@ print df_per_prices[0:100].to_string()
 #print df_qlmc[['Magasin', 'Prix']][(df_qlmc['Produit_norm'] == pr_pbm) &\
 #                                   (df_qlmc['P'] == period_pbm)].to_string()
 #
-#pr_pbm, period_pbm = u"Viva Lait TGV demi-écrémé vitaminé 6x50cl", 6
+#pr_pbm, period_pbm = u"Viva Lait TGV demi-écrémé vitaminé 6x50cl", 7
 #print df_qlmc[['Magasin', 'Prix']][(df_qlmc['Produit_norm'] == pr_pbm) &\
 #                                   (df_qlmc['P'] == period_pbm)].to_string()
 
@@ -180,7 +180,23 @@ print df_per_prices[0:100].to_string()
 
 # TODO: examine duplicates (associated with high/low price: way to solve!)
 se_dup_bool = df_qlmc.duplicated(subset = ['P', 'Magasin', 'Produit_norm'])
-df_test = df_qlmc[['P', 'Magasin', 'Produit_norm', 'Prix']][df_duplicates]
+df_dup = df_qlmc[['P', 'Magasin', 'Produit_norm', 'Prix']][se_dup_bool]
+
+df_dup['Produit_norm'][df_dup['P'] == 0].value_counts()[0:10]
+
+df_check = df_qlmc[['P', 'Magasin', 'Produit_norm', 'Prix']]\
+             [(df_qlmc['P'] == 0) &\
+              (df_qlmc['Produit_norm'] == u'Blédina Pêche fraise dès 4 mois 2 s - 260g')].copy()
+df_check.sort('Magasin', inplace = True)
+
+df_check_2 = df_qlmc[['P', 'Magasin', 'Produit_norm', 'Prix']]\
+               [(df_qlmc['P'] == 0) &\
+                (df_qlmc['Produit_norm'] == u'La-pie-qui-chante Menthe claire Bonbons 360g')].copy()
+df_check_2.sort('Magasin', inplace = True)
+print df_qlmc[(df_qlmc['P'] == 0) &\
+              (df_qlmc['Produit_norm'] == u'La-pie-qui-chante Menthe claire Bonbons 360g') &\
+              (df_qlmc['Magasin'] == u'GEANT CARCASSONNE')].T.to_string()
+
 #df_qlmc.drop_duplicates(subset = ['P', 'Magasin', 'Produit_norm'],
 #                        take_last = True,
 #                        inplace = True)
