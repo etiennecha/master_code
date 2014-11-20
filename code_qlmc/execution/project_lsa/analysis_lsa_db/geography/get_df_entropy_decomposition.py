@@ -113,7 +113,7 @@ dict_regions = {v: k for k,v in dict_regions.items()}
 # ENTROPY: AVAIL SURFACE vs. POP
 # ##############################
 
-field = 'avail_surf' # 'P10_MEN' 
+field = 'P10_MEN' # 'avail_surf' # 
 decomp = 'REG'
 
 # get s_k
@@ -145,7 +145,7 @@ df_reg.index = ['{:.0f}'.format(x) for x in df_reg.index]
 df_reg.index = [dict_regions[x]for x in df_reg.index]
 df_reg.ix['France'] = [df_com[field].mean(), np.nan, T1]
 
-print df_reg.to_string()
+print df_reg.to_string(formatters = {'mean' : format_float_int})
 print 'Within regions:', (df_reg['s_k'] * df_reg['T1_k']).sum()
 print 'Inter regions:', (df_reg['s_k'] * np.log(df_reg['mean'] / df_com[field].mean())).sum()
 

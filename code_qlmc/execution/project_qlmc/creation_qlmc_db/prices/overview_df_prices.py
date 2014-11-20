@@ -176,6 +176,10 @@ for per in range(13):
   else:
     print 'Rayon / Famille can differ for the same product in period:', per
 
+# Drop "perfect" duplicates: same period, same product, same store and same price
+df_qlmc.drop_duplicates(subset = ['P', 'Magasin', 'Produit_norm', 'Prix'],
+                        inplace = True)
+
 # Period 0:
 ## Duplicates: probably two stores(check further)
 #df_inspect = df_qlmc[['Produit_norm', 'Prix', 'Date']]\
@@ -316,6 +320,26 @@ for per in range(13):
   #  print se_rp_vc
 
 # ############################
+# OVERVIEW DUPLICATES
+# ############################
+
+se_dup_bool = df_qlmc.duplicated(subset = ['P', 'Magasin', 'Produit_norm'])
+df_dup = df_qlmc[['P', 'Magasin', 'Produit_norm', 'Prix']][se_dup_bool]
+for per in range(13):
+  print '\nDuplicates in period:', per
+  se_dup_vc = df_dup['Produit_norm'][(df_dup['P'] == per)].value_counts()
+  ls_dup_prod_1 = list(se_dup_vc.index[se_dup_vc <= 10])
+  se_dup_stores = df_dup['Magasin'][df_dup['Produit_norm'].isin(ls_dup_prod_1)].value_counts()
+  print '-'*20
+  print 'Stores to check:'
+  print se_dup_stores[0:10]
+  # only significant in periods 1 and 12... check stores (systematic?)
+  ls_dup_prod_2 = list(se_dup_vc.index[se_dup_vc > 10])
+  print '-'*20
+  print 'Products to check:'
+  print se_dup_vc[se_dup_vc > 10]
+
+# ############################
 # OVERVIEW ACROSS ALL PERIODS
 # ############################
 
@@ -406,185 +430,3 @@ for per in range(13):
 ##df_qlmc.drop_duplicates(subset = ['P', 'Magasin', 'Produit_norm'],
 ##                        take_last = True,
 ##                        inplace = True)
-#
-## STORE LEVEL (could be suited to examine before after..)
-#
-## 14343 (lsa index) closed on 2009-10-31 i.e. between periods 5 and 6
-## impact for 1525 (0 to 12) and 1581 (1 and 6... short)
-#
-## 10248 closed on 2011-01-01 i.e. beg of period 8 (?)
-## impact for 502 (0, 2, 4, 5, 8, 9, 10, 11, 12)
-#
-#id_lsa = '1525'
-#
-## Comparison between two periods for one store
-#df_temp_1 = df_qlmc[['Produit_norm', 'Prix']][(df_qlmc['P'] == 0) &\
-#                                              (df_qlmc['id_lsa'] == id_lsa)].copy()
-#df_temp_2 = df_qlmc[['Produit_norm', 'Prix']][(df_qlmc['P'] == 9) &\
-#                                              (df_qlmc['id_lsa'] == id_lsa)].copy()
-#df_temp_3 = pd.merge(df_temp_1, df_temp_2, on = 'Produit_norm',
-#                     how = 'inner', suffixes = ('_1', '_2'))
-#df_temp_3['D_value'] = df_temp_3['Prix_2'] - df_temp_3['Prix_1']
-#df_temp_3['D_percent'] = df_temp_3['D_value'] / df_temp_3['Prix_1']
-#
-## Comparison between all periods available for one store
-#ls_store_per_ind = [int(x) for x in df_qlmc['P']\
-#                     [df_qlmc['id_lsa'] == id_lsa].unique()]
-#df_store = df_qlmc[['Produit_norm', 'Prix']][(df_qlmc['P'] == ls_store_per_ind[0]) &\
-#                                             (df_qlmc['id_lsa'] == id_lsa)].copy()
-#for per_ind in ls_store_per_ind[1:]:
-#  df_temp = df_qlmc[['Produit_norm', 'Prix']]\
-#              [(df_qlmc['P'] == per_ind) &\
-#               (df_qlmc['id_lsa'] == id_lsa)]
-#  df_store = pd.merge(df_store,
-#                      df_temp,
-#                      on = 'Produit_norm',
-#                      how = 'outer', suffixes = ('', '_{:02d}'.format(per_ind)))
-#
-## Finally harmonize first Prix column name
-#df_store.rename(columns = {'Prix': 'Prix_00'}, inplace = True)
-#df_store.columns = [x.replace('Prix_', 'P') for x in df_store.columns]
-#
-## Trivial mistake in price reported: look for problems by product
-## might need to add price folder and work on prices
-#
-#print df_store[0:10].to_string()
-
-# #############################################
-# ONE LSA IND FOR TWO STORE NAMES WITHIN PERIOD
-# #############################################
-
-#len(df_qlmc[(df_qlmc['P'] == 9) &\
-#            (df_qlmc['Commune'] == 'CARREFOUR MARKET CLERMONT CARRE JAUDE')])
-#len(df_qlmc[(df_qlmc['P'] == 9) &\
-#            (df_qlmc['Commune'] == 'CARREFOUR MARKET CLERMONT FERRAND JAUDE')])
-#
-#len(df_qlmc[(df_qlmc['P'] == 5) & (df_qlmc['Magasin'] == 'CHAMPION ST GERMAIN DU PUY')])
-#len(df_qlmc[(df_qlmc['P'] == 5) & (df_qlmc['Magasin'] == 'CARREFOUR MARKET ST GERMAIN DU PUY')])
-#
-#len(df_qlmc[(df_qlmc['P'] == 4) & (df_qlmc['Magasin'] == 'SUPER U ANGERS BOURG DE PAILLE')])
-#len(df_qlmc[(df_qlmc['P'] == 4) & (df_qlmc['Magasin'] == 'SUPER U BEAUCOUZE')])
-#
-#df_pbm = df_qlmc[(df_qlmc['P'] == 4) & ((df_qlmc['Magasin'] == 'SUPER U BEAUCOUZE') |\
-#                                        (df_qlmc['Magasin'] == 'SUPER U ANGERS BOURG DE PAILLE'))].copy()
-#df_pbm.sort(columns = ['Produit'], inplace = True)
-#se_vc_pbms = df_pbm['Produit'].value_counts()
-#df_pbm[df_pbm['Produit'] == u'Elle & Vire - Beurre doux tendre, 250g']
-
-
-## ########################
-## DATE PARSING
-## ########################
-#
-#df_qlmc['Date_2'] = pd.to_datetime(df_qlmc['Date'], format = '%d/%m/%Y')
-#for i in range(13):
-#  print u'Beg of period {:2d}'.format(i), df_qlmc['Date_2'][df_qlmc['P'] == i].min()
-#  print u'End of period {:2d}'.format(i), df_qlmc['Date_2'][df_qlmc['P'] == i].max()
-## todo: check dates by store
-
-# ########################
-# ALL PERIODS: STATS DES
-# ########################
-
-## todo: write python object stats des generic functions
-#
-## (Survival) Products across periods
-## todo: check for minor product name differences? (e.g. within brands...?)
-#dict_product_periods = {}
-#for i, ls_period_products in enumerate(dict_describe['product']):
-#	for product in ls_period_products:
-#		dict_product_periods.setdefault(product, []).append(i)
-#
-#dict_product_stats = {key: value for key, value in [i for i in itertools.product(range(15), [0])]}
-#for shop, list_product_periods in dict_product_periods.iteritems():
-#  dict_product_stats[len(list_product_periods)] += 1
-#
-## (Survival) Stores across periods
-#dict_store_periods = {}
-#for i, ls_period_stores in enumerate(dict_describe['store']):
-#	for store in ls_period_stores:
-#		dict_store_periods.setdefault(store, []).append(i)
-#
-#dict_store_stats = {key: value for key, value in [i for i in itertools.product(range(15), [0])]}
-#for shop, ls_store_periods in dict_store_periods.iteritems():
-#  dict_store_stats[len(ls_store_periods)] += 1
-
-## Evo of prices among surviving stores (generalize)
-#ls_prod_0 = df_qlmc['Produit'][df_qlmc['P'] == 0].unique()
-#ls_prod_8 = df_qlmc['Produit'][df_qlmc['P'] == 8].unique()
-#ls_prod_08 = [x for x in ls_prod_0 if x in ls_prod_8]
-#ls_store_0 = df_qlmc['Magasin'][df_qlmc['P'] == 0].unique()
-#ls_store_8 = df_qlmc['Magasin'][df_qlmc['P'] == 8].unique()
-#ls_store_08 = [x for x in ls_store_0 if x in ls_store_8]
-#for x in ls_store_08:
-#  df_mag_prod = df_qlmc[(df_qlmc['Magasin'] == x) & (df_qlmc['Produit'] == ls_prod_08[0])]
-#  ls_mag_prod_periods = df_mag_prod['P'].unique()
-#  if 0 in ls_mag_prod_periods and 8 in ls_mag_prod_periods:
-#    print '\n', x
-#    print df_mag_prod[['P', 'Produit', 'Prix']]
-
-## Can check evolution of products of same brand
-## Draw evo of prices of different formats of Coca Cola at various stores
-
-# ##################
-# PRODUCT DISPERSION
-# ##################
-
-## Check product dispersion
-#ex_product = u'Nutella - Pâte à tartiner chocolat noisette, 400g'
-#ex_se_prices = df_qlmc[u'Prix'][(df_qlmc[u'Produit'] == ex_product) &\
-#                                   (df_qlmc[u'P'] == 1)]
-#ex_pd = compute_price_dispersion(ex_se_prices)
-#df_ex_pd = pd.DataFrame(ex_pd, ['N', 'min', 'max', 'mean', 'std', 'cv', 'range', 'gfs'])
-#print df_ex_pd
-
-# df_qlmc['Rayon'] = df_qlmc['Rayon'].map(lambda x: x.encode('utf-8'))
-# df_qlmc[df_qlmc['Rayon'] == 'Boissons']
-# df_qlmc[(df_qlmc['Rayon'] == 'Boissons') & (df_qlmc['P'] == 0)]
-# len(df_qlmc[(df_qlmc['Rayon'] == 'Boissons') & (df_qlmc['P'] == 0)]['Produit'].unique())
-
-#df_qlmc['Produit'] = df_qlmc['Produit'].map(lambda x: clean_product(x))
-#
-## todo: re.sub 'Bocal', 'Pet', 'Bidon' ?
-## 'barquettes?' '1 assiette', 'paquet', 'sachet', 'coffret'
-## brand u'b\xe9n\xe9dicta' => benedicta, ', 2 briques - 60cl' =>  '2 - 60cl'
-## brand u'bl\xe9did\xe9j' => u"bl\xe9di'dej (?) , '2 - 50cl' => '2*50cl'
-## todo : harmonize '1.5L' vs '1,5L' (temporary fix... to be improved)
-## todo: may want to remove 'Bouteille(s)', 'Pet' and likes before removing ','
-## todo... would be better to generally ignore text in the quantity part ! 
-#
-#ls_ls_boissons = []
-#for i in range(3):
-#	ls_ls_boissons.append(df_qlmc[(df_qlmc['Rayon'] == 'Boissons') &\
-#                           (df_qlmc['P'] == i)]['Produit'].unique())
-#
-#ls_boissons_0 = [x for x in ls_ls_boissons[0] if x in ls_ls_boissons[1]]
-#ls_boissons_1 = [x for x in ls_ls_boissons[1] if x in ls_ls_boissons[2]]
-#ls_boissons_2 = [x for x in ls_boissons_0 if x in ls_boissons_1]
-#
-#ls_ls_sale = []
-#for i in range(3):
-#	ls_ls_sale.append(\
-#    df_qlmc[(df_qlmc['Rayon'] == u'Epicerie sal\xe9e') &\
-#            (df_qlmc['P'] == i)]['Produit'].unique())
-#
-#ls_sale_0 = [x for x in ls_ls_sale[0] if x in ls_ls_sale[1]]
-#ls_sale_1 = [x for x in ls_ls_sale[1] if x in ls_ls_sale[2]]
-#ls_sale_2 = [x for x in ls_sale_0 if x in ls_sale_1]
-
-### Stores which survive (all stores for now...)
-#ls_ls_stores_2 = []
-#for i in range(0,3):
-#  ls_ls_stores_2.append(df_qlmc[df_qlmc['P'] == i]['Magasin'].unique())
-#ls_lasting_stores = [x for x in ls_ls_stores_2[0] if x in ls_ls_stores_2[1]]
-#
-#ls_prod_0 = df_qlmc['Produit'][(df_qlmc['Magasin'] == ls_lasting_stores[0]) &\
-#                               (df_qlmc['P'] == 0)].values
-#ls_prod_1 = df_qlmc['Produit'][(df_qlmc['Magasin'] == ls_lasting_stores[0]) &\
-#                               (df_qlmc['P'] == 1)].values
-#ls_lasting_prods = [x for x in ls_prod_0 if x in ls_prod_1]
-#
-#df_auchan_arras = df_qlmc[(df_qlmc['Magasin'] == ls_lasting_stores[0])]
-#for prod in ls_lasting_prods[0:10]:
-#	print df_auchan_arras[['P', 'Produit', 'Prix']]\
-#          [df_auchan_arras['Produit'] == prod].to_string(index=False)

@@ -140,6 +140,27 @@ All           &    2,062& \multicolumn{8}{c}{}  \\
 
 \end{table}
 
+\section{Overview of store creations}
+
+\begin{table}[H]
+\caption{Competition at the municipality level}
+\small
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+\toprule
+{} &  CASI &  CARR &  MOUS &  SYSU &  LECL &  AUCH &  ALDI &  LIDL &   ALL \\
+\midrule
+1890    &      75 &          5 &              1 &          4 &        0 &       0 &     0 &     1 &    87 \\
+1950    &      95 &         15 &              1 &          9 &        2 &       8 &     0 &     2 &   137 \\
+1960    &     223 &        142 &             35 &         36 &       20 &      66 &     2 &     9 &   586 \\
+1970    &     357 &        363 &            186 &        184 &      126 &     137 &     2 &    26 &  1521 \\
+1980    &     373 &        813 &            876 &        357 &      264 &     171 &    19 &    62 &  3088 \\
+1990    &     314 &        548 &            473 &        169 &       62 &      61 &   322 &   551 &  2661 \\
+2000    &     365 &        506 &            401 &        216 &       91 &      84 &   446 &   634 &  2955 \\
+2010    &     239 &        167 &            166 &         84 &       61 &      38 &   126 &   237 &  1239 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Overview of competition}
 
@@ -173,41 +194,82 @@ Min dist X                   &  36,247 &       8.28 &       5.37 &       0.00 & 
 TODO: explain method for avail. surface. There are 81 stores with distance 0 to municipality center hence their location is likely wrong at this stage.
 
 \begin{table}[H]
-\caption{Avail surface entropy decomposition by region}
+\caption{Municipality avail surface entropy decomposition by region}
 \footnotesize
 
-\begin{tabular}{lrr}
+\begin{tabular}{lrrr}
 \toprule
 \toprule
-Region &        $s_k$ &      $T_k(1)$ \\
+Region                     & $mu_k$     &      $s_k$ &   $T_k(1)$ \\
 \midrule
-Ile-de-France              &       0.23 &       0.44 \\
-Rhone-Alpes                &       0.08 &       0.24 \\
-Nord-Pas-de-Calais         &       0.08 &       0.22 \\
-Picardie                   &       0.06 &       0.15 \\
-Lorraine                   &       0.06 &       0.21 \\
-Midi-Pyrenees              &       0.05 &       0.38 \\
-Aquitaine                  &       0.04 &       0.27 \\
-Haute-Normandie            &       0.04 &       0.12 \\
-Pays de la Loire           &       0.03 &       0.14 \\
-Alsace                     &       0.03 &       0.09 \\
-Franche-Comte              &       0.03 &       0.13 \\
-Basse-Normandie            &       0.03 &       0.15 \\
-Centre                     &       0.03 &       0.16 \\
-Bourgogne                  &       0.03 &       0.23 \\
-Languedoc-Roussillon       &       0.03 &       0.31 \\
-Bretagne                   &       0.03 &       0.10 \\
-Champagne-Ardenne          &       0.03 &       0.24 \\
-Provence-Alpes-Cote-d'Azur &       0.03 &       0.48 \\
-Poitou-Charentes           &       0.02 &       0.08 \\
-Auvergne                   &       0.02 &       0.31 \\
-Limousin                   &       0.01 &       0.23 \\
+Ile-de-France              &    195,973 &       0.23 &       0.44 \\
+Champagne-Ardenne          &     14,303 &       0.03 &       0.24 \\
+Picardie                   &     28,862 &       0.06 &       0.15 \\
+Haute-Normandie            &     30,952 &       0.04 &       0.12 \\
+Centre                     &     18,738 &       0.03 &       0.16 \\
+Basse-Normandie            &     19,090 &       0.03 &       0.15 \\
+Bourgogne                  &     15,939 &       0.03 &       0.23 \\
+Nord-Pas-de-Calais         &     58,971 &       0.08 &       0.22 \\
+Lorraine                   &     26,691 &       0.06 &       0.21 \\
+Alsace                     &     40,457 &       0.03 &       0.09 \\
+Franche-Comte              &     20,027 &       0.03 &       0.13 \\
+Pays de la Loire           &     24,356 &       0.03 &       0.14 \\
+Bretagne                   &     24,313 &       0.03 &       0.10 \\
+Poitou-Charentes           &     15,942 &       0.02 &       0.08 \\
+Aquitaine                  &     20,607 &       0.04 &       0.27 \\
+Midi-Pyrenees              &     16,199 &       0.05 &       0.38 \\
+Limousin                   &     11,355 &       0.01 &       0.23 \\
+Rhone-Alpes                &     31,775 &       0.08 &       0.24 \\
+Auvergne                   &     14,340 &       0.02 &       0.31 \\
+Languedoc-Roussillon       &     20,809 &       0.03 &       0.31 \\
+Provence-Alpes-Cote-d'Azur &     28,264 &       0.03 &       0.48 \\
+\midrule
+France                     &     29,958 &            &       0.59 \\
 \bottomrule
 \end{tabular}
 
 \end{table}
 
 National entropy is 0.59 of which 45\% (0.27) is due to intra regional differences and 55\% (0.32) due to differences between regions.
+
+\begin{table}[H]
+\caption{Municipality number of households entropy decomposition by region}
+\footnotesize
+
+\begin{tabular}{lrrr}
+\toprule
+\toprule
+Region                     & $mu_k$     &      $s_k$ &   $T_k(1)$ \\
+\midrule
+Ile-de-France              &      3,818 &       0.18 &       1.38 \\
+Champagne-Ardenne          &        300 &       0.02 &       1.99 \\
+Picardie                   &        341 &       0.03 &       1.45 \\
+Haute-Normandie            &        549 &       0.03 &       1.65 \\
+Centre                     &        604 &       0.04 &       1.37 \\
+Basse-Normandie            &        355 &       0.02 &       1.30 \\
+Bourgogne                  &        360 &       0.03 &       1.57 \\
+Nord-Pas-de-Calais         &      1,063 &       0.06 &       1.39 \\
+Lorraine                   &        431 &       0.04 &       1.55 \\
+Alsace                     &        861 &       0.03 &       1.56 \\
+Franche-Comte              &        287 &       0.02 &       1.58 \\
+Pays de la Loire           &      1,019 &       0.06 &       1.39 \\
+Bretagne                   &      1,117 &       0.05 &       1.08 \\
+Poitou-Charentes           &        545 &       0.03 &       1.21 \\
+Aquitaine                  &        628 &       0.05 &       1.60 \\
+Midi-Pyrenees              &        427 &       0.05 &       2.07 \\
+Limousin                   &        463 &       0.01 &       1.66 \\
+Rhone-Alpes                &        922 &       0.10 &       1.40 \\
+Auvergne                   &        469 &       0.02 &       1.44 \\
+Languedoc-Roussillon       &        759 &       0.04 &       1.76 \\
+Provence-Alpes-Cote-d'Azur &      2,211 &       0.08 &       1.60 \\
+\midrule
+France                     &        744 &            &       1.77 \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+National entropy is 1.77 of which 1.49 is due to intra regional differences and 0.28 due to differences between regions.
 
 \begin{table}[H]
 \caption{Avail surface entropy decomposition by region and store type: T1s}
