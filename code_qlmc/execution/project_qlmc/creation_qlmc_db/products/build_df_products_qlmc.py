@@ -33,11 +33,13 @@ ls_disp_1 = ['P', 'Rayon', 'Famille', 'Produit']
 
 pd.set_option('display.max_colwidth', 80) # default 50 ? 
 
-# STANDARDIZE PRODUCTS
-
+# Keep original name to match later with price data
 df_products['Produit_O'] = df_products['Produit']
 
-# Ad hoc cleaning
+# ###############################
+# FIX PRODUCTS: REPLACE PRODUCTS
+# ###############################
+
 ls_fixed_products = [[u'mozzarella 19% mat. gr. environ - 125 g environ',
                       u'mozzarella 19% mat. gr. environ, 125 g environ'],
                      [u'Mozzarella 19% mat. gr. environ - 125 g environ',
@@ -72,11 +74,17 @@ def fix_produit(product, ls_replace_products = ls_fixed_products):
     if product == old:
       return new
   return product
+
 df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit(x))
+
+# #####################################
+# FIX PRODUCTS: REPLACE CHARS + SPACES
+# #####################################
 
 ls_replace_products = [[u'gazeuze', u'gazeuse'],
                        [u', ,', u','],
                        [u' ,', u',']]
+
 def fix_produit_2(product, ls_replace_products = ls_replace_products):
   for old, new in ls_replace_products:
     product = product.replace(old, new)
@@ -84,7 +92,34 @@ def fix_produit_2(product, ls_replace_products = ls_replace_products):
 
 df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit_2(x))
 
-# Alcool: u'degré' vs. u'\xb0' => check robustness
+# ###########
+# FIX ACCENTS
+# ###########
+
+# "Marie - Paà«lla royale, 1,1kg"
+# "Matines Å'ufs frais (...?)"
+for str_pbm in [u'Å"', u"à´", u'à´', u"à»", u"à¯", u'à´', ]:
+  print df_products['Produit'][df_products['Produit'].str.contains(str_pbm)].to_string()
+
+ls_fix_accents = [(u"à»", u"û"),
+                  (u"à¯", u"ï"),
+                  (u"à´", u"ô"),
+                  (u'Å"', u'oe'),
+                  (u'à´', u'oe'),
+                  (u'à«', u'ë')]
+
+def fix_accent(product, ls_fix):
+  for old, new in ls_fix_accents:
+    product = product.replace(old, new)
+  return product
+
+df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_accent(x, ls_fix_accents))
+
+# ##########
+# FIX ALCOOL
+# ##########
+
+# u'degré' vs. u'\xb0' => check robustness
 def fix_alcool(product):
   product = re.sub(u'\xb0C?', u' degrés', product)
   return u' '.join([x for x in product.split(u' ') if x])
@@ -99,6 +134,10 @@ df_products.loc[df_products['Produit'].str.contains(u'vinaigre', case=False),
                'Produit'] =\
   df_products.loc[df_products['Produit'].str.contains(u'vinaigre', case=False),
                   'Produit'].apply(lambda x: fix_alcool(x))
+
+# #######
+# FIX FAT
+# #######
 
 # MG / u'matière grasse' (see case etc)
 df_products['Produit'] = df_products['Produit'].apply(\
@@ -118,7 +157,9 @@ for x in df_products['Produit'].unique():
     print x
 # todo: fix u'Vieux Papes - Vin de table rouge Vieux Papes 12°, 7 5cl' etc.
 
+# ########################
 # SPLIT marque AND libelle
+# ########################
 
 df_products['marque'], df_products['libelle'] =\
   zip(*df_products['Produit'].map(\
@@ -126,11 +167,15 @@ df_products['marque'], df_products['libelle'] =\
 ## Inspect marque
 #print df_products['marque'].value_counts().to_string()
 
+# ##################
 # STANDARDIZE marque
+# ##################
 
 # todo: standardize accents and small variations generating duplicates
 
+# ###################
 # STANDARDIZE libelle
+# ###################
 
 df_products['libelle'] = df_products['libelle'].apply(\
                            lambda x: re.sub(u',\s?viande$', u'', x).strip())
@@ -154,7 +199,9 @@ df_products['libelle'] = df_products['libelle'].apply(lambda x: convert_float(x)
 #  if (not u',' in libelle) and (not u'-' in libelle):
 #    print libelle
 
+# ####################
 # SPLIT nom AND format
+# ####################
 
 df_products['nom'], df_products['format'] =\
   zip(*df_products['libelle'].map(lambda x: get_nom_and_format(x)))
@@ -206,8 +253,10 @@ df_products['format'] = df_products['format'].apply(lambda x: clean_format(x))
 # Conservative fix for u'x 80' => u'x80' (other spaces pbms to deal with)
 df_products['format'] = df_products['format'].apply(\
                           lambda x: re.sub(u'^x ([0-9])', u'x\\1', x, flags=re.IGNORECASE))
-                          
+
+# ################
 # PRODUCT TURNOVER
+# ################
 
 ls_alive_products = df_products['Produit'][df_products['P'] == 1].unique()
 ls_dead_products = []
@@ -233,7 +282,9 @@ print df_products[['P', 'marque', 'nom', 'format']]\
 # Contrex: pbm with presence or not of word "plate'
 # Taillefine: "0% de mg" vs. "0% de matière grasse"
 
+# ################################
 # MOST POPULAR BRANDS (PER PERIOD)
+# ################################
 
 per_ind = 2
 print '\nMost popular brands at period', per_ind
@@ -243,7 +294,9 @@ for rayon in df_products['Rayon'][df_products['P'] == per_ind].unique():
   print df_products['marque'][(df_products['P'] == per_ind) &\
                               (df_products['Rayon'] == rayon)].value_counts()[0:10].to_string()
 
+# #########################################################
 # PRODUCTS WITH SAME CONTENT/DIFFERENT FORMATS (PER PERIOD)
+# #########################################################
 
 per_ind = 2
 ls_disp_expl = ['marque', 'nom', 'format']
@@ -314,14 +367,10 @@ df_temp.sort(columns = ['marque', 'nom', 'format'], inplace = True)
 # todo: add value counts if possible (then need to load all)
 print df_temp[['marque', 'nom', 'format']][0:1000].to_string()
 
-# quite general pbms to be solved
-# "Marie - Paà«lla royale, 1,1kg"
-# "Nos villages Gros Å"ufs fermiers x6"
-# "Matines Å'ufs frais (...?)"
-for str_pbm in [u'Å"', u'à´', u"à»", u"à¯"]:
-  print df_products['Produit'][df_products['Produit'].str.contains(str_pbm)].to_string()
-
+# ######
 # OUTPUT
+# ######
+
 df_products_op = df_products[['Produit_O', 'marque', 'nom', 'format']].copy()
 df_products_op.rename(columns={'Produit_O': 'Produit'}, inplace = True)
 df_products_op.drop_duplicates('Produit', take_last=True, inplace=True)
