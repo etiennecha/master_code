@@ -120,7 +120,8 @@ pd.set_option('float_format', '{:4,.2f}'.format)
 format_str = lambda x: u'{:}'.format(x[:20])
 
 for per in range(13):
-  print '\n', u'-'*40, '\n'
+  print u'\n', u'-'*80
+  print u'-'*80, u'\n'
   print 'Stats descs: per', per
   df_qlmc_per = df_qlmc[df_qlmc['P'] == per]
   df_pero = df_qlmc_per[['Produit_norm', 'Prix']].groupby('Produit_norm').\
@@ -169,6 +170,7 @@ for per in range(13):
                           right_on = 'Famille') 
   
   # Get SE Famille by Rayon
+  print '\nNb of products in famille by rayon\n'
   df_qlmc_per_rp =\
     df_qlmc_per[['Rayon', 'Famille', 'Produit_norm']].\
       drop_duplicates(['Rayon', 'Famille', 'Produit_norm'])
@@ -177,5 +179,35 @@ for per in range(13):
     # display with total line... (function? + add bar?)
     se_rp_vc.ix[rayon] = se_rp_vc.sum()
     len_ind = max([len(x) for x in se_rp_vc.index])
-    for i, x in zip(se_rp_vc.index, se_rp_vc):
+    print u'\n', u'-'*(len_ind + 6)
+    print u"{:s}   {:3d}".format(se_rp_vc.index[-1].ljust(len_ind), se_rp_vc[-1])
+    print u'-'*(len_ind + 6)
+    for i, x in zip(se_rp_vc.index, se_rp_vc)[:-1]:
       print u"{:s}   {:3d}".format(i.ljust(len_ind), x)
+    print u'-'*(len_ind + 6)
+
+# #############################
+# INSPECT LSA DUPLICATE PRICES
+# #############################
+df_matched = df_stores[~pd.isnull(df_stores['id_lsa'])]
+print '\nNb id_lsa associated with two different stores:',\
+       len(df_matched[df_matched.duplicated(subset = ['P', 'id_lsa'])])
+ls_tup_dup = df_matched[['P', 'id_lsa']]\
+               [df_matched.duplicated(subset = ['P', 'id_lsa'])].values
+
+# Inspect store
+for per, id_lsa in ls_tup_dup:
+  print '\nProd for dups', per, id_lsa
+  df_store = df_qlmc[(df_qlmc['P'] == per) & (df_qlmc['id_lsa'] == id_lsa)]
+  len(df_store[['Produit_norm', 'Prix']]\
+        [df_store.duplicated(subset = ['Produit_norm'])])
+  ls_prod_dup = df_store['Produit_norm']\
+                  [df_store.duplicated(subset = ['Produit_norm'])].values
+  print df_store[['Magasin', 'Produit_norm', 'Prix', 'Date']]\
+          [df_store['Produit_norm'].isin(ls_prod_dup)].to_string()
+# first and last: same store... middle probably not: disambiguate
+# probably a mistake: CHAMPION is carrefour contact here:
+
+u'CHAMPION ST GERMAIN DU PUY', '2131' # period 3 and 5
+u'CARREFOUR MARKET ST GERMAIN DU PUY', '169094' # period 5
+u'CARREFOUR MARKET ST GERMAIN DU PUY', '2131' # period 9 if one believes in surface?

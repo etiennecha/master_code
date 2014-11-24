@@ -202,10 +202,10 @@ for date_ind, qlmc_date in enumerate(ls_qlmc_dates):
 
 ls_matched_stores = [ms for ls_ms in ls_ls_matched_stores for ms in ls_ms]
 
-df_matched = pd.DataFrame(ls_matched_stores,
+df_matching = pd.DataFrame(ls_matched_stores,
                           columns = ['P', 'Enseigne', 'Commune', 'id_lsa', 'Q'])
 
-df_qlmc_stores_ma = pd.merge(df_matched, df_qlmc_stores,
+df_qlmc_stores_ma = pd.merge(df_matching, df_qlmc_stores,
                              on = ['P', 'Enseigne', 'Commune'],
                              how = 'right')
 
@@ -238,8 +238,6 @@ df_read_fix_ms = pd.read_csv(os.path.join(path_dir_built_excel,
 df_read_fix_ms = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['id_lsa'])) |
                                 (~pd.isnull(df_read_fix_ms['id_fra_stores_2'])) |
                                 (~pd.isnull(df_read_fix_ms['street_fra_stores']))].copy()
-
-# OUTPUT RESULT FROM MATCHING (i.e. corr)
 # df_read_fix_ms contains all ad hoc matching
 df_read_fix_ms.rename(columns={'id_lsa' : 'id_lsa_adhoc'}, inplace = True)
 df_final = pd.merge(df_read_fix_ms[['P', 'Enseigne', 'Commune', 'id_lsa_adhoc']] ,
@@ -255,19 +253,17 @@ df_final.loc[pd.isnull(df_final['Q']), 'Q'] = 'ambigu' # check
 df_final.drop(['id_lsa_adhoc'], axis = 1, inplace = True)
 df_final.sort(columns=['P', 'INSEE_Code', 'Enseigne'], inplace = True)
 
-print '\nTwo identical LSA indexes matched with different stores in period:'
-for per in df_final['P'].unique():
-  se_vc_ind_lsa = df_final['id_lsa'][df_final['P'] == per].value_counts()
-  print u'\nPeriod', per, ':'
-  print se_vc_ind_lsa[se_vc_ind_lsa > 1]
+# INSPECT MATCHES: DUPLICATES?
 
-print '\nInspect problems (two stores with same lsa ind):'
+df_matched = df_final[~pd.isnull(df_final['id_lsa'])]
+print '\nNb id_lsa associated with two different stores:',\
+       len(df_matched[df_matched.duplicated(subset = ['P', 'id_lsa'])])
+ls_pbm_lsa_ids = df_matched['id_lsa'][df_matched.duplicated(subset = ['P', 'id_lsa'])].values
+print 'Inspect concerned stores:'
 ls_final_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code', 'id_lsa']
-print df_final[ls_final_disp][df_final['id_lsa'] == '51585'].to_string()
-print df_final[ls_final_disp][df_final['id_lsa'] == '169094'].to_string()
-print df_final[ls_final_disp][df_final['id_lsa'] == '48893'].to_string()
+print df_matched[ls_final_disp][df_matched['id_lsa'].isin(ls_pbm_lsa_ids)]
 
-# OUTPUT NO MATCH FOR POTENTIAL HAND WRITTEN UPDATES
+# TODO: OUTPUT NO MATCH FOR POTENTIAL HAND WRITTEN UPDATES
 
 # OUTPUT
 
