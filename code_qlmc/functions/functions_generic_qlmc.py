@@ -5,6 +5,7 @@ import os, sys
 import json
 import re
 import math
+import pandas as pd
 import numpy as np
 
 def dec_json(chemin):
@@ -145,24 +146,19 @@ def compute_price_dispersion(se_prices):
   return [len(se_prices), se_prices.min(), se_prices.max(), price_mean, 
           price_std, coeff_var, price_range, gain_from_search]
 
-def compare_stores(store_a, store_b, df_prices, category, period_ind = None):
+def compare_stores_det(field_store, store_a, store_b, df_prices, category, period_ind = None):
   if period_ind:
     df_prices_per = df_prices[df_prices['P'] == period_ind]
   else:
     df_prices_per = df_prices
-  # pandas df for store a
-  df_store_a= df_prices_per[['Prix','Produit','Rayon','Famille']]\
-                           [(df_prices_per['Magasin'] == store_a)].copy()
-  df_store_a = df_store_a.set_index('Produit')
+  df_store_a = df_prices_per[['Prix','Produit','Rayon','Famille']]\
+                           [(df_prices_per[field_store] == store_a)].copy()
   df_store_a.rename(columns = {'Prix' : 'Prix_a'}, inplace = True)
-  # pandas df for store b
   df_store_b = df_prices_per[['Prix','Produit']]\
-                            [(df_prices_per['Magasin'] == store_b)].copy()
+                            [(df_prices_per[field_store] == store_b)].copy()
   df_store_b.rename(columns = {'Prix' : 'Prix_b'}, inplace = True)
-  df_store_b = df_store_b.set_index('Produit')
-  # merge pandas df a and b
-  df_both = df_store_a.join(df_store_b)
-  # analysis of price dispersion
+  df_both = pd.merge(df_store_a, df_store_b,
+                     on = 'Produit', how = 'inner')
   ls_str_categories = []
   ls_a_cheaper, ls_b_cheaper, ls_a_equal_b = [], [], []
   for str_category in df_both[category].unique():
@@ -171,7 +167,31 @@ def compare_stores(store_a, store_b, df_prices, category, period_ind = None):
     ls_a_cheaper.append(len(df_cat[df_cat['Prix_a'] < df_cat['Prix_b']]))
     ls_b_cheaper.append(len(df_cat[df_cat['Prix_a'] > df_cat['Prix_b']]))
     ls_a_equal_b.append(len(df_cat[df_cat['Prix_a'] == df_cat['Prix_b']]))
-  return (ls_str_categories, ls_a_cheaper, ls_b_cheaper, ls_a_equal_b)
+  return [ls_str_categories, ls_a_cheaper, ls_b_cheaper, ls_a_equal_b]
+
+def compare_stores(df_prices, field_id, id_0, id_1):
+  df_store_0 = df_prices[['Prix','Produit','Rayon','Famille']]\
+                           [(df_prices[field_id] == id_0)].copy()
+  df_store_0.rename(columns = {'Prix' : 'Prix_0'}, inplace = True)
+  df_store_1 = df_prices[['Prix','Produit']]\
+                            [(df_prices[field_id] == id_1)].copy()
+  df_store_1.rename(columns = {'Prix' : 'Prix_1'}, inplace = True)
+  df_both = pd.merge(df_store_0, df_store_1,
+                     on = 'Produit', how = 'inner')
+  df_both['Diff'] = df_both['Prix_1'] - df_both['Prix_0']
+  nb_products = len(df_both)
+  nb_equal = len(df_both[df_both['Diff'].abs() < 1e-05])
+  nb_cheaper_0 = len(df_both[df_both['Diff'] >= 1e-05])
+  nb_cheaper_1 = len(df_both[df_both['Diff'] <= -1e-05])
+  tot_sum_0 = df_both['Prix_0'].sum()
+  tot_sum_1 = df_both['Prix_1'].sum()
+  abs_pct_tot_diff = np.abs(df_both['Diff'].sum()) /\
+                              df_both[['Prix_0', 'Prix_1']].sum(0).min() * 100
+  avg_abs_pct_diff = (df_both['Diff'] / df_both[['Prix_0', 'Prix_1']].min(1)).abs().mean() * 100
+  return [nb_products, nb_equal,
+          nb_cheaper_0, nb_cheaper_1,
+          tot_sum_0, tot_sum_1,
+          np.round(abs_pct_tot_diff, 1), np.round(avg_abs_pct_diff, 1)]
 
 def compute_distance(coordinates_A, coordinates_B):
   d_lat = math.radians(float(coordinates_B[0]) - float(coordinates_A[0]))

@@ -14,7 +14,7 @@ from mpl_toolkits.basemap import Basemap
 import pprint
 
 path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json')
 path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
 path_dir_built_excel = os.path.join(path_dir_qlmc, 'data_built' , 'data_excel')
 path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')

@@ -14,7 +14,7 @@ import pandas as pd
 path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 
 path_dir_source_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json')
 path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
 
 # LOAD PRODUCTS (directly from original data?)
