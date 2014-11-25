@@ -481,24 +481,24 @@ else:
 
 # TODO: 2 stores in same period w/ same LSA index
 
-## ######
-## OUTPUT
-## ######
-#
-## keep light (i.e. to be merged then w/ df_stores and df_products)
-#df_qlmc_op = df_qlmc[['P', 'Rayon', 'Famille', 'Produit', 'Magasin', 'Prix', 'Date']]
-#
-## HDF5 (drop?)
-#path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-#qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-#qlmc_data['df_qlmc_prices'] = df_qlmc_op
-#qlmc_data.close()
-#
-## CSV (no ',' in fields? how is it dealt with?)
-#df_qlmc_op.to_csv(os.path.join(path_dir_built_csv,
-#                               'df_qlmc_prices.csv'),
-#                  float_format='%.2f',
-#                  encoding='utf-8',
-#                  index=False)
-#
-## todo: store by period too?
+# ######
+# OUTPUT
+# ######
+
+# keep light (i.e. to be merged then w/ df_stores and df_products)
+df_qlmc_op = df_qlmc[['P', 'Rayon', 'Famille', 'Produit', 'Magasin', 'Prix', 'Date']]
+
+# HDF5 (drop?)
+path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+qlmc_data['df_qlmc_prices'] = df_qlmc_op
+qlmc_data.close()
+
+# CSV (no ',' in fields? how is it dealt with?)
+df_qlmc_op.to_csv(os.path.join(path_dir_built_csv,
+                               'df_qlmc_prices.csv'),
+                  float_format='%.2f',
+                  encoding='utf-8',
+                  index=False)
+
+# todo: store by period too?

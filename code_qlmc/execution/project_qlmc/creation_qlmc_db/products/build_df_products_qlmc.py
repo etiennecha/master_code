@@ -82,6 +82,7 @@ df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit(x))
 # #####################################
 
 ls_replace_products = [[u'gazeuze', u'gazeuse'],
+                       [u'Âoeuf', u"oeuf"],
                        [u', ,', u','],
                        [u' ,', u',']]
 

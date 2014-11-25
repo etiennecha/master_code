@@ -209,20 +209,7 @@ df_qlmc_stores_ma = pd.merge(df_matching, df_qlmc_stores,
                              on = ['P', 'Enseigne', 'Commune'],
                              how = 'right')
 
-# INSPECT NO MATCH
-df_unmatched = df_qlmc_stores_ma[pd.isnull(df_qlmc_stores_ma['id_lsa'])]
-print '\nTop insee areas in terms of no match'
-print df_unmatched['INSEE_Code'].value_counts()[0:10]
-print '\nINSEE area with code 49007:'
-print df_qlmc_stores_ma[df_qlmc_stores_ma['INSEE_Code'] == u'49007'].to_string()
 
-# DIPLAY MAIN NO MATCH MUNICIPALITIES
-ls_df_toextract = []
-for insee_code in df_unmatched['INSEE_Code'].value_counts()[0:30].index:
-  ls_df_toextract.append(df_qlmc_stores_ma[df_qlmc_stores_ma['INSEE_Code'] == insee_code])
-df_to_extract = pd.concat(ls_df_toextract)
-df_to_extract.sort(columns=['INSEE_Code', 'Enseigne', 'Commune'], inplace = True)
-print df_to_extract.to_string()
 
 # READ MATCHED STORES FROM CSV FILE AND UPDATE FIX
 df_read_fix_ms = pd.read_csv(os.path.join(path_dir_built_excel,
@@ -240,22 +227,41 @@ df_read_fix_ms = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['id_lsa'])) |
                                 (~pd.isnull(df_read_fix_ms['street_fra_stores']))].copy()
 # df_read_fix_ms contains all ad hoc matching
 df_read_fix_ms.rename(columns={'id_lsa' : 'id_lsa_adhoc'}, inplace = True)
-df_final = pd.merge(df_read_fix_ms[['P', 'Enseigne', 'Commune', 'id_lsa_adhoc']] ,
+df_stores = pd.merge(df_read_fix_ms[['P', 'Enseigne', 'Commune',
+                                    'id_lsa_adhoc', 'id_fra_stores', 'id_fra_stores_2',
+                                    'street_fra_stores']],
                     df_qlmc_stores_ma, on = ['P', 'Enseigne', 'Commune'],
                     how = 'right')
-df_final.loc[~pd.isnull(df_final['id_lsa_adhoc']), 'Q'] = 'manuel'
+# priority given to hand info
+df_stores.loc[~pd.isnull(df_stores['id_lsa_adhoc']), 'Q'] = 'manuel'
 
-df_final.loc[~pd.isnull(df_final['id_lsa_adhoc']),
-             'id_lsa'] = df_final['id_lsa_adhoc']
+df_stores.loc[~pd.isnull(df_stores['id_lsa_adhoc']),
+             'id_lsa'] = df_stores['id_lsa_adhoc']
 
-df_final.loc[pd.isnull(df_final['Q']), 'Q'] = 'ambigu' # check
+df_stores.loc[pd.isnull(df_stores['Q']), 'Q'] = 'ambigu' # check
 
-df_final.drop(['id_lsa_adhoc'], axis = 1, inplace = True)
-df_final.sort(columns=['P', 'INSEE_Code', 'Enseigne'], inplace = True)
+df_stores.drop(['id_lsa_adhoc'], axis = 1, inplace = True)
+df_stores.sort(columns=['P', 'INSEE_Code', 'Enseigne'], inplace = True)
+
+# INSPECT NO MATCH
+df_unmatched = df_stores[pd.isnull(df_stores['id_lsa'])]
+print '\nTop insee areas in terms of no match'
+print df_unmatched['INSEE_Code'].value_counts()[0:10]
+print '\nINSEE area with code 49007:'
+ls_store_disp = ['P', 'Magasin', 'INSEE_Code', 'Commune', 'QLMC_Surface', 'id_lsa', 'Q']
+print df_stores[ls_store_disp][df_stores['INSEE_Code'] == u'49007'].to_string()
+
+# DIPLAY MAIN NO MATCH MUNICIPALITIES
+ls_df_toextract = []
+for insee_code in df_unmatched['INSEE_Code'].value_counts()[0:30].index:
+  ls_df_toextract.append(df_stores[df_stores['INSEE_Code'] == insee_code])
+df_to_extract = pd.concat(ls_df_toextract)
+df_to_extract.sort(columns=['INSEE_Code', 'Enseigne', 'Commune'], inplace = True)
+print df_to_extract[ls_store_disp].to_string()
 
 # INSPECT MATCHES: DUPLICATES?
 
-df_matched = df_final[~pd.isnull(df_final['id_lsa'])]
+df_matched = df_stores[~pd.isnull(df_stores['id_lsa'])]
 print '\nNb id_lsa associated with two different stores:',\
        len(df_matched[df_matched.duplicated(subset = ['P', 'id_lsa'])])
 ls_pbm_lsa_ids = df_matched['id_lsa'][df_matched.duplicated(subset = ['P', 'id_lsa'])].values
@@ -265,19 +271,19 @@ print df_matched[ls_final_disp][df_matched['id_lsa'].isin(ls_pbm_lsa_ids)]
 
 # TODO: OUTPUT NO MATCH FOR POTENTIAL HAND WRITTEN UPDATES
 
-# OUTPUT
-
-# HDF (abandon?)
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-qlmc_data['df_qlmc_stores'] = df_final
-qlmc_data.close()
-
-# CSV
-df_final.to_csv(os.path.join(path_dir_built_csv,
-                             'df_qlmc_stores.csv'),
-                index = False,
-                encoding = 'UTF-8')
+## OUTPUT
+#
+## HDF (abandon?)
+#path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+#qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+#qlmc_data['df_qlmc_stores'] = df_stores
+#qlmc_data.close()
+#
+## CSV
+#df_stores.to_csv(os.path.join(path_dir_built_csv,
+#                             'df_qlmc_stores.csv'),
+#                index = False,
+#                encoding = 'UTF-8')
 
 
 
