@@ -253,23 +253,26 @@ df_cuts_su = pd.DataFrame(ls_rows_cuts,
                           index = list(df_chges.index),
                           columns = ls_columns)
 
- #########################
+# #########################
 # MERGE AND OUTPUT TO CSV
- #########################
+# #########################
 
 df_stations_stats = pd.merge(df_chges_indiv_su, df_rigidity,
                              left_index = True, right_index = True,
                              how = 'left')
 
 # temp
-df_promo.set_index('indiv_id', inplace = True)
 df_stations_stats['nb_promo'] = df_promo['nb_promo']
 
-#df_stations_stats.to_csv(os.path.join(path_dir_built_csv,
-#                                      'df_station_stats.csv'),
-#                         index_label = 'id_station',
-#                         float_format= '%.3f',
-#                         encoding = 'utf-8')
+df_stations_stats.to_csv(os.path.join(path_dir_built_csv,
+                                      'df_station_stats.csv'),
+                         index_label = 'id_station',
+                         float_format= '%.3f',
+                         encoding = 'utf-8')
+
+# ###############
+# MOVE / DISPOSE?
+# ###############
 
 ## Graph: one station: MOVE AND DO IT FOR 20-30
 ## clearly get just a subset of sales for now... make for flexible (copy error correction?)
