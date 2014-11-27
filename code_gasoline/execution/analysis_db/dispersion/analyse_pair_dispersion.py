@@ -18,7 +18,7 @@ path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'd
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
-ls_comp_pairs = dec_json(os.path.join(path_dir_built_json, 'ls_comp_pairs.json'))
+path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 
 # LOAD DF PRICES
 df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
@@ -60,12 +60,15 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                encoding = 'utf-8',
                                dtype = {'id_station' : str})
 
-# ##################
-# PPD: DF STATS DES
-# ##################
+# LOAD dict_std_brands (to exclude same group stations)
+dict_brands = dec_json(os.path.join(path_dir_source,
+                                    'data_other',
+                                    'dict_brands.json'))
+dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
 
-# DISPLAY
-
+# ##################
+# FILTER DATA
+# ##################
 
 # DROP PAIRS WITH INSUFFICIENT PRICE DATA (temp?)
 
@@ -73,19 +76,10 @@ print "Dropped pairs:".format(len(df_ppd[(pd.isnull(df_ppd['avg_spread'])) |\
                                          (df_ppd['nb_spread'] < 100)]))
 df_ppd = df_ppd[(~pd.isnull(df_ppd['avg_spread'])) & (df_ppd['nb_spread'] >= 100)]
 
-# SELECT PAIRS WITH LOW DIFFERENTIATIN (temp?)
 
-# Histogram of average spreads
-hist_test = plt.hist(df_ppd['avg_spread'].abs().values,
-                     bins = 100,
-                     range = (0, 0.3))
-plt.show()
-
-#for i in range(10):
-#  print i, len(df_ppd[np.abs(df_ppd['avg_spread']) > i * 10**(-2)]),\
-#        len(df_ppd[(np.abs(df_ppd['avg_spread']) > i * 10**(-2)) & (df_ppd['nb_rr'] > 10)])
 
 # EXCLUDE TOTAL ACCESS (temp)
+
 ls_brand_fields = ['brand_0_a', 'brand_1_a', 'brand_2_a',
                    'brand_0_b', 'brand_1_b', 'brand_2_b']
 for field in ls_brand_fields:
@@ -93,13 +87,44 @@ for field in ls_brand_fields:
 df_ppd['all_brands'] = df_ppd.apply(\
                          lambda x: ','.join([x[brand_field] for brand_field\
                                                in ls_brand_fields if x[brand_field]]), axis = 1)
+# group is in fact only normalized brand for now
+df_ppd['groups_a'] = df_ppd.apply(\
+                         lambda x: ','.join([dict_std_brands[x[brand_field]][1] for brand_field\
+                                               in ls_brand_fields[:3] if x[brand_field]]), axis = 1)
+
+df_ppd['groups_b'] = df_ppd.apply(\
+                         lambda x: ','.join([dict_std_brands[x[brand_field]][1] for brand_field\
+                                               in ls_brand_fields[3:] if x[brand_field]]), axis = 1)
+# not equivalent for now because can be 'TOTAL' and 'TOTAL_ACCESS' => deprecate
+df_ppd['sg_a'] = df_ppd.apply(lambda x: any([y in x['groups_a']\
+                                               for y in x['groups_b'].split(',')]), axis = 1)
+df_ppd['sg_b'] = df_ppd.apply(lambda x: any([y in x['groups_b']\
+                                               for y in x['groups_a'].split(',')]), axis = 1)
+
+print 'Nb pairs before dropping same group:', len(df_ppd)
+df_ppd = df_ppd[(~df_ppd['sg_a']) & (~df_ppd['sg_b'])]
+print 'Nb pairs after dropping same group:', len(df_ppd)
+
+# SEPARATE PAIRS WITH A TOTAL ACCESS
+
 df_ppd_ta = df_ppd[df_ppd['all_brands'].str.contains('TOTAL_ACCESS')]
 df_ppd_nota = df_ppd[~(df_ppd['all_brands'].str.contains('TOTAL_ACCESS'))]
 
-# STATS DES
+# ##########
+# STATS DESC
+# ##########
 
 pd.set_option('float_format', '{:,.2f}'.format)
 diff_bound = 0.01
+
+# Histogram of average spreads (abs value required)
+hist_test = plt.hist(df_ppd['avg_spread'].abs().values,
+                     bins = 100,
+                     range = (0, 0.3))
+plt.show()
+#for i in range(10):
+#  print i, len(df_ppd[np.abs(df_ppd['avg_spread']) > i * 10**(-2)]),\
+#        len(df_ppd[(np.abs(df_ppd['avg_spread']) > i * 10**(-2)) & (df_ppd['nb_rr'] > 10)])
 
 ## display
 #ls_disp =['id_a', 'id_b', 'brand_0_a', 'brand_0_b', 
@@ -109,21 +134,21 @@ diff_bound = 0.01
 print '\nRank reversal: All'
 print df_ppd['pct_rr'].describe()
 
-print '\nRank reversal: Total Access'
-print df_ppd.ix[[ind for ind in df_ppd.index if ind not in df_ppd_nota.index]]['pct_rr'].describe()
+print '\nRank reversal: Total Access (TA)'
+print df_ppd_ta['pct_rr'].describe()
 
-df_ppd = df_ppd_nota
-
-print '\nRank reversal: All (No TA)'
+print '\nRank reversal: All except TA'
 print df_ppd_nota['pct_rr'].describe()
 
-print '\nRank reversal: No differentiation (No TA)'
+print '\nRank reversal: No differentiation, no TA'
 print df_ppd_nota['pct_rr'][df_ppd_nota['avg_spread'].abs() <= diff_bound].describe()
 
-print '\nRank reversal: Differentiation (No TA)'
+print '\nRank reversal: Differentiation, no TA'
 print df_ppd_nota['pct_rr'][df_ppd_nota['avg_spread'].abs() > diff_bound].describe()
 
-# Build dataframes: differentiation vs. no differentiation
+# CAUTION: RESTRICTION TO NON TOTAL ACCESS
+df_ppd = df_ppd_nota
+
 df_ppd_nodiff = df_ppd[np.abs(df_ppd['avg_spread']) <= diff_bound]
 df_ppd_diff = df_ppd[np.abs(df_ppd['avg_spread']) > diff_bound]
 ls_ppd_names = ['All', 'No differentation', 'Differentiation']
@@ -153,6 +178,7 @@ for ppd_name, df_ppd_temp in zip(ls_ppd_names, [df_ppd, df_ppd_nodiff, df_ppd_di
   ax = plt.subplot()
   ax.step(x, y_close, label = r'$d_{ij} \leq 1km$')
   ax.step(x, y_far, label = r'$1km < d_{ij} \leq 3km$')
+  plt.title(ppd_name)
   plt.legend()
   plt.tight_layout()
   plt.show()
@@ -176,6 +202,15 @@ for ppd_name, df_ppd_temp in zip(ls_ppd_names, [df_ppd, df_ppd_nodiff, df_ppd_di
 # RR VS. TOTAL ACCESS / RR DURATION
 ## Find suspect rank reversal
 #print 'Station with max length rank reversal:', np.argmax(df_ppd['max_len_rr'])
+
+# INSPECT OUTLIERS
+len(df_ppd[(df_ppd['avg_spread'].abs() > 0.01) & (df_ppd['pct_rr']> 0.4)])
+ls_disp = ['id_a', 'id_b', 'groups_a', 'groups_b', 'nb_chges_a','nb_chges_b', 'pct_rr']
+print df_ppd[ls_disp][(df_ppd['avg_spread'].abs() > 0.01) &\
+                      (df_ppd['pct_rr']> 0.4)].to_string()
+
+# todo: filter pairs on frequency of changes (todo everywhere incl. price cleaning)
+# todo: filter chge of price policy: df_prices_ttc[['63000013','63000019']].plot()
 
 ## ####################
 ## DF PAIR PD TEMPORAL
@@ -210,6 +245,7 @@ for ppd_name, df_ppd_temp in zip(ls_ppd_names, [df_ppd, df_ppd_nodiff, df_ppd_di
 #                  ls_comp_chges[:-2])
 #    ls_ar_rrs.append(ls_comp_pd[2][1])
 #    ls_rr_lengths += ls_comp_pd[3][0]
+
 ## All, Total Access, No Total Access
 #ls_ar_rrs_ta, ls_ar_rrs_nota = [], []
 #for ar_rrs, ls_pair_ppd in zip(ls_ar_rrs, ls_ppd): 

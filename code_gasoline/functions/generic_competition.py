@@ -360,30 +360,32 @@ def get_market_price_dispersion(ls_market_ids, df_price):
                        'gfs'   : se_gain_from_search,
                        'nb_comp_t' : se_nb_market_prices,
                        'nb_comp'   : se_nb_market_prices.max()})
-  
-  return list_list_market_price_dispersion
 
 def get_ls_ls_market_price_dispersion(ls_ls_market_ids, master_price, series):
   # if numpy.version.version = '1.8' or above => switch from scipy to numpy
   # checks nb of prices (non nan) per period (must be 2 prices at least)
-  ls_ls_market_price_dispersion = []
+  ls_ls_market_pd = []
   for ls_market_ids in ls_ls_market_ids:
-    list_market_prices = [master_price[series][master_price['ids'].index(indiv_id)] for indiv_id in ls_market_ids]
+    list_market_prices = [master_price[series][master_price['ids'].index(indiv_id)]\
+                            for indiv_id in ls_market_ids]
     arr_market_prices = np.array(list_market_prices, dtype = np.float32)
     arr_nb_market_prices = (~np.isnan(arr_market_prices)).sum(0)
     arr_bool_enough_market_prices = np.where(arr_nb_market_prices > 1, 1, np.nan)
     arr_market_prices = arr_bool_enough_market_prices * arr_market_prices
-    range_price_array = scipy.nanmax(arr_market_prices, 0) - scipy.nanmin(arr_market_prices, axis = 0)
+    range_price_array = scipy.nanmax(arr_market_prices, 0) -\
+                          scipy.nanmin(arr_market_prices, axis = 0)
     std_price_array = scipy.stats.nanstd(arr_market_prices, 0)
-    coeff_var_price_array = scipy.stats.nanstd(arr_market_prices, 0) / scipy.stats.nanmean(arr_market_prices, 0)
-    gain_from_search_array = scipy.stats.nanmean(arr_market_prices, 0) - scipy.nanmin(arr_market_prices, axis = 0)
-    list_list_market_price_dispersion.append(( ls_market_ids,
-                                               len(ls_market_ids),
-                                               range_price_array,
-                                               std_price_array,
-                                               coeff_var_price_array,
-                                               gain_from_search_array ))
-  return list_list_market_price_dispersion
+    coeff_var_price_array = scipy.stats.nanstd(arr_market_prices, 0) /\
+                              scipy.stats.nanmean(arr_market_prices, 0)
+    gain_from_search_array = scipy.stats.nanmean(arr_market_prices, 0) -\
+                               scipy.nanmin(arr_market_prices, axis = 0)
+    ls_ls_market_pd.append((ls_market_ids,
+                            len(ls_market_ids),
+                            range_price_array,
+                            std_price_array,
+                            coeff_var_price_array,
+                            gain_from_search_array))
+  return ls_ls_market_price_dispersion
   
 def get_fe_predicted_prices(list_ids, series):
   dict_panel_data_master_temp = {}
