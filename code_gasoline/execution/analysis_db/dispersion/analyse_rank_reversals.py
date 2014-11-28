@@ -53,6 +53,14 @@ df_ppd = pd.read_csv(os.path.join(path_dir_built_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
+# LOAD DF RANK REVERSALS
+print '\nLoad df_rr'
+df_rr = pd.read_csv(os.path.join(path_dir_built_csv,
+                           'df_rank_reversals.csv'),
+                    parse_dates = ['date'],
+                    encoding = 'utf-8')
+df_rr.set_index('date', inplace = True)
+
 # LOAD DF STATION STATS
 print '\nLoad df_station_stats'
 df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
@@ -128,98 +136,11 @@ df_ppd_nota = df_ppd[~(df_ppd['all_brands'].str.contains('TOTAL_ACCESS'))]
 # need to separate since change in brand tends to inflate pct_rr artificially
 # todo: generalize to rule out significant chges in margin
 
-# ##########
-# STATS DESC
-# ##########
-
-pd.set_option('float_format', '{:,.2f}'.format)
 diff_bound = 0.01
-
-# Histogram of average spreads (abs value required)
-hist_test = plt.hist(df_ppd['avg_spread'].abs().values,
-                     bins = 100,
-                     range = (0, 0.3))
-plt.show()
-
-print '\nRank reversal: All'
-print df_ppd['pct_rr'].describe()
-
-print '\nRank reversal: Total Access (TA)'
-print df_ppd_ta['pct_rr'].describe()
-
-print '\nRank reversal: All except TA'
-print df_ppd_nota['pct_rr'].describe()
-
-print '\nRank reversal: No differentiation, no TA'
-print df_ppd_nota['pct_rr'][df_ppd_nota['avg_spread'].abs() <= diff_bound].describe()
-
-print '\nRank reversal: Differentiation, no TA'
-print df_ppd_nota['pct_rr'][df_ppd_nota['avg_spread'].abs() > diff_bound].describe()
-
-# CAUTION: RESTRICTION TO NON TOTAL ACCESS
-# df_ppd = df_ppd_nota
-
-df_ppd_nodiff = df_ppd[np.abs(df_ppd['avg_spread']) <= diff_bound]
-df_ppd_diff = df_ppd[np.abs(df_ppd['avg_spread']) > diff_bound]
+# caution not to restrict df_ppd to df_ppd for now => overview before
+df_ppd_nodiff = df_ppd_nota[df_ppd_nota['avg_spread'].abs() <= diff_bound]
+df_ppd_diff   = df_ppd_nota[df_ppd_nota['avg_spread'].abs() >  diff_bound]
 ls_ppd_names = ['All', 'No differentation', 'Differentiation']
-
-zero = np.float64(1e-10)
-
-for ppd_name, df_ppd_temp in zip(ls_ppd_names, [df_ppd, df_ppd_nodiff, df_ppd_diff]):
-  print '\n', ppd_name
-  print "\nNb pairs", len(df_ppd_temp)
-  
-  print "Of which no rank rank reversals",\
-           len(df_ppd_temp['pct_rr'][df_ppd_temp['pct_rr'] <= zero])
-  
-  # RR & SPREAD VS DISTANCE + PER TYPE OF BRAND
-  #hist_test = plt.hist(df_ppd_nodiff['pct_rr'][~pd.isnull(df_ppd_nodiff['pct_rr'])], bins = 50)
-  df_all = df_ppd_temp[(~pd.isnull(df_ppd_temp['pct_rr'])) & (df_ppd_temp['distance'] <= 3)]
-  df_close = df_ppd_temp[(~pd.isnull(df_ppd_temp['pct_rr'])) & (df_ppd_temp['distance'] <= 1)]
-  df_far = df_ppd_temp[(~pd.isnull(df_ppd_temp['pct_rr'])) & (df_ppd_temp['distance'] > 1)]
-  
-  # Plot ECDF of rank reversals: close vs. far
-  ecdf = ECDF(df_all['pct_rr'])
-  ecdf_close = ECDF(df_close['pct_rr'])
-  ecdf_far = ECDF(df_far['pct_rr'])
-  x = np.linspace(min(df_all['pct_rr']), max(df_all['pct_rr']), num=100)
-  y = ecdf(x)
-  y_close = ecdf_close(x)
-  y_far = ecdf_far(x)
-  plt.rcParams['figure.figsize'] = 8, 6
-  ax = plt.subplot()
-  ax.step(x, y_close, label = r'$d_{ij} \leq 1km$')
-  ax.step(x, y_far, label = r'$1km < d_{ij} \leq 3km$')
-  plt.title(ppd_name)
-  plt.legend()
-  plt.tight_layout()
-  plt.show()
-  
-  print '\nK-S test of equality of rank reversal distributions'
-  print ks_2samp(df_close['pct_rr'], df_far['pct_rr'])
-  # one side test not implemented in python ? (not in scipy at least)
-  
-  print '\nNb of pairs', len(df_all['pct_rr'])
-  print 'Nb of pairs w/ short distance', len(df_close['pct_rr'])
-  print 'Nb of pairs w/ longer distance', len(df_far['pct_rr'])
-  
-  #print '\nPair types representation among all pairs, close pairs, far pairs'
-  #for df_temp, name_df in zip([df_all, df_close, df_far], ['All', 'Close', 'Far']):
-  #  print '\n%s' %name_df, len(df_temp), 'pairs'
-  #  for pair_type in np.unique(df_temp['pair_type']):
-  #    print "{:20} {:>4.2f}".\
-  #            format(pair_type, len(df_temp[df_temp['pair_type'] == pair_type]) /\
-  #                     float(len(df_temp)))
-  
-# RR VS. TOTAL ACCESS / RR DURATION
-## Find suspect rank reversal
-#print 'Station with max length rank reversal:', np.argmax(df_ppd['max_len_rr'])
-
-# INSPECT OUTLIERS
-len(df_ppd[(df_ppd['avg_spread'].abs() > 0.01) & (df_ppd['pct_rr']> 0.4)])
-ls_disp = ['id_a', 'id_b', 'groups_a', 'groups_b', 'nb_chges_a','nb_chges_b', 'pct_rr', 'nb_rr']
-print df_ppd[ls_disp][(df_ppd['avg_spread'].abs() > 0.01) &\
-                      (df_ppd['pct_rr']> 0.4)].to_string()
 
 # todo: filter pairs on frequency of changes (todo everywhere incl. price cleaning)
 # todo: filter chge of price policy: df_prices_ttc[['63000013','63000019']].plot()
@@ -227,71 +148,49 @@ print df_ppd[ls_disp][(df_ppd['avg_spread'].abs() > 0.01) &\
 ## ####################
 ## DF PAIR PD TEMPORAL
 ## ####################
-#
-#km_bound = 3
-#diff_bound = 0.02
-#
-## todo: iterate with various  (high value: no cleaning of prices)
-#
-## DF PAIR PRICE DISPERSION
-#ls_ppd = []
-#ls_ar_rrs = []
-#ls_rr_lengths = []
-#for (indiv_id, comp_id), distance in ls_tuple_competitors:
-#  if distance <= km_bound: 
-#    se_prices_1 = df_prices[indiv_id]
-#    se_prices_2 = df_prices[comp_id]
-#    avg_spread = (se_prices_2 - se_prices_1).mean()
-#    if np.abs(avg_spread) > diff_bound:
-#      #se_prices_1 = df_price_cl[indiv_id]
-#      #se_prices_2 = df_price_cl[comp_id]
-#      se_prices_1 = df_prices[indiv_id]
-#      se_prices_2 = df_prices[comp_id]
-#    ls_comp_pd = get_pair_price_dispersion(se_prices_1.as_matrix(),
-#                                           se_prices_2.as_matrix(), light = False)
-#    ls_comp_chges = get_stats_two_firm_price_chges(se_prices_1.as_matrix(),
-#                                                   se_prices_2.as_matrix())
-#    ls_ppd.append([indiv_id, comp_id, distance] +\
-#                  ls_comp_pd[0][:9] + [avg_spread] + ls_comp_pd[0][10:]+\
-#                  get_ls_standardized_frequency(ls_comp_pd[3][0]) +\
-#                  ls_comp_chges[:-2])
-#    ls_ar_rrs.append(ls_comp_pd[2][1])
-#    ls_rr_lengths += ls_comp_pd[3][0]
 
-## All, Total Access, No Total Access
-#ls_ar_rrs_ta, ls_ar_rrs_nota = [], []
-#for ar_rrs, ls_pair_ppd in zip(ls_ar_rrs, ls_ppd): 
-#  if (df_brands['brand_1_e'][ls_pair_ppd[0]] == 'TOTAL_ACCESS') or\
-#     (df_brands['brand_1_e'][ls_pair_ppd[1]] == 'TOTAL_ACCESS'):
-#    ls_ar_rrs_ta.append(ar_rrs)
-#  else:
-#    ls_ar_rrs_nota.append(ar_rrs)
-#
-## Stations with low differentiation and not Total Access
-#ls_ar_rrs_nodiff = [] 
-#for ar_rrs, ls_pair_ppd in zip(ls_ar_rrs, ls_ppd):
-#  if (not df_brands['brand_1_e'][ls_pair_ppd[0]] == 'TOTAL_ACCESS') &\
-#     (not df_brands['brand_1_e'][ls_pair_ppd[1]] == 'TOTAL_ACCESS') &\
-#     (np.abs(ls_pair_ppd[12]) <= diff_bound): # CHANGE !?!
-#    ls_ar_rrs_nodiff.append(ar_rrs)
-# 
-#ls_df_rrs_su = []
-#for ls_ar_rrs_temp in [ls_ar_rrs, ls_ar_rrs_ta, ls_ar_rrs_nota, ls_ar_rrs_nodiff]:
-#  ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
-#  df_rrs_temp = pd.DataFrame(ls_ar_rrs_temp, columns = ls_dates)
-#  se_nb_valid = df_rrs_temp.apply(lambda x: (~pd.isnull(x)).sum())
-#  se_nb_rr    = df_rrs_temp.apply(lambda x: (np.abs(x) > zero_threshold).sum())
-#  se_avg_rr   = df_rrs_temp.apply(lambda x: np.abs(x[np.abs(x) > zero_threshold]).mean())
-#  se_std_rr   = df_rrs_temp.apply(lambda x: np.abs(x[np.abs(x) > zero_threshold]).std())
-#  se_med_rr   = df_rrs_temp.apply(lambda x: np.abs(x[np.abs(x) > zero_threshold]).median())
-#  df_rrs_su_temp = pd.DataFrame({'se_nb_valid' : se_nb_valid,
-#                                 'se_nb_rr'    : se_nb_rr,
-#                                 'se_avg_rr'   : se_avg_rr,
-#                                 'se_std_rr'   : se_std_rr,
-#                                 'se_med_rr'   : se_med_rr})
-#  df_rrs_su_temp['pct_rr'] = df_rrs_su_temp['se_nb_rr'] / df_rrs_su_temp['se_nb_valid']
-#  ls_df_rrs_su.append(df_rrs_su_temp) 
-#
+# Keep filtered pairs
+ls_keep_ids = list(df_ppd.apply(lambda x: '-'.join([x['id_a'], x['id_b']]),
+                                axis = 1).values)
+df_rr = df_rr[ls_keep_ids]
+# Restrict to pairs with total access (todo: generalize to margin change)
+ls_keep_ids_ta = list(df_ppd_ta.apply(lambda x: '-'.join([x['id_a'], x['id_b']]),
+                                      axis = 1).values)
+df_rr_ta = df_rr[ls_keep_ids_ta]
+# Restrict to pairs without total access
+ls_keep_ids_nota = list(df_ppd_ta.apply(lambda x: '-'.join([x['id_a'], x['id_b']]),
+                                      axis = 1).values)
+df_rr_nota = df_rr[ls_keep_ids_nota]
+# Restrict to pairs without total access and with low differentiation
+ls_keep_ids_nodiff = list(df_ppd_nodiff.apply(lambda x: '-'.join([x['id_a'], x['id_b']]),
+                                              axis = 1).values)
+df_rr_nodiff = df_rr[ls_keep_ids_nodiff]
+
+zero = np.float64(1e-10)
+ls_df_rrs_su = []
+for df_rrs_temp in [df_rr, df_rr_ta, df_rr_nota, df_rr_nodiff]:
+  df_rrs_temp = df_rrs_temp.T
+  se_nb_valid = df_rrs_temp.apply(lambda x: (~pd.isnull(x)).sum())
+  # se_nb_valid = se_nb_valid.astype(float)
+  se_nb_valid[se_nb_valid == 0] = np.nan
+  se_nb_rr    = df_rrs_temp.apply(lambda x: (np.abs(x) > zero).sum())
+  # se_nb_rr = se_nb_rr.astype(float)
+  se_nb_rr[se_nb_rr == 0] = np.nan
+  se_avg_rr   = df_rrs_temp.apply(lambda x: np.abs(x[np.abs(x) > zero]).mean())
+  se_std_rr   = df_rrs_temp.apply(lambda x: np.abs(x[np.abs(x) > zero]).std())
+  se_med_rr   = df_rrs_temp.apply(lambda x: np.abs(x[np.abs(x) > zero]).median())
+  df_rrs_su_temp = pd.DataFrame({'se_nb_valid' : se_nb_valid,
+                                 'se_nb_rr'    : se_nb_rr,
+                                 'se_avg_rr'   : se_avg_rr,
+                                 'se_std_rr'   : se_std_rr,
+                                 'se_med_rr'   : se_med_rr})
+  df_rrs_su_temp['pct_rr'] = df_rrs_su_temp['se_nb_rr'] / df_rrs_su_temp['se_nb_valid']
+  ls_df_rrs_su.append(df_rrs_su_temp) 
+
+print ls_df_rrs_su[-1].describe()
+ls_df_rrs_su[-1]['se_pct_rr'].plot()
+plt.show()
+
 ## Merge: to be improved? (more dataframes potentially?)
 #df_rrs_su_all = pd.merge(ls_df_rrs_su[0], ls_df_rrs_su[1],\
 #                         right_index = True, left_index = True, suffixes=('', '_ta'))

@@ -53,7 +53,7 @@ This article studies price dispersion on the French retail gasoline market, disc
 \textbf{JEL Classification Numbers:} L13
 
 \pagebreak%
-\doublespacing
+%\doublespacing
 
 \section{Introduction}
 
@@ -215,7 +215,8 @@ A clear ranking of empirical distribution functions of rank reversals can be obs
 
 In order to evaluate the hypothesis according to which information is connected to price dispersion, two measures of price dispersion: rank reversals and standard deviation in spread, are regressed on a proxy for consumer information: distance between stations.
 
-\begin{table}[h]\centering
+\begin{table}[h]
+\centering
 \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
 \caption{Regression of rank reversals}
 \begin{tabular}{lccc}
@@ -281,10 +282,12 @@ Regressions are then run using raw prices and cleaned prices. Also, in order to 
 
 Standard market dispersion statistics such as range and standard deviation are strongly influenced by static price dispersion. As a consequence, contrarily to the previous section where descriptives statistics performed on raw prices arguably provided a most conservative first idea of price dispersion, clean prices are now to be preferred despite their shortcomings. Results are reported with clean prices, raw prices for markets obtained with radiuses of respectively 3 and 5km. Additionnally, results are reported for non overlapping markets built in a way that is detailed in appendix.
 
-\begin{table}[!htbp]
+\begin{table}[H]
+%\renewcommand{\arraystretch}{0.7}
 \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
 \caption{Regressions of market dispersion}
-\begin{tabular}{lcccc }
+\centering
+\begin{tabular}{lcccc}
 \hline
 \hline
 {} & All & All & No overlap & Stable markets\\
@@ -395,5 +398,19 @@ N      &     4,183         &     4,183      &     8,312    \\
 \multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
 \end{tabular}
 \end{table}
+
+\section{In progress}
+
+\subsection{Number of digits after decimal point}
+
+There is heterogeneity between the number of digits displayed after decimal point among stations. Some stations indeed appear to restrict themselves to two digits after decimal point, hence giving up the possibility to undercut or match a competitor's price. Though accounting for this phenomenon is out of the scope of this paper, its connection with price dispersion is (to be) investigated.
+
+\subsection{Leadership}
+
+Maskin and Tirole (1988) [TODO: add ref] offer an alternative explanation for rank reversals. They indeed show that in a context where sellers have to commit on prices for at least one period, cycles can occur which are characterized by periods of undercutting punctuated by one firm accepting to set a high price when margin becomes too small. XXX [TODO: add ref] find evidence of such cycles with XXX data. Though standard test rule out the presence such cycles in French data, evidence of other specific patterns of prices has been found.
+
+\subsection{Monopoly, information, inventory and rule of thumb}
+
+Finally, a natural explanation for rank reversals could be that gas stations actually do not really compete and that their prices simply reflect their flow of information and/or inventory through more or less complex pricing rules. Such explanations are (to be) examined.
 
 \end{document}

@@ -13,7 +13,6 @@ path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-zero_threshold = np.float64(1e-10)
 km_bound = 5
 
 # ###############
@@ -25,7 +24,7 @@ df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.cs
 df_prices.set_index('date', inplace = True)
 df_chges = df_prices - df_prices.shift(1)
 
-# TODO: update
+# todo: refactoring?
 ls_ls_prices = [list(df_prices[col].values) for col in df_prices.columns]
 ls_ls_price_durations = get_price_durations(ls_ls_prices)
 ls_ls_price_variations = get_price_variations(ls_ls_price_durations)
@@ -84,15 +83,15 @@ print se_su_2d_ld_freq.to_string()
 # BUILD DF CHANGES
 # ################
 
-
 # Price changes: Value of price changes
+zero = np.float64(1e-10)
 ls_rows_chges = []
 for col in df_chges.columns:
   # todo: check what to do with missing values(exclude first not to miss any change?)
-  se_pos_price_chge = df_chges[col][df_chges[col] >  zero_threshold]
-  se_neg_price_chge = df_chges[col][df_chges[col] < -zero_threshold]
+  se_pos_price_chge = df_chges[col][df_chges[col] >  zero]
+  se_neg_price_chge = df_chges[col][df_chges[col] < -zero]
   ls_rows_chges.append([df_chges[col].count(), # nb valid (no nan) price chges
-                        df_chges[col][df_chges[col].abs() < zero_threshold].count(), # nb no chge
+                        df_chges[col][df_chges[col].abs() < zero].count(), # nb no chge
                         se_pos_price_chge.count(),
                         se_neg_price_chge.count(),
                         se_pos_price_chge.median(),
@@ -111,7 +110,7 @@ df_chges_indiv_su['pct_chge'] = df_chges_indiv_su['nb_chge'] / df_chges_indiv_su
 
 # STATS DES
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.2f}'.format)
 #print df_chges_indiv_su[0:100].to_string()
 
 # #################
@@ -257,15 +256,19 @@ df_cuts_su = pd.DataFrame(ls_rows_cuts,
 # MERGE AND OUTPUT TO CSV
 # #########################
 
-df_stations_stats = pd.merge(df_chges_indiv_su, df_rigidity,
+df_station_stats = pd.merge(df_chges_indiv_su, df_rigidity,
                              left_index = True, right_index = True,
                              how = 'left')
 
-# temp
-df_stations_stats['nb_promo'] = df_promo['nb_promo']
+# quasi no info (nb_chge: min five) or doubtful info (pct_chge: min once a month)
+print df_station_stats[(df_station_stats['nb_chge'] >= 5) &\
+                       (df_station_stats['pct_chge'] >= 0.03)].describe()
 
-df_stations_stats.to_csv(os.path.join(path_dir_built_csv,
-                                      'df_station_stats.csv'),
+# temp
+df_station_stats['nb_promo'] = df_promo['nb_promo']
+
+df_station_stats.to_csv(os.path.join(path_dir_built_csv,
+                                     'df_station_stats.csv'),
                          index_label = 'id_station',
                          float_format= '%.3f',
                          encoding = 'utf-8')

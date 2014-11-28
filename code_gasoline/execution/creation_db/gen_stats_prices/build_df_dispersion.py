@@ -99,7 +99,7 @@ df_info_sub = df_info[['ci_ardt_1', 'brand_0', 'brand_1', 'brand_2']].copy()
 df_info_sub['id_a'] = df_info_sub.index
 df_ppd = pd.merge(df_info_sub, df_ppd, on='id_a', how = 'right')
 df_info_sub.rename(columns={'id_a': 'id_b'}, inplace = True)
-df_ppd = pd.merge(df_info_sub, df_ppd, on='id_b', how = 'right', suffixes=('_a', '_b'))
+df_ppd = pd.merge(df_info_sub, df_ppd, on='id_b', how = 'right', suffixes=('_b', '_a'))
 
 # BUILD DF RR
 ls_index = ['-'.join(ppd[:2]) for ppd in ls_ppd]
