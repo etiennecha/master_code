@@ -37,6 +37,7 @@ def format_str_city_insee(word):
 
 def format_correspondence(ls_corr):
   """
+  DEPRECATED : use class
   returns correspondence with 0 at beginning of insee_code if 4 chars only
   ---
   correspondence: list of tup (commune, zip_code, department, insee_code) 
@@ -52,8 +53,7 @@ def format_correspondence(ls_corr):
 
 def match_insee_code(ls_corr, city, dpt_code, zip_code = None):
   """
-  TODO: create class and keep dicts alive
-  returns insee code corresponding to dpt, city
+  DEPRECATED : use class
   """
   city = format_str_city_insee(city)
   dpt_code = dpt_code.rjust(2, '0')
@@ -134,6 +134,78 @@ def refine_insee_code(ls_fra_insee_codes, candidate):
     final_ic, final_ic_ardt = None, None
   return final_ic, final_ic_ardt
 
+class MatchingINSEE:
+  def __init__(self, file_name):
+    """
+    @param file_name: path to a csv file containing citys names, zips, dpts, and insee codes
+    @type file_name: C{str}
+    """
+    df_corr = pd.read_csv(file_name, dtype = str)
+    ls_corr = [list(x) for x in df_corr.to_records(index = False)]
+    ls_corr = [(format_str_city_insee(city_insee),
+               zip_code_insee.rjust(5, '0'),
+               department_insee,
+               code_insee.rjust(5, '0')) for (city_insee,
+                                                   zip_code_insee,
+                                                   department_insee,
+                                                   code_insee) in ls_corr]
+    self.dict_corr_zip_insee = {}
+    for city_insee, zip_code_insee, department_insee, code_insee in ls_corr:
+      self.dict_corr_zip_insee.setdefault(zip_code_insee, []).append((city_insee,
+                                                                      zip_code_insee,
+                                                                      department_insee,
+                                                                      code_insee))
+
+    self.dict_corr_dpt_insee = {}
+    for city_insee, zip_code_insee, department_insee, code_insee in ls_corr:
+      self.dict_corr_dpt_insee.setdefault(zip_code_insee[:-3], []).append((city_insee,
+                                                                           zip_code_insee,
+                                                                           department_insee,
+                                                                           code_insee))
+
+  def match_city(self, city, dpt_code, zip_code = None):
+    """
+    returns insee code corresponding to dpt, city
+    """
+    city = format_str_city_insee(city)
+    dpt_code = dpt_code.rjust(2, '0')
+    if zip_code:
+      zip_code.rjust(5, '0')
+    # Based on zip code and city name
+    ls_matching = []
+    found_indicator = False
+    if zip_code:
+      if zip_code in self.dict_corr_zip_insee:
+        for city_insee, zip_insee, dpt_insee, code_insee in self.dict_corr_zip_insee[zip_code]:
+          if city == city_insee:
+            ls_matching.append((city_insee, zip_insee, code_insee))
+            found_indicator = True
+        if found_indicator:
+          return (ls_matching, 'zip_city_match')
+        # If no exact zip, city match: check if city name in insee city names
+        for city_insee, zip_insee, dpt_insee, code_insee in self.dict_corr_zip_insee[zip_code]:
+          if city in city_insee:
+            ls_matching.append((city_insee, zip_insee, code_insee))
+            found_indicator = True
+        if found_indicator:
+          return (ls_matching, 'zip_city_in_match(es)')
+    # Based on dpt code and city name
+    for city_insee, zip_insee, dpt_insee, code_insee in self.dict_corr_dpt_insee[dpt_code]:
+      if city == city_insee:
+        ls_matching.append((city_insee, zip_insee, code_insee))
+        found_indicator = True
+    if found_indicator:
+      return (ls_matching, 'dpt_city_match')
+        # If no exact dpt, city match: check if city name in insee city names
+    for city_insee, zip_insee, dpt_insee, code_insee in self.dict_corr_dpt_insee[dpt_code]:
+      if city in city_insee:
+        ls_matching.append((city_insee, zip_insee, code_insee))
+        found_indicator = True
+    if found_indicator:
+      return (ls_matching, 'dpt_city_in_match(es)')
+    # No match
+    return (None, 'no_match')
+
 if __name__ == "__main__":
   
   path_data = os.path.join(u'W:\\', u'Bureau', 'Etienne_work', 'Data')
@@ -141,16 +213,19 @@ if __name__ == "__main__":
   path_dir_ameli_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json')
   path_dir_insee_extracts = os.path.join(path_data, u'data_insee', 'data_extracts')
 
-  # LOAD CORRESPONDENCE
+  ## LOAD CORRESPONDENCE AND TEST MATCHING (DEPRECATED)
 
-  df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
-                        dtype = str)
-  ls_corr = [list(x) for x in df_corr.to_records(index = False)]
-  ls_corr = format_correspondence(ls_corr)
+  #df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
+  #                      dtype = str)
+  #ls_corr = [list(x) for x in df_corr.to_records(index = False)]
+  #ls_corr = format_correspondence(ls_corr)
+  #ls_matched = [match_insee_code(ls_corr, 'PARIS', '75', '75006')]
   
-  # EXECUTE MATCHING
+  # TEST MATCHING
   
-  ls_matched = [match_insee_code(ls_corr, 'PARIS', '75006')]
+  path_df_corr = os.path.join(path_dir_match_insee, 'df_corr_gas.csv')
+  matching_insee = MatchingINSEE(path_df_corr)
+  ls_matched = [matching_insee.match_city('PARIS', '75', '75006')]
   
   # LOAD CURRENT INSEE CODES
   

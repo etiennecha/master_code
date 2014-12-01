@@ -8,6 +8,7 @@ import subprocess
 from subprocess import PIPE, Popen
 import re
 import pandas as pd
+from matching_insee import *
 
 def read_pdftotext(path_file, path_pdftotext):
   pdf_file = subprocess.Popen([os.path.join(path_pdftotext,
@@ -153,7 +154,20 @@ df_fer = df_fer.drop(82)
 
 # could check letters alone (or 2, 3), remove except for L (and D)
 ls_city_fix = [('JOUARS PONTCHARTRAI N', 'JOUARS PONTCHARTRAIN'),
-               ('CLERMONT-FER RAND', 'CLERMONT-FERRAND')]
+               ('CLERMONT-FER RAND', 'CLERMONT-FERRAND'),
+               ('SAINT-GREGOIR E', 'SAINT-GREGOIRE'),
+               ('SOUFFELWEYER SHEIM', 'SOUFFELWEYERSHEIM'),
+               ('LE PLESSIS-BELLEV ILLE', 'LE PLESSIS-BELLEVILLE'),
+               ('CHAUDENEY S/MOSELLE', 'CHAUDENEY SUR MOSELLE'),
+               ('CHAMPIGNY S/MARNB', 'CHAMPIGNY SUR MARNE'),
+               ("CHAMPAGNE AU MT D'OR", "CHAMPAGNE AU MONT D'OR"),
+               ('MONTAIGUT COMBRAILLE', 'MONTAIGUT EN COMBRAILLE'),
+               ('LONGEVILLE ST AVOLD', 'LONGEVILLE LES ST AVOLD'),
+               ('PONT D ISERE', 'PONT DE L ISERE'),
+               ('ROISSY C DE GAULLE', 'ROISSY EN FRANCE'),
+               ('CHATILLON SUR BAGNEUX', 'CHATILLON'),
+               ('MONTREUIL SUR MER', 'MONTREUIL'),
+               ('ORLEANS LA SOURCE', 'LA SOURCE')] # ORLEANS
 def adhoc_fix(ls_fix, str_to_fix):
   for (old, new) in ls_fix:
     str_to_fix = str_to_fix.replace(old, new)
@@ -164,9 +178,18 @@ print '\nInspecting Cedex:'
 print df_fer[['Ville', 'CP']][df_fer['Ville'].str.contains('cedex',
                                                            case = False)].to_string()
 
+# mistake in zip (found during insee matchin)
+df_fer.loc[(df_fer['CP'] == '92570') &\
+           (df_fer['Ville'] == 'CHAUMONTEL'), 'CP'] = '95270'
+
+# following enough here because nothing after cedex
+df_fer['Ville'] = df_fer['Ville'].apply(\
+                    lambda x: re.sub(u'cedex', u'', x, flags = re.IGNORECASE).strip())
+
 # DUPLICATES
 
 print u'\nNb duplicates:', len(df_fer[df_fer.duplicated()])
+df_fer = df_fer.drop_duplicates()
 
 # DISPLAY
 
@@ -244,7 +267,9 @@ ls_city_fix = [('AIX-LES-BAIN S GOLFE JUAN', 'AIX-LES-BAINS GOLFE JUAN'), # migh
                ('CHASSENEUI L DU POITOU', 'CHASSENEUIL DU POITOU'),
                ('SCHILTIGHEI M', 'SCHILTIGHEIM'),
                ('VENDARGUE S', 'VENDARGUES'),
-               ('PERPIGNAN CHAPELLE ARMENTIERE S', 'PERPIGNAN CHAPELLE ARMENTIERES')]
+               ('PERPIGNAN CHAPELLE ARMENTIERE S', 'PERPIGNAN CHAPELLE ARMENTIERES'),
+               ('VALENCIENN ES', 'VALENCIENNES'),
+               ('CARCASSON NE', 'CARCASSONNE')]
 def adhoc_fix(ls_fix, str_to_fix):
   for (old, new) in ls_fix:
     str_to_fix = str_to_fix.replace(old, new)
@@ -261,6 +286,7 @@ df_ouv['Ville'] = df_ouv['Ville'].apply(\
 # DUPLICATES
 
 print u'\nNb duplicates:', len(df_ouv[df_ouv.duplicated()])
+df_ouv = df_ouv.drop_duplicates()
 
 # DISPLAY
 
@@ -269,3 +295,47 @@ print u'\nNb ouvetures Access:',\
                                                              case = False)])
 # df_ouv['Type Station'] = df_ouv['Type Station'].apply(lambda x: x.lower())
 print df_ouv.to_string()
+
+# ################
+# INSEE MATCHING
+# ################
+
+df_temp = df_fer
+
+path_dir_match_insee = os.path.join(path_data, u'data_insee', 'match_insee_codes')
+path_df_corr = os.path.join(path_dir_match_insee, 'df_corr_gas.csv')
+matching_insee = MatchingINSEE(path_df_corr)
+
+ls_matched = []
+for row_i, row in df_temp.iterrows():
+  match = matching_insee.match_city(row['Ville'], row['CP'][:-3], row['CP'])
+  ls_matched.append(match)
+
+dict_res = {}
+for i, match in enumerate(ls_matched):
+  dict_res.setdefault(match[1], []).append(i)
+
+print '\nINSEE Matching overview:'
+for k,v in dict_res.items():
+	print k, len(v)
+
+##df_ferm
+#print df_temp[ls_disp_ferm].iloc[dict_res['no_match']].to_string()
+# fixed manually
+
+df_ma_insee = pd.DataFrame([x[0][0] for x in ls_matched],
+                           index = df_temp.index,
+                           columns = ['i_city', 'i_zip', 'insee_code'])
+
+df_final = pd.merge(df_temp, df_ma_insee,
+                    left_index = True, right_index = True, how = 'left')
+
+df_final_access = df_final[(df_final['Type station'].str.contains('access')) |\
+                           (df_final['Type fermeture'].str.contains('access'))]
+
+pd.set_option('display.max_colwidth', 27)
+print df_final_access[ls_disp_ferm + ['i_city', 'insee_code']].to_string()
+
+# df_ouv:
+# on page breaks: lines merged though they should not (hence two communes)
+# todo: avoid merging and try to fill info when only city is available
