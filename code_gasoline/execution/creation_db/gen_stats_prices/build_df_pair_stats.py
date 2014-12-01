@@ -81,11 +81,9 @@ df_leader = df_comp_chges[(df_comp_chges['lead_both'] > 30) &\
 print df_comp_chges[ls_match_disp][0:100].to_string()
 print df_leader[ls_match_disp][0:10].to_string()
 
-# TODO: how many have no competitors based on distance / on this criteria
-# TODO: how many recursions: too big markets? have to refine? which are excluded?
-# TODO: draw map with links between stations within market
-# TODO: is pandas suitable for query: how many days do two stations chge prices together?
-# TODO: yes a priori but is it fast? (what about group?) Do I want to work on day indexes?
+# todo: how many have no competitors based on distance / on this criteria
+# todo: how many recursions: too big markets? have to refine? which are excluded?
+# todo: draw map with links between stations within market
 
 # Check followed prices changes (very sensitive)
 pair_id_1, pair_id_2 = '1500004', '1500006'
