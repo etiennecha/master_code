@@ -54,119 +54,131 @@ df_info.loc[(df_info['brand_1'] != 'TOTAL_ACCESS') &\
             'TA_chge'] = 1
 print u'Chge to Total Access:', df_info['TA_chge'].sum()
 
-# ##############################
-# TOTAL ACCESS WITHIN INSEE AREA
-# ##############################
-
-df_insee_areas = pd.read_csv(os.path.join(path_dir_insee_extracts,
-                                          'df_insee_areas.csv'),
-                             dtype = {'CODGEO' : str,
-                                      'AU2010': str,
-                                      'UU2010': str,
-                                      'BV' : str},
-                             encoding = 'utf-8')
-
-df_info = df_info.reset_index().merge(df_insee_areas[['CODGEO', 'AU2010', 'UU2010', 'BV']],
-                                      left_on = 'ci_1', right_on = 'CODGEO',
-                                      how = 'left').set_index('id_station')
-
-ls_areas = ['ci_1', 'AU2010', 'UU2010', 'BV']
-df_ta = df_info[ls_areas].copy()
-for area in ls_areas:
-  df_ta_area = df_info[[area, 'TA']].groupby(area).agg([sum])['TA']
-  #df_ta_area = df_info[[area, 'TA', 'TA_chge']].groupby(area).agg([sum])
-  #df_ta_area.columns = ['_'.join(col).strip() for col in df_ta_area.columns.values]
-  df_ta_area.rename(columns = {'sum': 'TA_%s' %area}, inplace = True)
-  df_ta = df_ta.reset_index().merge(df_ta_area,
-                                    left_on = area,
-                                    right_index = True,
-                                    how = 'left').set_index('id_station')
-  df_ta.drop(area, axis = 1, inplace = True)
-
-print '\nOverview of TAs within INSEE area', area
-
-# Check % of TA within area
-df_ta_area['Nb_%s' %area] = df_info[area].value_counts() # keep active only...
-df_ta_area['Pct_TA'] = df_ta_area['TA_%s' %area] / df_ta_area['Nb_%s' %area]
-df_ta_area.sort('Nb_%s' %area, ascending = False, inplace = True)
-
-pd.set_option('float_format', '{:,.2f}'.format)
-ls_dpt_ta_col_disp = ['Nb_%s' %area, 'TA_%s' %area, 'Pct_TA']
-
-print '\nNb of areas:', len(df_ta_area)
-nb_areas_no_TA = len(df_ta_area[df_ta_area['TA_%s' %area] == 0])
-print 'Nb of areas with 0 TA:', nb_areas_no_TA
-
-if nb_areas_no_TA > 10:
-  #print '\nAreas with TA:'
-  #print df_ta_area[ls_dpt_ta_col_disp][df_ta_area['TA_%s' %area] != 0].to_string()
-  print '\nTop 50 biggest areas in terms of general count:'
-  print df_ta_area[ls_dpt_ta_col_disp][0:50].to_string()
-else:
-  print '\nAll areas:'
-  print df_ta_area[ls_dpt_ta_col_disp].to_string()
-
-# Need ids of TAs within areas to find dates
-
 # ################################
-# TOTAL ACCESS WITHIN X KM RADIUS
+# DATE CONVERSION TOTAL ACCESS
 # ################################
 
-dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
-                                     'dict_ls_comp.json'))
-dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
-ls_ta_ids = list(df_info.index[df_info['TA'] == 1])
-ls_rows_ta_around = []
-for id_station in df_info.index:
-  ls_comp = dict_ls_comp.get(id_station, [])
-  row_ta_around = [(id_comp, dist) for id_comp, dist in ls_comp\
-                      if id_comp in ls_ta_ids]
-  ls_rows_ta_around.append([x for ls_x in row_ta_around[0:2] for x in ls_x])
-df_ta_around = pd.DataFrame(ls_rows_ta_around,
-                            columns = ['id_cl_ta_0', 'dist_cl_ta_0',
-                                       'id_cl_ta_1', 'dist_cl_ta_1'],
-                            index = df_info.index)
-df_ta = pd.merge(df_ta, df_ta_around,
-                 left_index = True, right_index = True, how = 'left')
+df_ta_dates = pd.read_csv(os.path.join(path_dir_built_csv,
+                                    'df_total_access_opening_dates.csv'),
+                          dtype = {'CP' : str,
+                                   'i_zip': str,
+                                   'insee_code' : str},
+                          parse_dates = [u'Date ouverture', u'Date fermeture'])
 
-# #####################################
-# POLICY PRICE CHANGE
-# #####################################
+# Matching
+df_info_ta = df_info[df_info['TA'] == 1].copy()
+for ci in df_info_ta['ci_ardt_1'].unique():
+  if len(df_info_ta[df_info_ta['ci_ardt_1'] == ci]) > 1:
+    print ci
 
+
+
+## ##############################
+## TOTAL ACCESS WITHIN INSEE AREA
+## ##############################
+#
+#df_insee_areas = pd.read_csv(os.path.join(path_dir_insee_extracts,
+#                                          'df_insee_areas.csv'),
+#                             dtype = {'CODGEO' : str,
+#                                      'AU2010': str,
+#                                      'UU2010': str,
+#                                      'BV' : str},
+#                             encoding = 'utf-8')
+#
+#df_info = df_info.reset_index().merge(df_insee_areas[['CODGEO', 'AU2010', 'UU2010', 'BV']],
+#                                      left_on = 'ci_1', right_on = 'CODGEO',
+#                                      how = 'left').set_index('id_station')
+#
+#ls_areas = ['ci_1', 'AU2010', 'UU2010', 'BV']
+#df_ta = df_info[ls_areas].copy()
+#for area in ls_areas:
+#  df_ta_area = df_info[[area, 'TA']].groupby(area).agg([sum])['TA']
+#  #df_ta_area = df_info[[area, 'TA', 'TA_chge']].groupby(area).agg([sum])
+#  #df_ta_area.columns = ['_'.join(col).strip() for col in df_ta_area.columns.values]
+#  df_ta_area.rename(columns = {'sum': 'TA_%s' %area}, inplace = True)
+#  df_ta = df_ta.reset_index().merge(df_ta_area,
+#                                    left_on = area,
+#                                    right_index = True,
+#                                    how = 'left').set_index('id_station')
+#  df_ta.drop(area, axis = 1, inplace = True)
+#
+#print '\nOverview of TAs within INSEE area', area
+#
+## Check % of TA within area
+#df_ta_area['Nb_%s' %area] = df_info[area].value_counts() # keep active only...
+#df_ta_area['Pct_TA'] = df_ta_area['TA_%s' %area] / df_ta_area['Nb_%s' %area]
+#df_ta_area.sort('Nb_%s' %area, ascending = False, inplace = True)
+#
+#pd.set_option('float_format', '{:,.2f}'.format)
+#ls_dpt_ta_col_disp = ['Nb_%s' %area, 'TA_%s' %area, 'Pct_TA']
+#
+#print '\nNb of areas:', len(df_ta_area)
+#nb_areas_no_TA = len(df_ta_area[df_ta_area['TA_%s' %area] == 0])
+#print 'Nb of areas with 0 TA:', nb_areas_no_TA
+#
+#if nb_areas_no_TA > 10:
+#  #print '\nAreas with TA:'
+#  #print df_ta_area[ls_dpt_ta_col_disp][df_ta_area['TA_%s' %area] != 0].to_string()
+#  print '\nTop 20 biggest areas in terms of general count:'
+#  print df_ta_area[ls_dpt_ta_col_disp][0:20].to_string()
+#else:
+#  print '\nAll areas:'
+#  print df_ta_area[ls_dpt_ta_col_disp].to_string()
+#
+## Need ids of TAs within areas to find dates
+#
+## ################################
+## TOTAL ACCESS WITHIN X KM RADIUS
+## ################################
+#
+#dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
+#                                     'dict_ls_comp.json'))
+#dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
+#ls_ta_ids = list(df_info.index[df_info['TA'] == 1])
+#ls_rows_ta_around = []
+#for id_station in df_info.index:
+#  ls_comp = dict_ls_comp.get(id_station, [])
+#  row_ta_around = [(id_comp, dist) for id_comp, dist in ls_comp\
+#                      if id_comp in ls_ta_ids]
+#  ls_rows_ta_around.append([x for ls_x in row_ta_around[0:2] for x in ls_x])
+#df_ta_around = pd.DataFrame(ls_rows_ta_around,
+#                            columns = ['id_cl_ta_0', 'dist_cl_ta_0',
+#                                       'id_cl_ta_1', 'dist_cl_ta_1'],
+#                            index = df_info.index)
+#df_ta = pd.merge(df_ta, df_ta_around,
+#                 left_index = True, right_index = True, how = 'left')
+#
+## #####################################
+## POLICY PRICE CHANGE
+## #####################################
+
+# LOAD DF PRICES
 df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
                         parse_dates = ['date'])
 df_prices.set_index('date', inplace = True)
 ls_keep_ids = [id_station for id_station in df_prices.columns if\
                 id_station in df_info.index]
 df_prices = df_prices[ls_keep_ids]
-
 se_mean_prices = df_prices.mean(1)
-df_diff = df_prices.apply(lambda x: x - se_mean_prices, axis = 0)
 
-# FIND BIG DIFFERENCE IN DIFF VS. NATIONAL PRICE (BEFORE TAX)
-# TODO: robustness checks around 0.04
+# LOAD DF MARGIN CHGE
+df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_margin_chge.csv'),
+                             encoding = 'utf-8',
+                             dtype = {'id_station' : str},
+                             parse_dates = ['date'])
+df_margin_chge.set_index('id_station', inplace = True)
+df_info['pp_chge'] = df_margin_chge['value']
+df_info['pp_chge_date'] = df_margin_chge['date']
 
-window_lim = 20
-ls_mean_diffs, ls_index = [], []
-for per_ind in range(window_lim, len(df_diff) - window_lim):
-  ls_index.append(df_diff.index[per_ind]) # todo better
-  mean_diff = df_diff.ix[:per_ind].mean(0) - df_diff[per_ind:].mean(0)
-  ls_mean_diffs.append(mean_diff)
-df_res = pd.concat(ls_mean_diffs, axis=1, keys =ls_index).T
-se_res_max = df_res.max(0)
-se_res_argmax = df_res.idxmax(0)
-print '\nNb of detected price policy chges', len(se_res_max[se_res_max.abs() > 0.04])
-
-df_ta['pp_chge'] = 0
-df_ta.loc[list(se_res_max.index[se_res_max.abs() > 0.04]), 'pp_chge'] = 1
-df_ta.loc[list(se_res_argmax.index[se_res_max.abs() > 0.04]), 'pp_chge_date'] = se_res_argmax
-
-# check chge in policy not TA
-df_info = pd.merge(df_info, df_ta,
-                   left_index = True, right_index = True, how = 'left')
-ls_disp = ['name', 'adr_city', 'adr_dpt', 'brand_0', 'brand_1', 'brand_2',
-           'pp_chge_date', 'id_cl_ta_0', 'dist_cl_ta_0']
-print df_info[ls_disp][(df_info['pp_chge'] == 1) & (df_info['TA'] != 1)].to_string()
+## check chge in policy not TA
+#df_info = pd.merge(df_info, df_ta,
+#                   left_index = True, right_index = True, how = 'left')
+#ls_disp = ['name', 'adr_city', 'adr_dpt', 'brand_0', 'brand_1', 'brand_2',
+#           'pp_chge_date', 'id_cl_ta_0', 'dist_cl_ta_0']
+#print '\nMargin chge not Total Access:'
+#print df_info[ls_disp][(df_info['pp_chge'].abs() >= 0.04) &\
+#                       (df_info['TA'] != 1)].to_string()
 
 ## Not TA => Gvt announces?
 #ax = df_prices[['93420001', '93420006']].plot()
@@ -175,13 +187,13 @@ print df_info[ls_disp][(df_info['pp_chge'] == 1) & (df_info['TA'] != 1)].to_stri
 #df_prices.mean(1).plot(ax = ax)
 #plt.show()
 
-# ###############
-# OUTPUT
-# ################
-
-df_ta.to_csv(os.path.join(path_dir_built_csv,
-                          'df_ta.csv'),
-                          encoding = 'utf-8')
+## ###############
+## OUTPUT
+## ################
+#
+#df_ta.to_csv(os.path.join(path_dir_built_csv,
+#                          'df_ta.csv'),
+#                          encoding = 'utf-8')
 
 ## ###############
 ## CHECK RESULTS

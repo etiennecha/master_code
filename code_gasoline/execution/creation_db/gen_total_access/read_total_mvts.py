@@ -10,6 +10,10 @@ import re
 import pandas as pd
 from matching_insee import *
 
+path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
+path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+
 def read_pdftotext(path_file, path_pdftotext):
   pdf_file = subprocess.Popen([os.path.join(path_pdftotext,
                                             'pdftotext.exe'),
@@ -25,7 +29,9 @@ path_dir_raw_stations = os.path.join(path_data,
                                      'data_raw',
                                      'data_stations')
 
-#path_pdf_total_mvts = os.path.join(path_dir_raw_stations, 'data_other', 'mvts_stations_services.pdf') 
+#path_pdf_total_mvts = os.path.join(path_dir_raw_stations,
+#                                   'data_other',
+#                                   'mvts_stations_services.pdf') 
 #str_pdf = read_pdftotext(path_pdf_total_mvts, path_dir)
 #ls_pdf = str_pdf.split('\r\n')
 
@@ -129,6 +135,21 @@ df_ouv = pd.DataFrame(ls_ls_final_2[1:], columns = ls_ls_final_2[0])
 # CHECK AND EXPLOIT DATA
 # #######################
 
+def adhoc_fix(ls_fix, str_to_fix):
+  for (old, new) in ls_fix:
+    str_to_fix = str_to_fix.replace(old, new)
+  return str_to_fix
+
+def adhoc_date_fix(some_date):
+  if re.match(u'^[0-9]{2}/[0-9]{2}/[0-9]{4}$', some_date):
+    pass
+  elif re.match(u'^[0-9]{2}/[0-9]{2}/[0-9]{2}$', some_date):
+    some_date = some_date[0:6] + '20' + some_date[6:]
+    print u'Fixed:', some_date
+  else:
+    some_date = None
+  return some_date
+
 # FERMETURES
 # ##########
 
@@ -168,11 +189,9 @@ ls_city_fix = [('JOUARS PONTCHARTRAI N', 'JOUARS PONTCHARTRAIN'),
                ('CHATILLON SUR BAGNEUX', 'CHATILLON'),
                ('MONTREUIL SUR MER', 'MONTREUIL'),
                ('ORLEANS LA SOURCE', 'LA SOURCE')] # ORLEANS
-def adhoc_fix(ls_fix, str_to_fix):
-  for (old, new) in ls_fix:
-    str_to_fix = str_to_fix.replace(old, new)
-  return str_to_fix
+
 df_fer['Ville'] = df_fer['Ville'].apply(lambda x: adhoc_fix(ls_city_fix, x))
+
 # remove cedex
 print '\nInspecting Cedex:'
 print df_fer[['Ville', 'CP']][df_fer['Ville'].str.contains('cedex',
@@ -186,15 +205,22 @@ df_fer.loc[(df_fer['CP'] == '92570') &\
 df_fer['Ville'] = df_fer['Ville'].apply(\
                     lambda x: re.sub(u'cedex', u'', x, flags = re.IGNORECASE).strip())
 
+# DATES
+
+print u'\nFix dates:'
+for date_field in [u'Date fermeture', u'Date ouverture']:
+  df_fer[date_field] = df_fer[date_field].apply(lambda x: adhoc_date_fix(x))
+
 # DUPLICATES
 
 print u'\nNb duplicates:', len(df_fer[df_fer.duplicated()])
 df_fer = df_fer.drop_duplicates()
 
+
 # DISPLAY
 
 pd.set_option('display.max_colwidth', 30)
-ls_disp_ferm =['Type station', 'Type fermeture', 'Date fermeture',
+ls_disp_fer =['Type station', 'Type fermeture', 'Date fermeture',
                'Date ouverture', 'Station', 'CP', 'Ville']
 
 #print df_fer[ls_disp_ferm].to_string()
@@ -206,19 +232,22 @@ df_fer['Type station'] = df_fer['Type station'].apply(lambda x: x.lower())
 df_fer['Type fermeture'] = df_fer['Type fermeture'].apply(\
                                lambda x: x.lower().replace(u'è', u'e'))
 
-df_ferm_access = df_fer[(df_fer['Type station'].str.contains('access')) |\
-                        (df_fer['Type fermeture'].str.contains('access'))]
+df_fer_access = df_fer[(df_fer['Type station'].str.contains('access')) |\
+                       (df_fer['Type fermeture'].str.contains('access'))].copy()
 
-df_ferm_noaccess = df_fer[(~df_fer['Type station'].str.contains('access')) &\
-                          (~df_fer['Type fermeture'].str.contains('access'))]
+df_fer_noaccess = df_fer[(~df_fer['Type station'].str.contains('access')) &\
+                         (~df_fer['Type fermeture'].str.contains('access'))].copy()
 
 ## Check no access
 #print df_ferm_noaccess[ls_disp_ferm].to_string()
 
-print '\nNb fermetures Access', len(df_ferm_access)
-print df_ferm_access[ls_disp_ferm].to_string()
+print '\nNb fermetures Access', len(df_fer_access)
+print df_fer_access[ls_disp_fer].to_string()
 
-# todo: extract (elsewhere), match insee, format date, match vs. gouv data
+# Remaining station duplicates
+dup_stations = df_fer_access['Station'][df_fer.duplicated('Station')].unique()
+df_fer_access.sort(['Station', 'Date ouverture'], inplace = True)
+print df_fer_access[df_fer_access['Station'].isin(dup_stations)][ls_disp_fer].to_string()
 
 # OUVERTURES
 # ##########
@@ -270,10 +299,7 @@ ls_city_fix = [('AIX-LES-BAIN S GOLFE JUAN', 'AIX-LES-BAINS GOLFE JUAN'), # migh
                ('PERPIGNAN CHAPELLE ARMENTIERE S', 'PERPIGNAN CHAPELLE ARMENTIERES'),
                ('VALENCIENN ES', 'VALENCIENNES'),
                ('CARCASSON NE', 'CARCASSONNE')]
-def adhoc_fix(ls_fix, str_to_fix):
-  for (old, new) in ls_fix:
-    str_to_fix = str_to_fix.replace(old, new)
-  return str_to_fix
+
 df_ouv['Ville'] = df_ouv['Ville'].apply(lambda x: adhoc_fix(ls_city_fix, x))
 # remove cedex
 print u'\nInspecting Cedex:'
@@ -288,11 +314,16 @@ df_ouv['Ville'] = df_ouv['Ville'].apply(\
 print u'\nNb duplicates:', len(df_ouv[df_ouv.duplicated()])
 df_ouv = df_ouv.drop_duplicates()
 
+# DATES
+
+print u'\nFix dates:'
+df_ouv['Date'] = df_ouv['Date'].apply(lambda x: adhoc_date_fix(x))
+
 # DISPLAY
 
 print u'\nNb ouvetures Access:',\
       len(df_ouv[df_ouv['Type Station'].str.contains('access',
-                                                             case = False)])
+                                                     case = False)])
 # df_ouv['Type Station'] = df_ouv['Type Station'].apply(lambda x: x.lower())
 print df_ouv.to_string()
 
@@ -334,7 +365,16 @@ df_final_access = df_final[(df_final['Type station'].str.contains('access')) |\
                            (df_final['Type fermeture'].str.contains('access'))]
 
 pd.set_option('display.max_colwidth', 27)
-print df_final_access[ls_disp_ferm + ['i_city', 'insee_code']].to_string()
+
+#print df_final_access[ls_disp_ferm + ['i_city', 'insee_code']].to_string()
+#
+#print df_final_access[ls_disp_ferm + ['i_city', 'insee_code']]\
+#        [df_final_access['Date ouverture'] == '13/12/2013'].to_string()
+
+df_final_access.to_csv(os.path.join(path_dir_built_csv,
+                                    'df_total_access_opening_dates.csv'),
+                       encoding = 'UTF-8',
+                       index = False)
 
 # df_ouv:
 # on page breaks: lines merged though they should not (hence two communes)
