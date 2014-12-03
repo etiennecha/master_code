@@ -328,11 +328,15 @@ ls_ouv_2 = [('10362', 'RELAIS SAINTE SAVINE', '04/06/2012', '10300004'),
             ('95280', 'RELAIS GOUSSAINVILLE A.SARRAUT', '21/04/2012', '95190001'),
             ('95680', 'RELAIS VILLIERS LE BEL LES ERABLES', '13/04/2012', '95400002')]
 
+ls_info_disp = ['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']
+
 dict_ta_dates = {}
 c = 0
+ls_ta_unique_matches = []
 for ci in df_info_ta['ci_ardt_1'].unique():
   if len(df_info_ta[df_info_ta['ci_ardt_1'] == ci]) == 1:
-    if len(df_ta_dates[df_ta_dates['insee_code'] == ci]) == 1:
+    # accept duplicates but assumes Station uniquely identifies
+    if len(df_ta_dates['Station'][df_ta_dates['insee_code'] == ci].unique()) == 1:
       print '-'*50
       print ci
       print '\n', df_info_ta[['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
@@ -341,9 +345,12 @@ for ci in df_info_ta['ci_ardt_1'].unique():
                     [df_ta_dates['insee_code'] == ci].T.to_string()
       c += 1
       id_gouv = df_info_ta[df_info_ta['ci_ardt_1'] == ci].index[0]
-      date = df_ta_dates[df_ta_dates['insee_code'] == ci]['Date ouverture'].iloc[0]
-      if not pd.isnull(date):
-        dict_ta_dates.setdefault(id_gouv, []).append(date)
+      for date in df_ta_dates[df_ta_dates['insee_code'] == ci]['Date ouverture'].values:
+        if not pd.isnull(date):
+          dict_ta_dates.setdefault(id_gouv, []).append(date)
+          ls_ta_unique_matches.append([ci, 
+                                       df_ta_dates[df_ta_dates['insee_code'] == ci]['Station'].iloc[0],
+                                       id_gouv])
 
 # One to one: wrong matchin Pierrefite sur seine
 
@@ -359,9 +366,39 @@ for ci, name_ta_ouv, str_date, id_gouv in ls_ouv + ls_ouv_2:
   if not pd.isnull(date):
     dict_ta_dates.setdefault(id_gouv, []).append(date)
 
-# todo: keep last (check which are dropped)... add those from ouv
-# todo: check those not matched in df_ta_dates and remaining in df_info
+# todo: about 50 TA in df_info_ta have not match... check
+print len(df_info_ta[~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))])
+df_info_ta['id_gouv'] = df_info_ta.index
+print df_info_ta[['ci_ardt_1', 'name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
+        [~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))].to_string()
+
+#print df_ta_dates[['Type station', 'Station', 'Adresse', 'Ville', 'insee_code']]\
+#        [df_ta_dates['Ville'].str.contains('Marseille', case = False)].to_string()
+
+ls_pbm = [('13215', 'RELAIS MISTRAL', '13015014'), # why not matched?
+
 # todo: how many have several dates?
+
+# todo: check those not matched in df_ta_dates and remaining in df_info
+df_lo = df_ta_dates.copy()
+for row in ls_fer + ls_fer_2 + ls_ta_unique_matches:
+  df_lo = df_lo[~((df_lo['insee_code'] == row[0]) & (df_lo['Station'] == row[1]))]
+
+# Generally: no TA yet in my data... hence enlarge period to include
+ls_lo_match = [('94060', 'LA QUEUE EN BRIE-EURO', '94510001'), # not TA in my data
+               ('30189', 'RELAIS KM DELTA', '30900009'), # not TA in my data
+               ('60159', 'RELAIS COMPIEGNE', '60200010'),
+               ('59034', 'NEW STATION', '59710004'), # still BP in my data
+               ('83123', 'RELAIS SANARY S/MER BEAUCOUR S', '83110001'),
+               ('37261', 'RELAIS SANITAS', '37000001'),
+               ('41295', 'RELAIS VINEUIL DENIS PAPIN 1', '41350004'), # unambiguous?
+               ('39300', 'RELAIS DU LEVANT', '39000006'),
+               ('14220', 'MENNETRIE R SCES AUTO SA/GGE RENAULT', '14800001'),
+               ('56148', 'RELAIS DE NOSTANG', '56690003'), # TA, not matched cuz highway?
+               ('59278', "RELAIS D'HALLENN ES", '59320002'),
+               ('72181', "RELAIS DU BOL D'OR", '72100007'),
+               ('17415', "RELAIS LA PALUE", '17100003'),
+               ('14514', 'RELAIS AMIRAL HAMELIN', '14130002')]
 
 ## ##############################
 ## TOTAL ACCESS WITHIN INSEE AREA
