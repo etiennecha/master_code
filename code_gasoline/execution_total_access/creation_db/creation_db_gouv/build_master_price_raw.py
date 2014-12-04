@@ -11,6 +11,7 @@ import time
 import copy
 import itertools
 import numpy as np
+from params import *
 
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
@@ -105,13 +106,13 @@ path_dir_source_prices = os.path.join(path_data,
 path_dir_built_json = os.path.join(path_data,
                                    'data_gasoline',
                                    'data_built',
-                                   'data_paper',
+                                   data_paper_folder,
                                    'data_json')
 
-#DIESEL MASTER 2011-2013
-#Current master: (2011,9,4) to (2012,5,14) (Can do : (2011,9,4) to (2013,6,4))
-start_date = date(2011,9,4)
-end_date = date(2013,6,4)
+start_date = date(*start_date)
+end_date = date(*end_date)
+
+#DIESEL MASTER
 path_in = os.path.join(path_dir_source_prices, 'diesel_standardized_tuple_lists')
 extension_in = r'_diesel'
 dict_var_types = {'id' : 0,
@@ -123,10 +124,11 @@ dict_var_types = {'id' : 0,
 master = build_master(start_date, end_date, path_in, extension_in, dict_var_types)
 enc_json(master, os.path.join(path_dir_built_json,
                               'master_price_diesel_raw.json'))
+print u'\nCreation of master_price_diesel_raw.json successful'
+print type(master)
+print u'Length:', len(master)
 
-# GAS MASTER 2011-2013
-start_date = date(2011,9,4)
-end_date = date(2013,6,4)
+# GAS MASTER
 path_in = os.path.join(path_dir_source_prices, 'gas_standardized_tuple_lists')
 extension_in = r'_gas'
 dict_var_types = {'id' : 0,
@@ -140,3 +142,6 @@ dict_var_types = {'id' : 0,
 master = build_master(start_date, end_date, path_in, extension_in, dict_var_types)
 enc_json(master, os.path.join(path_dir_built_json,
                               'master_price_gas_raw.json'))
+print u'\nCreation of master_price_gas_raw.json successful'
+print type(master)
+print u'Length:', len(master)

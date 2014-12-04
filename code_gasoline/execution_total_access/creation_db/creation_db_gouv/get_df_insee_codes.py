@@ -7,8 +7,13 @@ from generic_master_price import *
 from generic_master_info import *
 from matching_insee import *
 import pprint
+from params import *
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    data_paper_folder)
+
 path_dir_built_json = os.path.join(path_dir_built_paper, u'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
@@ -24,13 +29,29 @@ path_dir_insee_dpts_regions = os.path.join(path_data, u'data_insee', u'dpts_regi
 master_price = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel_fixed.json'))
 master_info = dec_json(os.path.join(path_dir_built_json, u'master_info_fixed.json'))
 
+# Fix detected problems (might need to comment out)
+master_info.pop('99999002', None) # drop it at build to avoid pbms
+master_info['76170004']['address'][5] = (u'autoroute a 29',
+                                         u'76210 bolleville')
+master_info['40410003']['address'][6] = (u'aire porte des landes est',
+                                         u'40410 saugnacq et muret')
+master_info['40410004']['address'][6] = (u'aire porte des landes ouest',
+                                         u'40410 saugnacq et muret')
+master_info['29140005']['address'][6] = None # got valid addresses before
+master_info['74600011']['address'][6] = (u'AUTOROUTE A41 NORD',
+                                         u'74600 SEYNOD') # to get insee match
+## Get rid or clean 4, 5, 6 if included
+#master_info['15400003']['address'][6] = (u'zone industrielle du sedour',
+#                                         u'15400 riom-\xc8s-montagnes')
+
 # Build master_addresses (addresses corrected for html pbms and somewhat stdized)
 dict_addresses = {indiv_id: [indiv_info['address'][i]\
-                               for i in (5, 3, 4, 0) if indiv_info['address'][i]]\
-                                 for (indiv_id, indiv_info) in master_info.items()}
+                               for i in (6, 5, 3, 4, 0)\
+                                 if (indiv_info['address'][i]) and\
+                                    (len(indiv_info['address'][i]) == 2)]\
+                    for (indiv_id, indiv_info) in master_info.items()}
+
 master_addresses = build_master_addresses(dict_addresses)
-master_addresses['15400003'] = [(u'zone industrielle du sedour', u'15400 riom-\xc8s-montagnes')]
-master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')]
 
 # Check zip from station address vs. zip from indiv_id (break if zip code not found in address)
 dict_describe_addresses = {}
@@ -53,10 +74,13 @@ for k, v in dict_describe_addresses.items():
 
 # LOAD INSEE CORRESPONDENCE AND RUN MATCHING
 
-df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
-                      dtype = str)
-ls_corr = [list(x) for x in df_corr.to_records(index = False)]
-ls_corr = format_correspondence(ls_corr)
+#df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
+#                      dtype = str)
+#ls_corr = [list(x) for x in df_corr.to_records(index = False)]
+#ls_corr = format_correspondence(ls_corr)
+
+path_df_corr = os.path.join(path_dir_match_insee, 'df_corr_gas.csv')
+matching_insee = MatchingINSEE(path_df_corr)
 
 # Match on master_info_raw
 # Caution match_res can contain several results
@@ -67,7 +91,8 @@ for indiv_id, ls_addresses in master_addresses.iteritems():
     zip_and_city = re.match('([0-9]{5,5}) (.*)', address[1])
     zip_code = zip_and_city.group(1)
     city = zip_and_city.group(2)
-    match_res = match_insee_code(ls_corr, city, zip_code[:-3], zip_code)
+    # match_res = match_insee_code(ls_corr, city, zip_code[:-3], zip_code)
+    match_res = matching_insee.match_city(city, zip_code[:-3], zip_code)
     ls_match_res.append(match_res)
   ls_ls_match_res.append(ls_match_res)
 

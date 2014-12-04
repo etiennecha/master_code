@@ -32,12 +32,15 @@ def build_master_addresses(dict_ls_addresses):
       # get rid of accents and returns list of [(street, score), (city, score)] then add scores
       dict_addresses_std = {}
       for address_corr in ls_addresses_corr:
-        tup_tup_address_std = map(str_corr_low_std_noacc, address_corr)
-        # tuple of standardized address for comparison
-        tup_address_std = (tup_tup_address_std[0][0], tup_tup_address_std[1][0])
-        # tuple of correct address and score (the higher the better here)
-        tup_address_cor = (address_corr, tup_tup_address_std[0][1] + tup_tup_address_std[1][1])
-        dict_addresses_std.setdefault(tup_address_std, []).append(tup_address_cor)
+        try:
+          tup_tup_address_std = map(str_corr_low_std_noacc, address_corr)
+          # tuple of standardized address for comparison
+          tup_address_std = (tup_tup_address_std[0][0], tup_tup_address_std[1][0])
+          # tuple of correct address and score (the higher the better here)
+          tup_address_cor = (address_corr, tup_tup_address_std[0][1] + tup_tup_address_std[1][1])
+          dict_addresses_std.setdefault(tup_address_std, []).append(tup_address_cor)
+        except:
+          print ls_addresses_corr
       master_addresses[indiv_id] = [sorted(v, key=lambda x: x[1], reverse=True)[0][0]\
                                       for k,v in dict_addresses_std.items()]
     else:

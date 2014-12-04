@@ -32,6 +32,7 @@ def format_str_city_insee(word):
   word = re.sub(ur"(^|\s)ste(s?)(\s|$|-)", ur" sainte\2 ", word)
   word = word.replace("'", " ")
   word = word.replace("-", " ")
+  word = re.sub(u'cedex', u'', word)
   word = ' '.join(word.split())
   return word.strip()
 

@@ -36,8 +36,9 @@ ls_series = ['diesel_price', 'diesel_date']
 # #################
 
 # Build master_addresses (addresses corrected for html pbms and somewhat stdized)
-dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0) if indiv_info['address'][i]]\
-                    for (indiv_id, indiv_info) in master_info.items()}
+dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0)\
+                               if indiv_info['address'][i]]\
+                                 for (indiv_id, indiv_info) in master_info.items()}
 master_addresses = build_master_addresses(dict_addresses)
 master_addresses['15400003'] = [(u'zone industrielle du sedour', u'15400 riom-\xc8s-montagnes')]
 master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')] # TODO: check/clean
