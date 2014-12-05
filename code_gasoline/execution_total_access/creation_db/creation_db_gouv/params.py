@@ -6,4 +6,4 @@ data_paper_folder = 'data_paper_total_access'
 
 # Define start and end dates of period covered (%Y, %m, %d)
 start_date = (2011, 9, 4)
-end_date = (2013, 6, 4)
+end_date = (2014, 12, 4)
