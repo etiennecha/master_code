@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import os, sys
 import httplib, urllib2
 import urllib
@@ -7,16 +10,7 @@ import re
 from datetime import date
 import json
 
-# path_data: data folder at different locations at CREST vs. HOME
-# could do the same for path_code if necessary (import etc).
-if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
-  path_data = r'W:\Bureau\Etienne_work\Data'
-else:
-  path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
-# structure of the data folder should be the same
-folder_source_coordinates = r'\data_gasoline\data_source\data_stations\data_gouv_gps\raw'
-
-def enc_stock_json(database, chemin):
+def enc_json(database, chemin):
  with open(chemin, 'w') as fichier:
   json.dump(database, fichier)
 
@@ -29,14 +23,16 @@ def get_coordinates(fuel_type):
   list_coordinates = []
   cookie_jar = cookielib.LWPCookieJar()
   opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
-  opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11')]
+  opener.addheaders = [(u'User-agent', u'Mozilla/5.0 (Windows NT 6.1; WOW64)' + 
+                                       u'AppleWebKit/537.11 (KHTML, like Gecko)' +\
+                                       u'Chrome/23.0.1271.64 Safari/537.11')]
   urllib2.install_opener(opener)
-  # welcome page: get token
   website_url = 'http://www.prix-carburants.economie.gouv.fr'
   response = urllib2.urlopen(website_url)
   data = response.read()
   soup = BeautifulSoup(data)
-  token = soup.find('input', {'type' : 'hidden', 'id':'recherche_recherchertype__token'})['value']
+  token = soup.find('input', {'type' : 'hidden',
+                              'id':'recherche_recherchertype__token'})['value']
   print 'token is', token
   for i in range(1, 96):
     # query with token
@@ -57,9 +53,23 @@ def get_coordinates(fuel_type):
     list_coordinates += dpt_coordinates_list
   return list_coordinates
 
-list_diesel = get_coordinates('1')
-list_essence =  get_coordinates('a')
+if __name__ == '__main__':
 
-today_date = date.today().strftime("%y%m%d")
-# enc_stock_json(list_essence, path_data + folder_source_coordinates + r'\20%s_list_coordinates_essence' %today_date)
-# enc_stock_json(list_diesel, path_data + folder_source_coordinates + r'\20%s_list_coordinates_diesel' %today_date)
+  # path_data: default to CREST location, else try home location
+  path_data = os.path.join(u'W:\\', u'Bureau', u'Etienne_work', u'Data')
+  if not os.path.exists(path_data):
+    path_data = os.path.join(u'C:\\', u'Users', u'etna', u'Desktop',
+                             u'Etienne_work', u'Data')
+  
+  path_raw_coordinates = os.path.join(path_data,
+                                      u'data_gasoline',
+                                      u'data_source',
+                                      u'data_prices')
+  
+  ls_diesel = get_coordinates('1')
+  ls_essence =  get_coordinates('a')
+  today_date = date.today().strftime("%y%m%d")
+  enc_json(ls_essence, os.path.join(path_raw_coordinates,
+                                    u'20%s_list_coordinates_essence' %today_date))
+  enc_json(ls_diesel, os.path.join(path_raw_coordinates,
+                                   u'20%s_list_coordinates_diesel' %today_date))

@@ -4,6 +4,7 @@
 import json
 import os, sys, codecs
 import re
+import add_to_path
 from functions_string import *
 
 def dec_json(chemin):
@@ -161,14 +162,17 @@ def format_gouv_stations_201300(dict_dict_stations_raw):
   gps not included
   """
   dict_dict_stations_std = {}
-  for id, dict_station in dict_dict_stations_raw.iteritems():
+  for id_gouv, dict_station in dict_dict_stations_raw.iteritems():
     # Std opening hours and closed days
     hours = None
     if dict_station['hours']:
       hours = dict_station['hours'][1]
     closed_days = None
     if dict_station['closed_days']:
-      closed_days = dict_station['closed_days'][1]
+      if len(dict_station['closed_days']) == 2:
+        closed_days = dict_station['closed_days'][1]
+      else:
+        print id_gouv, dict_station['closed_days']
     # Std address
     tuple_address = ()
     if dict_station['address']:
@@ -178,7 +182,7 @@ def format_gouv_stations_201300(dict_dict_stations_raw):
                         'hours' : hours,
                         'closed_days' : closed_days,
                         'address' : tuple_address}
-    dict_dict_stations_std[id] = dict_station_std
+    dict_dict_stations_std[id_gouv] = dict_station_std
   return dict_dict_stations_std
 
 def build_master_info(master_by_period, list_field_keys):
@@ -211,46 +215,60 @@ def get_dict_stat(list_items):
       dict_stats[item] = 1
   return dict_stats
 
-# path_data: data folder at different locations at CREST vs. HOME
-# could do the same for path_code if necessary (import etc).
-if os.path.exists(r'W:\Bureau\Etienne_work\Data'):
-  path_data = r'W:\Bureau\Etienne_work\Data'
-else:
-  path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
-# structure of the data folder should be the same
-folder_built_info_stations = r'\data_gasoline\data_built\data_json_gasoline\master_diesel'
-folder_source_brands = r'\data_gasoline\data_source\data_stations\data_brands'
+if __name__=="__main__":
+  
+  # path_data: default to CREST location, else try home location
+  path_data = os.path.join(u'W:\\', u'Bureau', u'Etienne_work', u'Data')
+  if not os.path.exists(path_data):
+    path_data = os.path.join(u'C:\\', u'Users', u'etna', u'Desktop',
+                             u'Etienne_work', u'Data')
 
-folder_source_gouv_stations_raw = r'\data_gasoline\data_source\data_stations\data_gouv_stations\raw'
-folder_source_gouv_stations_std = r'\data_gasoline\data_source\data_stations\data_gouv_stations\std'
+  path_dir_raw_gouv_stations = os.path.join(path_data,
+                                            'data_gasoline',
+                                            'data_raw',
+                                            'data_stations',
+                                            'data_gouv_stations')
 
-list_format_functions = [format_gouv_stations_201111,
+  path_dir_source_gouv_stations = os.path.join(path_data,
+                                               'data_gasoline',
+                                               'data_source',
+                                               'data_stations',
+                                               'data_gouv_stations')
+
+  ls_format_functions = [format_gouv_stations_201111,
                          format_gouv_stations_201200,
                          format_gouv_stations_201203,
                          format_gouv_stations_201209,
                          format_gouv_stations_201300,
+                         format_gouv_stations_201300,
+                         format_gouv_stations_201300,
                          format_gouv_stations_201300]
+  
+  ls_file_names = [u'20111121_gouv_stations',
+                   u'20120000_gouv_stations',
+                   u'20120314_gouv_stations',
+                   u'20120902_gouv_stations',
+                   u'20130220_gouv_stations',
+                   u'20130707_gouv_stations',
+                   u'20131115_gouv_stations',
+                   u'20140128_gouv_stations']
+  
+  # TODO: create new formatting function for 20131115 and 20140128
+  # T0D0: collect highway data (or check if available...)
+  
+  ls_path_files_raw = [os.path.join(path_dir_raw_gouv_stations,
+                                    file_name) for file_name in ls_file_names]
+  ls_path_files_source = [os.path.join(path_dir_source_gouv_stations,
+                                       file_name) for file_name in ls_file_names]
 
-files_source_data = [r'\20111121_gouv_stations',
-                     r'\20120000_gouv_stations',
-                     r'\20120314_gouv_stations',
-                     r'\20120902_gouv_stations',
-                     r'\20130220_gouv_stations',
-                     r'\20130707_gouv_stations']
-
-list_paths_raw = [path_data + folder_source_gouv_stations_raw + file for file in files_source_data]
-list_paths_std = [path_data + folder_source_gouv_stations_std + file for file in files_source_data]
-
-list_to_iterate = zip(list_paths_raw, list_format_functions, list_paths_std)
-
-if __name__=="__main__":
-  master_raw_files = []
-  master_std_files = []
-  for (path_in, format_function, path_out) in list_to_iterate:
+  ls_for_loop = zip(ls_path_files_raw, ls_format_functions, ls_path_files_source)
+  ls_raw_files, ls_std_files = [], []
+  for (path_in, format_function, path_out) in ls_for_loop:
+    print 'Reading and formatting:', path_in
     raw_file = dec_json(path_in)
     std_file = format_function(raw_file)
-    master_raw_files.append(raw_file)
-    master_std_files.append(std_file)
+    ls_raw_files.append(raw_file)
+    ls_std_files.append(std_file)
     enc_json(std_file, path_out)
   
   # BUILD master_info AND EXPLORE ADDRESSES (FIELDS)
@@ -264,9 +282,9 @@ if __name__=="__main__":
                     'gps', 
                     'gas_types']
   
-  master_info = build_master_info(master_std_files, list_info_keys)
-  master_price = dec_json(path_data + folder_built_info_stations +\
-                            r'\master_price_diesel')
+  master_info = build_master_info(ls_std_files, list_info_keys)
+  #master_price = dec_json(path_data + folder_built_info_stations +\
+  #                          r'\master_price_diesel')
   
   # 3d raw address: starts with station name hence dropped
   # 3d raw address: lower case, structure: Name / Brand(old) / Street / Zip and City
