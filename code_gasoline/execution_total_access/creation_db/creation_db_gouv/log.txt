@@ -1,4 +1,4 @@
-
+﻿
 Creation of master_info_raw.json (and _fixed.json) successful
 <type 'dict'>
 Length: 10571
