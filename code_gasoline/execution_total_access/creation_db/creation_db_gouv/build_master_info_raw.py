@@ -49,7 +49,9 @@ ls_file_names = ['20111121_gouv_stations.json',
                  '20120902_gouv_stations.json',
                  '20130220_gouv_stations.json',
                  '20130707_gouv_stations.json',
-                 '20131115_gouv_stations.json']
+                 '20131115_gouv_stations.json',
+                 '20140128_gouv_stations.json',
+                 '20141206_gouv_stations.json']
 
 list_info_keys = ['name',
                   'address', 

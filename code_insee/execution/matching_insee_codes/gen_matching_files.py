@@ -37,7 +37,7 @@ ls_corr_gas = open(os.path.join(path_dir_match_insee,
                                 'backup',
                                 'corr_cinsee_cpostal_gas_patch'),
                    'r').read().split('\n')
-ls_corr_gas = [row.split(';') for row in ls_corr_gas]
+ls_corr_gas = [row.split(';') for row in ls_corr_gas[1:]]
 
 # ################
 # BUILD DFS
@@ -51,7 +51,7 @@ for df_temp in [df_corr, df_corr_gas]:
   for field in ['code_insee', 'code_postal']:
     df_temp[field] = df_temp[field].apply(lambda x: x.rjust(5, '0'))
 
-# TODO: think of (manual) update process
+# todo: think of (manual) update process
 ls_csv_output = [(df_corr, 'df_corr.csv', 0),
                  (df_corr, 'df_corr_quotes.csv', 1),
                  (df_corr_gas, 'df_corr_gas.csv', 0),

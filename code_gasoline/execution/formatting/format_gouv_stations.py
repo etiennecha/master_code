@@ -1,11 +1,12 @@
 ﻿#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import json
-import os, sys, codecs
-import re
 import add_to_path
+import os, sys
+import json
+import re
 from functions_string import *
+import pprint
 
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
@@ -176,7 +177,17 @@ def format_gouv_stations_201300(dict_dict_stations_raw):
     # Std address
     tuple_address = ()
     if dict_station['address']:
-      tuple_address = (dict_station['address'][0], dict_station['address'][1])
+      if len(dict_station['address']) == 2:
+        tuple_address = (dict_station['address'][0], dict_station['address'][1])
+      elif len(dict_station['address']) == 1:
+        if re.match(u'[0-9]{4,5}', dict_station['address'][0]):
+          tuple_address = (u'', dict_station['address'][0])
+        else:
+          tuple_address = None
+        print u'Len address 1:', id_gouv, dict_station['address'], tuple_address
+      else:
+        tuple_address = None
+        print u'Len address > 2:', id_gouv, dict_station['address']
     dict_station_std = {'name' : dict_station['name'],
                         'services': dict_station['services'],
                         'hours' : hours,
@@ -242,16 +253,18 @@ if __name__=="__main__":
                          format_gouv_stations_201300,
                          format_gouv_stations_201300,
                          format_gouv_stations_201300,
+                         format_gouv_stations_201300,
                          format_gouv_stations_201300]
   
-  ls_file_names = [u'20111121_gouv_stations',
-                   u'20120000_gouv_stations',
-                   u'20120314_gouv_stations',
-                   u'20120902_gouv_stations',
-                   u'20130220_gouv_stations',
-                   u'20130707_gouv_stations',
-                   u'20131115_gouv_stations',
-                   u'20140128_gouv_stations']
+  ls_file_names = [u'20111121_gouv_stations.json',
+                   u'20120000_gouv_stations.json',
+                   u'20120314_gouv_stations.json',
+                   u'20120902_gouv_stations.json',
+                   u'20130220_gouv_stations.json',
+                   u'20130707_gouv_stations.json',
+                   u'20131115_gouv_stations.json',
+                   u'20140128_gouv_stations.json',
+                   u'20141206_gouv_stations.json']
   
   # TODO: create new formatting function for 20131115 and 20140128
   # T0D0: collect highway data (or check if available...)
@@ -273,126 +286,127 @@ if __name__=="__main__":
   
   # BUILD master_info AND EXPLORE ADDRESSES (FIELDS)
   
-  list_info_keys = ['name',
-                    'address', 
-                    'services', 
-                    'hours', 
-                    'closed_days', 
-                    'highway', 
-                    'gps', 
-                    'gas_types']
+  ls_info_keys = ['name',
+                  'address', 
+                  'services', 
+                  'hours', 
+                  'closed_days', 
+                  'highway', 
+                  'gps', 
+                  'gas_types']
   
-  master_info = build_master_info(ls_std_files, list_info_keys)
-  #master_price = dec_json(path_data + folder_built_info_stations +\
-  #                          r'\master_price_diesel')
+  master_info = build_master_info(ls_std_files, ls_info_keys)
   
   # 3d raw address: starts with station name hence dropped
   # 3d raw address: lower case, structure: Name / Brand(old) / Street / Zip and City
   # 4th raw address: upper case, structure: Street / Zip and City
   
-  # match zip/citylist_zip_codes_4 = []
-  """
-  zip_and_city = re.match('([0-9]{5,5}) (.*)', station['address'][1])
-  if zip_and_city:
-    zip_code = zip_and_city.group(1)        
-    city = zip_and_city.group(2)
-  """
-
-  # Check that taking 0, 3, 4, 5 fields allows to cover (virtually) all stations
+  # Check that taking subset of periods allows to cover (virtually) all stations
+  print u'\nStation addresses not covered by chosen subset of periods:'
+  ls_period_subset = [0, 3, 4, 5, 6, 7, 8]
   for id, station in master_info.iteritems():
-    if all(not station['address'][i] for i in (0,3,4,5)):
+    if all(not station['address'][i] for i in ls_period_subset):
       print id, 'address info', master_info[id]['address']
 
-  # Check that addresses do not change much between periods
-  list_several_streets = []
-  list_several_cities = []
-  for id, station in master_info.iteritems():
-    list_station_streets_std = []
-    list_stations_cities_std = []
-    for i in (0, 3, 4, 5):
+  # Check that addresses do not change much between periods (with simple corrections)
+  ls_multi_streets = []
+  ls_multi_cities = []
+  for id_gouv, station in master_info.items():
+    ls_std_streets = []
+    ls_std_cities = []
+    for i in ls_period_subset:
       if station['address'][i]:
-        street_std = str_corr_low_std_noacc(station['address'][i][0], False)
-        if street_std not in list_station_streets_std:
-          list_station_streets_std.append(street_std)
-        city_std = str_corr_low_std_noacc(station['address'][i][1], False)
-        if city_std not in list_stations_cities_std:
-          list_stations_cities_std.append(city_std)
-    if len(list_station_streets_std) > 1:
-      list_several_streets.append((id, list_station_streets_std))
-    if len(list_stations_cities_std) > 1:
-      list_several_cities.append((id, list_stations_cities_std))
+        std_street = str_corr_low_std_noacc(station['address'][i][0], False)
+        if std_street not in ls_std_streets:
+          ls_std_streets.append(std_street)
+        std_city = str_corr_low_std_noacc(station['address'][i][1], False)
+        if std_city not in ls_std_cities:
+          ls_std_cities.append(std_city)
+    if len(ls_std_streets) > 1:
+      ls_multi_streets.append((id_gouv, ls_std_streets))
+    if len(ls_std_cities) > 1:
+      ls_multi_cities.append((id_gouv, ls_std_cities))
 
-  # Aggregation into a new master (here: corrected, not standardized)
-  master_address_test = {}
-  for id, station in master_info.iteritems():
-    list_station_addresses = []
-    for period_index in (5, 3, 4, 0):
+  # Aggregation of corrected addresses (light fix, not standardization)
+  dict_cor_addresses_test = {}
+  for id_gouv, station in master_info.items():
+    ls_addresses = []
+    for period_index in ls_period_subset[::-1]:
       if station['address'][period_index]:
         cor_address = tuple(map(str_corr_low_std, station['address'][period_index]))
-        if cor_address not in list_station_addresses:
-          list_station_addresses.append(cor_address)
-    master_address_test[id] = list_station_addresses
+        if cor_address not in ls_addresses:
+          ls_addresses.append(cor_address)
+    dict_cor_addresses_test[id_gouv] = ls_addresses
 
   # Compare standardized and keep the best if duplicated
-  # (i.e. this which needed more standardization)
-  # TODO: Remains to check if difference is not merely the presence of street number
-  # (order by length as approx?)
-  # TODO: use levenshtein stat to evaluate interest of keeping several addresses...
-  temp_multiple_addresses = []
-  master_addresses_final = {}
-  for id, list_station_addresses in master_address_test.iteritems():
-    if len(list_station_addresses) > 1:
-      list_unique_addresses = []
-      list_unique_score = []
-      list_positions_to_keep = []
-      list_std_station_adresses = [map(str_corr_low_std_noacc, address) for address\
-                                    in list_station_addresses]
-      list_std_station_adresses = [((stre[0], city[0]), stre[1] + city[1]) for stre, city\
-                                    in list_std_station_adresses]
-      for ind, (address, score) in enumerate(list_std_station_adresses):
-        if address[0] not in list_unique_addresses:
-          list_unique_addresses.append(address[0])
-          list_unique_score.append(score)
-          list_positions_to_keep.append(ind)
+  # (here: this which needed more standardization)
+  # Could check if difference is not merely the presence of street number
+  # Coul use levenshtein stat to evaluate interest of keeping several addresses
+  dict_addresses = {}
+  for id_gouv, ls_addresses in dict_cor_addresses_test.iteritems():
+    if len(ls_addresses) > 1:
+      ls_unique_addresses = []
+      ls_unique_score = []
+      ls_positions_to_keep = []
+      ls_std_adresses = [map(str_corr_low_std_noacc, address) for address\
+                           in ls_addresses]
+      ls_std_adresses = [((stre[0], city[0]), stre[1] + city[1]) for stre, city\
+                           in ls_std_adresses]
+      for ind, (address, score) in enumerate(ls_std_adresses):
+        if address[0] not in ls_unique_addresses:
+          ls_unique_addresses.append(address[0])
+          ls_unique_score.append(score)
+          ls_positions_to_keep.append(ind)
         else:
-          ind_other = list_unique_addresses.index(list_unique_addresses[0])
-          score_other = list_unique_score[ind_other]
+          ind_other = ls_unique_addresses.index(ls_unique_addresses[0])
+          score_other = ls_unique_score[ind_other]
           if score > score_other:
-            list_unique_score[ind_other] = score
-            list_positions_to_keep[ind_other] = ind
-      temp_multiple_addresses.append((id, list_positions_to_keep))
-      final_list_station_addresses = [list_station_addresses[i] for i in list_positions_to_keep]
+            ls_unique_score[ind_other] = score
+            ls_positions_to_keep[ind_other] = ind
+      ls_addresses_to_keep = [ls_addresses[i] for i in ls_positions_to_keep]
     else:
-      final_list_station_addresses = list_station_addresses
-    master_addresses_final[id] = final_list_station_addresses
-  
-  """
-  # Control:
-  for id_sta, list_indices in temp_multiple_addresses:
-    print id_sta, list_indices
-    print master_address_test[id_sta], '\n'
-  """
+      ls_addresses_to_keep = ls_addresses
+    dict_addresses[id_gouv] = ls_addresses_to_keep
 
+  # Stats des
+  dict_adr_stats = {}
+  for id_gouv, ls_addresses in dict_addresses.items():
+    dict_adr_stats.setdefault(len(ls_addresses), []).append(id_gouv)
+  
+  print u'\nNb of stations by nb of addresses:'
+  for k, v in dict_adr_stats.items():
+    print k, len(v)
+  
+  print '\nInspect: 3 stdized addresses'
+  for id_gouv in dict_adr_stats[3]:
+    print u'\n', id_gouv
+    pprint.pprint(master_info[id_gouv]['address'])
+  
+  #print '\nInspect: 2 stdized addresses'
+  #for id_gouv in dict_adr_stats[2]:
+  #  print u'\n', id_gouv
+  #  pprint.pprint(master_info[id_gouv]['address'])
+  
   # Build dict_zip
-  dict_zip_master = {}
-  for id, list_addresses in master_addresses_final.iteritems():
-    if list_addresses:
-      list_id_streets = [id]
-      for address in list_addresses:
+  dict_zip_codes = {}
+  for id_gouv, ls_addresses in dict_addresses.items():
+    if ls_addresses:
+      ls_id_streets = [id_gouv]
+      for address in ls_addresses:
         zip_and_city = re.match('([0-9]{5,5}) (.*)', address[1])
-        zip = zip_and_city.group(1)
-        list_id_streets.append(address[0])
-      dict_zip_master.setdefault(zip, []).append(list_id_streets)
+        zip_code = zip_and_city.group(1)
+        ls_id_streets.append(address[0])
+      dict_zip_codes.setdefault(zip_code, []).append(ls_id_streets)
 
   # Build dict_dpt_city
-  dict_dpt_master = {}
-  for id, list_addresses in master_addresses_final.iteritems():
-    if list_addresses:
-      list_id_streets = [id]
-      for address in list_addresses:
+  dict_dpt_codes = {}
+  for id_gouv, ls_addresses in dict_addresses.items():
+    if ls_addresses:
+      ls_id_streets = [id]
+      for address in ls_addresses:
         zip_and_city = re.match('([0-9]{5,5}) (.*)', address[1])
-        zip = zip_and_city.group(1)
-        dpt = zip_and_city.group(1)[:2]
+        zip_code = zip_and_city.group(1)
+        dpt_code = zip_and_city.group(1)[:2]
         city = zip_and_city.group(2)
-        list_id_streets.append((zip, city, address[0]))
-      dict_dpt_master.setdefault(dpt, []).append(list_id_streets)
+        ls_id_streets.append((zip_code, city, address[0]))
+      dict_dpt_codes.setdefault(dpt_code, []).append(ls_id_streets)
