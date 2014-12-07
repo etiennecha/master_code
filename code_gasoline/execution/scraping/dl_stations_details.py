@@ -84,11 +84,11 @@ if __name__ == '__main__':
   # loop and scrap
   dict_stations = {}
   ls_field_keys = ['name', 'address', 'hours', 'closed_days', 'services']
-  for id_gouv in ls_ids[0:2]:
+  for id_gouv in ls_ids:
     try:
       dict_stations[id_gouv] = dict(zip(ls_field_keys,
                                         get_station_info(id_gouv)))
     except:
       print 'couldnt get info for', id_gouv
   
-  # enc_json(dict_stations, os.path.join(path_raw_info_stations, u'20141205_gouv_stations')
+  # enc_json(dict_stations, os.path.join(path_raw_info_stations, u'20141206_gouv_stations'))

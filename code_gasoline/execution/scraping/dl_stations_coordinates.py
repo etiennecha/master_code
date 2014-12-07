@@ -20,11 +20,11 @@ def get_coordinates(fuel_type):
   
   @param fuel_type  leaded (diesel) = 1, unleaded (essence) = 'a'
   """
-  list_coordinates = []
+  ls_coordinates = []
   cookie_jar = cookielib.LWPCookieJar()
   opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie_jar))
-  opener.addheaders = [(u'User-agent', u'Mozilla/5.0 (Windows NT 6.1; WOW64)' + 
-                                       u'AppleWebKit/537.11 (KHTML, like Gecko)' +\
+  opener.addheaders = [(u'User-agent', u'Mozilla/5.0 (Windows NT 6.1; WOW64) ' + 
+                                       u'AppleWebKit/537.11 (KHTML, like Gecko) ' +\
                                        u'Chrome/23.0.1271.64 Safari/537.11')]
   urllib2.install_opener(opener)
   website_url = 'http://www.prix-carburants.economie.gouv.fr'
@@ -48,10 +48,15 @@ def get_coordinates(fuel_type):
     response_3 = urllib2.urlopen(recherche_url)
     data_3 = response_3.read()
     soup_3 = BeautifulSoup(data_3)
-    dpt_coordinates_bloc = soup_3.find('div', {'id' : 'mc_pdv'})
-    dpt_coordinates_list = dpt_coordinates_bloc.string.split(',')
-    list_coordinates += dpt_coordinates_list
-  return list_coordinates
+    dpt_coordinates_bloc = soup_3.find('div', {'id' : 'pagecarto'})
+    ls_dpt_coordinate_blocs = dpt_coordinates_bloc.findAll('span', {'class' : 'infoPdv',
+                                                                    'data-id' : True,
+                                                                    'data-lon' : True,
+                                                                    'data-lat' : True})
+    ls_dpt_coordinates = [(x['data-id'], x['data-lon'], x['data-lat'])\
+                            for x in ls_dpt_coordinate_blocs]
+    ls_coordinates += ls_dpt_coordinates
+  return ls_coordinates
 
 if __name__ == '__main__':
 
@@ -63,8 +68,9 @@ if __name__ == '__main__':
   
   path_raw_coordinates = os.path.join(path_data,
                                       u'data_gasoline',
-                                      u'data_source',
-                                      u'data_prices')
+                                      u'data_raw',
+                                      u'data_stations',
+                                      u'data_gouv_gps')
   
   ls_diesel = get_coordinates('1')
   ls_essence =  get_coordinates('a')
