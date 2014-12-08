@@ -76,6 +76,6 @@ if __name__ == '__main__':
   ls_essence =  get_coordinates('a')
   today_date = date.today().strftime("%y%m%d")
   enc_json(ls_essence, os.path.join(path_raw_coordinates,
-                                    u'20%s_list_coordinates_essence' %today_date))
+                                    u'20%s_ls_gps_essence.json' %today_date))
   enc_json(ls_diesel, os.path.join(path_raw_coordinates,
-                                   u'20%s_list_coordinates_diesel' %today_date))
+                                   u'20%s_ls_gps_diesel.json' %today_date))

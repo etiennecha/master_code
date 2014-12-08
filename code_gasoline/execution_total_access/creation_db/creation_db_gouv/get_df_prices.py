@@ -27,7 +27,7 @@ path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
 master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
 
-dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
+# dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
 
 # todo: Work with master_price_raw or master_price ?
 # todo: probably need intermediate stage (before duplicate reconciliation)

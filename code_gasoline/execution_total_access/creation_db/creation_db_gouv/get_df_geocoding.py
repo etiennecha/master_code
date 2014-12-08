@@ -22,7 +22,7 @@ path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 #master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
 #master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_raw.json'))
 
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
+#master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
 master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
 
 #  Build master_addresses (addresses corrected for html pbms and somewhat stdized)
@@ -58,27 +58,27 @@ print 'Nb ids w/ missing addresses in master_geocoding:', len(ls_miss_adr_ids)
 # todo: may want to use standardized string comparison
 # e.g. master_addresses['58640003']
 
-## UPDATE GEOCODING
-#over_query = False
-#c = 0
-#for indiv_id, geo_info in master_geocoding.items():
-#  for i, address in enumerate(geo_info[0]):
-#    # (geo_info[1][i]['status'] == 'ZERO_RESULTS') or\
-#    if (not geo_info[1][i]) or\
-#       ((geo_info[1][i]['status'] == 'OK') and\
-#        (geo_info[1][i]['results'][0]['geometry']['location_type'] == 'APPROXIMATE')):
-#      info_geocoding = geocode_via_google(','.join(address))
-#      c += 1
-#      if info_geocoding['status'] == u'OVER_QUERY_LIMIT':
-#        over_query = True
-#        print 'Query quota used'
-#        break
-#      else:
-#        master_geocoding[indiv_id][1][i] = info_geocoding
-#        time.sleep(0.15)
-#  if over_query:
-#    break
-#print c, 'queries performed (should be < 2500)'
+# UPDATE GEOCODING
+over_query = False
+c = 0
+for indiv_id, geo_info in master_geocoding.items():
+  for i, address in enumerate(geo_info[0]):
+    # (geo_info[1][i]['status'] == 'ZERO_RESULTS') or\
+    if (not geo_info[1][i]) or\
+       ((geo_info[1][i]['status'] == 'OK') and\
+        (geo_info[1][i]['results'][0]['geometry']['location_type'] == 'APPROXIMATE')):
+      info_geocoding = geocode_via_google(','.join(address))
+      c += 1
+      if info_geocoding['status'] == u'OVER_QUERY_LIMIT':
+        over_query = True
+        print 'Query quota used'
+        break
+      else:
+        master_geocoding[indiv_id][1][i] = info_geocoding
+        time.sleep(0.15)
+  if over_query:
+    break
+print c, 'queries performed (should be < 2500)'
 
 # CHECK GEOCODING RESULTS
 dict_results_geocoding, ls_geocoded_but_weird, ls_not_geocoded =\

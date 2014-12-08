@@ -23,15 +23,18 @@ path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 # LOAD GAS STATION DATA
 # ######################
 
-#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-#master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_raw.json'))
+#master_price_raw = dec_json(os.path.join(path_dir_built_json,
+#                                         'master_price_diesel_raw.json'))
+#master_info_raw = dec_json(os.path.join(path_dir_built_json,
+#                                        'master_info_raw.json'))
+master_price = dec_json(os.path.join(path_dir_built_json,
+                                     'master_price_diesel_fixed.json'))
+master_info = dec_json(os.path.join(path_dir_built_json,
+                                    'master_info_fixed.json'))
 
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
-dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
-
-# todo: Work with master_price_raw or master_price ?
-# todo: probably need intermediate stage (before duplicate reconciliation)
+dict_brands = dec_json(os.path.join(path_dir_source,
+                                    'data_other',
+                                    'dict_brands.json'))
 
 # ##################
 # BUILD DF ACTIVITY
@@ -40,9 +43,10 @@ dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.
 # todo: refactor / replace?
 ls_ls_price_durations = get_price_durations(master_price['diesel_price'])
 # ls_ls_price_variations = get_price_variations_nan(ls_ls_price_durations)
-ls_start_end, ls_none, dict_dilettante =  get_overview_reporting_bis(master_price['diesel_price'],
-                                                                     master_price['dates'],
-                                                                     master_price['missing_dates'])
+ls_start_end, ls_none, dict_dilettante =\
+   get_overview_reporting_bis(master_price['diesel_price'],
+                              master_price['dates'],
+                              master_price['missing_dates'])
 
 ls_index, ls_rows_activity = [], []
 for i, indiv_id in enumerate(master_price['ids']):
@@ -78,11 +82,16 @@ dict_brands[u'U EXPRESS'] = [u'U_EXPRESS', u'SYSTEMEU', u'SUP']
 dict_brands[u'ENI FRANCE'] = [u'AGIP', u'AGIP', u'OIL']
 dict_brands[u'MARKET'] = [u'CARREFOUR_MARKET', u'CARREFOUR', u'SUP']
 
+enc_json(dict_brands, os.path.join(path_dir_source,
+                                   'data_other',
+                                   'dict_brands.json'))
+
 # Harmonizes brands (softly though so far)
 for indiv_id, indiv_info in master_price['dict_info'].items():
   if indiv_info['brand']:
-    master_price['dict_info'][indiv_id]['brand'] = [[get_str_no_accent_up(brand), day_ind]\
-                                                       for brand, day_ind in indiv_info['brand']]
+    master_price['dict_info'][indiv_id]['brand'] =\
+          [[get_str_no_accent_up(brand), day_ind]\
+             for brand, day_ind in indiv_info['brand']]
 
 # Resets brand starting date consistent with price series
 ls_to_be_chged = []
@@ -96,7 +105,8 @@ for i, (start, end) in enumerate(ls_start_end):
 dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
 for indiv_id, indiv_info in master_price['dict_info'].items():
   try:
-    ls_brand_std = [[dict_brands[name][0], day_ind] for name, day_ind in indiv_info['brand']]
+    ls_brand_std = [[dict_brands[name][0], day_ind]\
+                      for name, day_ind in indiv_info['brand']]
     i = 1 
     while i < len(ls_brand_std):
       if ls_brand_std[i][0] == ls_brand_std[i-1][0]:
@@ -140,9 +150,12 @@ df_brands = pd.DataFrame(ls_rows_brands,
 # BUILD DF BRAND ACTIVITY
 # #######################
 
-df_brand_activity = pd.merge(df_activity, df_brands, left_index = True, right_index = True)
+df_brand_activity = pd.merge(df_activity,
+                             df_brands,
+                             left_index = True,
+                             right_index = True)
 
-for field in ['start', 'end', 'day_0', 'day_1', 'day_2']:
+for field in ['start', 'end', 'day_0', 'day_1', 'day_2', 'day_3']:
   df_brand_activity[field] = df_brand_activity[field].apply(\
                                lambda x: master_price['dates'][int(x)]\
                                            if not pd.isnull(x) else x)
@@ -163,4 +176,6 @@ df_brand_activity.to_csv(os.path.join(path_dir_built_csv,
                          float_format= '%.3f',
                          encoding = 'utf-8')
 
-# TODO: check ids not in master_info
+# todo: check ids from master_price not in master_info => fill?
+# todo: simplify '38930001' (no Leclerc)
+# todo: keep '

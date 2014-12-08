@@ -23,10 +23,14 @@ path_dir_insee_extracts = os.path.join(path_data, u'data_insee', 'data_extracts'
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_csv_rls = os.path.join(path_dir_source, 'data_other', 'data_rls.csv')
 path_dir_gps_coordinates = os.path.join(path_dir_source, 'data_stations', 'data_gouv_gps')
-ls_dict_gouv_gps_file_names = ['20130117_ls_coordinates_essence.json',
-                               '20130117_ls_coordinates_diesel.json',
-                               '20130724_ls_coordinates_essence.json',
-                               '20130724_ls_coordinates_diesel.json'] 
+ls_dict_gouv_gps_file_names = ['20130117_dict_gps_essence.json',
+                               '20130117_dict_gps_diesel.json',
+                               '20130724_dict_gps_essence.json',
+                               '20130724_dict_gps_diesel.json',
+                               '20131115_dict_gps_essence.json',
+                               '20131115_dict_gps_diesel.json',
+                               '20141206_dict_gps_essence.json',
+                               '20141206_dict_gps_diesel.json']
 
 # ######################
 # LOAD GAS STATION DATA
@@ -40,10 +44,10 @@ master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json
 
 # BUILD master_addresses (addresses corrected for html pbms and somewhat stdized
 dict_addresses = {indiv_id: [indiv_info['address'][i]\
-                               for i in (5, 3, 4, 0) if indiv_info['address'][i]]\
+                               for i in (8, 7, 6, 5, 3, 4, 0) if indiv_info['address'][i]]\
                     for (indiv_id, indiv_info) in master_info.items()}
 master_addresses = build_master_addresses(dict_addresses)
-master_addresses['15400003'] = [(u'zone industrielle du sedour', u'15400 riom-\xc8s-montagnes')]
+# master_addresses['15400003'] = [(u'zone industrielle du sedour', u'15400 riom-\xc8s-montagnes')]
 master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')]
 
 # ########################################
@@ -53,22 +57,27 @@ master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')]
 # Load gps collected from prix-carburant.gouv.fr
 ls_dict_gouv_gps = [dec_json(os.path.join(path_dir_gps_coordinates, gps_file))\
                       for gps_file in ls_dict_gouv_gps_file_names]
-dict_20130117 = ls_dict_gouv_gps[0]
-dict_20130117.update(ls_dict_gouv_gps[1])
-dict_20130724 = ls_dict_gouv_gps[2]
-dict_20130724.update(ls_dict_gouv_gps[3])
-ls_index, ls_rows_gps = [], []
-for indiv_id in master_info.keys():
-  ls_index.append(indiv_id)
-  ls_gps_gouv_0 = dict_20130117.get(indiv_id, [np.nan, np.nan])
-  ls_gps_gouv_1 = dict_20130724.get(indiv_id, [np.nan, np.nan])
-  ls_rows_gps.append(ls_gps_gouv_0 + ls_gps_gouv_1)
-df_gps = pd.DataFrame(ls_rows_gps,
-                      index = ls_index,
-                      columns = ['lat_gov_0',
-                                 'lng_gov_0',
-                                 'lat_gov_1',
-                                 'lng_gov_1'])
+
+dict_gps = {}
+for dict_gouv_gps in ls_dict_gouv_gps:
+  for id_gouv, gps in dict_gouv_gps.items():
+    if gps not in dict_gps.get(id_gouv, []):
+      dict_gps.setdefault(id_gouv,[]).append(gps)
+
+dict_gps_len = {}
+for id_gouv, ls_gps in dict_gps.items():
+	dict_gps_len.setdefault(len(ls_gps), []).append(id_gouv)
+
+ls_columns_gps = []
+for i in range(max(dict_gps_len.keys())):
+  ls_columns_gps += ['lat_gov_%s' %i, 'lng_gov_%s' %i]
+
+ls_index_gps, ls_rows_gps = [], []
+for id_gouv in master_info.keys():
+  ls_index_gps.append(id_gouv)
+  ls_rows_gps.append([x for ls_x in dict_gps.get(id_gouv, []) for x in ls_x])
+df_gps = pd.DataFrame(ls_rows_gps, index = ls_index_gps, columns = ls_columns_gps)
+df_gps = df_gps.astype(float)
 
 # Load gps provided by Ronan (from prix-carburant.gouv.fr but older)
 df_rls = pd.read_csv(path_csv_rls, dtype = {'idpdv' : str})
@@ -85,15 +94,21 @@ df_gps = df_gps.apply(lambda x: np.round(x, 3))
 # GAS STATIONS ON HIGHWAY
 # #######################
 
+ls_gouv_highway_ids = dec_json(os.path.join(path_dir_source,
+                                            u'data_stations',
+                                            u'data_gouv_highway',
+                                            u'20141206_ls_highway_ids.json'))
+
 set_highway_ids = set()
 for indiv_id, ls_addresses in master_addresses.items():
   for address in ls_addresses:
     if 'autoroute' in address[0] or\
        re.search('(^|\s|-)a\s?[0-9]{1,3}($|\s|-|,)', address[0]) or\
-       master_info[indiv_id]['highway'][3] == 1:
+       master_info[indiv_id]['highway'][3] == 1 or\
+       indiv_id in ls_gouv_highway_ids:
       set_highway_ids.add(indiv_id)
 ls_mistakes_highway = ['93130007', '75017016', '56190007', '68127001', '7580002']
-ls_highway_indiv_ids = [indiv_id for indiv_id in list(set_highway_ids)\
+ls_highway_ids = [indiv_id for indiv_id in list(set_highway_ids)\
                           if indiv_id not in ls_mistakes_highway]
 # for indiv_id in list(set_highway_ids):
   # if indiv_id in master_price['dict_info'].keys():
@@ -101,7 +116,7 @@ ls_highway_indiv_ids = [indiv_id for indiv_id in list(set_highway_ids)\
 # # excluded: 93130007 (address incl. 'chasse a 3'), 75017016 ('6 a 8'),  56190007 (dummy 1), 
 # # excluded: 68127001 ('pres sortie...'), 7580002 (dummy 1, RN)
 ls_index = master_info.keys()
-ls_rows_highway = [1 if indiv_id in ls_highway_indiv_ids else 0\
+ls_rows_highway = [1 if indiv_id in ls_highway_ids else 0\
                      for indiv_id in master_info.keys()]
 se_highway = pd.Series(ls_rows_highway, index = ls_index, name = 'highway')
 
@@ -143,6 +158,7 @@ for indiv_id, indiv_info in master_info.items():
 df_services = pd.DataFrame(ls_rows_services,
                            index = ls_index,
                            columns = ls_unique_services)
+# todo: should set service to None if was not recorded at info period
 
 # #######################
 # OPENING DAYS and HOURS

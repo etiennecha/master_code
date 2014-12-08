@@ -9,23 +9,6 @@ import datetime
 import time
 import re
 
-# path_data: default to CREST location, else try home location
-path_data = os.path.join(u'W:\\', u'Bureau', u'Etienne_work', u'Data')
-if not os.path.exists(path_data):
-  path_data = os.path.join(u'C:\\', u'Users', u'etna', u'Desktop',
-                           u'Etienne_work', u'Data')
-
-path_raw_prices = os.path.join(path_data,
-                               u'data_gasoline',
-                               u'data_raw',
-                               u'data_prices')
-
-# actually source is the destination (raw is the origin)
-path_source_prices = os.path.join(path_data,
-                                  u'data_gasoline',
-                                  u'data_source',
-                                  u'data_prices')
-
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
     return json.loads(fichier.read())
@@ -42,9 +25,7 @@ def loop_and_format(format_function, path_input_dir, path_output_dir, extension_
       enc_json(formatted_file, os.path.join(path_output_dir,
                                             file_name[:8] + extension_out))
 
-# ###############################
-# DIESEL (LEADED IS NOT PROPER)
-# ###############################
+# DIESEL
 
 def format_price_201109_201205_diesel(path_file, output_list = True):
   # Difficulty dealt with: txt files were generated as CSV but some fields can contain commas
@@ -126,38 +107,7 @@ def format_price_201301_201306_diesel(path_file, output_list = True):
       list_id_observations.append(observation[0])
   return list_observations
 
-ls_diesel_functions = [format_price_201109_201205_diesel,
-                       format_price_201205_201205_diesel,
-                       format_price_201205_201205_diesel,
-                       format_price_201301_201306_diesel]
-
-ls_raw_diesel_dirs = [u'20110904_20120514_lea',
-                      u'20120515_20120521_two',
-                      u'20120522_20121203_two',
-                      u'20130121_20130604_lea']
-
-# Test each format function with one file of each type
-ls_raw_diesel_files = [u'20110904ga.txt',
-                       u'20120515_gas_prices',
-                       u'20120522_gas_prices',
-                       u'20130122_diesel_gas_prices']
-ls_raw_diesel_file_paths = [os.path.join(path_raw_prices, raw_diesel_dir, raw_diesel_file)\
-                              for (raw_diesel_dir, raw_diesel_file)
-                                in zip(ls_raw_diesel_dirs, ls_raw_diesel_files)]
-ls_diesel_records = []
-for (function_format, path_file) in zip(ls_diesel_functions, ls_raw_diesel_file_paths):
-  ls_diesel_records.append(function_format(path_file))
-
-## Execute
-#ls_raw_diesel_dir_paths = [os.path.join(path_raw_prices, dir_raw_prices)\
-#                             for dir_raw_prices in ls_raw_diesel_dirs]
-#path_diesel_output_dir = os.path.join(path_source_prices, 'diesel_standardized_tuple_lists')
-#for (function_format, path_input_dir) in zip(ls_diesel_functions, ls_raw_diesel_dir_paths):
-#  loop_and_format(function_format, path_input_dir, path_diesel_output_dir, '_diesel')
-
-# ###########################
-# GAS (LEADED IS NOT PRECISE)
-# ###########################
+# GAS
 
 def format_price_201109_201205_gas(path_file, output_list = True):
   # Difficulty dealt with: txt files were generated as CSV but some fields can contain commas
@@ -278,58 +228,115 @@ def format_price_201301_201306_gas(path_file, output_list = True):
       list_id_observations.append(observation[0])
   return list_observations
 
-ls_gas_functions = [format_price_201109_201205_gas,
-                    format_price_201205_201205_gas,
-                    format_price_201205_201212_gas,
-                    format_price_201301_201306_gas]
 
-ls_raw_gas_dirs = [u'20110903_20120514_unl',
-                   u'20120515_20120521_two',
-                   u'20120522_20121203_two',
-                   u'20130121_20130604_unl']
+if __name__=="__main__":
+  
+  # path_data: default to CREST location, else try home location
+  path_data = os.path.join(u'W:\\', u'Bureau', u'Etienne_work', u'Data')
+  if not os.path.exists(path_data):
+    path_data = os.path.join(u'C:\\', u'Users', u'etna', u'Desktop',
+                             u'Etienne_work', u'Data')
+  
+  path_raw_prices = os.path.join(path_data,
+                                 u'data_gasoline',
+                                 u'data_raw',
+                                 u'data_prices')
+  
+  
+  # actually source is the destination (raw is the origin)
+  path_source_prices = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_source',
+                                    u'data_prices')
+  
+  # #######
+  # DIESEL
+  # #######
 
-# Test each format function with one file of each type
-ls_raw_gas_files = [u'20110904sp.txt',
-                    u'20120515_gas_prices',
-                    u'20120522_gas_prices',
-                    u'20130121_essence_gas_prices']
-ls_raw_gas_file_paths = [os.path.join(path_raw_prices, raw_gas_dir, raw_gas_file)\
-                           for (raw_gas_dir, raw_gas_file)
-                             in zip(ls_raw_gas_dirs, ls_raw_gas_files)]
-ls_gas_records = []
-for (function_format, path_file) in zip(ls_gas_functions, ls_raw_gas_file_paths):
-  ls_gas_records.append(function_format(path_file))
+  ls_diesel_functions = [format_price_201109_201205_diesel,
+                         format_price_201205_201205_diesel,
+                         format_price_201205_201205_diesel,
+                         format_price_201301_201306_diesel]
+  
+  ls_raw_diesel_dirs = [u'20110904_20120514_lea',
+                        u'20120515_20120521_two',
+                        u'20120522_20121203_two',
+                        u'20130121_20130604_lea']
+  
+  # Test each format function with one file of each type
+  ls_raw_diesel_files = [u'20110904ga.txt',
+                         u'20120515_gas_prices',
+                         u'20120522_gas_prices',
+                         u'20130122_diesel_gas_prices']
+  ls_raw_diesel_file_paths = [os.path.join(path_raw_prices, raw_diesel_dir, raw_diesel_file)\
+                                for (raw_diesel_dir, raw_diesel_file)
+                                  in zip(ls_raw_diesel_dirs, ls_raw_diesel_files)]
+  ls_diesel_records = []
+  for (function_format, path_file) in zip(ls_diesel_functions, ls_raw_diesel_file_paths):
+    ls_diesel_records.append(function_format(path_file))
+  
+  ## Execute
+  #ls_raw_diesel_dir_paths = [os.path.join(path_raw_prices, dir_raw_prices)\
+  #                             for dir_raw_prices in ls_raw_diesel_dirs]
+  #path_diesel_output_dir = os.path.join(path_source_prices, 'diesel_standardized_tuple_lists')
+  #for (function_format, path_input_dir) in zip(ls_diesel_functions, ls_raw_diesel_dir_paths):
+  #  loop_and_format(function_format, path_input_dir, path_diesel_output_dir, '_diesel')
+  
+  # ####
+  # GAS
+  # ####
 
-## Execute
-#ls_raw_gas_dir_paths = [os.path.join(path_raw_prices, dir_raw_prices)\
-#                          for dir_raw_prices in ls_raw_gas_dirs]
-#path_gas_output_dir = os.path.join(path_source_prices, 'gas_standardized_tuple_lists')
-#for (function_format, path_input_dir) in zip(ls_gas_functions, ls_raw_gas_dir_paths):
-#  loop_and_format(function_format, path_input_dir, path_gas_output_dir, '_gas')
-
-
-
-## POSITIONS OF E10 AND SP95 IN LISTS (USE NB AVAIL PRICES. DONE)
-#
-#def count_gas_prices(list_indivs):
-#  # to make sure to righly attribute prices to sp95 / e10
-#  # works with list of dics
-#  count_e10 = 0
-#  count_sp95 = 0
-#  for index_indiv, tuple_indiv in enumerate(list_indivs):
-#    if tuple_indiv[4] != '--' and tuple_indiv[4] != ' --':
-#      count_sp95 += 1
-#    if tuple_indiv[6] != '--' and tuple_indiv[6] != ' --':
-#      count_e10 += 1
-#  return {'nb_prices_sp95' : count_sp95, 'nb_prices_e10' : count_e10}
-#
-#def loop_format_and_count(format_function, path_input_dir):
-#  for file_name in os.listdir(path_input_dir):
-#    if re.match('[0-9]{8}[^0-9]', file_name):
-#      formatted_file = format_function(os.path.join(path_input_dir, file_name))
-#      print file_name[:8], count_gas_prices(formatted_file)
-#
-#ls_raw_gas_dir_paths = [os.path.join(path_raw_prices, dir_raw_prices)\
-#                          for dir_raw_prices in ls_raw_gas_dirs]
-#for (function_format, path_input_dir) in zip(ls_gas_functions, ls_raw_gas_dir_paths)[0:1]:
-#  loop_format_and_count(function_format, path_input_dir)
+  ls_gas_functions = [format_price_201109_201205_gas,
+                      format_price_201205_201205_gas,
+                      format_price_201205_201212_gas,
+                      format_price_201301_201306_gas]
+  
+  ls_raw_gas_dirs = [u'20110903_20120514_unl',
+                     u'20120515_20120521_two',
+                     u'20120522_20121203_two',
+                     u'20130121_20130604_unl']
+  
+  # Test each format function with one file of each type
+  ls_raw_gas_files = [u'20110904sp.txt',
+                      u'20120515_gas_prices',
+                      u'20120522_gas_prices',
+                      u'20130121_essence_gas_prices']
+  ls_raw_gas_file_paths = [os.path.join(path_raw_prices, raw_gas_dir, raw_gas_file)\
+                             for (raw_gas_dir, raw_gas_file)
+                               in zip(ls_raw_gas_dirs, ls_raw_gas_files)]
+  ls_gas_records = []
+  for (function_format, path_file) in zip(ls_gas_functions, ls_raw_gas_file_paths):
+    ls_gas_records.append(function_format(path_file))
+  
+  ## Execute
+  #ls_raw_gas_dir_paths = [os.path.join(path_raw_prices, dir_raw_prices)\
+  #                          for dir_raw_prices in ls_raw_gas_dirs]
+  #path_gas_output_dir = os.path.join(path_source_prices, 'gas_standardized_tuple_lists')
+  #for (function_format, path_input_dir) in zip(ls_gas_functions, ls_raw_gas_dir_paths):
+  #  loop_and_format(function_format, path_input_dir, path_gas_output_dir, '_gas')
+  
+  
+  ## POSITIONS OF E10 AND SP95 IN LISTS (USE NB AVAIL PRICES. DONE)
+  #
+  #def count_gas_prices(list_indivs):
+  #  # to make sure to righly attribute prices to sp95 / e10
+  #  # works with list of dics
+  #  count_e10 = 0
+  #  count_sp95 = 0
+  #  for index_indiv, tuple_indiv in enumerate(list_indivs):
+  #    if tuple_indiv[4] != '--' and tuple_indiv[4] != ' --':
+  #      count_sp95 += 1
+  #    if tuple_indiv[6] != '--' and tuple_indiv[6] != ' --':
+  #      count_e10 += 1
+  #  return {'nb_prices_sp95' : count_sp95, 'nb_prices_e10' : count_e10}
+  #
+  #def loop_format_and_count(format_function, path_input_dir):
+  #  for file_name in os.listdir(path_input_dir):
+  #    if re.match('[0-9]{8}[^0-9]', file_name):
+  #      formatted_file = format_function(os.path.join(path_input_dir, file_name))
+  #      print file_name[:8], count_gas_prices(formatted_file)
+  #
+  #ls_raw_gas_dir_paths = [os.path.join(path_raw_prices, dir_raw_prices)\
+  #                          for dir_raw_prices in ls_raw_gas_dirs]
+  #for (function_format, path_input_dir) in zip(ls_gas_functions, ls_raw_gas_dir_paths)[0:1]:
+  #  loop_format_and_count(function_format, path_input_dir)

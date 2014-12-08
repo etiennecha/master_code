@@ -91,4 +91,4 @@ if __name__ == '__main__':
     except:
       print 'couldnt get info for', id_gouv
   
-  # enc_json(dict_stations, os.path.join(path_raw_info_stations, u'20141206_gouv_stations'))
+  # enc_json(dict_stations, os.path.join(path_raw_info_stations, u'20141206_gouv_stations.json'))
