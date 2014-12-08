@@ -85,7 +85,14 @@ enc_json(master_price, os.path.join(path_dir_built_json,
 print u'\nCreation of master_price_diesel_fixed.json successful'
 print type(master_price)
 print u'Length:', len(master_price)
- 
+
+## Inspect abnormal prices (see if corrected due to abnormal variations)
+#for x in ls_abnormal_price_values:
+#  print 'Station id_gouv', x[1], x[0]
+#  se_prices = pd.Series(master_price['diesel_price'][x[0]])
+#  se_prices.plot()
+#  plt.show()
+
 ## MOVE TO PRICE ANALYSIS
 #dict_sales = get_sales(ls_ls_price_variations, 3)
 #ls_sales = [(k, len(v)) for k, v in dict_sales.items()] 

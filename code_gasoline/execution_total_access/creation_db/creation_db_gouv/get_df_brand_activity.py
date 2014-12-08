@@ -59,6 +59,25 @@ df_activity = pd.DataFrame(ls_rows_activity,
 # BUILD DF BRANDS
 # ###############
 
+# Update dict brands if needed
+for indep in [u'AUCUNE', u'GME', u'S.D.L', u'NEANT', u'X.BEE', u'CCVB',
+              u'AUTOMAT24/24', u'AUTOMAT.DKV.UTA', u'BROSSIER',
+              u'STATION', u'PETROSUD', u'GALLIEN', u'GARCIN FRERES',
+              u'SUPERMARCHE', u'SOS PETRO', u'DISCOUNT', u'AIREC',
+              u'QUANTIUM 500T', u'Q8', u'STATION CHLOE', u'AGENT FORD']:
+  dict_brands[indep] = [u'INDEPENDANT', u'INDEPENDANT', u'IND']
+
+dict_brands[u'BP EXPRESS'] = [u'BP_EXPRESS', u'BP', u'OIL']
+dict_brands[u'COCCIMARKET'] = [u'COCCINELLE', u'COLRUYT', u'SUP'] # INDPT?
+dict_brands[u'CARREFOUR EXPRESS'] = [u'CARREFOUR_EXPRESS', u'CARREFOUR', u'SUP']
+dict_brands[u'PROXI SUPER'] = [u'AUTRE_GMS', u'AUTRE_GMS', u'SUP'] # COLRUYT?
+dict_brands[u'LIDL'] = [u'LIDL', u'LIDL', u'SUP']
+dict_brands[u'SPAR'] = [u'SPAR', u'CASINO', u'SUP']
+dict_brands[u'U'] = [u'SYSTEMEU', u'SYSTEMEU', u'SUP']
+dict_brands[u'U EXPRESS'] = [u'U_EXPRESS', u'SYSTEMEU', u'SUP']
+dict_brands[u'ENI FRANCE'] = [u'AGIP', u'AGIP', u'OIL']
+dict_brands[u'MARKET'] = [u'CARREFOUR_MARKET', u'CARREFOUR', u'SUP']
+
 # Harmonizes brands (softly though so far)
 for indiv_id, indiv_info in master_price['dict_info'].items():
   if indiv_info['brand']:
@@ -76,17 +95,20 @@ for i, (start, end) in enumerate(ls_start_end):
 # Adds brand_std to dict_info in master_price and create corresponding dict_std_brands:
 dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
 for indiv_id, indiv_info in master_price['dict_info'].items():
-  ls_brand_std = [[dict_brands[name][0], day_ind] for name, day_ind in indiv_info['brand']]
-  i = 1 
-  while i < len(ls_brand_std):
-    if ls_brand_std[i][0] == ls_brand_std[i-1][0]:
-      del(ls_brand_std[i])
-    else:
-      i += 1
-  master_price['dict_info'][indiv_id]['brand_std'] = ls_brand_std
+  try:
+    ls_brand_std = [[dict_brands[name][0], day_ind] for name, day_ind in indiv_info['brand']]
+    i = 1 
+    while i < len(ls_brand_std):
+      if ls_brand_std[i][0] == ls_brand_std[i-1][0]:
+        del(ls_brand_std[i])
+      else:
+        i += 1
+    master_price['dict_info'][indiv_id]['brand_std'] = ls_brand_std
+  except:
+    print 'Not in dict_brands', indiv_info['brand']
 
 # fix what seems to be mistakes
-
+# could have been created by me (TA or duplicate merge?)
 master_price['dict_info']['78150001']['brand'] =\
     [[u'ELF', 0], [u'TOTAL_ACCESS', 30]]
 master_price['dict_info']['78150001']['brand_std'] =\
@@ -97,8 +119,7 @@ master_price['dict_info']['86360003']['brand'] =\
 master_price['dict_info']['86360003']['brand_std'] =\
    [[u'TOTAL', 0], [u'TOTAL_ACCESS', 457]]
 
-# could have been created by me (TA or duplicate merge?)
-
+# check multi brands, reduce?
 dict_len_brands = {}
 ls_index, ls_rows_brands = [], []
 for indiv_id, indiv_info in master_price['dict_info'].items():
