@@ -6,11 +6,20 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
-path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_dir_built_paper = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_paper_total_access') # params here too?
 
-path_dir_insee_extracts = os.path.join(path_data, 'data_insee', 'data_extracts')
+path_dir_built_csv = os.path.join(path_dir_built_paper,
+                                  u'data_csv')
+
+path_dir_built_json = os.path.join(path_dir_built_paper,
+                                   'data_json')
+
+path_dir_insee_extracts = os.path.join(path_data,
+                                       'data_insee',
+                                       'data_extracts')
 
 # #########################
 # LOAD INFO STATIONS
@@ -40,7 +49,8 @@ df_info = df_info[df_info['highway'] != 1]
 df_info['TA'] = 0
 df_info.loc[(df_info['brand_0'] == 'TOTAL_ACCESS') |\
             (df_info['brand_1'] == 'TOTAL_ACCESS') |\
-            (df_info['brand_2'] == 'TOTAL_ACCESS'),
+            (df_info['brand_2'] == 'TOTAL_ACCESS') |\
+            (df_info['brand_3'] == 'TOTAL_ACCESS'),
             'TA'] = 1
 print u'Nb Total Access (assume no exit of brand nor dupl.):', df_info['TA'].sum()
 
@@ -51,6 +61,9 @@ df_info.loc[(df_info['brand_0'] != 'TOTAL_ACCESS') &\
             'TA_chge'] = 1
 df_info.loc[(df_info['brand_1'] != 'TOTAL_ACCESS') &\
             (df_info['brand_2'] == 'TOTAL_ACCESS'),
+            'TA_chge'] = 1
+df_info.loc[(df_info['brand_2'] != 'TOTAL_ACCESS') &\
+            (df_info['brand_3'] == 'TOTAL_ACCESS'),
             'TA_chge'] = 1
 print u'Chge to Total Access:', df_info['TA_chge'].sum()
 
@@ -375,7 +388,7 @@ print df_info_ta[['ci_ardt_1', 'name', 'adr_street', 'adr_city', 'brand_0', 'bra
 #print df_ta_dates[['Type station', 'Station', 'Adresse', 'Ville', 'insee_code']]\
 #        [df_ta_dates['Ville'].str.contains('Marseille', case = False)].to_string()
 
-ls_pbm = [('13215', 'RELAIS MISTRAL', '13015014'), # why not matched?
+ls_pbm = [('13215', 'RELAIS MISTRAL', '13015014')] # why not matched?
 
 # todo: how many have several dates?
 
