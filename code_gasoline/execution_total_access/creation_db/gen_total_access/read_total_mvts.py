@@ -10,7 +10,7 @@ import re
 import pandas as pd
 from matching_insee import *
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
+path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper_total_access')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 
@@ -371,10 +371,10 @@ pd.set_option('display.max_colwidth', 27)
 #print df_final_access[ls_disp_ferm + ['i_city', 'insee_code']]\
 #        [df_final_access['Date ouverture'] == '13/12/2013'].to_string()
 
-#df_final_access.to_csv(os.path.join(path_dir_built_csv,
-#                                    'df_total_access_opening_dates.csv'),
-#                       encoding = 'UTF-8',
-#                       index = False)
+df_final_access.to_csv(os.path.join(path_dir_built_csv,
+                                    'df_total_access_opening_dates.csv'),
+                       encoding = 'UTF-8',
+                       index = False)
 
 # df_ouv:
 # on page breaks: lines merged though they should not (hence two communes)

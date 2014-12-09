@@ -67,6 +67,9 @@ df_info.loc[(df_info['brand_2'] != 'TOTAL_ACCESS') &\
             'TA_chge'] = 1
 print u'Chge to Total Access:', df_info['TA_chge'].sum()
 
+ls_disp_ta = ['name', 'adr_street', 'adr_city', 'ci_ardt_1', 'brand_0', 'brand_1', 'brand_2', 'brand_3']
+print df_info[ls_disp_ta][df_info['TA'] == 1].to_string()
+
 # ################################
 # DATE CONVERSION TOTAL ACCESS
 # ################################
@@ -380,8 +383,8 @@ for ci, name_ta_ouv, str_date, id_gouv in ls_ouv + ls_ouv_2:
     dict_ta_dates.setdefault(id_gouv, []).append(date)
 
 # todo: about 50 TA in df_info_ta have not match... check
-print len(df_info_ta[~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))])
 df_info_ta['id_gouv'] = df_info_ta.index
+print len(df_info_ta[~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))])
 print df_info_ta[['ci_ardt_1', 'name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
         [~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))].to_string()
 

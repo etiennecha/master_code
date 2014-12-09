@@ -8,7 +8,7 @@ from generic_master_info import *
 import datetime, time
 from BeautifulSoup import BeautifulSoup
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
+path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper_total_access')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
 path_dir_rotterdam = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_rotterdam')
@@ -78,7 +78,7 @@ df_ufip.set_index('Date', inplace = True)
 
 # REGROUP EIA, ECB UFIP and REUTERS IN ONE DATAFRAME (arbitrary date range)
 index = pd.date_range(start = pd.to_datetime('20110904'),
-                      end   = pd.to_datetime('20140123'), 
+                      end   = pd.to_datetime('20140228'), 
                       freq='D')
 df_all = pd.DataFrame(None, index = index)
 for df_temp in [df_eia_brent, df_eia_diesel, df_ecb, df_ufip, df_reuters_diesel]:
@@ -146,7 +146,8 @@ print df_all[['UFIP RT Diesel R5 EL', 'ULSD 10 CIF NWE R5 S1 EL',
 #plt.show()
 
 # TODO: check: not ok because time stamps are kept... so then week end are still there as nan
-df_all_nowe = df_all[~((df_all.index.weekday == 5) | (df_all.index.weekday == 6))].copy()
+df_all_nowe = df_all[~((df_all.index.weekday == 5) |\
+                       (df_all.index.weekday == 6))].copy()
 df_all_nowe['ULSD 10 CIF NWE S1b EL'] = df_all_nowe['ULSD 10 CIF NWE EL'].shift(1)
 df_all_nowe['ULSD 10 CIF NWE S1b R5b EL'] = pd.stats.moments.rolling_apply(
                                               df_all_nowe['ULSD 10 CIF NWE S1b EL'], 5,
