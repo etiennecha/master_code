@@ -10,7 +10,11 @@ import re
 import pandas as pd
 from matching_insee import *
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper_total_access')
+path_dir_built_paper = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_paper_total_access')
+
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 
@@ -48,6 +52,8 @@ ls_pages = soup.findAll('div', {'style' : "position:relative;width:892;height:12
 
 # FERMETURES
 
+print u'\nReading fermetures'
+
 ls_rows = []
 for page in ls_pages[0:61]:
   ls_rows += page.findAll('div', {'style' : re.compile('position:absolute.*')})
@@ -62,7 +68,9 @@ for row in ls_rows:
   col_ind = int(re.search('left:([0-9]*)$', row['style']).group(1))
   row_ind = int(re.search('top:([0-9]*);left', row['style']).group(1))
   str_row = row.find('span', {'class' : True}).findAll(text = True)
-  # assume no new row start after page break without first column filled
+  # row_ind == 2 beginning of new page in pdf
+  # col_ind != 47 row maybe a continued or incomplete line
+  # for now: assume line continuation
   if ls_results and col_ind != 47 and row_ind == 2:
     print col_ind, row_ind, str_row
     ls_results.append((col_ind, row_ind, str_row))
@@ -74,7 +82,7 @@ for row in ls_rows:
 ls_ls_results.append(ls_results)
 ls_ls_results = ls_ls_results[1:]
 
-# sort based on first elt and join (double join?)
+# list of column starting positions on pdf pages
 ls_ind = [47, 120, 195, 269, 342, 407, 480, 521, 606]
 dict_ind = {ind: i for i, ind in enumerate(ls_ind)}
 
@@ -95,17 +103,22 @@ df_fer = pd.DataFrame(ls_ls_final[1:], columns = ls_ls_final[0])
 
 # OUVERTURES
 
+print u'\nReading ouvertures'
+
 ls_rows = []
 for page in ls_pages[61:]:
   ls_rows += page.findAll('div', {'style' : re.compile('position:absolute.*')})
 
-# TODO: print page break inds and correct manually
 ls_ls_results = []
 ls_results = []
 for row in ls_rows:
   col_ind = int(re.search('left:([0-9]*)$', row['style']).group(1))
   row_ind = int(re.search('top:([0-9]*);left', row['style']).group(1))
   str_row = row.find('span', {'class' : True}).findAll(text = True)
+  # row_ind == 2 beginning of new page in pdf
+  # col_ind != 58 row maybe a continued or incomplete line
+  # for now: assume line continuation 
+  # todo: fix because not always true
   if ls_results and col_ind != 58 and row_ind == 2:
     print col_ind, row_ind, str_row
     ls_results.append((col_ind, row_ind, str_row))
@@ -117,7 +130,7 @@ for row in ls_rows:
 ls_ls_results.append(ls_results)
 ls_ls_results = ls_ls_results[1:]
 
-# sort based on first elt and join (double join?)
+# list of column starting positions on pdf pages
 ls_ind = [58, 151, 259, 373, 523, 616]
 dict_ind = {ind: i for i, ind in enumerate(ls_ind)}
 
@@ -351,7 +364,7 @@ for k,v in dict_res.items():
 	print k, len(v)
 
 ##df_ferm
-#print df_temp[ls_disp_ferm].iloc[dict_res['no_match']].to_string()
+#print df_temp[ls_disp_fer].iloc[dict_res['no_match']].to_string()
 # fixed manually
 
 df_ma_insee = pd.DataFrame([x[0][0] for x in ls_matched],
@@ -366,9 +379,9 @@ df_final_access = df_final[(df_final['Type station'].str.contains('access')) |\
 
 pd.set_option('display.max_colwidth', 27)
 
-#print df_final_access[ls_disp_ferm + ['i_city', 'insee_code']].to_string()
+#print df_final_access[ls_disp_fer + ['i_city', 'insee_code']].to_string()
 #
-#print df_final_access[ls_disp_ferm + ['i_city', 'insee_code']]\
+#print df_final_access[ls_disp_fer + ['i_city', 'insee_code']]\
 #        [df_final_access['Date ouverture'] == '13/12/2013'].to_string()
 
 df_final_access.to_csv(os.path.join(path_dir_built_csv,
