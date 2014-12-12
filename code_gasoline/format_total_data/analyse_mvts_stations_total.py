@@ -6,46 +6,43 @@ from add_to_path import path_data, path_dir
 import os, sys
 import subprocess
 from subprocess import PIPE, Popen
+from BeautifulSoup import BeautifulSoup
 import re
 import pandas as pd
 from matching_insee import *
 
-path_dir_built_paper = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_built',
-                                    u'data_paper_total_access')
+path_dir_total = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_source',
+                              u'data_total')
+path_dir_total_raw = os.path.join(path_dir_total, 'data_total_raw')
+path_dir_total_csv = os.path.join(path_dir_total, 'data_total_csv')
 
-path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
-
-def read_pdftotext(path_file, path_pdftotext):
-  pdf_file = subprocess.Popen([os.path.join(path_pdftotext,
-                                            'pdftotext.exe'),
-                               #'-layout' ,
-                               '-raw',
-                               path_file,
-                               '-'], stdout=PIPE)
-  data = pdf_file.communicate()[0]
-  return data
-
-path_dir_raw_stations = os.path.join(path_data,
-                                     'data_gasoline',
-                                     'data_raw',
-                                     'data_stations')
-
+#def read_pdftotext(path_file, path_pdftotext):
+#  pdf_file = subprocess.Popen([os.path.join(path_pdftotext,
+#                                            'pdftotext.exe'),
+#                               #'-layout' ,
+#                               '-raw',
+#                               path_file,
+#                               '-'], stdout=PIPE)
+#  data = pdf_file.communicate()[0]
+#  return data
+#
 #path_pdf_total_mvts = os.path.join(path_dir_raw_stations,
 #                                   'data_other',
 #                                   'mvts_stations_services.pdf') 
 #str_pdf = read_pdftotext(path_pdf_total_mvts, path_dir)
 #ls_pdf = str_pdf.split('\r\n')
 
-# file obtained with pdftohtml and options -i -c -noframes
-path_html_total_mvts = os.path.join(path_dir_raw_stations,
-                                    'data_other',
-                                    'mvts_stations_services.html')
-test = open(path_html_total_mvts, 'r').read()
-from BeautifulSoup import BeautifulSoup
-soup = BeautifulSoup(test)
+# #######################
+# READ HTML FILE
+# #######################
+
+# HTML file obtained with pdftohtml and options -i -c -noframes
+path_html_total_mvts = os.path.join(path_dir_total_raw,
+                                    u'20141208_mvts_stations_total.html')
+html_file = open(path_html_total_mvts, 'r').read()
+soup = BeautifulSoup(html_file)
 
 ls_pages = soup.findAll('div', {'style' : "position:relative;width:892;height:1262;"})
 # up to 60: similar format a priori, then check
@@ -55,8 +52,10 @@ ls_pages = soup.findAll('div', {'style' : "position:relative;width:892;height:12
 print u'\nReading fermetures'
 
 ls_rows = []
-for page in ls_pages[0:61]:
-  ls_rows += page.findAll('div', {'style' : re.compile('position:absolute.*')})
+for page_ind, page in enumerate(ls_pages[0:68]):
+  ls_rows += [(page_ind, row)\
+                for row in page.findAll('div',
+                                        {'style' : re.compile('position:absolute.*')})]
 
 #page_1 = soup.find('div', {'style' : "position:relative;width:892;height:1262;"})
 #ls_rows_1 = page_1.findAll('div', {'style' : re.compile('position:absolute.*')})
@@ -64,15 +63,13 @@ for page in ls_pages[0:61]:
 # A bit of a fragile assumption (detailed below)
 ls_ls_results = []
 ls_results = []
-for row in ls_rows:
+for (page_ind, row) in ls_rows:
   col_ind = int(re.search('left:([0-9]*)$', row['style']).group(1))
   row_ind = int(re.search('top:([0-9]*);left', row['style']).group(1))
   str_row = row.find('span', {'class' : True}).findAll(text = True)
-  # row_ind == 2 beginning of new page in pdf
-  # col_ind != 47 row maybe a continued or incomplete line
-  # for now: assume line continuation
+  # assume no new row start after page break without first column filled
   if ls_results and col_ind != 47 and row_ind == 2:
-    print col_ind, row_ind, str_row
+    print page_ind, col_ind, row_ind, str_row
     ls_results.append((col_ind, row_ind, str_row))
   elif ls_results and col_ind != ls_results[-1][0] and row_ind != ls_results[-1][1]:
     ls_ls_results.append(ls_results)
@@ -82,7 +79,7 @@ for row in ls_rows:
 ls_ls_results.append(ls_results)
 ls_ls_results = ls_ls_results[1:]
 
-# list of column starting positions on pdf pages
+# sort based on first elt and join (double join?)
 ls_ind = [47, 120, 195, 269, 342, 407, 480, 521, 606]
 dict_ind = {ind: i for i, ind in enumerate(ls_ind)}
 
@@ -106,21 +103,20 @@ df_fer = pd.DataFrame(ls_ls_final[1:], columns = ls_ls_final[0])
 print u'\nReading ouvertures'
 
 ls_rows = []
-for page in ls_pages[61:]:
-  ls_rows += page.findAll('div', {'style' : re.compile('position:absolute.*')})
+for page_ind, page in enumerate(ls_pages[68:], start = 68):
+  ls_rows += [(page_ind, row)\
+                for row in page.findAll('div',
+                                        {'style' : re.compile('position:absolute.*')})]
 
+# todo: print page break inds and correct manually
 ls_ls_results = []
 ls_results = []
-for row in ls_rows:
+for (page_ind, row) in ls_rows:
   col_ind = int(re.search('left:([0-9]*)$', row['style']).group(1))
   row_ind = int(re.search('top:([0-9]*);left', row['style']).group(1))
   str_row = row.find('span', {'class' : True}).findAll(text = True)
-  # row_ind == 2 beginning of new page in pdf
-  # col_ind != 58 row maybe a continued or incomplete line
-  # for now: assume line continuation 
-  # todo: fix because not always true
   if ls_results and col_ind != 58 and row_ind == 2:
-    print col_ind, row_ind, str_row
+    print page_ind, col_ind, row_ind, str_row
     ls_results.append((col_ind, row_ind, str_row))
   elif ls_results and col_ind != ls_results[-1][0] and row_ind != ls_results[-1][1]:
     ls_ls_results.append(ls_results)
@@ -130,7 +126,7 @@ for row in ls_rows:
 ls_ls_results.append(ls_results)
 ls_ls_results = ls_ls_results[1:]
 
-# list of column starting positions on pdf pages
+# sort based on first elt and join (double join?)
 ls_ind = [58, 151, 259, 373, 523, 616]
 dict_ind = {ind: i for i, ind in enumerate(ls_ind)}
 
@@ -163,6 +159,18 @@ def adhoc_date_fix(some_date):
     some_date = None
   return some_date
 
+# LOAD CLASS matching_insee
+path_dir_match_insee = os.path.join(path_data, u'data_insee', 'match_insee_codes')
+path_df_corr = os.path.join(path_dir_match_insee, 'df_corr_gas.csv')
+matching_insee = MatchingINSEE(path_df_corr)
+
+# LOAD df_insee_com (to control if insee_codes still in use)
+path_dir_insee_extracts = os.path.join(path_data, u'data_insee', u'data_extracts')
+df_insee_com = pd.read_csv(os.path.join(path_dir_insee_extracts,
+                                        u'df_communes.csv'),
+                           encoding = 'utf-8',
+                           dtype = str)
+
 # FERMETURES
 # ##########
 
@@ -177,12 +185,16 @@ for row_i, row in df_fer.iterrows():
     row['CP'] = row['CP'].replace(u' ', u'').rjust(5, '0')
   else:
     print row_i, row['CP']
-# remediations (CAUTION: SPECIFIC TO THIS PDF FILE)
-df_fer.loc[10, ['Station', 'Adresse', 'CP', 'Ville']] =\
+
+# remediations (CAUTION: SPECIFIC TO ANOTHER PDF FILE)
+df_fer.loc[38, 'Ville'] = 'CHATELLERAULT'
+df_fer = df_fer.drop(39)
+df_fer.loc[81, ['Station', 'Adresse', 'CP', 'Ville']] =\
   ['', '81 RUE DE SECLIN', '59710', 'AVELIN']
-df_fer.loc[81, 'Station report'] = df_fer.loc[81, 'Ville']
-df_fer.loc[81, 'Ville'] = 'ST MAXIMIN LA STE BAUME'
-df_fer = df_fer.drop(82)
+# overwrite Station report but 1 vs. 3.. never mind
+df_fer.loc[156, 'Station report'] = df_fer.loc[156, 'Ville']
+df_fer.loc[156, 'Ville'] = 'ST MAXIMIN LA STE BAUME'
+df_fer = df_fer.drop(157)
 
 # FIX CITIES
 
@@ -201,7 +213,10 @@ ls_city_fix = [('JOUARS PONTCHARTRAI N', 'JOUARS PONTCHARTRAIN'),
                ('ROISSY C DE GAULLE', 'ROISSY EN FRANCE'),
                ('CHATILLON SUR BAGNEUX', 'CHATILLON'),
                ('MONTREUIL SUR MER', 'MONTREUIL'),
-               ('ORLEANS LA SOURCE', 'LA SOURCE')] # ORLEANS
+               ('ORLEANS LA SOURCE', 'LA SOURCE'), # ORLEANS
+               ('VILLENEUVE D AVEYRON', 'VILLENEUVE'),
+               ('LA PLEINE ST DENIS', 'LA PLAINE ST DENIS'),
+               ('MARQ EN BAROEUIL', 'MARCQ EN BAROEUL')]
 
 df_fer['Ville'] = df_fer['Ville'].apply(lambda x: adhoc_fix(ls_city_fix, x))
 
@@ -260,7 +275,76 @@ print df_fer_access[ls_disp_fer].to_string()
 # Remaining station duplicates
 dup_stations = df_fer_access['Station'][df_fer.duplicated('Station')].unique()
 df_fer_access.sort(['Station', 'Date ouverture'], inplace = True)
+print '\nDuplicates in fermeture (station, date ouv):'
 print df_fer_access[df_fer_access['Station'].isin(dup_stations)][ls_disp_fer].to_string()
+
+# INSEE MATCHING
+
+ls_fer_matched = []
+for row_i, row in df_fer.iterrows():
+  match = matching_insee.match_city(row['Ville'], row['CP'][:-3], row['CP'])
+  ls_fer_matched.append(match)
+
+dict_fer_res = {}
+for i, match in enumerate(ls_fer_matched):
+  dict_fer_res.setdefault(match[1], []).append(i)
+
+print '\nINSEE Matching overview:'
+for k,v in dict_fer_res.items():
+	print k, len(v)
+
+##df_ferm
+#print df_fer[ls_disp_fer].iloc[dict_fer_res['no_match']].to_string()
+# fixed manually
+
+## PRELIMINARY VERSION (NO CHECK ON VALIDITY)
+#
+#df_fer_ma_insee = pd.DataFrame([x[0][0] for x in ls_fer_matched],
+#                               index = df_fer.index,
+#                               columns = ['i_city', 'i_zip', 'insee_code'])
+
+# Check if several results
+ls_fer_multim = [i for i, match in enumerate(ls_fer_matched) if len(match[0]) > 1]
+
+ls_rows_fer_insee = []
+for ls_match in ls_fer_matched:
+  # first match if several (check city name)
+  row_fer_insee = [ls_match[0][0][0]] +\
+                   list(refine_insee_code(df_insee_com['CODGEO'].values,
+                                          ls_match[0][0][2]))
+  ls_rows_fer_insee.append(row_fer_insee)
+
+df_fer_ma_insee = pd.DataFrame(ls_rows_fer_insee,
+                               index = df_fer.index,
+                               columns = ['city', 'ci_1', 'ci_ardt_1'])
+
+df_fer_final = pd.merge(df_fer,
+                        df_fer_ma_insee,
+                        left_index = True,
+                        right_index = True,
+                        how = 'left')
+
+ls_disp_fer_ci = ls_disp_fer + ['city', 'ci_ardt_1']
+print df_fer_final[ls_disp_fer_ci][pd.isnull(df_fer_final['ci_1'])].to_string()
+#print df_fer_final[ls_disp_fer_ci].iloc[dict_fer_res['dpt_city_match']].to_string()
+##print df_fer_final[ls_disp_fer_ci].iloc[dict_fer_res['dpt_city_in_match(es)']].to_string()
+
+df_fer_access_final =\
+    df_fer_final[(df_fer_final['Type station'].str.contains('access',
+                                                            case = False)) |\
+                 (df_fer_final['Type fermeture'].str.contains('access',
+                                                              case = False))]
+
+pd.set_option('display.max_colwidth', 27)
+#print df_fer_access_final[ls_disp_fer_ci].to_string()
+#print df_fer_access_final[ls_disp_fer_ci]\
+#        [df_fer_access_final['Date ouverture'] == '13/12/2013'].to_string()
+#
+
+df_fer_final.to_csv(os.path.join(path_dir_total_csv,
+                                 'df_total_fer_20141208.csv'),
+                    encoding = 'UTF-8',
+                    index = False)
 
 # OUVERTURES
 # ##########
@@ -278,9 +362,11 @@ for row_i, row in df_ouv.iterrows():
     row['CP'] = row['CP'].replace(u' ', u'').rjust(5, '0')
   else:
     print row_i, row['CP']
+
 # remediations
 df_ouv = df_ouv[df_ouv['CP'] != '128300'] # duplicate line and mistake
 df_ouv.loc[df_ouv['Ville'] == 'GONESSE', 'CP'] = '95500'
+df_ouv.loc[df_ouv['Ville'] == 'GOLFE JUAN', 'CP'] = '06220'
 
 # FIX CITIES
 
@@ -311,7 +397,30 @@ ls_city_fix = [('AIX-LES-BAIN S GOLFE JUAN', 'AIX-LES-BAINS GOLFE JUAN'), # migh
                ('VENDARGUE S', 'VENDARGUES'),
                ('PERPIGNAN CHAPELLE ARMENTIERE S', 'PERPIGNAN CHAPELLE ARMENTIERES'),
                ('VALENCIENN ES', 'VALENCIENNES'),
-               ('CARCASSON NE', 'CARCASSONNE')]
+               ('CARCASSON NE', 'CARCASSONNE'),
+               ('BALLAINVILLI ERS', 'BALLAINVILLIERS'),
+               ('CHATELLERA ULT', 'CHATELLERAULT'),
+               ('LOUVECIENN ES', 'LOUVECIENNES'),
+               ('RAMBOUILLE T', 'RAMBOUILLET'),
+               ('PONTCHATEA U', 'PONTCHATEAU'),
+               ('FONBEAUZAR D', 'FONBEAUZARD'),
+               ('L HERBERGEM ENT', 'L HERBERGEMENT'),
+               ('AIX-LES-BAIN S', 'AIX-LES-BAINS'),
+               ('JOUARS PONTCHARTR AIN', 'JOUARS PONTCHARTRAIN'), # from now: insee matching
+               ('BELLERIVE NICE', 'BELLERIVE'), # line pbm => NICE
+               ('Roissy C de Gaulle', 'ROISSY'), 
+               ('BEAUMONT S/OISE', 'BEAUMONT SUR OISE'),
+               ("CHAMPAGNE AU MT D'OR", "CHAMPAGNE AU MONT D'OR"),
+               ('REZE LES NANTES', 'REZE'), # add in corr?
+               ('STAINS BOURRON MARLOTTE', 'STAINS'), # line pbm => BOURRON MARLOTTE
+               ('BIAS PERPIGNAN', 'BIAS'), # line pbm => PERPIGNAN
+               ('CHAPELLE ARMENTIERE S', "LA CHAPELLE D'ARMENTIERES"),
+               ('LONGEVILLE ST AVOLD', 'LONGEVILLE LES ST AVOLD'),
+               ('CERIZAY BEZIERS', 'CERIZAY'), # line pbm => BEZIERS
+               ('VERSAILLES QUIMPER', 'VERSAILLES'), # line pbm => QUIMPER
+               ('LUNEVLLE', 'LUNEVILLE'), # mistake
+               ('HEROUVILLE ST CLAIR ORLEANS', 'HEROUVILLE ST CLAIR'), # line pbm => ORLEANS
+               ('RAILLENCOURT ST OLLE',  'RAILLENCOURT STE OLLE')] # mistake
 
 df_ouv['Ville'] = df_ouv['Ville'].apply(lambda x: adhoc_fix(ls_city_fix, x))
 # remove cedex
@@ -334,61 +443,76 @@ df_ouv['Date'] = df_ouv['Date'].apply(lambda x: adhoc_date_fix(x))
 
 # DISPLAY
 
+# df_ouv['Type Station'] = df_ouv['Type Station'].apply(lambda x: x.lower())
 print u'\nNb ouvetures Access:',\
       len(df_ouv[df_ouv['Type Station'].str.contains('access',
                                                      case = False)])
-# df_ouv['Type Station'] = df_ouv['Type Station'].apply(lambda x: x.lower())
-print df_ouv.to_string()
-
-# ################
-# INSEE MATCHING
-# ################
-
-df_temp = df_fer
-
-path_dir_match_insee = os.path.join(path_data, u'data_insee', 'match_insee_codes')
-path_df_corr = os.path.join(path_dir_match_insee, 'df_corr_gas.csv')
-matching_insee = MatchingINSEE(path_df_corr)
-
-ls_matched = []
-for row_i, row in df_temp.iterrows():
-  match = matching_insee.match_city(row['Ville'], row['CP'][:-3], row['CP'])
-  ls_matched.append(match)
-
-dict_res = {}
-for i, match in enumerate(ls_matched):
-  dict_res.setdefault(match[1], []).append(i)
-
-print '\nINSEE Matching overview:'
-for k,v in dict_res.items():
-	print k, len(v)
-
-##df_ferm
-#print df_temp[ls_disp_fer].iloc[dict_res['no_match']].to_string()
-# fixed manually
-
-df_ma_insee = pd.DataFrame([x[0][0] for x in ls_matched],
-                           index = df_temp.index,
-                           columns = ['i_city', 'i_zip', 'insee_code'])
-
-df_final = pd.merge(df_temp, df_ma_insee,
-                    left_index = True, right_index = True, how = 'left')
-
-df_final_access = df_final[(df_final['Type station'].str.contains('access')) |\
-                           (df_final['Type fermeture'].str.contains('access'))]
-
-pd.set_option('display.max_colwidth', 27)
-
-#print df_final_access[ls_disp_fer + ['i_city', 'insee_code']].to_string()
-#
-#print df_final_access[ls_disp_fer + ['i_city', 'insee_code']]\
-#        [df_final_access['Date ouverture'] == '13/12/2013'].to_string()
-
-df_final_access.to_csv(os.path.join(path_dir_built_csv,
-                                    'df_total_access_opening_dates.csv'),
-                       encoding = 'UTF-8',
-                       index = False)
+print df_ouv[df_ouv['Type Station'].str.contains('access',
+                                                  case = False)].to_string()
 
 # df_ouv:
 # on page breaks: lines merged though they should not (hence two communes)
 # todo: avoid merging and try to fill info when only city is available
+
+# INSEE MATCHING
+
+ls_ouv_matched = []
+for row_i, row in df_ouv.iterrows():
+  match = matching_insee.match_city(row['Ville'], row['CP'][:-3], row['CP'])
+  ls_ouv_matched.append(match)
+
+dict_ouv_res = {}
+for i, match in enumerate(ls_ouv_matched):
+  dict_ouv_res.setdefault(match[1], []).append(i)
+
+print '\nINSEE Matching overview:'
+for k,v in dict_ouv_res.items():
+	print k, len(v)
+
+##df_ouv
+#print df_ouv.iloc[dict_ouv_res['no_match']].to_string()
+# fixed manually
+
+## PRELIMINARY VERSION (NO CHECK ON VALIDITY)
+#
+#df_ouv_ma_insee = pd.DataFrame([x[0][0] for x in ls_ouv_matched],
+#                               index = df_ouv.index,
+#                               columns = ['i_city', 'i_zip', 'insee_code'])
+
+# CHECK INSEE CODES STILL IN USE + DISAMB BIG CITY ARDTS
+
+
+# Check if several results
+ls_ouv_multim = [i for i, match in enumerate(ls_ouv_matched) if len(match[0]) > 1]
+
+ls_rows_ouv_insee = []
+for ls_match in ls_ouv_matched:
+  # first match if several (check city name)
+  row_ouv_insee = [ls_match[0][0][0]] +\
+                   list(refine_insee_code(df_insee_com['CODGEO'].values,
+                                          ls_match[0][0][2]))
+  ls_rows_ouv_insee.append(row_ouv_insee)
+
+df_ouv_ma_insee = pd.DataFrame(ls_rows_ouv_insee,
+                               index = df_ouv.index,
+                               columns = ['city', 'ci_1', 'ci_ardt_1'])
+
+df_ouv_final = pd.merge(df_ouv,
+                        df_ouv_ma_insee,
+                        left_index = True,
+                        right_index = True,
+                        how = 'left')
+
+print df_ouv_final[pd.isnull(df_ouv_final['ci_1'])].to_string()
+#print df_ouv_final.iloc[dict_ouv_res['dpt_city_in_match(es)']].to_string()
+#print df_ouv_final.iloc[dict_ouv_res['dpt_city_match']].to_string()
+
+# a lot have not label and may be Total Access?
+df_ouv_access_final =\
+   df_ouv_final[(df_ouv_final['Type Station'].str.contains('access',
+                                                           case = False))]
+
+df_ouv_final.to_csv(os.path.join(path_dir_total_csv,
+                                 'df_total_ouv_20141208.csv'),
+                    encoding = 'UTF-8',
+                    index = False)
