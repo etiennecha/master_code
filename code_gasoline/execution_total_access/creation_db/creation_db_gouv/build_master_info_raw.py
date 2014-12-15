@@ -90,6 +90,6 @@ enc_json(master_info, os.path.join(path_dir_built_json,
 enc_json(master_info, os.path.join(path_dir_built_json,
                                    'master_info_fixed.json'))
 
-print u'\nCreation of master_info_raw.json (and _fixed.json) successful'
+print u'\nCreation of master_info_raw.json successful'
 print type(master_info)
 print u'Length:', len(master_info)

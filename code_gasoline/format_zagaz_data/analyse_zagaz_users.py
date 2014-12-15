@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import add_to_path_sub
-from add_to_path_sub import path_data
+import add_to_path
+from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 from generic_competition import *
@@ -12,34 +12,22 @@ import copy
 import collections
 import pandas as pd
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_zagaz = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_zagaz')
+path_dir_zagaz_raw = os.path.join(path_dir_zagaz, 'data_zagaz_raw')
+path_dir_zagaz_json = os.path.join(path_dir_zagaz, 'data_zagaz_json')
 
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
-path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
-path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
-path_info_output = os.path.join(path_dir_built_json, 'master_info_diesel_for_output.json')
+dict_zagaz_stations_2012 = dec_json(os.path.join(path_dir_zagaz_json,
+                                                 '2012_dict_zagaz_stations.json'))
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
-path_csv_insee_data = os.path.join(path_dir_source, 'data_other', 'data_insee_extract.csv')
-
-path_dir_zagaz = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
-
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_match_insee_codes = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
-
-master_price = dec_json(path_diesel_price)
-master_info = dec_json(path_info_output)
-dict_brands = dec_json(path_dict_brands)
-dict_dpts_regions = dec_json(path_dict_dpts_regions)
-
-dict_zagaz_stations_2012 = dec_json(os.path.join(path_dir_zagaz, '2012_dict_zagaz_stations.json'))
-dict_zagaz_station_ids = dec_json(os.path.join(path_dir_zagaz,\
+dict_zagaz_station_ids = dec_json(os.path.join(path_dir_zagaz_json,\
                                                '20140124_dict_zagaz_station_ids.json'))
-dict_zagaz_prices = dec_json(os.path.join(path_dir_zagaz, '20140127_dict_zagaz_ext_prices.json'))
-#dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz, '20140124_dict_zagaz_users.json'))
-dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz, '20140408_dict_zagaz_user_info.json'))
+dict_zagaz_prices = dec_json(os.path.join(path_dir_zagaz_json,
+                                          '20140127_dict_zagaz_ext_prices.json'))
+## todo: merge both?
+#dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz,
+#                                         '20140124_dict_zagaz_users.json'))
+dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz_json,
+                                         '20140408_dict_zagaz_user_info.json'))
 
 # Content of station description within dict_zagaz_stations:
 # [id, brand, name, comment, street, zip_code, city, gps_tup, other?]
@@ -55,7 +43,8 @@ dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz, '20140408_dict_zagaz_us
 ls_missing_gps_zagaz = [indiv_id for indiv_id, indiv_info in dict_zagaz_station_ids.items()\
                           if indiv_id not in dict_zagaz_stations_2012]
 print len(ls_missing_gps_zagaz), 'gps coordinates missing vs. 2012 files'
-# TODO: pbm: need to have all insee codes if those are used for matching
+# todo: need to have all insee codes if those are used for matching
+# insee matching to be done properly for both 2012 and 2013
 
 dict_dict_contribs = {}
 ls_user_nb_contribs = []
@@ -68,16 +57,19 @@ for user_id, user_info in dict_zagaz_users.items():
   dict_dict_contribs[user_id] = dict_user_contrib
   ls_user_station_contribs.append(len(dict_user_contrib))
 
-# Nb of contributions / stations contributed by user
+# Nb of contributions by user (contrib can encompass prices of different kinds of fuel?)
 se_user_nb_contribs = pd.Series(ls_user_nb_contribs)
-print 'users w/ 3+ contribs:', len(se_user_nb_contribs[se_user_nb_contribs > 3]) 
-print 'users w/ 4+ contribs:', len(se_user_nb_contribs[se_user_nb_contribs > 4]) 
-print 'users w/ 5+ contribs:', len(se_user_nb_contribs[se_user_nb_contribs > 5]) 
+print '\nNb contributions by user'
+for i in range(3, 6):
+  print 'Users w/ {:d}+ contribs: {:d}'.\
+          format(i, len(se_user_nb_contribs[se_user_nb_contribs >= i]))
 
+# Nb of stations contributed by user (ever: idea of market for this user)
 se_user_station_contribs = pd.Series(ls_user_station_contribs)
-print 'users w/ 3+ stations:', len(se_user_station_contribs[se_user_station_contribs > 3]) 
-print 'users w/ 4+ stations:', len(se_user_station_contribs[se_user_station_contribs > 4]) 
-print 'users w/ 5+ stations:', len(se_user_station_contribs[se_user_station_contribs > 5]) 
+print '\nNb stations contributed by user'
+for i in range(3, 6):
+  print 'Users w/ {:d}+ stations: {:d}'.\
+          format(i, len(se_user_nb_contribs[se_user_nb_contribs >= i]))
 
 ls_ls_user_contrib = []
 for user_id, dict_user_contrib in dict_dict_contribs.items():
@@ -87,7 +79,6 @@ for user_id, dict_user_contrib in dict_dict_contribs.items():
 
 # GRAPHS: check:
 # http://nbviewer.ipython.org/github/cs109/content/blob/master/lec_03_statistical_graphs.ipynb
-
 # todo: both on same graphs with two colors...
 
 # Registration dates
@@ -186,24 +177,6 @@ plt.show()
 #for k, v in dict_relations_stats.items():
 #  print k, len(v)
 
-  # todo: map of zagaz stations.. would be cool to make display of markets easy
-  # markets around stations or general?
-  # view javascript? 
-
-zero = 0.000001
-ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
-df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
-df_price_chge = df_price.shift(1) - df_price
-ls_res = []
-for ind in df_price_chge.index:
-  ls_res.append(len(df_price_chge.ix[ind][np.abs(df_price_chge.ix[ind]) > zero]))
-se_nb_chges = pd.Series(ls_res, ls_dates)
-se_nb_chges[se_nb_chges < zero] = np.nan
-se_nb_chges_w = se_nb_chges.resample('W', how  = 'sum')
-se_nb_chges_w.plot()
-plt.show()
-# TODO: check if nan as soon as one is nan... + synchronize weeks
-df_registrations_w['nb_chges'] = se_nb_chges_w
-# TODO: add price level + perform analysis in variations (regressions)
-
-# TODO: import google data
+# todo: map of zagaz stations.. would be cool to make display of markets easy
+# markets around stations or general?
+# view javascript? 
