@@ -23,26 +23,8 @@ path_dir_insee_dpts_regions = os.path.join(path_data, u'data_insee', u'dpts_regi
 
 # LOAD GAS STATION ADDRESSES
 
-#master_price_raw = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel_raw.json'))
 #master_price = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel_fixed.json'))
-
-#master_info_raw = dec_json(os.path.join(path_dir_built_json, u'master_info_raw.json'))
 master_info = dec_json(os.path.join(path_dir_built_json, u'master_info_fixed.json'))
-
-# Fix detected problems (might need to comment out)
-master_info.pop('99999002', None) # drop it at build to avoid pbms
-master_info['76170004']['address'][5] = (u'autoroute a 29',
-                                         u'76210 bolleville')
-master_info['40410003']['address'][6] = (u'aire porte des landes est',
-                                         u'40410 saugnacq et muret')
-master_info['40410004']['address'][6] = (u'aire porte des landes ouest',
-                                         u'40410 saugnacq et muret')
-master_info['29140005']['address'][6] = None # got valid addresses before
-master_info['74600011']['address'][6] = (u'AUTOROUTE A41 NORD',
-                                         u'74600 SEYNOD') # to get insee match
-## Get rid or clean 4, 5, 6 if included
-#master_info['15400003']['address'][6] = (u'zone industrielle du sedour',
-#                                         u'15400 riom-\xc8s-montagnes')
 
 # Build master_addresses (addresses corrected for html pbms and somewhat stdized)
 dict_addresses = {indiv_id: [indiv_info['address'][i]\

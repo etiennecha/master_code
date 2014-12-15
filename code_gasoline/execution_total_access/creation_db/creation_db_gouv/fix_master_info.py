@@ -24,6 +24,7 @@ master_info = dec_json(os.path.join(path_dir_built_json,
                                     'master_info_raw.json'))
 master_diesel = dec_json(os.path.join(path_dir_built_json,
                                     'master_price_diesel_raw.json'))
+# could check master_gas too if needed
 
 # LOAD OPEN DATA
 
@@ -57,7 +58,7 @@ ls_ids_lost = [id_gouv for id_gouv in ls_missing_ids\
                  if id_gouv not in df_info_open.index]
 
 # Nb of elements for each info field (nb of records over time)
-nb_info_records = len(master_info[master_info.keys()[0]])
+nb_info_records = len(master_info[master_info.keys()[0]]['address'])
 
 for id_gouv in ls_ids_tofill:
   highway = 0 if df_info_open.ix[id_gouv]['pop'] == 'A' else 1
@@ -87,47 +88,54 @@ for id_gouv, station_info in master_info.items():
   ls_addresses = [x for x in station_info['address'] if x]
   if not ls_addresses:
     print '\n', id_gouv, 'has no address'
-  # check validity of addresses (add zip_code check)
-  if any([len([x for x in address if x]) != 2 for address in ls_addresses]):
-    print '\n', id_gouv, 'has an invalid address:'
-    print station_info['address'] 
-
-#master_info.pop('99999002', None) # drop it at build to avoid pbms
+  elif all([len([x for x in address if x]) != 2 for address in ls_addresses]):
+    print '\n', id_gouv, 'has only invalid addresses:'
+    print station_info['address']
+  elif any([len([x for x in address if x]) != 2 for address in ls_addresses]):
+    print '\n', id_gouv, 'has some invalid addresses:'
+    master_info[id_gouv]['address'] = \
+      [address if ((address) and (len([x for x in address if x]) == 2)) else None\
+         for address in station_info['address']]
+    print 'Fixed master info:',
+    print master_info[id_gouv]['address']
 
 # todo: if missing street once but other valid addresses, just drop problematic address
-# todo: loop + check if id_gouv in master_info
 
-master_info['76170004']['address'] = [None for i in range(nb_info_records)] +\
-                                     [[u'Toulbroche',
-                                       u'56870 BADEN']]
+print '\nRemaining problems'
+for id_gouv in ['76170004', '74600011', '63190008', '99999001']:
+  print id_gouv, master_info[id_gouv]['address']
 
-master_info['40410003']['address']= [None for i in range(nb_info_records)] +\
-                                     [[u'aire porte des landes est',
-                                       u'40410 saugnacq et muret']]
+ls_address_fix = [['76170004', [u'autoroute a 29', 
+                                 u'76210 bolleville']], # no address
+                  ['63190008', [u'AIRE DE LEZOUX - A72',
+                                u'63190 LEZOUX']]] # for insee matching
+                  #['74600011', [u'AUTOROUTE A41 NORD',
+                  #              u'74600 SEYNOD']] # for insee matching
+                  #['76170004', [u'Toulbroche',
+                  #              u'56870 BADEN']],
+                  #['40410003', [u'aire porte des landes est',
+                  #              u'40410 saugnacq et muret']],
+                  #['40410004', [u'aire porte des landes ouest',
+                  #              u'40410 saugnacq et muret']],
+                  #['29140005', [u'RN165 voie express',
+                  #              u'29140 SAINT-YVI']],
 
-master_info['40410003']['address']= [None for i in range(nb_info_records)] +\
-                                     [[u'aire porte des landes est',
-                                       u'40410 saugnacq et muret']]
+# Commented out: no more necessary with last info record
 
-master_info['40410004']['address'] = [None for i in range(nb_info_records)] +\
-                                     [[u'aire porte des landes ouest',
-                                       u'40410 saugnacq et muret']]
+for id_gouv, address in ls_address_fix:
+  if id_gouv in master_info:
+    master_info[id_gouv]['address']= [None for i in range(nb_info_records - 1)] +\
+                                     [address]
 
-master_info['29140005']['address']= [None for i in range(nb_info_records)] +\
-                                    [[u'RN165 voie express', u'29140 SAINT-YVI']]
+# First in master_info, other just in master_price: test stations...
+for id_gouv in ['99999001', '99999002']:
+  master_info.pop(id_gouv, None)
 
-master_info['74600011']['address'][6] = [None for i in range(nb_info_records)] +\
-                                        [[u'AUTOROUTE A41 NORD', u'74600 SEYNOD']] # for insee
-
-## Get rid or clean 4, 5, 6 if included
-#master_info['15400003']['address'][6] = (u'zone industrielle du sedour',
-#                                         u'15400 riom-\xc8s-montagnes')
 # OUTPUT
 
-## No preliminary fix deemed necessary at this stage... could add (e.g. brands)
-#enc_json(master_info, os.path.join(path_dir_built_json,
-#                                   'master_info_fixed.json'))
-#
-#print u'\nCreation of master_info_fixed.json successful'
-#print type(master_info)
-#print u'Length:', len(master_info)
+enc_json(master_info, os.path.join(path_dir_built_json,
+                                   'master_info_fixed.json'))
+
+print u'\nCreation of master_info_fixed.json successful'
+print type(master_info)
+print u'Length:', len(master_info)

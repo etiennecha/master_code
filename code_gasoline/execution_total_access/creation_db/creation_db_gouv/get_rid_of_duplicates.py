@@ -70,7 +70,8 @@ ls_tup_duplicates_update = [('13010002', '13010010'),
                             ('13590001', '13590003'),
                             ('13660003', '13660004'),
                             ('14000001', '14000015'), # fix brand (get rid of T before TA)
-                            ('14000008', '14000017'),
+                            ('14000008', '14000016'),
+                            ('14000016', '14000017'),
                             ('14051002', '14051003'),
                             ('14123002', '14123006'),
                             ('14130002', '14130006'), # fix brand (get rid of T before TA)
@@ -348,7 +349,9 @@ ls_tup_duplicates_update = [('13010002', '13010010'),
                             ('91550001', '91550003'), # check avia in PARAY-VIEILLE-POSTE
                             ('91570002', '91570003'),
                             ('92000004', '92000015'),
-                            ('92110005', '92110009'),
+                            ('92110004', '92110005'),
+                            ('92110005', '92110008'),
+                            ('92110008', '92110009'),
                             ('92110006', '92110007'),
                             ('92140001', '92140012'), # check TA
                             ('92140006', '92140013'), # check TA
@@ -367,7 +370,7 @@ ls_tup_duplicates_update = [('13010002', '13010010'),
                             ('93600013', '93600014'),
                             ('93800004', '93800005'),
                             ('94100004', '94100009'),
-                            ('94340004', '94340005'),
+                            ('94340004', '94340005'), # TA Sagy
                             ('94430001', '94430006'),
                             ('95800005', '95800006'),
                             ('95230001', '95230007'), # weird back to T after TA !?
@@ -376,8 +379,19 @@ ls_tup_duplicates_update = [('13010002', '13010010'),
                             ('95320002', '95320003'),
                             ('95320003', '95320005'),
                             ('95370002', '95370006'),
-                            ('95450003', '95450005'),
+                            ('95450004', '95450005'),
                             ('95740003', '95740004'),
+                            ('95000008', '95000012'),
+                            ('90000010', '90000011'),
+                            ('90000011', '90000012'),
+                            ('88220002', '88220003'),
+                            ('88200012', '88200013'), # now 14?
+                            ('85280001', '85280002'),
+                            ('82200006', '82200009'), # MOISSAC not easy, check INTERMARCHES w/ LSA
+                            ('33460001', '33460003'),
+                            ('76240004', '76240005'),
+                            ('80410001', '80410002'),
+                            ('6130004', '6130009'),
                             ('1000005', '1000011'),
                             ('1160004', '6160007'),
                             ('2130002', '2130005'),
@@ -407,6 +421,9 @@ ls_tup_duplicates_update = [('13010002', '13010010'),
                             ('9240001', '9240002')] # check ci_ardt_1 09042 LA BASTIDE DE SEROU
 
 ls_tup_duplicates += ls_tup_duplicates_update
+
+# todo: drop 87160005, 87160006 since just redundant with 87160001 and 87160002 (check 3, 4?)
+# todo: drop 85210005, 85210006 ... same with 85210002
 
 # Doubts: try to use zagaz
 # 13127001, 13127003, 13127009
@@ -522,8 +539,12 @@ for x, y in ls_tup_duplicates:
       df_prices_ttc.drop(x, axis = 1, inplace = True)
       df_prices_ht.drop(x, axis = 1, inplace = True)
       
-      # TODO: fix start date + other fields not to lose info
-
+      # fix start and end data (todo: other fields?)
+      ls_start_dates = [df_info.ix[x]['start'], df_info.ix[y]['start']]
+      df_info.loc[y, 'start'] = min(ls_start_dates)
+      ls_end_dates = [df_info.ix[x]['end'], df_info.ix[y]['end']]
+      df_info.loc[y, 'end'] = max(ls_end_dates)
+      
       # fix brand (assuming weird stuffs may be possible)
       ls_tup_x = [(df_info.ix[x]['brand_%s' %i],
                    df_info.ix[x]['day_%s' %i]) for i in range(3)\

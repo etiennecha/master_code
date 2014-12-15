@@ -23,10 +23,6 @@ path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 # LOAD GAS STATION DATA
 # ######################
 
-#master_price_raw = dec_json(os.path.join(path_dir_built_json,
-#                                         'master_price_diesel_raw.json'))
-#master_info_raw = dec_json(os.path.join(path_dir_built_json,
-#                                        'master_info_raw.json'))
 master_price = dec_json(os.path.join(path_dir_built_json,
                                      'master_price_diesel_fixed.json'))
 master_info = dec_json(os.path.join(path_dir_built_json,
@@ -100,7 +96,7 @@ for i, (start, end) in enumerate(ls_start_end):
     ls_to_be_chged.append(i)
     if start:
       master_price['dict_info'][master_price['ids'][i]]['brand'][0][1] = start
-      
+
 # Adds brand_std to dict_info in master_price and create corresponding dict_std_brands:
 dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
 for indiv_id, indiv_info in master_price['dict_info'].items():
