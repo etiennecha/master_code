@@ -19,9 +19,6 @@ path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
 # LOAD GAS STATION ADDRESSES
 
-#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-#master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_raw.json'))
-
 #master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
 master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
 
@@ -31,10 +28,6 @@ for indiv_id, station in master_info.items():
   dict_addresses[indiv_id] = [station['address'][i] for i in (8, 7, 6, 5, 3, 4, 0)\
                                 if station['address'][i]]
 master_addresses = build_master_addresses(dict_addresses)
-master_addresses['15400003'] = [(u'zone industrielle du sedour',
-                                 u'15400 riom-\xc8s-montagnes')]
-master_addresses['76170004'] = [(u'autoroute a 29',
-                                 u'76210 bolleville')]
 
 # UPDATE MASTER GEOCODING
 master_geocoding = dec_json(os.path.join(path_dir_built_json, 'master_geocoding.json'))
@@ -52,7 +45,7 @@ for indiv_id, ls_addresses in master_addresses.iteritems():
         master_geocoding[indiv_id][0].append(list(address))
         master_geocoding[indiv_id][1].append(None)
 ls_miss_adr_ids = list(set(ls_miss_adr_ids))
-print 'Nb ids not included in master_geocoding', len(ls_miss_ids)
+print 'Nb ids not included in master_geocoding:', len(ls_miss_ids)
 print 'Nb ids w/ missing addresses in master_geocoding:', len(ls_miss_adr_ids)
 
 # todo: may want to use standardized string comparison

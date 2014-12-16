@@ -66,41 +66,6 @@ for df_temp in [df_ci, df_geocoding]:
                              right_index = True,
                              how = 'outer')
 
-# ##################
-# TEMP: ADD MISSING
-# ##################
-
-## to fix
-#ls_fix_disp = ['name', 'adr_street', 'adr_city', 'brand_0', 'ci_ardt_1']
-##print df_station_info[(pd.isnull(df_station_info['adr_city'])) |\
-##                      (pd.isnull(df_station_info['ci_ardt_1']))][ls_fix_disp].to_string()
-#ls_missing_ids = list(df_station_info[(pd.isnull(df_station_info['adr_city'])) |\
-#                                      (pd.isnull(df_station_info['ci_ardt_1']))].index)
-#print '\nNb ids missing in my info records:', len(ls_missing_ids)
-#
-## load gouv open data
-#df_info_open = pd.read_csv(os.path.join(path_data,
-#                                        'data_gasoline',
-#                                        'data_source',
-#                                        'data_gouv_open',
-#                                        'df_info_all.csv'),
-#                           dtype = {'id_station' : str,
-#                                    'zip_code' : str},
-#                           encoding = 'UTF-8')
-#df_info_open.set_index('id_station', inplace = True)
-#ls_missing_found = [id_gouv for id_gouv in ls_missing_ids if id_gouv in df_info_open.index]
-#print '\nNb ids found in open data records:', len(ls_missing_ids)
-#
-#df_info_open.rename(columns = {'city' : 'adr_city',
-#                               'zip_code' : 'adr_zip',
-#                               'street' : 'adr_street',
-#                               'cl_days' : 'closed_days_l'},
-#                    inplace = True)
-#
-## todo: update field names and content but ok otherwise
-#for id_gouv in ls_missing_found:
-#  df_station_info.ix[id_gouv] = df_info_open.ix[id_gouv]
-
 # ######
 # OUTPUT
 # ######

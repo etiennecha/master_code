@@ -17,9 +17,6 @@ path_dir_built_paper = os.path.join(path_data,
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
-path_dir_match_insee = os.path.join(path_data, u'data_insee', 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_data, u'data_insee', 'data_extracts')
-
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_csv_rls = os.path.join(path_dir_source, 'data_other', 'data_rls.csv')
 path_dir_gps_coordinates = os.path.join(path_dir_source, 'data_stations', 'data_gouv_gps')
@@ -47,8 +44,6 @@ dict_addresses = {indiv_id: [indiv_info['address'][i]\
                                for i in (8, 7, 6, 5, 3, 4, 0) if indiv_info['address'][i]]\
                     for (indiv_id, indiv_info) in master_info.items()}
 master_addresses = build_master_addresses(dict_addresses)
-# master_addresses['15400003'] = [(u'zone industrielle du sedour', u'15400 riom-\xc8s-montagnes')]
-master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')]
 
 # ########################################
 # GAS STATIONS GPS COORDINATES (FROM GOUV)
@@ -104,7 +99,7 @@ for indiv_id, ls_addresses in master_addresses.items():
   for address in ls_addresses:
     if 'autoroute' in address[0] or\
        re.search('(^|\s|-)a\s?[0-9]{1,3}($|\s|-|,)', address[0]) or\
-       master_info[indiv_id]['highway'][3] == 1 or\
+       any([x == 1 for x in master_info[indiv_id]['highway']]) or\
        indiv_id in ls_gouv_highway_ids:
       set_highway_ids.add(indiv_id)
 ls_mistakes_highway = ['93130007', '75017016', '56190007', '68127001', '7580002']
@@ -250,10 +245,6 @@ for field in ['name', 'adr_street', 'zip_city']:
 
 print u'\nNb with no address', len(df_name_adr[pd.isnull(df_name_adr['adr_street']) &\
                                                pd.isnull(df_name_adr['zip_city'])])
-
-# adhoc fix
-df_name_adr.loc[u'76170004', 'adr_street'] = u'autoroute a 29'
-df_name_adr.loc[u'76170004', 'zip_city']   = u'76210 bolleville'
 
 # Get zip, dpt, city
 pat_zip = u"([0-9]?[0-9AB][0-9]{3})\s"
