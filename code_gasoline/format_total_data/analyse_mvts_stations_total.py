@@ -40,9 +40,10 @@ df_fer = df_fer_raw.drop_duplicates().copy()
 df_fer.sort('Station', inplace = True)
 ls_di_fer = ['Type station', 'Type fermeture', 'Date fermeture', 'Date ouverture',
              'Station', 'Adresse', 'CP', 'Ville']
-print df_fer[ls_di_fer].to_string()
 
-# Format "Type station", and "Type fermeture"
+# print df_fer[ls_di_fer].to_string()
+
+# FORMAT "Type station" AND "Type fermeture"
 
 def format_type_station(x):
   if (re.search('provisoire.*acce\s?ss?', x)) or (x == 'passage total access'):
@@ -63,14 +64,12 @@ df_fer.loc[~pd.isnull(df_fer['Type fermeture']), 'Type fermeture'] =\
     df_fer.loc[~pd.isnull(df_fer['Type fermeture']), 'Type fermeture'].apply(\
        lambda x: format_type_station(x))
 
+print u'\nOverview of Type fermeture after normalization'
 print df_fer['Type fermeture'].value_counts()
 print df_fer[ls_di_fer][df_fer['Type fermeture'] == 'total access'].to_string()
 
-# Fix and format dates
-#df_fer.loc[df_fer['Station'] == 'RELAIS ST LEU LA FORET',
-#           'Date fermeture'] = '22/11/2012'
-#df_fer.loc[df_fer['Station'] == 'RELAIS ST LEU LA FORET',
-#           'Date ouverture'] = '08/02/2013'
+# FIX AND FORMAT DATES
+
 for field in ['Date fermeture', 'Date ouverture']:
   df_fer[field] = pd.to_datetime(df_fer[field],
                                  format = '%d/%m/%Y',
@@ -84,6 +83,19 @@ print u'\nCheck fermeture then ouverture',\
 print df_fer[ls_di_fer][(~pd.isnull(df_fer['Date ouverture'])) &\
                         (~pd.isnull(df_fer['Date fermeture'])) &\
                         (df_fer['Date fermeture'] > df_fer['Date ouverture'])].to_string()
+
+print u'\nCheck interval during which station closed'
+df_fer['interval'] = df_fer['Date fermeture'] - df_fer['Date ouverture']
+print df_fer['interval'].describe()
+
+# OVERVIEW DUPLICATE STATIONS
+
+# check if several rows for the same station (based on station name: some errors)
+ls_dup_stations = list(df_fer['Station'][df_fer.duplicated('Station')].unique())
+df_fer_dup = df_fer[df_fer['Station'].isin(ls_dup_stations)].copy()
+df_fer_dup.sort('Station', inplace = True)
+print df_fer_dup[ls_di_fer].to_string()
+
 # ##########
 # OUVERTURES
 # ##########
