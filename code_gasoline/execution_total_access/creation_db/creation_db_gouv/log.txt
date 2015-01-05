@@ -22969,4 +22969,814 @@ Extract: chge in hours (non null):
 76410003         Dimanche  Ouvert de 06h30 à 20h00         Dimanche  Ouvert de 06h30 à 18h30
 83690004             None  Ouvert de 07h00 à 19h30             None  Ouvert de 06h00 à 18h30
 
-Nb with no address 5
+Nb with no address 5Issues with addresses / zip codes:
+Several_zip 501
+Multi_address 885
+1 10965
+2 49
+[([(u'barraux', '38530', '38027')], 'zip_city_match'),
+ ([(u'pontcharra', '38530', '38314')], 'zip_city_match')]
+[([(u'plouguernevel', '22110', '22220')], 'zip_city_match'),
+ ([(u'rostrenen', '22110', '22266')], 'zip_city_match')]
+[([(u'melun', '77000', '77288')], 'zip_city_match'),
+ ([(u'la rochette', '77000', '77389')], 'zip_city_match')]
+[([(u'jouy le moutier', '95000', '95323')], 'zip_city_match'),
+ ([(u'cergy', '95000', '95127')], 'zip_city_match')]
+[([(u'laniscat', '22570', '22107')], 'zip_city_match'),
+ ([(u'gouarec', '22570', '22064')], 'zip_city_match')]
+[([(u'saint nolff', '56250', '56231')], 'zip_city_match'),
+ ([(u'elven', '56250', '56053')], 'zip_city_match'),
+ ([(u'saint nolff', '56250', '56231')], 'zip_city_match')]
+[([(u'soyons', '07130', '07316')], 'zip_city_match'),
+ ([(u'soyons', '07130', '07316')], 'zip_city_match'),
+ ([(u'guilherand granges', '07500', '07102')], 'zip_city_match')]
+[([(u'hoymille', '59492', '59319')], 'zip_city_match'),
+ ([(u'lille', '59000', '59350')], 'zip_city_match')]
+[([(u'sainte savine', '10300', '10362')], 'zip_city_match'),
+ ([(u'la chapelle saint luc', '10600', '10081')], 'zip_city_match')]
+[([(u'pradines', '46090', '46224')], 'zip_city_match'),
+ ([(u'cahors', '46000', '46042')], 'zip_city_match')]
+[([(u'cergy', '95000', '95127'), (u'cergy', '95800', '95127')],
+  'dpt_city_match'),
+ ([(u'jouy le moutier', '95280', '95323')], 'zip_city_match')]
+[([(u'cheraute', '64130', '64188')], 'zip_city_match'),
+ ([(u'mauleon licharre', '64130', '64371')], 'zip_city_match')]
+[([(u'pfaffenhoffen', '67350', '67372')], 'zip_city_match'),
+ ([(u'niedermodern', '67350', '67328')], 'zip_city_match')]
+[([(u'noisiel', '77200', '77337')], 'zip_city_match'),
+ ([(u'torcy', '77200', '77468')], 'zip_city_match')]
+[([(u'valbonne', '06560', '06152')], 'zip_city_match'),
+ ([(u'vallauris', '06220', '06155')], 'dpt_city_match')]
+[([(u'cornillon', '30630', '30096')], 'zip_city_match'),
+ ([(u'cornillon', '30630', '30096')], 'dpt_city_match'),
+ ([(u'monteils', '30360', '30177')], 'zip_city_match')]
+[([(u'port en bessin huppain', '14520', '14515')], 'zip_city_in_match(es)'),
+ ([(u'thury harcourt', '14220', '14689')], 'zip_city_match'),
+ ([(u'port en bessin huppain', '14520', '14515')], 'zip_city_match')]
+[([(u'saint fargeau ponthierry', '77310', '77407')], 'zip_city_match'),
+ ([(u'ponthierry', '77310', '77900')], 'zip_city_match')]
+[([(u'strasbourg', '67200', '67482')], 'zip_city_match'),
+ ([(u'oberhausbergen', '67205', '67343')], 'zip_city_match')]
+[([(u'lacanau', '33680', '33214')], 'zip_city_match'),
+ ([(u'lacanau ocean', '33680', '33901')], 'zip_city_match')]
+[([(u'avignon', '84140', '84007')], 'zip_city_match'),
+ ([(u'fournes', '30210', '30116')], 'zip_city_match')]
+[([(u'hallignicourt', '52100', '52235')], 'zip_city_match'),
+ ([(u'pagny sur meuse', '55190', '55398')], 'zip_city_match')]
+[([(u'sommesous', '51320', '51545')], 'zip_city_match'),
+ ([(u'sompuis', '51320', '51550')], 'zip_city_match')]
+[([(u'mezzavia', '20167', '20004')], 'zip_city_match'),
+ ([(u'mezzavia', '20167', '20004')], 'zip_city_match'),
+ ([(u'valle di mezzana', '20167', '20336')], 'zip_city_match')]
+[([(u'avrainville', '91630', '91041')], 'zip_city_match'),
+ ([(u'saint michel sur orge', '91240', '91570')], 'zip_city_match')]
+[([(u'bastia', '20200', '20033')], 'zip_city_match'),
+ ([(u'ville di pietrabugno', '20200', '20353')], 'zip_city_match')]
+[([(u'auberive', '52160', '52023')], 'zip_city_match'),
+ ([(u'perrogney les fontaines', '52160', '52384')], 'dpt_city_match')]
+[([(u'allan', '26780', '26005')], 'zip_city_match'),
+ ([(u'malataverne', '26780', '26169')], 'zip_city_match')]
+[([(u'villefranche sur saone', '69400', '69264')], 'zip_city_match'),
+ ([(u'arnas', '69400', '69013')], 'zip_city_match')]
+[([(u'gevrey chambertin', '21220', '21295')], 'zip_city_match'),
+ ([(u'brochon', '21220', '21110')], 'zip_city_match'),
+ ([(u'brochon', '21220', '21110')], 'zip_city_match')]
+[([(u'messas', '45190', '45202')], 'zip_city_match'),
+ ([(u'meung sur loire', '45130', '45203')], 'zip_city_match'),
+ ([(u'messas', '45190', '45202')], 'zip_city_match')]
+[([(u'paris 12eme arrondissement', '75012', '75112')],
+  'zip_city_in_match(es)'),
+ ([(u'paris 20eme arrondissement', '75020', '75120')],
+  'zip_city_in_match(es)')]
+[([(u'flayosc', '83780', '83058')], 'zip_city_match'),
+ ([(u'draguignan', '83300', '83050')], 'zip_city_match')]
+[([(u'montigny le bretonneux', '78180', '78423'),
+   (u'montigny le bretonneux', '78990', '78423')],
+  'dpt_city_match'),
+ ([(u'trappes', '78190', '78621')], 'zip_city_match')]
+[([(u'trappes', '78190', '78621')], 'zip_city_match'),
+ ([(u'montigny le bretonneux', '78180', '78423'),
+   (u'montigny le bretonneux', '78990', '78423')],
+  'dpt_city_match')]
+[([(u'marseille 10eme arrondiss', '13010', '13210')], 'zip_city_in_match(es)'),
+ ([(u'marseille 10eme arrondiss', '13010', '13210')], 'zip_city_in_match(es)'),
+ ([(u'marseille', '13000', '13055')], 'zip_city_match')]
+[([(u'saint ambreuil', '71240', '71384')], 'zip_city_match'),
+ ([(u'chalon sur saone', '71100', '71076')], 'zip_city_match')]
+[([(u'vallauris', '06220', '06155')], 'zip_city_match'),
+ ([(u'le golfe juan', '06220', '06923')], 'zip_city_in_match(es)')]
+[([(u'boulogne sur mer', '62200', '62160')], 'zip_city_match'),
+ ([(u'saint leonard', '62360', '62755')], 'zip_city_match')]
+[([(u'saint fort', '53200', '53215')], 'zip_city_match'),
+ ([(u'chateau gonthier saint fort', '53200', '53062')], 'zip_city_match')]
+[([(u'montigny le bretonneux', '78990', '78423')], 'zip_city_match'),
+ ([(u'elancourt', '78990', '78208')], 'zip_city_match')]
+[([(u'locmine', '56500', '56117')], 'zip_city_match'),
+ ([(u'moreac', '56500', '56140')], 'zip_city_match')]
+[([(u'riom', '63200', '63300')], 'zip_city_match'),
+ ([(u'enval', '63530', '63150')], 'dpt_city_match')]
+[([(u'fain les montbard', '21500', '21259')], 'zip_city_match'),
+ ([(u'montbard', '21500', '21425')], 'zip_city_match'),
+ ([(u'montbard', '21500', '21425')], 'zip_city_match')]
+[([(u'creissels', '12100', '12084')], 'zip_city_match'),
+ ([(u'millau', '12100', '12145')], 'zip_city_match')]
+[([(u'lamotte beuvron', '41600', '41106')], 'zip_city_match'),
+ ([(u'saint cyr en val', '45590', '45272')], 'zip_city_match')]
+[([(u'sagone', '20118', '20348')], 'zip_city_match'),
+ ([(u'coggia', '20118', '20090')], 'zip_city_match')]
+[([(u'eragny', '95610', '95218')], 'zip_city_match'),
+ ([(u'cergy', '95000', '95127'), (u'cergy', '95800', '95127')],
+  'dpt_city_match')]
+[([(u'montlucon', '03100', '03185')], 'zip_city_match'),
+ ([(u'montlucon', '03100', '03185')], 'zip_city_match'),
+ ([(u'domerat', '03410', '03101')], 'zip_city_match')]
+Nb ids not included in master_geocoding: 0
+Nb ids w/ missing addresses in master_geocoding: 0
+
+Stations not geocoded yet 0
+Stations geocoded but result can not be read 0
+ROOFTOP 2112
+INVALID_REQUEST 0
+APPROXIMATE 1870
+ZERO_RESULTS 33
+RANGE_INTERPOLATED 2297
+GEOMETRIC_CENTER 4702
+New service in 4 : Douches
+New service in 4 : Bar
+New service in 4 : Espace bébé / change
+New service in 4 : Aire de camping-cars
+
+Nb chges in days (all): 9232
+Nb chges in days (non null): 14
+Extract: chge in days (non null):
+                                       closed_days_f                  hours_f                                      closed_days_l                  hours_l
+62260002  Lundi Mardi Mercredi Jeudi Vendredi Samedi  Ouvert de 09h00 à 19h30                                           Dimanche  Ouvert de 09h00 à 19h30
+22200003                                    Dimanche            Ouvert 24h/24                                  Mercredi Dimanche            Ouvert 24h/24
+62370001                                    Dimanche            Ouvert 24h/24                Lundi Mardi Mercredi Jeudi Dimanche            Ouvert 24h/24
+50150003  Lundi Mardi Mercredi Jeudi Vendredi Samedi  Ouvert de 08h00 à 19h00                                           Dimanche  Ouvert de 06h30 à 18h00
+29500003  Lundi Mardi Mercredi Jeudi Vendredi Samedi  Ouvert de 09h00 à 19h45                                           Dimanche  Ouvert de 09h45 à 18h45
+25440001  Lundi Mardi Mercredi Jeudi Vendredi Samedi  Ouvert de 09h00 à 19h00                                           Dimanche  Ouvert de 08h00 à 18h00
+3400002                                     Dimanche  Ouvert de 09h00 à 19h00  Lundi Mardi Mercredi Jeudi Vendredi Samedi Dim...  Ouvert de 09h00 à 18h30
+56270001  Lundi Mardi Mercredi Jeudi Vendredi Samedi  Ouvert de 09h00 à 19h30                                           Dimanche  Ouvert de 08h00 à 18h30
+59219001  Lundi Mardi Mercredi Jeudi Vendredi Samedi            Ouvert 24h/24                                           Dimanche  Ouvert de 06h00 à 19h00
+76420004                                    Dimanche  Ouvert de 14h30 à 19h00                               Mardi Jeudi Dimanche  Ouvert de 13h30 à 18h00
+62201001                                    Dimanche  Ouvert de 08h00 à 19h00                                    Samedi Dimanche  Ouvert de 07h45 à 12h00
+47200008                                    Dimanche  Ouvert de 09h00 à 19h30                                     Jeudi Dimanche  Ouvert de 09h15 à 19h15
+14320002                                    Mercredi  Ouvert de 07h30 à 20h00                                  Mercredi Dimanche  Ouvert de 07h30 à 20h00
+14700003                                    Mercredi  Ouvert de 07h00 à 20h00                                           Dimanche  Ouvert de 07h00 à 19h30
+
+Nb chges in hours (all): 3198
+Nb chges in hours (non null): 1392
+Extract: chge in hours (non null):
+            closed_days_f                  hours_f    closed_days_l                  hours_l
+75014005             None  Ouvert de 06h30 à 21h00             None  Ouvert de 05h30 à 20h00
+62100002         Dimanche  Ouvert de 07h15 à 20h00         Dimanche  Ouvert de 06h15 à 19h00
+21300001         Dimanche  Ouvert de 09h00 à 18h00         Dimanche  Ouvert de 09h00 à 17h00
+21300006             None  Ouvert de 06h00 à 22h00             None  Ouvert de 05h00 à 20h00
+57000003             None  Ouvert de 06h00 à 22h00             None  Ouvert de 05h00 à 20h00
+57000004             None            Ouvert 24h/24             None  Ouvert de 07h00 à 21h00
+93600012             None  Ouvert de 05h00 à 23h45             None            Non renseigné
+20113001         Dimanche  Ouvert de 06h30 à 20h30         Dimanche  Ouvert de 05h30 à 19h30
+34690006             None  Ouvert de 00h00 à 23h59             None  Ouvert de 00h00 à 23h45
+39000004             None  Ouvert de 07h30 à 20h30             None  Ouvert de 06h30 à 19h30
+44370006  Samedi Dimanche  Ouvert de 08h15 à 19h15  Samedi Dimanche  Ouvert de 07h15 à 18h15
+44370003             None  Ouvert de 07h00 à 21h00             None  Ouvert de 06h00 à 20h00
+33730001             None  Ouvert de 07h30 à 19h30         Dimanche  Ouvert de 06h30 à 18h30
+13170003             None  Ouvert de 06h00 à 20h00             None  Ouvert de 05h00 à 19h00
+64700001         Dimanche            Non renseigné             None            Ouvert 24h/24
+2200002              None  Ouvert de 06h00 à 22h00             None            Non renseigné
+2200006              None  Ouvert de 06h00 à 21h00             None  Ouvert de 05h00 à 20h00
+78318001             None            Ouvert 24h/24             None  Ouvert de 07h00 à 19h00
+76410003         Dimanche  Ouvert de 06h30 à 20h00         Dimanche  Ouvert de 06h30 à 18h30
+83690004             None  Ouvert de 07h00 à 19h30             None  Ouvert de 06h00 à 18h30
+
+Nb with no address 0
+           name                                  adr_street                     adr_city ci_ardt_1      start        end            brand_0 brand_1 brand_2
+id_station                                                                                                                                                 
+11480006    NaN            AIRE DE LAPALME EST AUTOROUTE A9                      Lapalme     11188        NaT        NaT                NaN     NaN     NaN
+13004002    NaN                  Boulevard Françoise Duparc                    Marseille     13204 2011-09-04 2011-09-14               AGIP     NaN     NaN
+13005008    NaN                     103, boulevard Sakakini                    MARSEILLE     13205 2011-09-04 2011-09-07              TOTAL     NaN     NaN
+13012017    NaN                  53 Avenue de Saint-Barnabé                    MARSEILLE     13212 2012-05-10 2012-07-07                 BP     NaN     NaN
+13014007    NaN                  26 Chemin de Sainte-Marthe                    Marseille     13214 2012-03-16 2012-12-03               AGIP     NaN     NaN
+13140008    NaN                       RN 569 Route d'Istres                      Miramas     13063 2012-01-20 2012-09-21              TOTAL     NaN     NaN
+13320008    NaN                       A51 Aire des Chabauds                 Bouc-Bel-Air     13015        NaT        NaT                NaN     NaN     NaN
+14000016    NaN                   83 Boulevard Yves Guillou                         Caen     14118 2014-10-13 2014-11-30       TOTAL_ACCESS     NaN     NaN
+20200009    NaN                         1 RUE CESAR VEZZANI                       BASTIA     2B033 2013-11-25 2014-01-05               VITO     NaN     NaN
+24620002    NaN                       24 Avenue de la Forge  LES EYZIES-DE-TAYAC-SIREUIL     24172 2013-07-08 2013-07-09        INDEPENDANT     NaN     NaN
+29100005    NaN                      4 Rue Étienne Kernours                   Douarnenez     29046 2012-08-23 2012-12-03              TOTAL     NaN     NaN
+29460004    NaN             aire d'hanvec - voie express 16                       hanvec     29078 2013-09-02 2013-09-30                ELF     NaN     NaN
+29910001    NaN                         Route de Concarneau                      Trégunc     29293 2011-12-30 2012-03-12             CASINO     NaN     NaN
+31520002    NaN                          53 Avenue Tolosane        Ramonville-Saint-Agne     31446 2011-09-04 2011-09-27               AVIA     NaN     NaN
+33460001    NaN                             LIEU DIT LE SOC                        Arsac     33012 2011-09-04 2011-09-08              TOTAL     NaN     NaN
+34400006    NaN                 355 Boulevard Sainte-Claire                        LUNEL     34145 2011-09-04 2011-09-04               AVIA     NaN     NaN
+34400015    NaN                 220 avenue de la République                   Lunel Viel     34146 2012-01-03 2012-05-03               ESSO     NaN     NaN
+34500021    NaN                                         NaN                          NaN       NaN 2012-07-26 2012-08-01              TOTAL     NaN     NaN
+37100009    NaN                  Boulevard du Maréchal Juin                        Tours     37261 2014-04-14 2014-10-30              TOTAL     NaN     NaN
+37200003    NaN                   32 ROUTE DE SAINT-AVERTIN                        TOURS     37261 2014-08-18 2014-11-13              TOTAL     NaN     NaN
+38080005    NaN                 A 43 AIRE DE L ISLE D ABEAU               L Isle D Abeau     38193 2013-09-12 2013-10-06               ESSO     NaN     NaN
+38690002    NaN            AUTOROUTE A 48 GARE DE PEAGEA 48                        RIVES     38337 2011-10-20 2012-01-18               AGIP     NaN     NaN
+40530004    NaN                               AUTOUROUTE 63                      Labenne     40133 2012-03-08 2012-06-12      MOUSQUETAIRES    ESSO     NaN
+40530005    NaN                               autouroute 63                      Labenne     40133 2012-03-31 2012-06-12               ESSO     NaN     NaN
+41350005    NaN                  CD 174 Le haut des Sablons                      VINEUIL     41295 2012-01-02 2012-03-05                ELF     NaN     NaN
+44370007    NaN             A11 AIRE DE VARADES LE GENETAIS                      Varades     44213 2012-02-29 2012-05-21               ESSO     NaN     NaN
+44730001    NaN                      125 route de la Plaine       SAINT MICHEL CHEF CHEF     44182 2012-06-13 2012-08-12           SYSTEMEU     NaN     NaN
+45190008    NaN                               Autoroute A10                       MESSAS     45202 2012-02-20 2012-02-29               ESSO     NaN     NaN
+45680002    NaN                                RUE DE PARIS                     Dordives     45127 2012-08-10 2012-10-15        INTERMARCHE     NaN     NaN
+47550005    NaN          1360 Avenue du Docteur Jean-Noguès                          Boé     47031 2014-04-11 2014-06-26       TOTAL_ACCESS     NaN     NaN
+5100006     NaN                          Avenue du Dauphine                     Briançon     05023 2012-06-20 2012-11-08              TOTAL     NaN     NaN
+51100036    NaN                         2 Rue Armand Bouxin                        REIMS     51454 2013-03-28 2013-04-03                 BP     NaN     NaN
+56000007    NaN                         Z.A.C. de Cliscouet                       VANNES     56260 2013-12-17 2013-12-26           SYSTEMEU     NaN     NaN
+56190009    NaN                   RN 165/sens Vannes-Nantes                     muzillac     56143 2013-08-08 2013-09-25              TOTAL     NaN     NaN
+57370006    NaN                              5 rue de Nancy                   Phalsbourg     57540 2012-07-05 2012-09-02              TOTAL     NaN     NaN
+57400008    NaN                    17 RUE ENCKMANN CHATRIAN                   SARREBOURG     57630 2014-03-20 2014-04-24        INTERMARCHE     NaN     NaN
+58140002    NaN                                    LE BOURG                       Brassy     58037        NaT        NaT                NaN     NaN     NaN
+59148002    NaN                       15 rue des résistants            FLINES LEZ RACHES     59239 2011-09-04 2011-10-09  CARREFOUR_CONTACT     NaN     NaN
+59260004    NaN                       25 Rue Roger Salengro                        LILLE     59350 2012-03-30 2012-06-12              TOTAL     NaN     NaN
+59410002    NaN                       Avenue Anatole France                        Anzin     59014 2012-01-10 2012-05-28              TOTAL     NaN     NaN
+60220003    NaN                              1 rue Alavoine                     FORMERIE     60245        NaT        NaT        INDEPENDANT     NaN     NaN
+60330001    NaN                           43 route de Paris        LE PLESSIS-BELLEVILLE     60500        NaT        NaT              TOTAL     NaN     NaN
+60700003    NaN                      28 Rue Georges Decroze          Pont-Sainte-Maxence     60509 2012-08-06 2012-11-07                 BP     NaN     NaN
+6130004     NaN                      111 ROUTE DE LA PAOUTE                       GRASSE     06069 2011-09-04 2011-09-15              TOTAL     NaN     NaN
+6210008     NaN                            Avenue de Cannes         MANDELIEU-LA-NAPOULE     06079 2013-03-27 2013-07-02               AGIP     NaN     NaN
+62128009    NaN                           Autoroute du Nord                     Wancourt     62873 2014-04-09 2014-04-16               ESSO     NaN     NaN
+63000021    NaN                 Boulevard Winston Churchill             Clermont-Ferrand     63113 2012-06-27 2012-08-25              TOTAL     NaN     NaN
+63190008    NaN                        AIRE DE LEZOUX - A72                       LEZOUX     63195 2013-02-25 2013-04-01               ESSO     NaN     NaN
+6500006     NaN                  1 AVENUE GENERAL DE GAULLE                       MENTON     06083 2013-11-14 2013-12-15                 BP     NaN     NaN
+67000010    NaN                      169 Route de Schirmeck                   STRASBOURG     67482 2011-09-04 2011-09-09               AGIP     NaN     NaN
+69004012    NaN                    97 Rue Denfert-Rochereau                         Lyon     69384 2012-04-11 2012-09-17               AGIP     NaN     NaN
+73100010    NaN                           aire de drumettaz                        Mouxy     73182        NaT        NaT                NaN     NaN     NaN
+74000012    NaN                   4 BIS CHEMIN DES ALLUEGES                       Annecy     74010 2011-11-04 2012-12-03               AGIP     NaN     NaN
+74600009    NaN               AUTOROUTE A41 AIRE DE FONTANE                       Seynod     74268 2011-11-16 2012-12-03                 BP     NaN     NaN
+75017013    NaN                        98 Avenue des Ternes                        PARIS     75117 2011-09-04 2011-09-06         OIL_FRANCE     NaN     NaN
+76170004    NaN                              autoroute a 29                   bolleville     76115 2012-02-25 2012-03-14               ESSO     NaN     NaN
+76240004    NaN                           37 Route de Paris             LE MESNIL-ESNARD     76429 2011-09-04 2011-09-26              TOTAL     NaN     NaN
+76800007    NaN                     63 Avenue des Canadiens     Saint-Étienne-du-Rouvray     76575 2014-07-04 2014-10-09              TOTAL     NaN     NaN
+77184006    NaN                       aire de la Soubriarde                 ÉMERAINVILLE     77169 2013-09-16 2013-09-16               ESSO     NaN     NaN
+77260006    NaN       Aire de Ussy sur Marne - Autoroute A4               Ussy-sur-Marne     77478 2011-11-21 2012-01-19               AGIP     NaN     NaN
+78000017    NaN                      60 AV DE LA REPUBLIQUE                   VERSAILLES     78646 2013-09-06 2013-10-16                 BP     NaN     NaN
+80080002    NaN                                Rue Marivaux                       Amiens     80021 2012-06-25 2012-12-03          AUTRE_GMS     NaN     NaN
+80410001    NaN                       184 RUE MARECHAL FOCH               CAYEUX-SUR-MER     80182 2011-09-04 2011-10-09  CARREFOUR_CONTACT     NaN     NaN
+80700008    NaN                        Rue HonorÉ de Balzac                         Roye     80685        NaT        NaT                NaN     NaN     NaN
+83000002    NaN                203 Boulevard Jules Michelet                       TOULON     83137 2011-09-04 2011-09-26              TOTAL     NaN     NaN
+83000003    NaN              322 Avenue Édouard le Bellegou                       Toulon     83137 2011-09-04 2011-09-06              TOTAL     NaN     NaN
+84300002    NaN                            Avenue de Verdun                    Cavaillon     84035        NaT        NaT              TOTAL     NaN     NaN
+84570001    NaN                          Avenue Jean Jaurès             VILLES-SUR-AUZON     84148 2013-04-16 2013-05-29        INDEPENDANT     NaN     NaN
+85120003    NaN                13 avenue Georges Clémenceau             La Châtaigneraie     85059 2011-09-04 2011-09-21        INTERMARCHE     NaN     NaN
+85210005    NaN                         LES AIRES DE VENDEE               Sainte Hermine     85223 2012-02-27 2012-05-14               ESSO     NaN     NaN
+85210006    NaN                         LES AIRES DE VENDEE               Sainte Hermine     85223 2012-02-27 2012-05-14               ESSO     NaN     NaN
+85280001    NaN                               Rue Nationale                  LA FERRIèRE     85089 2011-09-04 2011-10-05              TOTAL     NaN     NaN
+87160005    NaN                        A2 AIRE DE BOISMANDE    Sant Sulpice-les-Feuilles     87182 2012-02-28 2012-04-27               ESSO     NaN     NaN
+87160006    NaN                          Avenue de l'Avenir   Saint-Sulpice-les-Feuilles     87182 2013-09-02 2013-09-09               ESSO     NaN     NaN
+87280007    NaN                    AIRE DE BEAUNE LES MINES             Beaune-les-Mines     87085 2012-03-09 2012-06-08               ESSO     NaN     NaN
+88200013    NaN                                Rue de Peuxy                 Saint-Nabord     88429 2014-05-12 2014-11-26               AGIP     NaN     NaN
+88220002    NaN              18 Rue de la Vallée de l'Aitre                     XERTIGNY     88530 2011-09-04 2011-10-04           SYSTEMEU     NaN     NaN
+90000011    NaN                   56 Avenue Général Leclerc                      Belfort     90010 2014-03-31 2014-06-04       TOTAL_ACCESS     NaN     NaN
+90000012    NaN                   56 Avenue Général Leclerc                      Belfort     90010 2014-06-14 2014-11-30       TOTAL_ACCESS     NaN     NaN
+91300014    NaN                     190 Av Maréchal LECLERC                        Massy     91377 2012-02-20 2012-08-28                ELF     NaN     NaN
+92110004    NaN                   143 Boulevard Jean Jaurès                       CLICHY     92024 2011-09-04 2011-09-19                ELF     NaN     NaN
+92110008    NaN                   143 Boulevard Jean Jaurès                       Clichy     92024 2014-05-02 2014-07-06                ELF     NaN     NaN
+92140010    NaN                  6 Avenue Claude Trebignaud                      CLAMART     92023 2013-07-12 2013-09-17              TOTAL     NaN     NaN
+92220008    NaN               12/14 AV DU General DE GAULLE                      Bagneux     92007 2012-07-27 2013-02-03                 BP     NaN     NaN
+93420005    NaN                  Boulevard Robert Ballanger                   VILLEPINTE     93078 2013-01-22 2013-02-04       TOTAL_ACCESS     NaN     NaN
+94140002    NaN                     43 quai auguste Blanqui                  ALFORTVILLE     94002 2012-05-29 2012-08-12              TOTAL     NaN     NaN
+94200005    NaN                           168 bd Stalingrad               Ivry-sur-Seine     94041 2012-03-15 2012-05-22              TOTAL     NaN     NaN
+95000008    NaN                              BLD DECANCOURT              Jouy-le-Moutier     95323 2012-02-17 2012-02-27                 BP     NaN     NaN
+95000009    NaN             ANGLE AV GROUETTES BLD L'HAUTIL                        Cergy     95127 2012-02-24 2012-12-02                 BP     NaN     NaN
+95100022    NaN                   193 AVENUE HENRI BARBUSSE                   Argenteuil     95018 2012-02-21 2012-06-01              TOTAL     NaN     NaN
+95100023    NaN  9 rue des Grives ZAC de la Fosse aux loups                   Argenteuil     95018 2012-02-23 2012-12-03                ELF     NaN     NaN
+95190002    NaN                        32 AVENUE DE LA GARE                Goussainville     95280 2012-02-17 2012-03-31              TOTAL     NaN     NaN
+95230005    NaN                   59, BIS AVENUE KELLERMANN       Soisy-sous-Montmorency     95598 2012-02-17 2012-03-22                 BP     NaN     NaN
+95330007    NaN                           2 avenue du lycée                       Domont     95199 2012-02-09 2012-07-07        INDEPENDANT     NaN     NaN
+95450001    NaN                   RN 14 LIEUDIT LA MARLIERE                         Sagy     95535 2012-02-22 2012-09-17                ELF     NaN     NaN
+95450002    NaN                                       RN 14                         Sagy     95535 2012-02-20 2012-06-04              TOTAL     NaN     NaN
+95500004    NaN                      19 Avenue Gabriel Péri                      Gonesse     95277 2012-02-21 2012-06-06              TOTAL     NaN     NaN
+95500009    NaN                                      rd 370                      Gonesse     95277 2013-07-31 2013-07-31              TOTAL     NaN     NaN
+95870007    NaN                  151 Boulevard Gabriel Péri                       Bezons     95063 2012-02-23 2012-12-03                ELF     NaN     NaN
+99999001    NaN                                         NaN                          NaN       NaN 2013-08-07 2013-11-28        INDEPENDANT     NaN     NaN
+99999002    NaN                                         NaN                          NaN       NaN 2013-07-17 2013-09-14            LECLERC     NaN     NaN
+
+------------------------------
+                         name                adr_street     adr_city ci_ardt_1      start        end      brand_0       brand_1 brand_2
+id_station                                                                                                                             
+11000004    RELAIS DU VIGUIER           Route de Limoux  CARCASSONNE     11069 2011-09-04 2014-09-29        TOTAL  TOTAL_ACCESS     NaN
+11000012    SARL TRIAY FRERES  42 Boulevard Jean Jaurès  CARCASSONNE     11069 2012-01-31 2014-12-04  INDEPENDANT           NaN     NaN
+
+------------------------------
+                  name                   adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                               
+12100003     EOR ROUBY   8 Avenue Charles de Gaulle   Millau     12145 2011-09-04 2012-07-31        TOTAL     NaN     NaN
+12100009       Leclerc           Avenue de l'Europe   MILLAU     12145 2012-10-30 2014-12-04      LECLERC     NaN     NaN
+12100010    SERVIFIOUL  25 AV EDOUARD ALFRED MARTEL   MILLAU     12145 2013-09-19 2014-12-04  INDEPENDANT     NaN     NaN
+
+------------------------------
+                                               name                            adr_street   adr_city ci_ardt_1      start        end            brand_0 brand_1 brand_2
+id_station                                                                                                                                                             
+13003003                      GRAND GARAGE MARITIME                172 Boulevard de Paris  Marseille     13203 2011-09-04 2013-02-11        INDEPENDANT     NaN     NaN
+13004002                                        NaN            Boulevard Françoise Duparc  Marseille     13204 2011-09-04 2011-09-14               AGIP     NaN     NaN
+13005008                                        NaN               103, boulevard Sakakini  MARSEILLE     13205 2011-09-04 2011-09-07              TOTAL     NaN     NaN
+13006003              GARAGE NOTRE DAME DE LA GARDE               88 Boulevard Notre-Dame  MARSEILLE     13206 2011-09-04 2012-04-23               AVIA     NaN     NaN
+13008005                      AGIP MARSEILLE ODESSA                       Avenue d'Odessa  Marseille     13208 2011-09-04 2013-01-24               AGIP     NaN     NaN
+13008014                             SARL CP - AVIA                       Avenue d'Odessa  MARSEILLE     13208 2013-11-25 2014-12-04               AVIA     NaN     NaN
+13010008                      INTERMARCHE MARSEILLE                     Boulevard St Loup  MARSEILLE     13210 2011-09-04 2014-08-21        INTERMARCHE     NaN     NaN
+13011015                  sarl camoins distribution                  73 Route des Camoins  MARSEILLE     13211 2013-12-24 2014-11-25  CARREFOUR_CONTACT     NaN     NaN
+13012010                        Esso les trois lucs                 360 avenue des poilus  Marseille     13212 2011-09-04 2012-07-27               ESSO     NaN     NaN
+13012016              INTERMARCHE St Jean du désert                  Rue Gaston de Flotte  MARSEILLE     13212 2011-09-26 2014-12-04        INTERMARCHE     NaN     NaN
+13012017                                        NaN            53 Avenue de Saint-Barnabé  MARSEILLE     13212 2012-05-10 2012-07-07                 BP     NaN     NaN
+13012020    Oil france station de la grande bastide           56 Rue Saint-Jean-du-Désert  MARSEILLE     13212 2011-09-04 2014-05-12         OIL_FRANCE     NaN     NaN
+13013006                  AGIP MARSEILLE LES OLIVES                  44 Avenue des Olives  MARSEILLE     13213 2011-09-04 2013-04-03               AGIP     NaN     NaN
+13013012                            Kontzler Maxime            68 Boulevard de Plombières  MARSEILLE     13213 2012-03-16 2014-12-04        INDEPENDANT     NaN     NaN
+13013013                            RELAIS LOUBIERE             Chemin de Château Gombert  MARSEILLE     13213 2011-09-04 2014-11-06              TOTAL     NaN     NaN
+13013015                         Station Chloé SARL            59 Avenue Frédéric Mistral  MARSEILLE     13213 2014-05-19 2014-12-04        INDEPENDANT     NaN     NaN
+13014003                         VENTO SERVICE SARL  41 BD ALEX. ANSALDI CHEMIN LE MERLAN  MARSEILLE     13214 2011-09-04 2014-01-24               AVIA     NaN     NaN
+13014010                                       AVIA           33 Avenue Alexandre Ansaldi  MARSEILLE     13214 2013-12-12 2014-12-04               AVIA     NaN     NaN
+13014011                     station maison blanche       221 Boulevard Danielle Casanova  MARSEILLE     13214 2014-05-28 2014-12-04        INDEPENDANT     NaN     NaN
+
+------------------------------
+                                name                      adr_street  adr_city ci_ardt_1      start        end       brand_0 brand_1 brand_2
+id_station                                                                                                                                  
+13120004          Relais de la garde             Chemin Jean de Bouc  GARDANNE     13041 2012-03-29 2014-12-04   INDEPENDANT     NaN     NaN
+13120005    STATION SERVICE DE BIVER                      D 58 BIVER  GARDANNE     13041 2012-07-19 2014-12-04   INDEPENDANT     NaN     NaN
+13120006             Leader Gardanne  250 boulevard du pont de Peton  GARDANNE     13041 2012-06-30 2014-11-16  LEADER_PRICE     NaN     NaN
+
+------------------------------
+                               name                       adr_street   adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                                  
+13127001          Relais de l'Etang              RN 113 - CADESTRAUX  VITROLLES     13117 2011-09-04 2013-07-05        TOTAL     NaN     NaN
+13127003    BP VITROLLES CADESTEAUX  QUARTIER LES CADESTEAUX - RN113  VITROLLES     13117 2011-09-04 2014-01-30           BP     NaN     NaN
+13127004         RELAIS DE L'ANJOLY                     AV. D'ITALIE  VITROLLES     13117 2011-10-18 2014-12-04        TOTAL     NaN     NaN
+13127009      Station des Cadestaux              Quartier du Griffon  VITROLLES     13117 2014-04-24 2014-12-04  INDEPENDANT     NaN     NaN
+
+------------------------------
+                                       name                       adr_street       adr_city ci_ardt_1      start        end       brand_0       brand_1 brand_2
+id_station                                                                                                                                                     
+13130003                   ESSO DU CAPITOLE      RN 113 113 QUARTIER CRAPOUX  BERRE-L'ÉTANG     13014 2011-09-04 2013-05-27          ESSO  ESSO_EXPRESS     NaN
+13130004                  ESSO STE VICTOIRE          RN 113 QUARTIER CRAPOUX  BERRE-L'ÉTANG     13014 2011-09-04 2013-05-27          ESSO  ESSO_EXPRESS     NaN
+13130005    SARL le nouveau relais de berre              Avenue Henri Wallon  BERRE-L'ÉTANG     13014 2013-02-25 2014-12-04        DYNEFF           NaN     NaN
+13130006         TOTAL ACCESS Les Chasseurs  les grapoux route nationale 113  BERRE L'ÉTANG     13014 2013-06-25 2014-12-04  TOTAL_ACCESS           NaN     NaN
+
+------------------------------
+                               name                     adr_street             adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                                          
+13170008    Le Relais des Cadeneaux  113 Avenue François Mitterand  LES PENNES-MIRABEAU     13071 2011-11-16 2014-01-19  INDEPENDANT     NaN     NaN
+13170010           Le petit Chateau  1513 route départementale 113  LES PENNES-MIRABEAU     13071 2012-03-16 2014-12-04  INDEPENDANT     NaN     NaN
+
+------------------------------
+                                    name                         adr_street   adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                                         
+13370004    SAS VERO PROVENCE CARBURANTS  STATION DU MOULIN RN 7 PONT ROYAL  MALLEMORT     13053 2011-09-04 2014-02-24        TOTAL     NaN     NaN
+13370006    STATION DU MOULIN PONT ROYAL               Avenue du Pont Royal  MALLEMORT     13053 2014-01-28 2014-12-04  INTERMARCHE     NaN     NaN
+
+------------------------------
+                         name        adr_street adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                      
+14700003    LE RELAIS DU MIDI    Route de Tours  FALAISE     14258 2011-09-04 2013-10-29      BP     NaN     NaN
+14700007            Sarl duau  Route d'Argentan  FALAISE     14258 2013-10-08 2014-12-04      BP     NaN     NaN
+
+------------------------------
+                            name                           adr_street   adr_city ci_ardt_1      start        end   brand_0 brand_1 brand_2
+id_station                                                                                                                                
+17590001    GARAGE DE BEAUREGARD  Route de Saint-Clément-les-Baleines  ARS-EN-RÉ     17019 2011-09-04 2012-12-03      AVIA     NaN     NaN
+17590002               STATION U     735 Route de St Clément Baleines  ARS-EN-RÉ     17019 2013-04-16 2014-12-04  SYSTEMEU     NaN     NaN
+
+------------------------------
+                        name        adr_street adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                     
+19250002           MAURIANGE  ROUTE D'EGLETONS   MEYMAC     19136 2011-09-04 2014-09-13    ELAN     NaN     NaN
+19250005    CASINO CARBURANT    ROUTE DE TULLE   MEYMAC     19136 2012-10-02 2014-12-04  CASINO     NaN     NaN
+
+------------------------------
+                              name              adr_street              adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                              
+20200002       CAMPOMETA KYRN SARL  Avenue Jean Zuccarelli                BASTIA     2B033 2011-09-04 2014-10-12    VITO     NaN     NaN
+20200004    SARL LE RELAIS DE TOGA            Route du Cap  VILLE DI PIETRABUGNO     2B033 2011-09-04 2013-08-08    VITO     NaN     NaN
+20200009                       NaN     1 RUE CESAR VEZZANI                BASTIA     2B033 2013-11-25 2014-01-05    VITO     NaN     NaN
+
+------------------------------
+                                                name             adr_street                     adr_city ci_ardt_1      start        end              brand_0 brand_1 brand_2
+id_station                                                                                                                                                                   
+24620001    Relais des Mousquetaires eurl CHRISFANIE      24 av de la Forge          LES EYZIES DE TAYAC     24172 2013-06-26 2014-12-04  INTERMARCHE_CONTACT     NaN     NaN
+24620002                                         NaN  24 Avenue de la Forge  LES EYZIES-DE-TAYAC-SIREUIL     24172 2013-07-08 2013-07-09          INDEPENDANT     NaN     NaN
+
+------------------------------
+                                     name                  adr_street  adr_city ci_ardt_1      start        end      brand_0       brand_1 brand_2
+id_station                                                                                                                                        
+25000008                 ESSO LES 4 VENTS      50 Boulevard Léon Blum  BESANÇON     25056 2011-09-04 2014-11-18         ESSO  ESSO_EXPRESS     NaN
+25000010         S.A.R.L STATION LA HALTE             156 Rue de Dole  Besançon     25056 2011-09-04 2012-12-03  INDEPENDANT           NaN     NaN
+25000012                   RELAIS BIDON 5             1 ROUTE DE LYON  Besançon     25056 2011-09-04 2012-12-03        TOTAL           NaN     NaN
+25000013             SARL LE GARAGE @ MAX  9, Avenue du Maréchal Foch  BESANÇON     25056 2011-09-04 2014-10-25         ESSO   INDEPENDANT    ESSO
+25000022    Sarl sdc station des chaprais           60 rue de belfort  BESANCON     25056 2013-10-22 2014-12-04  INDEPENDANT           NaN     NaN
+
+------------------------------
+                                      name                 adr_street adr_city ci_ardt_1      start        end      brand_0       brand_1 brand_2
+id_station                                                                                                                                       
+29200005    RELAIS TOTAL ACCESS VX ST MARC  Route du vieux Saint-Marc    BREST     29019 2011-09-04 2014-10-17        TOTAL  TOTAL_ACCESS     NaN
+29200014             INTERMARCHE LE VALLON       118 Route de Quimper    BREST     29019 2013-04-10 2014-12-04  INTERMARCHE           NaN     NaN
+
+------------------------------
+                         name                       adr_street adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                     
+29460002    RELAIS ELF HANVEC  AIRE DE HANVEC VOIE EXPRESS 165   HANVEC     29078 2011-09-04 2013-08-05     ELF     NaN     NaN
+29460004                  NaN  aire d'hanvec - voie express 16   hanvec     29078 2013-09-02 2013-09-30     ELF     NaN     NaN
+
+------------------------------
+                                  name              adr_street adr_city ci_ardt_1      start        end      brand_0       brand_1 brand_2
+id_station                                                                                                                                
+30700002    RELAIS TOTAL ACCESS D'UZES  6 Avenue Maréchal Foch     UZÈS     30334 2011-09-04 2014-10-24          ELF  TOTAL_ACCESS     NaN
+30700005                  MJ AUTO AVIA     1013 ROUTE DE NIMES     Uzes     30334 2011-09-04 2012-08-30         AVIA           NaN     NaN
+30700006                   ETS LABORIE       AVENUE DE LA GARE     UZES     30334 2011-10-20 2014-12-04  INDEPENDANT           NaN     NaN
+
+------------------------------
+                                   name                   adr_street  adr_city ci_ardt_1      start        end       brand_0 brand_1 brand_2
+id_station                                                                                                                                  
+31200017                       SODIGEST  49 Boulevard Silvio Trentin  TOULOUSE     31555 2011-09-04 2014-06-02          AVIA     NaN     NaN
+31400001    RELAIS TOULOUSE DEMOISELLES     36 Allée des Demoiselles  TOULOUSE     31555 2011-09-04 2014-11-09         TOTAL     NaN     NaN
+31500007             ESSO CROIX DAURADE        231 FAUBOURG BONNEFOY  TOULOUSE     31555 2012-05-05 2014-12-04  ESSO_EXPRESS     NaN     NaN
+31500012              Station AVIA 2LLS      144 Avenue Jean Chaubet  TOULOUSE     31555 2011-09-04 2014-09-08          AVIA     NaN     NaN
+
+------------------------------
+                                        name                  adr_street  adr_city ci_ardt_1      start        end   brand_0 brand_1 brand_2
+id_station                                                                                                                                  
+33220002                          S.A. DISPI        17 Route de Bergerac  Pineuilh     33324 2011-09-04 2012-03-22   LECLERC     NaN     NaN
+33220006    Centre E. Leclerc Grand Pineuilh  80 avenue de la Résistance  PINEUILH     33324 2012-03-26 2014-12-04   LECLERC     NaN     NaN
+33220007                    SUPER U PINEUILH  15 Avenue du Maréchal Juin  PINEUILH     33324 2012-08-23 2014-12-04  SYSTEMEU     NaN     NaN
+
+------------------------------
+                                  name              adr_street          adr_city ci_ardt_1      start        end  brand_0 brand_1 brand_2
+id_station                                                                                                                               
+33260006                     LISA SARL     5 avenue Binghamton  La Teste-de-Buch     33529 2011-09-04 2012-11-28   DYNEFF     NaN     NaN
+33260010                 SIMPLY CAZAUX  RD112 Lieu dit Jaumard  LA TESTE-DE-BUCH     33529 2013-06-10 2014-12-04   SIMPLY     NaN     NaN
+33260011    E.LECLERC LA TESTE DE BUCH      Avenue de l'Europe  LA TESTE-DE-BUCH     33529 2013-11-14 2014-12-04  LECLERC     NaN     NaN
+
+------------------------------
+                              name                    adr_street adr_city ci_ardt_1      start        end      brand_0            brand_1 brand_2
+id_station                                                                                                                                       
+34230001    STATION SERVICE RAMOND          29 ROUTE DE CLERMONT  PAULHAN     34194 2011-09-04 2014-07-09  INDEPENDANT                NaN     NaN
+34230002         carrefour contact  zae la barthe bp6 la carnuse  PAULHAN     34194 2014-01-02 2014-12-04    CARREFOUR  CARREFOUR_CONTACT     NaN
+
+------------------------------
+                     name                     adr_street adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                               
+34400006              NaN    355 Boulevard Sainte-Claire    LUNEL     34145 2011-09-04 2011-09-04    AVIA     NaN     NaN
+34400014    ESSO VIDOURLE  AUTOROUTE A9 AIRE D'AMBRUSSUM    Lunel     34145 2012-02-10 2012-02-16    ESSO     NaN     NaN
+
+------------------------------
+                         name           adr_street      adr_city ci_ardt_1      start        end            brand_0 brand_1 brand_2
+id_station                                                                                                                         
+35590006          Proxi super       Rue des Aulnes  SAINT-GILLES     35275 2013-01-26 2013-11-04        INDEPENDANT     NaN     NaN
+35590007    CARREFOUR CONTACT  Rue de Saint-Brieuc  SAINT-GILLES     35275 2013-11-07 2014-12-04  CARREFOUR_CONTACT     NaN     NaN
+
+------------------------------
+                                name                     adr_street adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                          
+38200014    Relais du Champs de Mars             14 Cours de Verdun   VIENNE     38544 2013-02-20 2014-12-04   TOTAL     NaN     NaN
+38200015                   BP VIENNE  163 Avenue du Général Leclerc   VIENNE     38544 2011-09-04 2013-12-08      BP     NaN     NaN
+
+------------------------------
+                            name                           adr_street          adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                                          
+38300002         STATION DU PARC          87 Avenue Professeur Tixier  Bourgoin-Jallieu     38053 2011-09-04 2011-11-11       DYNEFF     NaN     NaN
+38300016    INTERMARCHE BOURGOIN  LIEU-DIT LE RIVET ROUTE DE CHAMBERY  BOURGOIN JALLIEU     38053 2012-03-29 2014-12-04  INTERMARCHE     NaN     NaN
+
+------------------------------
+                                   name                adr_street           adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                                  
+40410001        RELAIS SAUGNAC ET MURET             AIRE DU MURET  SAUGNACQ-ET-MURET     40295 2011-09-04 2013-05-22   TOTAL     NaN     NaN
+40410003           PORTE DES LANDES EST             Autoroute A63  SAUGNACQ-ET-MURET     40295 2013-09-02 2014-12-04    AVIA     NaN     NaN
+40410004    Avia Porte Des Landes Ouest  Aire Portes Landes Ouest  SAUGNACQ-ET-MURET     40295 2013-09-02 2014-12-04    AVIA     NaN     NaN
+
+------------------------------
+                                    name     adr_street               adr_city ci_ardt_1      start        end   brand_0 brand_1 brand_2
+id_station                                                                                                                              
+4170001              SARL MV COMBUSTILES  Route de Nice  SAINT-ANDRÉ-LES-ALPES     04173 2011-09-04 2013-06-15     TOTAL     NaN     NaN
+4170002       SARL GARAGE STATION CHABOT         RN 202  SAINT-ANDRÉ-LES-ALPES     04173 2011-09-04 2013-12-04      ELAN     NaN     NaN
+4170003     U EXPRESS ST ANDRE LES ALPES  Route de Nice  SAINT-ANDRÉ-LES-ALPES     04173 2013-11-26 2014-12-04  SYSTEMEU     NaN     NaN
+
+------------------------------
+                                            name               adr_street                 adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                                                     
+42380002                        Station Michalon            Rue Chevalier  SAINT-BONNET-LE-CHÂTEAU     42204 2011-09-04 2013-07-15       DYNEFF     NaN     NaN
+42380004                MICHALON DEPOT PETROLIER    Boulevard de l'Europe  SAINT-BONNET-LE-CHÂTEAU     42204 2011-12-27 2014-12-04  INDEPENDANT     NaN     NaN
+42380005    STATION MICHALON PRODUITS PETROLIERS  Boulevard du Haut Forez  SAINT-BONNET-LE-CHATEAU     42204 2013-07-15 2014-12-04  INDEPENDANT     NaN     NaN
+
+------------------------------
+                               name           adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                    
+4260001            SARL TOP SERVICE  LE PONT DE BOUCHIER    ALLOS     04006 2011-09-04 2013-09-08        SHOPI     NaN     NaN
+4260002     Le relais de Rochecline    Lieu-dit Bouchier    ALLOS     04006 2014-05-13 2014-12-04  INDEPENDANT     NaN     NaN
+
+------------------------------
+                                              name                   adr_street       adr_city ci_ardt_1      start        end       brand_0 brand_1 brand_2
+id_station                                                                                                                                                  
+44600003           RELAIS ELF ST NAZAIRE OLYMPIQUE  76 RUE DE LA VILLE HALLUARD  SAINT-NAZAIRE     44184 2011-09-04 2012-09-08           ELF     NaN     NaN
+44600008    Relais de Saint Nazaire - Total Access          Rond point de Reton  SAINT NAZAIRE     44184 2013-09-21 2014-12-04  TOTAL_ACCESS     NaN     NaN
+
+------------------------------
+                      name                      adr_street      adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                      
+45700001    ETS CORRE ESSO              RN 60 - PLATEVILLE  VILLEMANDEUR     45338 2011-09-04 2013-07-16    ESSO     NaN     NaN
+45700003             NETTO  32 BIS AVENUE DE LA LIBERATION  VILLEMANDEUR     45338 2012-03-06 2014-12-04   NETTO     NaN     NaN
+
+------------------------------
+                      name                 adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                 
+46110003    STATION VAYRAC  189, avenue de Saint Céré   VAYRAC     46330 2011-09-04 2014-09-26  INDEPENDANT     NaN     NaN
+46110004       SPAR VAYRAC        Route de Saint Cere   VAYRAC     46330 2013-01-22 2014-12-04       CASINO     NaN     NaN
+
+------------------------------
+                           name                   adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                        
+46300001            MR ESPAGNAT  9 Boulevard de la Madeleine  GOURDON     46127 2011-09-04 2014-03-23        TOTAL     NaN     NaN
+46300007    ETS JEAN CLAUDE FAU    Boulevard de la Madeleine  GOURDON     46127 2012-07-23 2014-12-04  INDEPENDANT     NaN     NaN
+
+------------------------------
+                          name               adr_street         adr_city ci_ardt_1      start        end   brand_0 brand_1 brand_2
+id_station                                                                                                                        
+47180001    ETS PAMPOUILLE SAS                  BEYLARD  SAINTE-BAZEILLE     47233 2011-09-04 2013-02-23      AVIA     NaN     NaN
+47180002               SUPER U  lieu dit Beylard RD 813  SAINTE-BAZEILLE     47233 2013-04-25 2014-12-04  SYSTEMEU     NaN     NaN
+
+------------------------------
+                     name                        adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                       
+51100034      INTERMARCHE  58 Boulevard du Président Wilson    REIMS     51454 2012-10-31 2014-12-04  INTERMARCHE     NaN     NaN
+51100036              NaN               2 Rue Armand Bouxin    REIMS     51454 2013-03-28 2013-04-03           BP     NaN     NaN
+51430001    BP REIMS NORD                331 Avenue de Laon    Reims     51454 2011-09-04 2012-11-28           BP     NaN     NaN
+
+------------------------------
+               name                     adr_street  adr_city ci_ardt_1      start        end   brand_0 brand_1 brand_2
+id_station                                                                                                            
+56170001    EURL 3D  4 Avenue du Général de Gaulle  Quiberon     56186 2011-09-04 2012-03-24     TOTAL     NaN     NaN
+56170003    Super U       116 Rue du Port de Pêche  QUIBERON     56186 2012-03-14 2014-12-04  SYSTEMEU     NaN     NaN
+
+------------------------------
+                                name                  adr_street  adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                        
+56190003    RELAIS MUZILLAC DES PINS  RN165 - SENS VANNES-NANTES  MUZILLAC     56143 2011-09-04 2013-08-05   TOTAL     NaN     NaN
+56190007               STATION TOTAL           LE POULHER RN 165  MUZILLAC     56143 2011-09-04 2014-06-29   TOTAL     NaN     NaN
+56190009                         NaN   RN 165/sens Vannes-Nantes  muzillac     56143 2013-08-08 2013-09-25   TOTAL     NaN     NaN
+
+------------------------------
+                                name                adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                          
+57260004              SARL CHRISCATH  Avenue Général de Gaulle   DIEUZE     57177 2011-09-04 2013-11-21        TOTAL     NaN     NaN
+57260005    INTERMARCHE SAS CYDIELLE         5 rue René Peltre   DIEUZE     57177 2014-10-02 2014-12-04  INTERMARCHE     NaN     NaN
+
+------------------------------
+                               name                 adr_street adr_city ci_ardt_1      start        end  brand_0 brand_1 brand_2
+id_station                                                                                                                      
+59000012          Relais pont royal  104 facade de l'esplanade    LILLE     59350 2011-09-04 2013-05-29    TOTAL     NaN     NaN
+59260004                        NaN      25 Rue Roger Salengro    LILLE     59350 2012-03-30 2012-06-12    TOTAL     NaN     NaN
+59800002    E.LECLERC Lille (Fives)           94 Rue de Lannoy    LILLE     59350 2011-10-27 2014-12-04  LECLERC     NaN     NaN
+
+------------------------------
+                            name                 adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                       
+6000018       AGIP NICE GALLIENI         26 Avenue Gallieni     Nice     06088 2011-09-04 2013-01-28         AGIP     NaN     NaN
+6300012     STATION DES OLIVIERS  10 Corniche André de Joly     NICE     06088 2012-05-03 2014-12-04  INDEPENDANT     NaN     NaN
+6300013            SARL ETS BMSJ  94 Corniche André de Joly     NICE     06088 2012-05-03 2014-12-04         AVIA     NaN     NaN
+
+------------------------------
+                            name                        adr_street               adr_city ci_ardt_1      start        end       brand_0 brand_1 brand_2
+id_station                                                                                                                                             
+60330002    PLESSIS DISTRIBUTION  Centre Commercial du Lièvre RN 2  Le Plessis-Belleville     60500 2011-09-04 2012-01-03       LECLERC     NaN     NaN
+60330003                    IRIS                    5 rue de Paris  LE PLESSIS BELLEVILLE     60500 2011-12-26 2014-12-04  TOTAL_ACCESS     NaN     NaN
+
+------------------------------
+                              name                  adr_street adr_city ci_ardt_1      start        end  brand_0 brand_1 brand_2
+id_station                                                                                                                      
+6150006       RELAIS SAINT CASSIEN  AERODROME CANNES MANDELIEU   CANNES     06029 2011-09-04 2014-11-26    TOTAL     NaN     NaN
+6150007     STATION LECLERC RANDIS            1 AV.VICTOR HUGO   CANNES     06029 2012-08-23 2014-12-04  LECLERC     NaN     NaN
+
+------------------------------
+                                name                        adr_street adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                             
+6600018             RELAIS DE FRANCE           107 Route de Saint-Jean  ANTIBES     06004 2011-09-04 2013-07-25   TOTAL     NaN     NaN
+6600020                         AGIP  50 Boulevard du Président Wilson  ANTIBES     06004 2011-09-04 2014-08-27    AGIP     NaN     NaN
+6600021     STATION SERVICE BOSCHINI            1650 Avenue Jules Grec  ANTIBES     06004 2014-05-02 2014-12-04  DYNEFF     NaN     NaN
+
+------------------------------
+                               name         adr_street              adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                          
+6210007     Relais total la napoule  2 brd henry clews  MANDELIEU LA NAPOULE     06079 2011-09-09 2014-11-26   TOTAL     NaN     NaN
+6210008                         NaN   Avenue de Cannes  MANDELIEU-LA-NAPOULE     06079 2011-09-04 2013-07-02    AGIP     NaN     NaN
+
+------------------------------
+                                          name                   adr_street          adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                                           
+63000021                                   NaN  Boulevard Winston Churchill  Clermont-Ferrand     63113 2012-06-27 2012-08-25   TOTAL     NaN     NaN
+63100002    Relais Lagarde Clermont République  120 Avenue de la République  CLERMONT-FERRAND     63113 2011-09-04 2013-04-01   TOTAL     NaN     NaN
+
+------------------------------
+                    name      adr_street adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                               
+63190003     ESSO ORLEAT  AUTOROUTE A 72   Orléat     63265 2011-09-04 2012-12-03    ESSO     NaN     NaN
+63190010    LIMAGNE NORD  Autoroute A 89   ORLÉAT     63265 2013-06-07 2014-12-04   TOTAL     NaN     NaN
+
+------------------------------
+                           name                adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                     
+63720002    ENNEZAT AUTOMOBILES  1A - 3 ROUTE DE CLERMONT  ENNEZAT     63148 2011-09-04 2013-07-31        TOTAL     NaN     NaN
+63720003            INTERMARCHE             ROUTE DE RIOM  ENNEZAT     63148 2012-10-03 2014-12-04  INTERMARCHE     NaN     NaN
+
+------------------------------
+                              name                   adr_street   adr_city ci_ardt_1      start        end       brand_0 brand_1 brand_2
+id_station                                                                                                                              
+66000004                   SUPER U  85, Rue Pascal Marie Agasse  Perpignan     66136 2011-09-04 2012-07-07      SYSTEMEU     NaN     NaN
+66000015    SARL FERNANDEZ ET FILS       138 Avenue Jean Mermoz  PERPIGNAN     66136 2012-09-25 2014-12-04        DYNEFF     NaN     NaN
+66000016      CATALOGNE CARBURANTS  3170, Avenue Julien Panchot  PERPIGNAN     66136 2014-11-06 2014-12-04  TOTAL_ACCESS     NaN     NaN
+
+------------------------------
+                                   name              adr_street    adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                              
+67000010                            NaN  169 Route de Schirmeck  STRASBOURG     67482 2011-09-04 2011-09-09         AGIP     NaN     NaN
+67000013    AGIP STRASBOURG RIBEAUVILLE   57 Rue de Ribeauvillé  Strasbourg     67482 2011-09-04 2011-11-17         AGIP     NaN     NaN
+67000023                   TestACTIMAGE        1 rue saint léon  STRASBOURG     67482 2013-04-11 2013-06-09  INDEPENDANT     NaN     NaN
+67200007             E. Leclerc Express           Rue d'Ostwald  Strasbourg     67482 2011-09-04 2011-09-28      LECLERC     NaN     NaN
+
+------------------------------
+                             name             adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                    
+71000005    BP MACON VAL DE SAONE      ROUTE NATIONALE 6    MÂCON     71270 2011-09-04 2014-07-02           BP     NaN     NaN
+71000012                    NETTO  Carrefour de l'Europe    MÂCON     71270 2011-09-04 2014-10-28        NETTO     NaN     NaN
+71000013           STATION DYNEFF     RUE GUSTAVE EIFFEL    MÂCON     71270 2011-09-04 2013-04-29       DYNEFF     NaN     NaN
+71000020              SAS ROPIMAX   Rue Frédéric Mistral    MÂCON     71270 2013-10-01 2014-12-04  INTERMARCHE     NaN     NaN
+
+------------------------------
+                               name               adr_street          adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                            
+71100020                     BP LUX  Route de Saint-Ambreuil    SAINT-AMBREUIL     71076 2011-09-04 2014-08-22      BP     NaN     NaN
+71100024    BP CHALON SUR SAONE RN6                 RN 6 LUX  CHALON-SUR-SAÔNE     71076 2013-06-05 2013-08-03      BP     NaN     NaN
+
+------------------------------
+                                name             adr_street    adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                     
+71200005    STATION AVIA RELAIS FOCH  214 Rue Maréchal Foch  LE CREUSOT     71153 2011-09-04 2014-01-22    AVIA     NaN     NaN
+71200007            Netto Le Creusot       Rue Albert Camus  LE CREUSOT     71153 2013-06-02 2014-12-04   NETTO     NaN     NaN
+
+------------------------------
+                                     name           adr_street      adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                               
+72120005               028 DATS ST CALAIS     AVENUE KIRCHDORF  SAINT CALAIS     72269 2011-11-29 2013-03-14      COLRUYT     NaN     NaN
+72120006    SAINT CALAIS AUTOMOBILES SARL  2 AVENUE DE VENDOME  SAINT CALAIS     72269 2014-08-26 2014-12-04  INDEPENDANT     NaN     NaN
+
+------------------------------
+                                        name                   adr_street  adr_city ci_ardt_1      start        end brand_0       brand_1 brand_2
+id_station                                                                                                                                       
+73000008    AGIP CHAMBERY AV D'AIX LES BAINS   863 Avenue d'Aix-les-Bains  CHAMBÉRY     73065 2011-09-12 2013-07-02    AGIP           NaN     NaN
+73000011                     RELAIS CHAMBERY  voie rapide urbaine. rn 201  CHAMBÉRY     73065 2012-05-14 2014-12-04   TOTAL  TOTAL_ACCESS     NaN
+
+------------------------------
+                                      name                        adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                                        
+75001003                 Halles garage sa.                   10 Rue Bailleul    PARIS     75101 2011-09-04 2012-10-30   OIL_FRANCE     NaN     NaN
+75005001             PARIS 5 GGE ST BERNAR   36 Rue des Fossés Saint-Bernard    PARIS     75105 2011-09-04 2014-09-27        TOTAL     NaN     NaN
+75007002                      AVIA RASPAIL               6 Boulevard Raspail    PARIS     75107 2011-09-04 2013-12-26         AVIA     NaN     NaN
+75008004         ESSO ROND POINT C.ELYSEES      18 Avenue des Champs-Élysées    Paris     75108 2011-09-04 2012-09-01         ESSO     NaN     NaN
+75011003                        Sarl delek           175 Avenue Ledru-Rollin    PARIS     75111 2011-09-04 2014-10-22         ELAN     NaN     NaN
+75013001               RELAIS D'AUSTERLITZ              13 Quai d'Austerlitz    Paris     75113 2011-09-04 2012-03-24        TOTAL     NaN     NaN
+75013005              RELAIS ITALIE COTE A           AV DE LA PORTE D'ITALIE    PARIS     75113 2011-09-04 2013-09-28        TOTAL     NaN     NaN
+75013007                RELAIS QUAI IVRY A              QUAI D'IVRY / COTE A    Paris     75113 2011-09-04 2011-11-10        TOTAL     NaN     NaN
+75014008          Sarl GES Location Garage             253 Boulevard Raspail    PARIS     75114 2011-09-04 2014-03-31         ELAN     NaN     NaN
+75015022    BP PARIS MONTPARNASSE 8 à Huit         47 Boulevard de Vaugirard    PARIS     75115 2011-09-04 2013-07-16           BP     NaN     NaN
+75016003                    BP PARIS MURAT                 7 Boulevard Murat    PARIS     75116 2011-09-04 2013-11-20           BP     NaN     NaN
+75016007                        AVIA MURAT               105 Boulevard Murat    PARIS     75116 2011-09-04 2013-12-26         AVIA     NaN     NaN
+75016011               Sarl STATION KLEBER                  69 Avenue Kléber    PARIS     75116 2012-03-30 2014-02-21         ELAN     NaN     NaN
+75017007                RELAIS BATIGNOLLES   37 Avenue de la Porte de Clichy    Paris     75117 2011-09-04 2011-11-27        TOTAL     NaN     NaN
+75017013                               NaN              98 Avenue des Ternes    PARIS     75117 2011-09-04 2011-09-06   OIL_FRANCE     NaN     NaN
+75017016          BP PARIS PORTE DE CLICHY    6 A 8 AV DE LA PORTE DE CLICHY    Paris     75117 2011-09-04 2012-07-01           BP     NaN     NaN
+75018009                               CCD                Rue de la Chapelle    PARIS     75118 2011-09-04 2014-06-13         ESSO     NaN     NaN
+75019004                      BP PARIS NEY                  54 Boulevard Ney    PARIS     75118 2011-09-04 2013-07-04           BP     NaN     NaN
+75019011     BP PARIS PORTE DE LA VILLETTE       AVENUE PORTE DE LA VILLETTE    PARIS     75119 2011-09-04 2013-07-04           BP     NaN     NaN
+75019012                 AGIP PARIS PANTIN       PLACE DE LA PORTE DE PANTIN    PARIS     75119 2011-09-04 2014-07-20         AGIP     NaN     NaN
+75020004        BP PARIS PORTE DE BAGNOLET  6 Avenue de la Porte de Bagnolet    PARIS     75120 2011-09-04 2013-08-08           BP     NaN     NaN
+75020007                               SRD              22 Rue Étienne Marey    PARIS     75120 2014-04-07 2014-12-04  INDEPENDANT     NaN     NaN
+75853002     BP PARIS PORTE MAILLOT SPEEDY         Place de la Porte-Maillot    PARIS     75116 2011-11-10 2014-12-04           BP     NaN     NaN
+
+------------------------------
+                       name      adr_street    adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                     
+76170004                NaN  autoroute a 29  bolleville     76115 2012-02-25 2012-03-14    ESSO     NaN     NaN
+76210003    ESSO BOLLEVILLE  AUTOROUTE A 29  BOLLEVILLE     76115 2011-09-04 2014-11-17    ESSO     NaN     NaN
+
+------------------------------
+                                      name              adr_street  adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                          
+76600016          BP LE HAVRE JULES DURAND  BOULEVARD JULES DURAND  LE HAVRE     76351 2011-09-04 2013-06-29      BP     NaN     NaN
+76600019    Relais du Perrey avitaillement    boulevard Clémenceau  LE HAVRE     76351 2012-10-02 2014-12-04   TOTAL     NaN     NaN
+
+------------------------------
+                          name                  adr_street adr_city ci_ardt_1      start        end       brand_0 brand_1 brand_2
+id_station                                                                                                                       
+79500001         HD Melle Coop            Route de Limoges    Melle     79174 2011-09-04 2012-06-12          COOP     NaN     NaN
+79500006    LEADER PRICE MELLE  Avenue de Nantes à Limoges    MELLE     79174 2014-04-30 2014-12-04  LEADER_PRICE     NaN     NaN
+
+------------------------------
+                   name       adr_street adr_city ci_ardt_1      start        end    brand_0 brand_1 brand_2
+id_station                                                                                                  
+80000002    EURL ROHAUT  45 Rue de Rouen   AMIENS     80021 2011-09-04 2013-11-23      TOTAL     NaN     NaN
+80080002            NaN     Rue Marivaux   Amiens     80021 2012-06-25 2012-12-03  AUTRE_GMS     NaN     NaN
+
+------------------------------
+                               name                      adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                               
+82200007    SMC AU Palais des Pains  44 avenue Delattre de Tassigny  MOISSAC     82112 2011-09-20 2013-06-09         ESSO     NaN     NaN
+82200008    INTERMARCHE HYPERMARCHE         805 Chemin de La Mégère  MOISSAC     82112 2014-06-06 2014-12-04  INTERMARCHE     NaN     NaN
+
+------------------------------
+                             name         adr_street        adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                       
+82400008    LES PORTES DE VALENCE             RN 113  Valence D'Agen     82186 2011-09-04 2012-11-04       DYNEFF     NaN     NaN
+82400009               Louda SARL  Place JB CHAUMEIL  VALENCE D'AGEN     82186 2012-05-21 2014-12-04  INDEPENDANT     NaN     NaN
+
+------------------------------
+                  name                    adr_street          adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                                         
+85120003           NaN  13 avenue Georges Clémenceau  La Châtaigneraie     85059 2011-09-04 2011-09-21  INTERMARCHE     NaN     NaN
+85120004    SA SOLACHA          7 Rue de la Chapelle  LA CHÂTAIGNERAIE     85059 2013-10-06 2014-12-04  INTERMARCHE     NaN     NaN
+
+------------------------------
+                         name              adr_street        adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                   
+85210002    ESSO VENDEE OUEST  AUTOROUTE A83 COTE EST  Sainte-Hermine     85223 2011-09-04 2012-12-03    ESSO     NaN     NaN
+85210005                  NaN     LES AIRES DE VENDEE  Sainte Hermine     85223 2012-02-27 2012-05-14    ESSO     NaN     NaN
+85210006                  NaN     LES AIRES DE VENDEE  Sainte Hermine     85223 2012-02-27 2012-05-14    ESSO     NaN     NaN
+
+------------------------------
+                                 name                          adr_street          adr_city ci_ardt_1      start        end           brand_0       brand_1 brand_2
+id_station                                                                                                                                                         
+87000002             Carrefour Market                Avenue du Roussillon           LIMOGES     87085 2011-09-04 2014-10-22  CARREFOUR_MARKET           NaN     NaN
+87000016           RELAIS PUY VINCENT  27 Avenue du Général Martial Valin           LIMOGES     87085 2011-09-04 2014-06-30              ELAN           NaN     NaN
+87000021        EURL MONTECOT LAURENT               39 Boulevard Gambetta           LIMOGES     87085 2011-09-04 2014-09-04              ESSO           NaN     NaN
+87000026    RELAIS DE LIMOGES LECLERC   252/259 Avenue du Général Leclerc           LIMOGES     87085 2011-10-27 2014-12-04             TOTAL  TOTAL_ACCESS     NaN
+87100005                 SODIGEST SAS           100 Boulevard de la Borie           LIMOGES     87085 2011-09-04 2013-06-14              AVIA           NaN     NaN
+87100008            Relais de VIGENAL             91 Boulevard du Vigenal           LIMOGES     87085 2011-09-04 2013-10-28               ELF           NaN     NaN
+87280007                          NaN            AIRE DE BEAUNE LES MINES  Beaune-les-Mines     87085 2012-03-09 2012-06-08              ESSO           NaN     NaN
+
+------------------------------
+           name            adr_street                    adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                               
+87160005    NaN  A2 AIRE DE BOISMANDE   Sant Sulpice-les-Feuilles     87182 2012-02-28 2012-04-27    ESSO     NaN     NaN
+87160006    NaN    Avenue de l'Avenir  Saint-Sulpice-les-Feuilles     87182 2013-09-02 2013-09-09    ESSO     NaN     NaN
+
+------------------------------
+                               name          adr_street         adr_city ci_ardt_1      start        end   brand_0 brand_1 brand_2
+id_station                                                                                                                        
+87700003         Garage Villelongue   27 Avenue Pasteur  Aixe-sur-Vienne     87001 2011-09-04 2012-01-31     TOTAL     NaN     NaN
+87700005    SUPER U AIXE SUR VIENNE  zac du grand rieux  AIXE SUR VIENNE     87001 2012-05-26 2014-12-04  SYSTEMEU     NaN     NaN
+
+------------------------------
+                         name                  adr_street adr_city ci_ardt_1      start        end           brand_0 brand_1 brand_2
+id_station                                                                                                                          
+89000006    BP AUXERRE VAUBAN          1 Boulevard Vauban  AUXERRE     89024 2011-09-04 2014-01-13                BP     NaN     NaN
+89000011       MARKET AUXERRE  97 Avenue de Saint-Georges  AUXERRE     89024 2014-04-26 2014-12-04  CARREFOUR_MARKET     NaN     NaN
+
+------------------------------
+                        name     adr_street        adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                              
+89150003      SAINT VALERIEN  Route de Sens  SAINT-VALERIEN     89370 2013-12-02 2014-11-28       SIMPLY     NaN     NaN
+89150004    STATION SCHIEVER  Route de Sens  SAINT-VALERIEN     89370 2011-12-21 2014-12-04  INDEPENDANT     NaN     NaN
+
+------------------------------
+                                   name               adr_street              adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                                    
+92100012    Relais Boulogne billancourt  29 Avenue André Morizet  BOULOGNE-BILLANCOURT     92012 2011-09-04 2014-03-09   TOTAL     NaN     NaN
+92100013        COMBUSTIBLE DE BOULOGNE     26 Route de la Reine  BOULOGNE-BILLANCOURT     92012 2013-02-02 2014-12-04    ELAN     NaN     NaN
+
+------------------------------
+                                    name                   adr_street         adr_city ci_ardt_1      start        end  brand_0 brand_1 brand_2
+id_station                                                                                                                                     
+93150001          RELAIS LE BLANC MESNIL  140 Avenue de la République  LE BLANC-MESNIL     93007 2011-09-04 2014-11-10    TOTAL     NaN     NaN
+93150008    DRIVE E.LECLERC BLANC MESNIL       1 Avenue Armand Esders  LE BLANC-MESNIL     93007 2013-09-16 2014-12-04  LECLERC     NaN     NaN
+
+------------------------------
+                         name                    adr_street              adr_city ci_ardt_1      start        end brand_0 brand_1 brand_2
+id_station                                                                                                                               
+94170003           Eurl mehdi  276 avenue general de gaulle            Le Perreux     94058 2011-09-04 2011-11-02   SHELL     NaN     NaN
+94170004    ESSO SERVICE HOEL             44, Avenue de BRY  LE PERREUX SUR MARNE     94058 2012-01-05 2014-12-04    ESSO     NaN     NaN
+
+------------------------------
+                                        name                       adr_street adr_city ci_ardt_1      start        end           brand_0 brand_1 brand_2
+id_station                                                                                                                                              
+95000007        SARL SIGESS ESSO 3 FONTAINES     3 Avenue des Trois Fontaines    CERGY     95127 2012-02-22 2014-12-04             SHELL    ESSO     NaN
+95000010    BP JOUY LE MOUTIER LES BOURSEAUX                   BLD DECANCOURT    CERGY     95127 2012-03-01 2014-07-31                BP     NaN     NaN
+95000011           BP CERGY LHAUTIL 8 à Huit  ANGLE AV GROUETTES BLD L'HAUTIL    CERGY     95127 2012-02-24 2014-12-04                BP     NaN     NaN
+95280001                    Carrefour Market           Rue Cordon de l'Hautil    CERGY     95127 2012-02-24 2014-12-04  CARREFOUR_MARKET     NaN     NaN
+95490004     BP VAUREAL LES TOUPETS 8 à Huit              Boulevard de l'Oise    CERGY     95127 2014-08-05 2014-12-04                BP     NaN     NaN
+95610005            BP ERAGNY Dir ST GERMAIN         Boulevard Jacques Duclos    CERGY     95127 2012-02-24 2014-12-04                BP     NaN     NaN
+95800003            ESSO ST CHRISTOPHE CERGY                 Boulevard d'Osny    CERGY     95127 2012-02-24 2014-12-04      ESSO_EXPRESS     NaN     NaN
+95800006     BP CERGY ST CHRISTOPHE 8 à Huit             ROND-POINT DU CHENES    CERGY     95127 2012-02-24 2014-12-04                BP     NaN     NaN
+
+------------------------------
+                 name         adr_street adr_city ci_ardt_1      start        end      brand_0 brand_1 brand_2
+id_station                                                                                                    
+95330004    BP DOMONT           RN 1 BP4   DOMONT     95199 2012-02-17 2014-12-04           BP     NaN     NaN
+95330008     T&J AUTO  2 avenue du lycee   DOMONT     95199 2012-02-09 2014-03-13  INDEPENDANT  CAMPUS     NaN
+
+------------------------------
+                                           name                       adr_street adr_city ci_ardt_1      start        end  brand_0       brand_1 brand_2
+id_station                                                                                                                                              
+95500001    TOTAL ACCESS RELAIS CROIX ST BENOIT          9 RUE NUNGESSER ET COLI  GONESSE     95277 2012-02-24 2014-12-04      ELF  TOTAL_ACCESS     NaN
+95500002                     RELAIS DES TULIPES                           RN 370  GONESSE     95277 2012-02-17 2014-12-04    TOTAL           NaN     NaN
+95500003                STE TURPIN VIGNALS SARL  RN 17 LA PATTE D OIE DE GONESSE  GONESSE     95277 2012-02-22 2014-12-04     ESSO           NaN     NaN
+95500006                            SA GONESDIS           1 Rue Georges Pompidou  GONESSE     95277 2012-02-24 2014-12-04  LECLERC           NaN     NaN
+95500008                   RELAIS DE SAINT BLIN           19 Avenue Gabriel Péri  GONESSE     95277 2012-02-21 2014-12-04    TOTAL  TOTAL_ACCESS     NaN
+95550001                    BP GONESSE AEROPORT                           RN 370  GONESSE     95277 2012-02-23 2013-03-10       BP           NaN     NaN

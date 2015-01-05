@@ -21,6 +21,12 @@ path_dir_insee_extracts = os.path.join(path_data,
                                        'data_insee',
                                        'data_extracts')
 
+path_dir_total = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_source',
+                              u'data_total')
+path_dir_total_csv = os.path.join(path_dir_total, 'data_total_csv')
+
 # #########################
 # LOAD INFO STATIONS
 # #########################
@@ -35,14 +41,11 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'ci_ardt_1' :str,
                                'ci_2' : str,
                                'ci_ardt_2' : str,
-                               'dpt' : str})
+                               'dpt' : str},
+                      parse_dates = [u'day_%s' %i for i in range(4)]) # fix
 df_info.set_index('id_station', inplace = True)
 
-# Active gas stations? Pick arbitrary day for now
-#df_info = df_info[(~pd.isnull(df_info['start'])) &\
-#                  (~pd.isnull(df_info['end']))])
-#df_info = df_info[(df_info['start'] <= '2012-06-01') &\
-#                  (df_info['end'] >= '2012-06-01')]
+# Exclude highway
 df_info = df_info[df_info['highway'] != 1]
 
 # Total Access in brands... but could no more be (check by concatenating)
@@ -52,34 +55,40 @@ df_info.loc[(df_info['brand_0'] == 'TOTAL_ACCESS') |\
             (df_info['brand_2'] == 'TOTAL_ACCESS') |\
             (df_info['brand_3'] == 'TOTAL_ACCESS'),
             'TA'] = 1
-print u'Nb Total Access (assume no exit of brand nor dupl.):', df_info['TA'].sum()
+print u'\nNb Total Acces:', df_info['TA'].sum()
 
-# Chge to Total Access recorded
+# Chge to Total Access recorded (improve?)
 df_info['TA_chge'] = 0
-df_info.loc[(df_info['brand_0'] != 'TOTAL_ACCESS') &\
-            (df_info['brand_1'] == 'TOTAL_ACCESS'),
-            'TA_chge'] = 1
-df_info.loc[(df_info['brand_1'] != 'TOTAL_ACCESS') &\
-            (df_info['brand_2'] == 'TOTAL_ACCESS'),
-            'TA_chge'] = 1
-df_info.loc[(df_info['brand_2'] != 'TOTAL_ACCESS') &\
-            (df_info['brand_3'] == 'TOTAL_ACCESS'),
-            'TA_chge'] = 1
-print u'Chge to Total Access:', df_info['TA_chge'].sum()
+for i in range(4):
+  df_info.loc[(df_info['brand_%s' %i] != 'TOTAL_ACCESS') &\
+              (df_info['brand_%s' %i] == 'TOTAL_ACCESS'),
+              'TA_chge'] = 1
+print u'\nNb chge to Total Access:', df_info['TA_chge'].sum()
 
+print u'\nOverview some Total Access:'
 ls_disp_ta = ['name', 'adr_street', 'adr_city', 'ci_ardt_1', 'brand_0', 'brand_1', 'brand_2', 'brand_3']
-print df_info[ls_disp_ta][df_info['TA'] == 1].to_string()
+print df_info[ls_disp_ta][df_info['TA'] == 1][0:10].to_string()
 
 # ################################
 # DATE CONVERSION TOTAL ACCESS
 # ################################
 
-df_ta_dates = pd.read_csv(os.path.join(path_dir_built_csv,
-                                    'df_total_access_opening_dates.csv'),
+df_total_fer = pd.read_csv(os.path.join(path_dir_total_csv,
+                                    'df_total_fer.csv'),
                           dtype = {'CP' : str,
                                    'i_zip': str,
-                                   'insee_code' : str},
+                                   'ci_1' : str,
+                                   'ci_ardt_1' : str},
                           parse_dates = [u'Date ouverture', u'Date fermeture'])
+
+df_total_fer = df_total_fer[(df_total_fer['Type station'].str.contains('total access')) |
+                            (df_total_fer['Type fermeture'].str.contains('total access'))]
+
+ls_di_fer = ['Type station', 'Type fermeture', 'Date fermeture', 'Date ouverture',
+             'Station', 'Adresse', 'CP', 'Ville']
+
+print u'\nOverview total data'
+print df_total_fer[ls_di_fer][0:20].to_string()
 
 df_info_ta = df_info[df_info['TA'] == 1].copy()
 
@@ -90,8 +99,8 @@ df_info_ta = df_info[df_info['TA'] == 1].copy()
 #    print ci
 #    print '\n', df_info_ta[['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
 #             [df_info_ta['ci_ardt_1'] == ci].T.to_string()
-#    print '\n', df_ta_dates[['Type station', 'Station', 'Adresse', 'Ville']]\
-#                  [df_ta_dates['insee_code'] == ci].T.to_string()
+#    print '\n', df_total_fer[['Type station', 'Station', 'Adresse', 'Ville']]\
+#                  [df_total_fer['ci_ardt_1'] == ci].T.to_string()
 
 ### SAGY, SANNOIS: ELF + TOTAL converted
 #df_prices[['95110005', '95110001']].plot()
@@ -235,19 +244,18 @@ ls_ouv = [('95018', 'RELAIS ARGENTEUIL BALMONT', '11/05/2012', '95100002'),
           ('26362', 'RELAIS PETIT ROUSSET', '13/06/2012', '26000004'),
           ('10387', 'RELAIS TROYES MAISONNEUVE', '17/03/2012', '10000014')]
 
-
-## Matching: unique TA in insee area
+## Matching: unique TA in insee area but several matches
 
 #c = 0
 #for ci in df_info_ta['ci_ardt_1'].unique():
 #  if len(df_info_ta[df_info_ta['ci_ardt_1'] == ci]) == 1:
-#    if len(df_ta_dates[df_ta_dates['insee_code'] == ci]) != 1:
+#    if len(df_total_fer[df_total_fer['ci_ardt_1'] == ci]) != 1:
 #      print '-'*50
 #      print ci
 #      print '\n', df_info_ta[['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
 #               [df_info_ta['ci_ardt_1'] == ci].T.to_string()
-#      print '\n', df_ta_dates[['Type station', 'Station', 'Adresse', 'Ville']]\
-#                    [df_ta_dates['insee_code'] == ci].T.to_string()
+#      print '\n', df_total_fer[['Type station', 'Station', 'Adresse', 'Ville']]\
+#                    [df_total_fer['ci_ardt_1'] == ci].T.to_string()
 #      c += 1
 
 ls_fer_2 = [('01053', 'RELAIS BOURG', '1000010'),
@@ -352,27 +360,30 @@ ls_ta_unique_matches = []
 for ci in df_info_ta['ci_ardt_1'].unique():
   if len(df_info_ta[df_info_ta['ci_ardt_1'] == ci]) == 1:
     # accept duplicates but assumes Station uniquely identifies
-    if len(df_ta_dates['Station'][df_ta_dates['insee_code'] == ci].unique()) == 1:
+    if len(df_total_fer['Station']\
+             [df_total_fer['ci_ardt_1'] == ci].drop_duplicates(['Station',
+                                                                'Adresse',
+                                                                'Ville'])) == 1:
       print '-'*50
       print ci
       print '\n', df_info_ta[['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
                [df_info_ta['ci_ardt_1'] == ci].T.to_string()
-      print '\n', df_ta_dates[['Type station', 'Station', 'Adresse', 'Ville']]\
-                    [df_ta_dates['insee_code'] == ci].T.to_string()
+      print '\n', df_total_fer[['Type station', 'Station', 'Adresse', 'Ville']]\
+                    [df_total_fer['ci_ardt_1'] == ci].T.to_string()
       c += 1
       id_gouv = df_info_ta[df_info_ta['ci_ardt_1'] == ci].index[0]
-      for date in df_ta_dates[df_ta_dates['insee_code'] == ci]['Date ouverture'].values:
+      for date in df_total_fer[df_total_fer['ci_ardt_1'] == ci]['Date ouverture'].values:
         if not pd.isnull(date):
           dict_ta_dates.setdefault(id_gouv, []).append(date)
           ls_ta_unique_matches.append([ci, 
-                                       df_ta_dates[df_ta_dates['insee_code'] == ci]['Station'].iloc[0],
+                                       df_total_fer[df_total_fer['ci_ardt_1'] == ci]['Station'].iloc[0],
                                        id_gouv])
 
 # One to one: wrong matchin Pierrefite sur seine
 
 for ci, name_ta, id_gouv in ls_fer + ls_fer_2:
-  ar_dates = df_ta_dates['Date fermeture'][(df_ta_dates['insee_code'] == ci) &\
-                                           (df_ta_dates['Station'] == name_ta)]
+  ar_dates = df_total_fer['Date fermeture'][(df_total_fer['ci_ardt_1'] == ci) &\
+                                           (df_total_fer['Station'] == name_ta)]
   for date in ar_dates:
     if not pd.isnull(date):
       dict_ta_dates.setdefault(id_gouv, []).append(date)
@@ -382,23 +393,40 @@ for ci, name_ta_ouv, str_date, id_gouv in ls_ouv + ls_ouv_2:
   if not pd.isnull(date):
     dict_ta_dates.setdefault(id_gouv, []).append(date)
 
-# todo: about 50 TA in df_info_ta have not match... check
+print u'\nNb TAs not matched:'
 df_info_ta['id_gouv'] = df_info_ta.index
 print len(df_info_ta[~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))])
-print df_info_ta[['ci_ardt_1', 'name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
-        [~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))].to_string()
 
-#print df_ta_dates[['Type station', 'Station', 'Adresse', 'Ville', 'insee_code']]\
-#        [df_ta_dates['Ville'].str.contains('Marseille', case = False)].to_string()
+print u'\nInspect TAs not matched:'
+
+def disp_date(some_date):
+  try:
+    return pd.to_datetime(some_date).strftime('%Y%m%d')
+  except:
+    return u''
+
+ls_disp_info_ta = ['ci_ardt_1', 'name', 'adr_street', 'adr_city',
+                   'day_0', 'brand_0', 'day_1', 'brand_1',
+                   'day_2', 'brand_2', 'day_3', 'brand_3']
+
+dict_formatters = dict([('start', disp_date), ('end', disp_date)] +\
+                         [('day_%s' %i, disp_date) for i in range(4)])
+
+print df_info_ta[ls_disp_info_ta][~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))]\
+         .to_string(formatters = dict_formatters)
+
+#print df_total_fer[['Type station', 'Station', 'Adresse', 'Ville', 'insee_code']]\
+#        [df_total_fer['Ville'].str.contains('Marseille', case = False)].to_string()
 
 ls_pbm = [('13215', 'RELAIS MISTRAL', '13015014')] # why not matched?
 
 # todo: how many have several dates?
 
-# todo: check those not matched in df_ta_dates and remaining in df_info
-df_lo = df_ta_dates.copy()
+# todo: check those not matched in df_total_fer and remaining in df_info
+df_lo = df_total_fer.copy()
 for row in ls_fer + ls_fer_2 + ls_ta_unique_matches:
-  df_lo = df_lo[~((df_lo['insee_code'] == row[0]) & (df_lo['Station'] == row[1]))]
+  df_lo = df_lo[~((df_lo['ci_ardt_1'] == row[0]) &\
+                  (df_lo['Station'] == row[1]))]
 
 # Generally: no TA yet in my data... hence enlarge period to include
 ls_lo_match = [('94060', 'LA QUEUE EN BRIE-EURO', '94510001'), # not TA in my data
