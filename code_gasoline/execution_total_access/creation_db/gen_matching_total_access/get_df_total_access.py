@@ -59,9 +59,9 @@ print u'\nNb Total Acces:', df_info['TA'].sum()
 
 # Chge to Total Access recorded (improve?)
 df_info['TA_chge'] = 0
-for i in range(4):
+for i in range(3):
   df_info.loc[(df_info['brand_%s' %i] != 'TOTAL_ACCESS') &\
-              (df_info['brand_%s' %i] == 'TOTAL_ACCESS'),
+              (df_info['brand_%s' %(i+1)] == 'TOTAL_ACCESS'),
               'TA_chge'] = 1
 print u'\nNb chge to Total Access:', df_info['TA_chge'].sum()
 
@@ -383,7 +383,7 @@ for ci in df_info_ta['ci_ardt_1'].unique():
 
 for ci, name_ta, id_gouv in ls_fer + ls_fer_2:
   ar_dates = df_total_fer['Date fermeture'][(df_total_fer['ci_ardt_1'] == ci) &\
-                                           (df_total_fer['Station'] == name_ta)]
+                                            (df_total_fer['Station'] == name_ta)]
   for date in ar_dates:
     if not pd.isnull(date):
       dict_ta_dates.setdefault(id_gouv, []).append(date)
