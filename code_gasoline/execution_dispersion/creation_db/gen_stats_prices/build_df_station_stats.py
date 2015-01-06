@@ -264,6 +264,8 @@ df_station_stats = pd.merge(df_chges_indiv_su, df_rigidity,
 print df_station_stats[(df_station_stats['nb_chge'] >= 5) &\
                        (df_station_stats['pct_chge'] >= 0.03)].describe()
 
+# add dummy 2 digit after decimal point prices
+df_station_stats['2d'] = df_digits['2d']
 # temp
 df_station_stats['nb_promo'] = df_promo['nb_promo']
 

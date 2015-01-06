@@ -66,17 +66,24 @@ for i in range(3):
 print u'\nNb chge to Total Access:', df_info['TA_chge'].sum()
 
 print u'\nOverview some Total Access:'
-ls_disp_ta = ['name', 'adr_street', 'adr_city', 'ci_ardt_1', 'brand_0', 'brand_1', 'brand_2', 'brand_3']
+ls_disp_ta = ['name', 'adr_street', 'adr_city', 'ci_ardt_1',
+              'brand_0', 'brand_1', 'brand_2', 'brand_3']
 print df_info[ls_disp_ta][df_info['TA'] == 1][0:10].to_string()
 
 # ################################
 # DATE CONVERSION TOTAL ACCESS
 # ################################
 
+df_total_ouv = pd.read_csv(os.path.join(path_dir_total_csv,
+                                    'df_total_ouv.csv'),
+                          dtype = {'CP' : str,
+                                   'ci_1': str,
+                                   'ci_ardt_1' : str},
+                          parse_dates = [u'Date'])
+
 df_total_fer = pd.read_csv(os.path.join(path_dir_total_csv,
                                     'df_total_fer.csv'),
                           dtype = {'CP' : str,
-                                   'i_zip': str,
                                    'ci_1' : str,
                                    'ci_ardt_1' : str},
                           parse_dates = [u'Date ouverture', u'Date fermeture'])
@@ -105,6 +112,52 @@ df_info_ta = df_info[df_info['TA'] == 1].copy()
 ### SAGY, SANNOIS: ELF + TOTAL converted
 #df_prices[['95110005', '95110001']].plot()
 #df_prices[['95450003', '95450004']].plot()
+
+## Matching: unique TA in insee area but several matches in Total file
+
+#c = 0
+#for ci in df_info_ta['ci_ardt_1'].unique():
+#  if len(df_info_ta[df_info_ta['ci_ardt_1'] == ci]) == 1:
+#    if len(df_total_fer[df_total_fer['ci_ardt_1'] == ci]) != 1:
+#      print '-'*50
+#      print ci
+#      print '\n', df_info_ta[['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
+#               [df_info_ta['ci_ardt_1'] == ci].T.to_string()
+#      print '\n', df_total_fer[['Type station', 'Station', 'Adresse', 'Ville']]\
+#                    [df_total_fer['ci_ardt_1'] == ci].T.to_string()
+#      c += 1
+
+
+# Matching: unique TA in insee area and in Total file
+ls_info_disp = ['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']
+
+dict_ta_dates = {}
+c = 0
+ls_ta_unique_matches = []
+for ci in df_info_ta['ci_ardt_1'].unique():
+  if len(df_info_ta[df_info_ta['ci_ardt_1'] == ci]) == 1:
+    # accept duplicates but assumes Station uniquely identifies
+    if len(df_total_fer['Station']\
+             [df_total_fer['ci_ardt_1'] == ci].drop_duplicates(['Station',
+                                                                'Adresse',
+                                                                'Ville'])) == 1:
+      #print '-'*50
+      #print ci
+      #print '\n', df_info_ta[['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
+      #         [df_info_ta['ci_ardt_1'] == ci].T.to_string()
+      #print '\n', df_total_fer[['Type station', 'Station', 'Adresse', 'Ville']]\
+      #              [df_total_fer['ci_ardt_1'] == ci].T.to_string()
+      c += 1
+      id_gouv = df_info_ta[df_info_ta['ci_ardt_1'] == ci].index[0]
+      for date in df_total_fer[df_total_fer['ci_ardt_1'] == ci]['Date ouverture'].values:
+        if not pd.isnull(date):
+          dict_ta_dates.setdefault(id_gouv, []).append(date)
+          ls_ta_unique_matches.append([ci, 
+                                       df_total_fer[df_total_fer['ci_ardt_1'] == ci]['Station'].iloc[0],
+                                       id_gouv])
+
+
+# Based on matching when several TA in insee area
 
 ls_fer = [('95535', 'RELAIS SAGY 1', '95450004'),
           ('95424', 'RELAIS DU CROISILLON', '95370004'),
@@ -244,19 +297,7 @@ ls_ouv = [('95018', 'RELAIS ARGENTEUIL BALMONT', '11/05/2012', '95100002'),
           ('26362', 'RELAIS PETIT ROUSSET', '13/06/2012', '26000004'),
           ('10387', 'RELAIS TROYES MAISONNEUVE', '17/03/2012', '10000014')]
 
-## Matching: unique TA in insee area but several matches
-
-#c = 0
-#for ci in df_info_ta['ci_ardt_1'].unique():
-#  if len(df_info_ta[df_info_ta['ci_ardt_1'] == ci]) == 1:
-#    if len(df_total_fer[df_total_fer['ci_ardt_1'] == ci]) != 1:
-#      print '-'*50
-#      print ci
-#      print '\n', df_info_ta[['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
-#               [df_info_ta['ci_ardt_1'] == ci].T.to_string()
-#      print '\n', df_total_fer[['Type station', 'Station', 'Adresse', 'Ville']]\
-#                    [df_total_fer['ci_ardt_1'] == ci].T.to_string()
-#      c += 1
+# Based on matching when one TA in insee area with several matches in Total file
 
 ls_fer_2 = [('01053', 'RELAIS BOURG', '1000010'),
             ('01503', 'relais bourg', '1000010'), # same but maj
@@ -279,7 +320,7 @@ ls_fer_2 = [('01053', 'RELAIS BOURG', '1000010'),
             ('92050', 'RELAIS NANTERRE', '92000001'),
             ('94028', 'RELAIS DE POMPADOU R', '94000003')]
 
-# following may essentially be obtained by matching with df_ouv...
+# Following may essentially be obtained by matching with df_ouv...
 ls_ouv_2 = [('10362', 'RELAIS SAINTE SAVINE', '04/06/2012', '10300004'),
             ('13071', 'RELAIS MIRABEAU', '30/11/2012', '13170009'),
             ('16015', 'RELAIS ANGOULEME SILLAC STAR', '16/04/2012', '16000001'),
@@ -352,34 +393,30 @@ ls_ouv_2 = [('10362', 'RELAIS SAINTE SAVINE', '04/06/2012', '10300004'),
             ('95280', 'RELAIS GOUSSAINVILLE A.SARRAUT', '21/04/2012', '95190001'),
             ('95680', 'RELAIS VILLIERS LE BEL LES ERABLES', '13/04/2012', '95400002')]
 
-ls_info_disp = ['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']
 
-dict_ta_dates = {}
-c = 0
-ls_ta_unique_matches = []
-for ci in df_info_ta['ci_ardt_1'].unique():
-  if len(df_info_ta[df_info_ta['ci_ardt_1'] == ci]) == 1:
-    # accept duplicates but assumes Station uniquely identifies
-    if len(df_total_fer['Station']\
-             [df_total_fer['ci_ardt_1'] == ci].drop_duplicates(['Station',
-                                                                'Adresse',
-                                                                'Ville'])) == 1:
-      print '-'*50
-      print ci
-      print '\n', df_info_ta[['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1']]\
-               [df_info_ta['ci_ardt_1'] == ci].T.to_string()
-      print '\n', df_total_fer[['Type station', 'Station', 'Adresse', 'Ville']]\
-                    [df_total_fer['ci_ardt_1'] == ci].T.to_string()
-      c += 1
-      id_gouv = df_info_ta[df_info_ta['ci_ardt_1'] == ci].index[0]
-      for date in df_total_fer[df_total_fer['ci_ardt_1'] == ci]['Date ouverture'].values:
-        if not pd.isnull(date):
-          dict_ta_dates.setdefault(id_gouv, []).append(date)
-          ls_ta_unique_matches.append([ci, 
-                                       df_total_fer[df_total_fer['ci_ardt_1'] == ci]['Station'].iloc[0],
-                                       id_gouv])
+# Generally: no TA yet in my data... hence enlarge period to include
+ls_lo_match = [('94060', 'LA QUEUE EN BRIE-EURO', '94510001'), # not TA in my data
+               ('30189', 'RELAIS KM DELTA', '30900009'), # not TA in my data
+               ('60159', 'RELAIS COMPIEGNE', '60200010'),
+               ('59034', 'NEW STATION', '59710004'), # still BP in my data
+               ('83123', 'RELAIS SANARY S/MER BEAUCOUR S', '83110001'),
+               ('37261', 'RELAIS SANITAS', '37000001'),
+               ('41295', 'RELAIS VINEUIL DENIS PAPIN 1', '41350004'), # unambiguous?
+               ('39300', 'RELAIS DU LEVANT', '39000006'),
+               ('14220', 'MENNETRIE R SCES AUTO SA/GGE RENAULT', '14800001'),
+               ('56148', 'RELAIS DE NOSTANG', '56690003'), # TA, not matched cuz highway?
+               ('59278', "RELAIS D'HALLENN ES", '59320002'),
+               ('72181', "RELAIS DU BOL D'OR", '72100007'),
+               ('17415', "RELAIS LA PALUE", '17100003'),
+               ('14514', 'RELAIS AMIRAL HAMELIN', '14130002')]
 
-# One to one: wrong matchin Pierrefite sur seine
+# #########################
+# EXPLOIT MATCHING
+# #########################
+
+# Inspect results
+
+# One to one: wrong matching Pierrefite sur seine
 
 for ci, name_ta, id_gouv in ls_fer + ls_fer_2:
   ar_dates = df_total_fer['Date fermeture'][(df_total_fer['ci_ardt_1'] == ci) &\
@@ -412,37 +449,28 @@ ls_disp_info_ta = ['ci_ardt_1', 'name', 'adr_street', 'adr_city',
 dict_formatters = dict([('start', disp_date), ('end', disp_date)] +\
                          [('day_%s' %i, disp_date) for i in range(4)])
 
-print df_info_ta[ls_disp_info_ta][~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))]\
-         .to_string(formatters = dict_formatters)
+#print df_info_ta[ls_disp_info_ta[:-4]][~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))]\
+#         .to_string(formatters = dict_formatters)
 
 #print df_total_fer[['Type station', 'Station', 'Adresse', 'Ville', 'insee_code']]\
 #        [df_total_fer['Ville'].str.contains('Marseille', case = False)].to_string()
 
 ls_pbm = [('13215', 'RELAIS MISTRAL', '13015014')] # why not matched?
 
-# todo: how many have several dates?
+## inspect (check in df_total_ouv?)
+# df_total_fer[df_total_fer['ci_ardt_1'] == '10387']
 
-# todo: check those not matched in df_total_fer and remaining in df_info
-df_lo = df_total_fer.copy()
-for row in ls_fer + ls_fer_2 + ls_ta_unique_matches:
-  df_lo = df_lo[~((df_lo['ci_ardt_1'] == row[0]) &\
-                  (df_lo['Station'] == row[1]))]
+## Check those not matched in df_total_fer and remaining in df_info
+#df_lo = df_total_fer.copy()
+#for row in ls_fer + ls_fer_2 + ls_ta_unique_matches:
+#  df_lo = df_lo[~((df_lo['ci_ardt_1'] == row[0]) &\
+#                  (df_lo['Station'] == row[1]))]
+#
 
-# Generally: no TA yet in my data... hence enlarge period to include
-ls_lo_match = [('94060', 'LA QUEUE EN BRIE-EURO', '94510001'), # not TA in my data
-               ('30189', 'RELAIS KM DELTA', '30900009'), # not TA in my data
-               ('60159', 'RELAIS COMPIEGNE', '60200010'),
-               ('59034', 'NEW STATION', '59710004'), # still BP in my data
-               ('83123', 'RELAIS SANARY S/MER BEAUCOUR S', '83110001'),
-               ('37261', 'RELAIS SANITAS', '37000001'),
-               ('41295', 'RELAIS VINEUIL DENIS PAPIN 1', '41350004'), # unambiguous?
-               ('39300', 'RELAIS DU LEVANT', '39000006'),
-               ('14220', 'MENNETRIE R SCES AUTO SA/GGE RENAULT', '14800001'),
-               ('56148', 'RELAIS DE NOSTANG', '56690003'), # TA, not matched cuz highway?
-               ('59278', "RELAIS D'HALLENN ES", '59320002'),
-               ('72181', "RELAIS DU BOL D'OR", '72100007'),
-               ('17415', "RELAIS LA PALUE", '17100003'),
-               ('14514', 'RELAIS AMIRAL HAMELIN', '14130002')]
+c_multi = 0
+for id_station, ls_dates in dict_ta_dates.items():
+  if len(ls_dates) > 1:
+    c_multi += 1
 
 ## ##############################
 ## TOTAL ACCESS WITHIN INSEE AREA
