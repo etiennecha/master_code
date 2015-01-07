@@ -78,7 +78,10 @@ print df_digits_bb[['#total', '#three', '#two', '%two']]\
 # todo: Nb digits by regrouped brand + by type (loop...)
 
 # Check Total w/ 2 digits vs. w/3 (then do regressions etc.)
-brand = 'LECLERC'
+
+brand = u'ESSO'
+
+print u'\n', brand
 
 print u'\nPct chge w/ 2 digits'
 print df_stats['pct_chge'][(df_stats['brand_last'] == brand) &\

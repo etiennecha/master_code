@@ -17,6 +17,9 @@ path_dir_built_csv = os.path.join(path_dir_built_paper,
 path_dir_built_json = os.path.join(path_dir_built_paper,
                                    'data_json')
 
+path_dir_built_graphs = os.path.join(path_dir_built_paper,
+                                     'data_graphs')
+
 path_dir_insee_extracts = os.path.join(path_data,
                                        'data_insee',
                                        'data_extracts')
@@ -472,6 +475,88 @@ for id_station, ls_dates in dict_ta_dates.items():
   if len(ls_dates) > 1:
     c_multi += 1
 
+## #####################################
+## POLICY PRICE CHANGE
+## #####################################
+
+# LOAD DF PRICES
+df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
+                        parse_dates = ['date'])
+df_prices.set_index('date', inplace = True)
+ls_keep_ids = [id_station for id_station in df_prices.columns if\
+                id_station in df_info.index]
+df_prices = df_prices[ls_keep_ids]
+se_mean_prices = df_prices.mean(1)
+
+# LOAD DF MARGIN CHGE
+df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_margin_chge.csv'),
+                             encoding = 'utf-8',
+                             dtype = {'id_station' : str},
+                             parse_dates = ['date'])
+df_margin_chge.set_index('id_station', inplace = True)
+
+#df_info['pp_chge'] = df_margin_chge['value']
+#df_info['pp_chge_date'] = df_margin_chge['date']
+## check chge in policy not TA
+#df_info = pd.merge(df_info, df_ta,
+#                   left_index = True, right_index = True, how = 'left')
+#ls_disp = ['name', 'adr_city', 'adr_dpt', 'brand_0', 'brand_1', 'brand_2',
+#           'pp_chge_date', 'id_cl_ta_0', 'dist_cl_ta_0']
+#print '\nMargin chge not Total Access:'
+#print df_info[ls_disp][(df_info['pp_chge'].abs() >= 0.04) &\
+#                       (df_info['TA'] != 1)].to_string()
+## Not TA => Gvt announces?
+#ax = df_prices[['93420001', '93420006']].plot()
+#ax.axvline(x = pd.to_datetime('2012-10-15'), color = 'k', ls = 'dashed')
+#ax.axvline(x = pd.to_datetime('2012-10-26'), color = 'k', ls = 'dashed')
+#df_prices.mean(1).plot(ax = ax)
+#plt.show()
+
+# UPDATE DF TA WITH TOTAL AND MARGIN CHGE DATE IF PRESENT
+
+df_info_ta['pp_chge'] = df_margin_chge['value']
+df_info_ta['pp_chge_date'] = df_margin_chge['date']
+
+df_info_ta['ta_chge_date'] = np.datetime64()
+for id_station, ls_dates in dict_ta_dates.items():
+  if id_station in df_info_ta.index:
+    df_info_ta.loc[id_station, 'ta_chge_date'] = max(ls_dates)
+  else:
+    print id_station, 'not in df_info_ta'
+
+# GRAPH INSPECTION
+# date on gvt website (always if change)
+# date of price policy change (can separate small or beginning/end vs. significant)
+# date of chge in my data (unsure if correct but check!)
+
+id_station = df_info_ta.index[0]
+pp_chge_date = df_info_ta['pp_chge_date'].iloc[0]
+ta_chge_date = df_info_ta['ta_chge_date'].iloc[0]
+
+for row_ind, row in df_info_ta.iterrows():
+  id_station = row_ind
+  pp_chge_date = row['pp_chge_date']
+  ta_chge_date = row['ta_chge_date']
+  plt.rcParams['figure.figsize'] = 16, 6
+  ax = df_prices[id_station].plot()
+  se_mean_prices.plot(ax=ax)
+  handles, labels = ax.get_legend_handles_labels()
+  ax.legend(handles, [id_station, u'mean price'], loc = 1)
+  ax.axvline(x = pp_chge_date, color = 'b', ls = 'dashed')
+  ax.axvline(x = ta_chge_date, color = 'r', ls = 'dashed')
+  plt.tight_layout()
+  # plt.show()
+  if pd.isnull(ta_chge_date):
+    plt.savefig(os.path.join(path_dir_built_graphs,
+                             'total_access_price_series',
+                             'notadate_%s' %id_station), dpi = 200)
+  else:
+    plt.savefig(os.path.join(path_dir_built_graphs,
+                             'total_access_price_series',
+                             '%s' %id_station), dpi = 200)
+  plt.close()
+
 ## ##############################
 ## TOTAL ACCESS WITHIN INSEE AREA
 ## ##############################
@@ -547,44 +632,6 @@ for id_station, ls_dates in dict_ta_dates.items():
 #df_ta = pd.merge(df_ta, df_ta_around,
 #                 left_index = True, right_index = True, how = 'left')
 #
-## #####################################
-## POLICY PRICE CHANGE
-## #####################################
-
-# LOAD DF PRICES
-df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
-                        parse_dates = ['date'])
-df_prices.set_index('date', inplace = True)
-ls_keep_ids = [id_station for id_station in df_prices.columns if\
-                id_station in df_info.index]
-df_prices = df_prices[ls_keep_ids]
-se_mean_prices = df_prices.mean(1)
-
-# LOAD DF MARGIN CHGE
-df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_margin_chge.csv'),
-                             encoding = 'utf-8',
-                             dtype = {'id_station' : str},
-                             parse_dates = ['date'])
-df_margin_chge.set_index('id_station', inplace = True)
-df_info['pp_chge'] = df_margin_chge['value']
-df_info['pp_chge_date'] = df_margin_chge['date']
-
-## check chge in policy not TA
-#df_info = pd.merge(df_info, df_ta,
-#                   left_index = True, right_index = True, how = 'left')
-#ls_disp = ['name', 'adr_city', 'adr_dpt', 'brand_0', 'brand_1', 'brand_2',
-#           'pp_chge_date', 'id_cl_ta_0', 'dist_cl_ta_0']
-#print '\nMargin chge not Total Access:'
-#print df_info[ls_disp][(df_info['pp_chge'].abs() >= 0.04) &\
-#                       (df_info['TA'] != 1)].to_string()
-
-## Not TA => Gvt announces?
-#ax = df_prices[['93420001', '93420006']].plot()
-#ax.axvline(x = pd.to_datetime('2012-10-15'), color = 'k', ls = 'dashed')
-#ax.axvline(x = pd.to_datetime('2012-10-26'), color = 'k', ls = 'dashed')
-#df_prices.mean(1).plot(ax = ax)
-#plt.show()
 
 ## ###############
 ## OUTPUT
@@ -594,33 +641,6 @@ df_info['pp_chge_date'] = df_margin_chge['date']
 #                          'df_ta.csv'),
 #                          encoding = 'utf-8')
 
-## ###############
-## CHECK RESULTS
-## ###############
-#
-## 94140002 (too few prices... inactive in the end with gap, sux)
-#
-## 95180001, 95180001: bad luck, supermarkets with play with prices
-## 93120003: unsure why captured? bad luck?
-#
-## 93300008, 93420001, 93100006: seem legit (adjustment to competition?)
-#
-## EXAMPLE
-#ls_ids_ta_check = [x for x in se_res_max.index[se_res_max.abs() > 0.04]\
-#                     if x in df_info.index[df_info['TA'] == 1]]
-#
-#indiv_id = ls_ids_ta_check[0]
-#
-#plt.rcParams['figure.figsize'] = 16, 6
-#ax = df_prices[indiv_id].plot()
-#se_mean_prices.plot(ax=ax)
-#handles, labels = ax.get_legend_handles_labels()
-#ax.legend(handles, [indiv_id, u'mean price'], loc = 1)
-#ax.axvline(x = se_res_argmax.ix[indiv_id], color = 'k', ls = 'dashed')
-#plt.tight_layout()
-#plt.show()
-#
-#
 ## ########
 ## MARGIN
 ## ########
