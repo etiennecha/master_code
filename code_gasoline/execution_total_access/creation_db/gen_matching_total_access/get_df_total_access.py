@@ -545,16 +545,23 @@ for row_ind, row in df_info_ta.iterrows():
   ax.legend(handles, [id_station, u'mean price'], loc = 1)
   ax.axvline(x = pp_chge_date, color = 'b', ls = 'dashed')
   ax.axvline(x = ta_chge_date, color = 'r', ls = 'dashed')
-  plt.tight_layout()
+  #plt.ylim(plt.ylim()[0]-0.5, plt.ylim()[1])
+  #print ax.get_position()
+  #ax.set_position((0.125, 0.2, 0.8, 0.7))
+  
+  footnote_text = '\n'.join([row['name'], row['adr_street'], row['adr_city'], row['ci_ardt_1']])
+  plt.figtext(0.1, -0.1, footnote_text) 
+  # plt.text(.02, .02, footnote_text)
+  # plt.tight_layout()
   # plt.show()
   if pd.isnull(ta_chge_date):
     plt.savefig(os.path.join(path_dir_built_graphs,
                              'total_access_price_series',
-                             'notadate_%s' %id_station), dpi = 200)
+                             'notadate_%s' %id_station), dpi = 200, bbox_inches='tight')
   else:
     plt.savefig(os.path.join(path_dir_built_graphs,
                              'total_access_price_series',
-                             '%s' %id_station), dpi = 200)
+                             '%s' %id_station), dpi = 200, bbox_inches='tight')
   plt.close()
 
 ## ##############################
