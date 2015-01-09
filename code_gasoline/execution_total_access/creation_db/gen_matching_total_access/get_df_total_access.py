@@ -158,7 +158,10 @@ for ci in df_info_ta['ci_ardt_1'].unique():
           ls_ta_unique_matches.append([ci, 
                                        df_total_fer[df_total_fer['ci_ardt_1'] == ci]['Station'].iloc[0],
                                        id_gouv])
-
+      # mistakes sometime...
+      for date in df_total_fer[df_total_fer['ci_ardt_1'] == ci]['Date fermeture'].values:
+        if not pd.isnull(date):
+          dict_ta_dates.setdefault(id_gouv, []).append(date)
 
 # Based on matching when several TA in insee area
 
@@ -563,6 +566,8 @@ for row_ind, row in df_info_ta.iterrows():
                              'total_access_price_series',
                              '%s' %id_station), dpi = 200, bbox_inches='tight')
   plt.close()
+
+
 
 ## ##############################
 ## TOTAL ACCESS WITHIN INSEE AREA
