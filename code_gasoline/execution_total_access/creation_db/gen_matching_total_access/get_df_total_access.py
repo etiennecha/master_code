@@ -528,46 +528,55 @@ for id_station, ls_dates in dict_ta_dates.items():
   else:
     print id_station, 'not in df_info_ta'
 
-# GRAPH INSPECTION
-# date on gvt website (always if change)
-# date of price policy change (can separate small or beginning/end vs. significant)
-# date of chge in my data (unsure if correct but check!)
+# ###############
+# OUTPUT
+# ################
 
-id_station = df_info_ta.index[0]
-pp_chge_date = df_info_ta['pp_chge_date'].iloc[0]
-ta_chge_date = df_info_ta['ta_chge_date'].iloc[0]
+df_info_ta.to_csv(os.path.join(path_dir_built_csv,
+                               'df_info_ta.csv'),
+                               encoding = 'utf-8')
 
-for row_ind, row in df_info_ta.iterrows():
-  id_station = row_ind
-  pp_chge_date = row['pp_chge_date']
-  ta_chge_date = row['ta_chge_date']
-  plt.rcParams['figure.figsize'] = 16, 6
-  ax = df_prices[id_station].plot()
-  se_mean_prices.plot(ax=ax)
-  handles, labels = ax.get_legend_handles_labels()
-  ax.legend(handles, [id_station, u'mean price'], loc = 1)
-  ax.axvline(x = pp_chge_date, color = 'b', ls = 'dashed')
-  ax.axvline(x = ta_chge_date, color = 'r', ls = 'dashed')
-  #plt.ylim(plt.ylim()[0]-0.5, plt.ylim()[1])
-  #print ax.get_position()
-  #ax.set_position((0.125, 0.2, 0.8, 0.7))
-  
-  footnote_text = '\n'.join([row['name'], row['adr_street'], row['adr_city'], row['ci_ardt_1']])
-  plt.figtext(0.1, -0.1, footnote_text) 
-  # plt.text(.02, .02, footnote_text)
-  # plt.tight_layout()
-  # plt.show()
-  if pd.isnull(ta_chge_date):
-    plt.savefig(os.path.join(path_dir_built_graphs,
-                             'total_access_price_series',
-                             'notadate_%s' %id_station), dpi = 200, bbox_inches='tight')
-  else:
-    plt.savefig(os.path.join(path_dir_built_graphs,
-                             'total_access_price_series',
-                             '%s' %id_station), dpi = 200, bbox_inches='tight')
-  plt.close()
-
-
+## ################
+## GRAPH INSPECTION
+## ################
+#
+## date on gvt website (always if change)
+## date of price policy change (can separate small or beginning/end vs. significant)
+## date of chge in my data (unsure if correct but check!)
+#
+#id_station = df_info_ta.index[0]
+#pp_chge_date = df_info_ta['pp_chge_date'].iloc[0]
+#ta_chge_date = df_info_ta['ta_chge_date'].iloc[0]
+#
+#for row_ind, row in df_info_ta.iterrows():
+#  id_station = row_ind
+#  pp_chge_date = row['pp_chge_date']
+#  ta_chge_date = row['ta_chge_date']
+#  plt.rcParams['figure.figsize'] = 16, 6
+#  ax = df_prices[id_station].plot()
+#  se_mean_prices.plot(ax=ax)
+#  handles, labels = ax.get_legend_handles_labels()
+#  ax.legend(handles, [id_station, u'mean price'], loc = 1)
+#  ax.axvline(x = pp_chge_date, color = 'b', ls = 'dashed')
+#  ax.axvline(x = ta_chge_date, color = 'r', ls = 'dashed')
+#  #plt.ylim(plt.ylim()[0]-0.5, plt.ylim()[1])
+#  #print ax.get_position()
+#  #ax.set_position((0.125, 0.2, 0.8, 0.7))
+#  
+#  footnote_text = '\n'.join([row['name'], row['adr_street'], row['adr_city'], row['ci_ardt_1']])
+#  plt.figtext(0.1, -0.1, footnote_text) 
+#  # plt.text(.02, .02, footnote_text)
+#  # plt.tight_layout()
+#  # plt.show()
+#  if pd.isnull(ta_chge_date):
+#    plt.savefig(os.path.join(path_dir_built_graphs,
+#                             'total_access_price_series',
+#                             'notadate_%s' %id_station), dpi = 200, bbox_inches='tight')
+#  else:
+#    plt.savefig(os.path.join(path_dir_built_graphs,
+#                             'total_access_price_series',
+#                             '%s' %id_station), dpi = 200, bbox_inches='tight')
+#  plt.close()
 
 ## ##############################
 ## TOTAL ACCESS WITHIN INSEE AREA
@@ -645,13 +654,6 @@ for row_ind, row in df_info_ta.iterrows():
 #                 left_index = True, right_index = True, how = 'left')
 #
 
-## ###############
-## OUTPUT
-## ################
-#
-#df_ta.to_csv(os.path.join(path_dir_built_csv,
-#                          'df_ta.csv'),
-#                          encoding = 'utf-8')
 
 ## ########
 ## MARGIN

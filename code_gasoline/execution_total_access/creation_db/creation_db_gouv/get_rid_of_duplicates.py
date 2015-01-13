@@ -78,14 +78,6 @@ for id_station in df_info.index[pd.isnull(df_info['start'])]:
 		df_prices_ht.drop(id_station, 1, inplace = True)
 df_info = df_info[~pd.isnull(df_info['start'])]
 
-# ad hoc fixing (keep here? how?)
-df_info.loc['51100035', 'brand_0'] = 'TOTAL_ACCESS'
-df_info.loc['51100035', 'brand_1'] = np.nan
-df_info.loc['51100035', 'day_1'] = np.nan
-df_info.loc['60230003', 'brand_0'] = 'TOTAL_ACCESS'
-df_info.loc['60230003', 'brand_1'] = np.nan
-df_info.loc['60230003', 'day_1'] = np.nan
-
 # drop ad hoc
 for id_station in ['95500009']:
   if id_station in df_prices_ttc.columns:

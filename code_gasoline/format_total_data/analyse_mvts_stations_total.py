@@ -117,13 +117,27 @@ df_fer_dup.sort('Station', inplace = True)
 print '\nOverview duplicate stations, different info:'
 print df_fer_dup[ls_di_fer].to_string()
 
-# OUTPUT
+# OVERVIEW OF FIRST RECORDED TOTAL ACCESS
 
-df_fer.drop(['interval'], axis = 1, inplace = True)
-df_fer.to_csv(os.path.join(path_dir_total_csv,
-                           'df_total_fer.csv'),
-                    encoding = 'UTF-8',
-                    index = False)
+df_fer.loc[pd.isnull(df_fer['Type fermeture']), 'Type fermeture'] = ''
+
+print '\nOverview first recorded total access station:'
+print 'Based on ouverture:'
+df_fer.sort('Date ouverture', ascending = True, inplace = True)
+print df_fer[df_fer['Type fermeture'].str.contains('total access')]\
+        [ls_di_fer][0:10].to_string()
+print 'Based on fermeture:'
+df_fer.sort('Date fermeture', ascending = True, inplace = True)
+print df_fer[df_fer['Type fermeture'].str.contains('total access')]\
+        [ls_di_fer][0:10].to_string()
+
+## OUTPUT
+#
+#df_fer.drop(['interval'], axis = 1, inplace = True)
+#df_fer.to_csv(os.path.join(path_dir_total_csv,
+#                           'df_total_fer.csv'),
+#                    encoding = 'UTF-8',
+#                    index = False)
 
 # ##########
 # OUVERTURES
@@ -180,9 +194,18 @@ df_ouv_dup.sort('Nom Station', inplace = True)
 print '\nOverview duplicate stations, different info:'
 print df_ouv_dup.to_string()
 
-# OUPUT
+# OVERVIEW OF FIRST RECORDED TOTAL ACCESS
 
-df_ouv.to_csv(os.path.join(path_dir_total_csv,
-                           'df_total_ouv.csv'),
-                    encoding = 'UTF-8',
-                    index = False)
+print '\nOverview first recorded total access station:'
+df_ouv.sort('Date', ascending = True, inplace = True)
+print df_ouv[df_ouv['Type Station'] == 'total access'][0:10].to_string()
+# from june 2012, seems late, might be some not registered with total access
+
+## OUPUT
+#
+#df_ouv.to_csv(os.path.join(path_dir_total_csv,
+#                           'df_total_ouv.csv'),
+#                    encoding = 'UTF-8',
+#                    index = False)
+
+

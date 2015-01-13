@@ -59,6 +59,26 @@ df_activity = pd.DataFrame(ls_rows_activity,
 # BUILD DF BRANDS
 # ###############
 
+# Fix (caution: not robust to a change in beginning of period studied!)
+ls_adhoc_brand_fix = [['10000017', [[u'TOTAL ACCESS', 1005]]], # new station Total then Total Access tho already TA
+                      ['14000015', [[u'TOTAL ACCESS', 946]]],
+                      ['14130006', [[u'TOTAL ACCESS', 1124]]],
+                      ['41000017', [[u'TOTAL ACCESS', 803]]],
+                      ['50100006', [[u'TOTAL ACCESS', 808]]],
+                      ['68200016', [[u'TOTAL ACCESS', 668]]],
+                      ['51100035', [[u'TOTAL ACCESS', 577]]],
+                      ['60230003', [[u'TOTAL ACCESS', 523]]],
+                      ['1130001',  [[u'ELF', 0], [u'TOTAL ACCESS', 872]]], # became Total (renovation) then TA...
+                      ['31700002', [[u'ELF', 0], [u'TOTAL ACCESS', 533]]],
+                      ['84700001', [[u'ELF', 0], [u'TOTAL ACCESS', 527]]],
+                      ['91590008', [[u'TOTAL ACCESS', 298]]], # TA created as Total (renovation) then TA (was Elf before)
+                      ['93420006', [[u'TOTAL ACCESS', 521]]],
+                      ['78150001', [[u'ELF', 0], [u'TOTAL ACCESS', 19]]], # double change TOTAL ELF TOTAL TA simplified
+                      ['86360003', [[u'TOTAL', 0], [u'TOTAL ACCESS', 448]]]] # same with TOTAL
+
+for id_gouv, ls_fixed_station_brands in ls_adhoc_brand_fix:
+  master_price['dict_info'][id_gouv]['brand'] = ls_fixed_station_brands
+
 # Update dict brands if needed
 for indep in [u'AUCUNE', u'GME', u'S.D.L', u'NEANT', u'X.BEE', u'CCVB',
               u'AUTOMAT24/24', u'AUTOMAT.DKV.UTA', u'BROSSIER',
@@ -113,17 +133,6 @@ for indiv_id, indiv_info in master_price['dict_info'].items():
   except:
     print 'Not in dict_brands', indiv_info['brand']
 
-# fix what seems to be mistakes
-# could have been created by me (TA or duplicate merge?)
-master_price['dict_info']['78150001']['brand'] =\
-    [[u'ELF', 0], [u'TOTAL_ACCESS', 30]]
-master_price['dict_info']['78150001']['brand_std'] =\
-    [[u'ELF', 0], [u'TOTAL_ACCESS', 30]]
-
-master_price['dict_info']['86360003']['brand'] =\
-   [[u'TOTAL', 0], [u'TOTAL_ACCESS', 457]]
-master_price['dict_info']['86360003']['brand_std'] =\
-   [[u'TOTAL', 0], [u'TOTAL_ACCESS', 457]]
 
 # check multi brands, reduce?
 dict_len_brands = {}
