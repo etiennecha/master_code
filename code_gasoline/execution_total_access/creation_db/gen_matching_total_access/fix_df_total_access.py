@@ -269,36 +269,39 @@ print df_interval['length_w_nan'].describe()
 
 df_pp_chge = pd.merge(df_pp_chge, df_interval, left_index = True, right_index = True)
 
-#for row_ind, row in df_pp_chge.iterrows():
-#  id_station = row_ind
-#  pp_chge = row['pp_chge']
-#  pp_chge_date = row['pp_chge_date']
-#  gov_chge_date = row['TA_day']
-#  ta_chge_date = row['ta_chge_date']
-#  date_beg = row['date_beg']
-#  date_end = row['date_end']
-#  plt.rcParams['figure.figsize'] = 16, 6
-#  ax = df_prices[id_station].plot()
-#  se_mean_prices.plot(ax=ax)
-#  handles, labels = ax.get_legend_handles_labels()
-#  ax.legend(handles, [id_station, u'mean price'], loc = 1)
-#  ax.axvline(x = ta_chge_date, color = 'r', ls = '-', alpha = 0.8)
-#  ax.axvline(x = date_beg, color = 'b', ls = '--')
-#  ax.axvline(x = date_end, color = 'b', ls = '--')
-#  ax.axvline(x = gov_chge_date, color = 'b', ls = ':')
-#  #plt.ylim(plt.ylim()[0]-0.5, plt.ylim()[1])
-#  #print ax.get_position()
-#  #ax.set_position((0.125, 0.2, 0.8, 0.7))
-#  
-#  footnote_text = '\n'.join([row['name'], row['adr_street'], row['adr_city'], row['ci_ardt_1']])
-#  plt.figtext(0.1, -0.1, footnote_text) 
-#  # plt.text(.02, .02, footnote_text)
-#  # plt.tight_layout()
-#  # plt.show()
-#  plt.savefig(os.path.join(path_dir_built_graphs,
-#                           'total_access_pp_chge_interval',
-#                           '%s_%s.png' %(id_station, pp_chge)), dpi = 200, bbox_inches='tight')
-#  plt.close()
+for row_ind, row in df_pp_chge.iterrows():
+  id_station = row_ind
+  pp_chge = row['pp_chge']
+  pp_chge_date = row['pp_chge_date']
+  gov_chge_date = row['TA_day']
+  ta_chge_date = row['ta_chge_date']
+  date_beg = row['date_beg']
+  date_end = row['date_end']
+  plt.rcParams['figure.figsize'] = 16, 6
+  ax = df_prices[id_station].plot()
+  se_mean_prices.plot(ax=ax)
+  handles, labels = ax.get_legend_handles_labels()
+  ax.legend(handles, [id_station, u'mean price'], loc = 1)
+  ax.axvline(x = ta_chge_date, color = 'r', ls = '-', alpha = 0.8)
+  ax.axvline(x = date_beg, color = 'b', ls = '--')
+  ax.axvline(x = date_end, color = 'b', ls = '--')
+  ax.axvline(x = gov_chge_date, color = 'b', ls = ':')
+  footnote_text = '\n'.join([row['name'], row['adr_street'], row['adr_city'], row['ci_ardt_1']])
+  plt.figtext(0.1, -0.1, footnote_text) 
+  if pd.isnull(ta_chge_date):
+    file_name = '_'.join([row['brand_0'],
+                           id_station,
+                           u'{:.3f}'.format(pp_chge)]) + '_notadate.png'
+  else:
+    file_name = '_'.join([row['brand_0'],
+                           id_station,
+                           u'{:.3f}'.format(pp_chge)]) + '.png'
+  plt.savefig(os.path.join(path_dir_built_graphs,
+                           'total_access_pp_chge_interval',
+                           file_name),
+              dpi = 200,
+              bbox_inches='tight')
+  plt.close()
 
 # todo: get last date when change... check with graph that it's ok
 # todo: fix manually if needed (+ get sample diff pp_chge_date vs. rebranding)
@@ -316,13 +319,14 @@ df_pp_chge = pd.merge(df_pp_chge, df_interval, left_index = True, right_index = 
 # 51430003 wrong detection
 # 84110001 check what can be done
 
-# check new version 919400004 if supperposed?
+# check new version 919400004 if superposed?
 
 ls_fix_date_ref = [['6800011', +10], # enough?
                    ['51430003', +30], # check
                    ['56100006', -20], # check... very unsure
                    ['62450002', -20], # check... very unsure
-                   ['88140001', -10]] # check
+                   ['88140001', -10],
+                   ['71260005', +130] # check, pp change detected way too early
 
 # TODO: fix according to all this info
 
@@ -348,21 +352,21 @@ df_no_pp_chge = df_info_ta[~((df_info_ta['brand_1'] == 'TOTAL_ACCESS') &\
 #  ax.axvline(x = ta_chge_date, color = 'r', ls = '-', alpha = 0.8, lw = 1.5)
 #  ax.axvline(x = gov_chge_date, color = 'b', ls = '--', alpha = 1.0, lw = 1.5)
 #  ax.axvline(x = pp_chge_date, color = 'b', ls = ':', alpha = 1.0, lw = 1.5)
-#  #plt.ylim(plt.ylim()[0]-0.5, plt.ylim()[1])
-#  #print ax.get_position()
-#  #ax.set_position((0.125, 0.2, 0.8, 0.7))
-#  
 #  footnote_text = '\n'.join([row['name'], row['adr_street'], row['adr_city'], row['ci_ardt_1']])
 #  plt.figtext(0.1, -0.1, footnote_text) 
-#  # plt.text(.02, .02, footnote_text)
-#  # plt.tight_layout()
-#  # plt.show()
+#  if pd.isnull(ta_chge_date):
+#    file_name = '_'.join([row['brand_0'],
+#                           id_station,
+#                           u'{:.3f}'.format(pp_chge)]) + '_notadate.png'
+#  else:
+#    file_name = '_'.join([row['brand_0'],
+#                           id_station,
+#                           u'{:.3f}'.format(pp_chge)]) + '.png'
 #  plt.savefig(os.path.join(path_dir_built_graphs,
 #                           'total_access_no_pp_chge',
-#                           '%s_%s_%s.png' %(row['brand_0'],
-#                                            id_station,
-#                                            pp_chge)),
-#                           dpi = 200, bbox_inches='tight')
+#                           file_name),
+#              dpi = 200,
+#              bbox_inches='tight')
 #  plt.close()
 
 # FIX BASED ON ta_gap examination
@@ -411,9 +415,10 @@ print df_no_pp_chge[ls_di_ta_gap][0:10].to_string()
 # gov website late on total doc
 print df_no_pp_chge[ls_di_ta_gap][~pd.isnull(df_no_pp_chge['ta_gap'])][-10:].to_string()
 
-print '\nNb of stations for which gov website has to be relied on so far:'
-len(df_no_pp_chge[pd.isnull(df_no_pp_chge['ta_chge_date'])])
-print df_no_pp_chge[ls_di_ta_gap][pd.isnull(df_no_pp_chge['ta_gap'])][0:20].to_string()
+print u'\nNb of stations for which gov website has to be relied on so far:',\
+        len(df_no_pp_chge[pd.isnull(df_no_pp_chge['ta_chge_date'])])
+print u'\n',\
+        df_no_pp_chge[ls_di_ta_gap][pd.isnull(df_no_pp_chge['ta_gap'])][0:20].to_string()
 # can check those which are credible given activity... (and look in total doc...)
 
 # CONCATENATE AND OUTPUT
@@ -422,3 +427,7 @@ df_info_ta_final = pd.concat([df_pp_chge, df_no_pp_chge])
 # for output
 df_info_ta_final['ta_gap'] = df_info_ta_final['ta_gap'].apply(\
                                lambda x: str(pd.Timedelta(x).days) if not pd.isnull(x) else '')
+
+df_info_ta_final.to_csv(os.path.join(path_dir_built_csv,
+                                     'df_info_ta_fixed.csv'),
+                                     encoding = 'utf-8')
