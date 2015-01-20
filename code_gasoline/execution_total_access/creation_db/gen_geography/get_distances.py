@@ -11,7 +11,11 @@ from mpl_toolkits.basemap import Basemap
 from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 import time
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_paper_total_access')
+
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 
@@ -25,7 +29,7 @@ path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.js
 # ######################
 
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_station_info.csv'),
+                                   'df_station_info_final.csv'),
                       encoding = 'utf-8',
                       dtype = {'id_station' : str,
                                'adr_zip' : str,
@@ -95,7 +99,7 @@ df_com[['lng_cl', 'lat_cl']] = df_com[['x_cl', 'y_cl']].apply(\
 # GET CROSS DISTANCES AND COMP
 # #############################
 
-# 1/ PICK BEST GPS
+# 1/ PICK BEST GPS (MOVE THIS STEP TO DF BUILDING?)
 
 df_info['id_station']= df_info.index
 df_com.drop_duplicates(subset = 'code_insee', inplace = True)
@@ -104,20 +108,48 @@ df_info = pd.merge(df_info,
                    left_on = 'ci_ardt_1',
                    right_on = 'code_insee',
                    how = 'left')
+df_info.set_index('id_station', inplace = True)
 
-df_info['lat_best'] = df_info['lat_gov_1']
-df_info['lng_best'] = df_info['lng_gov_1']
-df_info.loc[pd.isnull(df_info['lat_best']), 'lat_best'] = df_info['lat_gov_0']
-df_info.loc[pd.isnull(df_info['lng_best']), 'lng_best'] = df_info['lng_gov_0']
-df_info.loc[pd.isnull(df_info['lat_best']), 'lat_best'] = df_info['lat_rls']
-df_info.loc[pd.isnull(df_info['lng_best']), 'lng_best'] = df_info['lng_rls']
+# Update those for which more recent info (fixes existing issues?)
+for i in [1,2]:
+  df_info.loc[~pd.isnull(df_info['lng_gov_%s' %i]),
+              'lng_gov_0'] = df_info['lng_gov_%s' %i]
+  df_info.loc[~pd.isnull(df_info['lat_gov_%s' %i]),
+              'lat_gov_0'] = df_info['lat_gov_%s' %i]
 
+# Use rls (old gov info) if no info
+df_info.loc[pd.isnull(df_info['lng_gov_0']), 'lng_gov_0'] = df_info['lng_rls']
+df_info.loc[pd.isnull(df_info['lat_gov_0']), 'lat_gov_0'] = df_info['lat_rls']
+
+# Use geocoding if no info
+df_info.loc[pd.isnull(df_info['lng_gov_0']), 'lng_gov_0'] = df_info['lng_gc']
+df_info.loc[pd.isnull(df_info['lat_gov_0']), 'lat_gov_0'] = df_info['lat_gc']
+
+# Fix issue detected: inversion of lat and lng
+#len(df_info_ta[df_info_ta['lng_gov_0'] > df_info_ta['lat_gov_0']])
+df_info['lng_best'] = df_info['lng_gov_0']
+df_info['lat_best'] = df_info['lat_gov_0']
+df_info.loc[df_info['lng_gov_0'] > df_info['lat_gov_0'],
+            'lng_best'] = df_info['lat_gov_0']
+df_info.loc[df_info['lng_gov_0'] > df_info['lat_gov_0'],
+            'lat_best'] = df_info['lng_gov_0']
+
+# Adhox fixes (dist was too high even with geocoding)
+df_info.loc['13115001', ['lat_best', 'lng_best']] = [43.686, 5.713]
+df_info.loc['19350001', ['lat_best', 'lng_best']] = [45.316, 1.341] # not found
+df_info.loc['5350001' , ['lat_best', 'lng_best']] = [44.763, 6.820]
+df_info.loc['84140005', ['lat_best', 'lng_best']] = [43.940, 4.600]
+
+# Compute distance to municipality center to detect mistakes
 df_info['dist_cl'] = compute_distance_ar(df_info['lat_best'],
                                          df_info['lng_best'],
                                          df_info['lat_ct'],
                                          df_info['lng_ct'])
 
 # If dist > 20, wrong coordinates... try geocoding coordinates
+print u'\nNb of wrong gov coordinates (dist to municipality center too high):',\
+      len(df_info[df_info['dist_cl'] > 20])
+
 df_info.loc[df_info['dist_cl'] > 20, 'lat_best'] = df_info['lat_gc']
 df_info.loc[df_info['dist_cl'] > 20, 'lng_best'] = df_info['lng_gc']
 
@@ -131,17 +163,17 @@ df_info['dist_gc'] = compute_distance_ar(df_info['lat_best'],
                                          df_info['lat_gc'],
                                          df_info['lng_gc'])
 
-ls_disp_info = ['id_station', 'name', 'adr_street', 'commune',
+ls_disp_info = ['name', 'adr_street', 'commune',
                 'lat_best', 'lng_best',
                 'dist_cl', 'dist_gc', 'quality']
 
-#print '\nNb stations too far to commune center:', len(df_info[(df_info['dist_cl'] > 20)])
-#print '\n', df_info[ls_disp_info][(df_info['dist_cl'] > 20)].to_string(index=False)
+print '\nNb stations too far to commune center:', len(df_info[(df_info['dist_cl'] > 20)])
+print '\n', df_info[ls_disp_info][(df_info['dist_cl'] > 20)].to_string()
 
-#print '\nNb stations close to commune center:', len(df_info[(df_info['dist_cl'] < 0.10)])
-#print '\n', df_info[ls_disp_info][(df_info['dist_cl'] < 0.10)].to_string(index=False)
+print '\nNb stations too close to commune center:', len(df_info[(df_info['dist_cl'] < 0.10)])
+print '\n', df_info[ls_disp_info][(df_info['dist_cl'] < 0.10)].to_string()
 
-# If too close but got ROOFTOP OR RANGE_INTERPOLATED : SWITCH TO GC
+# If too close with gov but got ROOFTOP OR RANGE_INTERPOLATED: prefer geocoding
 df_info.loc[(df_info['dist_cl'] < 0.1) &\
             (df_info['quality'].isin(['ROOFTOP',
                                       'RANGE_INTERPOLATED'])), 'lat_best'] = df_info['lat_gc']
@@ -158,7 +190,6 @@ df_info.loc[(df_info['dist_cl'] < 0.1) &\
 
 # 2/ GET CROSS DISTANCES
 
-df_info.set_index('id_station', inplace = True)
 ls_ids, ls_gps = [], []
 for id_station, row in df_info.iterrows():
   if not pd.isnull(row['lat_best']) and not pd.isnull(row['lng_best']):
@@ -181,7 +212,7 @@ df_distances = pd.concat(ls_se_distances, axis = 1, keys = ls_ids)
 # need to add first and last to complete index/columns
 df_distances.ix[ls_ids[0]] = np.nan
 df_distances[ls_ids[-1]] = np.nan
-print time.time() - start
+print u'\nLength of computation:', time.time() - start
 
 ## Check results
 ## print df_distances.ix[ls_ids][0:10]
@@ -200,6 +231,14 @@ for id_station in df_distances.columns:
   for id_station_alt in ls_pbm_ids:
     ls_pbm_tup_ids.append((id_station, id_station_alt))
 
+## Inspect very short distance pairs
+## df_info.drop(['poly'], axis = 1, inplace = True)
+#ls_di_check = ['name', 'adr_street', 'adr_zip', 'adr_city',
+#               'brand_0', 'brand_1', 'start', 'end']
+#for tup_ids in ls_pbm_tup_ids[0:20]:
+#  print '\n', df_info.ix[list(tup_ids)][ls_di_check].T.to_string()
+## One potential duplicated detected: 86000018, 86000021
+
 # 4/ GET COMPETITION FILES
 
 comp_radius = 10
@@ -216,24 +255,16 @@ for id_station in df_distances.columns:
 # Sort each ls_comp on distance
 dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
 
-# 5/ STORE FILES
-
-# takes more time to store (load?) than to build (cur. 353Mo)
-df_distances.to_csv(os.path.join(path_dir_built_csv, 'df_distances.csv'),
-                    index_label = 'id_station',
-                    float_format= '%.2f',
-                    encoding = 'utf-8')
-
-enc_json(ls_comp_pairs, os.path.join(path_dir_built_json,
-                                     'ls_comp_pairs.json'))
-
-enc_json(dict_ls_comp, os.path.join(path_dir_built_json,
-                                    'dict_ls_comp.json'))
-
-## DEPRECATED ?
-#np.save(path_ar_cross_distances, ar_cross_distances)
-#enc_json(dict_ls_ids_gps, path_dict_ls_ids_gps) 
-#enc_json(ls_ls_competitors, path_ls_ls_competitors)
-#enc_json(ls_tuple_competitors, path_ls_tuple_competitors) 
-#ls_ls_competitors = dec_json(path_ls_ls_competitors)
-#ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
+## 5/ STORE FILES
+#
+## takes more time to store (load?) than to build (cur. 353Mo)
+#df_distances.to_csv(os.path.join(path_dir_built_csv, 'df_distances.csv'),
+#                    index_label = 'id_station',
+#                    float_format= '%.2f',
+#                    encoding = 'utf-8')
+#
+#enc_json(ls_comp_pairs, os.path.join(path_dir_built_json,
+#                                     'ls_comp_pairs.json'))
+#
+#enc_json(dict_ls_comp, os.path.join(path_dir_built_json,
+#                                    'dict_ls_comp.json'))

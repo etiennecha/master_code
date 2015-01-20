@@ -40,7 +40,7 @@ df_uu_com = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
 ## No need to merge: all info in df_uu_com
 #df_uu = df_uu_com
 
-# Identification of Commune at center of Aire Urbaine (if any)
+# Identification of Commune at center of Unite Urbaine (if any)
 se_libuu_is_libgeo = df_uu_com['LIBUU2010'][df_uu_com['LIBGEO'] ==\
                                             df_uu_com['LIBUU2010']]
 ## Check if city uniquely identified, no pbm if not
@@ -242,7 +242,7 @@ df_uu_agg_final.to_csv(os.path.join(path_dir_insee_built,
                                     'df_uu_agg_final.csv'),
                        float_format='%.2f',
                        encoding = 'utf-8', 
-                       index = 'UU2010')
+                       index_label = 'UU2010')
 
 print u'\nOverview df_au_agg_final:'
 print df_uu_agg_final[['LIBUU2010', 'CODGEO_CT', 'LIBGEO_CT', 'NB_CT',

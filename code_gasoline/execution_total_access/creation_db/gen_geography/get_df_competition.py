@@ -6,9 +6,14 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_total_access')
+
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
+
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_dir_insee_extracts = os.path.join(path_data, 'data_insee', 'data_extracts')
 
@@ -57,6 +62,17 @@ dict_brands = dec_json(os.path.join(path_dir_source,
                                     'dict_brands.json'))
 dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
 
+# Need to build groups to count real competitors only
+ls_big_brands = list(set([v[1] for k,v in dict_brands.items()]))
+ls_no_group = ['AUTRE_DIS', 'AUTRE_GMS', 'INDEPENDANT']
+ls_group_total = ['TOTAL_ACCESS', 'TOTAL', 'ELF', 'ELAN']
+dict_retail_groups = {x: [x] for x in ls_big_brands if x not in ls_no_group +\
+                                                                ls_group_total}
+for brand in ls_no_group:
+  dict_retail_groups[brand] = []
+for brand in ls_group_total:
+  dict_retail_groups[brand] = ls_group_total
+
 # ########################
 # MARKETS AROUND STATIONS
 # ########################
@@ -76,8 +92,12 @@ for id_station in df_info.index:
   ls_comp = dict_ls_comp.get(id_station, None)
   row_nb_comp = []
   if ls_comp is not None:
+    ls_retail_group_brands = dict_retail_groups[dict_std_brands[df_info.ix[id_station]['brand_0']][1]]
     for max_dist in ls_max_dist:
-      ls_comp = [comp for comp in ls_comp if comp[1] <= max_dist]
+      #ls_comp = [comp for comp in ls_comp if comp[1] <= max_dist]
+      ls_comp = [comp for comp in ls_comp if (comp[1] <= max_dist) and\
+                      dict_std_brands[df_info.ix[comp[0]]['brand_0']][1] not in\
+                          ls_retail_group_brands]
       row_nb_comp.append(len(ls_comp))
   else:
     row_nb_comp = [np.nan for i in ls_max_dist]
@@ -198,7 +218,8 @@ ls_ls_stable_markets = [x for k,v in dict_refined.items() for x in v]
 # STATS DES
 
 # have a look (tacit collusion?)
-ax = df_prices_ttc[[u'41700003', u'41700004', u'41700006'] + ['45240001', '45240002']].plot()
+ax = df_prices_ttc[[u'41700003', u'41700004', u'41700006'] +\
+                   ['45240001', '45240002']].plot()
 df_prices_ttc.mean(1).plot(ax=ax)
 plt.show()
 

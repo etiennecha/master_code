@@ -12,6 +12,9 @@ path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_communes = os.path.join(path_dir_insee, 'communes')
 path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
 
+pd.set_option('float_format', '{:10,.0f}'.format)
+pd.set_option('display.max_colwidth', 30)
+
 # #######################
 # BASSINS DE VIE 2012
 # #######################
@@ -20,7 +23,7 @@ path_xls_bv = os.path.join(path_dir_communes,
                            'BassinsVie',
                            'bv-2012.xls')
 wb_bv = xlrd.open_workbook(path_xls_bv)
-print 'Sheets in file', wb_bv.sheet_names()
+print u'\nSheets in file Bassins de Vie:', wb_bv.sheet_names()
 
 # Sheet: aires urbaines (info par au)
 sh_bv_info = wb_bv.sheet_by_name(u'Liste des bassins de vie 2012')
@@ -36,33 +39,41 @@ ls_rows = [sh_bv_com.row_values(i) for i in range(2, sh_bv_com.nrows)]
 ls_rows = [row[:6] for row in ls_rows] # ad hoc fix...
 df_bv_com = pd.DataFrame(ls_rows, columns = ls_columns[:6], dtype = str)
 
-## No need to merge: all info in df_uu_com
-#df_uu = df_uu_com
+# Standardization of column names
+df_bv_com.rename(columns = {'COM' : 'CODGEO',
+                            'LIB_COM' : 'LIBGEO'}, inplace = True)
+df_bv_com.index = df_bv_com['CODGEO'] # simply to rename index
 
-# Identification of Commune at center of Aire Urbaine (if any)
-ls_libgeo_1 = df_bv_com['LIBBV'][df_bv_com['LIB_COM'] == df_bv_com['LIBBV']].values
-ls_ok = set(list(ls_libgeo_1))
-# print df_uu_com['LIBBV'][df_uu_com['LIBBV'].str.contains(u' - ')].value_counts()
+# Identification of Commune at center of BV (essentially given here actually)
+ls_libbv_is_libgeo = df_bv_com['LIBBV'][df_bv_com['LIBGEO'] == df_bv_com['LIBBV']].values
+ls_ok = set(list(ls_libbv_is_libgeo))
+# print df_bv_com['LIBBV'][df_bv_com['LIBBV'].str.contains(u' - ')].value_counts()
 ls_check = [x for x in df_bv_info['LIBBV'].values if x not in ls_ok]
-# Check if 'LIBGEO' in 'LIBUU2010'
-# (ok for UU with two central cities + '(partie française)')
-# i.e. can be two UU centers
-df_bv_com['BV_Center'] = df_bv_com.apply(\
-                           lambda row: 'YES' if row['LIB_COM'] in row['LIBBV']\
+# Check if 'LIBGEO' in 'LIBBV'
+# (ok for BV with two central cities + '(partie française)')
+# i.e. can be two BV centers
+df_bv_com['BV_CT'] = df_bv_com.apply(\
+                           lambda row: 'YES' if row['LIBGEO'] in row['LIBBV']\
                                              else 'NO', axis=1)
-## print df_au_com[['LIBCOM', 'LIBBV']][df_au_com['AU_Center'] == 'YES'].to_string()
-#df_corr_center = df_bv_com[['UU2010', 'CODGEO']][df_bv_com['UU_Center'] == 'YES']
-#se_bv_vc = df_corr_center['UU2010'].value_counts()
-#print se_bv_vc[se_bv_vc > 1] # UU with more than one central city
+
+df_center = df_bv_com[['BV', 'CODGEO']][df_bv_com['BV_CT'] == 'YES']
+se_bv_vc = df_center['BV'].value_counts()
+# print se_uu_vc[se_uu_vc > 1] # UU with more than one central city
 ## Might be more reasonable to exclude those.. e.g. "Marseille - Aix-en-Provence"
-#df_corr_ucenter =  df_corr_center.groupby(df_corr_center['UU2010']).first()
+df_center.drop_duplicates('BV',
+                          take_last = False,
+                          inplace = True)
+df_center.set_index('BV', inplace = True)
+df_center['NB_CT'] = se_bv_vc
+df_center.rename(columns = {'CODGEO' : 'CODGEO_CT'}, inplace = True)
 
-## Merge back central city codgeo with df_au
-#df_bv_com.index = df_bv_com['UU2010']
-#df_corr_ucenter.index = df_corr_ucenter['UU2010']
-#df_uu_com['CODGEO_Center'] = df_corr_ucenter['CODGEO']
-
-df_bv_com.index = df_bv_com['COM'] # set index back to CODGEO
+# Merge back central city codgeo with df_au
+df_bv_com = pd.merge(df_bv_com,
+                     df_center,
+                     how = 'left',
+                     left_on = 'BV',
+                     right_index = True)
+df_bv_com.index = df_bv_com['CODGEO'] # set index back to CODGEO
 
 # ##################
 # COMMUNE LEVEL DATA
@@ -78,7 +89,7 @@ path_xls_population = os.path.join(path_dir_communes,
                                    'base-cc-evol-struct-pop-2010.xls')
 
 wb_population = xlrd.open_workbook(path_xls_population)
-print 'Sheets in file', wb_population.sheet_names()
+print u'\nSheets in file Population:', wb_population.sheet_names()
 
 sh_population_com = wb_population.sheet_by_name(u'COM')
 ls_columns = sh_population_com.row_values(5)
@@ -104,7 +115,7 @@ path_xls_logement = os.path.join(path_dir_communes,
                                  'base-cc-logement-2010.xls')
 
 wb_logement = xlrd.open_workbook(path_xls_logement)
-print 'Sheets in file', wb_logement.sheet_names()
+print u'\nSheets in file Logement:', wb_logement.sheet_names()
 
 sh_logement_com = wb_logement.sheet_by_name(u'COM')
 ls_columns = sh_logement_com.row_values(5)
@@ -132,7 +143,7 @@ path_xls_revenus = os.path.join(path_dir_communes,
                                 'base-cc-rev-fisc-loc-menage-10.xls')
 
 wb_revenus = xlrd.open_workbook(path_xls_revenus)
-print 'Sheets in file', wb_revenus.sheet_names()
+print u'\nSheets in file Revenus fisc:', wb_revenus.sheet_names()
 
 sh_revenus_com = wb_revenus.sheet_by_name(u'REVME_COM')
 ls_columns = sh_revenus_com.row_values(5)
@@ -187,45 +198,75 @@ df_bv_agg['POPDENSITY10'] = df_bv_agg['P10_POP'] / df_bv_agg['SUPERF']
 #df_bv_agg['LIBUU2010'] = df_bv_info['LIBUU2010']
 #df_bv_agg = pd.merge(df_bv_agg, df_revenus_uu, left_index = True, right_index = True)
 
-df_bv_info.index = df_bv_info['BV']
+df_bv_agg['NB_COMBV'] = df_bv_info['NB_COM']
 
-ls_disp_info = ['BV', 'LIBBV']
+df_bv_info.set_index('BV', inplace = True)
+
+ls_disp_info = ['LIBBV']
 df_bv_agg_final = pd.merge(df_bv_info[ls_disp_info],
                            df_bv_agg,
+                           how = 'right',
                            left_index = True,
-                           right_index = True,
-                           how = 'left')
-# todo: add check with nb communes actually found in insee info files
-df_bv_agg_final.to_csv(os.path.join(path_dir_insee_built, 'df_bv_agg_final.csv'),
-                       float_format='%.2f', encoding='utf-8', 
-                       index=False)
+                           right_index = True)
+
+# Add center and indicator of nb of centers (only first is kept then)
+df_bv_center = df_bv_com[['BV', 'CODGEO', 'LIBGEO']]\
+                        [df_bv_com['BV_CT'] == 'YES']
+df_bv_center.drop_duplicates('BV', take_last = False, inplace = True)
+df_bv_center.set_index('BV', inplace = True)
+df_bv_center['NB_CT'] = se_bv_vc
+df_bv_center.rename(columns = {'CODGEO' : 'CODGEO_CT',
+                               'LIBGEO' : 'LIBGEO_CT'}, inplace = True)
+# essentially redundant with BV and LIBBV
+
+df_bv_agg_final.sort(inplace = True)
+df_bv_agg_final = pd.merge(df_bv_center,
+                           df_bv_agg_final,
+                           how = 'right',
+                           left_index = True,
+                           right_index = True)
+
+df_bv_agg_final.to_csv(os.path.join(path_dir_insee_built,
+                                    'df_bv_agg_final.csv'),
+                       float_format='%.2f',
+                       encoding='utf-8', 
+                       index_label = 'BV')
+
+print u'\nOverview df_bv_agg_final:'
+print df_bv_agg_final[['LIBBV', 'CODGEO_CT', 'LIBGEO_CT', 'NB_CT',
+                       'P10_PMEN']][0:10].to_string()
 
 # ###################
 # BUILD FINAL DF BV
 # ###################
 
-df_bv_agg['NB_COMBV'] = df_bv_info['NB_COM']
-
-pd.set_option('float_format', '{:10,.0f}'.format)
-#print df_bv_agg.to_string()
+df_bv_agg.reset_index(inplace = True)
 
 # need df with au info at commune level (i.e. index = insee code)
 # keep TYPE AND STATUT and if commune = center or not
-df_bv_com_final = df_bv_com[['LIB_COM', 'BV', 'LIBBV']]
-df_bv_com_final = pd.merge(df_bv_com_final, df_bv_agg, how='left', # check how...
-                           left_on = 'BV', right_index = True)
-df_bv_com_final.sort(inplace=True) # sort by index (was sorted by AU2010)
-#print df_bv_com_final[0:100].to_string()
+df_bv_com_final = df_bv_com[['LIBGEO', 'BV', 'LIBBV',
+                             'BV_CT', 'NB_CT', 'CODGEO_CT']]
 
-path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
-df_bv_com_final.to_csv(os.path.join(path_dir_insee_built, 'df_bv_com_final.csv'),
-                       float_format='%.2f', encoding='utf-8', 
-                       index=True, index_label=u'COM')
+df_bv_com_final.reset_index(inplace = True) # save column COGEO
+
+df_bv_com_final = pd.merge(df_bv_com_final,
+                           df_bv_agg,
+                           how='left',
+                           left_on = 'BV',
+                           right_on = 'BV')
+
+df_bv_com_final.set_index('CODGEO', inplace = True)
+df_bv_com_final.sort(inplace=True)
+
+df_bv_com_final.to_csv(os.path.join(path_dir_insee_built,
+                                    'df_bv_com_final.csv'),
+                       float_format = '%.2f',
+                       encoding = 'utf-8', 
+                       index_label = 'CODGEO')
+
+print u'\nOverview df_au_com_final:'
+print df_bv_com_final[['LIBGEO', 'BV', 'LIBBV',
+                       'CODGEO_CT', 'BV_CT', 'NB_CT',
+                       'P10_PMEN']][0:10].to_string()
 
 # todo: add info on population revenu... e.g. central city only
-
-## BACKUP
-
-##path_dir_gas_source = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_other')
-##df_insee.to_csv(os.path.join(path_dir_gas_source, 'data_insee_extract.csv')
-##                float_format='%.3f', encoding='utf-8', index=False)

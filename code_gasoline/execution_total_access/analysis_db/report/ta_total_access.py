@@ -72,13 +72,12 @@ df_uu_agg = pd.read_csv(os.path.join(path_dir_insee_extracts,
                         encoding = 'UTF-8')
 df_uu_agg.set_index('UU2010', inplace = True)
 
-#df_bv_agg = pd.read_csv(os.path.join(path_dir_insee_extracts,
-#                                     'df_bv_agg_final.csv'),
-#                        dtype = {'BV2010' : str,
-#                                 'CODGEO_CT' : str},
-#                        encoding = 'UTF-8')
-#df_bv_agg.set_index('BV2010', inplace = True)
-
+df_bv_agg = pd.read_csv(os.path.join(path_dir_insee_extracts,
+                                     'df_bv_agg_final.csv'),
+                        dtype = {'BV' : str,
+                                 'CODGEO_CT' : str},
+                        encoding = 'UTF-8')
+df_bv_agg.set_index('BV', inplace = True)
 
 df_com = pd.read_csv(os.path.join(path_dir_insee_extracts,
                                   'data_insee_extract.csv'),
@@ -110,8 +109,9 @@ df_au_agg = df_au_agg[(df_au_agg.index != '000') &
                       (df_au_agg.index != '997') &
                       (df_au_agg.index != '998')]
 
-ls_insee_area_loop = [[df_uu_agg, 'UU'],
-                      [df_au_agg, 'AU']]
+ls_ia_loop = [[df_uu_agg, 'UU2010'],
+              [df_au_agg, 'AU2010'],
+              [df_bv_agg, 'BV']]
 
 dict_rename_lib = {u'Marseille - Aix-en-Provence' : u'Marseille - Aix',
                    u'(partie française)' : u'(fr)',
@@ -122,40 +122,44 @@ def rename_field(some_str, dict_rename):
     some_str = some_str.replace(k,v).strip()
   return some_str
 
-for df_insee_areas, insee_area in ls_insee_area_loop:
+for df_ias, ia in ls_ia_loop:
   # avoid error message due to overwriting of dataframe
-  df_insee_areas = df_insee_areas.copy()
-  df_insee_areas.sort('P10_POP', ascending = False, inplace = True)
-  df_insee_areas = df_insee_areas[~pd.isnull(df_insee_areas['P10_POP'])]
+  df_ias = df_ias.copy()
+  df_ias.sort('P10_POP', ascending = False, inplace = True)
+  df_ias = df_ias[~pd.isnull(df_ias['P10_POP'])]
   
   # NB STORES BY AREA IN A GIVEN PERIOD
-  se_ia_vc = df_info_ta['%s2010' %insee_area].value_counts()
-  df_insee_areas['Nb TA'] = se_ia_vc
+  se_ia_vc = df_info_ta['%s' %ia].value_counts()
+  df_ias['Nb TA'] = se_ia_vc
   
   # RENAME AREA FOR DISPLAY
-  df_insee_areas['LIB%s2010' %insee_area] =\
-     df_insee_areas['LIB%s2010' %insee_area].apply(\
+  df_ias['LIB%s' %ia] =\
+     df_ias['LIB%s' %ia].apply(\
         lambda x: rename_field(x, dict_rename_lib))
   
   ## todo: add pop by station and vehicle by station
   
-  df_insee_areas.rename(columns = {'P10_POP' : 'Pop',
-                                   'LIB%s2010' % insee_area : 'Area',
-                                   'POPDENSITY10': 'Pop density',
-                                   'QUAR2UC10' : 'Med rev'}, inplace = True)
+  df_ias.rename(columns = {'P10_POP' : 'Pop',
+                           'LIB%s' % ia : 'Area',
+                           'POPDENSITY10': 'Pop density',
+                           'QUAR2UC10' : 'Med rev'}, inplace = True)
   
   ls_disp = ['Area', 'Pop', 'Pop density', 'Med rev', 'Nb TA']
+  ls_disp = [x for x in ls_disp if x in df_ias.columns]
   
-  df_insee_areas['Pop by TA'] = df_insee_areas['Pop'] / df_insee_areas['Nb TA']
+  df_ias['Pop by TA'] = df_ias['Pop'] / df_ias['Nb TA']
   
-  print u'\nTop 20 %s in terms of inhabitants:' %insee_area
-  print df_insee_areas[ls_disp + ['Pop by TA']][0:20].to_string(index = False,
+  print u'\nTop 20 %s in terms of inhabitants:' %ia
+  print df_ias[ls_disp + ['Pop by TA']][0:20].to_string(index = False,
                                                               index_names = False)
   
-  df_insee_areas.sort('Nb TA', inplace = True, ascending = False)
-  print u'\nTop 20 %s in terms of TA count:' %insee_area
-  print df_insee_areas[ls_disp + ['Pop by TA']][~pd.isnull(df_insee_areas['Nb TA'])][0:30].\
+  df_ias.sort('Nb TA', inplace = True, ascending = False)
+  print u'\nTop 20 %s in terms of TA count:' %ia
+  print df_ias[ls_disp + ['Pop by TA']][~pd.isnull(df_ias['Nb TA'])][0:30].\
           to_string(index = False, index_names = False)
   
-  print u'\nPopulation living in %s with at least one Total Access:' %insee_area
-  print u'{:10,.0f}'.format(df_insee_areas['Pop'][~pd.isnull(df_insee_areas['Nb TA'])].sum())
+  print u'\nNb of TAs within %s areas:' %ia
+  print df_ias['Nb TA'].sum()
+
+  print u'\nPopulation living in %s with at least one Total Access:' %ia
+  print u'{:10,.0f}'.format(df_ias['Pop'][~pd.isnull(df_ias['Nb TA'])].sum())
