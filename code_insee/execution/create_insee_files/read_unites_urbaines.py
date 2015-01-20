@@ -12,6 +12,9 @@ path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_communes = os.path.join(path_dir_insee, 'communes')
 path_dir_insee_built = os.path.join(path_dir_insee, 'data_extracts')
 
+pd.set_option('float_format', '{:10,.0f}'.format)
+pd.set_option('display.max_colwidth', 30)
+
 # #######################
 # UNITES URBAINES 2010
 # #######################
@@ -20,7 +23,7 @@ path_xls_uu = os.path.join(path_dir_communes,
                            'UnitesUrbaines',
                            'UU2010.xls')
 wb_uu = xlrd.open_workbook(path_xls_uu)
-print 'Sheets in file', wb_uu.sheet_names()
+print u'\nSheets in file Unites Urbaines:', wb_uu.sheet_names()
 
 # Sheet: aires urbaines (info par au)
 sh_uu_info = wb_uu.sheet_by_name(u'Liste des unités urbaines 2010')
@@ -38,30 +41,44 @@ df_uu_com = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
 #df_uu = df_uu_com
 
 # Identification of Commune at center of Aire Urbaine (if any)
-ls_libgeo_1 = df_uu_com['LIBUU2010'][df_uu_com['LIBGEO'] == df_uu_com['LIBUU2010']].values
-ls_libgeo_2 = df_uu_com['LIBUU2010'][\
-                df_uu_com['LIBUU2010'].str.contains(u'\(partie française\)')].unique()
-ls_ok = set(list(ls_libgeo_1) + list(ls_libgeo_2))
-# print df_uu_com['LIBAU2010'][df_uu_com['LIBUU2010'].str.contains(u' - ')].value_counts()
-ls_check = [x for x in df_uu_info['LIBUU2010'].values if x not in ls_ok]
+se_libuu_is_libgeo = df_uu_com['LIBUU2010'][df_uu_com['LIBGEO'] ==\
+                                            df_uu_com['LIBUU2010']]
+## Check if city uniquely identified, no pbm if not
+#se_temp_vc = se_libuu_is_libgeo.value_counts()
+#print se_temp_vc[se_temp_vc > 1]
+ls_libuu_unique = se_libuu_is_libgeo.unique()
+ls_libuu_abroad = df_uu_com['LIBUU2010'][\
+                  df_uu_com['LIBUU2010'].str.contains(u'\(partie française\)')].unique()
+ls_libuu_nopbm = list(ls_libuu_unique) + list(ls_libuu_abroad)
+# print df_au_com['LIBUU2010'][df_uu_com['LIBUU2010'].str.contains(u' - ')].value_counts()
+ls_libuu_pbm = [x for x in df_uu_info['LIBUU2010'].unique() if x not in ls_libuu_nopbm]
+print u'\nLIBUU not corresponding to one city:'
+print ls_libuu_pbm
 # Check if 'LIBGEO' in 'LIBUU2010'
 # (ok for UU with two central cities + '(partie française)')
 # i.e. can be two UU centers
-df_uu_com['UU_Center'] = df_uu_com.apply(\
-                           lambda row: 'YES' if row['LIBGEO'] in row['LIBUU2010']\
-                                             else 'NO', axis=1)
-# print df_au_com[['UU2010', 'CODGEO']][df_au_com['AU_Center'] == 'YES'].to_string()
-df_corr_center = df_uu_com[['UU2010', 'CODGEO']][df_uu_com['UU_Center'] == 'YES']
-se_uu_vc = df_corr_center['UU2010'].value_counts()
-print se_uu_vc[se_uu_vc > 1] # UU with more than one central city
-# Might be more reasonable to exclude those.. e.g. "Marseille - Aix-en-Provence"
-df_corr_ucenter =  df_corr_center.groupby(df_corr_center['UU2010']).first()
+df_uu_com['UU_CT'] = df_uu_com.apply(\
+                        lambda row: 'YES' if row['LIBGEO'] in row['LIBUU2010']\
+                                          else 'NO', axis=1)
+# print df_uu_com[['UU2010', 'CODGEO']][df_uu_com['UU_Center'] == 'YES'].to_string()
+df_center = df_uu_com[['UU2010', 'CODGEO']][df_uu_com['UU_CT'] == 'YES']
+se_uu_vc = df_center['UU2010'].value_counts()
+# print se_uu_vc[se_uu_vc > 1] # UU with more than one central city
+## Might be more reasonable to exclude those.. e.g. "Marseille - Aix-en-Provence"
+df_center.drop_duplicates('UU2010',
+                          take_last = False,
+                          inplace = True)
+df_center.set_index('UU2010', inplace = True)
+df_center['NB_CT'] = se_uu_vc
+df_center.rename(columns = {'CODGEO' : 'CODGEO_CT'}, inplace = True)
 
 # Merge back central city codgeo with df_au
-df_uu_com.index = df_uu_com['UU2010']
-df_corr_ucenter.index = df_corr_ucenter['UU2010']
-df_uu_com['CODGEO_Center'] = df_corr_ucenter['CODGEO']
-df_uu_com.index = df_uu_com['CODGEO'] # set index back to CODGEO
+df_uu_com = pd.merge(df_uu_com,
+                     df_center,
+                     how = 'left',
+                     left_on = 'UU2010',
+                     right_index = True)
+df_uu_com.index = df_uu_com['CODGEO']
 
 # ##################
 # COMMUNE LEVEL DATA
@@ -77,7 +94,7 @@ path_xls_population = os.path.join(path_dir_communes,
                                    'base-cc-evol-struct-pop-2010.xls')
 
 wb_population = xlrd.open_workbook(path_xls_population)
-print 'Sheets in file', wb_population.sheet_names()
+print u'\nSheets in file Population:', wb_population.sheet_names()
 
 sh_population_com = wb_population.sheet_by_name(u'COM')
 ls_columns = sh_population_com.row_values(5)
@@ -103,7 +120,7 @@ path_xls_logement = os.path.join(path_dir_communes,
                                  'base-cc-logement-2010.xls')
 
 wb_logement = xlrd.open_workbook(path_xls_logement)
-print 'Sheets in file', wb_logement.sheet_names()
+print u'\nSheets in file Logement:', wb_logement.sheet_names()
 
 sh_logement_com = wb_logement.sheet_by_name(u'COM')
 ls_columns = sh_logement_com.row_values(5)
@@ -131,7 +148,7 @@ path_xls_revenus = os.path.join(path_dir_communes,
                                 'base-cc-rev-fisc-loc-menage-10.xls')
 
 wb_revenus = xlrd.open_workbook(path_xls_revenus)
-print 'Sheets in file', wb_revenus.sheet_names()
+print u'\nSheets in file Revenus fisc:', wb_revenus.sheet_names()
 
 sh_revenus_com = wb_revenus.sheet_by_name(u'REVME_COM')
 ls_columns = sh_revenus_com.row_values(5)
@@ -184,50 +201,90 @@ df_uu_agg['POPDENSITY10'] = df_uu_agg['P10_POP'] / df_uu_agg['SUPERF']
 ## next two lines for temp display / can be dropped if better groupby
 #df_uu_info.index = df_uu_info['UU2010']
 #df_uu_agg['LIBUU2010'] = df_uu_info['LIBUU2010']
-df_uu_agg = pd.merge(df_uu_agg, df_revenus_uu, left_index = True, right_index = True)
+df_uu_agg = pd.merge(df_revenus_uu,
+                     df_uu_agg,
+                     how = 'right', # missing UUs in revenus?
+                     left_index = True,
+                     right_index = True)
 
-df_uu_info.index = df_uu_info['UU2010']
+# specific additions (could do before?)
+df_uu_agg['NB_COMUU'] = df_uu_info['NB_COM']
+df_uu_agg['TAILLEUU'] = df_uu_info['TAILLE']
+df_uu_agg['TYPEUU'] = df_uu_info['TYPE']
+
+df_uu_info.set_index('UU2010', inplace = True)
 
 # todo: check missing UU... mainly DOMTOM: all info avail included??
-ls_disp_info = ['UU2010', 'LIBUU2010', 'NB_COM',
-                'TAILLE', 'TYPE', 'POP_MUN_2007']
+ls_disp_info = ['LIBUU2010', 'NB_COM', 'TAILLE', 'TYPE', 'POP_MUN_2007']
 df_uu_agg_final = pd.merge(df_uu_info[ls_disp_info],
                            df_uu_agg,
+                           how = 'right',
                            left_index = True,
-                           right_index = True,
-                           how = 'left')
-# todo: add check with nb communes actually found in insee info files
-df_uu_agg_final.to_csv(os.path.join(path_dir_insee_built, 'df_uu_agg_final.csv'),
-                       float_format='%.2f', encoding='utf-8', 
-                       index=False)
+                           right_index = True)
+
+# Add center and indicator of nb of centers (only first is kept then)
+df_uu_center = df_uu_com[['UU2010', 'CODGEO', 'LIBGEO']]\
+                        [df_uu_com['UU_CT'] == 'YES']
+df_uu_center.drop_duplicates('UU2010', take_last = False, inplace = True)
+df_uu_center.set_index('UU2010', inplace = True)
+df_uu_center['NB_CT'] = se_uu_vc
+df_uu_center.rename(columns = {'CODGEO' : 'CODGEO_CT',
+                               'LIBGEO' : 'LIBGEO_CT'}, inplace = True)
+
+df_uu_agg_final = pd.merge(df_uu_center,
+                           df_uu_agg_final,
+                           how = 'right',
+                           left_index = True,
+                           right_index = True)
+
+df_uu_agg_final.sort(inplace = True)
+df_uu_agg_final.to_csv(os.path.join(path_dir_insee_built,
+                                    'df_uu_agg_final.csv'),
+                       float_format='%.2f',
+                       encoding = 'utf-8', 
+                       index = 'UU2010')
+
+print u'\nOverview df_au_agg_final:'
+print df_uu_agg_final[['LIBUU2010', 'CODGEO_CT', 'LIBGEO_CT', 'NB_CT',
+                       'P10_PMEN', 'PMENFIS10', 'MENFIS10', 'QUAR2UC10']][0:10].to_string()
+
+ls_rural_uus = list(df_uu_agg_final.index[\
+                      pd.isnull(df_uu_agg_final['CODGEO_CT'])])
 
 # ######################
 # BUILD FINAL DF UU COM
 # ######################
 
-df_uu_agg['NB_COMUU'] = df_uu_info['NB_COM']
-df_uu_agg['TAILLEUU'] = df_uu_info['TAILLE']
-df_uu_agg['TYPEUU'] = df_uu_info['TYPE']
-
-pd.set_option('float_format', '{:10,.0f}'.format)
-#print df_uu_agg.to_string()
-
 # need df with au info at commune level (i.e. index = insee code)
 # keep TYPE AND STATUT and if commune = center or not
 df_uu_com_final = df_uu_com[['LIBGEO', 'UU2010', 'LIBUU2010',
                              'TYPE_2010', 'STATUT_2010',
-                             'UU_Center', 'CODGEO_Center']]
-df_uu_com_final = pd.merge(df_uu_com_final, df_uu_agg, how='left', # check how...
-                           left_on = 'UU2010', right_index = True)
+                             'UU_CT', 'NB_CT', 'CODGEO_CT']]
+
+# get rid of lines not corresponding to a geographic area (want nan in all cols)
+df_uu_agg_geo = df_uu_agg.reset_index()
+ls_drop_uu = list(df_uu_agg_final.index[\
+                    pd.isnull(df_uu_agg_final['CODGEO_CT'])])
+df_uu_agg_geo = df_uu_agg_geo[~(df_uu_agg_geo['UU2010'].isin(ls_drop_uu))]
+
+df_uu_com_final.reset_index(inplace = True) # save column COGEO
+
+df_uu_com_final = pd.merge(df_uu_com_final,
+                           df_uu_agg_geo,
+                           how='left',
+                           left_on = 'UU2010',
+                           right_on = 'UU2010')
+
+df_uu_com_final.set_index('CODGEO', inplace = True)
 df_uu_com_final.sort(inplace=True) # sort by index (was sorted by AU2010)
-#print df_uu_com_final[0:100].to_string()
 
-#df_uu_com_final.to_csv(os.path.join(path_dir_insee_built, 'df_uu_com_final.csv'),
-#                       float_format='%.2f', encoding='utf-8', 
-#                       index=True, index_label=u'CODGEO')
+df_uu_com_final.to_csv(os.path.join(path_dir_insee_built,
+                                    'df_uu_com_final.csv'),
+                       float_format = '%.2f',
+                       encoding = 'utf-8', 
+                       index_label = u'CODGEO')
 
-## BACKUP
-
-##path_dir_gas_source = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_other')
-##df_insee.to_csv(os.path.join(path_dir_gas_source, 'data_insee_extract.csv')
-##                float_format='%.3f', encoding='utf-8', index=False)
+print u'\nOverview df_au_com_final:'
+print df_uu_com_final[['LIBGEO', 'UU2010', 'LIBUU2010',
+                       'CODGEO_CT', 'UU_CT', 'NB_CT',
+                       'P10_PMEN', 'PMENFIS10', 'MENFIS10', 'QUAR2UC10']][0:10].to_string()
