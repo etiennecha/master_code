@@ -326,7 +326,7 @@ ls_fix_date_ref = [['6800011', +10], # enough?
                    ['56100006', -20], # check... very unsure
                    ['62450002', -20], # check... very unsure
                    ['88140001', -10],
-                   ['71260005', +130] # check, pp change detected way too early
+                   ['71260005', +130]] # check, pp change detected way too early
 
 # TODO: fix according to all this info
 
