@@ -255,16 +255,16 @@ for id_station in df_distances.columns:
 # Sort each ls_comp on distance
 dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
 
-## 5/ STORE FILES
-#
-## takes more time to store (load?) than to build (cur. 353Mo)
-#df_distances.to_csv(os.path.join(path_dir_built_csv, 'df_distances.csv'),
-#                    index_label = 'id_station',
-#                    float_format= '%.2f',
-#                    encoding = 'utf-8')
-#
-#enc_json(ls_comp_pairs, os.path.join(path_dir_built_json,
-#                                     'ls_comp_pairs.json'))
-#
-#enc_json(dict_ls_comp, os.path.join(path_dir_built_json,
-#                                    'dict_ls_comp.json'))
+# 5/ STORE FILES
+
+# takes more time to store (load?) than to build (cur. 353Mo)
+df_distances.to_csv(os.path.join(path_dir_built_csv, 'df_distances.csv'),
+                    index_label = 'id_station',
+                    float_format= '%.2f',
+                    encoding = 'utf-8')
+
+enc_json(ls_comp_pairs, os.path.join(path_dir_built_json,
+                                     'ls_comp_pairs.json'))
+
+enc_json(dict_ls_comp, os.path.join(path_dir_built_json,
+                                    'dict_ls_comp.json'))
