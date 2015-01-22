@@ -120,12 +120,12 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items():
 # DIFF IN DIFF
 # ###################
 
-ls_ta_chge_ids = list(df_info_ta.index[(df_info_ta['pp_chge'] >= 0.05) &\
+ls_ta_chge_ids = list(df_info_ta.index[(df_info_ta['pp_chge'] >= 0.02) &\
                                        (~pd.isnull(df_info_ta['date_beg']))])
 
 df_dd_control = pd.DataFrame(df_prices_ht[ls_control_ids].mean(1), df_prices_ht.index, ['price'])
 df_dd_control['time'] = df_dd_control.index
-ls_df_dd = [df_dd_control]
+ls_df_dd = []
 ls_station_fe_vars = []
 ls_treatment_vars = []
 ls_rows_close_ta = []
@@ -155,9 +155,9 @@ print u'\nLoop finished'
 
 # start, end = 0, 100
 ls_df_res = []
-for i in range(0, 1000, 100):
+for i in range(0, 300, 100):
   start, end = i, i+100
-  df_dd = pd.concat(ls_df_dd[start:end+1], ignore_index = True)
+  df_dd = pd.concat([df_dd_control] + ls_df_dd[start:end], ignore_index = True)
   df_dd.fillna(value = {x : 0 for x in ls_station_fe_vars[start:end] +\
                                        ls_treatment_vars[start:end]},
                inplace = True)
@@ -211,10 +211,10 @@ df_res_sf.sort('coeff', inplace = True)
 
 # describe by brand
 ls_df_desc = []
-ls_desc_brands = df_res_sf_test['brand_0'].value_counts()[0:10].index
+ls_desc_brands = df_res_sf['brand_0'].value_counts()[0:10].index
 for brand in ls_desc_brands:
-  df_temp_desc = df_res_sf_test['coeff'][\
-                    df_res_sf_test['brand_0'] == brand].describe()
+  df_temp_desc = df_res_sf['coeff'][\
+                    df_res_sf['brand_0'] == brand].describe()
   ls_df_desc.append(df_temp_desc)
 df_desc = pd.concat(ls_df_desc, axis = 1, keys = ls_desc_brands)
 df_desc.rename(columns = {'CARREFOUR_MARKET' : 'CARREFOUR_M'}, inplace = True)
