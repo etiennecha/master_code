@@ -62,7 +62,7 @@ dict_brands = dec_json(os.path.join(path_dir_source,
                                     'dict_brands.json'))
 dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
 
-# Need to build groups to count real competitors only
+# Need to build groups to count real competitors only (good enough?)
 ls_big_brands = list(set([v[1] for k,v in dict_brands.items()]))
 ls_no_group = ['AUTRE_DIS', 'AUTRE_GMS', 'INDEPENDANT']
 ls_group_total = ['TOTAL_ACCESS', 'TOTAL', 'ELF', 'ELAN']
@@ -150,7 +150,10 @@ for id_station in df_info.index:
   if id_station in df_distances.columns:
     se_dist = pd.concat([df_distances[id_station][~pd.isnull(df_distances[id_station])],
                          df_distances.ix[id_station][~pd.isnull(df_distances.ix[id_station])]])
+    # todo: add se_dist_comp: build ls_ids_comp, ls_ids_sup_comp (efficiently?)
+    #ls_retail_group_brands = dict_retail_groups[dict_std_brands[df_info.ix[id_station]['brand_0']][1]]
     se_dist_sup = se_dist[ls_ids_dist_sup]
+    # todo: add se_dist_sup_comp
     ls_rows_clc.append([se_dist.min(), se_dist_sup.min()])
   else:
     ls_rows_clc.append([np.nan, np.nan])
