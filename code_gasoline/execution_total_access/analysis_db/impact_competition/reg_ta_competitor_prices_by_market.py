@@ -153,7 +153,7 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items():
 
 print u'\nStarting diff-in-diff regressions:'
 ls_df_res = []
-for id_station in df_info_ta.index[df_info_ta['pp_chge'] >= 0.05]:
+for id_station in df_info_ta.index[df_info_ta['pp_chge'] >= 0.05][0:10]:
   try:
     print 'Loop with:', id_station
     #id_station = '88300002'

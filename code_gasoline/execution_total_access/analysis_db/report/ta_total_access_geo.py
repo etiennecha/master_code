@@ -122,7 +122,7 @@ def rename_field(some_str, dict_rename):
     some_str = some_str.replace(k,v).strip()
   return some_str
 
-for df_ias, ia in ls_ia_loop:
+for df_ias, ia in ls_ia_loop[1:2]:
   # avoid error message due to overwriting of dataframe
   df_ias = df_ias.copy()
   df_ias.sort('P10_POP', ascending = False, inplace = True)
@@ -151,7 +151,7 @@ for df_ias, ia in ls_ia_loop:
   
   print u'\nTop 20 %s in terms of inhabitants:' %ia
   print df_ias[ls_disp + ['Pop by TA']][0:20].to_string(index = False,
-                                                              index_names = False)
+                                                        index_names = False)
   
   df_ias.sort('Nb TA', inplace = True, ascending = False)
   print u'\nTop 20 %s in terms of TA count:' %ia

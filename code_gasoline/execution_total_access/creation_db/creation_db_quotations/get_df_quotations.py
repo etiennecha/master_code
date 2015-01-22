@@ -8,10 +8,18 @@ from generic_master_info import *
 import datetime, time
 from BeautifulSoup import BeautifulSoup
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper_total_access')
+path_dir_built_paper = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_paper_total_access')
+
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
-path_dir_rotterdam = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_rotterdam')
+path_dir_rotterdam = os.path.join(path_data,
+                                  'data_gasoline',
+                                  'data_source',
+                                  'data_rotterdam')
+
 path_dir_reuters = os.path.join(path_dir_rotterdam, 'data_reuters')
 path_xls_reuters_diesel = os.path.join(path_dir_reuters, 'diesel_data_to_import.xls')
 path_xls_eia = os.path.join(path_dir_rotterdam, 'PET_PRI_SPT_S1_D.xls')
