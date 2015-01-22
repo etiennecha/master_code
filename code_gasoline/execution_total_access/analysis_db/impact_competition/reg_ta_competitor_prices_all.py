@@ -149,15 +149,16 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items():
       ls_df_dd.append(df_dd_comp)
       ls_station_fe_vars.append('fe_%s' %id_station)
       ls_treatment_vars.append('tr_%s' %id_station)
-      ls_rows_close_ta.append((id_station, id_ta, distance))
+      ls_rows_close_ta.append((id_station, id_ta, distance, df_info_ta.ix[id_ta]['pp_chge']))
 
 print u'\nLoop finished'
 
 # start, end = 0, 100
 ls_df_res = []
-for i in range(0, 300, 100):
+for i in range(0, 200, 100):
   start, end = i, i+100
-  df_dd = pd.concat([df_dd_control] + ls_df_dd[start:end], ignore_index = True)
+  # df_dd = pd.concat([df_dd_control] + ls_df_dd[start:end], ignore_index = True)
+  df_dd = pd.concat(ls_df_dd[start:end], ignore_index = True)
   df_dd.fillna(value = {x : 0 for x in ls_station_fe_vars[start:end] +\
                                        ls_treatment_vars[start:end]},
                inplace = True)
@@ -191,7 +192,8 @@ for i in range(0, 300, 100):
 df_res = pd.concat(ls_df_res)
 
 # add nearby TA id and distance
-df_close_ta = pd.DataFrame(ls_rows_close_ta, columns = ['id_station', 'id_ta', 'distance'])
+df_close_ta = pd.DataFrame(ls_rows_close_ta,
+                           columns = ['id_station', 'id_ta', 'distance', 'pp_chge'])
 df_close_ta.set_index('id_station', inplace = True)
 df_res = pd.merge(df_res,
                   df_close_ta,
@@ -209,6 +211,16 @@ df_res = pd.merge(df_res,
 df_res_sf = df_res[df_res['pval'] <= 0.05].copy()
 df_res_sf.sort('coeff', inplace = True)
 
+# Table: TA chge vs. TA comp
+ls_pcts = [0.1, 0.25, 0.5, 0.75, 0.9]
+df_ta_chge_vs_ta_comp =\
+  pd.concat([(-df_info_ta.ix[ls_ta_chge_ids]['pp_chge']).describe(percentiles=ls_pcts),
+             df_res_sf['coeff'].describe(percentiles=ls_pcts),
+             df_res_sf['coeff'][df_res_sf['distance'] <= 2].describe(percentiles=ls_pcts),
+             df_res_sf['coeff'][df_res_sf['distance'] <= 1].describe(percentiles=ls_pcts)],
+             keys = ['TA', 'TA_comp_3km', 'TA_comp_2km' ,'TA_comp_1km'], axis = 1)
+print df_ta_chge_vs_ta_comp.to_string()
+
 # describe by brand
 ls_df_desc = []
 ls_desc_brands = df_res_sf['brand_0'].value_counts()[0:10].index
@@ -220,50 +232,60 @@ df_desc = pd.concat(ls_df_desc, axis = 1, keys = ls_desc_brands)
 df_desc.rename(columns = {'CARREFOUR_MARKET' : 'CARREFOUR_M'}, inplace = True)
 print df_desc.to_string()
 
-### #################
-### STACK AND ANALYSE
-### #################
-##
-##df_dd_su = pd.concat(ls_df_res, ignore_index = True)
-##df_dd_su = pd.merge(df_dd_su,
-##                    df_info[['brand_0']],
-##                    how = 'left',
-##                    left_on = 'id_station',
-##                    right_index = True)
-##
-### ADD TYPE: SUP OIL or do by brand
-##ls_gr_total = ['ELF', 'ELAN', 'TOTAL', 'TOTAL_ACCESS']
-##df_dd_su_cl = df_dd_su[~(df_dd_su['brand_0'].isin(ls_gr_total))].copy()
-### todo: inspect problems
-##df_dd_su_cl = df_dd_su_cl[df_dd_su_cl['se'] < 1]
-### can be duplicates... could sort and keep highest drop
-##
-##df_dd_su_cl['coeff'][df_dd_su_cl['pval'] <= 0.05].describe()
-##df_dd_su_cl_sf = df_dd_su_cl[df_dd_su_cl['pval'] <= 0.05].copy()
-##df_dd_su_cl_sf.sort('coeff', ascending = True, inplace = True)
-##
-### #######
-### GRAPHS
-### #######
+# small reg to explain coeff
+print smf.ols('coeff ~ C(brand_0) + distance + pp_chge',
+              data = df_res_sf).fit().summary()
 
-# Obfuscate then match TA price (check 2100012)
-# 95100025   -0.077 0.001 -107.343 0.000  95100016     0.070
-ax = df_prices_ht[['95100025', '95100016']].plot()
-df_prices_ht[ls_control_ids].mean(1).plot(ax = ax)
-plt.show()
+## #######
+## GRAPHS
+## #######
+#
+#from pylab import *
+#rcParams['figure.figsize'] = 16, 6
+#
+#plt.rc('font', **{'family' : 'Computer Modern Roman',
+#                  'size'   : 20})
+#
+## Obfuscate then match TA price (check 2100012)
+## 95100025   -0.077 0.001 -107.343 0.000  95100016     0.070
+## Match TA price then give up
+## 91000006   -0.057 0.001  -68.342 0.000  91000003     1.180
+## Match TA price
+## 5100004 ... lost the line
+#
+#ls_pair_display = [['95100025', '95100016'],
+#                   ['91000006', '91000003'],
+#                   ['5100004', '5100007'],
+#                   ['22500002', '22500003'],
+#                   ['69005002', '69009005'],
+#                   ['69110003', '69009005']]
+#
+#for i, (id_1, id_2) in enumerate(ls_pair_display):
+#  fig = plt.figure()
+#  ax1 = fig.add_subplot(111)
+#  l1 = ax1.plot(df_prices_ht.index, df_prices_ht[id_1].values,
+#                c = 'b', label = '%s_%s' %(id_1, df_info.ix[id_1]['brand_0']))
+#  l2 = ax1.plot(df_prices_ht.index, df_prices_ht[id_2].values,
+#                c = 'g', label = '%s_%s' %(id_2, df_info.ix[id_2]['brand_0']))
+#  l3 = ax1.plot(df_prices_ht.index, df_prices_ht[ls_control_ids].mean(1).values,
+#                c = 'r', label = 'Control')
+#  lns = l1 + l2 + l3
+#  labs = [l.get_label() for l in lns]
+#  ax1.legend(lns, labs, loc=0)
+#  ax1.grid()
+#  plt.tight_layout()
+#  #plt.show()
+#  plt.savefig(os.path.join(path_dir_built_graphs,
+#                           'competitor_reactions',
+#                           'ex_%s.png' %i))
 
-# Match TA price then give up
-# 91000006   -0.057 0.001  -68.342 0.000  91000003     1.180
-ax = df_prices_ht[['91000006', '91000003']].plot()
-df_prices_ht[ls_control_ids].mean(1).plot(ax = ax)
-plt.show()
+## Quick Graph
+# ax = df_prices_ht[['69005002', '69009005']].plot()
+# df_prices_ht[ls_control_ids].mean(1).plot(ax = ax)
+# plt.show()
 
-# Match TA price
-ax = df_prices_ht[['5100004', '5100007']].plot()
-df_prices_ht[ls_control_ids].mean(1).plot(ax = ax)
-plt.show()
 
-##
+
 #### Highest coeffs: interesting stories
 ###  coeff    se    tval  pval id_station  dist     id_TA           brand_0
 ### -0.061 0.001 -52.103 0.000   91000006 3.310  91130002              AVIA

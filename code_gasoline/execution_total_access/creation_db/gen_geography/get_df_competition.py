@@ -73,6 +73,12 @@ for brand in ls_no_group:
 for brand in ls_group_total:
   dict_retail_groups[brand] = ls_group_total
 
+df_info['group'] = df_info['brand_0'].apply(lambda x: dict_std_brands[x][1])
+df_info.loc[df_info['group'].isin(ls_group_total), 'group'] = 'TOTAL'
+df_info.loc[df_info['group'].isin(ls_no_group), 'group'] = None
+
+df_info['group_type'] = df_info['brand_0'].apply(lambda x: dict_std_brands[x][2])
+
 # ########################
 # MARKETS AROUND STATIONS
 # ########################
@@ -141,20 +147,29 @@ df_distances.set_index('id_station', inplace = True)
 #df_distances.ix['10000001'] = np.nan
 #df_distances['9700001'] = np.nan
 
+# old method not taking into account retail group
 ls_ids_dist_sup = [id_station for id_station in df_info.index\
                      if (dict_std_brands.get(df_info.ix[id_station]['brand_0'])[2] == 'SUP') and\
                         (id_station in df_distances.columns)]
 
+dict_rgp_ids = {rgp: list(df_info.index[df_info['group'] == rgp])\
+                  for rgp in df_info['group'].unique()}
+
+dict_diff_rgp_ids = {rgp: list(df_info.index[df_info['group'] != rgp])\
+                       for rgp in df_info['group'].unique()}
+
+dict_diff_rgp_sup_ids = {rgp: list(df_info.index[(df_info['group'] != rgp) &\
+                                                 (df_info['group_type'] == 'SUP')])\
+                           for rgp in df_info['group'].unique()}
+
 ls_rows_clc = []
 for id_station in df_info.index:
   if id_station in df_distances.columns:
+    group_station = df_info.ix[id_station]['group']
     se_dist = pd.concat([df_distances[id_station][~pd.isnull(df_distances[id_station])],
                          df_distances.ix[id_station][~pd.isnull(df_distances.ix[id_station])]])
-    # todo: add se_dist_comp: build ls_ids_comp, ls_ids_sup_comp (efficiently?)
-    #ls_retail_group_brands = dict_retail_groups[dict_std_brands[df_info.ix[id_station]['brand_0']][1]]
-    se_dist_sup = se_dist[ls_ids_dist_sup]
-    # todo: add se_dist_sup_comp
-    ls_rows_clc.append([se_dist.min(), se_dist_sup.min()])
+    ls_rows_clc.append([se_dist[dict_diff_rgp_ids[group_station]].min(),
+                        se_dist[dict_diff_rgp_sup_ids[group_station]].min()])
   else:
     ls_rows_clc.append([np.nan, np.nan])
 df_clc = pd.DataFrame(ls_rows_clc,
@@ -165,6 +180,12 @@ df_clc = pd.DataFrame(ls_rows_clc,
 
 df_comp = pd.merge(df_nb_comp, df_area, left_index = True, right_index = True)
 df_comp = pd.merge(df_comp, df_clc, left_index = True, right_index = True)
+
+df_comp.to_csv(os.path.join(path_dir_built_csv,
+                            'df_comp.csv'),
+               encoding = 'utf-8',
+               index_label = 'id_station',
+               float_format= '%.2f')
 
 # #####################
 # MARKETS ON THEIR OWN
