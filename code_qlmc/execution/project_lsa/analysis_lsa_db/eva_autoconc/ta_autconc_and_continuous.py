@@ -21,8 +21,12 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
                                   'df_lsa_active_fm_hsx.csv'),
-                     dtype = {'Code INSEE' : str,
-                              'Code INSEE ardt' : str},
+                     dtype = {u'Code INSEE' : str,
+                              u'Code INSEE ardt' : str,
+                              u'N°Siren' : str,
+                              u'N°Siret' : str},
+                     parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv',
+                                    u'DATE chg enseigne', u'DATE chgt surf'],
                      encoding = 'UTF-8')
 df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
                 (~pd.isnull(df_lsa['Longitude']))].copy()
@@ -36,7 +40,7 @@ ls_disp_lsa = [u"Nom de l'établissement",
                u'Longitude']
 
 # Type restriction
-df_lsa_sub = df_lsa[df_lsa['Type'] == 'H'].copy()
+df_lsa_sub = df_lsa[df_lsa['Type_alt'] == 'H'].copy()
 
 # Competitors for one store
 
@@ -101,9 +105,17 @@ df_lsa_sub = pd.merge(df_lsa_sub,
 
 df_lsa_sub.sort(['Code INSEE ardt', 'Enseigne'], inplace = True)
 
-ls_disp_lsa_comp = ls_disp_lsa + ['ac_store_share', 'ac_group_share', 'ac_hhi',
-                                  'store_share', 'group_share', 'hhi']
+ls_disp_lsa_comp = ls_disp_lsa + ['ac_store_share', 'store_share',
+                                  'ac_group_share', 'group_share',
+                                  'ac_hhi', 'hhi']
 print df_lsa_sub[ls_disp_lsa_comp][0:20].to_string()
+
+df_lsa_sub.to_csv(os.path.join(path_dir_built_csv,
+                               'df_comp_hyper_ac_vs_cont.csv'),
+                  encoding = 'latin-1',
+                  float_format ='%.3f',
+                  date_format='%Y%m%d',
+                  index = False)
 
 ## Test GroupBy with None => Caution, None ignored in groupby
 ## Hence need to fill with unique entries if None to get it working properly
