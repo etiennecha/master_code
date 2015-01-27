@@ -122,7 +122,7 @@ for type_store, type_comp, dist_comp, title in ls_h_and_s:
      pd.to_datetime('1900/01/01', format = '%Y/%m/%d')
 
   df_lsa_type.to_csv(os.path.join(path_dir_built_csv,
-                                  'df_eval_comp%s.csv' %title),
+                                  'df_eval_comp_%s.csv' %title),
                      encoding = 'latin-1',
                      float_format ='%.3f',
                      date_format='%Y%m%d',

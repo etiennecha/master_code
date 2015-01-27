@@ -137,60 +137,39 @@ print df_com[~df_com['code_insee'].isin(df_com_insee_fm.index)].to_string()
 df_com.set_index('code_insee', inplace = True)
 df_com['pop'] = df_com_insee['P10_POP']
 
-# Type restriction
-ls_h_and_s_demand = [['H', 25],
-                     ['S', 10]]
+ls_rows_hhi = []
+for row_ind, row in df_com.iterrows():
+  df_lsa_temp = df_lsa.copy()
+  df_lsa_temp['lat_com'] = row['lat_cl']
+  df_lsa_temp['lng_com'] = row['lng_cl']
+  df_lsa_temp['dist'] = compute_distance_ar(df_lsa_temp['Latitude'],
+                                       df_lsa_temp['Longitude'],
+                                       df_lsa_temp['lat_com'],
+                                       df_lsa_temp['lng_com'])
+  df_lsa_temp['wgt_surf'] = np.exp(-df_lsa_temp['dist']/10) * df_lsa_temp['Surf Vente']
+  wgt_surf = df_lsa_temp['wgt_surf'].sum()
+  df_rgps = df_lsa_temp[['Groupe', 'wgt_surf']].groupby('Groupe').agg([sum])['wgt_surf']
+  df_rgps['market_share'] = df_rgps['sum'] / df_rgps['sum'].sum()
+  hhi = (df_rgps['market_share']**2).sum()
 
-for type_store, dist_demand in ls_h_and_s_demand:
-  df_lsa_type = df_lsa[df_lsa['Type_alt'] == type_store].copy()
-  
-  # Population available for one store
-  
-  ls_rows_demand = []
-  for row_ind, row in df_lsa_type.iterrows():
-    ## could actually keep reference store since using groupe surface only
-    #df_lsa_sub_temp = df_lsa_sub[df_lsa_sub.index != row_ind].copy()
-    df_com_temp = df_com.copy()
-    df_com_temp['lat_store'] = row['Latitude']
-    df_com_temp['lng_store'] = row['Longitude']
-    df_com_temp['dist'] = compute_distance_ar(df_com_temp['lat_store'],
-                                              df_com_temp['lng_store'],
-                                              df_com_temp['lat_cl'],
-                                              df_com_temp['lng_cl'])
-    # AC
-    ac_pop = df_com_temp['pop'][df_com_temp['dist'] <= dist_demand].sum()
-    
-    # CONTINUOUS
-    df_com_temp['Wgt pop'] = np.exp(-df_com_temp['dist']/10) *\
-                                          df_com_temp['pop']
-    pop = df_com_temp['Wgt pop'].sum()
+  ls_rows_hhi.append((row_ind, wgt_surf, hhi))
 
-    ls_rows_demand.append((row_ind, ac_pop, pop))
+df_hhi = pd.DataFrame(ls_rows_hhi, columns = ['index', 'wgt_surf', 'hhi'])
+df_hhi.set_index('index', inplace = True)
 
-  df_des_demand = pd.DataFrame(ls_rows_demand,
-                               columns = ['index', 'ac_pop', 'pop'])
-  df_des_demand.set_index('index', inplace = True)
-  
-  df_lsa_type = pd.merge(df_lsa_type,
-                         df_des_demand,
-                         how = 'left',
-                         left_index = True,
-                         right_index = True)
-  
-  df_lsa_type.sort(['Code INSEE ardt', 'Enseigne'], inplace = True)
-  
-  ls_disp_lsa_comp = ls_disp_lsa + ['ac_pop', 'pop']
+df_com = pd.merge(df_com,
+                  df_hhi,
+                  how = 'left',
+                  right_index = True,
+                  left_index = True)
 
-  print u'\n', type_store
-  print df_lsa_type[ls_disp_lsa_comp][0:10].to_string()
-  
-  # temp: avoid error with dates before 1900 and strftime (when outputing to csv)
-  df_lsa_type.loc[df_lsa_type[u'DATE ouv'] <= '1900', 'DATE ouv'] =\
-     pd.to_datetime('1900/01/01', format = '%Y/%m/%d')
+df_com['hhi'] = df_com['hhi'] * 10000
 
-  df_lsa_type.to_csv(os.path.join(path_dir_built_csv,
-                                  'df_store_demand_%s.csv' %type_store),
-                     encoding = 'latin-1',
-                     float_format ='%.3f',
-                     date_format='%Y%m%d',
-                     index = False)
+df_com.to_csv(os.path.join(path_dir_built_csv,
+                           'df_municipality_hhi.csv'),
+              encoding = 'latin-1',
+              float_format = '%.3f',
+              date_format = '%Y%m%d',
+              index_label = 'code_insee')
+
+# Check ability to output HHi quantiles weighted by pop (compare with STATA output)
