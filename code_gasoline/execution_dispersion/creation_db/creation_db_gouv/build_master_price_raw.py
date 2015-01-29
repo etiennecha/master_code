@@ -105,7 +105,7 @@ path_dir_source_prices = os.path.join(path_data,
 path_dir_built_json = os.path.join(path_data,
                                    'data_gasoline',
                                    'data_built',
-                                   'data_paper',
+                                   'data_paper_dispersion',
                                    'data_json')
 
 #DIESEL MASTER 2011-2013

@@ -133,7 +133,6 @@ for indiv_id, indiv_info in master_price['dict_info'].items():
   except:
     print 'Not in dict_brands', indiv_info['brand']
 
-
 # check multi brands, reduce?
 dict_len_brands = {}
 ls_index, ls_rows_brands = [], []

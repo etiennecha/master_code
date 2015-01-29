@@ -8,7 +8,11 @@ from generic_master_info import *
 from matching_insee import *
 import pprint
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_dispersion')
+
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
@@ -18,15 +22,14 @@ path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 # LOAD GAS STATION DATA
 # ######################
 
-#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-#master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_raw.json'))
+master_price = dec_json(os.path.join(path_dir_built_json,
+                                     'master_price_diesel_fixed.json'))
+master_info = dec_json(os.path.join(path_dir_built_json,
+                                    'master_info_fixed.json'))
 
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
-dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
-
-# todo: Work with master_price_raw or master_price ?
-# todo: probably need intermediate stage (before duplicate reconciliation)
+dict_brands = dec_json(os.path.join(path_dir_source,
+                                    'data_other',
+                                    'dict_brands.json'))
 
 # ##################
 # BUILD DF ACTIVITY
@@ -35,9 +38,10 @@ dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.
 # todo: refactor / replace?
 ls_ls_price_durations = get_price_durations(master_price['diesel_price'])
 # ls_ls_price_variations = get_price_variations_nan(ls_ls_price_durations)
-ls_start_end, ls_none, dict_dilettante =  get_overview_reporting_bis(master_price['diesel_price'],
-                                                                     master_price['dates'],
-                                                                     master_price['missing_dates'])
+ls_start_end, ls_none, dict_dilettante =\
+   get_overview_reporting_bis(master_price['diesel_price'],
+                              master_price['dates'],
+                              master_price['missing_dates'])
 
 ls_index, ls_rows_activity = [], []
 for i, indiv_id in enumerate(master_price['ids']):
@@ -53,6 +57,43 @@ df_activity = pd.DataFrame(ls_rows_activity,
 # ###############
 # BUILD DF BRANDS
 # ###############
+
+# Fix (caution: not robust to a change in beginning of period studied!)
+ls_adhoc_brand_fix = [['51100035', [[u'TOTAL ACCESS', 577]]],
+                      ['60230003', [[u'TOTAL ACCESS', 523]]],
+                      ['1130001',  [[u'ELF', 0]]], # became Total (renovation) then TA... (not here)
+                      ['31700002', [[u'ELF', 0], [u'TOTAL ACCESS', 533]]],
+                      ['84700001', [[u'ELF', 0], [u'TOTAL ACCESS', 527]]],
+                      ['91590008', [[u'TOTAL ACCESS', 298]]], # TA created as Total (renovation) then TA (was Elf before)
+                      ['93420006', [[u'TOTAL ACCESS', 521]]],
+                      ['78150001', [[u'ELF', 0], [u'TOTAL ACCESS', 19]]], # double change TOTAL ELF TOTAL TA simplified
+                      ['86360003', [[u'TOTAL', 0], [u'TOTAL ACCESS', 448]]]] # same with TOTAL
+
+for id_gouv, ls_fixed_station_brands in ls_adhoc_brand_fix:
+  master_price['dict_info'][id_gouv]['brand'] = ls_fixed_station_brands
+
+# Update dict brands if needed
+for indep in [u'AUCUNE', u'GME', u'S.D.L', u'NEANT', u'X.BEE', u'CCVB',
+              u'AUTOMAT24/24', u'AUTOMAT.DKV.UTA', u'BROSSIER',
+              u'STATION', u'PETROSUD', u'GALLIEN', u'GARCIN FRERES',
+              u'SUPERMARCHE', u'SOS PETRO', u'DISCOUNT', u'AIREC',
+              u'QUANTIUM 500T', u'Q8', u'STATION CHLOE', u'AGENT FORD']:
+  dict_brands[indep] = [u'INDEPENDANT', u'INDEPENDANT', u'IND']
+
+dict_brands[u'BP EXPRESS'] = [u'BP_EXPRESS', u'BP', u'OIL']
+dict_brands[u'COCCIMARKET'] = [u'COCCINELLE', u'COLRUYT', u'SUP'] # INDPT?
+dict_brands[u'CARREFOUR EXPRESS'] = [u'CARREFOUR_EXPRESS', u'CARREFOUR', u'SUP']
+dict_brands[u'PROXI SUPER'] = [u'AUTRE_GMS', u'AUTRE_GMS', u'SUP'] # COLRUYT?
+dict_brands[u'LIDL'] = [u'LIDL', u'LIDL', u'SUP']
+dict_brands[u'SPAR'] = [u'SPAR', u'CASINO', u'SUP']
+dict_brands[u'U'] = [u'SYSTEMEU', u'SYSTEMEU', u'SUP']
+dict_brands[u'U EXPRESS'] = [u'U_EXPRESS', u'SYSTEMEU', u'SUP']
+dict_brands[u'ENI FRANCE'] = [u'AGIP', u'AGIP', u'OIL']
+dict_brands[u'MARKET'] = [u'CARREFOUR_MARKET', u'CARREFOUR', u'SUP']
+
+enc_json(dict_brands, os.path.join(path_dir_source,
+                                   'data_other',
+                                   'dict_brands.json'))
 
 # Harmonizes brands (softly though so far)
 for indiv_id, indiv_info in master_price['dict_info'].items():
@@ -80,20 +121,7 @@ for indiv_id, indiv_info in master_price['dict_info'].items():
       i += 1
   master_price['dict_info'][indiv_id]['brand_std'] = ls_brand_std
 
-# fix what seems to be mistakes
-
-master_price['dict_info']['78150001']['brand'] =\
-    [[u'ELF', 0], [u'TOTAL_ACCESS', 30]]
-master_price['dict_info']['78150001']['brand_std'] =\
-    [[u'ELF', 0], [u'TOTAL_ACCESS', 30]]
-
-master_price['dict_info']['86360003']['brand'] =\
-   [[u'TOTAL', 0], [u'TOTAL_ACCESS', 457]]
-master_price['dict_info']['86360003']['brand_std'] =\
-   [[u'TOTAL', 0], [u'TOTAL_ACCESS', 457]]
-
-# could have been created by me (TA or duplicate merge?)
-
+# check multi brands, reduce?
 dict_len_brands = {}
 ls_index, ls_rows_brands = [], []
 for indiv_id, indiv_info in master_price['dict_info'].items():

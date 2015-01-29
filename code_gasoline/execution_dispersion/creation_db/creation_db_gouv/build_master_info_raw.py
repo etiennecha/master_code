@@ -61,7 +61,7 @@ list_info_keys = ['name',
 path_dir_built_json = os.path.join(path_data,
                                    'data_gasoline',
                                    'data_built',
-                                   'data_paper',
+                                   'data_paper_dispersion',
                                    'data_json')
 
 ls_file_paths = []
@@ -69,16 +69,20 @@ master_files_info = [dec_json(os.path.join(path_dir_gouv_stations, file_name))\
                         for file_name in ls_file_names]
 
 # Obvious error of unknown original (CAHORS => AULNAY SOUS BOIS...)
-master_files_info[5]['46000011']['address'] = master_files_info[4]['46000011']['address']
+if len(master_files_info) >= 6:
+  master_files_info[5]['46000011']['address'] = master_files_info[4]['46000011']['address']
 
 master_info = build_master_info(master_files_info, list_info_keys)
-
 
 # OUTPUT TO CSV
 
 enc_json(master_info, os.path.join(path_dir_built_json,
                                    'master_info_raw.json'))
 
-# No preliminary fix deemed necessary at this stage... could add (e.g. brands)
+# Following file should be fixed by including open data
 enc_json(master_info, os.path.join(path_dir_built_json,
                                    'master_info_fixed.json'))
+
+print u'\nCreation of master_info_raw.json successful'
+print type(master_info)
+print u'Length:', len(master_info)

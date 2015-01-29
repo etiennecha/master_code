@@ -6,7 +6,11 @@ from generic_master_price import *
 from generic_master_info import *
 import matplotlib.pyplot as plt
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_dispersion')
+
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
@@ -16,20 +20,10 @@ path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 # LOAD GAS STATION DATA
 # ######################
 
-#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-#master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_raw.json'))
-
 master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
 master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
 
 dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
-
-# todo: Work with master_price_raw or master_price ?
-# todo: probably need intermediate stage (before duplicate reconciliation)
-
-#ls_columns = [pd.to_datetime(date) for date in master_price['dates']]
-#df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_columns).T
-#se_mean_price =  df_price.mean(1)
 
 # #################
 # DF PRICES
@@ -58,21 +52,6 @@ ls_tax_12 = [(1,7,26,38,42,69,73,74), # PrixHT + 0.0135
 ls_tax_12 = [map(lambda x: '{:d}'.format(x), ls_x) for ls_x in ls_tax_12]
 
 # DIFFERENCES IN REGIONAL TICPE
-
-## 2011
-#df_prices_ht_2011 = df_prices_ht.ix[:'2011-12-31']
-#for indiv_id in df_prices_ht_2011.columns:
-#  if indiv_id[:-6] in ls_tax_11[0]:
-#    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x + 0.0135)
-#  elif indiv_id[:-6] in ls_tax_11[1]:
-#    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x + 0.0250)
-## 2012 onward
-#df_prices_ht_2012 = df_prices_ht.ix['2012-01-01':]
-#for indiv_id in df_prices_ht_2012.columns:
-#  if indiv_id[:-6] in ls_tax_12[0]:
-#    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x + 0.0135)
-#  elif indiv_id[:-6] in ls_tax_12[1]:
-#    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x + 0.0250)
 
 # Alternative compliant (?) with newest pandas version
 # 2011

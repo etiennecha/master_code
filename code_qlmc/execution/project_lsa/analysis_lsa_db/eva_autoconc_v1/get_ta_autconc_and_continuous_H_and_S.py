@@ -197,7 +197,8 @@ ls_hyper_low_comp = df_hvh.index[(df_hvh['hvh_ac_nb_groups'] < 4) &\
                                  (df_hvh['hvh_ac_group_share'] > 0.5)]
 
 print u'\nTaking H/S/X into account:'
-print df_hvh[['hva_group_share', 'hva_ac_group_share', 'hva_ac_nb_groups']].ix[ls_hyper_low_comp].describe()
+print df_hvh[['hva_group_share', 'hva_ac_group_share', 'hva_ac_nb_groups']].\
+        ix[ls_hyper_low_comp].describe()
 
 print u'\nAll hypermarkets:'
 print df_hvh[['ac_hypers_by_pop_ac', 'ac_hypers_by_pop']].describe()
@@ -206,7 +207,8 @@ print u'\nLow comp hypermarkets:'
 print df_hvh.ix[ls_hyper_low_comp][['ac_hypers_by_pop_ac', 'ac_hypers_by_pop']].describe()
 
 print u'\nLow comp but high nb of hypers by pop'
-print df_hvh.ix[ls_hyper_low_comp][df_hvh['ac_hypers_by_pop'] > 10][ls_disp_lsa + ['Surf Vente', 'Reg']].to_string()
+print df_hvh.ix[ls_hyper_low_comp][df_hvh['ac_hypers_by_pop'].ix[ls_hyper_low_comp] > 10]\
+        [ls_disp_lsa + ['Surf Vente', 'Reg']].to_string()
 
 df_hvh.to_csv(os.path.join(path_dir_built_csv,
                            'df_hyper_competition.csv'),
@@ -272,7 +274,7 @@ df_com.sort(columns = ['insee_code', 'poly_area'],
 # ADD HHI
 df_com.set_index('insee_code', inplace = True)
 df_com = pd.merge(df_com,
-                  df_hhi[['wgt_surf', 'hhi']],
+                  df_hhi[['wgt_store_surf', 'hhi']],
                   how = 'left',
                   left_index = True,
                   right_index = True)
@@ -286,28 +288,35 @@ plt.clf()
 fig = plt.figure()
 ax1 = fig.add_subplot(111, aspect = 'equal') #, frame_on = False)
 
-ax1.scatter([store.x for store in df_hvh['point'].ix[ls_hyper_low_comp]],
-            [store.y for store in df_hvh['point'].ix[ls_hyper_low_comp]],
-            s = 20, marker = 'o', lw=1, facecolor = '#FE2E2E', edgecolor = 'w', alpha = 0.4,
-            antialiased = True, zorder = 3)
+le_1 = ax1.scatter([store.x for store in df_hvh['point'].ix[ls_hyper_low_comp]],
+                   [store.y for store in df_hvh['point'].ix[ls_hyper_low_comp]],
+                   s = 20, marker = 'o', lw=0, facecolor = '#FE2E2E', edgecolor = 'w', alpha = 0.8,
+                   antialiased = True, zorder = 3)
 
 # dpt borders
 df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
-                      PolygonPatch(x, fc = '#FFFFFF', ec='#000000', lw=.2, alpha=0.7, zorder=1))
+                      PolygonPatch(x, fc = 'w', ec='#000000', lw=0.6, alpha=1, zorder=1))
 pc_2 = PatchCollection(df_dpt['patches'], match_original=True)
-ax1.add_collection(pc_2)
+le_2 = ax1.add_collection(pc_2)
 
 # communes with low comp
 df_com['patches'] = df_com['poly'].map(lambda x:\
-                      PolygonPatch(x, fc = 'b', ec= 'w', lw=.2, alpha=0.2, zorder=1))
+                      PolygonPatch(x, fc = 'b', ec= 'w', lw=0.1, alpha=0.6, zorder=2))
 pc_3 = PatchCollection(df_com['patches'][df_com['hhi'] > 2500], match_original=True)
-ax1.add_collection(pc_3)
+le_3 = ax1.add_collection(pc_3)
+
+# fake object for legend
+from matplotlib.lines import Line2D
+le_4 = Line2D([0], [0], linestyle="none", marker="o", alpha=0.6, markersize=10, markerfacecolor="b")
 
 ax1.autoscale_view(True, True, True)
 ax1.axis('off')
-ax1.set_title('Hypermarkets with low competition', loc = 'left')
+#ax1.set_title('Hypermarkets with low competition', loc = 'left')
 # plt.subplots_adjust(left=.1, right=0.95, bottom=0.1, top=0.95, wspace=0, hspace=0)
 plt.tight_layout()
+plt.legend((le_1, le_4),
+           ('Hypers w/ low competition', 'Municipalities with HHI > 2500'),
+            scatterpoints = 1, numpoints = 1, loc = 'best')
 fig.set_size_inches(10, 15) # set the image width to 722px
 #plt.savefig(os.path.join(path_dir_built_graphs,
 #                         'maps',
@@ -316,3 +325,24 @@ fig.set_size_inches(10, 15) # set the image width to 722px
 #            alpha=True,
 #            bbox_inches = 'tight')
 plt.show()
+
+# drop communes duplicates (several polygons: can not draw map as well after that!)
+df_com.reset_index(inplace = True) # index name lost?
+df_com.drop_duplicates('index', inplace = True)
+df_com.set_index('index', inplace = True)
+
+ls_percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]
+print df_hhi['hhi'].describe(percentiles = ls_percentiles)
+
+# requires package wquantiles
+import weighted
+for quantile in ls_percentiles:
+  print weighted.quantile(df_hhi['hhi'], df_hhi['pop'], quantile)
+
+# todo: code weighted mean and std (count, min, max, unchanged) + check vs. STATA
+
+df_com.sort('hhi', ascending = False, inplace = True)
+print df_com[['com_name', 'dpt_name', 'reg_name', 'pop', 'wgt_store_surf', 'hhi']][0:20].to_string()
+
+print 'u\nPop living in municipalies with hhi above 2500:'
+print df_com['pop'][df_com['hhi'] > 2500].sum()

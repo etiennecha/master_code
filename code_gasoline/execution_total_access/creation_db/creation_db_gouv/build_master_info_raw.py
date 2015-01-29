@@ -78,15 +78,12 @@ if len(master_files_info) >= 6:
 
 master_info = build_master_info(master_files_info, list_info_keys)
 
-# Obvious test to be discarded
-master_info.pop('99999002', None) # drop it at build to avoid pbms
-
 # OUTPUT TO CSV
 
 enc_json(master_info, os.path.join(path_dir_built_json,
                                    'master_info_raw.json'))
 
-# No preliminary fix deemed necessary at this stage... could add (e.g. brands)
+# Following file should be fixed by including open data
 enc_json(master_info, os.path.join(path_dir_built_json,
                                    'master_info_fixed.json'))
 

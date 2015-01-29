@@ -96,8 +96,9 @@ df_com = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.communes_fr],
                        'x_cl' : [d['X_CHF_LIEU'] for d in m_fra.communes_fr_info],
                        'y_cl' : [d['Y_CHF_LIEU'] for d in m_fra.communes_fr_info],
                        'code_insee' : [d['INSEE_COM'] for d in m_fra.communes_fr_info],
-                       'commune' : [d['NOM_COMM'] for d in m_fra.communes_fr_info]})
-
+                       'commune' : [d['NOM_COMM'] for d in m_fra.communes_fr_info],
+                       'com_surf' : [d['SUPERFICIE'] for d in m_fra.communes_fr_info],
+                       'pop' : [d['POPULATION'] for d in m_fra.communes_fr_info]})
 
 # Drop Corsica (make sure dropped in LSA as well?)
 df_com['dpt'] = df_com['code_insee'].str.slice(stop=-3)
@@ -133,9 +134,9 @@ for col in ['lng_ct', 'lat_ct', 'lng_cl', 'lat_cl']:
 df_com_insee_fm = df_com_insee[~df_com_insee['DEP'].isin(['2A', '2B', '97'])].copy()
 print df_com[~df_com['code_insee'].isin(df_com_insee_fm.index)].to_string()
 
-# Add population to IGN data
 df_com.set_index('code_insee', inplace = True)
-df_com['pop'] = df_com_insee['P10_POP']
+## Overwrite IGN pop with INSEE pop (dates?)
+#df_com['pop'] = df_com_insee['P10_POP']
 
 ls_rows_hhi = []
 for row_ind, row in df_com.iterrows():
@@ -143,18 +144,38 @@ for row_ind, row in df_com.iterrows():
   df_lsa_temp['lat_com'] = row['lat_cl']
   df_lsa_temp['lng_com'] = row['lng_cl']
   df_lsa_temp['dist'] = compute_distance_ar(df_lsa_temp['Latitude'],
-                                       df_lsa_temp['Longitude'],
-                                       df_lsa_temp['lat_com'],
-                                       df_lsa_temp['lng_com'])
-  df_lsa_temp['wgt_surf'] = np.exp(-df_lsa_temp['dist']/10) * df_lsa_temp['Surf Vente']
-  wgt_surf = df_lsa_temp['wgt_surf'].sum()
-  df_rgps = df_lsa_temp[['Groupe', 'wgt_surf']].groupby('Groupe').agg([sum])['wgt_surf']
-  df_rgps['market_share'] = df_rgps['sum'] / df_rgps['sum'].sum()
-  hhi = (df_rgps['market_share']**2).sum()
+                                            df_lsa_temp['Longitude'],
+                                            df_lsa_temp['lat_com'],
+                                            df_lsa_temp['lng_com'])
+  # continous method (could add max group share)
+  df_lsa_temp['wgt_store_surf'] = np.exp(-df_lsa_temp['dist']/10) * df_lsa_temp['Surf Vente']
+  wgt_store_surf = df_lsa_temp['wgt_store_surf'].sum()
+  df_hhi = df_lsa_temp[['Groupe', 'wgt_store_surf']].groupby('Groupe').agg([sum])['wgt_store_surf']
+  df_hhi['market_share'] = df_hhi['sum'] / df_hhi['sum'].sum()
+  hhi = (df_hhi['market_share']**2).sum()
+  # ac method (could add max group share + nb groups)
+  df_lsa_ac = df_lsa_temp[((df_lsa_temp['dist'] <= 25) &\
+                           (df_lsa_temp['Type_alt'] == 'H')) |
+                          ((df_lsa_temp['dist'] <= 10) &\
+                           (df_lsa_temp['Type_alt'].isin(['S', 'X'])))].copy()
+  ac_store_surf = df_lsa_ac['Surf Vente'].sum()
+  ac_nb_groups = len(df_lsa_ac['Groupe'].unique())
+  df_ac_hhi = df_lsa_ac[['Groupe', 'Surf Vente']].groupby('Groupe').agg([sum])['Surf Vente']
+  df_ac_hhi['market_share'] = df_ac_hhi['sum'] / df_ac_hhi['sum'].sum()
+  ac_hhi = (df_ac_hhi['market_share']**2).sum()
+  ac_cr1 = df_ac_hhi['market_share'].max()
+  ls_rows_hhi.append((row_ind, wgt_store_surf, hhi,
+                      ac_nb_groups, ac_cr1, ac_store_surf, ac_hhi))
 
-  ls_rows_hhi.append((row_ind, wgt_surf, hhi))
+  #ls_rows_hhi.append((row_ind, wgt_store_surf, hhi))
 
-df_hhi = pd.DataFrame(ls_rows_hhi, columns = ['index', 'wgt_surf', 'hhi'])
+print df_lsa_ac[ls_disp_lsa + ['Type_alt', 'dist']].to_string()
+
+ls_columns = ['index', 'wgt_store_surf', 'hhi',
+              'ac_nb_groups', 'ac_cr1', 'ac_store_surf', 'ac_hhi']
+# ls_columns = ['index', 'wgt_store_surf', 'hhi']
+
+df_hhi = pd.DataFrame(ls_rows_hhi, columns = ls_columns)
 df_hhi.set_index('index', inplace = True)
 
 df_com = pd.merge(df_com,
@@ -164,12 +185,26 @@ df_com = pd.merge(df_com,
                   left_index = True)
 
 df_com['hhi'] = df_com['hhi'] * 10000
+df_com['ac_hhi'] = df_com['ac_hhi'] * 10000
 
-df_com.to_csv(os.path.join(path_dir_built_csv,
-                           'df_municipality_hhi.csv'),
-              encoding = 'latin-1',
-              float_format = '%.3f',
-              date_format = '%Y%m%d',
-              index_label = 'code_insee')
+# Add DEP and REG... five are not in insee data: nouvelles communes...
+df_com['reg'] = df_com_insee['REG'].astype(str)
+df_com['dpt'] = df_com_insee['DEP'].astype(str)
+for code_insee in  ['52465', '52278', '52266', '52124', '52033']:
+  df_com.loc[code_insee, ['reg', 'dpt']] = ['21', '52']
+
+ls_keep_com = ['commune', 'pop', 'com_surf'] + ls_columns[1:]
+
+print df_com[ls_keep_com][0:10].to_string()
+
+df_com[ls_keep_com].to_csv(os.path.join(path_dir_built_csv,
+                                        'df_municipality_hhi.csv'),
+                           encoding = 'latin-1',
+                           float_format = '%.3f',
+                           date_format = '%Y%m%d',
+                           index_label = 'code_insee')
 
 # Check ability to output HHi quantiles weighted by pop (compare with STATA output)
+
+# Duplicates in df_hhi... dunno why given code used to generate
+# Drop them and check they do not appear in new code

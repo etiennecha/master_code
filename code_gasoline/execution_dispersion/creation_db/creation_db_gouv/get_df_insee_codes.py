@@ -8,7 +8,11 @@ from generic_master_info import *
 from matching_insee import *
 import pprint
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_paper_dispersion')
+
 path_dir_built_json = os.path.join(path_dir_built_paper, u'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
@@ -53,10 +57,13 @@ for k, v in dict_describe_addresses.items():
 
 # LOAD INSEE CORRESPONDENCE AND RUN MATCHING
 
-df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
-                      dtype = str)
-ls_corr = [list(x) for x in df_corr.to_records(index = False)]
-ls_corr = format_correspondence(ls_corr)
+#df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
+#                      dtype = str)
+#ls_corr = [list(x) for x in df_corr.to_records(index = False)]
+#ls_corr = format_correspondence(ls_corr)
+
+path_df_corr = os.path.join(path_dir_match_insee, 'df_corr_gas.csv')
+matching_insee = MatchingINSEE(path_df_corr)
 
 # Match on master_info_raw
 # Caution match_res can contain several results
@@ -67,7 +74,8 @@ for indiv_id, ls_addresses in master_addresses.iteritems():
     zip_and_city = re.match('([0-9]{5,5}) (.*)', address[1])
     zip_code = zip_and_city.group(1)
     city = zip_and_city.group(2)
-    match_res = match_insee_code(ls_corr, city, zip_code[:-3], zip_code)
+    # match_res = match_insee_code(ls_corr, city, zip_code[:-3], zip_code)
+    match_res = matching_insee.match_city(city, zip_code[:-3], zip_code)
     ls_match_res.append(match_res)
   ls_ls_match_res.append(ls_match_res)
 

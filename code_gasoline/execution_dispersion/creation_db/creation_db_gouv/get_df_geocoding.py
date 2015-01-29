@@ -8,16 +8,17 @@ from generic_master_info import *
 from functions_geocoding import *
 import pandas as pd
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_dispersion')
+
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
 # LOAD GAS STATION ADDRESSES
 
-#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-#master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_raw.json'))
-
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
+#master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
 master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
 
 #  Build master_addresses (addresses corrected for html pbms and somewhat stdized)

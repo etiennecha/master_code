@@ -6,14 +6,12 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 import re
-from params import *
 import pprint
 
 path_dir_built_paper = os.path.join(path_data,
                                     'data_gasoline',
                                     'data_built',
-                                    data_paper_folder)
-
+                                    'data_paper_dispersion')
 
 path_dir_built_json = os.path.join(path_dir_built_paper, u'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')

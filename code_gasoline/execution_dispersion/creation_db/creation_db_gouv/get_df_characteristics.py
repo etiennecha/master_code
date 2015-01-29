@@ -8,20 +8,21 @@ from generic_master_info import *
 from matching_insee import *
 import pprint
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_dispersion')
+
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
-
-path_dir_match_insee = os.path.join(path_data, u'data_insee', 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_data, u'data_insee', 'data_extracts')
 
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_csv_rls = os.path.join(path_dir_source, 'data_other', 'data_rls.csv')
 path_dir_gps_coordinates = os.path.join(path_dir_source, 'data_stations', 'data_gouv_gps')
-ls_dict_gouv_gps_file_names = ['20130117_ls_coordinates_essence.json',
-                               '20130117_ls_coordinates_diesel.json',
-                               '20130724_ls_coordinates_essence.json',
-                               '20130724_ls_coordinates_diesel.json'] 
+ls_dict_gouv_gps_file_names = ['20130117_dict_gps_essence.json',
+                               '20130117_dict_gps_diesel.json',
+                               '20130724_dict_gps_essence.json',
+                               '20130724_dict_gps_diesel.json'] 
 
 # ######################
 # LOAD GAS STATION DATA
@@ -48,22 +49,27 @@ master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')]
 # Load gps collected from prix-carburant.gouv.fr
 ls_dict_gouv_gps = [dec_json(os.path.join(path_dir_gps_coordinates, gps_file))\
                       for gps_file in ls_dict_gouv_gps_file_names]
-dict_20130117 = ls_dict_gouv_gps[0]
-dict_20130117.update(ls_dict_gouv_gps[1])
-dict_20130724 = ls_dict_gouv_gps[2]
-dict_20130724.update(ls_dict_gouv_gps[3])
-ls_index, ls_rows_gps = [], []
-for indiv_id in master_info.keys():
-  ls_index.append(indiv_id)
-  ls_gps_gouv_0 = dict_20130117.get(indiv_id, [np.nan, np.nan])
-  ls_gps_gouv_1 = dict_20130724.get(indiv_id, [np.nan, np.nan])
-  ls_rows_gps.append(ls_gps_gouv_0 + ls_gps_gouv_1)
-df_gps = pd.DataFrame(ls_rows_gps,
-                      index = ls_index,
-                      columns = ['lat_gov_0',
-                                 'lng_gov_0',
-                                 'lat_gov_1',
-                                 'lng_gov_1'])
+
+dict_gps = {}
+for dict_gouv_gps in ls_dict_gouv_gps:
+  for id_gouv, gps in dict_gouv_gps.items():
+    if gps not in dict_gps.get(id_gouv, []):
+      dict_gps.setdefault(id_gouv,[]).append(gps)
+
+dict_gps_len = {}
+for id_gouv, ls_gps in dict_gps.items():
+	dict_gps_len.setdefault(len(ls_gps), []).append(id_gouv)
+
+ls_columns_gps = []
+for i in range(max(dict_gps_len.keys())):
+  ls_columns_gps += ['lat_gov_%s' %i, 'lng_gov_%s' %i]
+
+ls_index_gps, ls_rows_gps = [], []
+for id_gouv in master_info.keys():
+  ls_index_gps.append(id_gouv)
+  ls_rows_gps.append([x for ls_x in dict_gps.get(id_gouv, []) for x in ls_x])
+df_gps = pd.DataFrame(ls_rows_gps, index = ls_index_gps, columns = ls_columns_gps)
+df_gps = df_gps.astype(float)
 
 # Load gps provided by Ronan (from prix-carburant.gouv.fr but older)
 df_rls = pd.read_csv(path_csv_rls, dtype = {'idpdv' : str})
@@ -229,10 +235,6 @@ for field in ['name', 'adr_street', 'zip_city']:
 
 print u'\nNb with no address', len(df_name_adr[pd.isnull(df_name_adr['adr_street']) &\
                                                pd.isnull(df_name_adr['zip_city'])])
-
-# adhoc fix
-df_name_adr.loc[u'76170004', 'adr_street'] = u'autoroute a 29'
-df_name_adr.loc[u'76170004', 'zip_city']   = u'76210 bolleville'
 
 # Get zip, dpt, city
 pat_zip = u"([0-9]?[0-9AB][0-9]{3})\s"
