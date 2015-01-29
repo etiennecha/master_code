@@ -15,73 +15,43 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import time
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_dispersion')
 
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
-path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
-path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
-path_ls_ls_competitors = os.path.join(path_dir_built_json, 'ls_ls_competitors.json')
-path_ls_tuple_competitors = os.path.join(path_dir_built_json, 'ls_tuple_competitors.json')
 
-path_dir_built_graphs = os.path.join(path_dir_built_paper, 'data_graphs')
-path_dir_brand_chges = os.path.join(path_dir_built_graphs, 'brand_changes')
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+# ###############
+# LOAD DATA
+# ###############
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
-path_csv_insee_data = os.path.join(path_dir_source, 'data_other', 'data_insee_extract.csv')
+# LOAD DF INFO AND PRICES
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
+df_info = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_station_info_final.csv'),
+                      encoding = 'utf-8',
+                      dtype = {'id_station' : str,
+                               'adr_zip' : str,
+                               'adr_dpt' : str,
+                               'ci_1' : str,
+                               'ci_ardt_1' :str,
+                               'ci_2' : str,
+                               'ci_ardt_2' : str,
+                               'dpt' : str},
+                      parse_dates = ['start', 'end', 'day_0', 'day_1', 'day_2'])
+df_info.set_index('id_station', inplace = True)
 
-path_dir_rotterdam = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_rotterdam')
-path_dir_reuters = os.path.join(path_dir_rotterdam, 'data_reuters')
-path_xls_reuters_diesel = os.path.join(path_dir_reuters, 'diesel_data_to_import.xls')
-path_xml_ecb = os.path.join(path_dir_rotterdam, 'usd.xml')
+# Get rid of highway
+df_info = df_info[df_info['highway'] != 1]
 
-master_price = dec_json(path_diesel_price)
-master_info = dec_json(path_info)
-ls_ls_competitors = dec_json(path_ls_ls_competitors)
-ls_tuple_competitors = dec_json(path_ls_tuple_competitors)
-dict_brands = dec_json(path_dict_brands)
-dict_dpts_regions = dec_json(path_dict_dpts_regions)
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ht.set_index('date', inplace = True)
 
-## DF PRICES (TTC)
-#ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
-#df_prices_ttc = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
-#
-## DF PRICES (HT)
-#df_prices_ht = df_prices_ttc / 1.196 - 0.4419
-##df_prices_ht = pd.DataFrame.copy(df_prices_ttc)
-##df_prices_ht = df_prices_ht / 1.196 - 0.4419
-#
-## PrixHT = PrixTTC / 1.196 - 0.4419 
-## 2011: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,17899.html
-## 2012: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,26979.html
-## 2013: http://www.developpement-durable.gouv.fr/La-fiscalite-des-produits,31455.html
-#ls_tax_11 = [(1,7,26,38,42,69,73,74,75,77,78,91,92,93,94,95,4,5,6,13,83,84), # PrixHT + 0.0135
-#              (16,17,79,86)] # PrixHT + 0.0250
-#ls_tax_12 = [(1,7,26,38,42,69,73,74), # PrixHT + 0.0135
-#              (16,17,79,86)] # PrixHT + 0.0250
-#
-#df_prices_ht_2011 = df_prices_ht.ix[:'2011-12-31']
-#for indiv_id in df_prices_ht_2011.columns:
-#  if indiv_id[:-6] in ls_tax_11[0]:
-#    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x + 0.0135)
-#  elif indiv_id[:-6] in ls_tax_11[1]:
-#    df_prices_ht_2011[indiv_id] = df_prices_ht_2011[indiv_id].apply(lambda x: x + 0.0250)
-#
-#df_prices_ht_2012 = df_prices_ht.ix['2012-01-01':]
-#for indiv_id in df_prices_ht_2012.columns:
-#  if indiv_id[:-6] in ls_tax_12[0]:
-#    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x + 0.0135)
-#  elif indiv_id[:-6] in ls_tax_12[1]:
-#    df_prices_ht_2012[indiv_id] = df_prices_ht_2012[indiv_id].apply(lambda x: x + 0.0250)
-#
-#df_prices_ht.ix['2012-08-31':'2012-11-30'] = df_prices_ht.ix['2012-08-31':'2012-11-30'] + 0.03
-#df_prices_ht.ix['2012-12-01':'2012-12-11'] = df_prices_ht.ix['2012-12-11':'2012-12-11'] + 0.02
-#df_prices_ht.ix['2012-12-11':'2012-12-21'] = df_prices_ht.ix['2012-12-11':'2012-12-21'] + 0.015
-#df_prices_ht.ix['2012-12-21':'2013-01-11'] = df_prices_ht.ix['2012-12-21':'2013-01-11'] + 0.01
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
 
 ## DF CLEAN PRICES (ID split upon brand change)
 

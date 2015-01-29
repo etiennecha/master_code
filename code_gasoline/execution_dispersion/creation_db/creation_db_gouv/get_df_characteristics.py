@@ -22,7 +22,11 @@ path_dir_gps_coordinates = os.path.join(path_dir_source, 'data_stations', 'data_
 ls_dict_gouv_gps_file_names = ['20130117_dict_gps_essence.json',
                                '20130117_dict_gps_diesel.json',
                                '20130724_dict_gps_essence.json',
-                               '20130724_dict_gps_diesel.json'] 
+                               '20130724_dict_gps_diesel.json',
+                               '20131115_dict_gps_essence.json',
+                               '20131115_dict_gps_diesel.json',
+                               '20141206_dict_gps_essence.json',
+                               '20141206_dict_gps_diesel.json']
 
 # ######################
 # LOAD GAS STATION DATA
@@ -257,7 +261,7 @@ df_name_adr = df_name_adr[['name', 'adr_street', 'adr_zip', 'adr_city', 'adr_dpt
 # BUILD DF CHARS
 # ####################
 
-df_chars = pd.merge(df_name_adr, df_gps, left_index = True, right_index = True)
+df_chars = pd.merge(df_name_adr, df_gps, how = 'left', left_index = True, right_index = True)
 df_chars = pd.merge(df_chars, df_services, left_index = True, right_index = True)
 df_chars = pd.merge(df_chars, df_opening, left_index = True, right_index = True)
 df_chars['highway'] = se_highway
