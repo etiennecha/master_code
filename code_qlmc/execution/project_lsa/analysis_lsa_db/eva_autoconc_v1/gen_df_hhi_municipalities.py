@@ -193,7 +193,7 @@ df_com['dpt'] = df_com_insee['DEP'].astype(str)
 for code_insee in  ['52465', '52278', '52266', '52124', '52033']:
   df_com.loc[code_insee, ['reg', 'dpt']] = ['21', '52']
 
-ls_keep_com = ['commune', 'pop', 'com_surf'] + ls_columns[1:]
+ls_keep_com = ['commune', 'pop', 'com_surf', 'reg', 'dpt'] + ls_columns[1:]
 
 print df_com[ls_keep_com][0:10].to_string()
 

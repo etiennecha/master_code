@@ -1,32 +1,28 @@
-﻿#!/usr/bin/python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-import add_to_path_sub
-from add_to_path_sub import path_data
+import add_to_path
+from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
-from functions_string import *
-from BeautifulSoup import BeautifulSoup
-import xlrd
-import itertools
-import scipy
 import pandas as pd
 import patsy
+import scipy
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-import time
+from sklearn.feature_extraction import DictVectorizer
 
 path_dir_built_paper = os.path.join(path_data,
                                     'data_gasoline',
                                     'data_built',
                                     'data_paper_dispersion')
 
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
 # ###############
 # LOAD DATA
 # ###############
 
-# LOAD DF INFO AND PRICES
+# LOAD DF INFO
 
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
@@ -41,9 +37,9 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'dpt' : str},
                       parse_dates = ['start', 'end', 'day_0', 'day_1', 'day_2'])
 df_info.set_index('id_station', inplace = True)
-
-# Get rid of highway
 df_info = df_info[df_info['highway'] != 1]
+
+# LOAD DF PRICES
 
 df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
                         parse_dates = ['date'])
@@ -53,63 +49,71 @@ df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_fina
                         parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
-## DF CLEAN PRICES (ID split upon brand change)
+# Restrict DF PRICES to stations present in info (and kept e.g. not highway)
+df_prices_ht = df_prices_ht[[x for x in df_prices_ht.columns if x in df_info.index]]
+df_prices_ttc = df_prices_ttc[[x for x in df_prices_ttc.columns if x in df_info.index]]
 
-# todo: refactor to make shorter
-ls_ls_ids = []
-for indiv_id in master_price['ids']:
-  ls_brands = get_expanded_list(master_price['dict_info'][indiv_id]['brand_std'],
-                                len(master_price['dates']))
-  i = 0 
-  ls_ids = ['%s%s' %(indiv_id, i)]
-  j = 1
-  while len(ls_ids) < len(master_price['dates']):
-    if ls_brands[j] != ls_brands[j-1]:
-      i+=1
-    ls_ids.append('%s%s' %(indiv_id, i))
-    j+=1
-  ls_ls_ids.append(ls_ids)
+## BUILDF DF BRANDS (COMPLY WITH OLD METHOD)
+#max_brand_day_ind = 2
+#ls_se_brands = []
+#for id_station in df_info.index:
+#  se_temp = pd.Series(None, index = df_prices_ht.index)
+#  i = 0
+#  while (i < max_brand_day_ind) and\
+#        (not pd.isnull(df_info.ix[id_station]['day_%s' %i])):
+#    se_temp.ix[df_info.ix[id_station]['day_%s' %i]:] =\
+#       df_info.ix[id_station]['brand_%s' %i]
+#    i += 1
+#  # need to overwrite first days if not active? (no price anyway... same for last?)
+#  # se_temp.ix[df_info.ix[id_station]['end']:] = np.nan # todo: offset by one (+)
+#  ls_se_brands.append(se_temp)
+#df_brands = pd.concat(ls_se_brands, axis = 1, keys = df_info.index)
 
-ls_all_ids = [indiv_id for ls_ids in ls_ls_ids for indiv_id in ls_ids]
-ls_all_prices = [price for ls_prices in master_price['diesel_price'] for price in ls_prices]
-ls_all_dates = [date for indiv_id in master_price['ids'] for date in master_price['dates']]
-df_final = pd.DataFrame(zip(ls_all_ids, ls_all_dates, ls_all_prices), columns = ['id', 'date', 'price'])
-# todo: drop highway/corsica?
+## ############
+## CLEAN PRICES
+## ############
+
+# BUILDF DF IDS
+
+# create one id by station and brand
+# todo: take into account brand change dates based on price variations
+
+max_brand_day_ind = 2
+ls_se_ids = []
+for id_station in df_prices_ht.columns:
+  se_temp = pd.Series(None, index = df_prices_ht.index)
+  i = 0
+  while (i < max_brand_day_ind) and\
+        (not pd.isnull(df_info.ix[id_station]['day_%s' %i])):
+    se_temp.ix[df_info.ix[id_station]['day_%s' %i]:] = '%s_%s' %(id_station, i)
+    i += 1
+  # need to overwrite first days if not active? (no price anyway... same for last?)
+  # se_temp.ix[df_info.ix[id_station]['end']:] = np.nan # todo: offset by one (+)
+  ls_se_ids.append(se_temp)
+
+df_ids = pd.concat(ls_se_ids, axis = 1, keys = df_info.index)
+
+# build DF FINAL for cleaning
+
+ls_all_ids = [x for id_station in df_prices_ht.columns for x in df_ids[id_station].values]
+ls_all_prices = [x for id_station in df_prices_ht.columns for x in df_prices_ht[id_station].values]
+ls_all_dates = [x for id_station in df_prices_ht.columns for x in df_prices_ht.index]
+
+df_final = pd.DataFrame(zip(ls_all_ids,
+                            ls_all_dates,
+                            ls_all_prices),
+                        columns = ['id', 'date', 'price'])
+df_final = df_final[~pd.isnull(df_final['price'])]
 
 ## OUTPUT FOR EXTERNAL PRICE CLEANING
 #df_final.to_csv(os.path.join(path_dir_built_csv, 'price_panel_data_light.csv'),
 #                float_format='%.4f',
 #                encoding='utf-8')
 
-# PRICE CLEANING
-
-from sklearn.feature_extraction import DictVectorizer
-
-df_final = df_final[~pd.isnull(df_final['price'])]
-pd_as_dicts = [dict(r.iteritems()) for _, r in df_final[['id', 'date']].iterrows()]
-sparse_mat_id_dates = DictVectorizer(sparse=True).fit_transform(pd_as_dicts)
-res = scipy.sparse.linalg.lsqr(sparse_mat_id_dates, df_final['price'].values, iter_lim = 100)
-
-y_hat = sparse_mat_id_dates * res[0]
-df_final['yhat'] = y_hat
-df_final['price_cl'] = df_final['price'] - df_final['yhat'] 
-df_final['id'] = df_final['id'].str.slice(stop = -1) # set id back!
-df_clean = df_final.set_index(['id', 'date'])
-df_prices_cl = df_clean['price_cl'].unstack('id')
-df_prices_cl.index = [pd.to_datetime(date) for date in df_prices_cl.index]
-idx = pd.date_range('2011-09-04', '2013-06-04')
-df_prices_cl = df_prices_cl.reindex(idx, fill_value = np.nan)
-
-## OUTPUT FOR DISPERSION ANALYSIS
-#df_prices_cl.index.name = 'date'
-#df_prices_cl.to_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
-#                    float_format='%.4f',
-#                    encoding='utf-8')
-
-## READ RESULTS FROM EXTERNAL PRICE CLEANING
-## Consistency checked for R (one series...)
-#
+## #####################
 ## READ CLEANED PRICES R
+## #####################
+#
 #path_csv_price_cl_R = os.path.join(path_dir_built_csv, 'price_cleaned_light_R.csv')
 #df_prices_cl_R = pd.read_csv(path_csv_price_cl_R,
 #                             dtype = {'id' : str,
@@ -122,8 +126,11 @@ df_prices_cl = df_prices_cl.reindex(idx, fill_value = np.nan)
 #idx = pd.date_range('2011-09-04', '2013-06-04')
 #df_prices_cl_R = df_prices_cl_R.reindex(idx, fill_value=np.nan)
 #
+## ##########################
 ## READ CLEANED PRICES STATA
-#path_csv_price_cl_stata = os.path.join(path_dir_built_paper_csv, 'price_cleaned_stata.csv')
+## ##########################
+#
+#path_csv_price_cl_stata = os.path.join(path_dir_built_csv, 'price_cleaned_stata.csv')
 #df_prices_cl_stata = pd.read_csv(path_csv_price_cl_stata,
 #                                 dtype = {'id' : str,
 #                                          'date' : str,

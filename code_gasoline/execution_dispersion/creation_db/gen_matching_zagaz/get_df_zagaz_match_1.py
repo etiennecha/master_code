@@ -21,7 +21,11 @@ def str_zagaz_corrections(word):
                 word) 
   return word.strip()
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_paper_dispersion')
+
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 path_dir_built_json = os.path.join(path_dir_built_paper, u'data_json')
 

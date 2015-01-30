@@ -8,18 +8,25 @@ from generic_master_info import *
 from generic_competition import *
 import time
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_dispersion')
+
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
-ls_comp_pairs = dec_json(os.path.join(path_dir_built_json, 'ls_comp_pairs.json'))
+ls_comp_pairs = dec_json(os.path.join(path_dir_built_json,
+                                      'ls_comp_pairs.json'))
 
 # LOAD DF PRICES
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
                         parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
-df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
+df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_cleaned_prices.csv'),
                           parse_dates = True)
 df_prices_cl.set_index('date', inplace = True)
 
@@ -99,7 +106,12 @@ df_info_sub = df_info[['ci_ardt_1', 'brand_0', 'brand_1', 'brand_2']].copy()
 df_info_sub['id_a'] = df_info_sub.index
 df_ppd = pd.merge(df_info_sub, df_ppd, on='id_a', how = 'right')
 df_info_sub.rename(columns={'id_a': 'id_b'}, inplace = True)
-df_ppd = pd.merge(df_info_sub, df_ppd, on='id_b', how = 'right', suffixes=('_b', '_a'))
+
+df_ppd = pd.merge(df_info_sub,
+                  df_ppd,
+                  on='id_b',
+                  how = 'right',
+                  suffixes=('_b', '_a'))
 
 # BUILD DF RR
 ls_index = ['-'.join(ppd[:2]) for ppd in ls_ppd]
