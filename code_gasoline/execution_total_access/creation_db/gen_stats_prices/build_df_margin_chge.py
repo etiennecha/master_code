@@ -6,9 +6,17 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper_total_access')
+path_dir_built_paper = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_paper_total_access')
+
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_dir_built_graphs = os.path.join(path_dir_built_paper, 'data_graphs')
+
+pd.set_option('float_format', '{:.3f}'.format)
+format_float_int = lambda x: '{:10,.0f}'.format(x)
+format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 # #########################
 # LOAD INFO STATIONS
@@ -26,23 +34,18 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'ci_ardt_2' : str,
                                'dpt' : str})
 df_info.set_index('id_station', inplace = True)
-
-# Active gas stations? Pick arbitrary day for now
-#df_info = df_info[(~pd.isnull(df_info['start'])) &\
-#                  (~pd.isnull(df_info['end']))])
-#df_info = df_info[(df_info['start'] <= '2012-06-01') &\
-#                  (df_info['end'] >= '2012-06-01')]
 df_info = df_info[df_info['highway'] != 1]
 
 # #####################################
 # POLICY PRICE CHANGE
 # #####################################
 
-df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
+df_prices = pd.read_csv(os.path.join(path_dir_built_csv,
+                                     'df_prices_ht_final.csv'),
                         parse_dates = ['date'])
 df_prices.set_index('date', inplace = True)
 ls_keep_ids = [id_station for id_station in df_prices.columns if\
-                id_station in df_info.index]
+                 id_station in df_info.index]
 df_prices = df_prices[ls_keep_ids]
 
 se_mean_prices = df_prices.mean(1)
