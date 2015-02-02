@@ -8,7 +8,11 @@ from generic_master_info import *
 from generic_competition import *
 import time
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_dispersion')
+
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
@@ -57,7 +61,11 @@ df_comp_chges['pct_sim_2'] = df_comp_chges['nb_sim_chges'] / df_comp_chges['nb_c
 df_comp_chges['pct_sim'] = df_comp_chges[['pct_sim_1', 'pct_sim_2']].max(axis=1)
 df_comp_chges['pct_sim'] = df_comp_chges['pct_sim'][df_comp_chges['nb_chges_min'] > 30]
 
-n, bins, patches = plt.hist(df_comp_chges['pct_sim'][~pd.isnull(df_comp_chges['pct_sim'])], 30)
+fig = plt.figure()
+ax = fig.add_subplot(111)
+n, bins, patches = ax.hist(df_comp_chges['pct_sim']\
+                              [~pd.isnull(df_comp_chges['pct_sim'])], 30)
+ax.set_title('Histogram of pctage of simultaneous changes')
 plt.show()
 
 df_comp_chges['pct_close_1'] = df_comp_chges[['nb_sim_chges', 'nb_1_fol', 'nb_2_fol']].\
@@ -78,7 +86,10 @@ df_leader = df_comp_chges[(df_comp_chges['lead_both'] > 30) &\
                           ((df_comp_chges['pct_lead_1'] >= 0.7) |\
                            (df_comp_chges['pct_lead_1'] <= 0.3))]
 
+print u'\nOverview: chges followed by competitor:'
 print df_comp_chges[ls_match_disp][0:100].to_string()
+
+print u'\nCandidates for close price competition:'
 print df_leader[ls_match_disp][0:10].to_string()
 
 # todo: how many have no competitors based on distance / on this criteria
@@ -93,10 +104,10 @@ def plot_pair_followed_price_chges(pair_id_1, pair_id_2, beg=0, end=1000):
   ax = df_prices[[pair_id_1, pair_id_2]][beg:end].plot()
   for day_ind in ls_pair_chges[-1]:
     line_1 = ax.axvline(x=df_prices.index[day_ind], lw=1, ls='--', c='b')
-    line_1[0].set_dashes([4,2])
+    line_1.set_dashes([4,2])
   for day_ind in ls_pair_chges[-2]:
     line_2 = ax.axvline(x=df_prices.index[day_ind], lw=1, ls='--', c='g')
-    line_2[0].set_dashes([8,2])
+    line_2.set_dashes([8,2])
   plt.show()
 
 # Check matched prices (more robust but works only if no differentiation for now)
