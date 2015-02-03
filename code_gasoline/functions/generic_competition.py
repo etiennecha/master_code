@@ -112,18 +112,20 @@ def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
   ar_prices_1, ar_prices_2: two numpy arrays of float and np.nan
   """
   zero = np.float64(1e-10)
-  ar_prices_nonan_1 = ar_prices_1[~np.isnan(ar_prices_1)]
-  ar_prices_nonan_2 = ar_prices_2[~np.isnan(ar_prices_2)]
-  nb_days_1 = len(ar_prices_nonan_1)
-  nb_days_2 = len(ar_prices_nonan_2)
-  ar_nonan_chges_1 = ar_prices_nonan_1[1:] - ar_prices_nonan_1[:-1]
-  ar_nonan_chges_2 = ar_prices_nonan_2[1:] - ar_prices_nonan_2[:-1]
-  nb_prices_1 = (np.abs(ar_nonan_chges_1) > zero).sum() + 1
-  nb_prices_2 = (np.abs(ar_nonan_chges_2) > zero).sum() + 1
+  #ar_prices_nonan_1 = ar_prices_1[~np.isnan(ar_prices_1)]
+  #ar_prices_nonan_2 = ar_prices_2[~np.isnan(ar_prices_2)]
+  #nb_days_1 = len(ar_prices_nonan_1)
+  #nb_days_2 = len(ar_prices_nonan_2)
+  #ar_nonan_chges_1 = ar_prices_nonan_1[1:] - ar_prices_nonan_1[:-1]
+  #ar_nonan_chges_2 = ar_prices_nonan_2[1:] - ar_prices_nonan_2[:-1]
+  #nb_prices_1 = (np.abs(ar_nonan_chges_1) > zero).sum() + 1
+  #nb_prices_2 = (np.abs(ar_nonan_chges_2) > zero).sum() + 1
   ar_chges_1 = ar_prices_1[1:] - ar_prices_1[:-1]
   ar_chges_2 = ar_prices_2[1:] - ar_prices_2[:-1]
-  nb_ctd_1 = len(ar_chges_1[~np.isnan(ar_chges_1)])
-  nb_ctd_2 = len(ar_chges_2[~np.isnan(ar_chges_2)])
+  nb_ctd_1 = (~np.isnan(ar_chges_1)).sum()
+  nb_ctd_2 = (~np.isnan(ar_chges_2)).sum()
+  # Count successive days observed for both individuals
+  nb_ctd_both = ((~np.isnan(ar_chges_1)) * (~np.isnan(ar_chges_2))).sum()
   nb_chges_1 = (np.abs(ar_chges_1) > zero).sum() 
   nb_chges_2 = (np.abs(ar_chges_2) > zero).sum() 
   # Count simulatenous changes (following no chge at all or another sim chge)
@@ -142,10 +144,10 @@ def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
       ls_day_ind_1_follows.append(i)
     if (dum_chge_2 == 1) and (ar_dum_chges_2[i-1] == 0) and (ar_dum_chges_1[i-1] == 1):
       ls_day_ind_2_follows.append(i)
-  return [nb_days_1, nb_days_2, nb_prices_1, nb_prices_2,
-          nb_ctd_1, nb_ctd_2, nb_chges_1, nb_chges_2, nb_sim_chges,
-          len(ls_day_ind_1_follows), len(ls_day_ind_2_follows),
-          ls_day_ind_1_follows, ls_day_ind_2_follows]
+  return [[nb_ctd_1, nb_ctd_2, nb_ctd_both,
+           nb_chges_1, nb_chges_2, nb_sim_chges,
+           len(ls_day_ind_1_follows), len(ls_day_ind_2_follows)],
+          [ls_day_ind_1_follows, ls_day_ind_2_follows]]
 
 def get_two_firm_similar_prices(ar_price_1, ar_price_2):
   """
@@ -159,7 +161,9 @@ def get_two_firm_similar_prices(ar_price_1, ar_price_2):
   ls_1_lead, ls_2_lead = [], []
   ctd, ctd_1, ls_ctd_1, ls_ctd_2 = 0, False, [], []
   if len_spread and len_same:
-    for i, (price_1, price_2, spread) in enumerate(zip(ar_price_1, ar_price_2, ar_spread)[1:], start = 1):
+    for i, (price_1, price_2, spread) in enumerate(zip(ar_price_1,
+                                                       ar_price_2,
+                                                       ar_spread)[1:], start = 1):
       if (np.abs(spread) < zero) and (np.abs(ar_spread[i-1]) > zero):
         if price_1 == ar_price_1[i-1]:
           ls_1_lead.append(i)
@@ -185,7 +189,8 @@ def get_two_firm_similar_prices(ar_price_1, ar_price_2):
         ls_ctd_1.append(ctd)
       else:
         ls_ctd_2.append(ctd)
-  return (len_spread, len_same, ls_chge_to_same, ls_1_lead, ls_2_lead, ls_ctd_1, ls_ctd_2)
+  return [[len_spread, len_same, ls_chge_to_same, len(ls_1_lead), len(ls_2_lead)],
+          [ls_1_lead, ls_2_lead, ls_ctd_1, ls_ctd_2]]
 
 # ANALYSIS OF PAIR PRICE DISPERSION
 

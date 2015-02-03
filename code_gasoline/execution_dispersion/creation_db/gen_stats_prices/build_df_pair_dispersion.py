@@ -16,6 +16,11 @@ path_dir_built_paper = os.path.join(path_data,
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
+# ################
+# LOAD DATA
+# ################
+
+# LOAD COMPETITOR PAIRS
 ls_comp_pairs = dec_json(os.path.join(path_dir_built_json,
                                       'ls_comp_pairs.json'))
 
@@ -44,7 +49,9 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'dpt' : str})
 df_info.set_index('id_station', inplace = True)
 
+# ######################
 # GET DF PAIR DISPERSION
+# ######################
 
 # can accomodate both ttc prices (raw prices) or cleaned prices
 df_prices = df_prices_ttc
@@ -56,52 +63,54 @@ ls_comp_pairs = [(indiv_id, competitor_id, distance)\
                    for (indiv_id, competitor_id, distance) in ls_comp_pairs if\
                      (indiv_id in ls_keep_ids) and (competitor_id in ls_keep_ids)]
 
+
+# LOOP TO GENERATE PRICE DISPERSION STATS
+
 start = time.clock()
-ls_ppd = []
+ls_rows_ppd = []
 ls_pair_index = []
 ls_ar_rrs = []
 dict_rr_lengths = {}
-for (indiv_id, competitor_id, distance) in ls_comp_pairs:
+for (indiv_id, comp_id, distance) in ls_comp_pairs:
   if (distance <= km_bound):
     se_prices_1 = df_prices[indiv_id]
-    se_prices_2 = df_prices[competitor_id]
-    avg_spread = (df_prices_ttc[competitor_id] - df_prices_ttc[indiv_id]).mean()
-    ls_comp_pd = get_pair_price_dispersion(se_prices_1.as_matrix(),
-                                           se_prices_2.as_matrix(), light = False)
-    ls_comp_chges = get_stats_two_firm_price_chges(se_prices_1.as_matrix(),
-                                                   se_prices_2.as_matrix())
-    ls_ppd.append([indiv_id, competitor_id, distance] +\
-                  ls_comp_pd[0] +\
-                  [avg_spread] +\
-                  get_ls_standardized_frequency(ls_comp_pd[3][0]) +\
-                  ls_comp_chges[:-2])
+    se_prices_2 = df_prices[comp_id]
+    abs_avg_spread_ttc = np.abs((df_prices_ttc[indiv_id] - df_prices_ttc[comp_id]).mean())
+    ls_comp_pd = get_pair_price_dispersion(se_prices_1.values,
+                                           se_prices_2.values, light = False)
+    ls_rows_ppd.append([indiv_id, competitor_id, distance] +\
+                       ls_comp_pd[0] +\
+                       [abs_avg_spread_ttc] +\
+                       get_ls_standardized_frequency(ls_comp_pd[3][0]))
     pair_index = '-'.join([indiv_id, competitor_id])
     ls_pair_index.append(pair_index)
     ls_ar_rrs.append(ls_comp_pd[2][1])
     dict_rr_lengths[pair_index] = ls_comp_pd[3][0]
 print 'Loop: rank reversals',  time.clock() - start
 
-ls_scalars  = ['nb_spread', 'nb_same_price', 'nb_a_cheaper', 'nb_b_cheaper', 
-               'nb_rr', 'pct_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr',
-               'avg_abs_spread', 'avg_spread', 'std_spread', 'avg_ttc_spread']
+# BUILD DF PAIR PRICE DISPERSION (PPD)
 
-ls_freq_std = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
+ls_scalar_cols  = ['nb_spread', 'nb_same_price', 'nb_a_cheaper', 'nb_b_cheaper', 
+                   'nb_rr', 'pct_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr',
+                   'avg_abs_spread', 'avg_spread', 'std_spread']
 
-ls_chges    = ['nb_days_a', 'nb_days_b', 'nb_prices_a', 'nb_prices_b',
-               'nb_ctd_a', 'nb_ctd_b', 'nb_chges_a', 'nb_chges_b', 'nb_sim_chges',
-               'nb_a_fol', 'nb_b_fol']
+ls_freq_std_cols = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 
-ls_columns  = ['id_a', 'id_b', 'distance'] + ls_scalars + ls_freq_std + ls_chges
+ls_columns  = ['id_a', 'id_b', 'distance'] +\
+              ls_scalar_cols +\
+              ['abs_avg_spread_ttc'] +\
+              ls_freq_std_cols
 
-# BUILD DF PPD
+df_ppd = pd.DataFrame(ls_rows_ppd, columns = ls_columns)
 
-df_ppd = pd.DataFrame(ls_ppd, columns = ls_columns)
-df_ppd['pct_same_price'] = df_ppd['nb_same_price'] / df_ppd['nb_spread']
-# Create same corner variables
+# CREATE SAME CORNER VARIABLE
+
 for dist in [500, 750, 1000]:
   df_ppd['sc_{:d}'.format(dist)] = 0
   df_ppd.loc[df_ppd['distance'] <= dist/1000.0, 'sc_{:d}'.format(dist)] = 1
-# Add brands and code insee (keep here?)
+
+# ADD BRANDS AND CODE INSEE (MOVE)
+
 df_info_sub = df_info[['ci_ardt_1', 'brand_0', 'brand_1', 'brand_2']].copy()
 df_info_sub['id_a'] = df_info_sub.index
 df_ppd = pd.merge(df_info_sub, df_ppd, on='id_a', how = 'right')
@@ -113,11 +122,26 @@ df_ppd = pd.merge(df_info_sub,
                   how = 'right',
                   suffixes=('_b', '_a'))
 
-# BUILD DF RR
-ls_index = ['-'.join(ppd[:2]) for ppd in ls_ppd]
-df_rr = pd.DataFrame(ls_ar_rrs, index = ls_index, columns = df_prices_ttc.index).T
+# BUILD DF RANK REVERSALS
 
+ls_index = ['-'.join(ppd[:2]) for ppd in ls_rows_ppd]
+df_rr = pd.DataFrame(ls_ar_rrs,
+                     index = ls_index,
+                     columns = df_prices_ttc.index).T
+
+# ##############
+# STATS DES
+# ##############
+
+ls_disp_ppd = ['id_a', 'id_b', 'distance'] +\
+              ls_scalar_cols +\
+              ['abs_avg_spread_ttc']
+
+print df_ppd[ls_disp_ppd][0:10].to_string()
+
+# #########
 # OUPUT
+# #########
 
 # CSV
 

@@ -164,22 +164,47 @@ print u'\nNb of stations with censored prices (nb days): {:,.0f}'.\
 # BUILD DF DAY CHGE
 # #################
 
-# Price changes: day of week (todo: normalize by available days!)
-ar_ind_dow = df_prices.index.dayofweek # seems faster to store it first
+## Price changes: day of week (todo: normalize by available days!)
+#ar_ind_dow = df_prices.index.dayofweek # seems faster to store it first
+#ls_chge_dow_rows = []
+#for ls_price_durations in ls_ls_price_durations:
+#  ls_chge_days = []
+#  for price, ls_price_days in ls_price_durations:
+#    if not np.isnan(price):
+#      ls_chge_days.append(ls_price_days[0])
+#  ls_chge_dows = [ar_ind_dow[i] for i in ls_chge_days]
+#  se_chge_dows = pd.Series(ls_chge_dows).value_counts()
+#  dow_argmax = se_chge_dows.argmax()
+#  dow_max_pct = se_chge_dows.max() / float(se_chge_dows.sum())
+#  ls_chge_dow_rows.append((dow_argmax, dow_max_pct))
+#df_chge_dow = pd.DataFrame(ls_chge_dow_rows,
+#                           index = list(df_prices.columns),
+#                           columns = ['dow_max', 'pct_dow_max'])
+
+# Price change: day of week (normalization by days observed)
 ls_chge_dow_rows = []
 for ls_price_durations in ls_ls_price_durations:
-  ls_chge_days = []
+  ls_indiv_chge_days = []
+  ls_indiv_days = []
   for price, ls_price_days in ls_price_durations:
-    if price:
-      ls_chge_days.append(ls_price_days[0])
-  ls_chge_dows = [ar_ind_dow[i] for i in ls_chge_days]
-  se_chge_dows = pd.Series(ls_chge_dows).value_counts()
-  dow_argmax = se_chge_dows.argmax()
-  dow_max_pct = se_chge_dows.max() / float(se_chge_dows.sum())
+    if not np.isnan(price):
+      ls_indiv_chge_days.append(ls_price_days[0])
+      ls_indiv_days += ls_price_days
+  ls_indiv_chge_dows = [ar_ind_dow[i] for i in ls_indiv_chge_days]
+  ls_indiv_dows = [ar_ind_dow[i] for i in ls_indiv_days]
+  se_indiv_chge_dows = pd.Series(ls_indiv_chge_dows).value_counts()
+  se_indiv_days = pd.Series(ls_indiv_dows).value_counts()
+  se_indiv_chge_dows_norm = se_indiv_chge_dows / se_indiv_days.astype(float)
+  dow_argmax = se_indiv_chge_dows_norm.argmax()
+  dow_max_pct = se_indiv_chge_dows_norm.max() / float(se_indiv_chge_dows_norm.sum())
   ls_chge_dow_rows.append((dow_argmax, dow_max_pct))
 df_chge_dow = pd.DataFrame(ls_chge_dow_rows,
                            index = list(df_prices.columns),
                            columns = ['dow_max', 'pct_dow_max'])
+
+dict_replace_dow = dict(zip(range(7), ['MO','TU','WE','TH','FR','SA','SU']))
+df_chge_dow['dow_max'] =\
+   df_chge_dow['dow_max'].apply(lambda x: dict_replace_dow.get(x, None))
 
 # Inspect results (check process, rename days?)
 print u'\nOverview of days of week where changes most frequent:'
@@ -292,11 +317,17 @@ df_station_stats = pd.merge(df_chges_indiv_su,
                             right_index = True,
                             left_index = True)
 
+df_station_stats = pd.merge(df_chges_indiv_su,
+                            df_chge_dow,
+                            how = 'left',
+                            right_index = True,
+                            left_index = True)
+
 # quasi no info (nb_chge: min five) or doubtful info (pct_chge: min once a month)
 
 print u'\nNb stations with too little changes: {:,.0f}'.\
          format(len(df_station_stats[~((df_station_stats['nb_chge'] >= 5) &\
-                                       (df_station_stats['pct_chge'] >= 0.03))])
+                                       (df_station_stats['pct_chge'] >= 0.03))]))
 
 print u'\nOverview of valid price series:'
 print df_station_stats[(df_station_stats['nb_chge'] >= 5) &\
