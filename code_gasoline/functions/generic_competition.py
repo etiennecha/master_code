@@ -15,7 +15,6 @@ import random
 import itertools
 from generic_master_price import *
 
-
 def compute_distance(tup_gps_A, tup_gps_B):
   d_lat = math.radians(float(tup_gps_B[0]) - float(tup_gps_A[0]))
   d_lon = math.radians(float(tup_gps_B[1]) - float(tup_gps_A[1]))
@@ -309,51 +308,50 @@ def get_ls_lengths_rr_strict(ar_abs_spread_rr):
 
 # ANALYSIS OF MARKET PRICE DISPERSION
 
-def get_ls_ls_distance_market_ids(ls_ids, ls_ls_competitors, km_bound):
+def get_ls_ls_market_ids(dict_ls_comp, km_bound):
   """
   Distance used to define markets
   ls_ls_competitors has same order as master price (necessary condition)
   ls_ls_competitors: list of (id, distance) for each competitor (within 10km)
   """
-  ls_ls_distance_market_ids = []
-  for indiv_id, ls_competitors in zip(ls_ids, ls_ls_competitors):
-    if ls_competitors:
-      ls_distance_market_ids = [indiv_id] +\
-                               [comp_id for comp_id, distance\
-                                  in ls_competitors if distance < km_bound]
-      if len(ls_distance_market_ids) > 1:
-        ls_ls_distance_market_ids.append(ls_distance_market_ids)
-  return ls_ls_distance_market_ids
+  ls_ls_market_ids = []
+  for indiv_id, ls_comp in dict_ls_comp.items():
+    ls_market_ids = [indiv_id] +\
+                    [comp_id for (comp_id, distance) in ls_comp if distance <= km_bound]
+    if len(ls_market_ids) > 1:
+      ls_ls_market_ids.append(ls_market_ids)
+  return ls_ls_market_ids
 
-def get_ls_ls_distance_market_ids_restricted(ls_ids, ls_ls_competitors, km_bound, random_order = False):
+def get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, random_order = False):
   """
   Distance used to define markets
   ls_ls_competitors: list of (id, distance) for each competitor (within 10km)
   ls_ls_competitors has same order as master price
   If id in previous market: drop market 
   """
-  ls_zip_ids_competitors = zip(ls_ids, ls_ls_competitors)
+  ls_ids = dict_ls_comp.keys()
   if random_order:
-    random.shuffle(ls_zip_ids_competitors)
-  ls_ls_distance_market_ids = []
-  ls_ids_covered = []
-  for indiv_id, ls_competitors in ls_zip_ids_competitors:
-    if ls_competitors:
-      ls_distance_market_ids = [indiv_id] +\
-                               [comp_id for comp_id, distance\
-                                  in ls_competitors if distance < km_bound]
-      if (len(ls_distance_market_ids) > 1) and\
-         not (any(indiv_id in ls_ids_covered for indiv_id in ls_distance_market_ids)):
-        ls_ls_distance_market_ids.append(ls_distance_market_ids)
-        ls_ids_covered += ls_distance_market_ids
-  return ls_ls_distance_market_ids
+    random.shuffle(ls_ids)
+  ls_ls_market_ids, ls_ids_covered = [], []
+  for indiv_id in ls_ids:
+    ls_market_ids = [indiv_id] +\
+                    [comp_id for (comp_id, distance) in dict_ls_comp[indiv_id]\
+                             if distance < km_bound]
+    if (len(ls_market_ids) > 1) and\
+       (not any(indiv_id in ls_ids_covered for indiv_id in ls_market_ids)):
+      ls_ls_market_ids.append(ls_market_ids)
+      ls_ids_covered += ls_market_ids
+  return ls_ls_market_ids
   
 def get_market_price_dispersion(ls_market_ids, df_price):
+  """
+  Consider whole population observed hence we measure actual std (ddof = 0)
+  """
   df_market_prices = df_price[ls_market_ids]
   se_nb_market_prices =(~np.isnan(df_market_prices)).sum(1)
   se_range = df_market_prices.max(1) - df_market_prices.min(1)
-  se_std = df_market_prices.std(1)
-  se_coeff_var = df_market_prices.std(1) / df_market_prices.mean(1)
+  se_std = df_market_prices.std(1, ddof = 0)
+  se_coeff_var = df_market_prices.std(1, ddof = 0) / df_market_prices.mean(1)
   se_gain_from_search = df_market_prices.mean(1) - df_market_prices.min(1)
   return pd.DataFrame({'range' : se_range,
                        'cv'    : se_coeff_var,
@@ -362,108 +360,54 @@ def get_market_price_dispersion(ls_market_ids, df_price):
                        'nb_comp_t' : se_nb_market_prices,
                        'nb_comp'   : se_nb_market_prices.max()})
 
-def get_ls_ls_market_price_dispersion(ls_ls_market_ids, master_price, series):
-  # if numpy.version.version = '1.8' or above => switch from scipy to numpy
-  # checks nb of prices (non nan) per period (must be 2 prices at least)
-  ls_ls_market_pd = []
-  for ls_market_ids in ls_ls_market_ids:
-    list_market_prices = [master_price[series][master_price['ids'].index(indiv_id)]\
-                            for indiv_id in ls_market_ids]
-    arr_market_prices = np.array(list_market_prices, dtype = np.float32)
-    arr_nb_market_prices = (~np.isnan(arr_market_prices)).sum(0)
-    arr_bool_enough_market_prices = np.where(arr_nb_market_prices > 1, 1, np.nan)
-    arr_market_prices = arr_bool_enough_market_prices * arr_market_prices
-    range_price_array = scipy.nanmax(arr_market_prices, 0) -\
-                          scipy.nanmin(arr_market_prices, axis = 0)
-    std_price_array = scipy.stats.nanstd(arr_market_prices, 0)
-    coeff_var_price_array = scipy.stats.nanstd(arr_market_prices, 0) /\
-                              scipy.stats.nanmean(arr_market_prices, 0)
-    gain_from_search_array = scipy.stats.nanmean(arr_market_prices, 0) -\
-                               scipy.nanmin(arr_market_prices, axis = 0)
-    ls_ls_market_pd.append((ls_market_ids,
-                            len(ls_market_ids),
-                            range_price_array,
-                            std_price_array,
-                            coeff_var_price_array,
-                            gain_from_search_array))
-  return ls_ls_market_price_dispersion
-  
-def get_fe_predicted_prices(list_ids, series):
-  dict_panel_data_master_temp = {}
-  for indiv_id in list_ids:
-    indiv_ind = master_price['ids'].index(id)
-    list_station_prices = master_price[series][indiv_ind]
-    list_station_brands = [dict_brands[get_str_no_accent_up(brand)][1] if brand else brand\
-                            for brand in get_field_as_list(id, 'brand', master_price)]
-    dict_station = {'price' : np.array(list_station_prices, dtype = np.float32),
-                    'brand' : np.array(list_station_brands),
-                    'id' : indiv_id}
-    dict_panel_data_master_temp[indiv_id] = pd.DataFrame(dict_station, index = master_price['dates'])
-  pd_pd_master_temp = pd.Panel(dict_panel_data_master_temp)
-  pd_pd_master_temp = pd_pd_master_temp.transpose('minor', 'items', 'major')
-  pd_mi_master_temp = pd_pd_master_temp.to_frame(filter_observations=False)
-  pd_mi_master_temp['price'] = pd_mi_master_temp['price'].astype(np.float32)
-  pd_mi_master_temp['date'] = pd_mi_master_temp.index.get_level_values(1)
-  res = smf.ols(formula = 'price ~ C(id) + C(date)', data = pd_mi_master_temp).fit()
-  pd_df_X = pd.DataFrame(pd_mi_master_temp[['id', 'date']], columns=["id", "date"])
-  ar_y_prediction = res.predict(pd_df_X)
-  # Need to cut ar_y_prediction in price arrays
-  # Here: Assumes all have same lengths
-  return np.reshape(ar_y_prediction, (len(list_ids), -1))
+#def get_ls_ls_market_price_dispersion(ls_ls_market_ids, master_price, series):
+#  # if numpy.version.version = '1.8' or above => switch from scipy to numpy
+#  # checks nb of prices (non nan) per period (must be 2 prices at least)
+#  ls_ls_market_pd = []
+#  for ls_market_ids in ls_ls_market_ids:
+#    list_market_prices = [master_price[series][master_price['ids'].index(indiv_id)]\
+#                            for indiv_id in ls_market_ids]
+#    arr_market_prices = np.array(list_market_prices, dtype = np.float32)
+#    arr_nb_market_prices = (~np.isnan(arr_market_prices)).sum(0)
+#    arr_bool_enough_market_prices = np.where(arr_nb_market_prices > 1, 1, np.nan)
+#    arr_market_prices = arr_bool_enough_market_prices * arr_market_prices
+#    range_price_array = scipy.nanmax(arr_market_prices, 0) -\
+#                          scipy.nanmin(arr_market_prices, axis = 0)
+#    std_price_array = scipy.stats.nanstd(arr_market_prices, 0)
+#    coeff_var_price_array = scipy.stats.nanstd(arr_market_prices, 0) /\
+#                              scipy.stats.nanmean(arr_market_prices, 0)
+#    gain_from_search_array = scipy.stats.nanmean(arr_market_prices, 0) -\
+#                               scipy.nanmin(arr_market_prices, axis = 0)
+#    ls_ls_market_pd.append((ls_market_ids,
+#                            len(ls_market_ids),
+#                            range_price_array,
+#                            std_price_array,
+#                            coeff_var_price_array,
+#                            gain_from_search_array))
+#  return ls_ls_market_price_dispersion
+#  
+#def get_fe_predicted_prices(list_ids, series):
+#  dict_panel_data_master_temp = {}
+#  for indiv_id in list_ids:
+#    indiv_ind = master_price['ids'].index(id)
+#    list_station_prices = master_price[series][indiv_ind]
+#    list_station_brands = [dict_brands[get_str_no_accent_up(brand)][1] if brand else brand\
+#                            for brand in get_field_as_list(id, 'brand', master_price)]
+#    dict_station = {'price' : np.array(list_station_prices, dtype = np.float32),
+#                    'brand' : np.array(list_station_brands),
+#                    'id' : indiv_id}
+#    dict_panel_data_master_temp[indiv_id] = pd.DataFrame(dict_station, index = master_price['dates'])
+#  pd_pd_master_temp = pd.Panel(dict_panel_data_master_temp)
+#  pd_pd_master_temp = pd_pd_master_temp.transpose('minor', 'items', 'major')
+#  pd_mi_master_temp = pd_pd_master_temp.to_frame(filter_observations=False)
+#  pd_mi_master_temp['price'] = pd_mi_master_temp['price'].astype(np.float32)
+#  pd_mi_master_temp['date'] = pd_mi_master_temp.index.get_level_values(1)
+#  res = smf.ols(formula = 'price ~ C(id) + C(date)', data = pd_mi_master_temp).fit()
+#  pd_df_X = pd.DataFrame(pd_mi_master_temp[['id', 'date']], columns=["id", "date"])
+#  ar_y_prediction = res.predict(pd_df_X)
+#  # Need to cut ar_y_prediction in price arrays
+#  # Here: Assumes all have same lengths
+#  return np.reshape(ar_y_prediction, (len(list_ids), -1))
 
 if __name__=="__main__":
   pass
-
-  # CHECK IF SMTH TO KEEP AND DROP
-  
-  # indiv_ind_1 = master_price['ids'].index(indiv_id_1)
-  # indiv_ind_2 = master_price['ids'].index(indiv_id_2)
-  # brand_1 = master_price['dict_info'][indiv_id_1]['brand'][0][0]
-  # brand_2 = master_price['dict_info'][indiv_id_2]['brand'][0][0]
-  # plt.clf()
-  # fig = plt.figure() 
-  # ax = fig.add_subplot(111)
-  # ax.plot(ar_period_mean_prices)
-  # ax.plot(matrix_np_prices_ma[indiv_ind_1,:], label = '%s %s' %(indiv_id_1,brand_1))
-  # ax.plot(matrix_np_prices_ma[indiv_ind_2,:], label = '%s %s' %(indiv_id_2,brand_2))
-  # ax.set_xlim([0,len(master_price['dates'])]) 
-  # ax.set_ylim([1.2, 1.6])
-  # handles, labels = ax.get_legend_handles_labels()
-  # ax.legend(handles, labels)
-  # plt.savefig(path_data + folder_built_graphs + r'\tough_competition\tough_%s-%s' %(indiv_id_1, indiv_id_2),
-                # dpi = 500)
-  
-  #indiv_ind_1 = master_price['ids'].index(indiv_id_1)
-  #indiv_ind_2 = master_price['ids'].index(indiv_id_2)
-  #brand_1 = master_price['dict_info'][indiv_id_1]['brand'][0][0]
-  #brand_2 = master_price['dict_info'][indiv_id_2]['brand'][0][0]
-  #plt.clf()
-  #fig = plt.figure() 
-  #ax = fig.add_subplot(111)
-  #ax.plot(ar_period_mean_prices)
-  #ax.plot(matrix_np_prices_ma[indiv_ind_1,:], label = '%s %s' %(indiv_id_1,brand_1))
-  #ax.plot(matrix_np_prices_ma[indiv_ind_2,:], label = '%s %s' %(indiv_id_2,brand_2))
-  #ax.set_xlim([0,len(master_price['dates'])]) 
-  #ax.set_ylim([1.2, 1.6])
-  #handles, labels = ax.get_legend_handles_labels()
-  #ax.legend(handles, labels)
-  #plt.savefig(path_data + folder_built_graphs + r'\suspect\tough_%s-%s' %(indiv_id_1, indiv_id_2), dpi = 300)
-  
-  ## TODO: deal with classical temporal series problems...
-  #list_temp_a = [np.array(ls_percent_period_rr, dtype=np.float32),
-  #               np.array(ls_avg_spread_period_rr, dtype=np.float32),
-  #               ar_period_mean_prices.filled(np.nan)-1.3]
-  #list_temp_b = ['pct_rank_reversals', 'avg_reversal_spread', 'mean_price']
-  #pd_df_pair_rr = pd.DataFrame(np.array(list_temp_a, dtype=np.float32).T, columns = list_temp_b)
-  #pd_df_pair_rr['mean_price_d1'] = pd_df_pair_rr['mean_price'].diff()
-  #pd_df_pair_rr['mean_price_d1_abs'] = np.abs(pd_df_pair_rr['mean_price_d1'])
-  #pd_df_pair_rr[['mean_price', 'mean_price_d1','mean_price_d1_abs']].corr()
-  #print smf.ols(formula = 'pct_rank_reversals ~ mean_price_d1_abs', data = pd_df_pair_rr, missing = 'drop').fit().summary()
-  #pd_df_pair_rr['pct_rank_reversals_s1'] = pd_df_pair_rr['pct_rank_reversals'].shift(1)
-  #print smf.ols(formula = 'pct_rank_reversals ~ pct_rank_reversals_s1', data = pd_df_pair_rr, missing = 'drop').fit().summary()
-  #print smf.ols(formula = 'pct_rank_reversals ~ pct_rank_reversals_s1 + mean_price_d1_abs',\
-  #                data = pd_df_pair_rr, missing = 'drop').fit().summary()
-  #pd_df_pair_rr['pct_rank_reversals_d1'] = pd_df_pair_rr['pct_rank_reversals'].diff()
-  #print smf.ols(formula = 'pct_rank_reversals_d1 ~ mean_price_d1_abs', data = pd_df_pair_rr, missing = 'drop').fit().summary()
-  ## pd_df_pair_rr[['pct_rank_reversals','mean_price_d1']].plot()
-  ## plt.show()

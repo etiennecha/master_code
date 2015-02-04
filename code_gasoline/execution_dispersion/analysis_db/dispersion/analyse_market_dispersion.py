@@ -10,7 +10,10 @@ import datetime
 from statsmodels.distributions.empirical_distribution import ECDF
 from scipy.stats import ks_2samp
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper')
 
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')

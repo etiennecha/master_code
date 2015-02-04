@@ -36,24 +36,25 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'dpt' : str},
                       parse_dates = ['start', 'end', 'day_0', 'day_1', 'day_2'])
 df_info.set_index('id_station', inplace = True)
-
-# Get rid of highway
+# Get rid of highway (gps too unreliable so far + require diff treatment)
 df_info = df_info[df_info['highway'] != 1]
 
-df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
-                        parse_dates = ['date'])
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ht_final.csv'),
+                           parse_dates = ['date'])
 df_prices_ht.set_index('date', inplace = True)
 
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
-                        parse_dates = ['date'])
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
+                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
-# LOAD JSON COMP FILES
+# LOAD JSON CLOSE
 
-dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
-                                    'dict_ls_comp.json'))
-ls_comp_pairs = dec_json(os.path.join(path_dir_built_json,
-                                     'ls_comp_pairs.json'))
+dict_ls_close = dec_json(os.path.join(path_dir_built_json,
+                                      'dict_ls_close.json'))
+ls_close_pairs = dec_json(os.path.join(path_dir_built_json,
+                                      'ls_close_pairs.json'))
 
 # LOAD BRAND DICT
 
@@ -79,6 +80,30 @@ df_info.loc[df_info['group'].isin(ls_no_group), 'group'] = None
 
 df_info['group_type'] = df_info['brand_0'].apply(lambda x: dict_std_brands[x][2])
 
+# ################################
+# GET COMPETITORS FROM NEIGHBOURS
+# ################################
+
+ls_comp_pairs = [(id_station, id_close, dist) for (id_station, id_close, dist) in ls_close_pairs\
+                   if dict_std_brands[df_info.ix[id_close]['brand_0']][1] not in\
+                      dict_retail_groups[dict_std_brands[df_info.ix[id_station]['brand_0']][1]]]
+
+dict_ls_comp = {}
+for id_station, ls_close in dict_ls_close.items():
+  rgp_brands = dict_retail_groups[dict_std_brands[df_info.ix[id_station]['brand_0']][1]]
+  ls_comp = [(id_close, dist) for (id_close, dist) in ls_close\
+               if dict_std_brands[df_info.ix[id_close]['brand_0']][1] not in rgp_brands]
+  dict_ls_comp[id_station] = ls_comp
+
+enc_json(ls_comp_pairs, os.path.join(path_dir_built_json,
+                                      'ls_comp_pairs.json'))
+
+enc_json(dict_ls_comp, os.path.join(path_dir_built_json,
+                                     'dict_ls_comp.json'))
+
+print u'\nFound and saved {:d} pairs of competitors'.format(len(ls_comp_pairs))
+print u'\nFound and saved competitors for {:d} stations'.format(len(dict_ls_comp))
+
 # ########################
 # MARKETS AROUND STATIONS
 # ########################
@@ -98,12 +123,12 @@ for id_station in df_info.index:
   ls_comp = dict_ls_comp.get(id_station, None)
   row_nb_comp = []
   if ls_comp is not None:
-    ls_retail_group_brands = dict_retail_groups[dict_std_brands[df_info.ix[id_station]['brand_0']][1]]
+    ls_rgp_brands = dict_retail_groups[dict_std_brands[df_info.ix[id_station]['brand_0']][1]]
     for max_dist in ls_max_dist:
       #ls_comp = [comp for comp in ls_comp if comp[1] <= max_dist]
       ls_comp = [comp for comp in ls_comp if (comp[1] <= max_dist) and\
                       dict_std_brands[df_info.ix[comp[0]]['brand_0']][1] not in\
-                          ls_retail_group_brands]
+                          ls_rgp_brands]
       row_nb_comp.append(len(ls_comp))
   else:
     row_nb_comp = [np.nan for i in ls_max_dist]
@@ -197,17 +222,17 @@ ls_dict_markets = []
 for distance in [3, 4, 5]:
   print '\nMarkets with distance', distance
   ls_markets = []
-  for k,v in dict_ls_comp.items():
-    ls_comp_ids = [x[0] for x in v if x[1] <= distance]
-    if ls_comp_ids:
-      ls_markets.append([k] + ls_comp_ids)
+  for k,v in dict_ls_close.items():
+    ls_close_ids = [x[0] for x in v if x[1] <= distance]
+    if ls_close_ids:
+      ls_markets.append([k] + ls_close_ids)
   dict_market_ind = {ls_ids[0]: i for i, ls_ids in enumerate(ls_markets)}
   # todo: keep centers of market and periphery?
   ls_closed_markets = []
   for market in ls_markets:
     dum_closed_market = True
     for indiv_id in market[1:]:
-      if any(comp_id not in market for comp_id in ls_markets[dict_market_ind[indiv_id]]):
+      if any(close_id not in market for close_id in ls_markets[dict_market_ind[indiv_id]]):
         dum_closed_market = False
         break
     market = sorted(market)
@@ -220,9 +245,12 @@ for distance in [3, 4, 5]:
   for k,v in dict_market_size.items():
   	print k, len(v)
   ls_dict_markets.append(dict_market_size)
-# output?
 
-# MOST STABLE MARKETS
+enc_json(ls_dict_markets,
+         os.path.join(path_dir_built_json,
+                      'ls_dict_stable_markets.json'))
+
+# MOST ROBUST MARKETS
 
 print '\nMarkets robust to distance vars'
 dict_refined, dict_rejected = {}, {}
@@ -236,8 +264,11 @@ for market_size, ls_markets in ls_dict_markets[0].items():
 for k, v in dict_refined.items():
   print k, len(v)
 
-ls_ls_stable_markets = [x for k,v in dict_refined.items() for x in v]
-# enc_json(ls_ls_markets, os.path.join(path_dir_built_json, 'ls_ls_markets.json'))
+ls_robust_markets = [x for k,v in dict_refined.items() for x in v]
+
+enc_json(ls_robust_markets,
+         os.path.join(path_dir_built_json,
+                      'ls_robust_stable_markets.json'))
 
 # STATS DES
 

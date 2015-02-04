@@ -109,6 +109,8 @@ df_info = pd.merge(df_info,
                    right_on = 'code_insee',
                    how = 'left')
 df_info.set_index('id_station', inplace = True)
+# Get rid of highway (gps too unreliable so far + require diff treatment)
+df_info = df_info[df_info['highway'] != 1]
 
 # Update those for which more recent info (fixes existing issues?)
 for i in [1,2]:
@@ -135,10 +137,13 @@ df_info.loc[df_info['lng_gov_0'] > df_info['lat_gov_0'],
             'lat_best'] = df_info['lng_gov_0']
 
 # Adhox fixes (dist was too high even with geocoding)
-df_info.loc['13115001', ['lat_best', 'lng_best']] = [43.686, 5.713]
-df_info.loc['19350001', ['lat_best', 'lng_best']] = [45.316, 1.341] # not found
-df_info.loc['5350001' , ['lat_best', 'lng_best']] = [44.763, 6.820]
-df_info.loc['84140005', ['lat_best', 'lng_best']] = [43.940, 4.600]
+ls_gps_adhoc_fix = [['13115001', [43.686, 5.713]],
+                    ['19350001', [45.316, 1.341]],
+                    ['5350001',  [44.763, 6.820]],
+                    ['84140005', [43.940, 4.600]]]
+for id_station, gps in ls_gps_adhoc_fix:
+  if id_station in df_info.index:
+    df_info.loc[id_station, ['lat_best', 'lng_best']] = gps
 
 # Compute distance to municipality center to detect mistakes
 df_info['dist_cl'] = compute_distance_ar(df_info['lat_best'],
@@ -212,7 +217,7 @@ df_distances = pd.concat(ls_se_distances, axis = 1, keys = ls_ids)
 # need to add first and last to complete index/columns
 df_distances.ix[ls_ids[0]] = np.nan
 df_distances[ls_ids[-1]] = np.nan
-print u'\nLength of computation:', time.time() - start
+print u'\nLength of computation: {:.2f}'.format(time.time() - start)
 
 ## Check results
 ## print df_distances.ix[ls_ids][0:10]
@@ -242,18 +247,18 @@ for id_station in df_distances.columns:
 # 4/ GET COMPETITION FILES
 
 comp_radius = 10
-ls_comp_pairs = [] # ls of tup with two ids and distance inbetween
-dict_ls_comp = {}  # dict of ls of comp id and distance for each station
+ls_close_pairs = [] # ls of tup with two ids and distance inbetween
+dict_ls_close = {}  # dict of ls of comp id and distance for each station
 for id_station in df_distances.columns:
   ls_comp_ids = list(df_distances.index[df_distances[id_station] < comp_radius])
   for id_station_alt in ls_comp_ids:
     dist = df_distances.loc[id_station_alt, id_station]
-    ls_comp_pairs.append((id_station, id_station_alt, dist))
-    dict_ls_comp.setdefault(id_station, []).append((id_station_alt, dist))
-    dict_ls_comp.setdefault(id_station_alt, []).append((id_station, dist))
+    ls_close_pairs.append((id_station, id_station_alt, dist))
+    dict_ls_close.setdefault(id_station, []).append((id_station_alt, dist))
+    dict_ls_close.setdefault(id_station_alt, []).append((id_station, dist))
 
 # Sort each ls_comp on distance
-dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
+dict_ls_close = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_close.items()}
 
 # 5/ STORE FILES
 
@@ -263,8 +268,11 @@ df_distances.to_csv(os.path.join(path_dir_built_csv, 'df_distances.csv'),
                     float_format= '%.2f',
                     encoding = 'utf-8')
 
-enc_json(ls_comp_pairs, os.path.join(path_dir_built_json,
-                                     'ls_comp_pairs.json'))
+enc_json(ls_close_pairs, os.path.join(path_dir_built_json,
+                                      'ls_close_pairs.json'))
 
-enc_json(dict_ls_comp, os.path.join(path_dir_built_json,
-                                    'dict_ls_comp.json'))
+enc_json(dict_ls_close, os.path.join(path_dir_built_json,
+                                     'dict_ls_close.json'))
+
+print u'\nFound and saved {:d} close pairs'.format(len(ls_close_pairs))
+print u'\nFound and saved neighbours for {:d} stations'.format(len(dict_ls_close))

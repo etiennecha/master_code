@@ -16,6 +16,10 @@ path_dir_built_paper = os.path.join(path_data,
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
+pd.set_option('float_format', '{:,.2f}'.format)
+format_float_int = lambda x: '{:10,.0f}'.format(x)
+format_float_float = lambda x: '{:10,.2f}'.format(x)
+
 # ################
 # LOAD DATA
 # ################
@@ -49,6 +53,13 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'dpt' : str})
 df_info.set_index('id_station', inplace = True)
 
+# LOAD DF STATION STATS
+df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_station_stats.csv'),
+                               encoding = 'utf-8',
+                               dtype = {'id_station' : str})
+df_station_stats.set_index('id_station', inplace = True)
+
 # ######################
 # GET DF PAIR DISPERSION
 # ######################
@@ -58,11 +69,15 @@ df_prices = df_prices_ttc
 km_bound = 3
 diff_bound = 0.02
 
-ls_keep_ids = set(df_prices_cl.columns).intersection(set(df_prices_ttc.columns))
+ls_keep_info = list(df_info[df_info['highway'] != 1].index)
+ls_keep_stats = list(df_station_stats[(df_station_stats['nb_chge'] >= 5) &\
+                                      (df_station_stats['pct_chge'] >= 0.03)].index)
+ls_keep_ids = list(set(ls_keep_info).intersection(set(ls_keep_stats)))
+ls_keep_ids = list(set(df_prices.columns).intersection(set(ls_keep_ids)))
+
 ls_comp_pairs = [(indiv_id, competitor_id, distance)\
                    for (indiv_id, competitor_id, distance) in ls_comp_pairs if\
                      (indiv_id in ls_keep_ids) and (competitor_id in ls_keep_ids)]
-
 
 # LOOP TO GENERATE PRICE DISPERSION STATS
 
@@ -78,11 +93,11 @@ for (indiv_id, comp_id, distance) in ls_comp_pairs:
     abs_avg_spread_ttc = np.abs((df_prices_ttc[indiv_id] - df_prices_ttc[comp_id]).mean())
     ls_comp_pd = get_pair_price_dispersion(se_prices_1.values,
                                            se_prices_2.values, light = False)
-    ls_rows_ppd.append([indiv_id, competitor_id, distance] +\
+    ls_rows_ppd.append([indiv_id, comp_id, distance] +\
                        ls_comp_pd[0] +\
                        [abs_avg_spread_ttc] +\
                        get_ls_standardized_frequency(ls_comp_pd[3][0]))
-    pair_index = '-'.join([indiv_id, competitor_id])
+    pair_index = '-'.join([indiv_id, comp_id])
     ls_pair_index.append(pair_index)
     ls_ar_rrs.append(ls_comp_pd[2][1])
     dict_rr_lengths[pair_index] = ls_comp_pd[3][0]
@@ -122,6 +137,9 @@ df_ppd = pd.merge(df_info_sub,
                   how = 'right',
                   suffixes=('_b', '_a'))
 
+# Drop if insufficient observations
+df_ppd = df_ppd[df_ppd['nb_spread'] >= 30]
+
 # BUILD DF RANK REVERSALS
 
 ls_index = ['-'.join(ppd[:2]) for ppd in ls_rows_ppd]
@@ -137,7 +155,40 @@ ls_disp_ppd = ['id_a', 'id_b', 'distance'] +\
               ls_scalar_cols +\
               ['abs_avg_spread_ttc']
 
+print u'\nOverview df_ppd:'
 print df_ppd[ls_disp_ppd][0:10].to_string()
+
+ls_disp_rr = ['pct_rr', 'nb_rr', 'rr_1', 'rr_2', '5<rr<=20', 'rr>20']
+
+print u'\nOverview rank reversals (all):'
+print df_ppd[ls_disp_rr].describe()
+
+print u'\nOverview high differentiation but high rank reversals'
+print df_ppd[['id_a', 'id_b', 'distance', 'nb_spread', 'abs_avg_spread_ttc', 'pct_rr']]\
+        [(df_ppd['abs_avg_spread_ttc'] >= 0.05) & (df_ppd['pct_rr'] >= 0.3)]
+
+print u'\nOverview low differentiation and low rank reversals:'
+print len(df_ppd[(df_ppd['abs_avg_spread_ttc'] == 0) & (df_ppd['pct_rr'] == 0)])
+#print df_ppd[['id_a', 'id_b', 'distance', 'nb_spread']]\
+#        [(df_ppd['abs_avg_spread_ttc'] == 0) & (df_ppd['pct_rr'] == 0)]
+## actually not competitors: same name "SA CHIRAULT" so drop it
+#print len(df_ppd[(df_ppd['abs_avg_spread_ttc'] <= 0.01) & (df_ppd['pct_rr'] < 0.01)])
+#print df_ppd[['id_a', 'id_b', 'distance', 'nb_spread', 'abs_avg_spread_ttc', 'pct_rr']]\
+#        [(df_ppd['abs_avg_spread_ttc'] <= 0.01) & (df_ppd['pct_rr'] < 0.01)]
+
+print u'\nOverview rank reversals (low differentiation):'
+print df_ppd[ls_disp_rr][df_ppd['abs_avg_spread_ttc'] <= 0.02].describe()
+
+print u'\nPairs with a least one rank reversal per month: {:.0f}'.format(\
+      len(df_ppd[(df_ppd['nb_rr'] >= df_ppd['nb_spread'] / 30.0 )]))
+
+df_ppd_hrr = df_ppd[(df_ppd['nb_rr'] >= df_ppd['nb_spread'] / 30.0 )].copy()
+
+print u'\n', df_ppd_hrr[ls_disp_rr].describe()
+
+# Inspect those with rr of high length
+df_ppd_hrr.sort('rr>20', ascending = False, inplace = True)
+print df_ppd_hrr[['id_a', 'id_b', 'distance'] + ls_disp_rr][0:10].to_string()
 
 # #########
 # OUPUT
