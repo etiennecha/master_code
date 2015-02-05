@@ -133,3 +133,15 @@ df_prices_cl = df_prices_cl.reindex(idx, fill_value = np.nan)
 ##                                 'df_cleaned_prices.csv'),
 ##                    float_format='%.4f',
 ##                    encoding='utf-8')
+
+# TREND
+se_mean_price_ttc = df_prices_ttc.mean(1)
+se_mean_price_ttc_nonan = se_mean_price_ttc[~pd.isnull(se_mean_price_ttc)]
+se_date_ind = se_mean_price_ttc_nonan.index
+se_day_fe = pd.Series(res[0][:len(se_date_ind)], index = se_date_ind)
+se_final_day_fe = se_day_fe.asfreq('1d')
+se_final_day_fe.plot() # dunno why... no scale
+
+df_test = pd.concat([se_final_day_fe, se_mean_price_ttc],
+                    keys = ['trend', 'mean_ttc_price'],
+                    axis = 1)
