@@ -86,3 +86,9 @@ df_prices_all.to_csv(os.path.join(path_dir_csv,
 #df_prices = ls_df_prices[0]
 #for ind in df_prices.index[0:10]:
 #  print df_prices.ix[ind][df_prices.ix[ind] < 0.5]
+
+# Weird: dead stations are in df_info but not df_price => check xml
+# ls_dead = [i for i in ls_df_info[0].index if i not in ls_df_info[1].index]
+# len(ls_df_prices[0].columns)
+# ls_df_info[0].ix[u'1000003'] # no ls_df_prices[0]['1000003']
+# No price data in xml...

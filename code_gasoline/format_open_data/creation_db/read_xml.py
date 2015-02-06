@@ -59,7 +59,7 @@ def clean_str(word):
 #root = tree.getroot()
 
 ls_dict_fermetures = []
-for year in ['20{:02d}'.format(i) for i in range(7, 15)[6:]]:
+for year in ['20{:02d}'.format(i) for i in range(7, 15)[0:1]]:
 
   xml = open(os.path.join(path_dir_xml,
                           u'PrixCarburants_annuel_%s.xml' %year), 'r').read()
