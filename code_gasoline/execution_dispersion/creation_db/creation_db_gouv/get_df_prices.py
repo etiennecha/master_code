@@ -20,10 +20,15 @@ path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 # LOAD GAS STATION DATA
 # ######################
 
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
+master_price = dec_json(os.path.join(path_dir_built_json,
+                                     'master_price_diesel_fixed.json'))
 
-dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
+master_info = dec_json(os.path.join(path_dir_built_json,
+                                    'master_info_fixed.json'))
+
+dict_brands = dec_json(os.path.join(path_dir_source,
+                                    'data_other',
+                                    'dict_brands.json'))
 
 # #################
 # DF PRICES
@@ -32,7 +37,9 @@ dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.
 # DF PRICES TTC
 
 ls_columns = [pd.to_datetime(date) for date in master_price['dates']]
-df_prices_ttc = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_columns).T
+df_prices_ttc = pd.DataFrame(master_price['diesel_price'],
+                             master_price['ids'],
+                             ls_columns).T
 
 # DF PRICES HT
 
