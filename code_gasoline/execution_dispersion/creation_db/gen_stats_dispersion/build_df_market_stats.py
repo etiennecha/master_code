@@ -100,7 +100,7 @@ for ls_market_id, df_market_dispersion in zip(ls_markets_temp, ls_df_market_disp
                                (df_market_dispersion['nb_comp_t']/\
                                 df_market_dispersion['nb_comp'].astype(float)\
                                   >= 2.0/3)].copy()
-  if len(df_market_dispersion) > 50:
+  if len(df_md) > 50:
     df_md['id'] = ls_market_id[0]
     df_md['price'] = se_mean_price
     df_md['date'] = df_md.index

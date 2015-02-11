@@ -50,6 +50,15 @@ df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
                           parse_dates = True)
 df_prices_cl.set_index('date', inplace = True)
 
+# LOAD DF MARGIN CHANGE
+df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
+                                          'df_margin_chge.csv'),
+                             dtype = {'id_station' : str},
+                             encoding = 'utf-8')
+df_margin_chge.set_index('id_station', inplace = True)
+
+df_margin_chge = df_margin_chge[df_margin_chge['value'].abs() >= 0.03]
+
 # LOAD DF INFO
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
@@ -70,8 +79,12 @@ df_info.set_index('id_station', inplace = True)
 
 # PARAMETERS
 
-df_prices = df_prices_cl
+df_prices = df_prices_ttc
 km_bound = 5
+# temp (stations with too few/rigid prices absent in df_prices_cl)
+for id_station in df_info.index:
+  if id_station not in df_prices.columns:
+    df_prices[id_station] = np.nan
 
 # GET MARKETS
 
@@ -92,20 +105,26 @@ se_mean_price = df_prices.mean(1)
 ls_stats = ['range', 'gfs', 'std', 'cv', 'nb_comp']
 ls_ls_market_stats = []
 ls_market_ref_ids = []
-for ls_market_id, df_market_dispersion in zip(ls_markets_temp, ls_df_market_dispersion):
+for ls_market_ids, df_market_dispersion in zip(ls_markets_temp, ls_df_market_dispersion):
   df_md = df_market_dispersion[(df_market_dispersion['nb_comp'] >= 3) &\
                                (df_market_dispersion['nb_comp_t']/\
                                 df_market_dispersion['nb_comp'].astype(float)\
                                   >= 2.0/3)].copy()
-  if len(df_market_dispersion) > 50:
-    df_md['id'] = ls_market_id[0]
+  ## if margin change detected: keep only period before
+  #ls_mc_dates = [df_margin_chge['date'].ix[id_station] for id_station in ls_market_ids\
+  #                 if id_station in df_margin_chge.index]
+  #if ls_mc_dates:
+  #  ls_mc_dates.sort()
+  #  df_md = df_md[:ls_mc_dates[0]]
+  if len(df_md) > 50:
+    df_md['id'] = ls_market_ids[0]
     df_md['price'] = se_mean_price
     df_md['date'] = df_md.index
     ls_ls_market_stats.append([df_md[field].mean()\
                                 for field in ls_stats] +\
                               [df_md[field].std()\
                                 for field in ls_stats])
-    ls_market_ref_ids.append(ls_market_id[0])
+    ls_market_ref_ids.append(ls_market_ids[0])
 ls_columns = ['avg_%s' %field for field in ls_stats]+\
              ['std_%s' %field for field in ls_stats]
 df_market_stats = pd.DataFrame(ls_ls_market_stats, ls_market_ref_ids, ls_columns)
