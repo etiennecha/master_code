@@ -8,19 +8,20 @@ from generic_master_info import *
 import datetime, time
 from BeautifulSoup import BeautifulSoup
 
-path_dir_built_paper = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_built',
-                                    u'data_paper_dispersion')
+path_dir_rotterdam = os.path.join(path_data,
+                                  'data_gasoline',
+                                  'data_source',
+                                  'data_rotterdam')
 
-path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
-
-path_dir_rotterdam = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_rotterdam')
 path_dir_reuters = os.path.join(path_dir_rotterdam, 'data_reuters')
 path_xls_reuters_diesel = os.path.join(path_dir_reuters, 'diesel_data_to_import.xls')
 path_xls_eia = os.path.join(path_dir_rotterdam, 'PET_PRI_SPT_S1_D.xls')
 path_xlsx_ufip = os.path.join(path_dir_rotterdam, 'ufip-valeurs_2006-01-01_au_2013-12-31.xlsx')
 path_xml_ecb = os.path.join(path_dir_rotterdam, 'usd.xml')
+
+path_dir_built_paper = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built')
 
 # REUTERS FILE
 reuters_diesel_excel_file = pd.ExcelFile(path_xls_reuters_diesel)
@@ -127,9 +128,9 @@ plt.show()
 # UFIP COMPARISON
 # ####################
 
-# TODO: take into account week end properly with shift
-# Think it was done with excel and there was no line for week end
-# Shift must a.s. intervene before moving average
+# todo: take into account week end properly with shift
+# think it was done with excel and there was no line for week end
+# shift must a.s. intervene before moving average
 
 # nb: same to shift by 1 then moving average 5 or converse
 # pbm with WE doing it this way...
@@ -143,13 +144,13 @@ df_all['UFIP_diff'] = df_all['UFIP RT Diesel R5 EL'] - df_all['ULSD 10 CIF NWE R
 print np.argmax(df_all['UFIP_diff']), np.max(df_all['UFIP_diff'])
 print df_all[['UFIP RT Diesel R5 EL', 'ULSD 10 CIF NWE R5 S1 EL',
               'ULSD 10 CIF NWE S1 EL', 'UFIP_diff']].ix['2013-03-20':'2013-04-20'].to_string()
-# Obs: though WE prices are filled with previous prices by UFIP, other missing seem not to be
+# obs: though WE prices are filled with previous prices by UFIP, other missing seem not to be
 
 #plt.plot(df_all['UFIP RT Diesel R5 EL'] - df_all['ULSD 10 CIF NWE R5 EL'])
 #plt.plot(df_all['UFIP RT Diesel R5 EL'] - df_all['ULSD 10 CIF NWE R5 S1 EL'])
 #plt.show()
 
-# TODO: check: not ok because time stamps are kept... so then week end are still there as nan
+# todo: check: not ok because time stamps are kept... so then week end are still there as nan
 df_all_nowe = df_all[~((df_all.index.weekday == 5) | (df_all.index.weekday == 6))].copy()
 df_all_nowe['ULSD 10 CIF NWE S1b EL'] = df_all_nowe['ULSD 10 CIF NWE EL'].shift(1)
 df_all_nowe['ULSD 10 CIF NWE S1b R5b EL'] = pd.stats.moments.rolling_apply(
@@ -190,7 +191,9 @@ ls_output_columns = ['UFIP RT Diesel R5 EL',
                      'ULSD 10 CIF NWE R5 S1 EL',
                      'UFIP_diff']
 
-df_all[ls_output_columns].to_csv(os.path.join(path_dir_built_csv,
+df_all[ls_output_columns].to_csv(os.path.join(path_dir_built,
+                                              'data_paper_dispersion',
+                                              'data_csv',
                                               'df_quotations.csv'),
                                  index_label = 'date',
                                  float_format= '%.3f',

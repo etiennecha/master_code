@@ -49,55 +49,88 @@ df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_fina
                         parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
+# LOAD DF PRICE STATS
+
+df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
+                                            'df_station_stats.csv'),
+                               dtype = {'id_station' : str},
+                               encoding = 'utf-8')
+df_station_stats.set_index('id_station', inplace = True)
+
+# LOAD DF MARGIN CHGE
+
+df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
+                                          'df_margin_chge.csv'),
+                             dtype = {'id_station' : str},
+                             encoding = 'utf-8')
+df_margin_chge.set_index('id_station', inplace = True)
+
 # Restrict DF PRICES to stations present in info (and kept e.g. not highway)
-df_prices_ht = df_prices_ht[[x for x in df_prices_ht.columns if x in df_info.index]]
-df_prices_ttc = df_prices_ttc[[x for x in df_prices_ttc.columns if x in df_info.index]]
+set_keep_ids = set(df_prices_ttc.columns).intersection(set(df_info.index))
+df_prices_ht = df_prices_ht[list(set_keep_ids)]
+df_prices_ttc = df_prices_ttc[list(set_keep_ids)]
 
-## BUILDF DF BRANDS (COMPLY WITH OLD METHOD)
-#max_brand_day_ind = 2
-#ls_se_brands = []
-#for id_station in df_info.index:
-#  se_temp = pd.Series(None, index = df_prices_ht.index)
-#  i = 0
-#  while (i < max_brand_day_ind) and\
-#        (not pd.isnull(df_info.ix[id_station]['day_%s' %i])):
-#    se_temp.ix[df_info.ix[id_station]['day_%s' %i]:] =\
-#       df_info.ix[id_station]['brand_%s' %i]
-#    i += 1
-#  # need to overwrite first days if not active? (no price anyway... same for last?)
-#  # se_temp.ix[df_info.ix[id_station]['end']:] = np.nan # todo: offset by one (+)
-#  ls_se_brands.append(se_temp)
-#df_brands = pd.concat(ls_se_brands, axis = 1, keys = df_info.index)
+# Set to nan stations with too few prices
+set_nan_ids = set_keep_ids.intersection(\
+                 df_station_stats.index[(df_station_stats['nb_chge'] < 5)|\
+                                        (df_station_stats['pct_chge'] < 0.03)])
+df_prices_ht[list(set_nan_ids)] = np.nan
+df_prices_ttc[list(set_nan_ids)] = np.nan
 
-## ############
-## CLEAN PRICES
-## ############
+# ####################
+# BUILD DF PRICES LONG
+# ####################
 
-# BUILDF DF IDS
-
-# create one id by station and brand
-# todo: take into account brand change dates based on price variations
-
+# BUILD DF BRANDS (COMPLY WITH OLD METHOD)
 max_brand_day_ind = 2
-ls_se_ids = []
-for id_station in df_prices_ht.columns:
+ls_se_brands = []
+for id_station in df_info.index:
   se_temp = pd.Series(None, index = df_prices_ht.index)
   i = 0
   while (i < max_brand_day_ind) and\
         (not pd.isnull(df_info.ix[id_station]['day_%s' %i])):
-    se_temp.ix[df_info.ix[id_station]['day_%s' %i]:] = '%s_%s' %(id_station, i)
+    se_temp.ix[df_info.ix[id_station]['day_%s' %i]:] =\
+       df_info.ix[id_station]['brand_%s' %i]
     i += 1
   # need to overwrite first days if not active? (no price anyway... same for last?)
   # se_temp.ix[df_info.ix[id_station]['end']:] = np.nan # todo: offset by one (+)
+  ls_se_brands.append(se_temp)
+df_brands = pd.concat(ls_se_brands, axis = 1, keys = df_info.index)
+
+## BUILD DF IDS BASED ON BRANDS
+## create one id by station and brand
+## todo: take into account brand change dates based on price variations
+#max_brand_day_ind = 2
+#ls_se_ids = []
+#for id_station in df_prices_ht.columns:
+#  se_temp = pd.Series(None, index = df_prices_ht.index)
+#  i = 0
+#  while (i < max_brand_day_ind) and\
+#        (not pd.isnull(df_info.ix[id_station]['day_%s' %i])):
+#    se_temp.ix[df_info.ix[id_station]['day_%s' %i]:] = '%s_%s' %(id_station, i)
+#    i += 1
+#  # need to overwrite first days if not active? (no price anyway... same for last?)
+#  # se_temp.ix[df_info.ix[id_station]['end']:] = np.nan # todo: offset by one (+)
+#  ls_se_ids.append(se_temp)
+#df_ids = pd.concat(ls_se_ids, axis = 1, keys = df_prices_ht)
+
+# BUILD DF IDS BASED ON PRICING CHANGE
+ls_se_ids = []
+for id_station in df_prices_ht.columns:
+  se_temp = pd.Series(id_station + '_0', index = df_prices_ht.index)
+  i = 0
+  if np.abs(df_margin_chge.ix[id_station]['value']) >= 0.03:
+    se_temp.ix[df_margin_chge.ix[id_station]['date']:] = '%s_1' %id_station
   ls_se_ids.append(se_temp)
+df_ids = pd.concat(ls_se_ids, axis = 1, keys = df_prices_ht)
 
-df_ids = pd.concat(ls_se_ids, axis = 1, keys = df_info.index)
-
-# build DF FINAL for cleaning
-
-ls_all_ids = [x for id_station in df_prices_ht.columns for x in df_ids[id_station].values]
-ls_all_prices = [x for id_station in df_prices_ht.columns for x in df_prices_ht[id_station].values]
-ls_all_dates = [x for id_station in df_prices_ht.columns for x in df_prices_ht.index]
+# BUILD DF FINAL FOR REGRESSION
+ls_all_ids = [x for id_station in df_prices_ht.columns\
+                for x in df_ids[id_station].values]
+ls_all_prices = [x for id_station in df_prices_ht.columns\
+                  for x in df_prices_ht[id_station].values]
+ls_all_dates = [x for id_station in df_prices_ht.columns\
+                  for x in df_prices_ht.index]
 
 df_final = pd.DataFrame(zip(ls_all_ids,
                             ls_all_dates,
@@ -105,28 +138,30 @@ df_final = pd.DataFrame(zip(ls_all_ids,
                         columns = ['id', 'date', 'price'])
 df_final = df_final[~pd.isnull(df_final['price'])]
 
+# temp: erase if no id (because no brand: need to fix beginning date)
+df_final = df_final[~pd.isnull(df_final['id'])]
 
+# ###########################
+# BUILD DF PRICES MULTI INDEX
+# ###########################
 
-## ASSEMBLE PRICES/BRANDS INTO ONE DF (MI?) PRICES
-#
-### Pbms with Memory
-##df_prices_ht = df_prices_ht.T.stack(dropna = False)
-##df_brands_1 = pd.DataFrame(ls_ls_ls_brands[0], master_price['ids'], ls_columns).stack(dropna = False)
-##df_mi_agg = pd.DataFrame({'price_ht' : df_prices_ht, 'brand_1': df_brands_1})
-##del(ls_ls_ls_brands, df_prices_ttc, df_prices_ht, df_brands_1)
-##df_mi_agg.rename(index={0:'id', 1:'date'}, inplace = True)
-#
-#ls_all_prices = df_prices_ht.T.stack(dropna=False).values
-#ls_all_ids = [id_indiv for id_indiv in master_price['ids'] for x in range(len(master_price['dates']))]
-#ls_all_dates = [date for id_indiv in master_price['ids'] for date in master_price['dates']]
-#ls_ls_all_brands = [[brand for ls_brands in ls_ls_brands for brand in ls_brands]\
-#                      for ls_ls_brands in ls_ls_ls_brands]
-#index = pd.MultiIndex.from_tuples(zip(ls_all_ids, ls_all_dates), names= ['id','date'])
-#columns = ['price', 'brand_1', 'brand_2', 'brand_type']
-#df_mi_prices = pd.DataFrame(zip(*[ls_all_prices] + ls_ls_all_brands),
-#                            index = index,
-#                            columns = columns)
-#
+## Pbms with Memory
+#df_prices_ht = df_prices_ht.T.stack(dropna = False)
+#df_brands_1 = pd.DataFrame(ls_ls_ls_brands[0], master_price['ids'], ls_columns).stack(dropna = False)
+#df_mi_agg = pd.DataFrame({'price_ht' : df_prices_ht, 'brand_1': df_brands_1})
+#del(ls_ls_ls_brands, df_prices_ttc, df_prices_ht, df_brands_1)
+#df_mi_agg.rename(index={0:'id', 1:'date'}, inplace = True)
+
+ls_all_ids = [id_station for id_station in df_prices_ht.columns\
+                for x in df_prices_ht.index]
+ls_all_prices_mi = df_prices_ht.T.stack(dropna=False).values.tolist()
+ls_all_brands_mi = df_brands.T.stack(dropna=False).values.tolist()
+index = pd.MultiIndex.from_tuples(zip(ls_all_ids, ls_all_dates), names= ['id','date'])
+columns = ['price', 'brand']
+df_mi_prices = pd.DataFrame(zip(ls_all_prices, ls_all_brands),
+                            index = index,
+                            columns = columns)
+
 ## ############
 ## FINAL MERGE
 ## ############
@@ -220,7 +255,7 @@ df_final = df_final[~pd.isnull(df_final['price'])]
                   # map(lambda x: '{:8.3f}'.format(x), np.round(mod1.bse,3).tolist())))
 
 ## http://stackoverflow.com/questions/17242970/multi-index-sorting-in-pandas
-  
+
 # # EXAMPLE PANEL DATA REGRESSIONS
 # from patsy import dmatrices
 # f = 'price~brand_2'

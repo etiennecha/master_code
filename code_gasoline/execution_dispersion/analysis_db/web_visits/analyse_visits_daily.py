@@ -1,46 +1,37 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
-import add_to_path_sub
-from add_to_path_sub import path_data
+import add_to_path
+from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 from generic_competition import *
 import copy
 import collections
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_dispersion')
 
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
-path_diesel_price = os.path.join(path_dir_built_json, 'master_price_diesel.json')
-path_info = os.path.join(path_dir_built_json, 'master_info_diesel.json')
-path_info_output = os.path.join(path_dir_built_json, 'master_info_diesel_for_output.json')
+path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_dict_brands = os.path.join(path_dir_source, 'data_other', 'dict_brands.json')
-path_csv_insee_data = os.path.join(path_dir_source, 'data_other', 'data_insee_extract.csv')
+path_dir_source = os.path.join(path_data,
+                               'data_gasoline',
+                               'data_source')
 
 path_dir_zagaz = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_match_insee_codes = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dict_dpts_regions = os.path.join(path_dir_insee, 'dpts_regions', 'dict_dpts_regions.json')
-
 path_dir_web_visits = os.path.join(path_dir_source, 'data_web_visits')
-path_dir_rotterdam = os.path.join(path_dir_source, 'data_rotterdam')
-path_xlsx_ufip = os.path.join(path_dir_rotterdam, 'ufip-valeurs_2006-01-01_au_2013-12-31.xlsx')
-
-master_price = dec_json(path_diesel_price)
-master_info = dec_json(path_info_output)
-dict_brands = dec_json(path_dict_brands)
-dict_dpts_regions = dec_json(path_dict_dpts_regions)
 
 # ############
 # LOAD FILES
 # ############
 
-# Zagaz user file
-dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz, '20140408_dict_zagaz_user_info.json'))
+# LOAD ZAGAZ USER FILES
+dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz,
+                                         '20140408_dict_zagaz_user_info.json'))
+
 ls_registration_dates = [v[0][3][1] for k,v in dict_zagaz_users.items() if v and v[0]]
 dict_registration_dates = dict(collections.Counter(ls_registration_dates))
 df_registrations_temp = pd.DataFrame([(k,v) for k,v in dict_registration_dates.items()],
@@ -56,22 +47,41 @@ df_registrations['registrations'] = df_registrations['registrations'].fillna(0)
 #df_registrations['registrations'].plot()
 #plt.show()
 
-# Price level and price changes
-zero = 0.000001
-ls_dates = [pd.to_datetime(date) for date in master_price['dates']]
-df_price = pd.DataFrame(master_price['diesel_price'], master_price['ids'], ls_dates).T
-df_price_chge = df_price.shift(1) - df_price
-ls_res = []
-for ind in df_price_chge.index:
-  ls_res.append(len(df_price_chge.ix[ind][np.abs(df_price_chge.ix[ind]) > zero]))
-se_nb_chges = pd.Series(ls_res, ls_dates)
-se_nb_chges[se_nb_chges < zero] = np.nan
+# LOAD DF PRICES
+zero = 1e-5
 
-df_registrations['nb_chges'] = se_nb_chges
-df_registrations['price_gazole_ttc'] = df_price.mean(1)
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
+
+# BUILD DF AGG CHANGES
+df_price_changes = df_prices_ttc - df_prices_ttc.shift(1)
+ls_rows_agg_chges = []
+for ind in df_price_changes.index:
+  se_day_chges = df_price_changes.ix[ind]
+  ls_rows_agg_chges.append([se_day_chges[df_price_changes.ix[ind] > zero].count(),
+                            se_day_chges[df_price_changes.ix[ind] < -zero].count(),
+                            se_day_chges[df_price_changes.ix[ind].abs() > zero].count(),
+                            se_day_chges.count()])
+df_agg_chges = pd.DataFrame(ls_rows_agg_chges,
+                            index = df_price_changes.index,
+                            columns = ['nb_pos_chges',
+                                       'nb_neg_chges',
+                                       'nb_chges',
+                                       'nb_obs'])
+# Caution: need to set nb chges to nan instead of 0 if nb_obs == 0
+df_agg_chges.loc[df_agg_chges['nb_obs'] == 0,
+                 ['nb_pos_chges', 'nb_neg_chges', 'nb_chges']] = np.nan
+
+# UPDATE ZAGAZ FILES
+df_registrations['nb_chges'] = df_agg_chges['nb_chges']
+df_registrations['nb_neg_chges'] = df_agg_chges['nb_neg_chges']
+df_registrations['nb_pos_chges'] = df_agg_chges['nb_pos_chges']
+df_registrations['price_gazole_ttc'] = df_prices_ttc.mean(1)
 
 # Harmonize (base 100) and plot registrations, nb price changes and price
-df_visits = df_registrations['2011-09-04':'2013-06-04']
+df_visits = df_registrations['2011-09-04':'2013-06-04'].copy()
 df_visits['registrations_base100'] = df_visits['registrations'] /\
                                          df_visits['registrations'].max() * 100
 df_visits['nb_chges_base100'] = df_visits['nb_chges'] /\
@@ -103,8 +113,7 @@ plt.show()
 # Regressions
 df_visits['week_day'] = [x.weekday() for x in df_visits.index]
 df_visits['tax_cut'] = 0
-df_visits['tax_cut'][(df_visits.index == '2012-08-28') |\
-                     (df_visits.index == '2012-08-29')] = 1
+df_visits.loc['2012-08-28':'2012-09-01', 'tax_cut'] = 1
 df_visits['price_gazole_ttc_D'] = df_visits['price_gazole_ttc'] -  df_visits['price_gazole_ttc'].shift(1)
 df_visits['price_gazole_ttc_Da'] = df_visits['price_gazole_ttc_D'].abs()
 
@@ -112,8 +121,10 @@ formula = 'registrations ~ nb_chges + price_gazole_ttc + C(week_day) + tax_cut +
 print smf.ols(formula = formula,
               missing = 'drop',
               data = df_visits).fit().summary()
+# seems: nb of changes has no impact
 
-# TODO: check cointegration
+
+# todo: check cointegration
 
 df_visits['price_gazole_ttc_l1'] = df_visits['price_gazole_ttc'].shift(1)
 df_visits['registrations_l1'] = df_visits['registrations'].shift(1)
