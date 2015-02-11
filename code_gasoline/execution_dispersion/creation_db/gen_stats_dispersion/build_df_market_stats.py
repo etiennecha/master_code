@@ -70,15 +70,18 @@ df_info.set_index('id_station', inplace = True)
 
 # PARAMETERS
 
-df_prices = df_prices_cl
 km_bound = 5
+df_prices = df_prices_cl
+# temp (stations with too few/rigid prices absent in df_prices_cl)
+for id_station in df_info.index:
+  if id_station not in df_prices.columns:
+    df_prices[id_station] = np.nan
 
 # GET MARKETS
 
 ls_markets = get_ls_ls_market_ids(dict_ls_comp, km_bound)
 ls_markets_st = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound)
 ls_markets_st_rd = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
-# todo: add stable markets
 
 # GET MARKET DISPERSION
 
@@ -178,7 +181,7 @@ for x in ls_markets_temp:
 df_prices_ttc[ls_market].plot()
 plt.show()
 
-ls_market.remove('9200003')
+#ls_market.remove('9200003')
 
 ls_df_market_stats = []
 for df_pr in [df_prices_ttc, df_prices_cl]:
@@ -190,6 +193,7 @@ for df_pr in [df_prices_ttc, df_prices_cl]:
                            keys = ['max', 'min', 'mean', 'std'],
                            axis = 1)
   df_mkt_stats['range'] = df_mkt_stats['max'] - df_mkt_stats['min']
+  df_mkt_stats['cv'] = df_mkt_stats['std'] / df_mkt_stats['mean']
   ls_df_market_stats.append(df_mkt_stats)
 
 df_market_stats = ls_df_market_stats[0]
@@ -220,7 +224,8 @@ print smf.ols('range ~ mean + mean_price_var_neg + mean_price_var_pos',
               data = df_market_stats[df_market_stats['range'] <=\
                        df_market_stats['range'].quantile(0.95)]).fit().summary()
 
-# Range when excluding extreme values (interpolate only on graph... should get rid of values for graph)
+# Range when excluding extreme values
+# (interpolation only on graph... should get rid of values for graph)
 df_market_stats[df_market_stats['range'] <=\
                        df_market_stats['range'].quantile(0.9)]['range'].plot()
 plt.show()
@@ -228,3 +233,9 @@ plt.show()
 # IDEA TO DEAL WITH DIFFERENTIATION
 
 # todo: look at avg/median spread between pairs to detect submarkets if can do
+# example: need to restrict to before
+df_market_before = df_prices_ttc[ls_market][150:300].copy()
+df_market_after = df_prices_ttc[ls_market][-150:].copy()
+
+#(df_market_before['9200003'] - df_market_before[u'9190001']).value_counts()
+

@@ -111,10 +111,12 @@ df_pairs['pct_fol_min'] = df_pairs.apply(\
 # Min and max percent of close changes: simultaneous or followed
 df_pairs['pct_close_max'] = df_pairs.apply(\
    lambda x : max((x['nb_1_fol'] + x['nb_sim_chges'])/float(x['nb_chges_1']),
-                  (x['nb_2_fol'] + x['nb_sim_chges'])/float(x['nb_chges_2'])), axis = 1)
+                  (x['nb_2_fol'] + x['nb_sim_chges'])/float(x['nb_chges_2'])),
+                  axis = 1)
 df_pairs['pct_close_min'] = df_pairs.apply(\
    lambda x : min((x['nb_1_fol'] + x['nb_sim_chges'])/float(x['nb_chges_1']),
-                  (x['nb_2_fol'] + x['nb_sim_chges'])/float(x['nb_chges_2'])), axis = 1)
+                  (x['nb_2_fol'] + x['nb_sim_chges'])/float(x['nb_chges_2'])),
+                  axis = 1)
 
 # ENRICH DATAFRAME: SAME PRICE
 df_pairs['pct_same'] = df_pairs['nb_same'] / df_pairs['nb_spread'].astype(float)

@@ -65,7 +65,7 @@ df_station_stats.set_index('id_station', inplace = True)
 # ######################
 
 # can accomodate both ttc prices (raw prices) or cleaned prices
-df_prices = df_prices_ttc
+df_prices = df_prices_cl
 km_bound = 3
 diff_bound = 0.02
 

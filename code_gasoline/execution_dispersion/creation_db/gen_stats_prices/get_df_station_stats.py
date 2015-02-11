@@ -164,24 +164,8 @@ print u'\nNb of stations with censored prices (nb days): {:,.0f}'.\
 # BUILD DF DAY CHGE
 # #################
 
-## Price changes: day of week (todo: normalize by available days!)
-#ar_ind_dow = df_prices.index.dayofweek # seems faster to store it first
-#ls_chge_dow_rows = []
-#for ls_price_durations in ls_ls_price_durations:
-#  ls_chge_days = []
-#  for price, ls_price_days in ls_price_durations:
-#    if not np.isnan(price):
-#      ls_chge_days.append(ls_price_days[0])
-#  ls_chge_dows = [ar_ind_dow[i] for i in ls_chge_days]
-#  se_chge_dows = pd.Series(ls_chge_dows).value_counts()
-#  dow_argmax = se_chge_dows.argmax()
-#  dow_max_pct = se_chge_dows.max() / float(se_chge_dows.sum())
-#  ls_chge_dow_rows.append((dow_argmax, dow_max_pct))
-#df_chge_dow = pd.DataFrame(ls_chge_dow_rows,
-#                           index = list(df_prices.columns),
-#                           columns = ['dow_max', 'pct_dow_max'])
-
 # Price change: day of week (normalization by days observed)
+ar_ind_dow = df_prices.index.dayofweek # seems faster to store it first
 ls_chge_dow_rows = []
 for ls_price_durations in ls_ls_price_durations:
   ls_indiv_chge_days = []

@@ -14,11 +14,13 @@ from scipy.stats import ks_2samp
 # LOAD DATA
 # ###################
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_dispersion')
+
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 
 # LOAD DF PRICES
 df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
@@ -26,7 +28,7 @@ df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_fina
 df_prices_ttc.set_index('date', inplace = True)
 
 df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv, 'df_cleaned_prices.csv'),
-                          parse_dates = True)
+                          parse_dates = ['date'])
 df_prices_cl.set_index('date', inplace = True)
 
 # LOAD DF INFO
@@ -61,11 +63,12 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
-# LOAD dict_std_brands (to exclude same group stations)
-dict_brands = dec_json(os.path.join(path_dir_source,
-                                    'data_other',
-                                    'dict_brands.json'))
-dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
+## SAME GROUP STATIONS: ALREADY EXCLUDED (?)
+#path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
+#dict_brands = dec_json(os.path.join(path_dir_source,
+#                                    'data_other',
+#                                    'dict_brands.json'))
+#dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
 
 # ##################
 # FILTER DATA

@@ -8,7 +8,11 @@ from generic_master_info import *
 import datetime, time
 from BeautifulSoup import BeautifulSoup
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_paper_dispersion')
+
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
 path_dir_rotterdam = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_rotterdam')
@@ -156,8 +160,10 @@ df_all_nowe['UFIP_diff_b'] = df_all_nowe['UFIP RT Diesel R5 EL'] -\
 df_all_nowe['UFIP_diff_b'].plot()
 plt.show()
 # not good
-print df_all_nowe[['UFIP RT Diesel R5 EL', 'ULSD 10 CIF NWE S1b R5b EL',
-                   'ULSD 10 CIF NWE S1b EL', 'UFIP_diff_b']].ix['2013-03-20':'2013-04-20'].to_string()
+print df_all_nowe[['UFIP RT Diesel R5 EL',
+                   'ULSD 10 CIF NWE S1b R5b EL',
+                   'ULSD 10 CIF NWE S1b EL',
+                   'UFIP_diff_b']].ix['2013-03-20':'2013-04-20'].to_string()
 
 df_all['ULSD 10 CIF NWE S1b R5b EL'] = df_all_nowe['ULSD 10 CIF NWE S1b R5b EL']
 
@@ -184,7 +190,8 @@ ls_output_columns = ['UFIP RT Diesel R5 EL',
                      'ULSD 10 CIF NWE R5 S1 EL',
                      'UFIP_diff']
 
-df_all[ls_output_columns].to_csv(os.path.join(path_dir_built_csv, 'df_quotations.csv'),
+df_all[ls_output_columns].to_csv(os.path.join(path_dir_built_csv,
+                                              'df_quotations.csv'),
                                  index_label = 'date',
                                  float_format= '%.3f',
                                  encoding = 'utf-8')

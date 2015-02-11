@@ -32,7 +32,8 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'ci_ardt_1' :str,
                                'ci_2' : str,
                                'ci_ardt_2' : str,
-                               'dpt' : str})
+                               'dpt' : str},
+                      parse_dates = ['day_0', 'day_1', 'day_2'])
 df_info.set_index('id_station', inplace = True)
 df_info = df_info[df_info['highway'] != 1]
 
@@ -151,20 +152,20 @@ df_margin_chge.to_csv(os.path.join(path_dir_built_csv,
 #
 ## Inspection of same_brand_04
 #
-## Chges to discard (outdated prices.. rigidity)
-#81400003, 63940001, 50130002 (end), 42100010 (end),
-#84000015 (end), 13120006, 77130004 (end), 95180001 (beginning),
-#35760003, 56170001 (end), 44600003 (end), 61110001 (end),
-#78590002, 35520002 (end... caution nan in general missing period before),
-#44130002 (same), 47180001 (same), 20290007 (unsure), 83310010 (end),
-#31000003, 63000021, 64800006 (rigid + date?), 6650003, 75008004 (end),
-#56150003, 24320003 (rigid + end), 66000015, 52160002 (end)
-#
-## Check why margin chge detected (pbm... missing prices & window limits)
-#20150003, 22460002, 20137004, 86360004, 6250001, 64800006 (position)
-#
-## Real chge at beginning (seems to be Carrefour Market only!)
-#34200002, 13880001, 62520001, 5100004, 74230005, 13300007
-#
-## Promotion before closing?
-#77940001, 25400002, 34340001, 
+### Chges to discard (outdated prices.. rigidity)
+##81400003, 63940001, 50130002 (end), 42100010 (end),
+##84000015 (end), 13120006, 77130004 (end), 95180001 (beginning),
+##35760003, 56170001 (end), 44600003 (end), 61110001 (end),
+##78590002, 35520002 (end... caution nan in general missing period before),
+##44130002 (same), 47180001 (same), 20290007 (unsure), 83310010 (end),
+##31000003, 63000021, 64800006 (rigid + date?), 6650003, 75008004 (end),
+##56150003, 24320003 (rigid + end), 66000015, 52160002 (end)
+##
+### Check why margin chge detected (pbm... missing prices & window limits)
+##20150003, 22460002, 20137004, 86360004, 6250001, 64800006 (position)
+##
+### Real chge at beginning (seems to be Carrefour Market only!)
+##34200002, 13880001, 62520001, 5100004, 74230005, 13300007
+##
+### Promotion before closing?
+##77940001, 25400002, 34340001, 
