@@ -10,6 +10,10 @@ import time
 from statsmodels.distributions.empirical_distribution import ECDF
 from scipy.stats import ks_2samp
 
+pd.set_option('float_format', '{:,.3f}'.format)
+format_float_int = lambda x: '{:10,.0f}'.format(x)
+format_float_float = lambda x: '{:10,.3f}'.format(x)
+
 # ###################
 # LOAD DATA
 # ###################
@@ -21,6 +25,9 @@ path_dir_built_paper = os.path.join(path_data,
 
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
+path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+
+path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 
 # LOAD DF PRICES
 df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
@@ -45,16 +52,6 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'dpt' : str})
 df_info.set_index('id_station', inplace = True)
 
-# LOAD DF DISPERSION
-print '\nLoad df_ppd'
-ls_dtype_temp = ['id', 'ci_ardt_1', 'brand_0', 'brand_1', 'brand_2']
-dict_dtype = dict([('%s_b' %x, str) for x in ls_dtype_temp] +\
-                  [('%s_a' %x, str) for x in ls_dtype_temp])
-df_ppd = pd.read_csv(os.path.join(path_dir_built_csv,
-                     'df_pair_raw_price_dispersion.csv'),
-              encoding = 'utf-8',
-              dtype = dict_dtype)
-
 # LOAD DF STATION STATS
 print '\nLoad df_station_stats'
 df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
@@ -63,12 +60,21 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
-## SAME GROUP STATIONS: ALREADY EXCLUDED (?)
-#path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-#dict_brands = dec_json(os.path.join(path_dir_source,
-#                                    'data_other',
-#                                    'dict_brands.json'))
-#dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
+# LOAD DF DISPERSION
+print '\nLoad df_ppd'
+ls_dtype_temp = ['id', 'ci_ardt_1']
+dict_dtype = dict([('%s_b' %x, str) for x in ls_dtype_temp] +\
+                  [('%s_a' %x, str) for x in ls_dtype_temp])
+df_ppd = pd.read_csv(os.path.join(path_dir_built_csv,
+                     'df_pair_raw_price_dispersion.csv'),
+              encoding = 'utf-8',
+              dtype = dict_dtype)
+
+# SAME GROUP STATIONS: ALREADY EXCLUDED (?)
+dict_brands = dec_json(os.path.join(path_dir_source,
+                                    'data_other',
+                                    'dict_brands.json'))
+dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
 
 # ##################
 # FILTER DATA
@@ -82,6 +88,7 @@ df_ppd = df_ppd[(~pd.isnull(df_ppd['avg_spread'])) & (df_ppd['nb_spread'] >= 100
 
 ls_exclude_ids = df_station_stats.index[(df_station_stats['nb_chge'] < 10) |\
                                         (df_station_stats['pct_chge'] < 0.03)]
+
 print "Dropped pairs (insuff price data):",\
         len(df_ppd[(df_ppd['id_a'].isin(ls_exclude_ids)) | (df_ppd['id_b'].isin(ls_exclude_ids))])
 df_ppd = df_ppd[(~df_ppd['id_a'].isin(ls_exclude_ids)) & (~df_ppd['id_b'].isin(ls_exclude_ids))]
@@ -220,7 +227,7 @@ for ppd_name, df_ppd_temp in zip(ls_ppd_names, [df_ppd, df_ppd_nodiff, df_ppd_di
 
 # INSPECT OUTLIERS
 len(df_ppd[(df_ppd['avg_spread'].abs() > 0.01) & (df_ppd['pct_rr']> 0.4)])
-ls_disp = ['id_a', 'id_b', 'groups_a', 'groups_b', 'nb_chges_a','nb_chges_b', 'pct_rr', 'nb_rr']
+ls_disp = ['id_a', 'id_b', 'groups_a', 'groups_b', 'pct_rr', 'nb_rr']
 print df_ppd[ls_disp][(df_ppd['avg_spread'].abs() > 0.01) &\
                       (df_ppd['pct_rr']> 0.4)].to_string()
 

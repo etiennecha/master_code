@@ -50,6 +50,15 @@ df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
                           parse_dates = True)
 df_prices_cl.set_index('date', inplace = True)
 
+# LOAD DF MARGIN CHANGE
+df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
+                                          'df_margin_chge.csv'),
+                             dtype = {'id_station' : str},
+                             encoding = 'utf-8')
+df_margin_chge.set_index('id_station', inplace = True)
+
+df_margin_chge = df_margin_chge[df_margin_chge['value'].abs() >= 0.03]
+
 # LOAD DF INFO
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
@@ -95,20 +104,26 @@ se_mean_price = df_prices.mean(1)
 ls_stats = ['range', 'gfs', 'std', 'cv', 'nb_comp']
 ls_ls_market_stats = []
 ls_market_ref_ids = []
-for ls_market_id, df_market_dispersion in zip(ls_markets_temp, ls_df_market_dispersion):
+for ls_market_ids, df_market_dispersion in zip(ls_markets_temp, ls_df_market_dispersion):
   df_md = df_market_dispersion[(df_market_dispersion['nb_comp'] >= 3) &\
                                (df_market_dispersion['nb_comp_t']/\
                                 df_market_dispersion['nb_comp'].astype(float)\
                                   >= 2.0/3)].copy()
+  # if margin change detected: keep only period before
+  ls_mc_dates = [df_margin_chge['date'].ix[id_station] for id_station in ls_market_ids\
+                   if id_station in df_margin_chge.index]
+  if ls_mc_dates:
+    ls_mc_dates.sort()
+    df_md = df_md[:ls_mc_dates[0]]
   if len(df_md) > 50:
-    df_md['id'] = ls_market_id[0]
+    df_md['id'] = ls_market_ids[0]
     df_md['price'] = se_mean_price
     df_md['date'] = df_md.index
     ls_ls_market_stats.append([df_md[field].mean()\
                                 for field in ls_stats] +\
                               [df_md[field].std()\
                                 for field in ls_stats])
-    ls_market_ref_ids.append(ls_market_id[0])
+    ls_market_ref_ids.append(ls_market_ids[0])
 ls_columns = ['avg_%s' %field for field in ls_stats]+\
              ['std_%s' %field for field in ls_stats]
 df_market_stats = pd.DataFrame(ls_ls_market_stats, ls_market_ref_ids, ls_columns)
@@ -174,27 +189,32 @@ print u'\n', df_market_stats[df_market_stats['avg_nb_comp'] <= nb_comp_lim].desc
 
 for x in ls_markets_temp:
   if len(x) == 5:
-    ls_market = x
+    ls_market_ids = x
     break
 
 # typically: pbm with a change in price policy
-df_prices_ttc[ls_market].plot()
+df_prices_ttc[ls_market_ids].plot()
 plt.show()
 
 #ls_market.remove('9200003')
 
 ls_df_market_stats = []
 for df_pr in [df_prices_ttc, df_prices_cl]:
-  df_mkt_prices = df_pr[ls_market].copy()
-  df_mkt_stats = pd.concat([df_mkt_prices.max(1),
-                            df_mkt_prices.min(1),
-                            df_mkt_prices.mean(1),
-                            df_mkt_prices.std(1, ddof = 0)],
-                           keys = ['max', 'min', 'mean', 'std'],
-                           axis = 1)
-  df_mkt_stats['range'] = df_mkt_stats['max'] - df_mkt_stats['min']
-  df_mkt_stats['cv'] = df_mkt_stats['std'] / df_mkt_stats['mean']
-  ls_df_market_stats.append(df_mkt_stats)
+  df_mkt_prices = df_pr[ls_market_ids].copy()
+  df_md = pd.concat([df_mkt_prices.max(1),
+                     df_mkt_prices.min(1),
+                     df_mkt_prices.mean(1),
+                     df_mkt_prices.std(1, ddof = 0)],
+                    keys = ['max', 'min', 'mean', 'std'],
+                    axis = 1)
+  df_md['range'] = df_md['max'] - df_md['min']
+  df_md['cv'] = df_md['std'] / df_md['mean']
+  ls_mc_dates = [df_margin_chge['date'].ix[id_station] for id_station in ls_market_ids\
+                   if id_station in df_margin_chge.index]
+  if ls_mc_dates:
+    ls_mc_dates.sort()
+    df_md = df_md[:ls_mc_dates[0]]
+  ls_df_market_stats.append(df_md)
 
 df_market_stats = ls_df_market_stats[0]
 
@@ -234,8 +254,8 @@ plt.show()
 
 # todo: look at avg/median spread between pairs to detect submarkets if can do
 # example: need to restrict to before
-df_market_before = df_prices_ttc[ls_market][150:300].copy()
-df_market_after = df_prices_ttc[ls_market][-150:].copy()
+df_market_before = df_prices_ttc[ls_market_ids][150:300].copy()
+df_market_after = df_prices_ttc[ls_market_ids][-150:].copy()
 
 #(df_market_before['9200003'] - df_market_before[u'9190001']).value_counts()
 

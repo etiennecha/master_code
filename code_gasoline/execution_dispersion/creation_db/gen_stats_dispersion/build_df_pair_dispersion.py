@@ -16,9 +16,9 @@ path_dir_built_paper = os.path.join(path_data,
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 # ################
 # LOAD DATA
@@ -38,6 +38,15 @@ df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_cleaned_prices.csv'),
                           parse_dates = True)
 df_prices_cl.set_index('date', inplace = True)
+
+# LOAD DF MARGIN CHANGE
+df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
+                                          'df_margin_chge.csv'),
+                             dtype = {'id_station' : str},
+                             encoding = 'utf-8')
+df_margin_chge.set_index('id_station', inplace = True)
+
+df_margin_chge = df_margin_chge[df_margin_chge['value'].abs() >= 0.03]
 
 # LOAD DF INFO
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
@@ -65,7 +74,7 @@ df_station_stats.set_index('id_station', inplace = True)
 # ######################
 
 # can accomodate both ttc prices (raw prices) or cleaned prices
-df_prices = df_prices_cl
+df_prices = df_prices_ttc
 km_bound = 3
 diff_bound = 0.02
 
@@ -88,9 +97,18 @@ ls_ar_rrs = []
 dict_rr_lengths = {}
 for (indiv_id, comp_id, distance) in ls_comp_pairs:
   if (distance <= km_bound):
-    se_prices_1 = df_prices[indiv_id]
-    se_prices_2 = df_prices[comp_id]
-    abs_avg_spread_ttc = np.abs((df_prices_ttc[indiv_id] - df_prices_ttc[comp_id]).mean())
+    mc_date = None # base case: no limit date
+    # change in margin/pricing policy
+    ls_mc_dates = [df_margin_chge['date'].ix[id_station]\
+                     for id_station in [indiv_id, comp_id]\
+                       if id_station in df_margin_chge.index]
+    if ls_mc_dates:
+      ls_mc_dates.sort()
+      mc_date = ls_mc_dates[0]
+    se_prices_1 = df_prices[indiv_id][:mc_date]
+    se_prices_2 = df_prices[comp_id][:mc_date]
+    abs_avg_spread_ttc = np.abs((df_prices_ttc[indiv_id][:mc_date] -\
+                                   df_prices_ttc[comp_id][:mc_date]).mean())
     ls_comp_pd = get_pair_price_dispersion(se_prices_1.values,
                                            se_prices_2.values, light = False)
     ls_rows_ppd.append([indiv_id, comp_id, distance] +\
