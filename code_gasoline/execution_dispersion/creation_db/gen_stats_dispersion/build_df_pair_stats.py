@@ -71,7 +71,7 @@ ls_followed_chges_cols = ['nb_ctd_1', 'nb_ctd_2', 'nb_ctd_both',
 ls_matched_prices_cols = ['nb_spread', 'nb_same', 'nb_chge_to_same',
                           'nb_1_lead', 'nb_2_lead']
 
-df_pairs = pd.DataFrame(ls_rows_pairs, columns = ['id_1', 'id_2', 'distance'] +\
+df_pairs = pd.DataFrame(ls_rows_pairs, columns = ['id_a', 'id_b', 'distance'] +\
                                                  ls_followed_chges_cols +\
                                                  ls_matched_prices_cols)
 
@@ -134,6 +134,15 @@ df_pairs['pct_lead_max'] = df_pairs.apply(\
 df_pairs['pct_lead_min'] = df_pairs.apply(\
    lambda x : min(x['nb_1_lead']/float(x['nb_chges_1']),
                   x['nb_2_lead']/float(x['nb_chges_2'])), axis = 1)
+
+# ################
+# OUTPUT
+# ################
+
+df_pairs.to_csv(os.path.join(path_dir_built_csv,
+                             'df_pair_stats.csv'),
+                encoding = 'utf-8',
+                index = False)
 
 # ################
 # STATS DES

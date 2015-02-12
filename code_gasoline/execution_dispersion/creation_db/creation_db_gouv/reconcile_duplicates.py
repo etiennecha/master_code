@@ -136,6 +136,10 @@ for x, y in ls_tup_duplicates:
       ls_end_dates = [df_info.ix[x]['end'], df_info.ix[y]['end']]
       df_info.loc[y, 'end'] = max(ls_end_dates)
       
+      # fix group and group_type (keep old)
+      df_info.loc[y, 'group'] = df_info.ix[x]['group']
+      df_info.loc[y, 'group_type'] = df_info.ix[x]['group_type']
+
       # fix brand (assuming weird stuffs may be possible)
       ls_tup_x = [(df_info.ix[x]['brand_%s' %i],
                    df_info.ix[x]['day_%s' %i]) for i in range(3)\
@@ -204,3 +208,23 @@ df_prices_ht.to_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
                     index_label = 'date',
                     float_format= '%.3f',
                     encoding = 'utf-8')
+
+## #############
+## STATS DES
+## #############
+
+print u'\nOverview of brand changes over the period:'
+df_brand_chge = pd.pivot_table(df_info[df_info['brand_0'] !=\
+                                         df_info['brand_last']],
+                               values = 'brand_1',
+                               index=['brand_0', 'brand_last'],
+                               aggfunc=len)
+print df_brand_chge.to_string()
+
+print u'\nOverview of group changes over the period:'
+df_group_chge = pd.pivot_table(df_info[df_info['group'] !=\
+                                         df_info['group_last']],
+                               values = 'brand_0',
+                               index=['group', 'group_last'],
+                               aggfunc=len)
+print df_group_chge.to_string()
