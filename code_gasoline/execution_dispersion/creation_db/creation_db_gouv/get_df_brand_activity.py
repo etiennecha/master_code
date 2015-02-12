@@ -208,11 +208,6 @@ df_group_chge = pd.pivot_table(df_brand_activity[df_brand_activity['group'] !=\
                                aggfunc=len)
 print df_group_chge.to_string()
 
-print u'\nOverview: CARREFOUR to MOUSQUETAIRES:'
-ls_ov_disp = ['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1', 'start', 'end']
-print df_info[(df_info['group'] == 'CARREFOUR') &\
-              (df_info['group_last'] == 'MOUSQUETAIRES')][ls_ov_disp].to_string()
-
 #for year in ['2011', '2012', '2013']:
 #  print u'Nb starting after %s:' %year,\
 #        len(df_brand_activity[df_brand_activity['start'] > year])

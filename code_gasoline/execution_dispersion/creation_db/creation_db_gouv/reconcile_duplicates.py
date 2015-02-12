@@ -228,3 +228,8 @@ df_group_chge = pd.pivot_table(df_info[df_info['group'] !=\
                                index=['group', 'group_last'],
                                aggfunc=len)
 print df_group_chge.to_string()
+
+print u'\nOverview: CARREFOUR to MOUSQUETAIRES:'
+ls_ov_disp = ['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1', 'start', 'end']
+print df_info[(df_info['group'] == 'CARREFOUR') &\
+              (df_info['group_last'] == 'MOUSQUETAIRES')][ls_ov_disp].to_string()

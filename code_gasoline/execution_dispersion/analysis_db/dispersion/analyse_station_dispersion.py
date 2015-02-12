@@ -52,6 +52,14 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'dpt' : str})
 df_info.set_index('id_station', inplace = True)
 
+# LOAD DF COMP
+print '\nLoad df_comp'
+df_comp = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_comp.csv'),
+                      encoding = 'utf-8',
+                      dtype = {'id_station' : str})
+df_comp.set_index('id_station', inplace = True)
+
 # LOAD DF STATION STATS
 print '\nLoad df_station_stats'
 df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
@@ -88,4 +96,11 @@ df_pairs = pd.merge(df_ppd,
 # COMPETITION BY STATION
 # #######################
 
-# todo: load df_comp (with dist to same brand + hhi)
+# merge on df_comp excludes highway (and Corsica?)
+df_info = pd.merge(df_info,
+                   df_comp,
+                   how = 'right',
+                   left_index = True,
+                   right_index = True)
+
+ls_ov_disp = ['name', 'adr_street', 'adr_city', 'brand_0']

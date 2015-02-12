@@ -182,7 +182,7 @@ print u'\nPairs with same price 20%+ of time: {:.0f}'.format(\
       len(df_pairs[df_pairs['pct_same'] >= 0.2]))
 
 # DETECT LEADERSHIP
-ls_disp_cl = ['id_1', 'id_2', 'distance'] +\
+ls_disp_cl = ['id_a', 'id_b', 'distance'] +\
              ['nb_ctd_both', 'nb_chges_1', 'nb_chges_2',
               'nb_1_lead', 'nb_2_lead', 'nb_chge_to_same',
               'pct_same', 'pct_lead_max', 'pct_lead_min']
