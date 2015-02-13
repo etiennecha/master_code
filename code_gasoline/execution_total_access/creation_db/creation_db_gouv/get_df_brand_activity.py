@@ -97,6 +97,8 @@ dict_brands[u'U'] = [u'SYSTEMEU', u'SYSTEMEU', u'SUP']
 dict_brands[u'U EXPRESS'] = [u'U_EXPRESS', u'SYSTEMEU', u'SUP']
 dict_brands[u'ENI FRANCE'] = [u'AGIP', u'AGIP', u'OIL']
 dict_brands[u'MARKET'] = [u'CARREFOUR_MARKET', u'CARREFOUR', u'SUP']
+dict_brands[u'BRETECHE'] = [u'BRETECHE', u'INDEPENDANT', u'IND']
+dict_brands[u'BRETECHE EXPRESS'] = [u'BRETECHE', u'INDEPENDANT', u'IND']
 
 enc_json(dict_brands, os.path.join(path_dir_source,
                                    'data_other',
@@ -133,7 +135,7 @@ for indiv_id, indiv_info in master_price['dict_info'].items():
   except:
     print 'Not in dict_brands', indiv_info['brand']
 
-# check multi brands, reduce?
+# Build df brands (and display max number of brands per station)
 dict_len_brands = {}
 ls_index, ls_rows_brands = [], []
 for indiv_id, indiv_info in master_price['dict_info'].items():
@@ -141,7 +143,9 @@ for indiv_id, indiv_info in master_price['dict_info'].items():
   ls_index.append(indiv_id)
   ls_rows_brands.append([x for ls_x in indiv_info['brand_std'] for x in ls_x])
 
-#print dict_len_brands.keys()
+print u'\nMax nb of brands for one station:', max(dict_len_brands.keys())
+nb_brands_max = max(dict_len_brands.keys())
+
 ls_ls_columns = [['brand_%s' %i, 'day_%s' %i]\
                    for i in range(np.max(dict_len_brands.keys()))]
 ls_columns = [column for ls_columns in ls_ls_columns for column in ls_columns]
@@ -149,6 +153,27 @@ ls_columns = [column for ls_columns in ls_ls_columns for column in ls_columns]
 df_brands = pd.DataFrame(ls_rows_brands,
                          index = ls_index,
                          columns = ls_columns)
+
+# Add retail group and retail group type (IND, SUP, OIL  => improve ?)
+ls_big_brands = list(set([v[1] for k,v in dict_brands.items()]))
+
+dict_replace_rg = {'AUTRE_DIS' : None,
+                   'AUTRE_GMS' : None,
+                   'INDEPENDEANT' : None,
+                   'TOTAL_ACCESS' : 'TOTAL',
+                   'ELF': 'TOTAL',
+                   'ELAN' : 'TOTAL'}
+dict_groups = {v[0]: dict_replace_rg.get(v[1], v[1]) for k,v in dict_brands.items()}
+df_brands['group'] = df_brands['brand_0'].apply(lambda x: dict_groups[x])
+df_brands['group_type'] = df_brands['brand_0'].apply(lambda x: dict_std_brands[x][2])
+
+# Add last brand, retail group, retail group type
+df_brands['brand_last'] =\
+  df_brands.apply(\
+    lambda row: [x for x in row[['brand_%s' %i for i in range(nb_brands_max)]].values\
+                   if x][-1], axis = 1)
+df_brands['group_last'] = df_brands['brand_last'].apply(lambda x: dict_groups[x])
+df_brands['group_type_last'] = df_brands['brand_last'].apply(lambda x: dict_std_brands[x][2])
 
 # #######################
 # BUILD DF BRAND ACTIVITY
@@ -159,7 +184,9 @@ df_brand_activity = pd.merge(df_activity,
                              left_index = True,
                              right_index = True)
 
-for field in ['start', 'end', 'day_0', 'day_1', 'day_2', 'day_3']:
+# convert day indexes to dates
+ls_date_fields = ['start', 'end'] + ['day_%s' %i for i in range(nb_brands_max)]
+for field in ls_date_fields:
   df_brand_activity[field] = df_brand_activity[field].apply(\
                                lambda x: master_price['dates'][int(x)]\
                                            if not pd.isnull(x) else x)
@@ -167,19 +194,39 @@ for field in ['start', 'end', 'day_0', 'day_1', 'day_2', 'day_3']:
                                             format = '%Y%m%d',
                                             coerce = True)
 
-#for year in ['2011', '2012', '2013']:
-#  print u'Nb starting after %s:' %year,\
-#        len(df_brand_activity[df_brand_activity['start'] > year])
+# todo: check ids from master_price not in master_info => fill?
+# todo: simplify '38930001' (no Leclerc)
 
-# todo: group and brand
-
+# #############
 # OUTPUT TO CSV
+# #############
+
 df_brand_activity.to_csv(os.path.join(path_dir_built_csv,
                                       'df_brand_activity.csv'),
                          index_label = 'id_station',
                          float_format= '%.3f',
                          encoding = 'utf-8')
 
-# todo: check ids from master_price not in master_info => fill?
-# todo: simplify '38930001' (no Leclerc)
-# todo: keep '
+## #############
+## STATS DES
+## #############
+
+print u'\nOverview of brand changes over the period:'
+df_brand_chge = pd.pivot_table(df_brand_activity[df_brand_activity['brand_0'] !=\
+                                                   df_brand_activity['brand_last']],
+                               values = 'brand_1',
+                               index=['brand_0', 'brand_last'],
+                               aggfunc=len)
+print df_brand_chge.to_string()
+
+print u'\nOverview of group changes over the period:'
+df_group_chge = pd.pivot_table(df_brand_activity[df_brand_activity['group'] !=\
+                                                   df_brand_activity['group_last']],
+                               values = 'brand_0',
+                               index=['group', 'group_last'],
+                               aggfunc=len)
+print df_group_chge.to_string()
+
+#for year in ['2011', '2012', '2013']:
+#  print u'Nb starting after %s:' %year,\
+#        len(df_brand_activity[df_brand_activity['start'] > year])

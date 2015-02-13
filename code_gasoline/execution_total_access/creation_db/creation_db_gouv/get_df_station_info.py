@@ -14,7 +14,6 @@ path_dir_built_paper = os.path.join(path_data,
                                     'data_built',
                                     data_paper_folder)
 
-
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
 # #################

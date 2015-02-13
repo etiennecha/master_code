@@ -9,8 +9,8 @@ import datetime
 from params import *
 
 path_dir_built_paper = os.path.join(path_data,
-                                    'data_gasoline',
-                                    'data_built',
+                                    u'data_gasoline',
+                                    u'data_built',
                                     data_paper_folder)
 
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
@@ -126,7 +126,7 @@ for x, y in ls_tup_duplicates:
          df_prices_ht.loc[:date_switch-datetime.timedelta(days=1), x]
       
       # fix dates (TODO)
-      
+
       # drop prices
       df_prices_ttc.drop(x, axis = 1, inplace = True)
       df_prices_ht.drop(x, axis = 1, inplace = True)
@@ -137,6 +137,10 @@ for x, y in ls_tup_duplicates:
       ls_end_dates = [df_info.ix[x]['end'], df_info.ix[y]['end']]
       df_info.loc[y, 'end'] = max(ls_end_dates)
       
+      # fix group and group_type (keep old)
+      df_info.loc[y, 'group'] = df_info.ix[x]['group']
+      df_info.loc[y, 'group_type'] = df_info.ix[x]['group_type']
+
       # fix brand (assuming weird stuffs may be possible)
       ls_tup_x = [(df_info.ix[x]['brand_%s' %i],
                    df_info.ix[x]['day_%s' %i]) for i in range(3)\
@@ -205,3 +209,28 @@ df_prices_ht.to_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
                     index_label = 'date',
                     float_format= '%.3f',
                     encoding = 'utf-8')
+
+## #############
+## STATS DES
+## #############
+
+print u'\nOverview of brand changes over the period:'
+df_brand_chge = pd.pivot_table(df_info[df_info['brand_0'] !=\
+                                         df_info['brand_last']],
+                               values = 'brand_1',
+                               index=['brand_0', 'brand_last'],
+                               aggfunc=len)
+print df_brand_chge.to_string()
+
+print u'\nOverview of group changes over the period:'
+df_group_chge = pd.pivot_table(df_info[df_info['group'] !=\
+                                         df_info['group_last']],
+                               values = 'brand_0',
+                               index=['group', 'group_last'],
+                               aggfunc=len)
+print df_group_chge.to_string()
+
+print u'\nOverview: CARREFOUR to MOUSQUETAIRES:'
+ls_ov_disp = ['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1', 'start', 'end']
+print df_info[(df_info['group'] == 'CARREFOUR') &\
+              (df_info['group_last'] == 'MOUSQUETAIRES')][ls_ov_disp].to_string()

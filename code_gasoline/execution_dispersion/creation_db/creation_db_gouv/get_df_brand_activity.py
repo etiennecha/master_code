@@ -114,14 +114,18 @@ for i, (start, end) in enumerate(ls_start_end):
 # Adds brand_std to dict_info in master_price and create corresponding dict_std_brands:
 dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
 for indiv_id, indiv_info in master_price['dict_info'].items():
-  ls_brand_std = [[dict_brands[name][0], day_ind] for name, day_ind in indiv_info['brand']]
-  i = 1 
-  while i < len(ls_brand_std):
-    if ls_brand_std[i][0] == ls_brand_std[i-1][0]:
-      del(ls_brand_std[i])
-    else:
-      i += 1
-  master_price['dict_info'][indiv_id]['brand_std'] = ls_brand_std
+  try:
+    ls_brand_std = [[dict_brands[name][0], day_ind]\
+                      for name, day_ind in indiv_info['brand']]
+    i = 1 
+    while i < len(ls_brand_std):
+      if ls_brand_std[i][0] == ls_brand_std[i-1][0]:
+        del(ls_brand_std[i])
+      else:
+        i += 1
+    master_price['dict_info'][indiv_id]['brand_std'] = ls_brand_std
+  except:
+    print 'Not in dict_brands', indiv_info['brand']
 
 # Build df brands (and display max number of brands per station)
 dict_len_brands = {}
@@ -167,7 +171,10 @@ df_brands['group_type_last'] = df_brands['brand_last'].apply(lambda x: dict_std_
 # BUILD DF BRAND ACTIVITY
 # #######################
 
-df_brand_activity = pd.merge(df_activity, df_brands, left_index = True, right_index = True)
+df_brand_activity = pd.merge(df_activity,
+                             df_brands,
+                             left_index = True,
+                             right_index = True)
 
 # convert day indexes to dates
 ls_date_fields = ['start', 'end'] + ['day_%s' %i for i in range(nb_brands_max)]
@@ -182,6 +189,7 @@ for field in ls_date_fields:
 # #############
 # OUTPUT TO CSV
 # #############
+
 df_brand_activity.to_csv(os.path.join(path_dir_built_csv,
                                       'df_brand_activity.csv'),
                          index_label = 'id_station',

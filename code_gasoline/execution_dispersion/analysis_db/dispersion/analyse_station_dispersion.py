@@ -104,3 +104,7 @@ df_info = pd.merge(df_info,
                    right_index = True)
 
 ls_ov_disp = ['name', 'adr_street', 'adr_city', 'brand_0']
+# check no gps: 13680006, 34500021
+# move?
+df_info.loc[~pd.isnull(df_info['dist_cl']),
+            ['1km', '2km', '3km', '4km', '5km']] = 0
