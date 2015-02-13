@@ -234,3 +234,12 @@ print u'\nOverview: CARREFOUR to MOUSQUETAIRES:'
 ls_ov_disp = ['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1', 'start', 'end']
 print df_info[(df_info['group'] == 'CARREFOUR') &\
               (df_info['group_last'] == 'MOUSQUETAIRES')][ls_ov_disp].to_string()
+
+print u'\nOverview: left TOTAL:'
+ls_ov_disp = ['name', 'adr_street', 'adr_city', 'brand_0', 'brand_1', 'start', 'end']
+print df_info[(df_info['group'] == 'TOTAL') &\
+              (df_info['group_last'] != 'TOTAL')][ls_ov_disp].to_string()
+
+# 10270004 : conversion to Carrefour Market seems credible
+# 44117002 : conversion to Leclerc... seems actually closed
+# 26140005 : conversion to Leclerc: on highway, credible

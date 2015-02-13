@@ -242,8 +242,14 @@ print rebranded_mod.pred_table()
 #print smf.ols('rebranded ~ C(STATUT_2010) + CB + dist_cl_sup',
 #                      df_logit).fit().summary()
 
-ls_output_stata = ['STATUT_2010', 'CB', 'BA', 'BNA',
-                   'dist_cl', 'dist_cl_sup', '1km', '3km', '5km',
+for i in range(1,6):
+  df_logit['nb_comp_%skm' %i] = df_logit['%skm' %i]
+
+ls_output_stata = ['rebranded', 'STATUT_2010', 'CB', 'BA', 'BNA',
+                   'dist_cl', 'dist_cl_sup',
+                   'nb_comp_1km', 'nb_comp_3km', 'nb_comp_5km',
                    'crowded']
+
 df_logit[ls_output_stata].to_csv(os.path.join(path_dir_built_csv,
-                                              'df_rebranding_logit.csv'))
+                                              'df_rebranding_logit.csv'),
+                                 index = False)
