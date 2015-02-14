@@ -269,39 +269,39 @@ print df_interval['length_w_nan'].describe()
 
 df_pp_chge = pd.merge(df_pp_chge, df_interval, left_index = True, right_index = True)
 
-for row_ind, row in df_pp_chge.iterrows():
-  id_station = row_ind
-  pp_chge = row['pp_chge']
-  pp_chge_date = row['pp_chge_date']
-  gov_chge_date = row['TA_day']
-  ta_chge_date = row['ta_chge_date']
-  date_beg = row['date_beg']
-  date_end = row['date_end']
-  plt.rcParams['figure.figsize'] = 16, 6
-  ax = df_prices[id_station].plot()
-  se_mean_prices.plot(ax=ax)
-  handles, labels = ax.get_legend_handles_labels()
-  ax.legend(handles, [id_station, u'mean price'], loc = 1)
-  ax.axvline(x = ta_chge_date, color = 'r', ls = '-', alpha = 0.8)
-  ax.axvline(x = date_beg, color = 'b', ls = '--')
-  ax.axvline(x = date_end, color = 'b', ls = '--')
-  ax.axvline(x = gov_chge_date, color = 'b', ls = ':')
-  footnote_text = '\n'.join([row['name'], row['adr_street'], row['adr_city'], row['ci_ardt_1']])
-  plt.figtext(0.1, -0.1, footnote_text) 
-  if pd.isnull(ta_chge_date):
-    file_name = '_'.join([row['brand_0'],
-                           id_station,
-                           u'{:.3f}'.format(pp_chge)]) + '_notadate.png'
-  else:
-    file_name = '_'.join([row['brand_0'],
-                           id_station,
-                           u'{:.3f}'.format(pp_chge)]) + '.png'
-  plt.savefig(os.path.join(path_dir_built_graphs,
-                           'total_access_pp_chge_interval',
-                           file_name),
-              dpi = 200,
-              bbox_inches='tight')
-  plt.close()
+#for row_ind, row in df_pp_chge.iterrows():
+#  id_station = row_ind
+#  pp_chge = row['pp_chge']
+#  pp_chge_date = row['pp_chge_date']
+#  gov_chge_date = row['TA_day']
+#  ta_chge_date = row['ta_chge_date']
+#  date_beg = row['date_beg']
+#  date_end = row['date_end']
+#  plt.rcParams['figure.figsize'] = 16, 6
+#  ax = df_prices[id_station].plot()
+#  se_mean_prices.plot(ax=ax)
+#  handles, labels = ax.get_legend_handles_labels()
+#  ax.legend(handles, [id_station, u'mean price'], loc = 1)
+#  ax.axvline(x = ta_chge_date, color = 'r', ls = '-', alpha = 0.8)
+#  ax.axvline(x = date_beg, color = 'b', ls = '--')
+#  ax.axvline(x = date_end, color = 'b', ls = '--')
+#  ax.axvline(x = gov_chge_date, color = 'b', ls = ':')
+#  footnote_text = '\n'.join([row['name'], row['adr_street'], row['adr_city'], row['ci_ardt_1']])
+#  plt.figtext(0.1, -0.1, footnote_text) 
+#  if pd.isnull(ta_chge_date):
+#    file_name = '_'.join([row['brand_0'],
+#                           id_station,
+#                           u'{:.3f}'.format(pp_chge)]) + '_notadate.png'
+#  else:
+#    file_name = '_'.join([row['brand_0'],
+#                           id_station,
+#                           u'{:.3f}'.format(pp_chge)]) + '.png'
+#  plt.savefig(os.path.join(path_dir_built_graphs,
+#                           'total_access_pp_chge_interval',
+#                           file_name),
+#              dpi = 200,
+#              bbox_inches='tight')
+#  plt.close()
 
 # todo: get last date when change... check with graph that it's ok
 # todo: fix manually if needed (+ get sample diff pp_chge_date vs. rebranding)

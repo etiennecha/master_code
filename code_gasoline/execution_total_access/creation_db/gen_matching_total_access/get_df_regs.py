@@ -153,7 +153,8 @@ df_lg_ttac = pd.concat(ls_df_lg_ttac, ignore_index = True)
 df_lg_ttac['time'] = df_lg_ttac['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
 df_lg_ttac.to_csv(os.path.join(path_dir_built_csv,
                               'df_long_ttac.csv'),
-                 encoding = 'latin-1')
+                 encoding = 'latin-1',
+                 index = False)
 
 # ########################################
 # LONG PANEL: COMP OF ELF => TOTAL ACCESS
@@ -164,25 +165,27 @@ ls_elf_ids = list(df_info_ta.index[(df_info_ta['brand_0'] == 'ELF')])
 
 ls_df_lg_elfc = []
 for id_station, ls_comp in dict_ls_comp.items():
+  # station should have no ex Total Total Access competitor
   if any([comp_id in ls_tta_ids for comp_id, distance in ls_comp]):
     pass
   else:
+    # need a close elf
     ls_elf_comp = [(comp_id, distance) for comp_id, distance in ls_comp
                     if (comp_id in ls_elf_ids) and (distance <= 3)]
     if ls_elf_comp:
       id_temp = ls_elf_comp[0][0]
       distance = ls_elf_comp[0][1]
       date_chge = df_info_ta.ix[id_ta]['day_1']
-      date_beg_nan = df_info_ta.ix[id_ta]['day_1'] - pd.Timedelta(days = 10)
-      date_end_nan = df_info_ta.ix[id_ta]['day_1'] + pd.Timedelta(days = 10)
+      date_beg_nan = df_info_ta.ix[id_temp]['day_1'] - pd.Timedelta(days = 10)
+      date_end_nan = df_info_ta.ix[id_temp]['day_1'] + pd.Timedelta(days = 10)
       df_lg_elfc = pd.DataFrame(df_prices[id_station].values,
-                                    df_prices.index, ['price'])
+                                df_prices.index, ['price'])
       df_lg_elfc.loc[date_beg_nan:date_end_nan, 'price'] = np.nan
       df_lg_elfc['time'] = df_lg_elfc.index
       # df_lg_elfc['time'] = df_lg_elfc['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
       df_lg_elfc['id_station'] = id_station
       df_lg_elfc['treatment'] = 0
-      df_lg_elfc.loc[date_end:, 'treatment'] = 1
+      df_lg_elfc.loc[date_end_nan:, 'treatment'] = 1
       df_lg_elfc['group'] = df_info.ix[id_station]['group']
       df_lg_elfc['group_type'] = df_info.ix[id_station]['group_type']
       df_lg_elfc['reg'] = df_info.ix[id_station]['reg']
@@ -193,7 +196,8 @@ df_lg_elfc = pd.concat(ls_df_lg_elfc, ignore_index = True)
 df_lg_elfc['time'] = df_lg_elfc['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
 df_lg_elfc.to_csv(os.path.join(path_dir_built_csv,
                               'df_long_elfc.csv'),
-                 encoding = 'latin-1')
+                 encoding = 'latin-1',
+                 index = False)
 
 # todo: need to define dates...
 # todo: need to make sure no Total-Total Access around
