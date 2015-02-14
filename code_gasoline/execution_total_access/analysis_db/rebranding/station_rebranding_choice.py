@@ -142,7 +142,8 @@ df_info = pd.merge(df_info,
 ls_ids_elf_TA = list(df_info_ta.index[df_info_ta['brand_0'] == 'ELF'])
 ls_ids_total_TA = list(df_info_ta.index[df_info_ta['brand_0'] == 'TOTAL'])
 ls_ids_total = list(df_info.index[(df_info['brand_0'] == 'TOTAL')])
-ls_ids_total_noTA = [id_station for id_station in ls_ids_total if id_station not in df_info_ta.index]
+ls_ids_total_noTA = [id_station for id_station in ls_ids_total\
+                       if id_station not in df_info_ta.index]
 
 # Describe competitive environment
 ls_desc_tot = []
@@ -160,11 +161,13 @@ df_desc.ix['count'] = [2027, 1653, 374, 250]
 
 # Describe amenities
 for ls_ids in [ls_ids_total, ls_ids_total_noTA, ls_ids_total_TA, ls_ids_elf_TA]:
-	print u'\n', df_info.ix[list(ls_ids)]['brand_0'][0], df_info.ix[list(ls_ids)]['brand_1'][0]
+	print u'\n', df_info.ix[list(ls_ids)]['brand_0'][0],\
+               df_info.ix[list(ls_ids)]['brand_1'][0]
 	print df_info.ix[list(ls_ids)][[u'Boutique alimentaire',
                                   u'Boutique non alimentaire',
                                   u'Automate CB', 
-                                  u'Station de lavage']].describe().ix[['count', 'mean']].to_string()
+                                  u'Station de lavage']].describe().ix[['count',
+                                                                        'mean']].to_string()
 # check how old information is, update?
 # more Boutique... consistant with necessity to make more revenue
 
@@ -226,7 +229,11 @@ df_logit['BA'] = df_logit['Boutique alimentaire']
 df_logit['BNA'] = df_logit['Boutique non alimentaire']
 
 for service in ['CB', 'BA', 'BNA']:
-  print u'\n', pd.crosstab(df_logit['rebranded'], df_logit[service], rownames=['rebranded'])
+  df_ser = pd.crosstab(df_logit['rebranded'], df_logit[service], rownames=['rebranded'])
+  df_ser_pct = pd.concat([df_ser[0] / (df_ser[0] + df_ser[1]),
+                          df_ser[1] / (df_ser[0] + df_ser[1])], axis = 1)
+  print u'\n', service
+  print df_ser_pct
 
 # check if actually works
 # http://nbviewer.ipython.org/github/adparker/GADSLA_1403/blob/master/src/lesson07/Logistic%20Regression%20and%20Statsmodels%20tutorial.ipynb

@@ -6,20 +6,24 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 
-path_dir_built_paper = os.path.join(path_data, 'data_gasoline', 'data_built', 'data_paper')
+path_dir_built_paper = os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_paper_total_access')
+
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
+pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
-
-km_bound = 5
 
 # ###############
 # LOAD DF PRICES
 # ###############
 
-df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
+df_prices = pd.read_csv(os.path.join(path_dir_built_csv,
+                                     'df_prices_ttc_final.csv'),
                         parse_dates = ['date'])
 df_prices.set_index('date', inplace = True)
 df_chges = df_prices - df_prices.shift(1)
@@ -34,24 +38,23 @@ ls_ls_price_variations = get_price_variations(ls_ls_price_durations)
 # ################
 
 # Stations using 2 or 3 digits after decimal point and frequency of last digit
-ls_two_digit_ids, ls_three_digit_ids = [], []
 ls_rows_last_digit = []
 for col in df_prices.columns:
   ar_prices_cent = df_prices[col][~pd.isnull(df_prices[col])].values * 100
   if len(ar_prices_cent) > 0:
+    dummy_two_digits = 1
     if any(ar_prices_cent != ar_prices_cent.astype(int).astype(float)):
-      ls_three_digit_ids.append(col)
-      row_last_digit = [0] # three digit
-      ar_prices_temp = (ar_prices_cent * 10).astype(int).astype(str)
-    else:
-      ls_two_digit_ids.append(col)
-      ar_prices_temp = ar_prices_cent.astype(int).astype(str)
-      row_last_digit = [1] # two digit
+      dummy_two_digits = 0
+      # need to avoid digits after decimal point
+      ar_prices_cent = ar_prices_cent * 10 # no more cents actually
+    ar_prices_temp = ar_prices_cent.astype(int).astype(str)
+    ls_last_digit = []
     for i in range(10):
       ar_temp = ar_prices_temp[np.core.defchararray.startswith(ar_prices_temp,
                                                                '{:d}'.format(i),
                                                                start = -1)]
-      row_last_digit.append(len(ar_temp))
+      ls_last_digit.append(len(ar_temp))
+    row_last_digit = [dummy_two_digits] + ls_last_digit
   else:
     row_last_digit = [None for i in range(11)]
   ls_rows_last_digit.append(row_last_digit)
@@ -62,18 +65,16 @@ df_digits = pd.DataFrame(ls_rows_last_digit,
 
 # STATS DES
 
-pd.set_option('float_format', '{:,.2f}'.format)
+print u'Nb stations w/ 2 digits: {:,.0f}'.format(len(df_digits[df_digits['2d'] == 1]))
+print u'Nb stations w/ 3 digits: {:,.0f}'.format(len(df_digits[df_digits['2d'] == 0]))
 
-print '\nNb stations w/ 2 digits: {:,.0f}'.format(len(df_digits[df_digits['2d'] == 1]))
-print 'Nb stations w/ 3 digits: {:,.0f}'.format(len(df_digits[df_digits['2d'] == 0]))
-
-print '\nFrequency of last digit (3 digit prices):'
+print u'\nFrequency of last digit (3 digit prices):'
 df_digits_3d = df_digits[df_digits['2d'] == 0]
 se_su_3d_ld = df_digits_3d[['ld_%s' %i for i in range(10)]].sum()
 se_su_3d_ld_freq = se_su_3d_ld / se_su_3d_ld.sum()
 print se_su_3d_ld_freq.to_string()
 
-print '\nFrequency of last digit (2 digit prices):'
+print u'\nFrequency of last digit (2 digit prices):'
 df_digits_2d = df_digits[df_digits['2d'] == 1]
 se_su_2d_ld = df_digits_2d[['ld_%s' %i for i in range(10)]].sum()
 se_su_2d_ld_freq = se_su_2d_ld / se_su_2d_ld.sum()
@@ -98,20 +99,17 @@ for col in df_chges.columns:
                         se_pos_price_chge.mean(),
                         se_neg_price_chge.median(),
                         se_neg_price_chge.mean()])
-
 ls_columns = ['nb_valid', 'nb_no_chge',
               'nb_pos_chge', 'nb_neg_chge',
               'med_pos_chge', 'avg_pos_chge', 'med_neg_chge', 'avg_neg_chge']
-df_chges_indiv_su = pd.DataFrame(ls_rows_chges, columns = ls_columns, index = df_chges.columns)
+df_chges_indiv_su = pd.DataFrame(ls_rows_chges,
+                                 index = df_chges.columns,
+                                 columns = ls_columns)
 
-df_chges_indiv_su['nb_chge'] = df_chges_indiv_su['nb_pos_chge'] + df_chges_indiv_su['nb_neg_chge']
-df_chges_indiv_su['pct_chge'] = df_chges_indiv_su['nb_chge'] / df_chges_indiv_su['nb_valid']
-#divide by nb of days?
-
-# STATS DES
-
-pd.set_option('float_format', '{:,.2f}'.format)
-#print df_chges_indiv_su[0:100].to_string()
+df_chges_indiv_su['nb_chge'] = df_chges_indiv_su['nb_pos_chge'] +\
+                                 df_chges_indiv_su['nb_neg_chge']
+df_chges_indiv_su['pct_chge'] = df_chges_indiv_su['nb_chge'] /\
+                                  df_chges_indiv_su['nb_valid']
 
 # #################
 # BUILD DF RIGIDITY
@@ -119,7 +117,8 @@ pd.set_option('float_format', '{:,.2f}'.format)
 
 # Price rigidity: Frequency of prices changes
 ls_rigidity_rows = []
-for indiv_id, ls_price_durations in zip(list(df_prices.columns), ls_ls_price_durations):
+for indiv_id, ls_price_durations in zip(list(df_prices.columns),
+                                        ls_ls_price_durations):
   ls_indiv_durations = []
   for i, price_duration in enumerate(ls_price_durations[2:-1], 2):
     # discard first and last price
@@ -136,43 +135,64 @@ for indiv_id, ls_price_durations in zip(list(df_prices.columns), ls_ls_price_dur
   else:
     ls_rigidity_rows.append([np.nan for i in range(5)])
 ls_columns = ['nb_prices_used', 'mean_length', 'std_length', 'min_length', 'max_length']
-df_rigidity = pd.DataFrame(ls_rigidity_rows, list(df_prices.columns), ls_columns)
+df_rigidity = pd.DataFrame(ls_rigidity_rows, df_prices.columns, ls_columns)
 
 # STATS DES
 
-# Solve pbm... one length > 60: probably two stations reconciled?
-#df_rigidity = df_rigidity[df_rigidity.index != '35660003']
-print "\nNb w/ less than 10 prices (dropped): {:>6.2f}".\
+# One length > 60: probably two stations reconciled?
+
+print "\nNb w/ less than 10 prices (drop?): {:,.0f}".\
          format(len(df_rigidity[(pd.isnull(df_rigidity['nb_prices_used'])) |\
-                   (df_rigidity['nb_prices_used'] < 10)]))
-ls_ids_nb_prices_drop = df_rigidity.index[df_rigidity['nb_prices_used'] < 10]
-# df_rigidity = df_rigidity[df_rigidity['nb_prices_used'] >= 10]
-print df_rigidity.describe()
-print "\nNb of stations with censored prices: {:>8.2f}".\
-        format(len(df_rigidity[df_rigidity['max_length'] == 60]))
-print "\nAvg max length of a price validity w/o censored: {:>8.2f}".\
-        format(df_rigidity['max_length'][df_rigidity['max_length'] < 60].mean())
+                   (df_rigidity['nb_prices_used'] <= 10)]))
+
+ls_ids_nb_prices_drop = df_rigidity.index[(pd.isnull(df_rigidity['nb_prices_used'])) |\
+                                          (df_rigidity['nb_prices_used'] <= 10)]
+
+df_rigidity = df_rigidity[(~pd.isnull(df_rigidity['nb_prices_used'])) &\
+                          (df_rigidity['nb_prices_used'] > 10)]
+
+print u'\nOverview of price rigidity (nb days, incl. censored):'
+print u'\n', df_rigidity.describe()
+
+print u'\nOverview of price rigidity (nb days, no censored):'
+print u'\n', df_rigidity[df_rigidity['max_length'] < 60].describe()
+
+print u'\nNb of stations with censored prices (nb days): {:,.0f}'.\
+        format(len(df_rigidity[df_rigidity['max_length'] >= 60]))
 
 # #################
 # BUILD DF DAY CHGE
 # #################
 
-# Price changes: day of week (todo: normalize by available days!)
+# Price change: day of week (normalization by days observed)
 ar_ind_dow = df_prices.index.dayofweek # seems faster to store it first
 ls_chge_dow_rows = []
 for ls_price_durations in ls_ls_price_durations:
-  ls_chge_days = []
+  ls_indiv_chge_days = []
+  ls_indiv_days = []
   for price, ls_price_days in ls_price_durations:
-    if price:
-      ls_chge_days.append(ls_price_days[0])
-  ls_chge_dows = [ar_ind_dow[i] for i in ls_chge_days]
-  se_chge_dows = pd.Series(ls_chge_dows).value_counts()
-  dow_argmax = se_chge_dows.argmax()
-  dow_max_pct = se_chge_dows.max() / float(se_chge_dows.sum())
+    if not np.isnan(price):
+      ls_indiv_chge_days.append(ls_price_days[0])
+      ls_indiv_days += ls_price_days
+  ls_indiv_chge_dows = [ar_ind_dow[i] for i in ls_indiv_chge_days]
+  ls_indiv_dows = [ar_ind_dow[i] for i in ls_indiv_days]
+  se_indiv_chge_dows = pd.Series(ls_indiv_chge_dows).value_counts()
+  se_indiv_days = pd.Series(ls_indiv_dows).value_counts()
+  se_indiv_chge_dows_norm = se_indiv_chge_dows / se_indiv_days.astype(float)
+  dow_argmax = se_indiv_chge_dows_norm.argmax()
+  dow_max_pct = se_indiv_chge_dows_norm.max() / float(se_indiv_chge_dows_norm.sum())
   ls_chge_dow_rows.append((dow_argmax, dow_max_pct))
 df_chge_dow = pd.DataFrame(ls_chge_dow_rows,
                            index = list(df_prices.columns),
                            columns = ['dow_max', 'pct_dow_max'])
+
+dict_replace_dow = dict(zip(range(7), ['MO','TU','WE','TH','FR','SA','SU']))
+df_chge_dow['dow_max'] =\
+   df_chge_dow['dow_max'].apply(lambda x: dict_replace_dow.get(x, None))
+
+# Inspect results (check process, rename days?)
+print u'\nOverview of days of week where changes most frequent:'
+print df_chge_dow['dow_max'].value_counts()
 
 # ########################
 # BUILD DF PEAKS AND DROPS
@@ -221,14 +241,18 @@ ls_all_promo_dow = [x for ls_x in ls_ls_promo_dow for x in ls_x]
 ls_all_peak_days = [x for ls_x in ls_ls_peak_days for x in ls_x]
 ls_all_peak_dow = [x for ls_x in ls_ls_peak_dow for x in ls_x]
 
-print '\nPromo price per day of week'
+print '\nPromo price per day of week:'
 print pd.Series(ls_all_promo_dow).value_counts()
-print '\nPeak price per day of week'
+
+print '\nPeak price per day of week:'
 print pd.Series(ls_all_peak_dow).value_counts()
 
-print '\nPromo price per date'
+# todo: get real dates... not day in
+
+print '\nPromo price per date:'
 print pd.Series(ls_all_promo_days).value_counts()[0:10]
-print '\nPeak price per date'
+
+print '\nPeak price per date:'
 print pd.Series(ls_all_peak_days).value_counts()[0:10]
 
 # Dataframes dow
@@ -252,18 +276,49 @@ df_cuts_su = pd.DataFrame(ls_rows_cuts,
                           index = list(df_chges.index),
                           columns = ls_columns)
 
+# inspect cuts
+
+print u'\nOverview cuts of 0.04 at least:'
+print df_cuts_su['nb_promo_04'].describe()
+
+print u'\nDay with max nb of price cuts:'
+print df_cuts_su[df_cuts_su['nb_promo_04'] == 3115]
+
+print u'\nExamples of cut on this day:'
+print df_chges.ix['2012-08-31'][df_chges.ix['2012-08-31'] < - 0.04][0:10]
+
+# df_prices[['1500007', '1500001', '1500004']]['2012-08-21':'2012-09-11'].plot()
+# plt.show()
+## todo: check stations with df_info
+
 # #########################
 # MERGE AND OUTPUT TO CSV
 # #########################
 
-df_station_stats = pd.merge(df_chges_indiv_su, df_rigidity,
-                             left_index = True, right_index = True,
-                             how = 'left')
+df_station_stats = pd.merge(df_chges_indiv_su,
+                            df_rigidity,
+                            how = 'left',
+                            right_index = True,
+                            left_index = True)
+
+df_station_stats = pd.merge(df_chges_indiv_su,
+                            df_chge_dow,
+                            how = 'left',
+                            right_index = True,
+                            left_index = True)
 
 # quasi no info (nb_chge: min five) or doubtful info (pct_chge: min once a month)
+
+print u'\nNb stations with too little changes: {:,.0f}'.\
+         format(len(df_station_stats[~((df_station_stats['nb_chge'] >= 5) &\
+                                       (df_station_stats['pct_chge'] >= 0.03))]))
+
+print u'\nOverview of valid price series:'
 print df_station_stats[(df_station_stats['nb_chge'] >= 5) &\
                        (df_station_stats['pct_chge'] >= 0.03)].describe()
 
+# add dummy 2 digit after decimal point prices
+df_station_stats['2d'] = df_digits['2d']
 # temp
 df_station_stats['nb_promo'] = df_promo['nb_promo']
 
