@@ -108,7 +108,6 @@ df_elf_nomc = df_info_ta[(df_info_ta['brand_0'] == 'ELF') &\
 # GRAPHS: PRICE HISTOGRAMS
 # ############################
 
-
 # First day
 bins = np.linspace(1.20, 1.60, 41)
 plt.hist(df_prices_ttc[ls_total].iloc[0].values,
