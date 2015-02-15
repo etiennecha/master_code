@@ -127,6 +127,7 @@ df_prices = df_prices_ttc
 ##df_tta_lg_control['time'] = df_tta_lg_control.index
 #
 #ls_rows_ttac= []
+## for id_station, ls_ta_comp in [['6156001', dict_ls_ta_comp['6156001']]]:
 #for id_station, ls_ta_comp in dict_ls_ta_comp.items():
 #  if (id_station in ls_keep_ids) and\
 #     (df_info.ix[id_station]['group'] != 'TOTAL'):
@@ -145,6 +146,7 @@ df_prices = df_prices_ttc
 #      df_lg_ttac.loc[date_beg:date_end, 'price'] = np.nan
 #      df_lg_ttac['time'] = df_lg_ttac.index
 #      df_lg_ttac['time'] = df_lg_ttac['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
+#      df_lg_ttac['fe_station'] = 1
 #      df_lg_ttac['treatment'] = 0
 #      df_lg_ttac.loc[date_end:, 'treatment'] = 1
 #      #df_lg_ttac['id_station'] = id_station
@@ -168,15 +170,17 @@ df_prices = df_prices_ttc
 #                                df_prices.index, ['price'])
 #      df_lg_ctrl['time'] = df_lg_ctrl.index
 #      df_lg_ctrl['time'] = df_lg_ctrl['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
+#      df_lg_ctrl['fe_station'] = 0
 #      df_lg_ctrl['treatment'] = 0
 #
 #      df_lg = pd.concat([df_lg_ttac, df_lg_ctrl], ignore_index = True)
 #      
-#      reg = smf.ols('price ~ C(time) + treatment',
+#      reg = smf.ols('price ~ C(time) + fe_station + treatment',
 #                    df_lg).fit()
 #      ls_tup_coeffs = zip(reg.params.index.values.tolist(),
 #                          reg.params.values.tolist(),
 #                          reg.bse.values.tolist(),
+#                          # reg.HC0_se,
 #                          reg.tvalues.values.tolist(),
 #                          reg.pvalues.values.tolist())
 #      df_tc = pd.DataFrame(ls_tup_coeffs, columns = ['name', 'coeff', 'se', 'tval', 'pval'])
@@ -187,6 +191,7 @@ df_prices = df_prices_ttc
 #                           distance,
 #                           df_info.ix[id_station]['group'],
 #                           df_info.ix[id_station]['group_type'],
+#                           df_tc[df_tc['name'] == 'fe_station']['coeff'].values[0],
 #                           df_tc[df_tc['name'] == 'treatment']['coeff'].values[0],
 #                           df_tc[df_tc['name'] == 'treatment']['se'].values[0],
 #                           df_tc[df_tc['name'] == 'treatment']['tval'].values[0]))
@@ -197,15 +202,14 @@ df_prices = df_prices_ttc
 #                                                       'distance',
 #                                                       'group',
 #                                                       'group_type',
-#                                                       'coeff',
+#                                                       'fe_station',
+#                                                       'treatment',
 #                                                       'se',
 #                                                       'tval'])
-
-#df_lg_ttac = pd.concat(ls_df_lg_ttac, ignore_index = True)
-#df_lg_ttac['time'] = df_lg_ttac['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
-#df_lg_ttac.to_csv(os.path.join(path_dir_built_csv,
-#                              'df_long_ttac.csv'),
-#                 encoding = 'latin-1',
+#
+#df_coeffs_ttac.to_csv(os.path.join(path_dir_built_csv,
+#                              'df_coeffs_ttac.csv'),
+#                 encoding = 'utf-8',
 #                 index = False)
 
 # ########################################
@@ -235,6 +239,7 @@ for id_station, ls_comp in dict_ls_comp.items():
       df_lg_elfc.loc[date_beg_nan:date_end_nan, 'price'] = np.nan
       df_lg_elfc['time'] = df_lg_elfc.index
       df_lg_elfc['time'] = df_lg_elfc['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
+      df_lg_elfc['fe_station']= 1
       df_lg_elfc['treatment'] = 0
       df_lg_elfc.loc[date_end_nan:, 'treatment'] = 1
       #df_lg_elfc['id_station'] = id_station
@@ -258,11 +263,12 @@ for id_station, ls_comp in dict_ls_comp.items():
                                 df_prices.index, ['price'])
       df_lg_ctrl['time'] = df_lg_ctrl.index
       df_lg_ctrl['time'] = df_lg_ctrl['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
+      df_lg_ctrl['fe_station'] = 0
       df_lg_ctrl['treatment'] = 0
 
       df_lg = pd.concat([df_lg_elfc, df_lg_ctrl], ignore_index = True)
       
-      reg = smf.ols('price ~ C(time) + treatment',
+      reg = smf.ols('price ~ C(time) + fe_station + treatment',
                     df_lg).fit()
       ls_tup_coeffs = zip(reg.params.index.values.tolist(),
                           reg.params.values.tolist(),
@@ -276,6 +282,7 @@ for id_station, ls_comp in dict_ls_comp.items():
                            distance,
                            df_info.ix[id_station]['group'],
                            df_info.ix[id_station]['group_type'],
+                           df_tc[df_tc['name'] == 'fe_station']['coeff'].values[0],
                            df_tc[df_tc['name'] == 'treatment']['coeff'].values[0],
                            df_tc[df_tc['name'] == 'treatment']['se'].values[0],
                            df_tc[df_tc['name'] == 'treatment']['tval'].values[0]))
@@ -284,18 +291,14 @@ df_coeffs_elfc = pd.DataFrame(ls_rows_elfc, columns = ['id_station',
                                                        'id_elf',
                                                        'date_chge',
                                                        'distance',
+                                                       'fe_station',
                                                        'group',
                                                        'group_type',
                                                        'coeff',
                                                        'se',
                                                        'tval'])
 
-#df_lg_elfc = pd.concat(ls_df_lg_elfc, ignore_index = True)
-#df_lg_elfc['time'] = df_lg_elfc['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
-#df_lg_elfc.to_csv(os.path.join(path_dir_built_csv,
-#                              'df_long_elfc.csv'),
-#                 encoding = 'latin-1',
-#                 index = False)
-
-# todo: need to define dates...
-# todo: need to make sure no Total-Total Access around
+df_coeffs_elfc.to_csv(os.path.join(path_dir_built_csv,
+                                   'df_coeffs_ttac.csv'),
+                      encoding = 'utf-8',
+                      index = False)
