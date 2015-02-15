@@ -113,7 +113,7 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items():
 # PARAMETERS
 # ##########
 
-df_prices = df_prices_ttc
+df_prices = df_prices_ttc[90:]
 
 ## ##########################################
 ## LONG PANEL: COMP OF TOTAL => TOTAL ACCESS
@@ -291,10 +291,10 @@ df_coeffs_elfc = pd.DataFrame(ls_rows_elfc, columns = ['id_station',
                                                        'id_elf',
                                                        'date_chge',
                                                        'distance',
-                                                       'fe_station',
                                                        'group',
                                                        'group_type',
-                                                       'coeff',
+                                                       'fe_station',
+                                                       'treatment',
                                                        'se',
                                                        'tval'])
 
