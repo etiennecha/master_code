@@ -39,6 +39,7 @@ df_info.set_index('id_station', inplace = True)
 # Get rid of highway (gps too unreliable so far + require diff treatment)
 df_info = df_info[df_info['highway'] != 1]
 
+# LOAD PRICES (only for stats des...)
 df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_prices_ht_final.csv'),
                            parse_dates = ['date'])
@@ -55,30 +56,6 @@ dict_ls_close = dec_json(os.path.join(path_dir_built_json,
                                       'dict_ls_close.json'))
 ls_close_pairs = dec_json(os.path.join(path_dir_built_json,
                                       'ls_close_pairs.json'))
-
-# LOAD BRAND DICT
-
-dict_brands = dec_json(os.path.join(path_dir_source,
-                                    'data_other',
-                                    'dict_brands.json'))
-dict_std_brands = {v[0]: v for k, v in dict_brands.items()}
-
-## Need to build groups to count real competitors only (good enough?)
-#ls_big_brands = list(set([v[1] for k,v in dict_brands.items()]))
-#ls_no_group = ['AUTRE_DIS', 'AUTRE_GMS', 'INDEPENDANT']
-#ls_group_total = ['TOTAL_ACCESS', 'TOTAL', 'ELF', 'ELAN']
-#dict_retail_groups = {x: [x] for x in ls_big_brands if x not in ls_no_group +\
-#                                                                ls_group_total}
-#for brand in ls_no_group:
-#  dict_retail_groups[brand] = []
-#for brand in ls_group_total:
-#  dict_retail_groups[brand] = ls_group_total
-#
-#df_info['group'] = df_info['brand_0'].apply(lambda x: dict_std_brands[x][1])
-#df_info.loc[df_info['group'].isin(ls_group_total), 'group'] = 'TOTAL'
-#df_info.loc[df_info['group'].isin(ls_no_group), 'group'] = None
-#
-#df_info['group_type'] = df_info['brand_0'].apply(lambda x: dict_std_brands[x][2])
 
 # ################################
 # GET COMPETITORS FROM NEIGHBOURS
@@ -114,27 +91,31 @@ dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
                                      'dict_ls_comp.json'))
 # dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
 
-ls_max_dist = [5, 4, 3, 2, 1] # Need decreasing order
-ls_max_dist.sort(reverse = True)
-ls_rows_nb_comp = []
+ls_max_dist = [5, 4, 3, 2, 1]
+# ls_max_dist.sort(reverse = True) # decreasing order
+ls_rows_nb_around = []
 for id_station in df_info.index:
-  ls_comp = dict_ls_comp.get(id_station, None)
-  row_nb_comp = []
-  id_station_group = df_info.ix[id_station]['group']
-  if ls_comp is not None:
+  station_group = df_info.ix[id_station]['group']
+  ls_close = dict_ls_close.get(id_station, None)
+  if ls_close is not None:
+    ls_nb_comp, ls_nb_same = [], []
     for max_dist in ls_max_dist:
-      #ls_comp = [comp for comp in ls_comp if comp[1] <= max_dist]
-      ls_comp = [comp for comp in ls_comp if (comp[1] <= max_dist) and\
-                      df_info.ix[comp[0]]['group'] != id_station_group]
-      row_nb_comp.append(len(ls_comp))
+      ls_comp = [close for close in ls_close if (close[1] <= max_dist) and\
+                      df_info.ix[close[0]]['group'] != station_group]
+      ls_same = [close for close in ls_close if (close[1] <= max_dist) and\
+                     df_info.ix[close[0]]['group'] == station_group]
+      ls_nb_comp.append(len(ls_comp))
+      ls_nb_same.append(len(ls_same))
+    row_nb_around = ls_nb_comp + ls_nb_same
   else:
-    row_nb_comp = [np.nan for i in ls_max_dist]
-  ls_rows_nb_comp.append(row_nb_comp)
-df_nb_comp = pd.DataFrame(ls_rows_nb_comp,
+    row_nb_around = [np.nan for i in range(len(ls_max_dist) *2)]
+  ls_rows_nb_around.append(row_nb_around)
+df_nb_comp = pd.DataFrame(ls_rows_nb_around,
                        index = df_info.index,
-                       columns = ['{:d}km'.format(i) for i in ls_max_dist])
+                       columns = ['nb_c_{:d}km'.format(i) for i in ls_max_dist] +\
+                                 ['nb_s_{:d}km'.format(i) for i in ls_max_dist])
 
-# NB COMP BASED ON INSEE AREAS
+# NB BASED ON INSEE AREAS
 
 df_insee_areas = pd.read_csv(os.path.join(path_dir_insee_extracts,
                                           'df_insee_areas.csv'),
@@ -149,14 +130,29 @@ df_info = df_info.reset_index().merge(df_insee_areas[['CODGEO', 'AU2010', 'UU201
                                       how = 'left').set_index('id_station')
 
 ls_areas = ['ci_1', 'AU2010', 'UU2010', 'BV']
-# todo: apply further restrictions?
-df_area = df_info[ls_areas][df_info['highway'] != 1].copy()
-df_area.reset_index(inplace = True) # index used to add data by area
+df_area_nb = df_info[ls_areas].copy()
+df_area_nb.reset_index(inplace = True) # index used to add data by area
 for area in ls_areas:
   se_area = df_info[area].value_counts()
-  df_area.set_index(area, inplace = True)
-  df_area['M_%s' %area] = se_area
-df_area.set_index('id_station', inplace = True)
+  df_area_nb.set_index(area, inplace = True)
+  df_area_nb['nb_%s' %area] = se_area
+df_area_nb.set_index('id_station', inplace = True)
+
+# NB SAME GROUP IN INSEE AREAS
+
+ls_areas = ['ci_1', 'AU2010', 'UU2010', 'BV']
+df_area_same = df_info[['group'] + ls_areas].copy()
+ls_groups = df_info['group'][~(df_info['group'].isnull())].unique()
+for group_name in ls_groups:
+  df_group = df_info[df_info['group'] == group_name]
+  for area in ls_areas:
+    se_group_area = df_group[area].value_counts()
+    df_area_same.reset_index(inplace = True)
+    df_area_same.set_index(area, inplace = True)
+    df_area_same.loc[df_area_same['group'] == group_name,
+                     'nb_s_%s' %area] = se_group_area
+df_area_same.set_index('id_station', inplace = True)
+df_area_same = df_area_same[['nb_s_%s' %area for area in ls_areas]]
 
 # CLOSEST COMP, CLOSEST SUPERMARKET (move to get distances?)
 
@@ -165,9 +161,6 @@ df_distances = pd.read_csv(os.path.join(path_dir_built_csv,
                            dtype = {'id_station' : str},
                            encoding = 'utf-8')
 df_distances.set_index('id_station', inplace = True)
-## need to add first and last to complete index/columns
-#df_distances.ix['10000001'] = np.nan
-#df_distances['9700001'] = np.nan
 
 # old method not taking into account retail group
 dict_rgp_ids = {rgp: list(df_info.index[df_info['group'] == rgp])\
@@ -186,18 +179,28 @@ for id_station in df_info.index:
     group_station = df_info.ix[id_station]['group']
     se_dist = pd.concat([df_distances[id_station][~pd.isnull(df_distances[id_station])],
                          df_distances.ix[id_station][~pd.isnull(df_distances.ix[id_station])]])
-    ls_rows_clc.append([se_dist[dict_diff_rgp_ids[group_station]].min(),
+    ls_rows_clc.append([se_dist[dict_rgp_ids[group_station]].min(),
+                        se_dist[dict_diff_rgp_ids[group_station]].min(),
                         se_dist[dict_diff_rgp_sup_ids[group_station]].min()])
   else:
-    ls_rows_clc.append([np.nan, np.nan])
+    ls_rows_clc.append([np.nan, np.nan, np.nan])
 df_clc = pd.DataFrame(ls_rows_clc,
                       index = df_info.index,
-                      columns = ['dist_cl', 'dist_cl_sup'])
+                      columns = ['dist_s', 'dist_c', 'dist_c_sup'])
 
 # MERGE AND OUTPUT
 
-df_comp = pd.merge(df_nb_comp, df_area, left_index = True, right_index = True)
+df_comp = pd.merge(df_nb_comp, df_area_nb, left_index = True, right_index = True)
+df_comp = pd.merge(df_comp, df_area_same, left_index = True, right_index = True)
 df_comp = pd.merge(df_comp, df_clc, left_index = True, right_index = True)
+
+# fix stations with no group
+# counted in nb_AU2010 (e.g.) but not in nb_c
+len(df_comp[(~df_comp['nb_UU2010'].isnull()) & (df_comp['nb_s_UU2010'].isnull())])
+for area in ['ci_1', 'AU2010', 'UU2010', 'BV']:
+  df_comp.loc[(df_comp['nb_s_%s' %area].isnull()) &\
+              (~df_comp['nb_%s' %area].isnull()),
+              'nb_s_%s' %area] = 1
 
 df_comp.to_csv(os.path.join(path_dir_built_csv,
                             'df_comp.csv'),
