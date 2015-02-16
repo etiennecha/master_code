@@ -241,21 +241,27 @@ df_info_ta['point'] = df_info_ta[['lng', 'lat']].apply(\
 plt.clf()
 fig = plt.figure()
 ax1 = fig.add_subplot(111, aspect = 'equal') #, frame_on = False)
-ax1.scatter([store.x for store in df_info_ta['point'][df_info_ta['brand_0'] == 'TOTAL']],
-            [store.y for store in df_info_ta['point'][df_info_ta['brand_0'] == 'TOTAL']],
-            s = 20, marker = 'o', lw=1, facecolor = '#FE2E2E', edgecolor = 'w', alpha = 0.4,
-            antialiased = True, zorder = 3)
-ax1.scatter([store.x for store in df_info_ta['point'][df_info_ta['brand_0'] == 'ELF']],
-            [store.y for store in df_info_ta['point'][df_info_ta['brand_0'] == 'ELF']],
-            s = 20, marker = 'o', lw=1, facecolor = '#2E64FE', edgecolor = 'w', alpha = 0.4,
-            antialiased = True, zorder = 3)
+l1 = ax1.scatter([store.x for store in df_info_ta['point'][df_info_ta['brand_0'] == 'TOTAL']],
+                 [store.y for store in df_info_ta['point'][df_info_ta['brand_0'] == 'TOTAL']],
+                 s = 20, marker = 'o', lw=1, facecolor = '#FE2E2E', edgecolor = 'w', alpha = 0.4,
+                 antialiased = True, zorder = 3)
+l2 = ax1.scatter([store.x for store in df_info_ta['point'][df_info_ta['brand_0'] == 'ELF']],
+                 [store.y for store in df_info_ta['point'][df_info_ta['brand_0'] == 'ELF']],
+                 s = 20, marker = 'o', lw=1, facecolor = '#2E64FE', edgecolor = 'w', alpha = 0.4,
+                 antialiased = True, zorder = 3)
 df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
                       PolygonPatch(x, fc = '#FFFFFF', ec='#000000', lw=.2, alpha=1., zorder=1))
 pc_2 = PatchCollection(df_dpt['patches'], match_original=True)
+
+ax1.legend((l1, l2),
+           ('Total', 'Elf'),
+           loc='lower right',
+           scatterpoints=1,
+           ncol = 2)
 ax1.add_collection(pc_2)
 ax1.autoscale_view(True, True, True)
 ax1.axis('off')
-ax1.set_title('Total Access as of 2014', loc = 'left')
+#ax1.set_title('Total Access as of 2014', loc = 'left')
 # plt.subplots_adjust(left=.1, right=0.95, bottom=0.1, top=0.95, wspace=0, hspace=0)
 plt.tight_layout()
 fig.set_size_inches(10, 15) # set the image width to 722px
@@ -310,55 +316,55 @@ plt.savefig(os.path.join(path_dir_built_graphs,
 #            alpha=True,
 #            bbox_inches = 'tight')
 
-# ###########################################################
-# ALL TOTAL ACCESS: ELF + TOTAL HISTORY (6 SMALL MAPS 2 BY 2)
-# ##########################################################
-
-df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
-                      PolygonPatch(x, fc = '#FFFFFF', ec='#000000', lw=.2, alpha=1., zorder=1))
-
-ls_dates = ['2011-12-31', '2012-06-30', '2012-12-31', '2013-06-30', '2013-12-31', '2014-06-30']
- 
-ls_loop = [[0, 2, '2012'],
-           [2, 4, '2013'],
-           [4, 6, '2014']]
-
-
-for start, end, str_title in ls_loop:
-  plt.clf()
-  fig = plt.figure()
-  fig.set_size_inches(12, 10) # set the image width to 722px
-  for i, date in enumerate(ls_dates[start:end], start = 1):
-    df_temp = df_info_ta[df_info_ta['TA_day'] <= date]
-  
-    ax1 = fig.add_subplot(120 + i, aspect = 'equal') #, frame_on = False)
-    l1 = ax1.scatter([store.x for store in df_temp['point'][df_temp['brand_0'] == 'TOTAL']],
-                     [store.y for store in df_temp['point'][df_temp['brand_0'] == 'TOTAL']],
-                     s = 15, marker = 'o', lw=0, facecolor = '#FE2E2E', edgecolor = 'w', alpha = 0.3,
-                     antialiased = True, zorder = 3)
-    l2 = ax1.scatter([store.x for store in df_temp['point'][df_temp['brand_0'] == 'ELF']],
-                     [store.y for store in df_temp['point'][df_temp['brand_0'] == 'ELF']],
-                     s = 15, marker = 'o', lw=0, facecolor = '#2E64FE', edgecolor = 'w', alpha = 0.3,
-                     antialiased = True, zorder = 3)
-    pc_1 = PatchCollection(df_dpt['patches'], match_original=True)
-    ax1.add_collection(pc_1)
-    ax1.autoscale_view(True, True, True)
-    ax1.axis('off')
-    ax1.set_title(date, loc = 'left')
-  
-  ax1.legend((l1, l2),
-             ('Total', 'Elf'),
-             bbox_to_anchor=(-0.08, -0.05),
-             loc='lower center',
-             scatterpoints=1,
-             ncol = 2)
-  # leg.get_frame().set_linewidth(0.0)
-  plt.subplots_adjust(left=.1, right=0.95, bottom=0.1, top=0.95, wspace=0, hspace=0)
-  plt.tight_layout()
-  #plt.show()
-  plt.savefig(os.path.join(path_dir_built_graphs,
-                           'maps',
-                           'map_network_%s.png' %str_title),
-              dpi=300,
-              alpha=True,
-              bbox_inches = 'tight')
+## ###########################################################
+## ALL TOTAL ACCESS: ELF + TOTAL HISTORY (6 SMALL MAPS 2 BY 2)
+## ##########################################################
+#
+#df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
+#                      PolygonPatch(x, fc = '#FFFFFF', ec='#000000', lw=.2, alpha=1., zorder=1))
+#
+#ls_dates = ['2011-12-31', '2012-06-30', '2012-12-31', '2013-06-30', '2013-12-31', '2014-06-30']
+# 
+#ls_loop = [[0, 2, '2012'],
+#           [2, 4, '2013'],
+#           [4, 6, '2014']]
+#
+#
+#for start, end, str_title in ls_loop:
+#  plt.clf()
+#  fig = plt.figure()
+#  fig.set_size_inches(12, 10) # set the image width to 722px
+#  for i, date in enumerate(ls_dates[start:end], start = 1):
+#    df_temp = df_info_ta[df_info_ta['TA_day'] <= date]
+#  
+#    ax1 = fig.add_subplot(120 + i, aspect = 'equal') #, frame_on = False)
+#    l1 = ax1.scatter([store.x for store in df_temp['point'][df_temp['brand_0'] == 'TOTAL']],
+#                     [store.y for store in df_temp['point'][df_temp['brand_0'] == 'TOTAL']],
+#                     s = 15, marker = 'o', lw=0, facecolor = '#FE2E2E', edgecolor = 'w', alpha = 0.3,
+#                     antialiased = True, zorder = 3)
+#    l2 = ax1.scatter([store.x for store in df_temp['point'][df_temp['brand_0'] == 'ELF']],
+#                     [store.y for store in df_temp['point'][df_temp['brand_0'] == 'ELF']],
+#                     s = 15, marker = 'o', lw=0, facecolor = '#2E64FE', edgecolor = 'w', alpha = 0.3,
+#                     antialiased = True, zorder = 3)
+#    pc_1 = PatchCollection(df_dpt['patches'], match_original=True)
+#    ax1.add_collection(pc_1)
+#    ax1.autoscale_view(True, True, True)
+#    ax1.axis('off')
+#    ax1.set_title(date, loc = 'left')
+#  
+#  ax1.legend((l1, l2),
+#             ('Total', 'Elf'),
+#             bbox_to_anchor=(-0.08, -0.05),
+#             loc='lower center',
+#             scatterpoints=1,
+#             ncol = 2)
+#  # leg.get_frame().set_linewidth(0.0)
+#  plt.subplots_adjust(left=.1, right=0.95, bottom=0.1, top=0.95, wspace=0, hspace=0)
+#  plt.tight_layout()
+#  #plt.show()
+#  plt.savefig(os.path.join(path_dir_built_graphs,
+#                           'maps',
+#                           'map_network_%s.png' %str_title),
+#              dpi=300,
+#              alpha=True,
+#              bbox_inches = 'tight')

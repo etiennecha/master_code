@@ -16,7 +16,7 @@
 \usepackage{array}
 \usepackage{booktabs}
 \usepackage{caption}
-\usepackage{subcaption}
+\usepackage{subfig}
 % \usepackage[hidelinks]{hyperref}
 \usepackage{floatrow} %[capposition=top]
 \floatsetup{footposition=bottom,capposition=top}
@@ -43,7 +43,7 @@
 
 \textbf{Abstract:}
 
-Total S.A is one of the five "supermajor" oil companies in the world and operates the largest gas station network in France. End of 2011, the company launched a new brand, "Total Access", with the stated goal of recapturing market shares lost due to the development of supermarket gas station chains. Two years later, the new network had reached the size of c. 600 gas stations, exlusively through the rebranding of existing stations. The creation of the brand and its impact on competition is studied using daily price data obtained from a comparison website. For half of the rebranded stations, the rebranding is accompanied by a sharp decline in price. At an aggregate level, competitors' prices are found not to exhibit any significant adjustment. [TODO: DESC RESULTS]
+Total S.A is one of the five "supermajor" oil companies in the world and operates the largest gas station network in France. End of 2011, the company launched a new chain, "Total Access", with the stated goal of recapturing market shares lost due to the development of supermarket gas station chains. Within two years, 600 gas stations across France were thus rebranded to integrate the new chain, and for half of them the rebranding was accompanied by a sharp drop in prices. The creation of the brand and its impact on competition are studied using daily price data obtained from a comparison website. At an aggregate level, competitors' prices are found not to exhibit any significant adjustment. At an individidual level, upward adjustments are found to occur more frequently than price cuts. Such findings are consistent with a context of tough price competition imposed by supermarkets (limited ability to cut prices), and differentiation by other sellers in the market.
 
 \strut
 
@@ -58,9 +58,13 @@ Total S.A is one of the five "supermajor" oil companies in the world and operate
 
 \section{Introduction}
 
-While supermarket chains only accounted for 12\% of retail gasoline sales in 1980, low prices have allowed them to reach a current 60 \% market share. Over last years, several traditional gas station operators have exited the markets (e.g. Shell, BP) or engaged in large divestment operations (e.g. Esso). On the other end, the largest operator, Total, decided end of 2011 to launch a new chain regrouping existing stations capable of coping with the price competition imposed by supermarkets. Within the next two years, about 600 hundred existing stations were thus rebranded to integrate the "Total Access" network. While half of them were previously operated under the chain "Elf" (inheritance from a merger) and already posted low prices, rebranding of the other c. 300 "Total" stations was accompanied by a sharp drop in prices.
-Concerned about consumer information regarding gas station prices, the French governement has launched a comparison website in 2006 on which it is mandatory for gas stations selling above $500m^3$ per year to keep prices posted. The creation of "Total Access" and the availability of rich price dataset on the period thus offer an interesting opportunity to assess the competitiveness of the French retail gasoline market.
-[TODO: DESC RESULTS]
+While supermarket chains only accounted for 12\% of retail gasoline sales in 1980, low price policies have allowed them to reach a current 60 \% market share. As a consequence, several traditional gas station operators have exited the markets (e.g. Shell, BP) or engaged in large divestment operations (e.g. Esso). On the other hand, the largest operator, Total, has decided end of 2011 to launch a new chain of gas stations characterized by a low price policy: "Total Access". Within two years, about 600 hundred gas stations were thus rebranded to integrate the new network. While half of them were previously operated under the chain "Elf" (inheritance from a merger) and already posted low prices, rebranding of the other c. 300 "Total" stations was accompanied by a sharp drop in prices.
+
+Concerned about consumer information regarding gas station prices, the French governement has launched a comparison website in 2006. The creation of "Total Access" and the availability of a comprehensive price dataset on the period thus offer an interesting opportunity to assess the competitiveness of the French retail gasoline market.
+
+The analysis is close to \cite{HAS04} which investigates the impact on competition of the purchase of a chain of independent gas stations by another operator in San Diego and Los Angeles in 1997. The rebranding of nearby a Total or Elf to Total Access is considered as a treatment for any non Total gas station. Daily price data at the gas station level allow to include time and station fixed effects so as to allow the identification of a potential pricing policy change. Regressions are run both at an aggregate level (pooling all stations, which, importantly, are treated at different dates) and at the gas station level with various control groups. The analysis is performed both with ex-Total gas stations, for which the rebranding is accompanied by a drop in price, and for ex-Elf gas stations, which are simply rebranded.
+
+A large majority of gas station is found not to modify its pricing policy, and among reactions significantly more upward adjustments are observed than price cuts. A potential explanation is the fact that the rebranding induces more competition "at the bottom", where pricing was already quite aggressive, and less pressure "at the top".
 
 \section{The French retail gasoline market}
 
@@ -86,11 +90,28 @@ The period covered in the data starts on September 4, 2011 and ends on December 
 
 \subsection{"Total Access"}
 
-At the end of the period studied, there were 641 Total Access registered in the database, of which 374 were previously operated under the brand "Total" and 250 as "Elf" (others were either operated within another chain or information is missing). 
+At the end of the period studied, there were 641 Total Access registered in the database, of which 374 were previously operated under the brand "Total" and 250 as "Elf" (others were either operated within another chain or information is missing). A map of the Total Access network end of 2014 is provided in Appendix. As can be observed in Figure \ref{fig:tot_price_distr}, prices of "Total" gas stations rebranded "Total Access" exhibit significant heterogeneity, reflecting the fact that they operate in very different market environments.
 
-For each rebranded station, a change in pricing policy was investigated by looking for the date which maximized the difference ( before and after the date) in estimated station fixed effect vs. the average national price. While no significant discontinuity could be identified for "Elf-Total Access" gas stations, it was the case for 344 "Total-Total Access" gas stations.
+\begin{figure}
+    \centering
+    \subfloat[September 4, 2011]{{\includegraphics[width=7cm]{graphs/tot_pd_first.png}}}
+    \qquad
+    \subfloat[December 4, 2014]{{\includegraphics[width=7cm]{graphs/tot_pd_last.png}}}
+    \caption{Total price distribution}
+    \label{fig:tot_price_distr}
+\end{figure}
 
-\subsection{Competitors}
+For each rebranded station, a change in pricing policy was investigated by looking for the date which maximized the difference ( before and after the date) in estimated station fixed effect vs. the average national price. While no significant discontinuity could be identified for "Elf-Total Access" gas stations, it was the case for 344 "Total-Total Access" gas stations. An example is provided in Figure \ref{figure:rebranding_detection}.
+
+\begin{figure}[H]
+    \caption{Rebranding date detection}
+	\centering
+		\includegraphics[width=15cm]{graphs/price_cut_detection_adj.png}
+	\floatfoot{}
+\label{figure:rebranding_detection}
+\end{figure}
+
+\subsection{Retail market definition}
 
 In the following analysis, two stations are considered to be competitors whenever they are separated by a distance of less than 3 km (as the crow flies). In the analysis of the rebranding from "Total" to "Total Access", all stations which do not belong to the group Total and are located within 3 km of a Total-Total Access are considered as competitors. In the case of "Elf", on top of these conditions, it is imposed that no Total-Total Access is located within a radius of 10km. Indeed, with Elf-Total Access, the goal is to observe the impact of the rebranding without a price drop. Robustness checks were performed to ensure than findings were not sensitive to the radius used.
 
@@ -105,11 +126,7 @@ p_{it} = \mu + \alpha_i + \delta_t + \theta r_{it} + \epsilon_{it}
 \end{align*}
 with $\mu$ a constant, $\alpha_i$ the station fixed-effects, $\delta_t$ the day fixed-effects, $r_{it}$ indicator equal to 1 in case of Rebranding. Table \ref{table:ta_fe_agg} reports the results of six regressions run according to this specification. In column (1), only the price of ex-Elf stations rebranded Total Access are included so that the Rebranding indicator captures the change in pricing policy implemented by Total. The same goes for column (4) with ex-Total stations rebranded Total. As expected, there is no significant change for ex-Elf stations (-0.1 cent), while the sharp drop in price for ex "Total" stations is appropriately captured with a nearly -10 cent estimated effect.
 
-In columns (2) and (3), regressions are run with prices of competitors of Elf-Total Access gas stations. In column (3), the treatment is interacted with a categorical variable accounting for the "type" of the competitor: supermarket gas station, oil company gas station, or independent.
-
- The rebranding of Elf to Total Access....
-
- A similar analysis is reported in columns (5) and (6) for competitors of Total-Total Access gas stations...
+In columns (2) and (3), regressions are run with prices of competitors of Elf-Total Access gas stations. In column (3), the treatment is interacted with a categorical variable accounting for the "type" of the competitor: supermarket gas station, oil company gas station, or independent. A similar analysis is reported in columns (5) and (6) for competitors of Total-Total Access gas stations. Globally, reactions 
 
 
 \begin{table}[h]
@@ -129,18 +146,18 @@ In columns (2) and (3), regressions are run with prices of competitors of Elf-To
 Rebranding       & -0.140\sym{*}         & 0.036                    &                                 & -9.826\sym{***}       & -0.345\sym{***}      &                                  \\
                          & (0.067)                     & (0.128)                  &                                & (0.105)                       & (0.062)                      &                                  \\
 \hline
-Rebr. vs.           &                                  &                               & -0.329\sym{*}      &                                    &                                     & -0.400\sym{***}     \\
-Supermarket     &                                  &                               & (0.139)                  &                                    &                                     & (0.060)                    \\
+Rebr. vs.           &                                  &                               & -0.329\sym{*}      &                                    &                                     & -0.634\sym{***}     \\
+Supermarket     &                                  &                               & (0.139)                  &                                    &                                     & (0.066)                    \\
 \hline
-Rebr. vs.           &                                  &                               & 0.776\sym{**}      &                                    &                                   & -0.053                        \\
-Oil company      &                                  &                                & (0.273)                 &                                    &                                    &  (0.125)                      \\
+Rebr. vs.           &                                  &                               & 0.776\sym{**}      &                                    &                                   &  0.152                        \\
+Oil company      &                                  &                                & (0.273)                 &                                    &                                    &  (0.131)                      \\
 \hline
-Rebr. vs.           &                                  &                               & 0.751                     &                                    &                                   & -0.386                       \\
-Independent     &                                  &                               & (0.888)                  &                                    &                                    & (0.233)                     \\
+Rebr. vs.           &                                  &                               & 0.751                     &                                    &                                   & -0.079                      \\
+Independent     &                                  &                               & (0.888)                  &                                    &                                    & (0.240)                     \\
 \hline
-Nb stations       & 250                           & 144                        & 144                         & 313                              & 604                            & 600                            \\
-Obs                   & 257,600                    & 146,122                &  146,122                 & 322,273                      &  606,256                    & 439,600                     \\
-R-square           & 0.910                        & 0.542                    &  0.581                     & 0.961                          &  0.588                        &  0.530                       \\
+Nb stations       & 250                           & 144                        & 144                         & 313                              & 604                            & 604                            \\
+Obs                   & 257,600                    & 146,122                &  146,122                 & 322,273                      &  606,256                    & 606,256                     \\
+R-square           & 0.910                        & 0.542                    &  0.581                     & 0.961                          &  0.588                        & 0.612                       \\
 \hline\hline
 \multicolumn{7}{l}{\footnotesize Standard errors in parentheses}\\
 \multicolumn{7}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
@@ -151,11 +168,63 @@ R-square           & 0.910                        & 0.542                    &  
 
 \subsection{Station level fixed-effect Estimation}
 
-Results from aggregate analysis and observations suggest that there is significant heterogeneity in the reaction of gas stations. In order to gain a better understanding of this heterogeneity, a similar analysis is performed at the gas station level. For each affected gas station, a regression is run with the prices of a Total Access competitor and prices of gas stations located in the same "départment" (Metropolitan France is composed of 96 such regions) but which are not affected by the rebranding.
+Results from aggregate analysis and observations suggest that there is significant heterogeneity in the reaction of stations competing with Total Access. In order to gain a better understanding of this heterogeneity, a similar analysis is performed at the gas station level. A treatment effect is now estimated for each gas station in a specific regression, where the control group is composed of stations operating in the same in the same "départment" (Metropolitan France is composed of 96 such regions) and not competing with a Total Access gas station.
+
+The distribution of the treatment effects estimated for Elf-Total Access competitors is reported in Table \ref{table:ta_fe_indiv_elf}. While the overall effect is found to be slighly higher than at an aggregate level, results clearly establish that significant reactions are scarce.
+
+\begin{table}[h]
+\centering
+\caption{Distribution of estimated individual treatment effects for Elfl-Total Access competitors}
+\begin{tabular}{lrrrr}
+\toprule
+{} &     All &    Supermarket &    Oil company &     Independent \\
+\midrule
+count & 134 & 88 & 27 &  19 \\
+mean  &   0.780 &  0.421 &  1.536 &   1.363 \\
+std   &   1.764 &  0.944 &  1.551 &   3.656 \\
+min   & -13.020 & -2.189 & -0.877 & -13.020 \\
+10\%   &  -0.775 & -1.044 &  0.303 &   0.801 \\
+25\%   &   0.280 &  0.158 &  0.569 &   1.177 \\
+50\%   &   0.829 &  0.440 &  1.259 &   1.794 \\
+75\%   &   1.386 &  0.983 &  1.906 &   2.818 \\
+90\%   &   2.411 &  1.426 &  3.940 &   3.676 \\
+max   &   5.778 &  2.420 &  5.778 &   4.200 \\
+\bottomrule
+\end{tabular}
+\label{table:ta_fe_indiv_elf}
+\end{table}
+
+In Table \ref{table:ta_fe_indiv_tta}, the distribution of the treatment effects estimated for Total-Total Access competitors is reported. Remarkably, the distribution is quite similar to the distribution for Elf-Total Access. Supermarkets are found to be more likely to have decreased prices than oil company and independent gas stations. As compared to the average c.10 cent price cut estimated at over 300. Total-Total Access gas stations, only 38 competitors are found to have cut price by more than 2 cents, of which 25 supermarkets. On the other hand, 163 gas stations are found to have increased prices by more than 2 cents, of which103 oil company gas stations.
+
+\begin{table}[h]
+\centering
+\caption{Distribution of estimated individual treatment effects for Total-Total Access competitors}
+\begin{tabular}{lrrrr}
+\toprule
+{} &     All &    Supermarket &    Oil company &     Independent \\
+\midrule
+count & 956 & 572 & 276 & 108 \\
+mean  &   0.782 &   0.421 &   1.421 &   1.064 \\
+std   &   1.512 &   1.183 &   1.617 &   2.095 \\
+min   &  -6.824 &  -4.088 &  -6.824 &  -5.985 \\
+10\%   &  -0.907 &  -1.007 &  -0.521 &  -1.272 \\
+25\%   &   0.174 &  -0.232 &   0.486 &   0.192 \\
+50\%   &   0.746 &   0.522 &   1.558 &   1.219 \\
+75\%   &   1.628 &   1.072 &   2.536 &   1.906 \\
+90\%   &   2.543 &   1.675 &   3.231 &   3.049 \\
+max   &  11.738 &   4.890 &   5.769 &  11.738 \\
+\bottomrule
+\end{tabular}
+\label{table:ta_fe_indiv_tta}
+\end{table}
+
+\clearpage
 
 \section{Conclusion}
 
-\newpage
+The creation of the chain "Total Access" offers the opportunity to study the impact on many local markets of a unilateral sharp decrease in price. Empirical results suggest that a large majority of affected competitors has not changed its price policy, and that upward adjustments were more frequent that price cuts. Such findings are consistent with tough price competition between supermarkets and differentiation from oil company and independent gas stations.
+
+\clearpage
 
 \bibliography{references}
 
@@ -164,5 +233,77 @@ Results from aggregate analysis and observations suggest that there is significa
 \appendix
 
 \section{Maps}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=16cm]{graphs/map_ta_adj.png}
+	\floatfoot{}
+\caption{Total Access gas stations end 2014}
+\label{figure:map_ta}
+\end{figure}
+
+\section{Price trends: Total stations rebranded Total Access}
+
+\begin{figure}[H]
+    \centering
+    \subfloat[September 4, 2011]{{\includegraphics[width=7cm]{graphs/not_yet_rebranded_2013.png}}}
+    \qquad
+    \subfloat[December 4, 2014]{{\includegraphics[width=7cm]{graphs/not_yet_rebranded_2014.png}}}
+    \caption{Average price of Total stations to be rebranded vs. national price (number of stations in parenthesis)}
+    \label{fig:not_yet}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \subfloat[September 4, 2011]{{\includegraphics[width=7cm]{graphs/rebranded_before_2013.png}}}
+    \qquad
+    \subfloat[December 4, 2014]{{\includegraphics[width=7cm]{graphs/rebranded_before_2014.png}}}
+    \caption{Average price of ex Total now Total Access vs.national price (number of stations in parenthesis)}
+    \label{fig:rebranded_before}
+\end{figure}
+
+\section{Price trends: Elf stations rebranded Total Access}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=17cm]{graphs/elf_trend.png}
+	\floatfoot{}
+\caption{Average Elf - Total Access station prices vs. national price}
+\label{figure:elf_prices}
+\end{figure}
+
+\section{Competitor reactions: examples}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=16cm]{graphs/ex_0.png}
+	\floatfoot{}
+\caption{Competition with an oil company gas station}
+\label{figure:fierce_competition}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=16cm]{graphs/ex_2.png}
+	\floatfoot{}
+\caption{Competition with a supermarket}
+\label{figure:given_up}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=16cm]{graphs/ex_3.png}
+	\floatfoot{}
+\caption{Increase in price 1}
+\label{figure:given_up}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+		\includegraphics[width=16cm]{graphs/ex_4.png}
+	\floatfoot{}
+\caption{Increase in price 2}
+\label{figure:given_up}
+\end{figure}
 
 \end{document} 
