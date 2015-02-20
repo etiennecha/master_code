@@ -47,8 +47,11 @@ df_survivors = pd.DataFrame(ls_rows_survivors,
 
 df_survivors['out'] = df_survivors.max(1) - df_survivors['2014']
 df_survivors.ix['total'] = df_survivors.sum(0)
+
+print u'\nEntries and exits:'
 print df_survivors.to_string()
-print 'Net increase: {:4.0f}'.format(df_survivors.loc['total', '2014'] -\
+
+print '\nNet increase: {:4.0f}'.format(df_survivors.loc['total', '2014'] -\
                                        df_survivors.loc['total', '2007'])
 
 # MERGE ALL DF INFOS
