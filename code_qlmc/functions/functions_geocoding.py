@@ -7,6 +7,7 @@ import json
 import urllib2
 import time
 import numpy as np
+from inspect import getsourcefile
 
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
@@ -24,16 +25,15 @@ def geocode_via_google(location):
   json_response = json.loads(geocoding_response.read())
   return json_response
 
-def geocode_via_google_textsearch(location, all_pages = False):
-  # TODO: load key from json file not located on github!
+def geocode_via_google_textsearch(key_api, location, all_pages = False):
+  # todo: load key from json file not located on github!
   # tight google restrictions: 
   # => get first result page only (if helps) 
   # => restrict type
   results = []
-  key = 'AIzaSyDzJhqpk1dUdKpxOIuv-xSZcMCDMgQmtYc'
   location = urllib2.quote(location.encode('utf-8'))
   url = u'https://maps.googleapis.com/maps/api/place/textsearch/json?' +\
-        u'key=%s&sensor=false&query=%s' %(key, location)
+        u'key=%s&sensor=false&query=%s' %(key_api, location)
   geocoding_response = urllib2.urlopen(url)
   json_response = json.loads(geocoding_response.read())
   status = json_response['status']

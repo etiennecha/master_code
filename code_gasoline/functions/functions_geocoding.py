@@ -24,12 +24,11 @@ def geocode_via_mapquest(location):
   json_response = json.loads(geocoding_response.read())
   return json_response
 
-def geocode_via_google(location):
+def geocode_via_google(key_api, location):
   location += ', France'
   location = urllib2.quote(location.encode('utf-8'))
-  macle = u'AIzaSyDzJhqpk1dUdKpxOIuv-xSZcMCDMgQmtYc' # put in json file
   url = u'https://maps.googleapis.com/maps/api/geocode/json?' +\
-        u'address=%s&region=FR&sensor=false&key=%s' %(location, macle)
+        u'address=%s&region=FR&sensor=false&key=%s' %(location, key_api)
   geocoding_response = urllib2.urlopen(url)
   json_response = json.loads(geocoding_response.read())
   return json_response
