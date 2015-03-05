@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os, sys
-import re
 import json
 import urllib2
 import time
@@ -15,37 +14,41 @@ def enc_json(json_obj, path_file):
   with open(path_file, 'w') as f:
     json.dump(json_obj, f)
 
-def get_google_direction(key_api, origin, destination):
+def get_google_direction(key_api, origin, destination, region = 'FR'):
   origin = urllib2.quote(origin.encode('utf-8'))
   destination = urllib2.quote(destination.encode('utf-8'))
   url = 'https://maps.googleapis.com/maps/api/directions/json?'+\
-        'origin={:s}&destination={:s}&key={:s}'.format(origin,
-                                                       destination,
-                                                       key_api)
+      'origin={:s}&destination={:s}&region={:s}&key={:s}'.format(origin,
+                                                                 destination,
+                                                                 region,
+                                                                 key_api)
   geocoding_response = urllib2.urlopen(url)
   json_response = json.loads(geocoding_response.read())
   return json_response
 
-def geocode_via_google(key_api, location):
-  location += ', France'
+def geocode_via_google(key_api, location, region = 'FR'):
   location = urllib2.quote(location.encode('utf-8'))
   url = u'https://maps.googleapis.com/maps/api/geocode/json?' +\
-        u'address=%s&region=FR&sensor=false&key=%s' %(location, key_api)
+        u'address={:s}&region={:s}&sensor=false&key={:s}'.format(location,
+                                                                 region,
+                                                                 key_api)
   geocoding_response = urllib2.urlopen(url)
   json_response = json.loads(geocoding_response.read())
   return json_response
 
-
-def geocode_via_google_textsearch(key_api, location, all_pages = False):
+def geocode_via_google_textsearch(key_api, query, all_pages = False):
   """
-  Tight quota hence best practice: 
+  @query: text string to search
+
+  Tight quota (100 daily) hence best practice: 
   - first result page only (if helps?) 
   - restrict type
   """
   results = []
-  location = urllib2.quote(location.encode('utf-8'))
+  query = urllib2.quote(query.encode('utf-8'))
   url = u'https://maps.googleapis.com/maps/api/place/textsearch/json?' +\
-        u'key=%s&sensor=false&query=%s' %(key_api, location)
+        u'query={:s}&key={:s}'.format(query,
+                                      key_api)
   geocoding_response = urllib2.urlopen(url)
   json_response = json.loads(geocoding_response.read())
   status = json_response['status']
@@ -54,7 +57,8 @@ def geocode_via_google_textsearch(key_api, location, all_pages = False):
     while 'next_page_token' in json_response.keys():
       time.sleep(2)
       url = u'https://maps.googleapis.com/maps/api/place/textsearch/json?' +\
-            u'pagetoken=%s&sensor=false&key=%s' %(json_response['next_page_token'], key)
+            u'pagetoken={:s}&key={:s}'.format(json_response['next_page_token'],
+                                              key_api)
       geocoding_response = urllib2.urlopen(url)
       json_response = json.loads(geocoding_response.read())
       status = json_response['status']
@@ -66,7 +70,7 @@ def geocode_via_mapquest(location):
   Check guidelines: systematic queries forbidden?
   """
   location = urllib2.quote(location.encode('utf-8'))
-  url = u'http://open.mapquestapi.com/nominatim/v1/search?q=%s&' %location +\
+  url = u'http://open.mapquestapi.com/nominatim/v1/search?q={:s}&'.format(location) +\
         u'format=json&polygon=1&addressdetails=1&'+\
         u'countrycodes=fr&viewbox=-5.133333,51.0833,9.55,41.333333'
   geocoding_response = urllib2.urlopen(url)
@@ -128,32 +132,36 @@ if __name__=="__main__":
   with open(os.path.join(path_dir_api_keys, 'key_google_api.txt'), 'r') as f:
     key_google_api = f.read()
   
+  # Geocoding tests: Google vs. Mapquest
   location = u'9 rue des Grandes Allées, 02600 Villers-Cotterêts'
   test_google_geocoding =  geocode_via_google(key_google_api,
                                               location)
   test_mapquest_geocoding = geocode_via_mapquest(location)
+  
+  # Routing test: Google directions with addresses and gps
+  origin = u'7 rue Marie Bonaparte, Saint Cloud'
+  destination = u'15 Boulevard Gabriel Péri, Malakoff'
+  test_google_direction_adr = get_google_direction(key_google_api,
+                                                   origin,
+                                                   destination)
 
-  origin = u'7 rue Marie Bonaparte, Saint Cloud, France'
-  destination = u'15 Boulevard Gabriel Péri, Malakoff, France'
-  test_google_direction = get_google_direction(key_google_api,
-                                               origin,
-                                               destination)
-  
-  #http://open.mapquestapi.com/nominatim/v1/search?
-  #q=14%20rue%20martignon,%20rueil%20malmaison
-  #&format=json&polygon=1&addressdetails=1
-  #&countrycodes=fr&viewbox=-5.133333,51.0833,9.55,41.333333
-  
+  gps_origin = '48.853 2.216'
+  gps_destination = '48.819 2.300'
+  test_google_direction_gps = get_google_direction(key_google_api,
+                                                   gps_origin,
+                                                   gps_destination)
+
+  ## Google Text search (expensive in quota)
+  #query = 'Franprix, Paris, France'
+  #test_google_textsearch = geocode_via_google_textsearch(key_google_api,
+  #                                                       query,
+  #                                                       all_pages = True)
+  #import pandas as pd 
+  #ls_rows_ts = [[x['name'],
+  #               x['formatted_address'],
+  #               '-'.join(x['types'])] for x in test_google_text_search[1]]
+  #df_ts = pd.DataFrame(ls_rows_ts)
+
   #France box incl. Corsica
   #51.0833, -5.133333 North West
   #41.333333, 9.55 South East
-  
-  #Google bounds example : bounds=34.172684,-118.604794|34.236144,-118.500938
-  #France: bounds=41.333333,-5.133333|51.0833,9.55
-  #addr_1 = 14%20%rue%20martignon,%2092500%20rueil%20malmaison
-  #addr_2 = r.n%207,84430%20mondragon
-  #http://maps.googleapis.com/maps/api/geocode/json?address=r.n%207,84430%20mondragon
-  #&region=FR&sensor=false&bounds=41.333333,-5.133333|51.0833,9.55
-  
-  #Mapquest viewbox: viewbox=left,top,right,bottom
-  #France: -5.133333,51.0833,9.55,41.333333
