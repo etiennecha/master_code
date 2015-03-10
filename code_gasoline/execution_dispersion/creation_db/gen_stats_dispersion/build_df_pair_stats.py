@@ -16,9 +16,9 @@ path_dir_built_paper = os.path.join(path_data,
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 # ##############
 # LOAD DATA
@@ -94,28 +94,38 @@ start = time.clock()
 ls_ls_pair_stats = []
 for (indiv_id, other_id, distance) in ls_keep_pairs:
   if distance <= km_bound:
+    ls_spread = get_stats_two_firm_price_spread(df_prices[indiv_id].values,
+                                                df_prices[other_id].values, 3)
     # A changes then B changes (A changes did not follow a change by B?)
     ls_followed_chges = get_stats_two_firm_price_chges(df_prices[indiv_id].values,
                                                        df_prices[other_id].values)
     # A sets a price which is then matched by B (biased if promotions btw)
-    ls_matched_prices = get_two_firm_similar_prices(df_prices[indiv_id].values,
-                                                    df_prices[other_id].values)
+    ls_matched_prices = get_stats_two_firm_same_prices(df_prices[indiv_id].values,
+                                                       df_prices[other_id].values)
     ls_ls_pair_stats.append([[indiv_id, other_id, distance],
-                              ls_followed_chges,
-                              list(ls_matched_prices)])
+                             ls_spread,
+                             ls_followed_chges,
+                             list(ls_matched_prices)])
 print 'Loop: raw price changes vs. comp analysis',  time.clock() - start
 
 # BUILD DATAFRAME
-ls_rows_pairs = [row[0] + row[1][0] + row[2][0] for row in ls_ls_pair_stats]
+ls_rows_pairs = [row[0] + row[1] + row[2][0] + row[3][0] for row in ls_ls_pair_stats]
+
+ls_spread_cols = ['nb_spread', 'mean_spread', 'mean_abs_spread',
+                  'std_spread', 'std_abs_spread',
+                  'mc_spread', 'freq_mc_spread',
+                  'smc_spread', 'freq_smc_spread',
+                  'med_spread', 'freq_med_spread']
 
 ls_followed_chges_cols = ['nb_ctd_1', 'nb_ctd_2', 'nb_ctd_both',
                           'nb_chges_1', 'nb_chges_2', 'nb_sim_chges',
                           'nb_1_fol', 'nb_2_fol']
 
-ls_matched_prices_cols = ['nb_spread', 'nb_same', 'nb_chge_to_same',
+ls_matched_prices_cols = ['nb_spread_alt', 'nb_same', 'nb_chge_to_same',
                           'nb_1_lead', 'nb_2_lead']
 
 df_pairs = pd.DataFrame(ls_rows_pairs, columns = ['id_1', 'id_2', 'distance'] +\
+                                                 ls_spread_cols +\
                                                  ls_followed_chges_cols +\
                                                  ls_matched_prices_cols)
 df_pairs_bu = df_pairs.copy()

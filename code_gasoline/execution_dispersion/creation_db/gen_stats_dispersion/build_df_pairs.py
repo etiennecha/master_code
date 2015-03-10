@@ -88,7 +88,7 @@ df_pair_stats = pd.read_csv(os.path.join(path_dir_built_csv,
 # ################
 
 # MERGE PAIR STATS AND DISPERSION
-df_ppd.drop(labels = ['distance', 'nb_spread'], axis = 1, inplace = True)
+df_ppd.drop(labels = ['distance', 'nb_spread', 'std_spread', 'std_abs_spread'], axis = 1, inplace = True)
 df_pairs = pd.merge(df_ppd,
                     df_pair_stats,
                     on = ['id_1', 'id_2'],

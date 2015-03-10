@@ -105,15 +105,11 @@ for (indiv_id, other_id, distance) in ls_keep_pairs:
     if ls_mc_dates:
       ls_mc_dates.sort()
       mc_date = ls_mc_dates[0]
-    se_prices_1 = df_prices[indiv_id][:mc_date]
-    se_prices_2 = df_prices[other_id][:mc_date]
-    abs_avg_spread_ttc = np.abs((df_prices_ttc[indiv_id][:mc_date] -\
-                                   df_prices_ttc[other_id][:mc_date]).mean())
-    ls_comp_pd = get_pair_price_dispersion(se_prices_1.values,
-                                           se_prices_2.values, light = False)
+    ls_comp_pd = get_pair_price_dispersion(df_prices[indiv_id][:mc_date].values,
+                                           df_prices[other_id][:mc_date].values,
+                                           light = False)
     ls_rows_ppd.append([indiv_id, other_id, distance] +\
                        ls_comp_pd[0] +\
-                       [abs_avg_spread_ttc] +\
                        get_ls_standardized_frequency(ls_comp_pd[3][0]))
     pair_index = '-'.join([indiv_id, other_id])
     ls_pair_index.append(pair_index)
@@ -125,14 +121,12 @@ print 'Loop: rank reversals',  time.clock() - start
 
 ls_scalar_cols  = ['nb_spread', 'nb_same_price', 'nb_1_cheaper', 'nb_2_cheaper', 
                    'nb_rr', 'pct_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr',
-                   'avg_abs_spread', 'avg_spread', 'std_spread']
+                   'avg_abs_spread', 'avg_spread', 'std_spread', 'std_abs_spread']
 
 ls_freq_std_cols = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 
 ls_columns  = ['id_1', 'id_2', 'distance'] +\
-              ls_scalar_cols +\
-              ['abs_avg_spread_ttc'] +\
-              ls_freq_std_cols
+              ls_scalar_cols + ls_freq_std_cols
 
 df_ppd = pd.DataFrame(ls_rows_ppd, columns = ls_columns)
 

@@ -192,7 +192,7 @@ for ppd_name, df_pairs_temp in zip(ls_ppd_names, [df_pairs, df_pairs_nodiff, df_
 ## Find suspect rank reversal
 #print 'Station with max length rank reversal:', np.argmax(df_pairs['max_len_rr'])
 
-# INSPECT OUTLIERS
+# INSPECT OUTLIERS (???)
 print u'\nInspect outliers'
 len(df_pairs[(df_pairs['avg_spread'].abs() > 0.01) & (df_pairs['pct_rr']> 0.4)])
 ls_disp = ['id_1', 'id_2', 'group_last_1', 'group_last_2', 'pct_rr', 'nb_rr']
@@ -201,3 +201,22 @@ print df_pairs[ls_disp][(df_pairs['avg_spread'].abs() > 0.01) &\
 
 # todo: filter pairs on frequency of changes (todo everywhere incl. price cleaning)
 # todo: filter chge of price policy: df_prices_ttc[['63000013','63000019']].plot()
+
+# CLOSE PRICES
+print u'\nClose prices'
+print len(df_pairs[(df_pairs['pct_same'] >= 0.33)]) # todo: harmonize pct i.e. * 100
+print len(df_pairs[(df_pairs['avg_spread'].abs() <= 0.01)])
+# Pct same vs. avg_spread: make MSE appear? (i.e. close prices but no steady gap...)
+# Very radical criterion though (show it with second... both side?)
+print len(df_pairs[(df_pairs['avg_spread'].abs() <= 0.01) &\
+                   (df_pairs['freq_mc_spread'] < 10)])
+
+# High prevalence of two spread values with opposit signs
+# Good candidates MSE with fixed grid? (why so few?... freq too strong?)
+# Check nb rank reversals
+print len(df_pairs[(df_pairs['freq_mc_spread'] > 10) &\
+                   (df_pairs['freq_smc_spread'] > 10) &\
+                   ((df_pairs['mc_spread'] * df_pairs['smc_spread']) < 0)])
+
+# Not so many without checking it (check inexistence of a reference spread?)
+print len(df_pairs[((df_pairs['mc_spread'] * df_pairs['smc_spread']) < 0)])
