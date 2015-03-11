@@ -94,14 +94,24 @@ start = time.clock()
 ls_ls_pair_stats = []
 for (indiv_id, other_id, distance) in ls_keep_pairs:
   if distance <= km_bound:
-    ls_spread = get_stats_two_firm_price_spread(df_prices[indiv_id].values,
-                                                df_prices[other_id].values, 3)
+    mc_date = None # base case: no limit date
+    # change in margin/pricing policy
+    ls_mc_dates = [df_margin_chge['date'].ix[id_station]\
+                     for id_station in [indiv_id, other_id]\
+                       if id_station in df_margin_chge.index]
+    if ls_mc_dates:
+      ls_mc_dates.sort()
+      mc_date = ls_mc_dates[0]
+    se_prices_1 = df_prices[indiv_id][:mc_date].values
+    se_prices_2 = df_prices[other_id][:mc_date].values
+    ls_spread = get_stats_two_firm_price_spread(se_prices_1,
+                                                se_prices_2, 3)
     # A changes then B changes (A changes did not follow a change by B?)
-    ls_followed_chges = get_stats_two_firm_price_chges(df_prices[indiv_id].values,
-                                                       df_prices[other_id].values)
+    ls_followed_chges = get_stats_two_firm_price_chges(se_prices_1,
+                                                       se_prices_2)
     # A sets a price which is then matched by B (biased if promotions btw)
-    ls_matched_prices = get_stats_two_firm_same_prices(df_prices[indiv_id].values,
-                                                       df_prices[other_id].values)
+    ls_matched_prices = get_stats_two_firm_same_prices(se_prices_1,
+                                                       se_prices_2)
     ls_ls_pair_stats.append([[indiv_id, other_id, distance],
                              ls_spread,
                              ls_followed_chges,
@@ -133,47 +143,48 @@ df_pairs_bu = df_pairs.copy()
 # ENRICH DATAFRAME: FOLLOWED PRICE CHANGES
 
 # Min and max percent of simultaneous changes
-df_pairs['pct_sim_max'] = df_pairs.apply(\
-   lambda x : max(x['nb_sim_chges']/float(x['nb_chges_1']),
-                  x['nb_sim_chges']/float(x['nb_chges_2'])), axis = 1)
-df_pairs['pct_sim_min'] = df_pairs.apply(\
-   lambda x : min(x['nb_sim_chges']/float(x['nb_chges_1']),
-                  x['nb_sim_chges']/float(x['nb_chges_2'])), axis = 1)
+df_pairs['pct_sim_max'] = df_pairs[['nb_chges_1', 'nb_chges_2']].apply(\
+                            lambda x: df_pairs['nb_sim_chges'] / x.astype(float),
+                            axis = 0).max(axis = 1)
+
+df_pairs['pct_sim_min'] = df_pairs[['nb_chges_1', 'nb_chges_2']].apply(\
+                            lambda x: df_pairs['nb_sim_chges'] / x.astype(float),
+                            axis = 0).min(axis = 1)
 
 # Min and max percent of followed changes (pbm if few obs for other?)
 df_pairs['pct_fol_max'] = df_pairs.apply(\
-   lambda x : max(x['nb_1_fol']/float(x['nb_chges_1']),
-                  x['nb_2_fol']/float(x['nb_chges_2'])), axis = 1)
+   lambda x : max(x['nb_1_fol']/np.float64(x['nb_chges_1']),
+                  x['nb_2_fol']/np.float64(x['nb_chges_2'])), axis = 1)
 df_pairs['pct_fol_min'] = df_pairs.apply(\
-   lambda x : min(x['nb_1_fol']/float(x['nb_chges_1']),
-                  x['nb_2_fol']/float(x['nb_chges_2'])), axis = 1)
+   lambda x : min(x['nb_1_fol']/np.float64(x['nb_chges_1']),
+                  x['nb_2_fol']/np.float64(x['nb_chges_2'])), axis = 1)
 
 # Min and max percent of close changes: simultaneous or followed
 df_pairs['pct_close_max'] = df_pairs.apply(\
-   lambda x : max((x['nb_1_fol'] + x['nb_sim_chges'])/float(x['nb_chges_1']),
-                  (x['nb_2_fol'] + x['nb_sim_chges'])/float(x['nb_chges_2'])),
+   lambda x : max((x['nb_1_fol'] + x['nb_sim_chges'])/np.float64(x['nb_chges_1']),
+                  (x['nb_2_fol'] + x['nb_sim_chges'])/np.float64(x['nb_chges_2'])),
                   axis = 1)
 df_pairs['pct_close_min'] = df_pairs.apply(\
-   lambda x : min((x['nb_1_fol'] + x['nb_sim_chges'])/float(x['nb_chges_1']),
-                  (x['nb_2_fol'] + x['nb_sim_chges'])/float(x['nb_chges_2'])),
+   lambda x : min((x['nb_1_fol'] + x['nb_sim_chges'])/np.float64(x['nb_chges_1']),
+                  (x['nb_2_fol'] + x['nb_sim_chges'])/np.float64(x['nb_chges_2'])),
                   axis = 1)
 
 # ENRICH DATAFRAME: SAME PRICE
 df_pairs['pct_same'] = df_pairs['nb_same'] / df_pairs['nb_spread'].astype(float)
 
 df_pairs['pct_chge_to_same_max'] = df_pairs.apply(\
-   lambda x : max(x['nb_chge_to_same']/float(x['nb_chges_1']),
-                  x['nb_chge_to_same']/float(x['nb_chges_2'])), axis = 1)
+   lambda x : max(x['nb_chge_to_same']/np.float64(x['nb_chges_1']),
+                  x['nb_chge_to_same']/np.float64(x['nb_chges_2'])), axis = 1)
 df_pairs['pct_chge_to_same_min'] = df_pairs.apply(\
-   lambda x : min(x['nb_chge_to_same']/float(x['nb_chges_1']),
-                  x['nb_chge_to_same']/float(x['nb_chges_2'])), axis = 1)
+   lambda x : min(x['nb_chge_to_same']/np.float64(x['nb_chges_1']),
+                  x['nb_chge_to_same']/np.float64(x['nb_chges_2'])), axis = 1)
 
 df_pairs['pct_lead_max'] = df_pairs.apply(\
-   lambda x : max(x['nb_1_lead']/float(x['nb_chges_1']),
-                  x['nb_2_lead']/float(x['nb_chges_2'])), axis = 1)
+   lambda x : max(x['nb_1_lead']/np.float64(x['nb_chges_1']),
+                  x['nb_2_lead']/np.float64(x['nb_chges_2'])), axis = 1)
 df_pairs['pct_lead_min'] = df_pairs.apply(\
-   lambda x : min(x['nb_1_lead']/float(x['nb_chges_1']),
-                  x['nb_2_lead']/float(x['nb_chges_2'])), axis = 1)
+   lambda x : min(x['nb_1_lead']/np.float64(x['nb_chges_1']),
+                  x['nb_2_lead']/np.float64(x['nb_chges_2'])), axis = 1)
 
 # ################
 # OUTPUT

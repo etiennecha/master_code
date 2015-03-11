@@ -110,7 +110,7 @@ pd.set_option('float_format', '{:,.2f}'.format)
 diff_bound = 0.01
 
 # Histogram of average spreads (abs value required)
-hist_test = plt.hist(df_pairs['avg_spread'].abs().values,
+hist_test = plt.hist(df_pairs['mean_spread'].abs().values,
                      bins = 100,
                      range = (0, 0.3))
 plt.show()
@@ -125,16 +125,16 @@ print '\nRank reversal: All except TA'
 print df_pairs_nota['pct_rr'].describe()
 
 print '\nRank reversal: No differentiation, no TA'
-print df_pairs_nota['pct_rr'][df_pairs_nota['avg_spread'].abs() <= diff_bound].describe()
+print df_pairs_nota['pct_rr'][df_pairs_nota['mean_spread'].abs() <= diff_bound].describe()
 
 print '\nRank reversal: Differentiation, no TA'
-print df_pairs_nota['pct_rr'][df_pairs_nota['avg_spread'].abs() > diff_bound].describe()
+print df_pairs_nota['pct_rr'][df_pairs_nota['mean_spread'].abs() > diff_bound].describe()
 
 # CAUTION: RESTRICTION TO NON TOTAL ACCESS
 # df_pairs = df_pairs_nota
 
-df_pairs_nodiff = df_pairs[np.abs(df_pairs['avg_spread']) <= diff_bound]
-df_pairs_diff = df_pairs[np.abs(df_pairs['avg_spread']) > diff_bound]
+df_pairs_nodiff = df_pairs[np.abs(df_pairs['mean_spread']) <= diff_bound]
+df_pairs_diff = df_pairs[np.abs(df_pairs['mean_spread']) > diff_bound]
 ls_ppd_names = ['All', 'No differentation', 'Differentiation']
 
 zero = np.float64(1e-10)
@@ -194,21 +194,24 @@ for ppd_name, df_pairs_temp in zip(ls_ppd_names, [df_pairs, df_pairs_nodiff, df_
 
 # INSPECT OUTLIERS (???)
 print u'\nInspect outliers'
-len(df_pairs[(df_pairs['avg_spread'].abs() > 0.01) & (df_pairs['pct_rr']> 0.4)])
+len(df_pairs[(df_pairs['mean_spread'].abs() > 0.01) & (df_pairs['pct_rr']> 0.4)])
 ls_disp = ['id_1', 'id_2', 'group_last_1', 'group_last_2', 'pct_rr', 'nb_rr']
-print df_pairs[ls_disp][(df_pairs['avg_spread'].abs() > 0.01) &\
+print df_pairs[ls_disp][(df_pairs['mean_spread'].abs() > 0.01) &\
                       (df_pairs['pct_rr']> 0.4)].to_string()
 
 # todo: filter pairs on frequency of changes (todo everywhere incl. price cleaning)
 # todo: filter chge of price policy: df_prices_ttc[['63000013','63000019']].plot()
 
 # CLOSE PRICES
+print u'\nOverview pct_rr'
+print df_pairs['pct_rr'].describe()
+
 print u'\nClose prices'
 print len(df_pairs[(df_pairs['pct_same'] >= 0.33)]) # todo: harmonize pct i.e. * 100
-print len(df_pairs[(df_pairs['avg_spread'].abs() <= 0.01)])
-# Pct same vs. avg_spread: make MSE appear? (i.e. close prices but no steady gap...)
+print len(df_pairs[(df_pairs['mean_spread'].abs() <= 0.01)])
+# Pct same vs. mean_spread: make MSE appear? (i.e. close prices but no steady gap...)
 # Very radical criterion though (show it with second... both side?)
-print len(df_pairs[(df_pairs['avg_spread'].abs() <= 0.01) &\
+print len(df_pairs[(df_pairs['mean_spread'].abs() <= 0.01) &\
                    (df_pairs['freq_mc_spread'] < 10)])
 
 # High prevalence of two spread values with opposit signs
