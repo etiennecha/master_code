@@ -61,7 +61,7 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
-# LOAD DF DISPERSION
+# LOAD DF PAIRS
 print '\nLoad df_ppd'
 ls_dtype_temp = ['id', 'ci_ardt_1']
 dict_dtype = dict([('%s_1' %x, str) for x in ls_dtype_temp] +\
@@ -76,6 +76,9 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_csv,
 #                       (df_pairs['group_last_1'] == df_pairs['group_last_2'])]
 df_pairs = df_pairs[(df_pairs['group_1'] != df_pairs['group_2']) &\
                     (df_pairs['group_last_1'] != df_pairs['group_last_2'])]
+
+# ADD ABS MEAN SPREAD (DIFFERENTIATION CRITERION => todo: move)
+df_pairs['abs_mean_spread'] = df_pairs['mean_spread'].abs()
 
 # ##################
 # FILTER DATA
@@ -188,24 +191,93 @@ for ppd_name, df_pairs_temp in zip(ls_ppd_names, [df_pairs, df_pairs_nodiff, df_
   #            format(pair_type, len(df_temp[df_temp['pair_type'] == pair_type]) /\
   #                     float(len(df_temp)))
   
-# RR VS. TOTAL ACCESS / RR DURATION
-## Find suspect rank reversal
-#print 'Station with max length rank reversal:', np.argmax(df_pairs['max_len_rr'])
 
-# INSPECT OUTLIERS (???)
-print u'\nInspect outliers'
-len(df_pairs[(df_pairs['mean_spread'].abs() > 0.01) & (df_pairs['pct_rr']> 0.4)])
-ls_disp = ['id_1', 'id_2', 'group_last_1', 'group_last_2', 'pct_rr', 'nb_rr']
-print df_pairs[ls_disp][(df_pairs['mean_spread'].abs() > 0.01) &\
-                      (df_pairs['pct_rr']> 0.4)].to_string()
+# RELATION MEAN SPREAD vs. DIFFERENTIATION
 
-# todo: filter pairs on frequency of changes (todo everywhere incl. price cleaning)
-# todo: filter chge of price policy: df_prices_ttc[['63000013','63000019']].plot()
+print smf.ols('abs_mean_spread ~ distance',
+              data = df_pairs).fit().summary()
 
-# CLOSE PRICES
+print smf.ols('abs_mean_spread ~ distance',
+              data = df_pairs[(df_pairs['group_type_1'] ==\
+                               df_pairs['group_type_2'])]).fit().summary()
+
+print smf.ols('abs_mean_spread ~ distance',
+              data = df_pairs[(df_pairs['group_type_1'] == df_pairs['group_type_2']) &\
+                              (df_pairs['distance'] <= 2)]).fit().summary()
+
+print smf.ols('abs_mean_spread ~ distance',
+              data = df_pairs[(df_pairs['ci_ardt_1_1'] ==\
+                                 df_pairs['ci_ardt_1_2']) &\
+                              (df_pairs['group_type_1'] ==\
+                                 df_pairs['group_type_2'])]).fit().summary()
+
+df_pairs['distance_sq'] = df_pairs['distance'] ** 2
+df_pairs['ln_distance'] = np.log(df_pairs['distance'])
+df_pairs['ln_abs_mean_spread'] = np.log(df_pairs['mean_spread'])
+
+print smf.ols('ln_abs_mean_spread ~ ln_distance',
+              data = df_pairs[(df_pairs['distance'] != 0) &\
+                              (df_pairs['abs_mean_spread'] != 0)]).fit().summary()
+
+#print smf.ols('ln_abs_mean_spread ~ ln_distance',
+#              data = df_pairs[(df_pairs['distance'] != 0) &\
+#                              (df_pairs['distance'] <= 2) &\
+#                              (df_pairs['abs_mean_spread'] != 0)]).fit().summary()
+
+print smf.ols('abs_mean_spread ~ distance + distance_sq',
+              data = df_pairs).fit().summary()
+              
+              
+# PAIR COMPARISON
+
+# Overview of most common spread frequency (various distances)
+ls_df_temp = []
+ls_distances = [5, 4, 3, 2, 1, 0.5]
+for distance in ls_distances:
+  ls_df_temp.append(df_pairs[df_pairs['distance'] <= distance]\
+                       ['freq_mc_spread'].describe())
+
+df_d_f_mcs = pd.concat(ls_df_temp, axis = 1, keys = ls_distances)
+print u'\nOverview of most common spread frequency for various distances:'
+print df_d_f_mcs.to_string()
+
+# Overview of pct same price (various distances)
+ls_df_temp = []
+ls_distances = [5, 4, 3, 2, 1, 0.5]
+for distance in ls_distances:
+  ls_df_temp.append(df_pairs[df_pairs['distance'] <= distance]\
+                       ['pct_same'].describe())
+df_d_pct_sp = pd.concat(ls_df_temp, axis = 1, keys = ls_distances)
+print u'\nOverview of pct same price for various distances:'
+print df_d_pct_sp.to_string()
+
+# Overview of most common spread frequency (various differentiation)
+ls_df_temp = []
+ls_mean_spread = [0.1, 0.05, 0.02,  0.01, 0.005, 0.0025]
+for mean_spread in ls_mean_spread:
+  ls_df_temp.append(df_pairs[(df_pairs['distance'] <= 5) &\
+                             (df_pairs['abs_mean_spread'] <= mean_spread)]
+                            ['freq_mc_spread'].describe())
+df_ms_f_mcs = pd.concat(ls_df_temp, axis = 1, keys = ls_mean_spread)
+print u'\nOverview of most common spread frequency for various max mean spread:'
+print df_ms_f_mcs.to_string()
+
+# Overview of pct same price (various differentiation)
+ls_df_temp = []
+ls_mean_spread = [0.1, 0.05, 0.02,  0.01, 0.005, 0.0025]
+for mean_spread in ls_mean_spread:
+  ls_df_temp.append(df_pairs[(df_pairs['distance'] <= 5) &\
+                             (df_pairs['abs_mean_spread'] <= mean_spread)]
+                            ['pct_same'].describe())
+df_ms_pct_sp = pd.concat(ls_df_temp, axis = 1, keys = ls_mean_spread)
+print u'\nOverview of pct same price for various max mean spread:'
+print df_ms_pct_sp.to_string()
+
+# RANK REVERSALS (todo: compare vs nb identical prices)
 print u'\nOverview pct_rr'
 print df_pairs['pct_rr'].describe()
 
+# CLOSE PRICES
 print u'\nClose prices'
 print len(df_pairs[(df_pairs['pct_same'] >= 0.33)]) # todo: harmonize pct i.e. * 100
 print len(df_pairs[(df_pairs['mean_spread'].abs() <= 0.01)])
@@ -223,3 +295,17 @@ print len(df_pairs[(df_pairs['freq_mc_spread'] > 10) &\
 
 # Not so many without checking it (check inexistence of a reference spread?)
 print len(df_pairs[((df_pairs['mc_spread'] * df_pairs['smc_spread']) < 0)])
+
+# RR VS. TOTAL ACCESS / RR DURATION
+## Find suspect rank reversal
+#print 'Station with max length rank reversal:', np.argmax(df_pairs['max_len_rr'])
+
+## INSPECT OUTLIERS (???)
+#print u'\nInspect outliers'
+#len(df_pairs[(df_pairs['mean_spread'].abs() > 0.01) & (df_pairs['pct_rr']> 0.4)])
+#ls_disp = ['id_1', 'id_2', 'group_last_1', 'group_last_2', 'pct_rr', 'nb_rr']
+#print df_pairs[ls_disp][(df_pairs['mean_spread'].abs() > 0.01) &\
+#                      (df_pairs['pct_rr']> 0.4)].to_string()
+#
+## todo: filter pairs on frequency of changes (todo everywhere incl. price cleaning)
+## todo: filter chge of price policy: df_prices_ttc[['63000013','63000019']].plot()
