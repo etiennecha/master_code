@@ -61,7 +61,7 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
-# LOAD DF DISPERSION
+# LOAD DF PAIRS
 print '\nLoad df_ppd'
 ls_dtype_temp = ['id', 'ci_ardt_1']
 dict_dtype = dict([('%s_1' %x, str) for x in ls_dtype_temp] +\
@@ -76,6 +76,13 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_csv,
 #                       (df_pairs['group_last_1'] == df_pairs['group_last_2'])]
 df_pairs = df_pairs[(df_pairs['group_1'] != df_pairs['group_2']) &\
                     (df_pairs['group_last_1'] != df_pairs['group_last_2'])]
+
+# ADD ABS MEAN SPREAD (DIFFERENTIATION CRITERION => todo: move)
+df_pairs['abs_mean_spread'] = df_pairs['mean_spread'].abs()
+# ADD NORMALIZATION OF NB OF RANK REVERSALS
+df_pairs['norm_nb_rr'] = df_pairs['nb_rr'] / df_pairs['nb_spread']
+df_pairs['mean_rr_len'] = (df_pairs['pct_rr'] * df_pairs['nb_spread']) /\
+                             df_pairs['nb_rr'].astype(float)
 
 # ##################
 # FILTER DATA
@@ -106,11 +113,10 @@ df_pairs_nota = df_pairs[(df_pairs['brand_last_1'] != 'TOTAL_ACCESS') &\
 # STATS DESC
 # ##########
 
-pd.set_option('float_format', '{:,.2f}'.format)
 diff_bound = 0.01
 
 # Histogram of average spreads (abs value required)
-hist_test = plt.hist(df_pairs['avg_spread'].abs().values,
+hist_test = plt.hist(df_pairs['mean_spread'].abs().values,
                      bins = 100,
                      range = (0, 0.3))
 plt.show()
@@ -125,16 +131,21 @@ print '\nRank reversal: All except TA'
 print df_pairs_nota['pct_rr'].describe()
 
 print '\nRank reversal: No differentiation, no TA'
-print df_pairs_nota['pct_rr'][df_pairs_nota['avg_spread'].abs() <= diff_bound].describe()
+print df_pairs_nota['pct_rr'][df_pairs_nota['mean_spread'].abs() <= diff_bound].describe()
 
 print '\nRank reversal: Differentiation, no TA'
-print df_pairs_nota['pct_rr'][df_pairs_nota['avg_spread'].abs() > diff_bound].describe()
+print df_pairs_nota['pct_rr'][df_pairs_nota['mean_spread'].abs() > diff_bound].describe()
 
 # CAUTION: RESTRICTION TO NON TOTAL ACCESS
 # df_pairs = df_pairs_nota
 
-df_pairs_nodiff = df_pairs[np.abs(df_pairs['avg_spread']) <= diff_bound]
-df_pairs_diff = df_pairs[np.abs(df_pairs['avg_spread']) > diff_bound]
+df_pairs_nodiff = df_pairs[np.abs(df_pairs['mean_spread']) <= diff_bound]
+df_pairs_diff = df_pairs[np.abs(df_pairs['mean_spread']) > diff_bound]
+
+## insufficient: ESSO, TOTAL ACCESS etc.
+#df_pairs_nodiff = df_pairs[df_pairs['group_type_last_1'] == df_pairs['group_type_last_2']]
+#df_pairs_diff = df_pairs[df_pairs['group_type_last_1'] != df_pairs['group_type_last_2']]
+
 ls_ppd_names = ['All', 'No differentation', 'Differentiation']
 
 zero = np.float64(1e-10)
@@ -188,16 +199,164 @@ for ppd_name, df_pairs_temp in zip(ls_ppd_names, [df_pairs, df_pairs_nodiff, df_
   #            format(pair_type, len(df_temp[df_temp['pair_type'] == pair_type]) /\
   #                     float(len(df_temp)))
   
-# RR VS. TOTAL ACCESS / RR DURATION
-## Find suspect rank reversal
+
+# RELATION MEAN SPREAD vs. DIFFERENTIATION
+
+print smf.ols('abs_mean_spread ~ distance',
+              data = df_pairs).fit().summary()
+
+print smf.ols('abs_mean_spread ~ distance',
+              data = df_pairs[(df_pairs['group_type_1'] ==\
+                               df_pairs['group_type_2'])]).fit().summary()
+
+print smf.ols('abs_mean_spread ~ distance',
+              data = df_pairs[(df_pairs['group_type_1'] == df_pairs['group_type_2']) &\
+                              (df_pairs['distance'] <= 2)]).fit().summary()
+
+print smf.ols('abs_mean_spread ~ distance',
+              data = df_pairs[(df_pairs['ci_ardt_1_1'] ==\
+                                 df_pairs['ci_ardt_1_2']) &\
+                              (df_pairs['group_type_1'] ==\
+                                 df_pairs['group_type_2'])]).fit().summary()
+
+df_pairs['distance_sq'] = df_pairs['distance'] ** 2
+df_pairs['ln_distance'] = np.log(df_pairs['distance'])
+df_pairs['ln_abs_mean_spread'] = np.log(df_pairs['mean_spread'])
+
+print smf.ols('ln_abs_mean_spread ~ ln_distance',
+              data = df_pairs[(df_pairs['distance'] != 0) &\
+                              (df_pairs['abs_mean_spread'] != 0)]).fit().summary()
+
+#print smf.ols('ln_abs_mean_spread ~ ln_distance',
+#              data = df_pairs[(df_pairs['distance'] != 0) &\
+#                              (df_pairs['distance'] <= 2) &\
+#                              (df_pairs['abs_mean_spread'] != 0)]).fit().summary()
+
+print smf.ols('abs_mean_spread ~ distance + distance_sq',
+              data = df_pairs).fit().summary()
+              
+              
+# PAIR COMPARISON
+
+# Overview of most common spread frequency (various distances)
+ls_df_temp = []
+ls_distances = [5, 4, 3, 2, 1, 0.5]
+for distance in ls_distances:
+  ls_df_temp.append(df_pairs[df_pairs['distance'] <= distance]\
+                       ['freq_mc_spread'].describe())
+
+df_d_f_mcs = pd.concat(ls_df_temp, axis = 1, keys = ls_distances)
+print u'\nOverview of most common spread frequency for various distances:'
+print df_d_f_mcs.to_string()
+
+# Overview of pct same price (various distances)
+ls_df_temp = []
+ls_distances = [5, 4, 3, 2, 1, 0.5]
+for distance in ls_distances:
+  ls_df_temp.append(df_pairs[df_pairs['distance'] <= distance]\
+                       ['pct_same'].describe())
+df_d_pct_sp = pd.concat(ls_df_temp, axis = 1, keys = ls_distances)
+print u'\nOverview of pct same price for various distances:'
+print df_d_pct_sp.to_string()
+
+# Overview of most common spread frequency (various differentiation)
+ls_df_temp = []
+ls_mean_spread = [0.1, 0.05, 0.02,  0.01, 0.005, 0.0025]
+for mean_spread in ls_mean_spread:
+  ls_df_temp.append(df_pairs[(df_pairs['distance'] <= 5) &\
+                             (df_pairs['abs_mean_spread'] <= mean_spread)]
+                            ['freq_mc_spread'].describe())
+df_ms_f_mcs = pd.concat(ls_df_temp, axis = 1, keys = ls_mean_spread)
+print u'\nOverview of most common spread frequency for various max mean spread:'
+print df_ms_f_mcs.to_string()
+
+# Overview of pct same price (various differentiation)
+ls_df_temp = []
+ls_mean_spread = [0.1, 0.05, 0.02,  0.01, 0.005, 0.0025]
+for mean_spread in ls_mean_spread:
+  ls_df_temp.append(df_pairs[(df_pairs['distance'] <= 5) &\
+                             (df_pairs['abs_mean_spread'] <= mean_spread)]
+                            ['pct_same'].describe())
+df_ms_pct_sp = pd.concat(ls_df_temp, axis = 1, keys = ls_mean_spread)
+print u'\nOverview of pct same price for various max mean spread:'
+print df_ms_pct_sp.to_string()
+
+# RANK REVERSALS (todo: compare vs nb identical prices)
+print u'\nOverview pct_rr'
+print df_pairs['pct_rr'].describe()
+
+# ALIGNED PRICES
+print u'\nClose prices'
+print len(df_pairs[(df_pairs['pct_same'] >= 0.33)]) # todo: harmonize pct i.e. * 100
+print len(df_pairs[(df_pairs['mean_spread'].abs() <= 0.01)])
+# Pct same vs. mean_spread: make MSE appear? (i.e. close prices but no steady gap...)
+# Very radical criterion though (show it with second... both side?)
+print len(df_pairs[(df_pairs['mean_spread'].abs() <= 0.01) &\
+                   (df_pairs['freq_mc_spread'] < 10)])
+
+# High prevalence of two spread values with opposit signs
+# Good candidates MSE with fixed grid? (why so few?... freq too strong?)
+# Check nb rank reversals
+print len(df_pairs[(df_pairs['freq_mc_spread'] > 10) &\
+                   (df_pairs['freq_smc_spread'] > 10) &\
+                   ((df_pairs['mc_spread'] * df_pairs['smc_spread']) < 0)])
+
+# Not so many without checking it (check inexistence of a reference spread?)
+print len(df_pairs[((df_pairs['mc_spread'] * df_pairs['smc_spread']) < 0)])
+
+# ALIGNED PRICES AND RANK REVERSALS
+
+lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
+lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
+
+print 'Nb both in 4th quartiles in terms of aligned prices and rr:'
+print len(df_pairs_nodiff[(df_pairs_nodiff['pct_same'] >=\
+                             df_pairs_nodiff['pct_same'].quantile(q=0.75)) &\
+                          (df_pairs_nodiff['pct_rr'] >=\
+                             df_pairs_nodiff['pct_rr'].quantile(q=0.75))])
+
+print df_pairs_nodiff[(df_pairs_nodiff['pct_same'] >=\
+                         df_pairs_nodiff['pct_same'].quantile(q=0.75)) &\
+                      (df_pairs_nodiff['pct_rr'] >=\
+                         df_pairs_nodiff['pct_rr'].quantile(q=0.75))]\
+                     [lsd + lsd_rr + ['pct_rr', 'pct_same']][0:10].to_string()
+
+# HEATMAP: PCT SAME VS PCT RR
+heatmap, xedges, yedges = np.histogram2d(df_pairs_nodiff['pct_same'].values,
+                                         df_pairs_nodiff['pct_rr'].values,
+                                         bins=30)
+extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+plt.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
+plt.show()
+
+# HEATMAP: PCT RR VS MEAN SPREAD
+heatmap, xedges, yedges = np.histogram2d(df_pairs_nodiff['abs_mean_spread'].values,
+                                         df_pairs_nodiff['pct_rr'].values,
+                                         bins=30)
+extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+plt.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
+plt.show()
+
+# HIGH RANK REVERSAL PCT BUT LOW RR COUNT
+print df_pairs_nodiff[df_pairs_nodiff['pct_rr'] >= 0.2]['nb_rr'].describe()
+
+print df_pairs_nodiff[(df_pairs_nodiff['pct_rr'] >= 0.2) &\
+                      (df_pairs_nodiff['nb_rr'] < 8)]\
+                     [lsd + lsd_rr + ['pct_rr', 'nb_rr']][0:10].to_string()
+
+# Use average rank reversal length
+print df_pairs_nodiff['mean_rr_len'][df_pairs_nodiff['pct_rr'] >= 0.2].describe()
+print df_pairs_nodiff['abs_mean_spread'][df_pairs_nodiff['pct_rr'] >= 0.2].describe()
+
+print df_pairs_nodiff[(df_pairs_nodiff['pct_rr'] >= 0.2) &\
+                      (df_pairs_nodiff['mean_rr_len'] >=
+                         df_pairs_nodiff['mean_rr_len'].quantile(q=0.95))]\
+                     [lsd + lsd_rr + ['pct_rr', 'mean_rr_len']][0:10].to_string()
+
+## Find suspect rank reversal => seems ok
 #print 'Station with max length rank reversal:', np.argmax(df_pairs['max_len_rr'])
+## todo: filter pairs on frequency of changes (todo everywhere incl. price cleaning)
+## todo: filter chge of price policy: df_prices_ttc[['63000013','63000019']].plot()
 
-# INSPECT OUTLIERS
-print u'\nInspect outliers'
-len(df_pairs[(df_pairs['avg_spread'].abs() > 0.01) & (df_pairs['pct_rr']> 0.4)])
-ls_disp = ['id_1', 'id_2', 'group_last_1', 'group_last_2', 'pct_rr', 'nb_rr']
-print df_pairs[ls_disp][(df_pairs['avg_spread'].abs() > 0.01) &\
-                      (df_pairs['pct_rr']> 0.4)].to_string()
-
-# todo: filter pairs on frequency of changes (todo everywhere incl. price cleaning)
-# todo: filter chge of price policy: df_prices_ttc[['63000013','63000019']].plot()
+# ALIGNED PRICES: LEADERSHIP?
+len(df_pairs[df_pairs['pct_same'] >= 0.2])

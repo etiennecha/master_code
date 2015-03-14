@@ -13,6 +13,7 @@ import patsy
 import copy
 import random
 import itertools
+from collections import Counter
 from generic_master_price import *
 
 def compute_distance(tup_gps_A, tup_gps_B):
@@ -98,6 +99,40 @@ def get_stats_price_chges(ar_prices, light = True):
     ls_results = ls_scalars + [ar_neg_chges, ar_pos_chges]
   return ls_results
 
+def get_stats_two_firm_price_spread(ar_prices_1, ar_prices_2, par_round):
+  ar_spread = ar_prices_1 - ar_prices_2
+  nb_spread = len(ar_spread[~np.isnan(ar_spread)])
+  if nb_spread != 0:
+    mean_spread = scipy.stats.nanmean(ar_spread)
+    mean_abs_spread = scipy.stats.nanmean(np.abs(ar_spread))
+    std_spread = scipy.stats.nanstd(ar_spread)
+    std_abs_spread = scipy.stats.nanstd(np.abs(ar_spread))
+    # Two Most common spread
+    ar_spread_nodec = (np.around(ar_spread, par_round) * np.power(10, par_round))
+    dict_spread_vc = Counter(ar_spread_nodec[~pd.isnull(ar_spread_nodec)])
+    ls_tup_spread_vc = sorted(dict_spread_vc.items(), key = lambda tup: tup[1], reverse = True)
+    mc_spread = ls_tup_spread_vc[0][0] / np.power(10, par_round)
+    freq_mc_spread = ls_tup_spread_vc[0][1] * 100 / float((~np.isnan(ar_spread)).sum())
+    # Second most commun spread
+    smc_spread, freq_smc_spread = np.nan, np.nan
+    if len(ls_tup_spread_vc) >= 2:
+      smc_spread = ls_tup_spread_vc[1][0] / np.power(10, par_round)
+      freq_smc_spread = ls_tup_spread_vc[1][1] * 100 / float((~np.isnan(ar_spread)).sum())
+    # Median spread 
+    med_spread = np.median(ar_spread[~np.isnan(ar_spread)])
+    freq_med_spread =  dict_spread_vc[np.round(med_spread, par_round) *\
+                                        np.power(10, par_round)] /\
+                         float((~np.isnan(ar_spread)).sum()) * 100
+    ls_results = [nb_spread, 
+                  mean_spread, mean_abs_spread,
+                  std_spread, std_abs_spread,
+                  mc_spread, freq_mc_spread,
+                  smc_spread, freq_smc_spread,
+                  med_spread, freq_med_spread]
+  else:
+   ls_results = [nb_spread] + [np.nan for i in range(10)]
+  return ls_results
+
 def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
   """
   Counts simulatenous changes: A and B had changed before or none had changed
@@ -111,14 +146,6 @@ def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
   ar_prices_1, ar_prices_2: two numpy arrays of float and np.nan
   """
   zero = np.float64(1e-10)
-  #ar_prices_nonan_1 = ar_prices_1[~np.isnan(ar_prices_1)]
-  #ar_prices_nonan_2 = ar_prices_2[~np.isnan(ar_prices_2)]
-  #nb_days_1 = len(ar_prices_nonan_1)
-  #nb_days_2 = len(ar_prices_nonan_2)
-  #ar_nonan_chges_1 = ar_prices_nonan_1[1:] - ar_prices_nonan_1[:-1]
-  #ar_nonan_chges_2 = ar_prices_nonan_2[1:] - ar_prices_nonan_2[:-1]
-  #nb_prices_1 = (np.abs(ar_nonan_chges_1) > zero).sum() + 1
-  #nb_prices_2 = (np.abs(ar_nonan_chges_2) > zero).sum() + 1
   ar_chges_1 = ar_prices_1[1:] - ar_prices_1[:-1]
   ar_chges_2 = ar_prices_2[1:] - ar_prices_2[:-1]
   nb_ctd_1 = (~np.isnan(ar_chges_1)).sum()
@@ -148,7 +175,7 @@ def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
            len(ls_day_ind_1_follows), len(ls_day_ind_2_follows)],
           [ls_day_ind_1_follows, ls_day_ind_2_follows]]
 
-def get_two_firm_similar_prices(ar_price_1, ar_price_2):
+def get_stats_two_firm_same_prices(ar_price_1, ar_price_2):
   """
   Compare price series: rather for non differentiated sellers (same price level)
   """
@@ -176,7 +203,7 @@ def get_two_firm_similar_prices(ar_price_1, ar_price_2):
           ls_chge_to_same += 1
       elif (np.abs(spread) < zero) and (ctd > 0):
         ctd += 1
-      elif (ctd > 0): #not np.isnan(np.abs(spread)) => cuts if nan...
+      elif (ctd > 0): #not np.isnan(np.abs(spread)) => cuts if nan
         if ctd_1:
           ls_ctd_1.append(ctd)
         else:
@@ -210,6 +237,7 @@ def get_pair_price_dispersion(ar_prices_a, ar_prices_b, light = True):
   avg_spread = scipy.stats.nanmean(ar_spread)
   std_spread = scipy.stats.nanstd(ar_spread)
   avg_abs_spread = scipy.stats.nanmean(np.abs(ar_spread))
+  std_abs_spread = scipy.stats.nanstd(np.abs(ar_spread))
   if nb_days_b_cheaper > nb_days_a_cheaper:
     ar_spread_rr = np.where(ar_spread <=  zero, 0, ar_spread)
   else:
@@ -222,7 +250,7 @@ def get_pair_price_dispersion(ar_prices_a, ar_prices_b, light = True):
   nb_rr_conservative = count_nb_rr_conservative(ar_abs_spread_rr)
   ls_scalars = [nb_days_spread, nb_days_same_price, nb_days_a_cheaper, nb_days_b_cheaper,
                 nb_rr_conservative, percent_rr, avg_abs_spread_rr, med_abs_spread_rr,
-                avg_abs_spread, avg_spread, std_spread]
+                avg_abs_spread, avg_spread, std_spread, std_abs_spread]
   ls_arrays = [ar_spread, ar_spread_rr]
   ls_ls_lengths = [[], []]
   if not light:

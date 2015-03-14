@@ -36,7 +36,8 @@ def get_num_ls_ls(ls_ls_prices):
 
 def fill_prices_using_dates(ls_ls_prices, ls_ls_dates, ls_master_dates):
   """
-  Fills list of prices using next available price if the later was set on the current date (or previously)
+  Fills list of prices using next available price 
+  if the latter was set on the current date (or previously)
 
   Verify: 
   ind_test = master_price['ids'].index('3410005')
@@ -153,8 +154,8 @@ def correct_abnormal_price_values(ls_corrections, ls_indiv_ids, ls_master_dates,
 
 def correct_abnormal_price_variations(ls_ls_prices, var_lim):
   """ Correct apparent price mistakes """
-  # TODO: Inspect with pandas
-  # TODO: Check mistakes with sp95 and/or input forward vs. backward
+  # todo: Inspect with pandas
+  # todo: Check mistakes with sp95 and/or input forward vs. backward
   dict_suspects_opposit = {}
   dict_suspects_single = {}
   for indiv_ind, ls_prices in enumerate(ls_ls_prices):
@@ -269,7 +270,7 @@ def get_overview_reporting(ls_ls_prices, ls_ls_price_durations, ls_master_dates,
         ls_price_durations_cut = ls_price_durations_cut[:-1]
       start = ls_price_durations_cut[0][1][0]
       end = ls_price_durations_cut[-1][1][-1]
-      # find missing prices within valid price series (TODO: make it efficient...)
+      # find missing prices within valid price series (todo: make efficient)
       for (price, ls_day_ind) in ls_price_durations_cut:
         if price != price:
           for day_ind in ls_day_ind:
