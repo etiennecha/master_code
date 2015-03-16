@@ -282,8 +282,28 @@ print u'\nOverview of pct same price for various max mean spread:'
 print df_ms_pct_sp.to_string()
 
 # RANK REVERSALS (todo: compare vs nb identical prices)
-print u'\nOverview pct_rr'
-print df_pairs['pct_rr'].describe()
+# Overview of pct rr price (various differentiation)
+ls_df_temp = []
+ls_mean_spread = [0.1, 0.05, 0.01, 0.005, 0.002, 0.001]
+for mean_spread in ls_mean_spread:
+  ls_df_temp.append(df_pairs[(df_pairs['distance'] <= 3) &\
+                             (df_pairs['abs_mean_spread'] <= mean_spread)]
+                            ['pct_rr'].describe())
+df_ms_pct_rr = pd.concat(ls_df_temp, axis = 1, keys = ls_mean_spread)
+print u'\nOverview of pct rank reversals for various max mean spread'
+print df_ms_pct_rr.to_string()
+
+# GAIN FROM SEARCH
+# Overview of gain from search (various differentiation)
+ls_df_temp = []
+ls_mean_spread = [0.1, 0.05, 0.01, 0.005, 0.002, 0.001]
+for mean_spread in ls_mean_spread:
+  ls_df_temp.append(df_pairs[(df_pairs['distance'] <= 3) &\
+                             (df_pairs['abs_mean_spread'] <= mean_spread)]
+                            ['mean_abs_spread'].describe())
+df_ms_gfs = pd.concat(ls_df_temp, axis = 1, keys = ls_mean_spread)
+print u'\nOverview of gain from search for various max mean spread:'
+print df_ms_gfs.to_string()
 
 # ALIGNED PRICES
 print u'\nClose prices'
