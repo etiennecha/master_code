@@ -360,3 +360,29 @@ print df_pairs_nodiff[(df_pairs_nodiff['pct_rr'] >= 0.2) &\
 
 # ALIGNED PRICES: LEADERSHIP?
 len(df_pairs[df_pairs['pct_same'] >= 0.2])
+
+df_pairs['pct_1_lead'] = df_pairs['nb_1_lead'].astype(float) /\
+                           df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+df_pairs['pct_2_lead'] = df_pairs['nb_2_lead'].astype(float) /\
+                           df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+df_pairs['pct_sim_same'] = df_pairs['nb_chge_to_same'].astype(float) /\
+                             df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+
+print df_pairs[df_pairs['pct_same'] >= 0.2]\
+        [lsd + ['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same',
+                'pct_1_lead', 'pct_2_lead', 'pct_sim_same']][0:10].to_string()
+
+# STANDARD SPREAD
+# if exists: can generalize rank reversal and leadership
+print df_pairs[(df_pairs['mc_spread'] == 0.010) &\
+               (df_pairs['freq_mc_spread'] >= 25)]\
+              [lsd + ['freq_mc_spread', 'pct_rr']][0:10].to_string()
+
+# DISTANCE VS. PERCENT SAME PRICES
+print df_pairs_nodiff[df_pairs_nodiff['pct_same'] >=\
+                        df_pairs_nodiff['pct_same'].quantile(0.75)]\
+                     ['distance'].describe()
+
+print df_pairs_nodiff[df_pairs_nodiff['pct_same'] <\
+                        df_pairs_nodiff['pct_same'].quantile(0.75)]\
+                     ['distance'].describe()

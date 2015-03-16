@@ -254,7 +254,7 @@ df_dpt['patches'] = df_dpt['poly'].map(lambda x:\
 pc_2 = PatchCollection(df_dpt['patches'], match_original=True)
 
 ax1.legend((l1, l2),
-           ('Total', 'Elf'),
+           ('Ex-Total', 'Ex-Elf'),
            loc='lower right',
            scatterpoints=1,
            ncol = 2)
