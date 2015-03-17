@@ -61,7 +61,7 @@ df_info = df_info[df_info['highway'] != 1]
 
 # not sure if need to keep this... compare UFIP for robustness if needed
 df_cost_nowe = df_cost[~((df_cost.index.weekday == 5) |\
-                         (df_cost.index.weekday == 6))]
+                         (df_cost.index.weekday == 6))].copy()
 df_cost_nowe['ULSD 10 CIF NWE S1 EL'] = df_cost_nowe['ULSD 10 CIF NWE EL'].shift(1)
 df_cost_nowe['ULSD 10 CIF NWE S1 R5 EL'] = pd.stats.moments.rolling_apply(
                                              df_cost_nowe['ULSD 10 CIF NWE S1 EL'], 5,
