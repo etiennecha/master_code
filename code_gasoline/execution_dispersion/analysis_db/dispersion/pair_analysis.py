@@ -304,7 +304,7 @@ print df_pairs_nodiff[(df_pairs_nodiff['pct_same'] >=\
 
 # ALIGNED PRICES AND LEADERSHIP
 print u'\nNb of high pct_same (above 20 pct):'
-print len(df_pairs[df_pairs['pct_same'] >= 0.2])
+print len(df_pairs[df_pairs['pct_same'] >= 0.3])
 
 df_pairs['pct_1_lead'] = df_pairs['nb_1_lead'].astype(float) /\
                            df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
@@ -312,12 +312,20 @@ df_pairs['pct_2_lead'] = df_pairs['nb_2_lead'].astype(float) /\
                            df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
 df_pairs['pct_sim_same'] = df_pairs['nb_chge_to_same'].astype(float) /\
                              df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+df_pairs.replace([np.inf, -np.inf], np.nan, inplace = True)
 
-print u'\nInspect pct_same above 20 pct:'
-print df_pairs[df_pairs['pct_same'] >= 0.2]\
+print u'\nInspect pct_same above 30 pct:'
+print df_pairs[df_pairs['pct_same'] >= 0.3]\
         [lsd + ['nb_1_lead', 'nb_2_lead', 
                 'pct_same', 'nb_chge_to_same',
                 'pct_1_lead', 'pct_2_lead', 'pct_sim_same']][0:10].to_string()
+
+print u'\nMax pct lead when pct_same above 30 pct:'
+df_pairs[df_pairs['pct_same'] >= 0.3][['pct_1_lead', 'pct_2_lead']].max(1).describe()
+
+print u'\nMax pct lead when pct_rr above 30 pct:'
+df_pairs[df_pairs['pct_rr'] >= 0.3][['pct_1_lead', 'pct_2_lead']].max(1).describe()
+# slightly higher...
 
 # STANDARD SPREAD
 lsd_f_sp = ['mc_spread', 'smc_spread',
