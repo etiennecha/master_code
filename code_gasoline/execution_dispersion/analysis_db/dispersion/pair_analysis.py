@@ -82,6 +82,13 @@ df_pairs['abs_mean_spread'] = df_pairs['mean_spread'].abs()
 # ADD AVERAGE RANK REVERSAL LENGTH
 df_pairs['mean_rr_len'] = (df_pairs['nb_spread'] * df_pairs['pct_rr']) / df_pairs['nb_rr']
 df_pairs['mean_rr_len'] = df_pairs['mean_rr_len'].replace(np.inf, np.nan)
+# ADD MEASURE OF PRICE CONVERGENCE
+df_pairs['pct_price_cv'] = df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)/\
+                             df_pairs[['nb_chges_1', 'nb_chges_2']].sum(1)
+df_pairs['pct_price_cv_1'] = df_pairs[['nb_2_lead', 'nb_chge_to_same']].sum(1)/\
+                               df_pairs[['nb_chges_1']].sum(1)
+df_pairs['pct_price_cv_2'] = df_pairs[['nb_1_lead', 'nb_chge_to_same']].sum(1)/\
+                               df_pairs[['nb_chges_2']].sum(1)
 
 # LISTS FOR DISPLAY
 lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
@@ -320,12 +327,19 @@ print df_pairs[df_pairs['pct_same'] >= 0.3]\
                 'pct_same', 'nb_chge_to_same',
                 'pct_1_lead', 'pct_2_lead', 'pct_sim_same']][0:10].to_string()
 
-print u'\nMax pct lead when pct_same above 30 pct:'
-df_pairs[df_pairs['pct_same'] >= 0.3][['pct_1_lead', 'pct_2_lead']].max(1).describe()
+print u'\nPct price convergence (both grouped) when pct_same above 30 pct:'
+print df_pairs[df_pairs['pct_same'] >= 0.3]['pct_price_cv'].describe()
 
-print u'\nMax pct lead when pct_rr above 30 pct:'
-df_pairs[df_pairs['pct_rr'] >= 0.3][['pct_1_lead', 'pct_2_lead']].max(1).describe()
-# slightly higher...
+print u'\nMax pct price convergence when pct_same above 30 pct:'
+print df_pairs[df_pairs['pct_same'] >= 0.3]\
+        [['pct_price_cv_1', 'pct_price_cv_2']].max(1).describe()
+
+print u'\nPct price convergence (both_grouped) when pct_rr above 30 pct:'
+print df_pairs[df_pairs['pct_rr'] >= 0.3]['pct_price_cv'].describe()
+
+print u'\nMax pct price convergence when pct_rr above 30 pct:'
+print df_pairs[df_pairs['pct_rr'] >= 0.3]\
+        [['pct_price_cv_1', 'pct_price_cv_2']].max(1).describe()
 
 # STANDARD SPREAD
 lsd_f_sp = ['mc_spread', 'smc_spread',
@@ -348,3 +362,8 @@ print u'\nDistance in 3 lower quartiles of pct_same:'
 print df_pairs_nodiff[df_pairs_nodiff['pct_same'] <\
                         df_pairs_nodiff['pct_same'].quantile(0.75)]\
                      ['distance'].describe()
+
+#len(df_pairs_nodiff[(df_pairs_nodiff['pct_same'] >= 0.33) &\
+#                    (df_pairs_nodiff['pct_rr'] >= 0.33)])
+#df_pairs_nodiff[(df_pairs_nodiff['pct_same'] >= 0.33) &\
+#                (df_pairs_nodiff['pct_rr'] >= 0.33)][lsd]
