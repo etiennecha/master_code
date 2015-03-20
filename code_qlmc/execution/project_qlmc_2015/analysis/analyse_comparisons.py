@@ -62,7 +62,8 @@ for region, ls_leclerc in dict_reg_leclerc.items():
 ls_regions_done = ['nord-pas-de-calais',
                    'ile-de-france',
                    'champagne-ardenne',
-                   'haute-normandie']
+                   'haute-normandie',
+                   'picardie']
 
 # Choice of region
 region = ls_regions_done[-1] 
