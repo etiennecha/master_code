@@ -55,7 +55,7 @@ for region, ls_leclerc in dict_reg_leclerc.items():
   dict_reg_pairs[region] = ls_reg_pairs
 
 ls_fra_regions = [u'picardie', # ok (home)
-                  u'franche-comte',
+                  u'franche-comte', # in progress (home)
                   u'languedoc-roussillon',
                   u'rhone-alpes',
                   u'basse-normandie', # ok (rerun - home)
@@ -66,7 +66,7 @@ ls_fra_regions = [u'picardie', # ok (home)
                   u'nord-pas-de-calais', # ok
                   u'centre', # ok (rerun home)
                   u'bretagne', # ok (rerun home)
-                  u'bourgogne',
+                  u'bourgogne', # in progress (home)
                   u'aquitaine',
                   u'auvergne',
                   u'alsace', # in progress (crest)
@@ -78,7 +78,7 @@ ls_fra_regions = [u'picardie', # ok (home)
                   u'limousin']
 
 # Choice of region
-region = 'franche-comte'
+region = 'rhone-alpes'
 ls_pairs = dict_reg_pairs[region]
 
 # Load dict region if exists or create it
