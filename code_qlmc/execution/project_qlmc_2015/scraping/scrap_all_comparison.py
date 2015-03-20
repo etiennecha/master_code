@@ -53,58 +53,67 @@ for leclerc in ls_leclerc:
 
 # Use pair tuples as dictionary keys
 
-## Visit competitor's page
-#comp_id = ls_comp_ids[0]
-#url_comp = u'http://www.quiestlemoinscher.com/local/{:s}/{:s}'.\
-#              format(store_id, comp_id)
-#response_comp = urllib2.urlopen(url_comp)
-#data_comp = response_comp.read()
-#soup_comp = BeautifulSoup(data_comp)
-## Get link to family/subfamilies of products
-#bloc_families = soup_comp.find('div', {'id' : 'menuLev2', 'class' : 'onTop'})
-#ls_family_blocs = bloc_families.findAll('ul', {'id' : True})
-#dict_families = {}
-#for family_bloc in ls_family_blocs:
-#  family_name = family_bloc['id']
-#  ls_subfamily_blocs = family_bloc.findAll('a', {'href' : True})
-#  ls_subfamilies = [(x.text, x['href']) for x in ls_subfamily_blocs]
-#  dict_families[family_name] = ls_subfamilies
-## Get comparison result
-#bloc_comparison = soup_comp.find('div', {'id' : 'battleHomeLocal'})
-#ls_compa = [bloc_comparison.find('p', {'class' : 'mention'}).text,
-#            bloc_comparison.find('h2', {'class' : 'sign textblue'}).text,
-#            bloc_comparison.find('p', {'class' : 'result textblue'}).text,
-#            bloc_comparison.find('h2', {'class' : 'sign textred'}).text,
-#            bloc_comparison.find('p', {'class' : 'result textred'}).text]
-#
-## Visit competitor's (sub)family pages
-#
-##family = dict_families.keys()[0]
-##sf, sf_url_extension = dict_families[family][0]
-#
-#dict_comp =  {}
-#for family, ls_sub_families in dict_families.items():
-#  dict_comp[family] = {}
-#  for sf, sf_url_extension in ls_sub_families:
-#    sf_url = u'http://www.quiestlemoinscher.com{:s}'.format(sf_url_extension)
-#    sf_response = urllib2.urlopen(sf_url)
-#    sf_data = sf_response.read()
-#    sf_soup = BeautifulSoup(sf_data)
-#    ls_prod_blocs = sf_soup.findAll('article', {'class' : 'listProducts'})
-#    ls_sf_products = []
-#    for prod_bloc in ls_prod_blocs:
-#      product_name = prod_bloc.find('div', {'class' : 'txtProducts'}).h3.text
-#      ls_prod_info = []
-#      ls_prod_sub_blocs = prod_bloc.findAll('div', {'class' : 'txtCompare'})
-#      for prod_sub_bloc in ls_prod_sub_blocs:
-#        releve_date = prod_sub_bloc.find('div', {'class' : 'mentionReleve'}).text
-#        psb_temp = prod_sub_bloc.find('div', {'class' : re.compile('signPrice*.')})
-#        releve_store = psb_temp.find('img')['src']
-#        releve_price = psb_temp.text
-#        ls_prod_info.append([releve_date, releve_store, releve_price])
-#      ls_sf_products.append([product_name, ls_prod_info])
-#    dict_comp[family][sf] = ls_sf_products
-#
-#file_name = '_VERSUS_'.join([store_id, comp_id]) + '.json'
-#enc_json(dict_comp,
-#         u'W:\Bureau\Python_projs\scraping_qlmc_2015\{:s}'.format(file_name))
+dict_reg_pairs = {}
+
+for store_id, comp_id in ls_pairs:
+  try:
+    # Visit competitor's page
+    url_comp = u'http://www.quiestlemoinscher.com/local/{:s}/{:s}'.\
+                  format(store_id, comp_id)
+    response_comp = urllib2.urlopen(url_comp)
+    data_comp = response_comp.read()
+    soup_comp = BeautifulSoup(data_comp)
+    # Get link to family/subfamilies of products
+    bloc_families = soup_comp.find('div', {'id' : 'menuLev2', 'class' : 'onTop'})
+    ls_family_blocs = bloc_families.findAll('ul', {'id' : True})
+    dict_families = {}
+    for family_bloc in ls_family_blocs:
+      family_name = family_bloc['id']
+      ls_subfamily_blocs = family_bloc.findAll('a', {'href' : True})
+      ls_subfamilies = [(x.text, x['href']) for x in ls_subfamily_blocs]
+      dict_families[family_name] = ls_subfamilies
+    # Get comparison result
+    bloc_comparison = soup_comp.find('div', {'id' : 'battleHomeLocal'})
+    ls_compa = [bloc_comparison.find('p', {'class' : 'mention'}).text,
+                bloc_comparison.find('h2', {'class' : 'sign textblue'}).text,
+                bloc_comparison.find('p', {'class' : 'result textblue'}).text,
+                bloc_comparison.find('h2', {'class' : 'sign textred'}).text,
+                bloc_comparison.find('p', {'class' : 'result textred'}).text]
+    
+    # Visit competitor's (sub)family pages
+    
+    #family = dict_families.keys()[0]
+    #sf, sf_url_extension = dict_families[family][0]
+    
+    dict_comp =  {}
+    for family, ls_sub_families in dict_families.items():
+      dict_comp[family] = {}
+      for sf, sf_url_extension in ls_sub_families:
+        sf_url = u'http://www.quiestlemoinscher.com{:s}'.format(sf_url_extension)
+        sf_response = urllib2.urlopen(sf_url)
+        sf_data = sf_response.read()
+        sf_soup = BeautifulSoup(sf_data)
+        ls_prod_blocs = sf_soup.findAll('article', {'class' : 'listProducts'})
+        ls_sf_products = []
+        for prod_bloc in ls_prod_blocs:
+          product_name = prod_bloc.find('div', {'class' : 'txtProducts'}).h3.text
+          ls_prod_info = []
+          ls_prod_sub_blocs = prod_bloc.findAll('div', {'class' : 'txtCompare'})
+          for prod_sub_bloc in ls_prod_sub_blocs:
+            releve_date = prod_sub_bloc.find('div', {'class' : 'mentionReleve'}).text
+            psb_temp = prod_sub_bloc.find('div', {'class' : re.compile('signPrice*.')})
+            releve_store = psb_temp.find('img')['src']
+            releve_price = psb_temp.text
+            ls_prod_info.append([releve_date, releve_store, releve_price])
+          ls_sf_products.append([product_name, ls_prod_info])
+        dict_comp[family][sf] = ls_sf_products
+        
+    dict_reg_pairs[(store_id, comp_id)] = [ls_compa, dict_comp]
+    print 'Got data for pair {:s} {:s}'.format(store_id, comp_id)
+  except:
+    print 'Failed for pair {:s} {:s}'.format(store_id, comp_id)
+    pass
+  
+# file_name = '_VERSUS_'.join([store_id, comp_id]) + '.json'
+enc_json(dict_reg_pairs,
+         os.path.join(path_qlmc_scrapped, 'dict_pairs_{:s}'.format(region)))
