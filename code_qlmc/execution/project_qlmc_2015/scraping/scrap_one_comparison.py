@@ -26,26 +26,27 @@ path_qlmc_scrapped = os.path.join(path_data,
 
 start = time.time()
 
-# Region map (todo: loop over region)
-url = u'http://www.quiestlemoinscher.com/carte/ile-de-france'
-response = urllib2.urlopen(url)
-data = response.read()
-soup = BeautifulSoup(data)
-dict_params = {'region' : 'ile-de-france',
-               'regionTitle' : 'Ile-de-France'}
-headers = {'Referer' : url,
-           'X-Requested-With' : 'XMLHttpRequest',
-           #'X-Prototype-Version' : '1.6.0.3',
-           'Content-type' : 'application/x-www-form-urlencoded; charset=UTF-8'}
-params = urllib.urlencode(dict_params)  
-req  = urllib2.Request('http://www.quiestlemoinscher.com/mapping/data', params, headers)
-response_2 = urllib2.urlopen(req)
-data_2 = response_2.read()
-dict_reg_stores = json.loads(data_2)
-print dict_reg_stores['signs'][0]
+## Region map (todo: loop over region)
+#url = u'http://www.quiestlemoinscher.com/carte/ile-de-france'
+#response = urllib2.urlopen(url)
+#data = response.read()
+#soup = BeautifulSoup(data)
+#dict_params = {'region' : 'ile-de-france',
+#               'regionTitle' : 'Ile-de-France'}
+#headers = {'Referer' : url,
+#           'X-Requested-With' : 'XMLHttpRequest',
+#           #'X-Prototype-Version' : '1.6.0.3',
+#           'Content-type' : 'application/x-www-form-urlencoded; charset=UTF-8'}
+#params = urllib.urlencode(dict_params)  
+#req  = urllib2.Request('http://www.quiestlemoinscher.com/mapping/data', params, headers)
+#response_2 = urllib2.urlopen(req)
+#data_2 = response_2.read()
+#dict_reg_stores = json.loads(data_2)
+#print dict_reg_stores['signs'][0]
 
 # Get competitors for a given store (todo: loop over stores within region)
-store_id = dict_reg_stores['signs'][0]['slug']
+# store_id = dict_reg_stores['signs'][0]['slug']
+store_id = 'centre-e-leclerc-romilly-sur-seine'
 url_store = u'http://www.quiestlemoinscher.com/carte/{:s}'.format(store_id)
 response_store = urllib2.urlopen(url_store)
 data_store = response_store.read()
@@ -55,7 +56,9 @@ ls_comp_blocs = bloc_comp.findAll('option', {'value' : True})
 ls_comp_ids = [x['value'] for x in ls_comp_blocs if x['value']]
 
 # Visit competitor's page
-comp_id = ls_comp_ids[0]
+# comp_id = ls_comp_ids[0]
+comp_id = 'intermarche-super-nogent-sur-seine'
+
 url_comp = u'http://www.quiestlemoinscher.com/local/{:s}/{:s}'.\
               format(store_id, comp_id)
 response_comp = urllib2.urlopen(url_comp)
@@ -72,11 +75,12 @@ for family_bloc in ls_family_blocs:
   dict_families[family_name] = ls_subfamilies
 # Get comparison result
 bloc_comparison = soup_comp.find('div', {'id' : 'battleHomeLocal'})
-ls_compa = [bloc_comparison.find('p', {'class' : 'mention'}).text,
-            bloc_comparison.find('h2', {'class' : 'sign textblue'}).text,
-            bloc_comparison.find('p', {'class' : 'result textblue'}).text,
-            bloc_comparison.find('h2', {'class' : 'sign textred'}).text,
-            bloc_comparison.find('p', {'class' : 'result textred'}).text]
+ls_compa = [bloc_comparison.find('p', {'class' : 'mention'}),
+            bloc_comparison.find('h2', {'class' : 'sign textblue'}),
+            bloc_comparison.find('p', {'class' : 'result textblue'}),
+            bloc_comparison.find('h2', {'class' : 'sign textred'}),
+            bloc_comparison.find('p', {'class' : 'result textred'})]
+ls_compa = [x.text if x else None for x in ls_compa]
 
 # Visit competitor's (sub)family pages
 
