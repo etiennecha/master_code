@@ -63,7 +63,8 @@ ls_regions_done = ['nord-pas-de-calais',
                    'ile-de-france',
                    'champagne-ardenne',
                    'haute-normandie',
-                   'picardie']
+                   'picardie', # home
+                   'lorraine']
 
 # Choice of region
 region = ls_regions_done[-1] 

@@ -60,8 +60,8 @@ ls_fra_regions = [u'picardie', # ok (home)
                   u'rhone-alpes',
                   u'basse-normandie', # in progress (home)
                   u'poitou-charentes',
-                  u'pays-de-la-loire',
-                  u'lorraine', # in progress (crest)
+                  u'pays-de-la-loire', # in progress (crest)
+                  u'lorraine', # ok (todo: rerun)
                   u'midi-pyrenees',
                   u'nord-pas-de-calais', # ok
                   u'centre',
@@ -73,12 +73,12 @@ ls_fra_regions = [u'picardie', # ok (home)
                   u'corse',
                   u'champagne-ardenne', # ok
                   u'haute-normandie', # ok
-                  u'ile-de-france', # ok but rerun one last time
+                  u'ile-de-france', # ok (todo: rerun)
                   u'provence-alpes-cote-d-azur',
                   u'limousin']
 
 # Choice of region
-region = 'bretagne'
+region = 'pays-de-la-loire'
 ls_pairs = dict_reg_pairs[region]
 
 # Load dict region if exists or create it
