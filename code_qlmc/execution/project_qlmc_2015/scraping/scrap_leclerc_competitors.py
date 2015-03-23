@@ -19,12 +19,12 @@ def dec_json(path_file):
   with open(path_file, 'r') as f:
     return json.loads(f.read())
 
-path_qlmc_scrapped = os.path.join(path_data,
+path_qlmc_scraped = os.path.join(path_data,
                                   'data_qlmc',
                                   'data_source',
-                                  'data_scrapped')
+                                  'data_scraped')
 
-dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scrapped,
+dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scraped,
                                          'dict_reg_leclerc_stores.json'))
 
 dict_leclerc_comp = {}
@@ -66,5 +66,5 @@ for x in ls_all_comp:
 
 ## Store Leclerc competitors
 #enc_json(dict_leclerc_comp,
-#         os.path.join(path_qlmc_scrapped,
+#         os.path.join(path_qlmc_scraped,
 #                      'dict_leclerc_comp.json'))

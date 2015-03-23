@@ -19,10 +19,10 @@ def dec_json(path_file):
   with open(path_file, 'r') as f:
     return json.loads(f.read())
 
-path_qlmc_scrapped = os.path.join(path_data,
+path_qlmc_scraped = os.path.join(path_data,
                                   'data_qlmc',
                                   'data_source',
-                                  'data_scrapped')
+                                  'data_scraped')
 
 # France map
 url = u'http://www.quiestlemoinscher.com'
@@ -78,5 +78,5 @@ dict_reg_stores['corse'] = ls_corse_stores
 
 ## Store Leclerc stores
 #enc_json(dict_reg_stores,
-#         os.path.join(path_qlmc_scrapped,
+#         os.path.join(path_qlmc_scraped,
 #                      'dict_reg_leclerc_stores.json'))

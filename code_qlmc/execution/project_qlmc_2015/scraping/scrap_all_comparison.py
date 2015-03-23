@@ -18,15 +18,15 @@ def dec_json(path_file):
   with open(path_file, 'r') as f:
     return json.loads(f.read())
 
-path_qlmc_scrapped = os.path.join(path_data,
+path_qlmc_scraped = os.path.join(path_data,
                                   'data_qlmc',
                                   'data_source',
-                                  'data_scrapped')
+                                  'data_scraped')
 
-dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scrapped,
+dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scraped,
                                          'dict_reg_leclerc_stores.json'))
 
-dict_leclerc_comp = dec_json(os.path.join(path_qlmc_scrapped,
+dict_leclerc_comp = dec_json(os.path.join(path_qlmc_scraped,
                                           'dict_leclerc_comp.json'))
 
 # Define list of pairs to scrap by region
@@ -45,7 +45,7 @@ for region, ls_leclerc in dict_reg_leclerc.items():
     ls_comp_todo = [comp for comp in ls_comp if\
                       (comp['slug'] not in ls_covered_comp) and\
                       (comp['signCode'] != u'LEC')]
-    # if all scrapped, take first one to get current Leclerc's prices
+    # if all scraped, take first one to get current Leclerc's prices
     if not ls_comp_todo:
       ls_comp_todo = ls_comp[:1]
     for comp in ls_comp_todo:
@@ -82,7 +82,7 @@ region = u'provence-alpes-cote-d-azur'
 ls_pairs = dict_reg_pairs[region]
 
 # Load dict region if exists or create it
-path_dict_reg_comparisons = os.path.join(path_qlmc_scrapped,
+path_dict_reg_comparisons = os.path.join(path_qlmc_scraped,
                                          'dict_reg_comparisons_{:s}.json'.format(region))
 if os.path.exists(path_dict_reg_comparisons):
   dict_reg_comparisons_json = dec_json(path_dict_reg_comparisons)
