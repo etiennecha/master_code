@@ -55,30 +55,30 @@ for region, ls_leclerc in dict_reg_leclerc.items():
   dict_reg_pairs[region] = ls_reg_pairs
 
 ls_fra_regions = [u'picardie', # ok (home)
-                  u'franche-comte', # in progress (home)
-                  u'languedoc-roussillon',
-                  u'rhone-alpes',
+                  u'franche-comte', # ok (home)
+                  u'languedoc-roussillon', # ok (home)
+                  u'rhone-alpes', # ok (crest)
                   u'basse-normandie', # ok (rerun - home)
-                  u'poitou-charentes',
-                  u'pays-de-la-loire', # in progress (crest)
+                  u'poitou-charentes', # ok (crest)
+                  u'pays-de-la-loire', # ok (crest)
                   u'lorraine', # ok (rerun)
-                  u'midi-pyrenees',
+                  u'midi-pyrenees', # in progress (home)
                   u'nord-pas-de-calais', # ok
                   u'centre', # ok (rerun home)
                   u'bretagne', # ok (rerun home)
-                  u'bourgogne', # in progress (home)
-                  u'aquitaine',
-                  u'auvergne',
-                  u'alsace', # in progress (crest)
-                  u'corse',
+                  u'bourgogne', # ok (home)
+                  u'aquitaine', # ok (crest)
+                  u'auvergne', # ok (home)
+                  u'alsace', # ok (home)
+                  u'corse', # in progress (crest)
                   u'champagne-ardenne', # ok
                   u'haute-normandie', # ok
                   u'ile-de-france', # ok (todo: rerun)
                   u'provence-alpes-cote-d-azur',
-                  u'limousin']
+                  u'limousin'] # ok (home)
 
 # Choice of region
-region = 'rhone-alpes'
+region = u'provence-alpes-cote-d-azur'
 ls_pairs = dict_reg_pairs[region]
 
 # Load dict region if exists or create it

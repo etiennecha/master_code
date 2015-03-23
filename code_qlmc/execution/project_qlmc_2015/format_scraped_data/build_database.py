@@ -107,8 +107,8 @@ for k,v in dict_reg_comparisons.items():
                          u'(.*?) produits comparés', v[0][0])
   if re_general:
     row_res += [re_general.group(1),
-               re_general.group(2),
-               re_general.group(3)]
+                re_general.group(2),
+                re_general.group(3)]
   else:
     row_res += [None, None, None]
   # % comparison
@@ -144,93 +144,70 @@ print df_overview.to_string()
 
 # READ PRODUCT COMPARISONS
 
-print u'\n', dict_reg_comparisons[dict_reg_comparisons.keys()[0]][0]
-dict_pair_products = dict_reg_comparisons[dict_reg_comparisons.keys()[0]][1]
-ls_rows_products = []
-for family, dict_sfamily in dict_pair_products.items():
-  for sfamily, ls_sfamily_products in dict_sfamily.items():
-    for ls_prod in ls_sfamily_products:
-      ls_rows_products.append([family,
-                               sfamily,
-                               ls_prod[0]]+\
-                              ls_prod[1][0])
-      ls_rows_products.append([family,
-                               sfamily,
-                               ls_prod[0]]+\
-                              ls_prod[1][1])
+#print u'\n', dict_reg_comparisons[dict_reg_comparisons.keys()[0]][0]
+#dict_pair_products = dict_reg_comparisons[dict_reg_comparisons.keys()[0]][1]
 
-df_products = pd.DataFrame(ls_rows_products,
-                           columns = ['family',
-                                      'subfamily',
-                                      'product',
-                                      'date',
-                                      'chain',
-                                      'price'])
+ls_df_pair_products = []
+for pair_ids, pair_comparison in dict_reg_comparisons.items():
+  leclerc_id, competitor_id = pair_ids
+  dict_pair_products = pair_comparison[1]
+  ls_rows_products = []
+  for family, dict_sfamily in dict_pair_products.items():
+    for sfamily, ls_sfamily_products in dict_sfamily.items():
+      for ls_prod in ls_sfamily_products:
+        ls_rows_products.append([family,
+                                 sfamily,
+                                 ls_prod[0]]+\
+                                ls_prod[1][0])
+        ls_rows_products.append([family,
+                                 sfamily,
+                                 ls_prod[0]]+\
+                                ls_prod[1][1])
+  
+  df_pair_products = pd.DataFrame(ls_rows_products,
+                             columns = ['family',
+                                        'subfamily',
+                                        'product',
+                                        'date',
+                                        'chain',
+                                        'price'])
+  
+  dict_replace_family = {u'familyId_2'  : u'Fruits et Légumes',
+                         u'familyId_4'  : u'Frais',
+                         u'familyId_5'  : u'Surgelés',
+                         u'familyId_6'  : u'Epicerie salée',
+                         u'familyId_7'  : u'Epicerie sucrée',
+                         u'familyId_8'  : u'Aliments bébé et Diététique',
+                         u'familyId_9'  : u'Boissons',
+                         u'familyId_10' : u'Hygiène et Beauté',
+                         u'familyId_11' : u'Nettoyage',
+                         u'familyId_12' : u'Animalerie',
+                         u'familyId_13' : u'Bazar et textile'}
+  
+  df_pair_products['family'] =\
+     df_pair_products['family'].apply(lambda x: dict_replace_family[x])
+  
+  df_pair_products['price'] =\
+    df_pair_products['price'].apply(lambda x: x.replace(u'\xa0\u20ac', u'')).astype(float)
+  
+  df_pair_products['chain'] =\
+    df_pair_products['chain'].apply(\
+      lambda x: re.match(u'/bundles/qelmcsite/images/signs/header/(.*?)\.png',
+                         x).group(1))
+  
+  df_pair_products['date'] =\
+    df_pair_products['date'].apply(\
+      lambda x: re.match(u'Prix relevé le (.*?)$',
+                         x).group(1))
+  
+  # can do more robust?
+  df_pair_products['store_id'] = leclerc_id
+  df_pair_products.loc[df_pair_products['chain'] != 'LEC', 'store_id'] = competitor_id
+  
+  ls_df_pair_products.append(df_pair_products)
 
-dict_replace_family = {u'familyId_2'  : u'Fruits et Légumes',
-                       u'familyId_4'  : u'Frais',
-                       u'familyId_5'  : u'Surgelés',
-                       u'familyId_6'  : u'Epicerie salée',
-                       u'familyId_7'  : u'Epicerie sucrée',
-                       u'familyId_8'  : u'Aliments bébé et Diététique',
-                       u'familyId_9'  : u'Boissons',
-                       u'familyId_10' : u'Hygiène et Beauté',
-                       u'familyId_11' : u'Nettoyage',
-                       u'familyId_12' : u'Animalerie',
-                       u'familyId_13' : u'Bazar et textile'}
-
-df_products['family'] =\
-   df_products['family'].apply(lambda x: dict_replace_family[x])
-
-df_products['price'] =\
-  df_products['price'].apply(lambda x: x.replace(u'\xa0\u20ac', u'')).astype(float)
-
-df_products['chain'] =\
-  df_products['chain'].apply(\
-    lambda x: re.match(u'/bundles/qelmcsite/images/signs/header/(.*?)\.png',
-                       x).group(1))
-
-df_products['date'] =\
-  df_products['date'].apply(\
-    lambda x: re.match(u'Prix relevé le (.*?)$',
-                       x).group(1))
-
-# Families and subfamilies
-print pd.pivot_table(df_products[df_products['chain'] == 'LEC'],
-                     index=['family','subfamily'],
-                     values=['price'],
-                     aggfunc=[len])
-
-# Comparison of prices
-
-print u'\nPct difference in total sum'
-# se_sum = df_products[['chain', 'price']].groupby('chain').agg(sum)
-# print se_sum.ix['LEC'] / se_sum.ix['SCA'] - 1
-print df_products[df_products['chain'] != 'LEC']['price'].sum() /\
-      df_products[df_products['chain'] == 'LEC']['price'].sum() - 1
-
-# Build df duel to make product by product comparison easier
-df_lec = df_products[df_products['chain'] == 'LEC'].copy()
-df_oth = df_products[df_products['chain'] != 'LEC'].copy()
-df_duel = pd.merge(df_lec,
-                   df_oth,
-                   how = 'inner',
-                   on = ['family', 'subfamily', 'product'],
-                   suffixes = ['_lec', '_oth'])
-df_duel.drop(['chain_lec', 'chain_oth'], axis = 1, inplace = True)
-
-print u'\nOverview product prices'
-print df_duel[['price_lec', 'price_oth']].describe()
-
-print u'\nAverage on product by product comparison'
-# (todo: add weighted pct (Leclerc's method?))
-df_duel['diff'] = df_duel['price_oth'] - df_duel['price_lec']
-df_duel['pct_diff'] = df_duel['price_oth'] / df_duel['price_lec'] - 1
-print df_duel[['diff', 'pct_diff']].describe()
-
-print u'\nDesc of abs value of percent difference'
-print df_duel['pct_diff'].abs().describe(\
-        percentiles = [0.1, 0.25, 0.5, 0.75, 0.9])
-
-#df_duel.sort('diff', ascending = False, inplace = True)
-#print df_duel[0:10].to_string()
+  df_products = pd.concat(ls_df_pair_products)
+  df_products.sort(['store_id', 'family', 'subfamily', 'product'], inplace = True)
+  
+  # drop duplicate at this stage but must do also with global df
+  df_products.drop_duplicates(['store_id', 'family', 'subfamily', 'product'], inplace = True)
