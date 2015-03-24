@@ -11,6 +11,14 @@ import re
 import json
 import pandas as pd
 
+def enc_json(data, path_file):
+  with open(path_file, 'w') as f:
+    json.dump(data, f)
+
+def dec_json(path_file):
+  with open(path_file, 'r') as f:
+    return json.loads(f.read())
+
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)

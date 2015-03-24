@@ -63,7 +63,7 @@ ls_fra_regions = [u'picardie', # ok (home)
                   u'pays-de-la-loire', # ok (crest)
                   u'lorraine', # ok (rerun)
                   u'midi-pyrenees', # in progress (home)
-                  u'nord-pas-de-calais', # ok
+                  u'nord-pas-de-calais', # ok (crest)
                   u'centre', # ok (rerun home)
                   u'bretagne', # ok (rerun home)
                   u'bourgogne', # ok (home)
