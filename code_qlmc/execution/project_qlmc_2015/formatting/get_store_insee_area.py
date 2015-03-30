@@ -3,6 +3,7 @@
 
 import add_to_path
 from add_to_path import *
+from matching_insee import *
 from functions_string import *
 import os, sys
 import re
@@ -28,10 +29,15 @@ path_csv = os.path.join(path_data,
                         'data_built',
                         'data_csv')
 
+path_dir_match_insee = os.path.join(path_data,
+                                    u'data_insee',
+                                    u'match_insee_codes')
+
 df_stores = pd.read_csv(os.path.join(path_csv,
                                      'qlmc_scraped',
                                      'df_stores.csv'),
                         encoding = 'utf-8')
+
 
 # Fix some problematic store locations (found through competitor pair analysis)
 ls_fix_gps = [['intermarche-super-le-portel', (50.7093, 1.5789)], # too far
@@ -114,7 +120,46 @@ df_stores['city_match'] = df_stores.apply(lambda row: 1 if str_low_noacc(row['ic
                                           axis = 1)
 print len(df_stores[~df_stores['city_match']])
 print df_stores[df_stores['city_match'] == 0].to_string()
-# not so many... can keep them on watch list during LSA matching
+
+# Match city name with insee code 
+# uses insee code already found to have dpt (should not be too wrong!)
+path_df_corr = os.path.join(path_dir_match_insee, 'df_corr_gas.csv')
+matching_insee = MatchingINSEE(path_df_corr)
+
+ls_matched = [matching_insee.match_city('PARIS', '75', '75006')]
+
+def apply_insee_matching(store_city, dpt_id):
+  dpt_id = dpt_id.replace('2A', '20').replace('2B', '20')
+  ls_res = matching_insee.match_city(store_city, dpt_id)
+  if ls_res and ls_res[0]:
+    return ls_res[0][0][2], ls_res[0][0][0]
+  else:
+    return None, None
+
+# Not way to fill two columns with one apply?
+df_stores.loc[df_stores['city_match'] == 0, 'insee_matching'] =\
+  df_stores[df_stores['city_match'] == 0].apply(\
+     lambda row: apply_insee_matching(row['store_city'],
+                                      row['ic'][0:2]),
+     axis = 1)
+df_stores['ic_alt'], df_stores['ic_city_alt'] = None, None
+df_stores['ic_alt'] = df_stores[~pd.isnull(df_stores['insee_matching'])].apply(\
+                        lambda row: row['insee_matching'][0], axis = 1)
+df_stores['ic_city_alt'] = df_stores[~pd.isnull(df_stores['insee_matching'])].apply(\
+                             lambda row: row['insee_matching'][1], axis = 1)
+
+print df_stores[df_stores['city_match'] == 0]\
+        [['store_city', 'ic_city', 'ic_city_alt', 'ic', 'ic_alt']].to_string()
+
+df_stores.loc[(~pd.isnull(df_stores['ic_alt'])) &\
+              (~df_stores['ic_city_alt'].isin(['paris', 'marseille', 'lyon'])),
+              'ic'] = df_stores['ic_alt']
+
+df_stores.loc[(~pd.isnull(df_stores['ic_alt'])) &\
+              (~df_stores['ic_city_alt'].isin(['paris', 'marseille', 'lyon'])),
+              'ic_city'] = df_stores['ic_city_alt']
+
+df_stores.drop(['insee_matching', 'ic_alt', 'ic_city_alt'], axis = 1, inplace = 1)
 
 df_stores.to_csv(os.path.join(path_csv,
                               'qlmc_scraped',
