@@ -82,8 +82,9 @@ df_france['freq_prod'] = se_prod_vc
 df_france.reset_index(inplace = True)
 
 df_u_prod = df_france.drop_duplicates('product')
-df_u_prod = df_u_prod[['family', 'subfamily', 'product', 'freq_prod']]
-
 df_u_prod.sort('freq_prod', ascending = False, inplace = True)
+df_u_prod = df_u_prod[['family', 'subfamily', 'product', 'freq_prod']][0:50]
+
 df_u_prod.set_index(['family', 'subfamily', 'product'], inplace = True)
 df_u_prod.sort_index(inplace = True)
+print df_u_prod.to_string()
