@@ -67,14 +67,15 @@ dict_lsa_stores_alt_brand = {u'INTERMARCHE SUPER': u'INTERMARCHE',
                              u'CENTRE E.LECLERC' : u'LECLERC',
                              u'LECLERC EXPRESS' : u'LECLERC'}
 
-ls_matching = [[u'ITM', u'XXX', u'INTERMARCHE'], # give up direct matching (first period...)
+ls_matching = [[u'LEC', u'LECLERC', u'LECLERC'],
+               [u'ITM', u'XXX', u'INTERMARCHE'], # give up direct matching (first period...)
                [u'USM', 'SUPER U', 'SYSTEME U'],
-               [u'CAR', u'CARREFOUR', u'CARREFOUR'],
+               [u'CAR', u'CARREFOUR', 'CARREFOUR'],
                [u'CRM', u'CARREFOUR MARKET', u'CARREFOUR MARKET'],
                [u'AUC', u'AUCHAN', u'AUCHAN'],
                [u'GEA', u'GEANT', u'GEANT CASINO'], # GEANT vs. GEANT CASINO?
                [u'COR', u'CORA', u'CORA'],
-               [u'SCA', u'GEANT CASINO', u'GEANT CASINO'], # check if CASINO only in LSA? (CASINO)
+               [u'SCA', u'CASINO', u'CASINO'], # check if CASINO only in LSA? (CASINO)
                [u'HSM', u'HYPER U', 'SYSTEME U'],
                [u'SIM', u'SIMPLY MARKET', u'SIMPLY MARKET'], # check if chain in LSA
                [u'MAT', u'SUPERMARCHE MATCH', u'SUPERMARCHE MATCH'], # check if chain in LSA
@@ -101,40 +102,40 @@ for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
     insee_code = row['ic']
     df_city_stores = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
                             (df_lsa['Enseigne'] == enseigne_fra)]
+    tup_store_info = tuple(row[['store_chain', 'store_id', 'store_city',
+                                'ic_city', 'ic']].values)
     if len(df_city_stores) == 1:
-      ls_matched_stores.append((row['store_id'],
-                                row['store_city'],
-                                row['ic_city'],
-                                row['ic'],
-                                df_city_stores.iloc[0]['Ident'],
+      ls_matched_stores.append(tup_store_info +\
+                               (df_city_stores.iloc[0]['Ident'],
                                 enseigne_fra,
                                 'direct'))
+    elif len(df_city_stores) > 1:
+      ls_matched_stores.append(tup_store_info +\
+                               (None, enseigne_fra, 'ambiguous'))
     elif len(df_city_stores) == 0:
       df_city_stores_alt = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
                                   (df_lsa['Enseigne_matching'] == enseigne_fra_alt)]
       if len(df_city_stores_alt) == 1:
-        ls_matched_stores.append((row['store_id'],
-                                  row['store_city'],
-                                  row['ic_city'],
-                                  row['ic'],
-                                  df_city_stores_alt.iloc[0]['Ident'],
+        ls_matched_stores.append(tup_store_info +\
+                                 (df_city_stores_alt.iloc[0]['Ident'],
                                   enseigne_fra_alt,
                                   'indirect'))
+      elif len(df_city_stores) > 1:
+        ls_matched_stores.append(tup_store_info +\
+                                 (None, enseigne_fra_alt, 'ambiguous'))
       elif len(df_city_stores_alt) == 0:
-        ls_matched_stores.append((row['store_id'],
-                                  row['store_city'],
-                                  row['ic_city'],
-                                  row['ic'],
-                                  None,
-                                  None,
-                                  'aucun'))
+        ls_matched_stores.append(tup_store_info +\
+                                 (None, None, 'aucun'))
 
 df_matching = pd.DataFrame(ls_matched_stores,
-                          columns = ['store_id', 'store_city', 'ic_city', 'ic',
+                          columns = ['store_chain', 'store_id', 'store_city',
+                                     'ic_city', 'ic',
                                      'lsa_id', 'lsa_brand', 'Q'])
 
-print df_matching[0:20].to_string()
+print len(df_matching[df_matching['lsa_id'].isnull()])
 print df_matching[df_matching['lsa_id'].isnull()][0:20].to_string()
 
-# a few new stores
-# need to better take into account carrefour and casino types
+# todo: use LSA file including Corsica
+# todo: check by hand when matching ambiguous (use gps with Google Drive?)
+# todo: check for new stores (not in LSA?)
+# todo: check results for Casino and others? (pbm in chosing type? use gps dist)
