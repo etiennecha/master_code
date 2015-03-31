@@ -54,20 +54,17 @@ for field in [u'DATE ouv', u'DATE ferm', u'DATE réouv',
 # INSEE CODES
 # ############
 
-# TODO: read Code INSEE and Code postal as unicode
-
-# Check that INSEE codes are up to date
-# fusion de communes
 df_lsa['Code INSEE'] = df_lsa['Code INSEE'].apply(\
                          lambda x: str(x).replace('76095', '76108'))
 
 def get_insee_from_zip_ardt(zip_code):
-# fix: ['75056', '13055', '69123']
-# geofla only has arrondissements
+  """
+  Uses zip to get INSEE code at district level (Paris/Lyon/Marseille)
+  """
   zip_code = re.sub(u'750([0-9]{2})', u'751\\1', zip_code) # 75116 untouched
   zip_code = re.sub(u'130([0-9]{2})', u'132\\1', zip_code)
   zip_code = re.sub(u'6900([0-9])', u'6938\\1', zip_code)
-  return zip_code # actually an ardt insee code
+  return zip_code
 
 ls_insee_bc = ['75056', '13055', '69123']
 
@@ -650,6 +647,13 @@ df_lsa.to_csv(os.path.join(path_dir_built_csv,
               encoding = 'UTF-8',
               float_format ='%.3f',
               index = False)
+
+# ACTIVE STORES
+df_lsa_active.to_csv(os.path.join(path_dir_built_csv,
+                                  'df_lsa_active.csv'),
+                     encoding = 'UTF-8',
+                     float_format = '%.3f',
+                     index = False)
 
 # ACTIVE STORES IN METROPOLITAN FRANCE
 df_lsa_active_fm.to_csv(os.path.join(path_dir_built_csv,

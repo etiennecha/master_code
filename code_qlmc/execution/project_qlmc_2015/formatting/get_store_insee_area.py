@@ -159,7 +159,9 @@ df_stores.loc[(~pd.isnull(df_stores['ic_alt'])) &\
               (~df_stores['ic_city_alt'].isin(['paris', 'marseille', 'lyon'])),
               'ic_city'] = df_stores['ic_city_alt']
 
-df_stores.drop(['insee_matching', 'ic_alt', 'ic_city_alt'], axis = 1, inplace = 1)
+df_stores.drop(['insee_matching', 'ic_alt', 'ic_city_alt'],
+               axis = 1,
+               inplace = 1)
 
 df_stores.to_csv(os.path.join(path_csv,
                               'qlmc_scraped',
