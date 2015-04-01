@@ -15,9 +15,9 @@ from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 from shapely.prepared import prep
 from descartes import PolygonPatch
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 path_qlmc_scraped = os.path.join(path_data,
                                   'data_qlmc',
@@ -32,15 +32,22 @@ path_csv = os.path.join(path_data,
 df_stores = pd.read_csv(os.path.join(path_csv,
                                      'qlmc_scraped',
                                      'df_stores.csv'),
-                        encoding = 'utf-8')
+                        encoding = 'utf-8',
+                        dtype = {'ic' : str})
+
+# todo: move to dedicated script
+df_stores.loc[df_stores['store_id'] == 'centre-e-leclerc-clichy',
+              'ic'] = '92024'
 
 df_lsa = pd.read_csv(os.path.join(path_csv,
                                   'df_lsa_active.csv'),
                      encoding = 'UTF-8',
-                     dtype = {'Code INSEE' : str,
+                     dtype = {'Ident' : str,
+                              'Code INSEE' : str,
                               'Code INSEE ardt' : str,
                               'Code postal' : str},
                      parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv'])
+
 
 #df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
 #                        lambda x: Point(m_fra(x[0], x[1])), axis = 1)
@@ -86,7 +93,7 @@ ls_matching = [[u'LEC', u'LECLERC', u'LECLERC'],
                [u'CAS', u'CASINO', u'CASINO'], # check if CASINO only in LSA (CASINO)
                [u'UHM', u'HYPER U', u'SYSTEME U'],
                [u'MIG', u'MIGROS', u'MIGROS'], # check if chain in LSA
-               [u'G20', u'G20', u'G20'], # check if chain in LSA
+               [u'G20', u'G 20', u'G 20'], # check if chain in LSA
                [u'REC', u'RECORD', u'RECORD'], # check if chain in LSA
                [u'HAU', u'AUCHAN', u'AUCHAN']] # LES HALLES D AUCHAN?
 
@@ -134,13 +141,13 @@ for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
                                  (None, enseigne_fra, 'ambiguous'))
     elif len(df_city_stores) == 0:
       df_city_stores_alt = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
-                                  (df_lsa['Enseigne_matching'] == enseigne_fra_alt)]
+                                  (df_lsa['Enseigne_matching'] == enseigne_fra_alt)].copy()
       if len(df_city_stores_alt) == 1:
         ls_matched_stores.append(tup_store_info +\
                                  (df_city_stores_alt.iloc[0]['Ident'],
                                   enseigne_fra_alt,
                                   'indirect'))
-      elif len(df_city_stores) > 1:
+      elif len(df_city_stores_alt) > 1:
         # do: check with distances
         ls_matched_stores.append(tup_store_info +\
                                  (None, enseigne_fra_alt, 'ambiguous'))
@@ -153,33 +160,120 @@ df_matching = pd.DataFrame(ls_matched_stores,
                                      'ic_city', 'ic',
                                      'lsa_id', 'lsa_brand', 'Q'])
 
+# checked by hand when matching ambiguous (use gps with Google Drive?)
+ls_fix_matching = [['super-u-rennes', '10914'],
+                   ['super-u-rennes-1', '18433'],
+                   ['super-u-brest', '140546'],
+                   ['super-u-le-havre', '3461'],
+                   ['super-u-le-havre-1', '14755'],
+                   ['super-u-limoges', '1458'],
+                   ['super-u-nantes', '740'],
+                   ['carrefour-market-ajaccio', '2762'], # not sure (dist 1.39)
+                   ['carrefour-market-le-mans-sablons', '1367'], # MARKET in LSA
+                   ['carrefour-market-le-mans', '1366'], # dist 0.16
+                   ['carrefour-market-rennes-villejean-kennedy', '1706'], # dist 0.43
+                   ['carrefour-market-bordeaux', '1045'], # dist 0.12
+                   ['carrefour-market-peyrehorade', '3753'], # dist 0.29
+                   ['carrefour-market-bourges', '3782'], # dist 0.10 not necessary?
+                   ['carrefour-market-vierzon', '2462'],
+                   ['carrefour-market-laon', '1565'],
+                   ['carrefour-market-les-sables-d-olonne-petite-garliere', '1445'],
+                   ['carrefour-market-les-sables-d-olonne-castelnau', '11029'],
+                   ['carrefour-market-colomiers', '2396'], # dist 0.19
+                   ['carrefour-market-sainte-maxime-1', '2414'], # dist 0.10 not necessary?
+                   ['carrefour-market-reims-clemenceau', '2864'],
+                   ['carrefour-market-nevers', '176597'], # dist 0.57 => Colbert
+                   ['casino-clichy', '11417'],
+                   ['supermarche-match-douai-rue-du-kiosque', '3525'],
+                   ['atac-autun', '1559'], # not closest but av republique
+                   ['leclerc-express-borgo', '10382'], # no match, diff ic?
+                   ['super-u-bihorel', '2539'], # no match, diff ic?
+                   ['carrefour-contact-freyming-merlebach', '12719'], # no match, chain?
+                   ['carrefour-contact-gramat', '10235'],
+                   ['carrefour-marseille-grand-littoral', '39135'],
+                   ['carrefour-contact-plouguerneau', '11454'],
+                   ['carrefour-contact-grenade-sur-l-adour', '9450'],
+                   ['carrefour-city-deuil-la-barre', '9702'],
+                   ['carrefour-contact-st-nicolas-de-la-grave', '195959'],
+                   ['auchan-city-tourcoing', '181644'],
+                   ['casino-blanzac-les-matha', '4054'], # no match, diff ic
+                   ['les-halles-d-auchan-le-blanc-mesnil', '158859']] # no match, chain
+
+ls_drive = [['casino-drive-lagny-sur-marne', '197888']] # drive
+
+ls_chain_chge = [['super-u-laguenne', '693'], # ex SIMPLY
+                 ['casino-le-blanc-mesnil-25-27-av-henri-barbusse', '12349']] # ex MONOPRIX
+
+for qlmc_id, lsa_id in ls_fix_matching:
+  df_matching.loc[df_matching['store_id'] == qlmc_id, 'lsa_id'] = lsa_id
+  df_matching.loc[df_matching['store_id'] == qlmc_id, 'Q'] = 'amb_fixed'
+
 print len(df_matching[df_matching['lsa_id'].isnull()])
-
 print df_matching[df_matching['lsa_id'].isnull()].to_string()
-
-# todo: use LSA file including Corsica
-# todo: check by hand when matching ambiguous (use gps with Google Drive?)
 # todo: check for new stores (not in LSA?)
 # todo: check results for Casino and others? (pbm in chosing type? use gps dist)
 
-# TODO: finish casino
-ls_fix = [['super-u-rennes', '10914'],
-          ['super-u-rennes-1', '18433'],
-          ['super-u-brest', '140546'],
-          ['super-u-le-havre', '3461'],
-          ['super-u-le-havre-1', '14755'],
-          ['super-u-limoges', '1458'],
-          ['super-u-nantes', '740'],
-          ['carrefour-market-le-mans-sablons', '1367'], # MARKET in LSA
-          ['carrefour-market-le-mans', '974'], # distance 0.16
-          ['carrefour-market-bordeaux', '1045'], # distance 0.12
-          ['carrefour-market-peyrehorade', '3753'], # distance 0.29
-          ['carrefour-market-bourges', '3782'], # distance 0.10 not necessary?
-          ['carrefour-market-vierzon', '2462'],
-          ['carrefour-market-laon', '1565'],
-          ['carrefour-market-les-sables-d-olonne-petite-garliere', '1445'],
-          ['carrefour-market-les-sables-d-olonne-castelnau', '11029'],
-          ['carrefour-market-colomiers', '2396'], # distance 0.19
-          ['carrefour-market-sainte-maxime-1', '2414'], # distance 0.10 not necessary?
-          ['carrefour-market-reims-clemenceau', '2864'],
-          ['carrefour-market-nevers', '176597']] # distance 0.57 => Colbert
+# centre-e-leclerc-thury-harcourt : sold => Super U (July 2014)
+# intermarche-super-sainte-gemmes-d-andigne : opened Nov 2014 (2400m2)
+# super-u-donzere : not clear..
+
+# Check matching with distance
+df_stores_f = pd.merge(df_stores,
+                       df_matching[['store_id', 'lsa_id']],
+                       on = 'store_id',
+                       how = 'left')
+
+ls_lsa_cols = ['Ident',
+               'Enseigne',
+               'ADRESSE1',
+               'Ville',
+               'Code INSEE ardt',
+               'Surf Vente',
+               'Nbr de caisses',
+               'Nbr emp',
+               'Longitude',
+               'Latitude',
+               'Verif',
+               'Groupe']
+
+df_stores_f = pd.merge(df_stores_f,
+                       df_lsa[ls_lsa_cols],
+                       left_on = 'lsa_id',
+                       right_on = 'Ident',
+                       how = 'left')
+
+
+df_stores_f['dist'] =\
+   df_stores_f.apply(lambda x: compute_distance_ar(x['store_lat'],
+                                                   x['store_lng'],
+                                                   x['Latitude'],
+                                                   x['Longitude']),
+                        axis = 1)
+
+ls_di = ['store_id', 'store_lat', 'store_lng',
+         'Enseigne', 'ADRESSE1', 'Ville', 'Latitude', 'Longitude', 'Verif']
+
+print u'\n', df_stores_f[df_stores_f['dist'] > 5][ls_di].to_string()
+# todo: extend to 3
+# check that (when?) LSA should be preferred...
+
+ls_final_gps = [['casino-prunelli-di-fiumorbo', 'qlmc'], # 4 and bad
+                ['carrefour-market-beaumont-le-roger', 'lsa'],
+                ['carrefour-market-anse', (45.9380, 4.7201)], # 2 and bad
+                ['super-u-saint-brevin-les-pins', 'lsa'],
+                ['centre-e-leclerc-oletta', 'lsa'],
+                ['leclerc-express-borgo', 'lsa'],
+                ['casino-rivieres', (45.7463, 0.3830)], # 3 and bad
+                ['u-express-bagnoles-de-l-orne', 'qlmc'], # 4 and bad
+                ['casino-estancarbon', 'lsa'],
+                ['intermarche-super-surgeres', 'lsa'],
+                ['centre-e-leclerc-joue-les-tours', 'lsa'],
+                ['carrefour-market-aussonne', 'lsa'], # check (resumed activity?)
+                ['carrefour-market-vauvert', 'qlmc']] # 3 and bad
+
+# Whenever 4 (and 3): not good idea to take LSA
+# Check if 4 means center of commune... if qlmc different then maybe best?
+# Anyway: only 7 have 4... and 122 have 3 => those should be inspected (use dist?)
+
+print u'\n', df_stores_f[(df_stores_f['Verif'] == 1) &\
+                         (df_stores_f['dist'] >= 1)][ls_di + ['dist']].to_string()
