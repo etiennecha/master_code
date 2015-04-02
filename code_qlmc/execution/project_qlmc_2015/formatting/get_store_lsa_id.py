@@ -248,7 +248,11 @@ ls_fix_matching = [['super-u-rennes', '10914'],
                    ['intermarche-super-la-seyne-sur-mer', '1429'],
                    ['intermarche-super-toulon', '3319'],
                    ['intermarche-super-muret', '1679'],
-                   ['intermarche-super-vienne', '4293']]
+                   ['intermarche-super-vienne', '4293'],
+                   ['super-u-donzere', '151457']] # other is drive
+
+# centre-e-leclerc-thury-harcourt : sold => Super U (July 2014)
+# intermarche-super-sainte-gemmes-d-andigne : opened Nov 2014 (2400m2)
 
 ls_drive = [['casino-drive-lagny-sur-marne', '197888']] # drive
 
@@ -263,10 +267,6 @@ print len(df_matching[df_matching['lsa_id'].isnull()])
 print df_matching[df_matching['lsa_id'].isnull()].to_string()
 # todo: check for new stores (not in LSA?)
 # todo: check results for Casino and others? (pbm in chosing type? use gps dist)
-
-# centre-e-leclerc-thury-harcourt : sold => Super U (July 2014)
-# intermarche-super-sainte-gemmes-d-andigne : opened Nov 2014 (2400m2)
-# super-u-donzere : not clear..
 
 # Check matching with distance
 df_stores_f = pd.merge(df_stores,
@@ -285,14 +285,14 @@ ls_lsa_cols = ['Ident',
                'Longitude',
                'Latitude',
                'Verif',
-               'Groupe']
+               'Groupe',
+               'Type']
 
 df_stores_f = pd.merge(df_stores_f,
                        df_lsa[ls_lsa_cols],
                        left_on = 'lsa_id',
                        right_on = 'Ident',
                        how = 'left')
-
 
 df_stores_f['dist'] =\
    df_stores_f.apply(lambda x: compute_distance_ar(x['store_lat'],
@@ -304,7 +304,7 @@ df_stores_f['dist'] =\
 ls_di = ['store_id', 'store_lat', 'store_lng',
          'Enseigne', 'ADRESSE1', 'Ville', 'Latitude', 'Longitude', 'Verif']
 
-print u'\n', df_stores_f[df_stores_f['dist'] > 5][ls_di].to_string()
+print u'\n', df_stores_f[df_stores_f['dist'] > 5][ls_di + ['dist']].to_string()
 # todo: extend to 3
 # check that (when?) LSA should be preferred...
 
@@ -328,3 +328,10 @@ ls_final_gps = [['casino-prunelli-di-fiumorbo', 'qlmc'], # 4 and bad
 
 #print u'\n', df_stores_f[(df_stores_f['Verif'] == 1) &\
 #                         (df_stores_f['dist'] >= 1)][ls_di + ['dist']].to_string()
+
+df_stores_f.to_csv(os.path.join(path_csv,
+                                'qlmc_scraped',
+                                'df_stores_final.csv'),
+                   encoding = 'utf-8',
+                   float_format='%.4f',
+                   index = False)

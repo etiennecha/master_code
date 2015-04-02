@@ -31,7 +31,7 @@ path_csv = os.path.join(path_data,
 
 df_stores = pd.read_csv(os.path.join(path_csv,
                                      'qlmc_scraped',
-                                     'df_stores.csv'),
+                                     'df_stores_final.csv'),
                         encoding = 'utf-8')
 
 df_comp = pd.read_csv(os.path.join(path_csv,
@@ -88,7 +88,7 @@ df_prod_prices = df_prod_prices.pivot(index='store_id', columns='product', value
 # http://matplotlib.org/examples/pylab_examples/boxplot_demo2.html
 # todo: update matplotlib http://stackoverflow.com/questions/21997897/ (ctd)
 # changing-what-the-ends-of-whiskers-represent-in-matplotlibs-boxplot-function
-ax = df_prod_prices.plot(kind = 'box', whis = [0.10, 0.90])
+ax = df_prod_prices.plot(kind = 'box') #, whis = [0.10, 0.90])
 # ax.get_xticklabels()[0].get_text()
 # textwrap.fill(ax.get_xticklabels()[0].get_text(), width = 20)
 ax.set_xticklabels([textwrap.fill(x.get_text(), 20) for x in ax.get_xticklabels()])
@@ -97,3 +97,42 @@ plt.show()
 # todo: find most common prod within important categories and draw maps
 # todo: restrict to most common prod and run regressions (check robustness?)
 # moustache plot by product?
+
+nb_prod = 15
+
+product = se_prod_vc.index[0]
+set_prod_stores = set(df_leclerc[df_leclerc['product'] == product]\
+                        ['store_id'].values)
+
+ls_set_prod_stores = []
+for i, product in enumerate(se_prod_vc.index[1:nb_prod], start = 1):
+  set_prod_stores = set_prod_stores.intersection(set(\
+                       df_leclerc[df_leclerc['product'] == product]\
+                          ['store_id'].values))
+  ls_set_prod_stores.append(set_prod_stores)
+
+ls_stores = list(ls_set_prod_stores[-1])
+
+df_test = df_leclerc[(df_leclerc['product'].isin(se_prod_vc.index[0:nb_prod])) &\
+                     (df_leclerc['store_id'].isin(ls_stores))].copy()
+se_store_sum = df_test[['store_id', 'price']].groupby('store_id').agg(sum)
+
+df_stores.set_index('store_id', inplace = True)
+df_stores['sum'] = se_store_sum
+
+df_stores_comp = df_stores[~df_stores['sum'].isnull()]
+
+df_stores_comp[['Nbr de caisses', 'Nbr emp', 'Surf Vente']].corr()
+
+plt.scatter(df_stores_comp['Surf Vente'].values, df_stores_comp['sum'].values)
+plt.show()
+
+plt.scatter(df_stores_comp['Nbr de caisses'].values, df_stores_comp['sum'].values)
+plt.show()
+
+plt.scatter(df_stores_comp['Nbr emp'].values, df_stores_comp['sum'].values)
+plt.show()
+
+# check competition intensity proxies?
+# regions (dist to warehouse?), distance to city center?
+# competition as shown by leclerc? prices of competitors?
