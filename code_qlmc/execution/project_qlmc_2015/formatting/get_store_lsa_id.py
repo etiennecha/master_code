@@ -148,9 +148,27 @@ for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
                                   enseigne_fra_alt,
                                   'indirect'))
       elif len(df_city_stores_alt) > 1:
-        # do: check with distances
-        ls_matched_stores.append(tup_store_info +\
-                                 (None, enseigne_fra_alt, 'ambiguous'))
+        # check with distances
+        df_city_stores_alt['qlmc_lat'] = row['store_lat']
+        df_city_stores_alt['qlmc_lng'] = row['store_lng']
+        df_city_stores_alt['dist'] =\
+           df_city_stores_alt.apply(lambda x: compute_distance_ar(x['qlmc_lat'],
+                                                              x['qlmc_lng'],
+                                                              x['Latitude'],
+                                                              x['Longitude']),
+                                axis = 1)
+        print u'\n', tup_store_info
+        print df_city_stores_alt[['Ident', 'Enseigne', 'ADRESSE1',
+                              'Code postal', 'Ville', 'dist']].to_string()
+        if len(df_city_stores_alt[df_city_stores_alt['dist'] <= 0.1]) == 1:
+          ls_matched_stores.append(tup_store_info +\
+                                   (df_city_stores_alt\
+                                      [df_city_stores_alt['dist'] <= 0.1].iloc[0]['Ident'],
+                                    enseigne_fra_alt,
+                                    'direct_gps'))
+        else:
+          ls_matched_stores.append(tup_store_info +\
+                                   (None, enseigne_fra_alt, 'ambiguous'))
       elif len(df_city_stores_alt) == 0:
         ls_matched_stores.append(tup_store_info +\
                                  (None, None, 'aucun'))
@@ -197,7 +215,40 @@ ls_fix_matching = [['super-u-rennes', '10914'],
                    ['carrefour-contact-st-nicolas-de-la-grave', '195959'],
                    ['auchan-city-tourcoing', '181644'],
                    ['casino-blanzac-les-matha', '4054'], # no match, diff ic
-                   ['les-halles-d-auchan-le-blanc-mesnil', '158859']] # no match, chain
+                   ['les-halles-d-auchan-le-blanc-mesnil', '158859'], # no match, chain
+                   ['leclerc-express-montlucon-le-pont-vert', '1147'],
+                   ['centre-e-leclerc-ajaccio-rte-d-alata', '50986'], # dist 0.120
+                   ['centre-e-leclerc-onet-le-chateau-rte-de-severac', '2232'], # dist 0.640
+                   ['centre-e-leclerc-varennes-sur-seine', '172159'],
+                   ['centre-e-leclerc-hyeres', '197842'], # twice same? one closed?
+                   ['centre-e-leclerc-dunkerque-centre-marine', '50061'],
+                   ['centre-e-leclerc-ajaccio-prince-imperial', '3503'],
+                   ['centre-e-leclerc-lannion-rte-de-guingamp', '2238'],
+                   ['centre-e-leclerc-le-cannet-rocheville-46-avenue-franklin-roosevelt', '436'],
+                   ['intermarche-super-cagnes-sur-mer', '10376'],
+                   ['intermarche-super-concarneau-korrigans', '3676'],
+                   ['intermarche-super-carcassonne', '1157'],
+                   ['intermarche-super-rodez', '13006'],
+                   ['intermarche-hyper-moissac', '171579'],
+                   ['intermarche-super-laval', '158676'],
+                   ['intermarche-super-niort', '3302'],
+                   ['intermarche-super-brest-1', '4114'],
+                   ['intermarche-super-brest-2', '4194'],
+                   ['intermarche-super-coudekerque-branche-89-av-jb-lebas', '177517'],
+                   ['intermarche-super-cahors', '2461'],
+                   ['intermarche-super-saint-malo', '4160'],
+                   ['intermarche-super-brest', '1028'], # dist 3.120 but only one remaining.. check
+                   ['intermarche-super-bergerac', '13340'],
+                   ['intermarche-super-la-teste-de-buch', '4154'],
+                   ['intermarche-contact-pontivy', '10968'],
+                   ['intermarche-super-langres', '4497'],
+                   ['intermarche-super-chateaudun-rte-d-orleans', '1203'],
+                   ['intermarche-super-clermont-ferrand', '1335'],
+                   ['intermarche-super-gradignan', '2835'],
+                   ['intermarche-super-la-seyne-sur-mer', '1429'],
+                   ['intermarche-super-toulon', '3319'],
+                   ['intermarche-super-muret', '1679'],
+                   ['intermarche-super-vienne', '4293']]
 
 ls_drive = [['casino-drive-lagny-sur-marne', '197888']] # drive
 
@@ -275,5 +326,5 @@ ls_final_gps = [['casino-prunelli-di-fiumorbo', 'qlmc'], # 4 and bad
 # Check if 4 means center of commune... if qlmc different then maybe best?
 # Anyway: only 7 have 4... and 122 have 3 => those should be inspected (use dist?)
 
-print u'\n', df_stores_f[(df_stores_f['Verif'] == 1) &\
-                         (df_stores_f['dist'] >= 1)][ls_di + ['dist']].to_string()
+#print u'\n', df_stores_f[(df_stores_f['Verif'] == 1) &\
+#                         (df_stores_f['dist'] >= 1)][ls_di + ['dist']].to_string()
