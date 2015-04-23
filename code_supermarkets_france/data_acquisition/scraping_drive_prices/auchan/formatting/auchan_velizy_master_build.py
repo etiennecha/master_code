@@ -1,3 +1,8 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import add_to_path
+from add_to_path import path_data
 import os
 import json
 from datetime import date, timedelta
@@ -5,21 +10,23 @@ import datetime
 import numpy as np
 import pprint
 
-# path_data: data folder at different locations at CREST vs. HOME
-# could do the same for path_code if necessary (import etc).
-if os.path.exists(r'W:/Bureau/Etienne_work/Data'):
-  path_data = r'W:/Bureau/Etienne_work/Data'
-else:
-  path_data = r'C:/Users/etna/Desktop/Etienne_work/Data'
-# structure of the data folder should be the same
-folder_source_auchan_velizy_prices = r'/data_drive_supermarkets/data_auchan/data_source/data_json_auchan_velizy'
-folder_built_auchan_velizy_json = r'/data_drive_supermarkets/data_auchan/data_built/data_json_auchan_velizy'
+path_auchan = os.path.join(path_data,
+                           u'data_drive_supermarkets',
+                           u'data_auchan')
+
+path_price_source = os.path.join(path_auchan,
+                                 u'data_source',
+                                 u'data_json_auchan_velizy')
+
+path_price_built = os.path.join(path_auchan,
+                                'data_built',
+                                'data_json_auchan_velizy')
 
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
     return json.loads(fichier.read())
 
-def enc_stock_json(database, chemin):
+def enc_json(database, chemin):
   with open(chemin, 'w') as fichier:
     json.dump(database, fichier)
 
