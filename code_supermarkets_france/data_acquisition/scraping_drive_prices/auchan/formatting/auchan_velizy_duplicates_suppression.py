@@ -172,11 +172,13 @@ for date_str in ls_dates:
             list_sub_2 = [elt.strip() for elt in list(set(dict_prod_ref_sds[product])) if elt]
             if [x for x in list_sub_1 if x in list_sub_2]:
               dict_sets_differences[tup_prod_sds] = [x for x in list_sub_1 if x in list_sub_2]
-            #print u'\nDiff', product,'---->', ' -- '.join([elt.strip() for elt\
-            #                                                 in list(set(ls_prod_sds)) if elt])
-            #print u'1:', ' -- '.join(list_sub_1)
-            #print u'2:', ' -- '.join(list_sub_2)
-            #print u'intersection', [x for x in list_sub_1 if x in list_sub_2], '\n'
+
+            # Three or more sub_dpts
+            for k,v in dict_sets_differences.items()[20:40]:
+              if len(k) >= 3:
+                print u'\n'
+                print k
+                print v
 
     # Apply mapping: update dict_prod_1_sds
     c = 0
