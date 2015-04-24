@@ -52,17 +52,21 @@ def get_list_no_duplicates(list_with_duplicates):
 
 def get_formatted_file(master_period):
   for product in master_period:
-    product['product_total_price'] = ''.join(product['product_total_price']).replace('<sub>','')\
-                                       .replace('<span>&euro;</span></sub>','').replace(',','.')
+    product['product_total_price'] = ''.join(product['product_total_price']).\
+                                               replace('<sub>','').\
+                                               replace('<span>&euro;</span></sub>','').\
+                                               replace(',','.')
     product['price_unit'] = product['product_unit_price'][0]
-    product['product_unit_price'] = product['product_unit_price'][2].replace('&euro;','')\
-                                      .replace(',','.')
+    product['product_unit_price'] = product['product_unit_price'][2].\
+                                      replace('&euro;','').\
+                                      replace(',','.')
     product['product_title'] = product['product_title'][0]
     if len(product['product_promo']) == 0:
       product['product_promo_amount'] = '0'
       product['product_promo_type'] = ''
     else:
-      product['product_promo_amount'] = product['product_promo'][0].replace(',','.')
+      product['product_promo_amount'] = product['product_promo'][0].\
+                                          replace(',','.')
       product['product_promo_type'] = product['product_promo'][1]
     del product['product_promo']
     if len(product['product_promo_vignette']) == 0:
@@ -91,7 +95,8 @@ print 'Nb uniques products in reference period: {:d}'.format(len(set_prod_ref))
 
 dict_prod_ref_sds = {}
 for product in ref_file:
-  dict_prod_ref_sds.setdefault(product['product_title'][0], []).append(product['sub_department'])
+  dict_prod_ref_sds.setdefault(product['product_title'][0], []).\
+      append(product['sub_department'])
 
 #for product in get_list_no_duplicates(list_prod_ref):
 #  if len(dict_prod_ref[product])!=1:
@@ -143,7 +148,8 @@ for date_str in ls_dates:
     # Check results (in particular products no more listed in ref files)
     dict_prod_1_sds = {}
     for product in ls_products_1:
-      dict_prod_1_sds.setdefault(product['product_title'][0], []).append(product['sub_department'])
+      dict_prod_1_sds.setdefault(product['product_title'][0], []).\
+          append(product['sub_department'])
     
     # Idea: find those products which wrongly belong to several sub-dpts
     # Look for a mapping between wrong multi-sub-dpt belonging and the right classification
@@ -151,7 +157,8 @@ for date_str in ls_dates:
     # Mapping is contained in dict_sets_differences
     dict_prod_sds = {}
     for product in ls_products:
-      dict_prod_sds.setdefault(product['product_title'][0], []).append(product['sub_department'])
+      dict_prod_sds.setdefault(product['product_title'][0], []).\
+          append(product['sub_department'])
     dict_sets_differences = {}
     for product, ls_prod_sds in dict_prod_sds.items():
       if product in set_prod_ref:
@@ -173,12 +180,12 @@ for date_str in ls_dates:
             if [x for x in list_sub_1 if x in list_sub_2]:
               dict_sets_differences[tup_prod_sds] = [x for x in list_sub_1 if x in list_sub_2]
 
-            # Three or more sub_dpts
-            for k,v in dict_sets_differences.items()[20:40]:
-              if len(k) >= 3:
-                print u'\n'
-                print k
-                print v
+    # Three or more sub_dpts
+    for k,v in dict_sets_differences.items()[20:40]:
+      if len(k) >= 3:
+        print u'\n'
+        print k
+        print v
 
     # Apply mapping: update dict_prod_1_sds
     c = 0
@@ -188,11 +195,8 @@ for date_str in ls_dates:
         dict_prod_1_sds[product] =\
             dict_sets_differences[tup_prod_sds]
         c+=1
-      dict_prod_1_sds[product] = list(set([elt.strip() for elt in dict_prod_1_sds[product] if elt]))
-    ## Check: doesn't look bad
-    #for product in get_list_no_duplicates(list_prod_after):
-	  #  if len(dict_prod_period_after[product])!=1:
-		#print [subdpt.strip() for subdpt in dict_prod_period_after[product] if subdpt],'        ', product
+      dict_prod_1_sds[product] = list(set([elt.strip() for elt\
+                                             in dict_prod_1_sds[product] if elt]))
     
     # Now get list of legit (product, sub_department)
     ls_clean_tuples = []
@@ -202,10 +206,12 @@ for date_str in ls_dates:
 
     # Keep only products if legit (product, sub_department)
     ls_products_2 = [product for product in ls_products_1\
-                       if (product['product_title'][0], product['sub_department'].strip()) in ls_clean_tuples]
+                       if (product['product_title'][0],
+                           product['sub_department'].strip()) in ls_clean_tuples]
 
     print 'Nb products after second filter {:d}'.format(len(ls_products_2))
-    # enc_json(ls_products_2, path_data + folder_source_auchan_velizy_prices + r'/%s_auchan_velizy' %date_str)
+    #enc_json(ls_products_2, os.path.join(path_price_source,
+    #                                     u'{:s}_auchan_velizy'.format(date_str))
   
     # Temp
     break

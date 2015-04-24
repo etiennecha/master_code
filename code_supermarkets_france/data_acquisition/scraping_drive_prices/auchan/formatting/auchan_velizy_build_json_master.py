@@ -45,17 +45,24 @@ def get_formatted_file(master_period):
   list_products = []
   for product in master_period:
     # clean fields
-    product['product_total_price'] = ''.join(product['product_total_price']).replace('<sub>','')\
-                                       .replace('<span>&euro;</span></sub>','').replace(',','.')
+    product['product_total_price'] = ''.join(product['product_total_price']).\
+                                               replace('<sub>','').\
+                                               replace('<span>&euro;</span></sub>','').\
+                                               replace(',','.')
     product['price_unit'] = product['product_unit_price'][0]
-    product['product_unit_price'] = product['product_unit_price'][2].replace('&euro;','').replace(',','.')
+    product['product_unit_price'] = product['product_unit_price'][2].\
+                                      replace('&euro;','').\
+                                      replace(',','.')
     product['product_title'] = product['product_title'][0]
     if len(product['product_promo']) == 0:
       product['product_promo_amount'] = '0'
       product['product_promo_type'] = ''
     else:
-      product['product_promo_amount'] = product['product_promo'][0].replace(',','.')
-      product['product_promo_type'] = product['product_promo'][1].replace('<sup>','').replace('</sup>','')
+      product['product_promo_amount'] = product['product_promo'][0].\
+                                          replace(',','.')
+      product['product_promo_type'] = product['product_promo'][1].\
+                                        replace('<sup>','').\
+                                        replace('</sup>','')
     del product['product_promo']
     if len(product['product_promo_vignette']) == 0:
       product['product_promo_vignette'] = ''
@@ -72,7 +79,8 @@ def get_formatted_file(master_period):
       else:
         product_index = list_products.index(product['product_title'])
         # drop product if same name but different price (not perfect dynamically...)
-        if clean_master_period[product_index]['product_total_price'] != product['product_total_price']:
+        if clean_master_period[product_index]['product_total_price'] !=\
+                product['product_total_price']:
           del clean_master_period[product_index]
           del list_products[product_index]
         else:
@@ -86,24 +94,13 @@ def get_formatted_file(master_period):
               print '\n pbm - same product with different info'
               pprint.pprint(clean_master_period[product_index])
               pprint.pprint(product)
-  # for product in master_dict:
-    # master_list.append([product['department'],
-                        # product['sub_department'],
-                        # product['product_title'],
-                        # float(product['product_total_price']),
-                        # float(product['product_unit_price']),
-                        # product['price_unit'],
-                        # product['product_flag'],
-                        # float(product['product_promo_amount']),
-                        # product['product_promo_type'],
-                        # product['product_promo_vignette'],
-                        # product['available']])
   return clean_master_period
 
-def build_master(get_formatted_file, raw_data_folder, file_extension, start_date, end_date, id_str, price_str, date_str, key_dict):
+def build_master(get_formatted_file, path_data, file_extension,
+                 start_date, end_date, id_str, price_str, date_str, key_dict):
   """
-  The function aggregates files i.e. lists of dicos to produce a master (incl. several components)
-  So far it uses a function to read and format the raw files.. but that should be dropped later on
+  The function aggregates files i.e. lists of dicts into a dict
+  It uses a function to read and format the raw files (to be dropped lated?)
   ----
   Arguments description:
   - raw_data_folder: location of files
@@ -118,24 +115,29 @@ def build_master(get_formatted_file, raw_data_folder, file_extension, start_date
   master_list_prices = []
   master_list_dates = []
   for date_index, date in enumerate(master_dates):
-    file_path = raw_data_folder + r'/%s%s' %(date, file_extension)
+    file_path = os.path.join(path_data, r'{:s}{:s}'.format(date, file_extension))
     if os.path.exists(file_path):
       master_period = get_formatted_file(dec_json(file_path))
       for observation in master_period:
         if observation[id_str] in master_list_ids:
           observation_index = master_list_ids.index(observation[id_str])
           for original_key, new_key in key_dict.iteritems():
-            if observation[original_key] != master_dict_general_info[observation[id_str]][new_key][-1][0]:
-              master_dict_general_info[observation[id_str]][new_key].append((observation[original_key], date_index))
+            if observation[original_key] !=\
+                 master_dict_general_info[observation[id_str]][new_key][-1][0]:
+              master_dict_general_info[observation[id_str]][new_key].append(\
+                     (observation[original_key],
+                      date_index))
         else:
           master_list_ids.append(observation[id_str])
           observation_index = master_list_ids.index(observation[id_str])
           master_dict_general_info[observation[id_str]] = {'rank': observation_index}
           for original_key, new_key in key_dict.iteritems():
-            master_dict_general_info[observation[id_str]][new_key] = [(observation[original_key], date_index)]
+            master_dict_general_info[observation[id_str]][new_key] =\
+                  [(observation[original_key],
+                    date_index)]
           master_list_prices.append([])
           master_list_dates.append([])
-        # fill price/date holes (either because of missing dates or individuals occasionnally missing)
+        # fill price/date holes (either bc of missing dates or individuals occas. missing)
         while len(master_list_prices[observation_index]) < date_index:
           master_list_prices[observation_index].append(None)
         master_list_prices[observation_index].append(observation[price_str])
@@ -165,7 +167,9 @@ def fill_holes(master_price, fill_limit):
   for index_list_prices, list_prices in enumerate(master_price):
     first_observation = next(obs_ind for obs_ind, obs in enumerate(list_prices) if obs)
     # next breaks (StopIterration) if one list is full of None (which should not happen)
-    last_observation = len(list_prices) - 1 - next(obs_ind for obs_ind, obs in enumerate(list_prices[::-1]) if obs)
+    last_observation =\
+        len(list_prices) - 1 - next(obs_ind for obs_ind, obs\
+                                       in enumerate(list_prices[::-1]) if obs)
     list_prices_filled = [None for i in range(first_observation)]
     observation_index = first_observation
     while observation_index < last_observation:
@@ -178,9 +182,11 @@ def fill_holes(master_price, fill_limit):
           next_observation_relative_position += 1
         if next_observation_relative_position < fill_limit:
           # fills with the next available price: could as well be the last available price
-          list_prices_filled += [list_prices[observation_index + next_observation_relative_position]\
-                                                      for i in range(next_observation_relative_position)]
-          if list_prices[observation_index-1] != list_prices[observation_index + next_observation_relative_position]:
+          list_prices_filled +=\
+              [list_prices[observation_index + next_observation_relative_position]\
+                   for i in range(next_observation_relative_position)]
+          if list_prices[observation_index-1] !=\
+                 list_prices[observation_index + next_observation_relative_position]:
             print 'different prices between and after', index_list_prices
         else:
           list_prices_filled += [None for i in range(next_observation_relative_position)]
@@ -193,7 +199,8 @@ def get_price_lists_with_holes(master_price):
   list_dilettante = []
   for index_list_prices, list_prices in enumerate(master_price):
     first_observation = next(obs_ind for obs_ind, obs in enumerate(list_prices) if obs)
-    last_observation = len(list_prices) - 1 - next(obs_ind for obs_ind, obs in enumerate(list_prices[::-1]) if obs)
+    last_observation = len(list_prices) - 1 -\
+                         next(obs_ind for obs_ind, obs in enumerate(list_prices[::-1]) if obs)
     if None in list_prices[first_observation:last_observation]:
       list_dilettante.append(index_list_prices)
   return list_dilettante
@@ -226,24 +233,27 @@ def get_field_as_list(id, field, master_dict_general_info, master_dates):
   return list_result
 
 def display_product_info(ind, master):
-  print master['list_ids'][ind]
-  pprint.pprint(master['dict_general_info'][master['list_ids'][ind]])
-  print master['list_indiv_prices'][ind]
+  print master['ls_ids'][ind]
+  pprint.pprint(master['dict_general_info'][master['ls_ids'][ind]])
+  print master['ls_ls_prices'][ind]
 
-# #####################
-# MASTER BUILDING
-# #####################
+# #############
+# BUILD MASTER
+# #############
 
-# test of formatting function
-dict_dpt_subdpts = {}
-date_test = '20130411'
-master_period = get_formatted_file(dec_json(path_data + folder_source_auchan_velizy_prices +\
-                                                             r'/%s_auchan_velizy' %date_test))
-# build master
-raw_data_folder = path_data + folder_source_auchan_velizy_prices
+dict_dpt_subdpts = {} # needed and filled by get_formatted_file()
+
+# Test formatting function
+date_str = '20130411'
+path_file =  os.path.join(path_price_source,
+                          u'{:s}_auchan_velizy'.format(date_str))
+ls_products_ex = get_formatted_file(dec_json(path_file))
+
+# Build master
+path_data = path_price_source
 file_extension = r'_auchan_velizy'
 start_date = date(2012,11,22)
-end_date = date(2013,5,13)
+end_date =  date(2012,12,22) # date(2013,5,13)
 id_str = 'product_title'
 price_str = 'product_total_price'
 date_str = 'product_unit_price'
@@ -254,15 +264,15 @@ key_dict = {'department' : 'department',
             'product_promo_type' : 'product_promo_type',
             'product_promo_vignette' : 'product_promo_vignette',
             'product_promo_amount' : 'product_promo_amount'}
-master = build_master(get_formatted_file, raw_data_folder, file_extension,\
+dict_master = build_master(get_formatted_file, path_data, file_extension,\
                         start_date, end_date, id_str, price_str, date_str, key_dict)
 # it may not be appropriate to fill gaps
-# however in the short term it makes price changes analysis easier (difference between series...)
-master_prices_corrected = fill_holes(master['list_indiv_prices'], 3)
-list_products_with_holes = get_price_lists_with_holes(master_prices_corrected)
-
-enc_stock_json(master, path_data + folder_built_auchan_velizy_json + r'/master_duplicate')
+# however in the short term it makes price changes analysis easier (diff between series)
+ls_ls_prices_corrected = fill_holes(dict_master['ls_ls_prices'], 3)
+ls_products_with_holes = get_price_lists_with_holes(ls_ls_prices_corrected)
 
 for k, v in dict_dpt_subdpts.iteritems():
-	dict_dpt_subdpts[k] = list(v)
-enc_stock_json(dict_dpt_subdpts, path_data + folder_built_auchan_velizy_json + r'/dict_dpt_subdpts')
+  dict_dpt_subdpts[k] = list(v)
+
+#enc_json(dict_master, os.path.join(path_price_built, 'master_duplicate'))
+#enc_json(dict_dpt_subdpts, os.path.join(path_price_built, 'dict_dpt_subdpts'))
