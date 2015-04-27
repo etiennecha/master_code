@@ -273,43 +273,58 @@ print df_prod_dsd[['nb_obs', 'nb_price_chges']].describe()
 print u'\nOverview products with high nb_price_chges'
 print df_prod_dsd[0:20].to_string()
 
-# #################
-# EXAMPLE: COCA
-# #################
-
-# todo: check issues with product categories...
-# print df_prod_dsd[df_prod_dsd['title'].str.contains('Coca')].to_string()
-
-df_ex = df_prod_prices[['date', 'total_price']]\
-          [df_prod_prices['title'] == u'Coca-Cola Classic 2l']
-df_ex.set_index('date', inplace = True)
-df_ex['total_price'].plot()
-
-# Coca with highest number of observations
-
-print df_prod_dsd[(df_prod_dsd['title'].str.contains('Coca', case = False))].to_string()
-
-
-ls_coca_title =\
-  df_prod_dsd['title'][(df_prod_dsd['title'].str.contains('Coca', case = False)) &\
-                       (df_prod_dsd['title'].str.contains('1,5L', case = False)) &\
-                       (df_prod_dsd['nb_obs'] >= 200)]\
-                  .unique().tolist()
-df_coca = df_prod_prices[['title', 'date', 'total_price']]\
-            [df_prod_prices['title'].isin(ls_coca_title)]
-df_coca_wide = df_coca.pivot('date', 'title', 'total_price')
-
+ls_titles = [u'chou fleur  pièce',
+             u'pommes de terre blonde filet 2,5kg vapeur,salade, sautées',
+             u'concombre pièce',
+             u'pommes gala tenroy sachet 1,5kg et plus',
+             u'courgettes filet 1kg',
+df_prices = df_prod_prices[['title', 'date', 'total_price']]\
+              [df_prod_prices['title'].isin(ls_titles)]
+df_prices_wide = df_prices.pivot('date', 'title', 'total_price')
 index = pd.date_range(start = df_prod_prices['date'].min(),
                       end   = df_prod_prices['date'].max(), 
                       freq='D')
-df_coca_wide = df_coca_wide.reindex(index = list(index))
+df_prices_wide = df_prices_wide.reindex(index = list(index))
+df_prices_wide.plot()
+plt.show()
 
-# a lot of products have few price observations
-# add in database: nb of obs, nb price changes
-
-# u"Coca Cola classic 12x1,5l", # 37 obs
-# u'Coca Cola 8x1,5l format spécial', # 1 obs
-ls_coca_15_classic = [u'Coca Cola 6x1,5l offre économique', # 23 obs
-                      u"Coca-Cola 6x1,5l offre 100% remboursé différée", # 60 obs
-                      u'Coca-Cola standard 6x1,5l', # 173 obs
-                      u'Coca-Cola standard 1,5l'] # 213 obs
+## #################
+## EXAMPLE: COCA
+## #################
+#
+## todo: check issues with product categories...
+## print df_prod_dsd[df_prod_dsd['title'].str.contains('Coca')].to_string()
+#
+#df_ex = df_prod_prices[['date', 'total_price']]\
+#          [df_prod_prices['title'] == u'Coca-Cola Classic 2l']
+#df_ex.set_index('date', inplace = True)
+#df_ex['total_price'].plot()
+#
+## Coca with highest number of observations
+#
+#print df_prod_dsd[(df_prod_dsd['title'].str.contains('Coca', case = False))].to_string()
+#
+#
+#ls_coca_title =\
+#  df_prod_dsd['title'][(df_prod_dsd['title'].str.contains('Coca', case = False)) &\
+#                       (df_prod_dsd['title'].str.contains('1,5L', case = False)) &\
+#                       (df_prod_dsd['nb_obs'] >= 200)]\
+#                  .unique().tolist()
+#df_coca = df_prod_prices[['title', 'date', 'total_price']]\
+#            [df_prod_prices['title'].isin(ls_coca_title)]
+#df_coca_wide = df_coca.pivot('date', 'title', 'total_price')
+#
+#index = pd.date_range(start = df_prod_prices['date'].min(),
+#                      end   = df_prod_prices['date'].max(), 
+#                      freq='D')
+#df_coca_wide = df_coca_wide.reindex(index = list(index))
+#
+## a lot of products have few price observations
+## add in database: nb of obs, nb price changes
+#
+## u"Coca Cola classic 12x1,5l", # 37 obs
+## u'Coca Cola 8x1,5l format spécial', # 1 obs
+#ls_coca_15_classic = [u'Coca Cola 6x1,5l offre économique', # 23 obs
+#                      u"Coca-Cola 6x1,5l offre 100% remboursé différée", # 60 obs
+#                      u'Coca-Cola standard 6x1,5l', # 173 obs
+#                      u'Coca-Cola standard 1,5l'] # 213 obs
