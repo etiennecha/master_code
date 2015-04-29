@@ -55,8 +55,9 @@ opener.addheaders = [('User-agent',
                         'Chrome/23.0.1271.64 Safari/537.11')]
 urllib2.install_opener(opener)
 
-path_data = ur'W:\Bureau\Etienne_work\Code\code_tests\scraping_vins'
-dict_info = dec_json(path_data + ur'\dict_carrefour_prelim_info.json')
+path_current_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+dict_info = dec_json(os.path.join(path_current_dir,
+                                  u'dict_carrefour_prelim_info.json'))
 
 dict_bottle_rows = {}
 
@@ -101,4 +102,5 @@ for bottle_url_extension in dict_info.keys():
 # seems quite a lot of info in desc... to be extracted with regex
 
 enc_json(dict_bottle_rows,
-         path_data + ur'\dict_carrefour_wine.json')
+         os.path.join(path_current_dir,
+                      u'dict_carrefour_wine.json'))

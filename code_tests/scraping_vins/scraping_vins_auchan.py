@@ -131,8 +131,10 @@ for i in range(11):
   
     dict_bottle_rows[bottle_url_extension] =  ls_prod_rows
 
+path_current_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 #enc_json(dict_bottle_rows,
-#          ur'W:\Bureau\Etienne_work\Code\code_tests\scraping_vins\dict_auchan_wine.json')
+#         os.path.join(path_current_dir,
+#                      u'dict_auchan_wine.json'))
 
 # Caution: forgot ls_ppu in first pass hence could have info from previous if missing
 # Results of first past kep in dict_bottle_rows_first_try.json

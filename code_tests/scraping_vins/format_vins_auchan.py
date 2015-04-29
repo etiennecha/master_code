@@ -24,8 +24,9 @@ def clean_text(some_str):
                      .strip()
   return some_str
 
-dict_auchan =\
-  dec_json(ur'W:\Bureau\Etienne_work\Code\code_tests\scraping_vins\dict_auchan_wine.json')
+path_current_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
+dict_auchan = dec_json(os.path.join(path_current_dir,
+                                    u'dict_auchan_wine.json'))
 
 # Get dict of dict
 dict_dict_auchan = {}
@@ -46,6 +47,7 @@ for k, v in dict_dict_auchan.items():
 
 df_auchan_wine = pd.DataFrame(ls_rows, columns = ls_fields)
 
-df_auchan_wine.to_csv(ur'W:\Bureau\Etienne_work\Code\code_tests\scraping_vins\df_auchan_wine.csv',
+df_auchan_wine.to_csv(os.path.join(path_current_dir,
+                                   'df_auchan_wine.csv'),
                       encoding = 'utf-8',
                       index = False)

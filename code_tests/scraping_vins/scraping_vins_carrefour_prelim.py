@@ -146,8 +146,8 @@ for i in range(1, 37):
                           
     dict_prices[href] = ls_prod_prices
 
-path_data = ur'W:\Bureau\Etienne_work\Code\code_tests\scraping_vins'
+path_current_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 enc_json(dict_prices,
-         path_data + ur'\dict_carrefour_prelim_prices.json')
+         os.path.join(path_current_dir, u'dict_carrefour_prelim_prices.json'))
 enc_json(dict_info,
-         path_data + ur'\dict_carrefour_prelim_info.json')
+         os.path.join(path_currentçdir, u'dict_carrefour_prelim_info.json'))
