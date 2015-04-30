@@ -163,7 +163,7 @@ ls_fix_dsd = [[u'Label 5 whisky flask 40° -20cl',
                   u'Produits solaires',
                   u'Soins femme']]]
 
-# to be continued in more efficient way
+# to be continued (in a more efficient way?)
 
 for title, ls_sub_departments in ls_fix_dsd:
   df_1_sub_dsd = df_1_sub_dsd[(df_1_sub_dsd['title'] != title) |\
@@ -277,7 +277,8 @@ ls_titles = [u'chou fleur  pièce',
              u'pommes de terre blonde filet 2,5kg vapeur,salade, sautées',
              u'concombre pièce',
              u'pommes gala tenroy sachet 1,5kg et plus',
-             u'courgettes filet 1kg',
+             u'courgettes filet 1kg']
+
 df_prices = df_prod_prices[['title', 'date', 'total_price']]\
               [df_prod_prices['title'].isin(ls_titles)]
 df_prices_wide = df_prices.pivot('date', 'title', 'total_price')
@@ -287,6 +288,15 @@ index = pd.date_range(start = df_prod_prices['date'].min(),
 df_prices_wide = df_prices_wide.reindex(index = list(index))
 df_prices_wide.plot()
 plt.show()
+
+print u'\nOverview dpt and subdpts'
+df_dsd = df_prod_dsd[['department', 'sub_department']].drop_duplicates()
+df_dsd.sort(['department', 'sub_department'], inplace = True)
+
+## Extract vins
+#len(df_prod_dsd[df_prod_dsd['sub_department'] == 'Vins'])
+#ls_title_vins = df_prod_dsd['title'][df_prod_dsd['sub_department'] == 'Vins'].unique().tolist()
+#df_prices_vins = df_prod_prices[df_prod_prices['title'].isin(ls_title_vins)]
 
 ## #################
 ## EXAMPLE: COCA
