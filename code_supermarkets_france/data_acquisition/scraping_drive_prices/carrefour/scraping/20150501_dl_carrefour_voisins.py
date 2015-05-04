@@ -9,10 +9,11 @@ import urllib
 import cookielib
 from cookielib import Cookie
 from bs4 import BeautifulSoup
-import string
+import json
+import pprint
+# import string
 import re
 from datetime import date
-import json
 
 def enc_json(data, path_data):
   with open(path_data, 'w') as f:
@@ -64,8 +65,6 @@ def parse_product_page(product_soup):
     ls_price = extract_bs_text(bloc_price) # conservative: captures all
     ls_promo = extract_bs_text(bloc_price.find('div', {'class' : 'priceBlock promoBlock'}))
     ls_promo_heading = extract_bs_text(bloc_price.find('h4', {'class' : 'heading'}))
-    if (ls_price == ls_promo) and not ls_promo_heading:
-      print bloc_product
     ls_reduction = extract_bs_text(bloc_price.find('div', {'class' : 'spec reduction'}))
     ls_format = extract_bs_text(bloc_price.find('span', {'class' : 'unit'}))
     ls_total_price = extract_bs_text(bloc_price.find('div', {'class' : 'spec price'}))
@@ -97,78 +96,126 @@ response = urllib2.urlopen(drive_website_url + r'/drive/accueil')
 data = response.read()
 soup = BeautifulSoup(data)
 
-## go on store page (deprecated)
-#shop_blocs = soup.findAll('li', {'class' : 'shop'})
-#shop_voisin = soup.find('li', {'id' : 215, 'class' : 'shop'})
-#shop_voisin_href = shop_voisin.find('a')['href']
-#shop_voisin_href = soup.find('form', {'id' : 'drivePickingForm_290'})['action']
+ls_bloc_stores = soup.findAll('li', {'class' : 'shop'})
 
-post_args = {'id' : 'drivePickingForm_404',
-             'name' : 'drivePickingForm_404'}
-req = urllib2.Request(drive_website_url)
-req.add_data(urllib.urlencode(post_args))
-response_2 = urllib2.urlopen(req)
-data_2 = response_2.read()
-soup_2 = BeautifulSoup(data_2)
+# Browse ls store markers (json)
+ls_json_stores = re.search(u'shopLatLng = (.*?);', data).group(1)
+ls_ls_stores = json.loads(ls_json_stores)
 
-# need to play with cookies to get products
-cookie_jar.set_cookie(makeCookie("serviceDrive", "3"))
-cookie_jar.set_cookie(makeCookie("storeDrive", "215"))
-cookie_jar.set_cookie(makeCookie("browserSupportCheck", "checked"))
+## DRIVE VOISINS
+#for ls_store in ls_ls_stores:
+#  if ls_store[-1] == u"78 - VOISINS LE BRETONNEUX":
+#    print ls_store
+#    break
+
+#ls_stores_toloop = [u'06 - ANTIBES (HYPER)',
+#                    u'06 - NICE LINGOSTIERE',
+#                    u'13 - AIX EN PROVENCE',
+#                    u'69 - ECULLY',
+#                    u'69 - VENISSIEUX',
+#                    u'91 - LES ULIS',
+#                    u'91 - VILLABE',
+#                    u'92 - CLAMART',
+#                    u"78 - VOISINS LE BRETONNEUX",
+#                    u'33 - MERIGNAC (HYPER)']
+
+# GO TO STORE PAGE (QUERY TO GET COOKIES)
+for bloc_store in ls_bloc_stores:
+  if bloc_store.find('h2', {'class' : 'heading'}).span.text ==\
+         u"78 - VOISINS LE BRETONNEUX":
+    bloc_store_submit = bloc_store.find('li', {'class' : 'submit'})
+    store_url = bloc_store_submit.find('form', {'action' : True})['action']
+    store_tformdata = bloc_store_submit.find('input', {'name' : 't:formdata'})['value']
+
+store_headers = {u'Host' : 'courses.carrefour.fr',
+                 u'Origin' : 'http://courses.carrefour.fr',
+                 u'Referer' : 'http://courses.carrefour.fr/drive/accueil',
+                 u'X-Requested-With' : u'XMLHttpRequest',
+                 u'X-Prototype-Version' : u'1.6.0.3',
+                 u'Content-type' : u'application/x-www-form-urlencoded; charset=UTF-8'}
+store_post = {'t:formdata' : store_tformdata}
+store_req = urllib2.Request(u'http://courses.carrefour.fr' + store_url,
+                            data = urllib.urlencode(store_post),
+                            headers = store_headers)
+store_response = urllib2.urlopen(store_req)
 # pprint.pprint(cookie_jar.__dict__)
 
-product_links = soup_2.findAll('a', {'class' : 'page',
-                                     'href' : re.compile('/drive/tous-les-rayons/*')})
+## ALTERNATIVE GO TO STORE PAGE (add cookies manually)
+#cookie_jar.set_cookie(makeCookie("serviceDrive", "3"))
+#cookie_jar.set_cookie(makeCookie("storeDrive", "215"))
+#cookie_jar.set_cookie(makeCookie("browserSupportCheck", "checked"))
+# pprint.pprint(cookie_jar.__dict__)
+
+# GET DPTS AND SUBDPTS (PAGES TO VISIT)
+store_response_2 = urllib2.urlopen(drive_website_url + '/drive/accueil')
+store_data = store_response_2.read()
+store_soup = BeautifulSoup(store_data)
+
+#ls_dsd_href = store_soup.findAll('a', {'class' : 'page',
+#                                       'href' : re.compile('/drive/tous-les-rayons/*')})
+
+bloc_dpts = store_soup.find('div', {'class' : 'lowerLevel'})
+ls_dpt_blocs = bloc_dpts.findAll('li', {'class' : True,
+                                        'onmouseout' : True,
+                                        'onmouseover' : True})
+dict_dsds = {}
+for dpt_bloc in ls_dpt_blocs:
+  dpt_title = dpt_bloc.find('a', {'class' : 'page'}).text.strip()
+  # next line to avoid capturing url of dpt
+  dpt_sd_bloc = dpt_bloc.find('div', {'class' : 'nextLevel'})
+  ls_sd_blocs = dpt_sd_bloc.findAll('a', {'class' : 'page',
+                                         'href' : True})
+  ls_sds = [(sd_bloc.text, sd_bloc['href']) for sd_bloc in ls_sd_blocs]
+  dict_dsds[dpt_title] = ls_sds
+
 ls_products = []
-for product_link in product_links[1:]:
-  if product_link.find('img', {'alt':''}):
-    # a bit fragile
-    department = product_link.text
-  else:
-    try:
-      sub_department_link  = product_link['href']
-      sub_department = product_link.text
-      response_3 = urllib2.urlopen(drive_website_url + sub_department_link)
-      data_3 = response_3.read()
-      soup_3 = BeautifulSoup(data_3)
-      
-      ls_sd_dict_products = parse_product_page(soup_3)
-      # scrap other pages if any
-      ac_param = sub_department_link.split('/')[-1]
-      for cookie in cookie_jar:
-        if cookie.name == 'JSESSIONID':
-          jsessionid = cookie.value
-      ls_page_nbs = extract_bs_text(soup_3.find('ul', {'class' : 'pageNumbers'}))
-      if ls_page_nbs and len(ls_page_nbs) > 1:
-        for page_nb in ls_page_nbs[1:]:
-          headers_page = {u'Host' : 'courses.carrefour.fr',
-                          u'Origin' : 'http://courses.carrefour.fr',
-                          u'Referer' : drive_website_url + sub_department_link +\
-                                       u';jsessionid=' + jsessionid,
-                          u'X-Requested-With' : u'XMLHttpRequest',
-                          u'X-Prototype-Version' : u'1.6.0.3',
-                          u'Content-type' : u'application/x-www-form-urlencoded; charset=UTF-8'}
-          data_page = {'t:ac' : ac_param}
-          req_page = urllib2.Request(u'http://courses.carrefour.fr/drive'+\
-                                     u'/rayon.categoryproductlistcontainer'+\
-                                     u'.paging.selectpage/{:s}?t:ac={:s}'.format(page_nb,
-                                                                                 ac_param),
-                                     data = urllib.urlencode(data_page),
-                                     headers = headers_page)
-          response_page = urllib2.urlopen(req_page)
-          data_page = response_page.read()
-          
-          json_content = json.loads(data_page)
-          data_prods = json_content['zones']['componentZone']
-          soup_prods = BeautifulSoup(data_prods)
-          ls_sd_dict_products += parse_product_page(soup_prods)
-      for dict_product in ls_sd_dict_products:
-        dict_product['department'] = department
-        dict_product['sub_department'] = sub_department
-      ls_products += ls_sd_dict_products
-    except Exception, e:
-      print [department, sub_department, sub_department_link]
-      print e
+# VISIT AND PARSE SUBDPT PAGES
+for dpt, ls_sds in dict_dsds.items():
+  for sub_dpt, sub_dpt_href in ls_sds:
+    # exclude pages displaying specific selections of products
+    if re.match('/drive/tous-les-rayons/', sub_dpt_href):
+      try:
+        response_3 = urllib2.urlopen(drive_website_url + sub_dpt_href)
+        data_3 = response_3.read()
+        soup_3 = BeautifulSoup(data_3)
+        
+        ls_sd_dict_products = parse_product_page(soup_3)
+        # scrap other pages if any
+        ac_param = sub_dpt_href.split('/')[-1]
+        for cookie in cookie_jar:
+          if cookie.name == 'JSESSIONID':
+            jsessionid = cookie.value
+        ls_page_nbs = extract_bs_text(soup_3.find('ul', {'class' : 'pageNumbers'}))
+        if ls_page_nbs and len(ls_page_nbs) > 1:
+          for page_nb in ls_page_nbs[1:]:
+            headers_page = {u'Host' : 'courses.carrefour.fr',
+                            u'Origin' : 'http://courses.carrefour.fr',
+                            u'Referer' : drive_website_url + sub_dpt_href +\
+                                         u';jsessionid=' + jsessionid,
+                            u'X-Requested-With' : u'XMLHttpRequest',
+                            u'X-Prototype-Version' : u'1.6.0.3',
+                            u'Content-type' : u'application/x-www-form-urlencoded; charset=UTF-8'}
+            data_page = {'t:ac' : ac_param}
+            req_page = urllib2.Request(u'http://courses.carrefour.fr/drive'+\
+                                       u'/rayon.categoryproductlistcontainer'+\
+                                       u'.paging.selectpage/{:s}?t:ac={:s}'.format(page_nb,
+                                                                                   ac_param),
+                                       data = urllib.urlencode(data_page),
+                                       headers = headers_page)
+            response_page = urllib2.urlopen(req_page)
+            data_page = response_page.read()
+            
+            json_content = json.loads(data_page)
+            data_prods = json_content['zones']['componentZone']
+            soup_prods = BeautifulSoup(data_prods)
+            ls_sd_dict_products += parse_product_page(soup_prods)
+        for dict_product in ls_sd_dict_products:
+          dict_product['department'] = dpt
+          dict_product['sub_department'] = sub_dpt
+        ls_products += ls_sd_dict_products
+      except Exception, e:
+        print [dpt, sub_dpt, sub_dpt_href]
+        print e
 
 # todo: inspect Marché, Le fromage du marché: ls_promo
 # seems ls_promo should be empty but returns ls_price (print soup)

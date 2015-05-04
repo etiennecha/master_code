@@ -70,141 +70,25 @@ for path_temp, start_date, end_date in ls_loop:
       df_products['date'] = date_str
       ls_df_products.append(df_products)
   
-      ## Output dataframe
-      #df_products.to_csv(os.path.join(path_price_source_csv,
-      #                                '{:s}_auchan_velizy'.format(date_str)),
-      #                   index = False,
-      #                   encoding = 'utf-8')
-  
   df_master = pd.concat(ls_df_products, axis = 0, ignore_index = True)
   ls_df_master.append(df_master)
 
-## ###################
-## CLEAN FIRST PERIOD
-## ###################
-#
-## Look if way to get some promo info (price cuts etc...)
-## Promo probably essentially missing though
-## Do some regular expression research for promo in various fields? 
-## sec_price_caption, main_price_caption
-#
-#df_master_1 = ls_df_master[0]
-#
-## main_price_bloc
-#
-#df_master_1['product_title_1'] = df_master_1['product_title_1'].apply(lambda x: x.strip())
-#
-#df_master_1['main_price_bloc'] =\
-#   df_master_1['main_price_bloc'].apply(\
-#      lambda x: x.replace(u' <span class="currency">\u20ac</span>', u'')\
-#                 .replace(u' <span class="decimal">', u',')\
-#                 .replace(u'</span>', u'')\
-#                 .replace(u',', u'.')\
-#                 .strip())
-#df_master_1['main_price_bloc'] = df_master_1['main_price_bloc'].astype(float)
-#
-## sec_price_bloc
-#
-#df_master_1['sec_price_bloc'] =\
-#   df_master_1['sec_price_bloc'].apply(lambda x: x.replace(\
-#                                         u'<span class="currency">\u20ac</span>', u'')\
-#                                                  .replace(u',', u'.')\
-#                                                  .strip())
-#
-#df_master_1.loc[(df_master_1['sec_price_bloc'] == '') |\
-#                (df_master_1['sec_price_bloc'].str.contains(u'\u221e')),
-#                'sec_price_bloc'] = None
-#
-#df_master_1['sec_price_bloc'] = df_master_1['sec_price_bloc'].astype(float)
-#
-#
-### Audit pbms
-##ls_ok, ls_pbm = [], []
-##for x in df_master_1['sec_price_bloc'].values:
-##  if x:
-##    try:
-##      ls_ok.append(float(x))
-##    except:
-##      ls_pbm.append(x)
-##len(df_master_1[df_master_1['main_price_bloc'].str.contains(u'\u221e')])
-### print df_master_1[df_master_1['sec_price_bloc'].str.contains(u'\u221e')][0:10].to_string()
-#
-##print df_master_1['main_price_caption'].value_counts()
-### All lines: u'Prix Promo :' hence no qualitative info
-##
-##print len(df_master_1[df_master_1['product_title_1'] != df_master_1['product_title_2']])
-### All lines: product_title_1 and product_title_2 always equal
-#
-#df_master_1.drop(['product_title_2', 'main_price_caption'],
-#                 axis = 1,
-#                 inplace = True)
-#
-#df_master_1.rename(columns = {'product_title_1' : 'title',
-#                              'main_price_bloc' : 'price_1',
-#                              'main_price_unit' : 'price_lab_1',
-#                              'sec_price_bloc' : 'price_2',
-#                              'sec_price_caption': 'price_lab_2'},
-#                   inplace = True)
-#
-#ls_fields = [u'department', u'sub_department', u'title']
-#for field in ls_fields:
-#  df_master_1[field] =\
-#     df_master_1[field].apply(lambda x: x.replace(u'&amp;', u'&').strip())
-#
-#print u'\n Check first lines'
-#print df_master_1[0:10].to_string()
-#
-#print df_master_1[['price_1', 'price_2']].describe()
-#
-##print u'\n Check weird prices'
-##pbm_title = u'Colle universelle instantanée, ultra gel - Super glue-3'
-### print df_master_1[df_master_1['title'] == pbm_title][0:10].to_string()
-##pbm_title_2 = u'Gousses de vanille, plus longues, plus charnues'
-### print df_master_1[df_master_1['title'] == pbm_title_2][0:10].to_string()
-### ok: 4.2 / 3.0  * 1000 = 1400
-#
-#print u'\nTodo: fix (extract displayed)'
-#print df_master_1[df_master_1['price_2'] <= 0.01][0:10].to_string()
-#
-#df_1_dsd = df_master_1[['department', 'sub_department']].drop_duplicates()
-#print df_1_dsd.to_string()
-#
-### Vins: 99 unique, no Millesime, very little information
-##print u'\nVins'
-##print len(df_master_1[df_master_1['sub_department'] == u'La cave à vin'])
-##pd.set_option('display.max_colwidth', 80)
-##print df_master_1[df_master_1['sub_department'] == u'La cave à vin'][0:100][['title']]\
-##        .drop_duplicates().to_string(index = False)
-#
-#df_master_1.to_csv(os.path.join(path_price_built_csv,
-#                              'df_carrefour_voisins_{:s}_{:s}.csv'\
-#                                 .format('20130418', '20131128')),
-#                   encoding = 'utf-8',
-#                   index = False)
-#
-## ####################
-## CLEAN SECOND PERIOD
-## ####################
-#
-## ls_unit_price and ls_reduction are always empty
-## ls_block_promo: 2839 non null out of 125635 lines (i.e; 0.02%... small)
-## Interestingly: ls_regular_price include "Prix Promo" so maybe info before?
-#
-#df_master_2 = ls_df_master[1]
-#
 ## Not starting with price: promo?
-#df_master_2.drop(['ls_unit_price', 'ls_reduction'],
-#                 axis = 1,
-#                 inplace = True)
-#
-df_master_2['ls_price'] =\
-   df_master_2['ls_price'].apply(lambda x: re.sub(u'^Prix Promo :', u'', x).strip())
+#df_master.drop(['ls_unit_price', 'ls_reduction'],
+#               axis = 1,
+#               inplace = True)
+
+# ###################
+# CLEAN DF MASTER
+# ###################
+
+df_master['ls_price'] =\
+   df_master['ls_price'].apply(lambda x: re.sub(u'^Prix Promo :', u'', x).strip())
 
 dict_len_1, dict_len_2 = {}, {}
-for x in df_master_2['ls_block_price'].values:
+for x in df_master['ls_price'].values:
 	dict_len_1.setdefault(len(x.split('\n')), []).append(x)
 	dict_len_2.setdefault(len(x.split('\n \n')), []).append(x)
-
 
 # todo: analyse by length... find rules to split
 # hypo on dict_len_2
@@ -215,7 +99,7 @@ for x in df_master_2['ls_block_price'].values:
 # In fact 6, 8 and 9 can be split on Prix promo: 
 
 ls_price_rows = []
-for bloc_price in df_master_2['ls_block_price'].values:
+for bloc_price in df_master['ls_price'].values:
   promo, prix_1, prix_lab_1, prix_lab_2, prix_2 = [None for i in range(5)]
   if len(bloc_price.split(u'\n')) >= 8: # 8 or 9
     ls_split_1 = bloc_price.split(u'Prix Promo :')
@@ -256,87 +140,92 @@ df_price = pd.DataFrame(ls_price_rows,
                                    'price_1', 'price_lab_1',
                                    'price_2', 'price_lab_2'])
 
-df_master_3 = pd.concat([df_master_2[['date', 'department', 'subdepartment',
-                                      'product_title', 'ls_block_promo',
-                                      'ls_format', 'ls_regular_price']],
-                        df_m2_block_price],
+df_master_2 = pd.concat([df_master[['date', 'department', 'sub_department',
+                                    'ls_product_title', 'img_name']],
+                        df_price],
                         axis = 1)
 
-#print len(df_master_2[~pd.isnull(df_master_2['ls_block_promo'])])
-#print len(df_master_2[~df_master_2['ls_block_price'].str.match(u'^[0-9]')])
-#print df_master_2[~df_master_2['ls_block_price'].str.match(u'^[0-9]')][0:10].to_string()
-## No match is good indicator but there are a bit more ('Prix Promo' to be added back !?)
-#
-## count promo first day (looks ok)
-#print len(df_master_2[(~pd.isnull(df_master_2['ls_block_promo'])) &\
-#                      (df_master_2['date'] == '20131129')])
-#
-## Fix promo (check valid)
-#df_master_3.loc[(pd.isnull(df_master_3['promo'])) &\
-#                (~pd.isnull(df_master_3['ls_block_promo'])),
-#                'promo'] = 'Prix Promo'
-#
-## Check validity of price_lab_1 (vs. ls_format), price_1 (vs ls_regular + euro sum?) 
-## Same for price_2 ...
-#
-##df_master_3['ls_format'] =\
-##   df_master_3['ls_format'].apply(lambda x: x.rstrip(u'\n').lstrip(u'\n').strip())
-##print len(df_master_3[df_master_3['ls_format'] != df_master_3['price_lab_1']])
-#
-#df_master_3['price_1'] =\
-#   df_master_3['price_1'].apply(lambda x: x.replace(u' \u20ac ', u'.').strip())
-#df_master_3['price_1'] = df_master_3['price_1'].astype(float)
-#
-#df_master_3['price_2'] =\
-#   df_master_3['price_2'].apply(lambda x: x.replace(u'\u20ac', u'')\
-#                                           .replace(u',', u'.')\
-#                                           .strip() if x else x)
-#
-#df_master_3.loc[(df_master_3['price_2'] == '') |\
-#                (df_master_3['price_2'].str.contains(u'\u221e')),
-#                'price_2'] = None
-#
-#df_master_3['price_2'] = df_master_3['price_2'].astype(float)
-#
-## weird prix_2 to be checked later... not so many
-#print df_master_3[['price_1', 'price_2']].describe()
-#
-#df_master_3.drop(['ls_regular_price', 'ls_format', 'ls_block_promo'],
-#              axis = 1,
-#              inplace = True)
-#
-#df_master_3.rename(columns = {'product_title' : 'title',
-#                              'subdepartment' : 'sub_department'},
-#                   inplace = True)
-#
-#ls_fields = [u'department', u'sub_department', u'title']
-#for field in ls_fields:
-#  df_master_3[field] =\
-#     df_master_3[field].apply(lambda x: x.replace(u'&amp;', u'&').strip())
-#
-##df_2_dsd = df_master_3[['department', 'sub_department']].drop_duplicates()
-##df_2_dsd.sort(['department', 'sub_department'], inplace = True)
-##print df_2_dsd.to_string()
-#
-#df_master_3.to_csv(os.path.join(path_price_built_csv,
+# FORMAT SIMPLE TEXT FIELDS
+
+for field in ['department', 'sub_department', 'ls_product_title', 'img_name']:
+  df_master_2[field] =\
+     df_master_2[field].apply(lambda x: x.replace(u'\n', ' ')\
+                                         .replace(u'&amp;', u'&').strip())
+
+# CONVERT PRICES TO NUMERIC
+
+df_master_2['price_1'] =\
+   df_master_2['price_1'].apply(lambda x: x.replace(u' \u20ac ', u'.').strip())
+df_master_2['price_1'] = df_master_2['price_1'].astype(float)
+
+df_master_2['price_2'] =\
+   df_master_2['price_2'].apply(lambda x: x.replace(u'\u20ac', u'')\
+                                           .replace(u',', u'.')\
+                                           .strip() if x else x)
+
+df_master_2.loc[(df_master_2['price_2'] == '') |\
+                (df_master_2['price_2'].str.contains(u'\u221e')),
+                'price_2'] = None
+
+df_master_2['price_2'] = df_master_2['price_2'].astype(float)
+
+# FORMAT PROMO
+
+df_master_2['promo'] =\
+   df_master_2['promo'].apply(lambda x: x.replace(u'\r', u' ')\
+                                         .replace(u'\n', u' ')\
+                                         .strip() if x else x)
+df_master_2['promo'] =\
+   df_master_2['promo'].apply(lambda x: re.sub(u'Prix combiné\s*Soit les.*',
+                                               '',
+                                               x,
+                                               re.DOTALL).strip()\
+                                        if x else x)
+
+df_master_2['promo'] =\
+   df_master_2['promo'].apply(lambda x: re.sub(u'Ancien Prix.*',
+                                               '',
+                                               x,
+                                               re.DOTALL).strip()\
+                                        if x else x)
+
+print u'\nView promo:'
+#print df_master_2[~pd.isnull(df_master_2['promo'])]['promo'][0:500].to_string()
+print df_master_2['promo'].value_counts()
+
+# Weird prix_2 to be checked later... not so many
+
+print u'\nProduct total and unit price overview:'
+print df_master_2[['price_1', 'price_2']].describe()
+
+df_master_2.rename(columns = {'img_name' : 'title_1',
+                              'ls_product_title' : 'title_2'},
+                   inplace = True)
+
+print u'\nOverview departments and sub_departments:'
+df_2_dsd = df_master_2[['department', 'sub_department']].drop_duplicates()
+df_2_dsd.sort(['department', 'sub_department'], inplace = True)
+print df_2_dsd.to_string()
+
+#df_master_2.to_csv(os.path.join(path_price_built_csv,
 #                              'df_carrefour_voisins_{:s}_{:s}.csv'\
 #                                 .format('20131129', '20141205')),
 #                   encoding = 'utf-8',
 #                   index = False)
+
+## ######
+## BACKUP
+## ######
+#  for field in ['product_title', 'department', 'sub_department']:
+#    df_master_2[field] =\
+#      df_master_2[field].apply(lambda x: x.strip()\
+#                                          .replace(u'&amp;', u'&')\
+#                                          .replace(u'&Agrave;', u'À')\
+#                                          .replace(u'&ndash;', u'-')\
+#                                          .replace(u'&OElig;', u'Œ')
+#                               if x else x)
 #
-### ######
-### BACKUP
-### ######
-##  for field in ['product_title', 'department', 'sub_department']:
-##    df_master_3[field] =\
-##      df_master_3[field].apply(lambda x: x.strip()\
-##                                          .replace(u'&amp;', u'&')\
-##                                          .replace(u'&Agrave;', u'À')\
-##                                          .replace(u'&ndash;', u'-')\
-##                                          .replace(u'&OElig;', u'Œ')
-##                               if x else x)
-##
-#
+
 ## ##############################
 ## CHECK DUPLICATES IN ONE PERIOD
 ## ##############################
