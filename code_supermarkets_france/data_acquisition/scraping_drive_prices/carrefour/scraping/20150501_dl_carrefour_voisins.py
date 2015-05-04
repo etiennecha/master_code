@@ -64,6 +64,8 @@ def parse_product_page(product_soup):
     ls_price = extract_bs_text(bloc_price) # conservative: captures all
     ls_promo = extract_bs_text(bloc_price.find('div', {'class' : 'priceBlock promoBlock'}))
     ls_promo_heading = extract_bs_text(bloc_price.find('h4', {'class' : 'heading'}))
+    if (ls_price == ls_promo) and not ls_promo_heading:
+      print bloc_product
     ls_reduction = extract_bs_text(bloc_price.find('div', {'class' : 'spec reduction'}))
     ls_format = extract_bs_text(bloc_price.find('span', {'class' : 'unit'}))
     ls_total_price = extract_bs_text(bloc_price.find('div', {'class' : 'spec price'}))
@@ -167,6 +169,9 @@ for product_link in product_links[1:]:
     except Exception, e:
       print [department, sub_department, sub_department_link]
       print e
+
+# todo: inspect Marché, Le fromage du marché: ls_promo
+# seems ls_promo should be empty but returns ls_price (print soup)
 
 #path_carrefour = os.path.join(path_data,
 #                              u'data_drive_supermarkets',
