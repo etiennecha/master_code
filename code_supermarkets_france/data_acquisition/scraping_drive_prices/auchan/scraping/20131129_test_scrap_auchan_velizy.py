@@ -5,7 +5,7 @@ import os, sys
 import cookielib
 from cookielib import Cookie
 import urllib, urllib2
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 import re
 import json
 import string
@@ -75,7 +75,7 @@ else:
   path_data = r'C:\Users\etna\Desktop\Etienne_work\Data'
 # structure of the data folder should be the same
 folder_drive_auchan = r'\data_drive_supermarkets\data_auchan'
-folder_source_plaisir = r'\data_source\data_json_auchan_plaisir'
+folder_source_velizy = r'\data_source\data_json_auchan_velizy'
 
 # Open welcome page and get list of stores
 auchan_drive_website_url = r'http://www.auchandrive.fr'
@@ -90,8 +90,8 @@ for drive_block in list_drive_blocks:
 
 # Open a store page
 cookie_jar.set_cookie(makeCookie('auchanCook','"935|"'))
-plaisir_url_extension = soup.find('a', {'title' : u'D\xe9partement 78, Plaisir'})['href']
-response_2 = urllib2.urlopen(auchan_drive_website_url + plaisir_url_extension)
+velizy_url_extension = soup.find('a', {'title' : u'D\xe9partement 78, V\xe9lizy'})['href']
+response_2 = urllib2.urlopen(auchan_drive_website_url + velizy_url_extension)
 data_2 = response_2.read()
 soup_2 = BeautifulSoup(data_2)
 
@@ -177,8 +177,8 @@ for dpt_title, list_tuple_sub_dpts in dict_dpt_sub_dpt_urls.items(): #  => u'Pro
       print 'all_block: None', dpt_title, sub_dpt_title
 
 # FOR PRODUCTION
-today_date = date.today().strftime("%y%m%d")
-enc_stock_json(ls_ls_products, path_data +\
-                               folder_drive_auchan +\
-                               folder_source_plaisir +\
-                               r'\20%s_auchan_plaisir_new' %today_date)
+# today_date = date.today().strftime("%y%m%d")
+# enc_stock_json(ls_ls_products, path_data +\
+                               # folder_drive_auchan +\
+                               # folder_source_velizy +\
+                               # r'\20%s_auchan_velizy_new' %today_date)

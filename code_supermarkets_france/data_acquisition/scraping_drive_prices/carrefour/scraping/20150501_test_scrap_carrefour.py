@@ -41,11 +41,11 @@ def makeCookie(name, value):
 
 def extract_bs_text(soup_bloc, ls_text = True):
   if soup_bloc and ls_text:
-    return soup_bloc.findAll(text = True)
+    return [unicode(x) for x in soup_bloc.findAll(text = True)]
   elif not soup_bloc and ls_text:
     return []
   elif soup_bloc and not ls_text:
-    return soup_bloc.text
+    return unicode(soup_bloc.text)
   elif not soup_bloc and not ls_text:
     return None
 
@@ -98,34 +98,24 @@ soup = BeautifulSoup(data)
 
 ls_bloc_stores = soup.findAll('li', {'class' : 'shop'})
 
-# Browse ls store markers (json)
+# Get ls store markers (json)
 ls_json_stores = re.search(u'shopLatLng = (.*?);', data).group(1)
-ls_ls_stores = json.loads(ls_json_stores)
+ls_store_markers = json.loads(ls_json_stores)
 
-## DRIVE VOISINS
-#for ls_store in ls_ls_stores:
-#  if ls_store[-1] == u"78 - VOISINS LE BRETONNEUX":
-#    print ls_store
-#    break
-
-#ls_stores_toloop = [u'06 - ANTIBES (HYPER)',
-#                    u'06 - NICE LINGOSTIERE',
-#                    u'13 - AIX EN PROVENCE',
-#                    u'69 - ECULLY',
-#                    u'69 - VENISSIEUX',
-#                    u'91 - LES ULIS',
-#                    u'91 - VILLABE',
-#                    u'92 - CLAMART',
-#                    u"78 - VOISINS LE BRETONNEUX",
-#                    u'33 - MERIGNAC (HYPER)']
-
-# GO TO STORE PAGE (QUERY TO GET COOKIES)
+# Get dict store urls
+dict_store_urls = {}
 for bloc_store in ls_bloc_stores:
-  if bloc_store.find('h2', {'class' : 'heading'}).span.text ==\
-         u"78 - VOISINS LE BRETONNEUX":
-    bloc_store_submit = bloc_store.find('li', {'class' : 'submit'})
-    store_url = bloc_store_submit.find('form', {'action' : True})['action']
-    store_tformdata = bloc_store_submit.find('input', {'name' : 't:formdata'})['value']
+  store_id = bloc_store.find('h2', {'class' : 'heading'}).span.text
+  bloc_store_submit = bloc_store.find('li', {'class' : 'submit'})
+  try:
+    store_url = bloc_store_submit.find('form', {'action' : True}).get('action')
+    store_tformdata = bloc_store_submit.find('input', {'name' : 't:formdata'}).get('value')
+    dict_store_urls[store_id] = [store_url, store_tformdata]
+  except:
+    pass
+
+store_id = u"78 - VOISINS LE BRETONNEUX"
+store_url, store_tformdata = dict_store_urls[store_id]
 
 store_headers = {u'Host' : 'courses.carrefour.fr',
                  u'Origin' : 'http://courses.carrefour.fr',

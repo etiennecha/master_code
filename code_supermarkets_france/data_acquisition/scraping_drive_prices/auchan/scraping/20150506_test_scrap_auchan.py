@@ -13,6 +13,7 @@ import json
 import string
 from datetime import date
 import time
+import gc
 
 def dec_json(path_data):
   with open(path_data, 'r') as f:
@@ -52,7 +53,7 @@ def extract_bs_text(soup_bloc, ls_text = True):
   elif not soup_bloc and not ls_text:
     return None
 
-def parse_product_page(soup_products):
+def parse_product_page(soup_products, dpt_title, sub_dpt_title):
   ls_dict_products = []
   # Parse products
   ls_prod_blocs = soup_products.findAll('div', {'class' : 'vignette-box'})
@@ -110,14 +111,16 @@ opener.addheaders = [('User-agent',
 urllib2.install_opener(opener)
 
 # WELCOME PAGE: GET LIST OF STORES
+
 website_url = r'http://www.auchandrive.fr'
 response = urllib2.urlopen(website_url)
 data = response.read()
 soup = BeautifulSoup(data)
 
+# Browse stores (html)
 bloc_stores = soup.find('div', {'class' : 'zoneRight right float'})
-bloc_li_stores = bloc_stores.find('div', {'id' : 'liste_drives'})
-ls_bloc_stores = bloc_li_stores.findAll('li')
+#bloc_li_stores = bloc_stores.find('div', {'id' : 'liste_drives'})
+#ls_bloc_stores = bloc_li_stores.findAll('li')
 
 # Browse dict store markers (json)
 dict_json_stores = json.loads(bloc_stores.script.text\
@@ -126,17 +129,24 @@ dict_json_stores = json.loads(bloc_stores.script.text\
 ls_dict_stores = dict_json_stores['markers']
 
 # VELIZY DRIVE PAGE: GET DPTS AND SUB DPT LINKS
+store_id =  u'VELIZY Cedex'
 for dict_store in ls_dict_stores:
-  if dict_store[u'Ville'] == u'VELIZY Cedex':
-    velizy_url_extension = dict_store[u'UrlEntreeMagasin']
+  if dict_store[u'Ville'] == store_id:
+    store_url_extension = dict_store[u'UrlEntreeMagasin']
+    store_referer = dict_store['UrlFicheMagasin']
     break
 
-cookie_jar.set_cookie(makeCookie('auchanCook','"935|"'))
-response_2 = urllib2.urlopen(website_url + velizy_url_extension)
-data_2 = response_2.read()
-soup_2 = BeautifulSoup(data_2)
+# GET COOKIE TO ENTER STORE
+# Alternative way: cookie_jar.set_cookie(makeCookie('auchanCook','"935|"'))
+headers_store = {u'Host' : 'www.auchandrive.fr',
+                 u'Referer' : store_referer}
+req_store = urllib2.Request(website_url + store_url_extension,
+                            headers = headers_store)
+response_store = urllib2.urlopen(req_store)
+data_store = response_store.read()
+soup_store = BeautifulSoup(data_store)
 
-ls_dpt_blocs = soup_2.findAll('div', {'class' : 'item-content'})
+ls_dpt_blocs = soup_store.findAll('div', {'class' : 'item-content'})
 dict_dpt_sub_dpts = {}
 for dpt_bloc in ls_dpt_blocs:
   dpt_title = extract_bs_text(dpt_bloc.find('p', {'class' : 'titre'}),
@@ -147,8 +157,8 @@ for dpt_bloc in ls_dpt_blocs:
     ls_sub_dpts = []
     for sub_dpt_bloc in ls_sub_dpt_blocs:
       sub_dpt_href = sub_dpt_bloc['href']
-      sub_dpt_title = None
       sub_dpt_img = sub_dpt_bloc.find('img', {'alt' : True})
+      sub_dpt_title = None
       if sub_dpt_img:
         sub_dpt_title = sub_dpt_img['alt']
       ls_sub_dpts.append((sub_dpt_title, sub_dpt_href))
@@ -160,8 +170,8 @@ for dpt_bloc in ls_dpt_blocs:
 #sub_dpt_href = u'/drive/Velizy-935/Produits-Frais-R3686962/Cremerie-3686963/'
 
 ls_dict_products = []
-for dpt_title, ls_sub_dpts in dict_dpt_sub_dpts.items():
-  for (sub_dpt_title, sub_dpt_href) in ls_sub_dpts:
+for dpt_title, ls_sub_dpts in dict_dpt_sub_dpts.items()[0:1]:
+  for (sub_dpt_title, sub_dpt_href) in ls_sub_dpts[0:1]:
     time.sleep(1)
     
     response_3 = urllib2.urlopen(website_url + sub_dpt_href)
@@ -193,7 +203,7 @@ for dpt_title, ls_sub_dpts in dict_dpt_sub_dpts.items():
       # soup_4 = BeautifulSoup(data_4)
       json_content = json.loads(data_4)
       soup_products = BeautifulSoup(json_content['zones']['itemsList'])
-      ls_dict_products += parse_product_page(soup_products)
+      ls_dict_products += parse_product_page(soup_products, dpt_title, sub_dpt_title)
 
       # loop over pages
       #print json_content['inits'][0]['linkZone'][0]
@@ -216,13 +226,14 @@ for dpt_title, ls_sub_dpts in dict_dpt_sub_dpts.items():
         data_4 = response_4.read()
         json_content = json.loads(data_4)
         soup_products = BeautifulSoup(json_content['zones']['itemsList'])
-        ls_dict_products += parse_product_page(soup_products)
+        ls_dict_products += parse_product_page(soup_products, dpt_title, sub_dpt_title)
     else:
       print u'\nDisp 100 items per page did not work:', sub_dpt_title
       good_part = re.search(u'<!-- FIN PAGINATION -->(.*?)<!-- PAGINATION -->', data_3, re.DOTALL)
       html_candidate = good_part.group(1)
       soup_products = BeautifulSoup(html_candidate)
-      ls_dict_products += parse_product_page(soup_products)
+      ls_dict_products += parse_product_page(soup_products, dpt_title, sub_dpt_title)
+    gc.collect()
 
 # INSPECT PROMO CONTENTS
 # hard to be comprehensive enough in parsing
