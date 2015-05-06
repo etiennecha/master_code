@@ -10,7 +10,16 @@ import pprint
 import json
 from datetime import date
 
-ls_store_subset = [u'VELIZY Cedex']
+ls_store_subset = [u'VELIZY Cedex',
+                   u'Plaisir',
+                   u'AUBAGNE',
+                   u'LOMME', # Englos
+                   u'Roncq',
+                   u'LYON ST PRIEST',
+                   u'Noyelles Godault',
+                   u'Nice',
+                   u'Marseille',
+                   u'BORDEAUX LE LAC CEDEX']
 
 path_auchan = os.path.join(path_data,
                               u'data_drive_supermarkets',
@@ -32,13 +41,15 @@ scrap_auchan = ScrapAuchan()
 dict_stores = scrap_auchan.dict_store_urls
 ls_store_ids = dict_stores.keys()
 
-#ls_store_add = [store_id for store_id in ls_store_ids\
-#                  if store_id not in dict_prices][0:10]
-#
-#pprint.pprint(ls_store_add)
+#ls_store_add = [store_id for store_id in ls_store_subset\
+#                  if store_id not in dict_prices]
 
-dict_prices_add = scrap_auchan.scrap_stores(ls_store_subset)
+ls_store_add = [store_id for store_id in ls_store_ids\
+                  if store_id not in dict_prices][0:10]
 
-# dict_prices.update(dict_prices_add)
+pprint.pprint(ls_store_add)
+
+dict_prices_add = scrap_auchan.scrap_stores(ls_store_add)
+dict_prices.update(dict_prices_add)
 
 # enc_json(dict_prices, path_dict_prices_today)

@@ -270,10 +270,13 @@ print u'\nNb unique product (title, unit, price):'
 print len(df_period[['title_1', 'price_lab_1', 'price_1']].drop_duplicates())
 
 # VISUAL INSPECTION
-print u'\n', df_period[df_period.duplicated(['department',
-                                             'sub_department',
-                                             'title_1',
-                                             'price_lab_1'])].to_string()
+ls_dup_titles_1 =\
+   df_period['title_1'][df_period.duplicated(['department',
+                                              'sub_department',
+                                              'title_1',
+                                              'price_lab_1'])].unique().tolist()
+print u'\nInspect duplicates w/ same dep, sdep, title, format:'
+print df_period[df_period['title_1'].isin(ls_dup_titles_1)].to_string()
 
 # Duplicates due to one line for regular price and one for promo price
 # Note sure if all duplicates are legit (carottes sachet in épicerie?)
@@ -289,7 +292,8 @@ print u'\n', df_period[df_period.duplicated(['department',
 
 df_ttp = df_period[['title_1', 'price_1']].drop_duplicates()
 ls_dup_ttp = df_ttp['title_1'][df_ttp.duplicated(['title_1'])].unique().tolist()
-print df_period[df_period['title_1'].isin(ls_dup_ttp)].to_string()
+
+# print df_period[df_period['title_1'].isin(ls_dup_ttp)].to_string()
 
 # Get all (unique) legit (product, dpt, subdpt)
 # Too slow if want to run with df_master
