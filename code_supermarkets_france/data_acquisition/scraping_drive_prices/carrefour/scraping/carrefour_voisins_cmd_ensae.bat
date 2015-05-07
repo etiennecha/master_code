@@ -1,1 +1,0 @@
-\\ulysse\users\echamayou\Etienne\Python\Ppython\App\python.exe \\ulysse\users\echamayou\Bureau\Etienne_work\Code\code_drive_supermarkets\code_carrefour\code_carrefour_scraping\dl_carrefour_voisins_daily.py >> \\ulysse\users\echamayou\Bureau\Etienne_work\Data\data_drive_supermarkets\data_carrefour\data_source\data_json_carrefour_voisins\log.txt

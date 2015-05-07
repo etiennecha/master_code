@@ -41,13 +41,10 @@ scrap_carrefour = ScrapCarrefour()
 
 ls_store_ids = scrap_carrefour.dict_store_urls.keys()
 
-ls_store_add = [store_id for store_id in ls_store_ids\
-                  if store_id not in dict_prices][0:10]
+#ls_store_add = [store_id for store_id in ls_store_ids\
+#                  if store_id not in dict_prices][0:10]
+#pprint.pprint(ls_store_add)
 
-pprint.pprint(ls_store_add)
-
-# dict_prices_add = scrap_carrefour.scrap_stores(ls_store_add)
-
-# dict_prices.update(dict_prices_add)
-
-# enc_json(dict_prices, path_dict_prices_today)
+dict_prices_add = scrap_carrefour.scrap_stores(ls_store_subset)
+dict_prices.update(dict_prices_add)
+enc_json(dict_prices, path_dict_prices_today)
