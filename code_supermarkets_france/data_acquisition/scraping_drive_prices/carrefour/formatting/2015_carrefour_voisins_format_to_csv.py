@@ -32,7 +32,8 @@ period_file = dec_json(path_file)
 dict_fields = {}
 for dict_product in period_file:
   for product_key in dict_product.keys():
-    dict_fields.setdefault(product_key, []).append(dict_product.get('product_title', None))
+    dict_fields.setdefault(product_key, []).append(dict_product.get('product_title',
+                                                                    None))
 for k,v in dict_fields.items():
   print k, len(v)
 
@@ -236,12 +237,15 @@ df_master_int, date_ex = df_master_2, '20150503'
 
 df_period = df_master_int[df_master_int['date'] == date_ex].copy()
 
-print u'\nNb duplicates based on dpt, sub_dpt, title_1 (short):'
+# Check w/ title_2 (short) vs. title_1 (with brand)
+# Check interest of adding format (price_lab_1)
+
+print u'\nNb duplicates based on dpt, sub_dpt, title_2 (short):'
 print len(df_period[df_period.duplicated(['department',
                                           'sub_department',
                                           'title_2'])])
 
-print u'\nNb duplicates based on dpt, sub_dpt, title_2 (with brand):'
+print u'\nNb duplicates based on dpt, sub_dpt, title_1 (with brand):'
 print len(df_period[df_period.duplicated(['department',
                                           'sub_department',
                                           'title_1'])])
@@ -252,60 +256,85 @@ print len(df_period[df_period.duplicated(['department',
                                           'title_1',
                                           'price_lab_1'])])
 
-print u'\nNb duplicates based on title, unit:'
-print len(df_period[df_period.duplicated(['title_1', 'price_lab_1'])])
+# Restriction to non ambiguous rows
 
+ls_fordup = ['department', 'sub_department', 'title_1', 'price_lab_1']
 
-print u'\nNb with no dpt or sub_dpt'
-print len(df_period[(df_period['department'].isnull()) |\
-                    (df_period['sub_department'].isnull())])
+print u'\nNb of ambiguous rows:'
+print len(df_period[(df_period.duplicated(ls_fordup)) |\
+                    (df_period.duplicated(ls_fordup, take_last = True))])
 
-print u'\nNb with no sub_dpt:'
-print len(df_period[df_period['sub_department'].isnull()])
+print u'\nOverview of ambiguous rows:'
+print df_period[(df_period.duplicated(ls_fordup)) |\
+                (df_period.duplicated(ls_fordup, take_last = True))].to_string()
 
-print u'\nNb unique products (title, unit):'
-print len(df_period[['title_1', 'price_lab_1']].drop_duplicates())
+print u'\nNb rows with no ambiguity:'
+print len(df_period[(~df_period.duplicated(ls_fordup)) &\
+                    (~df_period.duplicated(ls_fordup, take_last = True))])
 
-print u'\nNb unique product (title, unit, price):'
-print len(df_period[['title_1', 'price_lab_1', 'price_1']].drop_duplicates())
+# Check that products with several dpt, sub_dpt have same price
 
-# VISUAL INSPECTION
-ls_dup_titles_1 =\
-   df_period['title_1'][df_period.duplicated(['department',
-                                              'sub_department',
-                                              'title_1',
-                                              'price_lab_1'])].unique().tolist()
-print u'\nInspect duplicates w/ same dep, sdep, title, format:'
-print df_period[df_period['title_1'].isin(ls_dup_titles_1)].to_string()
+df_loss = df_period[(df_period.duplicated(ls_fordup)) |\
+                    (df_period.duplicated(ls_fordup, take_last = True))]
 
-# Duplicates due to one line for regular price and one for promo price
-# Note sure if all duplicates are legit (carottes sachet in épicerie?)
+print df_loss[~df_loss['promo'].isnull()].to_string()
 
-## Check if no subdpt (None) are always duplicates?
-#ls_prod_nosd = df_period['title_1'][df_period['sub_department'].isnull()]\
-#                 .unique().tolist()
-#print u'\nNb of prod with no sub_dpt: {:d}'.format(len(ls_prod_nosd))
-#
-#ls_prod_nosd_dup = df_period['title_1'][(df_period.duplicated(['title_1'])) &\
-#                                        (df_period['title_1'].isin(ls_prod_nosd))]\
-#                     .unique().tolist()
+df_ok = df_period[(~df_period.duplicated(ls_fordup)) &\
+                  (~df_period.duplicated(ls_fordup, take_last = True))].copy()
 
-df_ttp = df_period[['title_1', 'price_1']].drop_duplicates()
-ls_dup_ttp = df_ttp['title_1'][df_ttp.duplicated(['title_1'])].unique().tolist()
+ls_fordup2 = ['title_1', 'price_lab_1']
+df_ok_dup = df_ok[(df_ok.duplicated(ls_fordup2)) |\
+                  (df_ok.duplicated(ls_fordup2, take_last = True))].copy()
+df_ok_dup.sort(ls_fordup2, inplace = True)
 
-# print df_period[df_period['title_1'].isin(ls_dup_ttp)].to_string()
+print u'\nCheck if dup products across dpt sub_dpts have same price:'
+print len(df_ok_dup[(~df_ok_dup.duplicated(['price_1'])) &\
+                    (~df_ok_dup.duplicated(['price_1'], take_last = True))])
 
-# Get all (unique) legit (product, dpt, subdpt)
-# Too slow if want to run with df_master
-ls_legit_pds = []
-for x in df_period[['title_1', 'department', 'sub_department']].values:
-  if tuple(x) not in ls_legit_pds:
-    ls_legit_pds.append(tuple(x))
+print u'\nNb rows with no ambiguity (incl price):'
+print len(df_period[(~df_period.duplicated(ls_fordup + ['price_1'])) &\
+                    (~df_period.duplicated(ls_fordup + ['price_1'], take_last = True))])
 
-df_pds = df_master_int[['title_1', 'department', 'sub_department']].drop_duplicates()
-df_pds.sort(['title_1', 'department', 'sub_department'], inplace = True)
+# ##############################
+# OUTPUT NON AMBIGUOUS ROWS
+# ##############################
 
-# Check mapping
-df_u_title_1 = df_period[['title_1']].drop_duplicates()
-df_u_title_2 = df_period[['title_2']].drop_duplicates()
-df_u_title_12 = df_period[['title_1', 'title_2']].drop_duplicates()
+# todo: promo field could be filled for first product only and rest same
+# sort data so as to have non null promo field kept whenever data are dropped
+
+df_prod_final = df_ok[['department',
+                       'sub_department',
+                       'title_1',
+                       'price_lab_1']].drop_duplicates()
+
+df_prices_final = df_ok[['title_1',
+                         'title_2',
+                         'price_lab_1',
+                         'price_1',
+                         'price_lab_2',
+                         'price_2',
+                         'promo']].drop_duplicates(['title_1', 'price_lab_1'])
+
+# Add nb of dpt/sub_dpt in df_prices_final
+se_nb_dsd = df_prod_final.groupby(['title_1', 'price_lab_1']).size()
+df_nb_dsd = se_nb_dsd.reset_index()
+df_nb_dsd.rename(columns = {0 : 'nb_dsd'}, inplace = True)
+df_prices_final = pd.merge(df_prices_final,
+                           df_nb_dsd,
+                           on = ['title_1', 'price_lab_1'],
+                           how = 'left')
+
+# Check nb of promo lost while filtering data
+# Can be that two different products with same name and format are on promotion
+# Can be that product is listed once with a promotion once without (technical issue)
+print u'\nNb of promo after treatment {:d}'.format(\
+          df_prices_final[~df_prices_final['promo'].isnull()]['nb_dsd'].sum())
+
+print u'\nNb of promo at beginning (total) {:d}'.format(\
+          len(df_period[~df_period['promo'].isnull()]))
+
+# Count promo by dpt and sub dpt (in general could be several period...)
+# (actually kind of need to rebuild df_ok then...)
+df_dsd_promo = df_ok[~df_ok['promo'].isnull()]\
+                 .groupby(['department', 'sub_department']).size()
+# todo: divide by nb of prods (float)... do with dpt and check over time
