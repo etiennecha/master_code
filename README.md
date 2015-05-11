@@ -6,11 +6,14 @@ This repository contains the code of virtually all the economic research project
 
 ### code_gasoline_france
 
-In 2007, a governmental website was launched in France to increase transparency in the retail gasoline market. Data obtained from this website and various other sources are used in two research projects. The first focuses on consumer information and price dispersion. The second studies the launch of the low cost chain "Total Access" by "Total" (a large oil company and historical gas station operator in France) and its impact on competition.
+In 2007, a governmental website ([prix-carburants.gouv.fr](http://www.prix-carburants.gouv.fr)) was launched in France to increase transparency in the retail gasoline market. Data obtained from this website are used in two research projects:
+
+- Consumer information and price dispersion ([Working paper](https://github.com/etiennecha/master_code/blob/master/papers/french_retail_gasoline_dispersion/report.pdf))
+- Launch of the low cost chain "Total Access" by "Total" (a large oil company and historical gas station operator in France) and its impact on competition ([Working paper](https://github.com/etiennecha/master_code/blob/master/papers/french_retail_gasoline_total_access/report.pdf))
 
 ### code_supermarkets_france
 
-In 2006, the French supermarket chain Leclerc launched a website with a view to demonstrate the competitiveness of its prices vs. other retail chains operating in France. Data obtained from the website, combined with data collected online from "drive" stores are used to study price strategies and competition in the French supermarket industry. Though data about store locations and characteristics have been collected online, I generally use data purchased from LSA (which I thus unfortunately cannot share) when it comes to store locations and characteristics.
+In 2006, the French supermarket chain Leclerc launched a website ([quiestlemoinscher.com](http://www.quiestlemoinscher.com/)) with a view to demonstrate the competitiveness of its prices vs. other retail chains operating in France. Data obtained from the website, combined with data collected online from "drive" stores are used to study price strategies and competition in the French supermarket industry. Though data about store locations and characteristics have been collected online, data purchased from LSA are generally preferred when it comes to store locations and characteristics. ([Document](https://github.com/etiennecha/master_code/blob/master/papers/french_supermarkets/report.pdf) describing supermarket chains in France and preliminary analysis of competition based on store location and size vs. demand).
 
 ### code_physicians_france
 
