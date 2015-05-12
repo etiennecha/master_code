@@ -24,7 +24,7 @@ Price data collected drom drive websites offer the opportunity to observe all pr
 
 ### Store data purchased from LSA
 
-LSA is a firm that collects and sells data about the French supermarket industry. Data about French supermarkets, hypermarkets and hard discount stores were purchased from them so as to obtain exact store locations, and various store characteristics such as store surface, number of checkouts, employees, parking slots etc. (The following [document](https://github.com/etiennecha/master_code/blob/master/papers/french_supermarkets/report.pdf) describes supermarket chains in France and provide a brief overview of competition based on store location and size vs. demand).
+LSA is a firm that collects and sells data about the French supermarket industry. Data about French supermarkets, hypermarkets and hard discount stores were purchased from them so as to obtain exact store locations, and various store characteristics such as store surface, number of checkouts, employees, parking slots etc. (The following [document](https://github.com/etiennecha/master_code/blob/master/papers/french_supermarkets/report.pdf) provides a brief overview of supermarket chains in France and competition based on store location and size vs. demand.
 
 ### Other sources
 
