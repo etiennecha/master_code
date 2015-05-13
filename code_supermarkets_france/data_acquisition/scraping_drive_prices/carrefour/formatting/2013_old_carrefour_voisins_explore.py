@@ -42,5 +42,3 @@ for i, product_info in enumerate(test_0):
     ls_price.append(float(product_info['sec_price_bloc'][0].replace(',','.')))
   except:
     print i, product_info['sec_price_bloc']
-
-# NO INFO ON SALES.. SH...

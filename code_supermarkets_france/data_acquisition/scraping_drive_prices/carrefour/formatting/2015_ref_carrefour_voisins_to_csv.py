@@ -141,87 +141,94 @@ df_price = pd.DataFrame(ls_price_rows,
                                    'price_1', 'price_lab_1',
                                    'price_2', 'price_lab_2'])
 
-df_master_2 = pd.concat([df_master[['date', 'department', 'sub_department',
+df_master_bu = df_master.copy()
+
+df_master = pd.concat([df_master[['date', 'department', 'sub_department',
                                     'ls_product_title', 'img_name']],
-                        df_price],
-                        axis = 1)
+                      df_price],
+                      axis = 1)
 
 # FORMAT SIMPLE TEXT FIELDS
 
 for field in ['department', 'sub_department', 'ls_product_title', 'img_name']:
-  df_master_2[field] =\
-     df_master_2[field].apply(lambda x: x.replace(u'\n', ' ')\
+  df_master[field] =\
+     df_master[field].apply(lambda x: x.replace(u'\n', ' ')\
                                          .replace(u'&amp;', u'&').strip())
 
 # CONVERT PRICES TO NUMERIC
 
-df_master_2['price_1'] =\
-   df_master_2['price_1'].apply(lambda x: x.replace(u' \u20ac ', u'.').strip())
-df_master_2['price_1'] = df_master_2['price_1'].astype(float)
+df_master['price_1'] =\
+   df_master['price_1'].apply(lambda x: x.replace(u' \u20ac ', u'.').strip())
+df_master['price_1'] = df_master['price_1'].astype(float)
 
-df_master_2['price_2'] =\
-   df_master_2['price_2'].apply(lambda x: x.replace(u'\u20ac', u'')\
+df_master['price_2'] =\
+   df_master['price_2'].apply(lambda x: x.replace(u'\u20ac', u'')\
                                            .replace(u',', u'.')\
                                            .strip() if x else x)
 
-df_master_2.loc[(df_master_2['price_2'] == '') |\
-                (df_master_2['price_2'].str.contains(u'\u221e')),
+df_master.loc[(df_master['price_2'] == '') |\
+                (df_master['price_2'].str.contains(u'\u221e')),
                 'price_2'] = None
 
-df_master_2['price_2'] = df_master_2['price_2'].astype(float)
+df_master['price_2'] = df_master['price_2'].astype(float)
 
 # FORMAT PROMO
 
-df_master_2['promo'] =\
-   df_master_2['promo'].apply(lambda x: x.replace(u'\r', u' ')\
+df_master['promo'] =\
+   df_master['promo'].apply(lambda x: x.replace(u'\r', u' ')\
                                          .replace(u'\n', u' ')\
                                          .strip() if x else x)
-df_master_2['promo'] =\
-   df_master_2['promo'].apply(lambda x: re.sub(u'Prix combiné\s*Soit les.*',
+df_master['promo'] =\
+   df_master['promo'].apply(lambda x: re.sub(u'Prix combiné\s*Soit les.*',
                                                '',
                                                x,
                                                re.DOTALL).strip()\
                                         if x else x)
 
-df_master_2['promo'] =\
-   df_master_2['promo'].apply(lambda x: re.sub(u'Ancien Prix.*',
+df_master['promo'] =\
+   df_master['promo'].apply(lambda x: re.sub(u'Ancien Prix.*',
                                                '',
                                                x,
                                                re.DOTALL).strip()\
                                         if x else x)
 
 print u'\nView promo:'
-#print df_master_2[~pd.isnull(df_master_2['promo'])]['promo'][0:500].to_string()
-print df_master_2['promo'].value_counts()
+#print df_master[~pd.isnull(df_master['promo'])]['promo'][0:500].to_string()
+print df_master['promo'].value_counts()
 
 # todo: check this promo vs promo field (some unexplained inconsistencies)
 
 # Weird prix_2 to be checked later... not so many
 
 print u'\nProduct total and unit price overview:'
-print df_master_2[['price_1', 'price_2']].describe()
+print df_master[['price_1', 'price_2']].describe()
 
-df_master_2.rename(columns = {'img_name' : 'title_1',
+df_master.rename(columns = {'img_name' : 'title_1',
                               'ls_product_title' : 'title_2'},
                    inplace = True)
 
 print u'\nOverview departments and sub_departments:'
-df_2_dsd = df_master_2[['department', 'sub_department']].drop_duplicates()
+df_2_dsd = df_master[['department', 'sub_department']].drop_duplicates()
 df_2_dsd.sort(['department', 'sub_department'], inplace = True)
 print df_2_dsd.to_string()
 
-#df_master_2.to_csv(os.path.join(path_price_built_csv,
+#df_master.to_csv(os.path.join(path_price_built_csv,
 #                              'df_carrefour_voisins_{:s}_{:s}.csv'\
 #                                 .format('20131129', '20141205')),
 #                   encoding = 'utf-8',
 #                   index = False)
 
+df_master.to_csv(os.path.join(path_price_built_csv,
+                              'df_carrefour_voisins_2015_ref.csv'),
+                   encoding = 'utf-8',
+                   index = False)
+
 ## ######
 ## BACKUP
 ## ######
 #  for field in ['product_title', 'department', 'sub_department']:
-#    df_master_2[field] =\
-#      df_master_2[field].apply(lambda x: x.strip()\
+#    df_master[field] =\
+#      df_master[field].apply(lambda x: x.strip()\
 #                                          .replace(u'&amp;', u'&')\
 #                                          .replace(u'&Agrave;', u'À')\
 #                                          .replace(u'&ndash;', u'-')\
@@ -233,7 +240,7 @@ print df_2_dsd.to_string()
 # CHECK DUPLICATES IN ONE PERIOD
 # ##############################
 
-df_master_int, date_ex = df_master_2, '20150503'
+df_master_int, date_ex = df_master, '20150503'
 
 df_period = df_master_int[df_master_int['date'] == date_ex].copy()
 
