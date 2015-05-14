@@ -28,17 +28,17 @@ for file_name in ls_file_names:
 # parse_dates = ['date']))
 # parse_dates a bit slow and not really necessary
 
-# ################################
-# NON UNIQUE PRODUCTS IN 2013-2014
-# ################################
-
-# for now.. only period with promo
+# For now: only period with promo
 df_master_2013 = ls_df_master[1]
 df_master_2015 = ls_df_master[2]
 
-# assume "Prix Promo" is not legit for now
+# Assume "Prix Promo" is not legit promotion for now (pbm of data collect)
 df_master_2013.loc[df_master_2013['promo'] == u'Prix Promo',
                    'promo'] = None
+
+# ################################
+# UNIQUE PRODUCTS IN 2013-2014
+# ################################
 
 ls_prod_id_cols = ['date', 'department', 'sub_department', 'title', 'price_lab_1']
 df_dup_2013 = df_master_2013[(df_master_2013.duplicated(ls_prod_id_cols)) |\
@@ -56,6 +56,35 @@ df_unique_2013 = df_master_2013[~((df_master_2013.duplicated(ls_prod_id_cols)) |
 ls_dsd_cols = ls_prod_id_cols[1:] + ['price_lab_2']
 df_dsd_2013 = df_unique_2013[ls_dsd_cols]\
                 .drop_duplicates(ls_dsd_cols[:-1])
+
+# ################################
+# UNIQUE PRODUCTS IN 2015
+# ################################
+
+ls_prod_id_cols_2 = ['date', 'department', 'sub_department', 'title_2', 'price_lab_1']
+df_dup_2015 = df_master_2015[(df_master_2015.duplicated(ls_prod_id_cols_2)) |\
+                             (df_master_2015.duplicated(ls_prod_id_cols_2,
+                                                        take_last = True))].copy()
+df_unique_2015 = df_master_2015[~((df_master_2015.duplicated(ls_prod_id_cols_2)) |\
+                                  (df_master_2015.duplicated(ls_prod_id_cols_2,
+                                                             take_last = True)))].copy()
+
+ls_dsd_cols_2 = ls_prod_id_cols_2[1:] + ['title_1', 'price_lab_2']
+df_dsd_2015 = df_unique_2015[ls_dsd_cols_2]\
+                .drop_duplicates(ls_dsd_cols_2[:-2])
+
+# CAUTION: in df_dsd_2015: ('title', 'price_lab_1') non unique => several sub dpts
+df_dsd_2013_u = pd.merge(df_dsd_2013,
+                         df_dsd_2015[['title_1',
+                                      'title_2',
+                                      'price_lab_1']].drop_duplicates('title_2',
+                                                                      'price_lab_1'),
+                         left_on = ['title', 'price_lab_1'],
+                         right_on = ['title_2', 'price_lab_1'],
+                         how = 'left')
+df_dsd_2013.drop(lab
+# print len(df_dsd_2013_u[~df_dsd_2013_u['title_1'].isnull()])
+# 4974 among 16615...
 
 # ######################
 # PROMOTIONS BY PRODUCT
@@ -78,8 +107,11 @@ df_dsd_2013 = pd.merge(df_dsd_2013,
                        on = ls_dsd_cols[:-1],
                        how = 'left')
 
-print len(df_dsd_2013[df_dsd_2013['nb_per'] == df_dsd_2013['nb_promo']])
-print len(df_dsd_2013[df_dsd_2013['nb_promo'] != 0])
+print u'\nNb products always in promo: {:d}'\
+          .format(len(df_dsd_2013[df_dsd_2013['nb_per'] == df_dsd_2013['nb_promo']]))
+
+print u'\nNb products with at least one promo: {:d}'\
+          .format(len(df_dsd_2013[df_dsd_2013['nb_promo'] != 0]))
 
 # ####################
 # PROMOTIONS BY PERIOD
@@ -100,36 +132,102 @@ df_overview.index = pd.to_datetime(df_overview.index, format = '%Y%m%d')
 index_overview = pd.date_range(start = df_overview.index[0],
                                end   = df_overview.index[-1], 
                                freq='D')
-df_overview = df_overview.reindex(index_overview, fill_value = 0)
+df_overview = df_overview.reindex(index_overview, fill_value = np.nan)
+df_overview['pct_promo'] = df_overview['nb_promo'] / df_overview['nb_prod']
+
+#df_overview['pct_promo'].plot()
+#plt.show()
+
+# ###################################
+# DEPARTMENTS: NB PRODUCTS AND PROMO
+# ###################################
+
+# Nb products
+df_dpt_nb_prod = df_master_2013.pivot_table(values='price_1',
+                                            index='date',
+                                            columns='department',
+                                            aggfunc='count')
+df_dpt_nb_prod.index = pd.to_datetime(df_dpt_nb_prod.index, format = '%Y%m%d')
+df_dpt_nb_prod = df_dpt_nb_prod.reindex(index_overview, fill_value = np.nan)
+#df_dpt_nb_prod.plot()
+#plt.show()
+
+# Nb promo
+df_dpt_nb_promo = df_master_2013[~df_master_2013['promo'].isnull()]\
+                    .pivot_table(values='price_1',
+                                 index='date',
+                                 columns='department',
+                                 aggfunc='count')
+df_dpt_nb_promo.index = pd.to_datetime(df_dpt_nb_promo.index, format = '%Y%m%d')
+df_dpt_nb_promo = df_dpt_nb_promo.reindex(index_overview, fill_value = np.nan)
+
+# Pct promo
+df_dpt_pct_promo = df_dpt_nb_promo / df_dpt_nb_prod
+
+# Plot pct and nb (todo: add vertical lines on mondays)
+se_avg_dpt_nb_prod = df_dpt_nb_prod.mean()
+se_avg_dpt_nb_prod.sort(ascending = False)
+#df_dpt_pct_promo['weekday'] = df_dpt_pct_promo.index.weekday
+
+#ls_col_disp = se_avg_dpt_nb_prod.index[4:6]
+ls_col_disp = [u'Épicerie', u'Hygiène & Beauté', u'Boissons', u'Crèmerie']
+ax = df_dpt_pct_promo[ls_col_disp][50:230].plot()
+for date, dow in zip(df_dpt_pct_promo.index, df_dpt_pct_promo.index.weekday):
+  if dow == 0: # dow is monday
+    plt.axvline(date, color = 'k', linestyle = ':')
+ax.grid('on', which='major', axis='x', linestyle = '--')
+# ax.grid('off', axis='y')
+plt.show()
+
+#df_dpt_nb_promo[se_avg_dpt_nb_prod.index[0:2]][200:500].plot()
+#plt.show()
 
 # ############################
 # NB PRODUCTS BY DPT - SUBDPT
 # ############################
 
-# "Departement" => can check visually with series of nb by day
-
-#se_daily_dpt = df_master_2013.groupby(['date', 'department']).size()
-#df_daily_dpt = se_daily_dpt.reset_index()
-
-df_daily_dpt = df_master_2013.pivot_table(values='price_1',
+# Nb products
+df_subdpt_nb_prod = df_master_2013.pivot_table(values='price_1',
                                           index='date',
-                                          cols='department',
+                                          columns=['department', 'sub_department'],
                                           aggfunc='count')
-df_daily_dpt.index = pd.to_datetime(df_daily_dpt.index, format = '%Y%m%d')
-df_daily_dpt = df_daily_dpt.reindex(index_overview, fill_value = np.nan)
+df_subdpt_nb_prod.index = pd.to_datetime(df_subdpt_nb_prod.index, format = '%Y%m%d')
+df_subdpt_nb_prod = df_subdpt_nb_prod.reindex(index_overview, fill_value = np.nan)
 
-# "Sub-department" => see if any missing on some days
+se_subdpt_max = df_subdpt_nb_prod.max()
+df_subdpt_desc = df_subdpt_nb_prod.describe().T
 
-df_daily_sdpt = df_master_2013[df_master_2013['department'] == u'Maison & Entretien']\
-                  .pivot_table(values='price_1',
-                               index='date',
-                               cols='sub_department',
-                               aggfunc='count')
-df_daily_sdpt.index = pd.to_datetime(df_daily_sdpt.index, format = '%Y%m%d')
-df_daily_sdpt = df_daily_sdpt.reindex(index_overview, fill_value = np.nan)
-df_daily_sdpt.plot(ylim = (0,150))
+#print df_subdpt_desc.to_string()
 
 # looks like never more than 100
-# hypothesis : did not go beyond first page for each subdpt
+# did not go beyond first page for each subdpt
 # check with other dpts
 # then only got a sample of products... compare with more recent data then
+
+print u"\nNb of subdpts with 100 products at least once: {:d} among {:d}"\
+          .format(len(df_subdpt_desc[df_subdpt_desc['max'] == 100]),
+                  len(df_subdpt_desc))
+
+print u"\nNb of subdpts with 100 products Q75% days: {:d} among {:d}"\
+          .format(len(df_subdpt_desc[df_subdpt_desc['75%'] == 100]),
+                  len(df_subdpt_desc))
+
+# Nb products: focus on one departement (drop?) 
+df_sdpt_nb_prod = df_master_2013[df_master_2013['department'] == u'Maison & Entretien']\
+                  .pivot_table(values='price_1',
+                               index='date',
+                               columns='sub_department',
+                               aggfunc='count')
+df_sdpt_nb_prod.index = pd.to_datetime(df_sdpt_nb_prod.index, format = '%Y%m%d')
+df_sdpt_nb_prod = df_sdpt_nb_prod.reindex(index_overview, fill_value = np.nan)
+#df_sdpt_nb_prod.plot(ylim = (0,150))
+#plt.show()
+
+# Nb promo
+df_subdpt_nb_promo = df_master_2013[~df_master_2013['promo'].isnull()]\
+                       .pivot_table(values='price_1',
+                                    index='date',
+                                    columns=['department', 'sub_department'],
+                                    aggfunc='count')
+df_subdpt_nb_promo.index = pd.to_datetime(df_subdpt_nb_promo.index, format = '%Y%m%d')
+df_subdpt_nb_promo = df_subdpt_nb_promo.reindex(index_overview, fill_value = np.nan)

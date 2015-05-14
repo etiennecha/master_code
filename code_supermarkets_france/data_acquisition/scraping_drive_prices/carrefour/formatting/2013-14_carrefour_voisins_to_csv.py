@@ -183,11 +183,11 @@ print df_1_dsd.to_string()
 #print df_master_1[df_master_1['sub_department'] == u'La cave à vin'][0:100][['title']]\
 #        .drop_duplicates().to_string(index = False)
 
-#df_master_1.to_csv(os.path.join(path_price_built_csv,
-#                                'df_carrefour_voisins_{:s}_{:s}.csv'\
-#                                   .format('20130418', '20131128')),
-#                   encoding = 'utf-8',
-#                   index = False)
+df_master_1.to_csv(os.path.join(path_price_built_csv,
+                                'df_carrefour_voisins_{:s}_{:s}.csv'\
+                                   .format('20130418', '20131128')),
+                   encoding = 'utf-8',
+                   index = False)
 
 # ####################
 # CLEAN SECOND PERIOD
