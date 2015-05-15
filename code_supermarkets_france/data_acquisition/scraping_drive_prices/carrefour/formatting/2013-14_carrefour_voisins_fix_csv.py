@@ -74,37 +74,49 @@ df_dsd_2015 = df_unique_2015[ls_dsd_cols_2]\
                 .drop_duplicates(ls_dsd_cols_2[:-2])
 
 # CAUTION: in df_dsd_2015: ('title', 'price_lab_1') non unique => several sub dpts
-df_dsd_2013_u = pd.merge(df_dsd_2013,
-                         df_dsd_2015[['title_1',
-                                      'title_2',
-                                      'price_lab_1']].drop_duplicates('title_2',
-                                                                      'price_lab_1'),
-                         left_on = ['title', 'price_lab_1'],
-                         right_on = ['title_2', 'price_lab_1'],
-                         how = 'left')
-df_dsd_2013.drop(lab
-# print len(df_dsd_2013_u[~df_dsd_2013_u['title_1'].isnull()])
+df_dsd_2013 = pd.merge(df_dsd_2013,
+                       df_dsd_2015[['title_1',
+                                    'title_2',
+                                    'price_lab_1']].drop_duplicates('title_2',
+                                                                    'price_lab_1'),
+                       left_on = ['title', 'price_lab_1'],
+                       right_on = ['title_2', 'price_lab_1'],
+                       how = 'left')
+df_dsd_2013.drop(['title_2'], axis = 1, inplace = True)
+df_dsd_2013.rename(columns = {'title' : 'title_2'}, inplace = True)
+
+# print len(df_dsd_2013[~df_dsd_2013['title_1'].isnull()])
 # 4974 among 16615...
+
+# Extract brand when there is one (cannot use regex easily cuz + etc in str)
+df_dsd_2013['brand'] =\
+  df_dsd_2013.apply(lambda row: row['title_1'].replace(row['title_2'], '').strip()\
+                                if not pd.isnull(row['title_1']) else None, axis = 1)
 
 # ######################
 # PROMOTIONS BY PRODUCT
 # ######################
 
 # add nb periods and nb promo
-se_nb_per = df_unique_2013.groupby(ls_dsd_cols[:-1]).size()
+df_unique_2013.rename(columns = {'title' : 'title_2'},
+                      inplace = True)
+
+se_nb_per = df_unique_2013.groupby(ls_dsd_cols_2[:-2]).size()
 se_nb_promo = df_unique_2013[~pd.isnull(df_unique_2013['promo'])]\
-                .groupby(ls_dsd_cols[:-1]).size()
+                .groupby(ls_dsd_cols_2[:-2]).size()
 
 df_dsd_2013_add = pd.concat([se_nb_per, se_nb_promo],
                             axis = 1,
                             keys = ['nb_per', 'nb_promo'])
 df_dsd_2013_add.loc[df_dsd_2013_add['nb_promo'].isnull(),
                     'nb_promo'] = 0
+df_dsd_2013['nb_promo'] = df_dsd_2013['nb_promo'].astype(int)
+
 df_dsd_2013_add.reset_index(inplace = True)
 
 df_dsd_2013 = pd.merge(df_dsd_2013,
                        df_dsd_2013_add,
-                       on = ls_dsd_cols[:-1],
+                       on = ls_dsd_cols_2[:-2],
                        how = 'left')
 
 print u'\nNb products always in promo: {:d}'\
@@ -137,6 +149,41 @@ df_overview['pct_promo'] = df_overview['nb_promo'] / df_overview['nb_prod']
 
 #df_overview['pct_promo'].plot()
 #plt.show()
+
+# ####################
+# PROMOTIONS BY BRAND
+# ####################
+
+# Need to know how many promo per period have no identified brand
+print len(df_dsd_2013[(df_dsd_2013['nb_promo'] != 0) &\
+                      (df_dsd_2013['brand'].isnull())])
+
+
+# Promo by brand in terms of products and promo days
+se_brand_promo = df_dsd_2013[df_dsd_2013['nb_promo'] != 0]['brand'].value_counts()
+se_brands = df_dsd_2013['brand'].value_counts()
+se_brand_nb_per = df_dsd_2013[['brand', 'nb_per']].groupby('brand').sum()['nb_per']
+se_brand_nb_promo = df_dsd_2013[['brand', 'nb_promo']].groupby('brand').sum()['nb_promo']
+
+df_brand_promo = pd.concat([se_brands, se_brand_promo, se_brand_nb_per, se_brand_nb_promo],
+                           axis = 1,
+                           keys = ['nb_prods', 'nb_prod_w_promo', 'nb_days', 'nb_promo_days'])
+
+for field in ['nb_prods', 'nb_prod_w_promo', 'nb_days', 'nb_promo_days']:
+  df_brand_promo.loc[df_brand_promo[field].isnull(),
+                     field] = 0
+  df_brand_promo[field] = df_brand_promo[field].astype(int)
+
+df_brand_promo['pct_prod_w_promo'] = df_brand_promo['nb_prod_w_promo'] /\
+                                       df_brand_promo['nb_prods']
+
+df_brand_promo['pct_promo_days'] = df_brand_promo['nb_promo_days'] /\
+                                       df_brand_promo['nb_days']
+
+df_brand_promo.sort('nb_prods', ascending = False, inplace = True)
+
+pd.set_option('display.float_format', '{:,.2f}'.format)
+# print df_brand_promo[0:20].to_string()
 
 # ###################################
 # DEPARTMENTS: NB PRODUCTS AND PROMO
@@ -182,9 +229,9 @@ plt.show()
 #df_dpt_nb_promo[se_avg_dpt_nb_prod.index[0:2]][200:500].plot()
 #plt.show()
 
-# ############################
-# NB PRODUCTS BY DPT - SUBDPT
-# ############################
+# #####################################
+# SUBDEPARTMENTS: NB PRODUCTS AND PROMO
+# #####################################
 
 # Nb products
 df_subdpt_nb_prod = df_master_2013.pivot_table(values='price_1',

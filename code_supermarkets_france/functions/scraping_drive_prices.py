@@ -262,9 +262,9 @@ class ScrapAuchan:
 
   def scrap_stores(self, ls_store_id):
     """
-    @param list of store_id: carrefour drive identifier e.g. [u"78 - VOISINS LE BRETONNEUX"]
+    @param list of store_id: auchan drive identifier
     @type store_id: C{str}
-    returns prices for list of carrefour drive identifiers provided
+    returns prices for list of auchan drive identifiers provided
     """
     self.dict_ls_store_prices = {}
     for store_id in ls_store_id:
@@ -274,14 +274,14 @@ class ScrapAuchan:
           store_referer = self.dict_store_urls[store_id][u'UrlFicheMagasin']
           self.dict_ls_store_prices[store_id] =\
             self.fetch_store_prices(store_url, store_referer)
-          print u'\nCollected {:d} products for Carrefour {:s}'.format(\
+          print u'Collected {:d} products for Auchan {:s}'.format(\
                    len(self.dict_ls_store_prices[store_id]),
                    store_id)
         except Exception, e:
-          print u'\nCould not collect prices for store: {:s}'.format(store_id)
+          print u'Could not collect prices for store: {:s}'.format(store_id)
           print e
       else:
-        print u'\nNo URL for store {:s} found in welcome page'.format(store_id)
+        print u'No URL for store {:s} found in welcome page'.format(store_id)
     return self.dict_ls_store_prices
 
   def fetch_store_prices(self, store_url, store_referer):
@@ -380,11 +380,15 @@ class ScrapAuchan:
             req  = urllib2.Request(self.website_url + page_href, params, headers)
             response_4 = urllib2.urlopen(req)
             data_4 = response_4.read()
-            json_content = json.loads(data_4)
-            soup_products = BeautifulSoup(json_content['zones']['itemsList'])
-            ls_products += self.parse_product_page(soup_products, dpt_title, sub_dpt_title)
+            try:
+              json_content = json.loads(data_4)
+              soup_products = BeautifulSoup(json_content['zones']['itemsList'])
+              ls_products += self.parse_product_page(soup_products, dpt_title, sub_dpt_title)
+            except:
+              print u'Empty page in sub_dpt:', sub_dpt_title, 'in store:', store_url
+
         else:
-          print u'\nDisp 100 items per page did not work:', sub_dpt_title
+          print u'Disp 100 items per page did not work:', sub_dpt_title
           good_part = re.search(u'<!-- FIN PAGINATION -->(.*?)<!-- PAGINATION -->', data_3, re.DOTALL)
           html_candidate = good_part.group(1)
           soup_products = BeautifulSoup(html_candidate)
