@@ -16,7 +16,7 @@ path_price_built_csv = os.path.join(path_auchan,
                                     u'data_built',
                                     u'data_csv_auchan_velizy')
 
-df_prices_1 = pd.read_csv(os.path.join(path_price_built_csv,
+df_master_1 = pd.read_csv(os.path.join(path_price_built_csv,
                                        'df_auchan_velizy_20121122_20130411.csv'),
                           parse_dates = ['date'],
                           dtype = {'available' : str,
@@ -24,7 +24,7 @@ df_prices_1 = pd.read_csv(os.path.join(path_price_built_csv,
                                    'promo_vignette' : str},
                           encoding = 'utf-8')
 
-df_prices_2 = pd.read_csv(os.path.join(path_price_built_csv,
+df_master_2 = pd.read_csv(os.path.join(path_price_built_csv,
                                        'df_auchan_velizy_20130411_20130809.csv'),
                           parse_dates = ['date'],
                           dtype = {'available' : str,
@@ -34,66 +34,105 @@ df_prices_2 = pd.read_csv(os.path.join(path_price_built_csv,
                           encoding = 'utf-8')
 
 # ##############
-# 2/ df_prices_2
+# 2/ df_master_2
 # ##############
+
+print u'\nProcessing df_master_2'
+df_master_2_bu = df_master_2.copy()
 
 # contains products with null sub_dpt which are to be erased
 # contains duplicates of (period title dpt subdpt): keep only lowest price
 # all subdpt should be proper
 
 print u'\nNb obs with null sub_department: {:d} (dropped)'.format(\
-          len(df_prices_2[~df_prices_2['sub_department'].isnull()]))
-df_prices_2 = df_prices_2[~df_prices_2['sub_department'].isnull()]
+          len(df_master_2[df_master_2['sub_department'].isnull()]))
+df_master_2 = df_master_2[~df_master_2['sub_department'].isnull()]
 
 # sort: ascending and nan as last by default
-df_prices_2.sort(['date', 'title', 'department', 'sub_department', 'total_price'],
+df_master_2.sort(['date', 'title', 'department', 'sub_department', 'total_price'],
                  inplace = True)
 
-# drop_duplicates: takes first by default
-df_prices_2.drop_duplicates(['date', 'title', 'department', 'sub_department'],
-                            inplace = True)
+# count duplicates
+ls_prod_id_cols = ['date', 'department', 'sub_department', 'title']
+df_dup_2 = df_master_2[(df_master_2.duplicated(ls_prod_id_cols)) |\
+                       (df_master_2.duplicated(ls_prod_id_cols,
+                                               take_last = True))].copy()
 
-ls_u_title_2 = df_prices_2['title'].unique().tolist()
+print u'\nNb obs involving duplicates: {:d}'.format(len(df_dup_2))
+print df_dup_2[0:20].to_string()
 
+print u'\nNb obs involving duplicates w/ promo: {:d}'.format(\
+        len(df_dup_2[~df_dup_2['promo'].isnull()]))
+print df_dup_2[~df_dup_2['promo'].isnull()][0:20].to_string()
 
-df_2_dsd = df_prices_2[['title', 'department', 'sub_department']].drop_duplicates()
+# caution: does not generate unique products (still all dpt/sub_dpts)
+df_master_2 = df_master_2[~((df_master_2.duplicated(ls_prod_id_cols)) |\
+                            (df_master_2.duplicated(ls_prod_id_cols,
+                                                    take_last = True)))]
+
+## drop_duplicates: takes first by default
+#df_master_2.drop_duplicates(ls_prod_id_cols,
+#                            inplace = True)
+
+df_2_dsd = df_master_2[['title', 'department', 'sub_department']].drop_duplicates()
 
 # Check [u"Martini royale rosato 8° -75cl", u"Bébé", u"Repas bébé"]
 
 # ##############
-# 1/ df_prices_1
+# 1/ df_master_1
 # ##############
+
+print u'\nProcessing df_master_1'
+df_master_1_bu = df_master_1.copy()
 
 # contains products with null sub_dpt which are to be erased
 # contains duplicates of (period title dpt subdpt): keep only lowest price
-# contains (title dpt subdpt) in which subdpt not relevant to product: check df_prices_2
+# contains (title dpt subdpt) in which subdpt not relevant to product: check df_master_2
 
 print u'\nNb obs with null sub_department: {:d} (dropped)'.format(\
-          len(df_prices_1[~df_prices_1['sub_department'].isnull()]))
-df_prices_1 = df_prices_1[~df_prices_1['sub_department'].isnull()]
+          len(df_master_1[df_master_1['sub_department'].isnull()]))
+df_master_1 = df_master_1[~df_master_1['sub_department'].isnull()]
 
 # sort: ascending and nan as last by default
-df_prices_1.sort(['date', 'title', 'department', 'sub_department', 'total_price'],
+df_master_1.sort(['date', 'title', 'department', 'sub_department', 'total_price'],
                  inplace = True)
 
-# drop_duplicates: takes first by default
-df_prices_1.drop_duplicates(['date', 'title', 'department', 'sub_department'],
-                            inplace = True)
+# count duplicates
+ls_prod_id_cols = ['date', 'department', 'sub_department', 'title']
+df_dup_1 = df_master_1[(df_master_1.duplicated(ls_prod_id_cols)) |\
+                       (df_master_1.duplicated(ls_prod_id_cols,
+                                               take_last = True))].copy()
 
-ls_u_title_1 = df_prices_1['title'].unique().tolist()
+print u'\nNb obs involving duplicates: {:d}'.format(len(df_dup_1))
+print df_dup_1[0:10].to_string()
 
+print u'\nNb obs involving duplicates w/ promo: {:d}'.format(\
+        len(df_dup_1[~df_dup_1['promo'].isnull()]))
+print df_dup_1[~df_dup_1['promo'].isnull()][0:10].to_string()
+
+## drop_duplicates: takes first by default
+#df_master_1.drop_duplicates(ls_prod_id_cols,
+#                            inplace = True)
+
+df_master_1 = df_master_1[~((df_master_1.duplicated(ls_prod_id_cols)) |\
+                            (df_master_1.duplicated(ls_prod_id_cols,
+                                                    take_last = True)))]
+
+
+ls_u_title_1 = df_master_1['title'].unique().tolist()
+ls_u_title_2 = df_master_2['title'].unique().tolist()
 ls_u_title_12 = list(set(ls_u_title_1).intersection(ls_u_title_2))
 # for those: keep only dpt and subdpt from file 2 (check that looks good)
 
-df_prices_1_sub = df_prices_1[~df_prices_1['title'].isin(ls_u_title_12)].copy()
-df_1_sub_dsd = df_prices_1_sub[['title', 'department', 'sub_department']].drop_duplicates()
+df_master_1_sub = df_master_1[~df_master_1['title'].isin(ls_u_title_12)].copy()
+df_1_sub_dsd = df_master_1_sub[['title', 'department', 'sub_department']].drop_duplicates()
 
 ls_dsd_dup = df_1_sub_dsd['title'][df_1_sub_dsd['title'].duplicated()].unique().tolist()
 
-print u'\nOverview of some products not in df_prices_2 with several s_dpts'
+print u'\nOverview of some products not in df_master_2 with several s_dpts:'
 print df_1_sub_dsd[df_1_sub_dsd['title'].isin(ls_dsd_dup)][0:20].to_string()
 
-print u'\nOverview of products not in df_prices_2 with highest nb of s_dpts'
+print u'\nOverview of products not in df_master_2 with highest nb of s_dpts:'
 print df_1_sub_dsd['title'].value_counts()[0:20]
 
 # Most issues seem to be with dpt: boissons
@@ -179,7 +218,7 @@ for title, ls_sub_departments in ls_fix_dsd:
 # A product dpt subdpt database
 
 # Keep unique product price (no loss of info on promo etc?)
-df_prod_prices_1 = df_prices_1[['title',
+df_prod_prices_1 = df_master_1[['title',
                                 'total_price',
                                 'unit_price',
                                 'available',
@@ -190,11 +229,11 @@ df_prod_prices_1 = df_prices_1[['title',
 
 df_prod_prices_1['pictos'] = None
 
-df_prod_1_dsd = df_prices_1[['title',
+df_prod_1_dsd = df_master_1[['title',
                              'department',
                              'sub_department']].drop_duplicates()
 
-df_prod_prices_2 = df_prices_2[['title',
+df_prod_prices_2 = df_master_2[['title',
                                 'total_price',
                                 'unit_price',
                                 'available',
@@ -204,7 +243,7 @@ df_prod_prices_2 = df_prices_2[['title',
                                 'pictos',
                                 'date']].drop_duplicates(['date', 'title'])
 
-df_prod_2_dsd = df_prices_2[['title',
+df_prod_2_dsd = df_master_2[['title',
                              'department',
                              'sub_department']].drop_duplicates()
 
