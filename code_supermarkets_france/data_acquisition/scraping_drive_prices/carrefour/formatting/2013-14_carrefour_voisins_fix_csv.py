@@ -12,9 +12,13 @@ path_carrefour = os.path.join(path_data,
                            u'data_drive_supermarkets',
                            u'data_carrefour')
 
+path_price_built_csv_voisins = os.path.join(path_carrefour,
+                                            u'data_built',
+                                            u'data_csv_carrefour_voisins')
+
 path_price_built_csv = os.path.join(path_carrefour,
                                     u'data_built',
-                                    u'data_csv_carrefour_voisins')
+                                    u'data_csv_carrefour')
 
 ls_file_names = ['df_carrefour_voisins_20130418_20131128.csv',
                  'df_carrefour_voisins_20131129_20141205.csv',
@@ -22,7 +26,7 @@ ls_file_names = ['df_carrefour_voisins_20130418_20131128.csv',
 
 ls_df_master = []
 for file_name in ls_file_names:
-  ls_df_master.append(pd.read_csv(os.path.join(path_price_built_csv,
+  ls_df_master.append(pd.read_csv(os.path.join(path_price_built_csv_voisins,
                                                file_name),
                       encoding = 'utf-8'))
 # parse_dates = ['date']))
@@ -32,13 +36,15 @@ for file_name in ls_file_names:
 df_master_2013 = ls_df_master[1]
 df_master_2015 = ls_df_master[2]
 
-# Assume "Prix Promo" is not legit promotion for now (pbm of data collect)
+# ###################################
+# FIX DATA & IMPORT BRANDS FROM 2015
+# ###################################
+
+# Assume "Prix Promo" is not legit promotion (pbm of data collect)
 df_master_2013.loc[df_master_2013['promo'] == u'Prix Promo',
                    'promo'] = None
 
-# ################################
-# UNIQUE PRODUCTS IN 2013-2014
-# ################################
+### UNIQUE PRODUCTS IN 2013-2014
 
 ls_prod_id_cols = ['date', 'department', 'sub_department', 'title', 'price_lab_1']
 df_dup_2013 = df_master_2013[(df_master_2013.duplicated(ls_prod_id_cols)) |\
@@ -57,9 +63,7 @@ ls_dsd_cols = ls_prod_id_cols[1:] + ['price_lab_2']
 df_dsd_2013 = df_unique_2013[ls_dsd_cols]\
                 .drop_duplicates(ls_dsd_cols[:-1])
 
-# ################################
-# UNIQUE PRODUCTS IN 2015
-# ################################
+### UNIQUE PRODUCTS IN 2015
 
 ls_prod_id_cols_2 = ['date', 'department', 'sub_department', 'title_2', 'price_lab_1']
 df_dup_2015 = df_master_2015[(df_master_2015.duplicated(ls_prod_id_cols_2)) |\
@@ -73,7 +77,11 @@ ls_dsd_cols_2 = ls_prod_id_cols_2[1:] + ['title_1', 'price_lab_2']
 df_dsd_2015 = df_unique_2015[ls_dsd_cols_2]\
                 .drop_duplicates(ls_dsd_cols_2[:-2])
 
-# CAUTION: in df_dsd_2015: ('title', 'price_lab_1') non unique => several sub dpts
+### IMPORT BRANDS FROM 2015 IN 2013-14
+
+# CAUTION: 
+# In df_dsd_2015: ('title', 'price_lab_1') non unique (several sub dpts)
+# Hence need to drop duplicates before merging
 df_dsd_2013 = pd.merge(df_dsd_2013,
                        df_dsd_2015[['title_1',
                                     'title_2',
@@ -93,9 +101,9 @@ df_dsd_2013['brand'] =\
   df_dsd_2013.apply(lambda row: row['title_1'].replace(row['title_2'], '').strip()\
                                 if not pd.isnull(row['title_1']) else None, axis = 1)
 
-# ######################
-# PROMOTIONS BY PRODUCT
-# ######################
+# todo: propagate brand
+
+### ADD PROMOTIONS BY PRODUCT TO df_dsd_2013
 
 # add nb periods and nb promo
 df_unique_2013.rename(columns = {'title' : 'title_2'},
@@ -110,7 +118,7 @@ df_dsd_2013_add = pd.concat([se_nb_per, se_nb_promo],
                             keys = ['nb_per', 'nb_promo'])
 df_dsd_2013_add.loc[df_dsd_2013_add['nb_promo'].isnull(),
                     'nb_promo'] = 0
-df_dsd_2013['nb_promo'] = df_dsd_2013['nb_promo'].astype(int)
+df_dsd_2013_add['nb_promo'] = df_dsd_2013_add['nb_promo'].astype(int)
 
 df_dsd_2013_add.reset_index(inplace = True)
 
@@ -125,9 +133,37 @@ print u'\nNb products always in promo: {:d}'\
 print u'\nNb products with at least one promo: {:d}'\
           .format(len(df_dsd_2013[df_dsd_2013['nb_promo'] != 0]))
 
-# ####################
-# PROMOTIONS BY PERIOD
-# ####################
+# ##################
+# OUTPUT FINAL DATA
+# ##################
+
+df_master_2013.to_csv(os.path.join(path_price_built_csv,
+                                 'df_carrefour_voisins_2013_2014.csv'),
+                      encoding = 'utf-8',
+                      index = False)
+
+df_dsd_2013.to_csv(os.path.join(path_price_built_csv,
+                                'df_dsd_voisins_2013_2014.csv'),
+                   encoding = 'utf-8',
+                   index = False)
+
+df_unique_2013.to_csv(os.path.join(path_price_built_csv,
+                                   'df_prices_voisins_2013_2014.csv'),
+                      encoding = 'utf-8',
+                      index = False)
+
+# ###################################
+# DESCRIPTIVE STATISTICS (MOVE?)
+# ###################################
+
+pd.set_option('display.float_format', '{:,.2f}'.format)
+
+### PROMOTIONS BY PRODUCT
+
+print u'\nDesc promotions by products:'
+print df_dsd_2013[['nb_per', 'nb_promo']].describe()
+
+### PROMOTIONS BY PERIOD
 
 #ls_title_suspect = df_master_2013[df_master_2013['promo'] == 'Prix Promo']\
 #                     ['title'].unique().tolist()
@@ -150,14 +186,12 @@ df_overview['pct_promo'] = df_overview['nb_promo'] / df_overview['nb_prod']
 #df_overview['pct_promo'].plot()
 #plt.show()
 
-# ####################
-# PROMOTIONS BY BRAND
-# ####################
+### PROMOTIONS BY BRAND
 
 # Need to know how many promo per period have no identified brand
-print len(df_dsd_2013[(df_dsd_2013['nb_promo'] != 0) &\
-                      (df_dsd_2013['brand'].isnull())])
-
+print u'\nNb promo with identified brand: {:d}'.format(\
+        len(df_dsd_2013[(df_dsd_2013['nb_promo'] != 0) &\
+                        (df_dsd_2013['brand'].isnull())]))
 
 # Promo by brand in terms of products and promo days
 se_brand_promo = df_dsd_2013[df_dsd_2013['nb_promo'] != 0]['brand'].value_counts()
@@ -182,12 +216,9 @@ df_brand_promo['pct_promo_days'] = df_brand_promo['nb_promo_days'] /\
 
 df_brand_promo.sort('nb_prods', ascending = False, inplace = True)
 
-pd.set_option('display.float_format', '{:,.2f}'.format)
 # print df_brand_promo[0:20].to_string()
 
-# ###################################
-# DEPARTMENTS: NB PRODUCTS AND PROMO
-# ###################################
+### DEPARTMENTS: NB PRODUCTS AND PROMO
 
 # Nb products
 df_dpt_nb_prod = df_master_2013.pivot_table(values='price_1',
@@ -229,9 +260,7 @@ plt.show()
 #df_dpt_nb_promo[se_avg_dpt_nb_prod.index[0:2]][200:500].plot()
 #plt.show()
 
-# #####################################
-# SUBDEPARTMENTS: NB PRODUCTS AND PROMO
-# #####################################
+### SUBDEPARTMENTS: NB PRODUCTS AND PROMO
 
 # Nb products
 df_subdpt_nb_prod = df_master_2013.pivot_table(values='price_1',
