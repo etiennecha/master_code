@@ -148,11 +148,11 @@ ls_ids_total_noTA = [id_station for id_station in ls_ids_total\
 # Describe competitive environment
 ls_desc_tot = []
 for ls_ids in [ls_ids_total, ls_ids_total_noTA, ls_ids_total_TA, ls_ids_elf_TA]:
-  ls_desc_tot.append(df_info.ix[ls_ids][['dist_cl_sup',
-                                         'dist_cl',
-                                         '3km',
-                                         '2km',
-                                         '1km']].mean())
+  ls_desc_tot.append(df_info.ix[ls_ids][['dist_c_sup',
+                                         'dist_c',
+                                         'nb_c_3km',
+                                         'nb_c_2km',
+                                         'nb_c_1km']].mean())
 
 df_desc = pd.concat(ls_desc_tot, axis = 1,
                     keys = ['Total_All', 'Total_noTA', 'Total_TA', 'Elf_TA'])
@@ -176,20 +176,20 @@ for ls_ids in [ls_ids_total, ls_ids_total_noTA, ls_ids_total_TA, ls_ids_elf_TA]:
 # ################
 
 df_logit = df_info[(df_info['brand_0'] == 'TOTAL') &\
-                   (~pd.isnull(df_info['dist_cl']))].copy()
+                   (~pd.isnull(df_info['dist_c']))].copy()
 df_logit['rebranded'] = 0
 df_logit.loc[df_logit['brand_last'] == 'TOTAL_ACCESS', 'rebranded'] = 1
 
-ls_dist_disp = ['name', 'adr_street', 'adr_city', 'dist_cl' , 'dist_cl_sup']
+ls_dist_disp = ['name', 'adr_street', 'adr_city', 'dist_c' , 'dist_c_sup']
 print df_logit[df_logit['reg']  == 'Corse'][ls_dist_disp].to_string()
 
 df_logit = df_logit[df_logit['reg'] != 'Corse']
 
-print df_logit[(df_logit['dist_cl'] == 0) |\
-               (df_logit['dist_cl_sup'] == 0)][ls_dist_disp].to_string()
+print df_logit[(df_logit['dist_c'] == 0) |\
+               (df_logit['dist_c_sup'] == 0)][ls_dist_disp].to_string()
 
 #import statsmodels.api as sm
-#exo = sm.add_constant(df_logit['dist_cl_sup'])
+#exo = sm.add_constant(df_logit['dist_c_sup'])
 #logit_mod = sm.Logit(df_logit['Rebranded'], exo)
 #logit_res = logit_mod.fit()
 #print logit_res.summary()
@@ -197,8 +197,8 @@ print df_logit[(df_logit['dist_cl'] == 0) |\
 # http://statsmodels.sourceforge.net/stable/examples/notebooks/generated/discrete_choice_example.html
 
 from statsmodels.formula.api import logit, probit
-df_logit['nb_comp_1km'] = df_logit['1km']
-rebranded_mod = logit('rebranded ~ dist_cl_sup',
+#df_logit['nb_comp_1km'] = df_logit['1km']
+rebranded_mod = logit('rebranded ~ dist_c_sup',
                       df_logit).fit()
 print rebranded_mod.summary()
 # prediction not working?
@@ -237,7 +237,7 @@ for service in ['CB', 'BA', 'BNA']:
 
 # check if actually works
 # http://nbviewer.ipython.org/github/adparker/GADSLA_1403/blob/master/src/lesson07/Logistic%20Regression%20and%20Statsmodels%20tutorial.ipynb
-rebranded_mod = logit('rebranded ~ C(STATUT_2010) + CB + dist_cl_sup',
+rebranded_mod = logit('rebranded ~ C(STATUT_2010) + CB + dist_c_sup',
                       df_logit).fit()
 print rebranded_mod.summary()
 mfx = rebranded_mod.get_margeff(at = 'mean')
@@ -249,12 +249,12 @@ print rebranded_mod.pred_table()
 #print smf.ols('rebranded ~ C(STATUT_2010) + CB + dist_cl_sup',
 #                      df_logit).fit().summary()
 
-for i in range(1,6):
-  df_logit['nb_comp_%skm' %i] = df_logit['%skm' %i]
+#for i in range(1,6):
+#  df_logit['nb_c_%skm' %i] = df_logit['%skm' %i]
 
 ls_output_stata = ['rebranded', 'STATUT_2010', 'CB', 'BA', 'BNA',
-                   'dist_cl', 'dist_cl_sup',
-                   'nb_comp_1km', 'nb_comp_3km', 'nb_comp_5km',
+                   'dist_c', 'dist_c_sup',
+                   'nb_c_1km', 'nb_c_3km', 'nb_c_5km',
                    'crowded']
 
 df_logit[ls_output_stata].to_csv(os.path.join(path_dir_built_csv,
