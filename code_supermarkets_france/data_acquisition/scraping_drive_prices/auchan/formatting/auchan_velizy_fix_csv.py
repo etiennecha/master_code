@@ -12,11 +12,15 @@ path_auchan = os.path.join(path_data,
                            u'data_drive_supermarkets',
                            u'data_auchan')
 
-path_price_built_csv = os.path.join(path_auchan,
-                                    u'data_built',
-                                    u'data_csv_auchan_velizy')
+path_price_csv_store = os.path.join(path_auchan,
+                                     u'data_built',
+                                     u'data_csv_auchan_velizy')
 
-df_master_1 = pd.read_csv(os.path.join(path_price_built_csv,
+path_price_csv = os.path.join(path_auchan,
+                                     u'data_built',
+                                     u'data_csv_auchan')
+
+df_master_1 = pd.read_csv(os.path.join(path_price_csv_store,
                                        'df_auchan_velizy_20121122_20130411.csv'),
                           parse_dates = ['date'],
                           dtype = {'available' : str,
@@ -24,7 +28,7 @@ df_master_1 = pd.read_csv(os.path.join(path_price_built_csv,
                                    'promo_vignette' : str},
                           encoding = 'utf-8')
 
-df_master_2 = pd.read_csv(os.path.join(path_price_built_csv,
+df_master_2 = pd.read_csv(os.path.join(path_price_csv_store,
                                        'df_auchan_velizy_20130411_20130809.csv'),
                           parse_dates = ['date'],
                           dtype = {'available' : str,
@@ -33,16 +37,16 @@ df_master_2 = pd.read_csv(os.path.join(path_price_built_csv,
                                    'promo_vignette' : str},
                           encoding = 'utf-8')
 
-# ##############
-# 2/ df_master_2
-# ##############
+# #################
+# FIX SECOND PERIOD
+# #################
+
+# contains products with null sub_dpt which are to be erased
+# contains duplicates of (period title dpt subdpt): get rid
+# all subdpt should be proper
 
 print u'\nProcessing df_master_2'
 df_master_2_bu = df_master_2.copy()
-
-# contains products with null sub_dpt which are to be erased
-# contains duplicates of (period title dpt subdpt): keep only lowest price
-# all subdpt should be proper
 
 print u'\nNb obs with null sub_department: {:d} (dropped)'.format(\
           len(df_master_2[df_master_2['sub_department'].isnull()]))
@@ -78,16 +82,16 @@ df_2_dsd = df_master_2[['title', 'department', 'sub_department']].drop_duplicate
 
 # Check [u"Martini royale rosato 8° -75cl", u"Bébé", u"Repas bébé"]
 
-# ##############
-# 1/ df_master_1
-# ##############
+# #################
+# FIX FIRST PERIOD
+# #################
+
+# contains products with null sub_dpt which are to be erased
+# contains duplicates of (period title dpt subdpt): get rid
+# contains (title dpt subdpt) in which subdpt not relevant to product: check df_master_2
 
 print u'\nProcessing df_master_1'
 df_master_1_bu = df_master_1.copy()
-
-# contains products with null sub_dpt which are to be erased
-# contains duplicates of (period title dpt subdpt): keep only lowest price
-# contains (title dpt subdpt) in which subdpt not relevant to product: check df_master_2
 
 print u'\nNb obs with null sub_department: {:d} (dropped)'.format(\
           len(df_master_1[df_master_1['sub_department'].isnull()]))
@@ -97,7 +101,7 @@ df_master_1 = df_master_1[~df_master_1['sub_department'].isnull()]
 df_master_1.sort(['date', 'title', 'department', 'sub_department', 'total_price'],
                  inplace = True)
 
-# count duplicates
+# DROP DUPLICATES
 ls_prod_id_cols = ['date', 'department', 'sub_department', 'title']
 df_dup_1 = df_master_1[(df_master_1.duplicated(ls_prod_id_cols)) |\
                        (df_master_1.duplicated(ls_prod_id_cols,
@@ -118,15 +122,16 @@ df_master_1 = df_master_1[~((df_master_1.duplicated(ls_prod_id_cols)) |\
                             (df_master_1.duplicated(ls_prod_id_cols,
                                                     take_last = True)))]
 
+# PREPARE TO GET RID OF WRONG DPT/SUB_DPT ASSOCIATIONS
 
+# If product in second period, want to use its dpt/sub_dpts from future
 ls_u_title_1 = df_master_1['title'].unique().tolist()
 ls_u_title_2 = df_master_2['title'].unique().tolist()
 ls_u_title_12 = list(set(ls_u_title_1).intersection(ls_u_title_2))
-# for those: keep only dpt and subdpt from file 2 (check that looks good)
 
+# Keep products not listed in period 2... need to deal with them
 df_master_1_sub = df_master_1[~df_master_1['title'].isin(ls_u_title_12)].copy()
 df_1_sub_dsd = df_master_1_sub[['title', 'department', 'sub_department']].drop_duplicates()
-
 ls_dsd_dup = df_1_sub_dsd['title'][df_1_sub_dsd['title'].duplicated()].unique().tolist()
 
 print u'\nOverview of some products not in df_master_2 with several s_dpts:'
@@ -210,7 +215,7 @@ for title, ls_sub_departments in ls_fix_dsd:
                                (df_1_sub_dsd['sub_department'].isin(ls_sub_departments)))]
 
 # ###############
-# 3/ Concatenate
+# CONCATENATE BOTH PE
 # ###############
 
 # Need to concatenate and build two databases
@@ -255,16 +260,83 @@ df_prod_dsd = pd.concat([df_prod_2_dsd,
                          df_1_sub_dsd],
                         axis = 0)
 
-# #########################
-# 4/ Finish formatting data
-# #########################
+# Check that there were never two different prices for one title across dpt/sub_dpts?
+df_master = pd.merge(df_prod_dsd,
+                     df_prod_prices,
+                     on = 'title',
+                     how = 'left')
 
-# FORMAT COLUMN total_price
+# len(df_master[df_master['date'] == '2013-06-11'])
+# len(df_master_2[df_master_2['date'] == '2013-06-11'])
+# More in master than in master_2... could mean trouble
+
+## todo: investigate:
+#len(df_master_2[df_master_2.duplicated(['date', 'title'])])
+#len(df_master_2[df_master_2.duplicated(['date', 'title', 'total_price'])])
+
+l1 = df_master_2[df_master_2['date'] == '2013-06-11']\
+       [['title', 'department', 'sub_department']].values.tolist()
+l2 = df_master[df_master['date'] == '2013-06-11']\
+       [['title', 'department', 'sub_department']].values.tolist()
+l_audit = list(set([tuple(x) for x in l2]).difference(set([tuple(y) for y in l1])))
+
+# ###########################
+# FORMAT DATA (BOTH PERIODS)
+# ##########################
+
+# FORMAT NaN & None in available, flag, pictos, promo, promo_vignette
+
+for field in ['available', 'flag', 'pictos', 'promo', 'promo_vignette']:
+  df_prod_prices.loc[df_prod_prices[field].isnull(),
+                     field] = None
+
+# FORMAT total_price
 
 df_prod_prices['total_price'] =\
   df_prod_prices['total_price'].apply(lambda x: x.replace(',', '.')\
-                                                  .replace(u'\\u20ac', u''))
-df_prod_prices['total_price'] = df_prod_prices['total_price'].astype(float)
+                                                 .replace(u'\\u20ac', u'')).astype(float)
+
+# FORMAT unit_price
+
+#for x in df_prod_prices['unit_price'].values:
+#  if len(u'Prix/L: 2,49'.split(':')) != 2:
+#    print x
+#    break
+
+df_prod_prices['price_lab_2'], df_prod_prices['price_2'] =\
+  zip(*df_prod_prices['unit_price'].apply(lambda x: [x.strip() for x in x.split(':')]))
+
+df_prod_prices['price_2'] =\
+  df_prod_prices['price_2'].apply(lambda x: x.replace(u'\\u20ac', u'')\
+                                             .replace(u',', u'.')\
+                                             .strip()).astype(float)
+df_prod_prices['unit_price'] = df_prod_prices['price_2']
+df_prod_prices['unit'] = df_prod_prices['price_lab_2']
+df_prod_prices.drop(labels = ['price_2', 'price_lab_2'], axis = 0, inplace = True)
+
+# ######################
+# OUTPUT
+# ######################
+
+df_master.to_csv(os.path.join(path_price_csv,
+                              'df_auchan_velizy_master_2013.csv'),
+                 encoding = 'utf-8',
+                 index = False)
+
+df_prod_dsd.to_csv(os.path.join(path_price_csv,
+                                'df_auchan_velizy_dsd_2013.csv'),
+                   encoding = 'utf-8',
+                   index = False)
+
+df_prod_prices.to_csv(os.path.join(path_price_csv,
+                                   'df_auchan_velizy_prices_2013.csv'),
+                      encoding = 'utf-8',
+                      index = False)
+
+
+# ##########
+# STATS DES
+# ##########
 
 # ADD NB OF PRICE OBS BY PRODUCT IN df_prod_dsd
 
@@ -302,10 +374,6 @@ df_prod_dsd['nb_price_chges'] = df_nb_price_chges['total_price']['count_nb_chges
 df_prod_dsd.reset_index(inplace = True)
 df_prod_dsd.sort('nb_price_chges', inplace = True, ascending = False)
 
-# #########
-# OVERVIEW
-# #########
-
 print u'\nOverview nb_obs and nb_price_chges'
 print df_prod_dsd[['nb_obs', 'nb_price_chges']].describe()
 
@@ -337,9 +405,7 @@ df_dsd.sort(['department', 'sub_department'], inplace = True)
 #ls_title_vins = df_prod_dsd['title'][df_prod_dsd['sub_department'] == 'Vins'].unique().tolist()
 #df_prices_vins = df_prod_prices[df_prod_prices['title'].isin(ls_title_vins)]
 
-## #################
 ## EXAMPLE: COCA
-## #################
 #
 ## todo: check issues with product categories...
 ## print df_prod_dsd[df_prod_dsd['title'].str.contains('Coca')].to_string()

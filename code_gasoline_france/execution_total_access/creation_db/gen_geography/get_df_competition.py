@@ -188,11 +188,32 @@ df_clc = pd.DataFrame(ls_rows_clc,
                       index = df_info.index,
                       columns = ['dist_s', 'dist_c', 'dist_c_sup'])
 
+# CLOSEST TOTAL ACCESS
+ls_ta_ids = df_info[(df_info['brand_last'] == 'TOTAL_ACCESS')].index.tolist()
+ls_rows_close_ta = []
+for id_station, ls_comp in dict_ls_comp.items():
+  # keep info even for Total SA group stations
+  #if df_info.ix[id_station]['brand_0'] not in ['ELF', 'TOTAL', 'TOTAL_ACCESS', 'ELAN']:
+  
+  ls_ta_comp = [(comp_id, distance) for comp_id, distance in ls_comp\
+                                    if comp_id in ls_ta_ids]
+  ls_ta_comp_flat = [x for ls_x in ls_ta_comp[0:3] for x in ls_x]
+  ls_rows_close_ta.append([id_station] + ls_ta_comp_flat)
+df_close_ta = pd.DataFrame(ls_rows_close_ta, columns = ['id_station',
+                                                        'id_ta_0',
+                                                        'dist_ta_0',
+                                                        'id_ta_1',
+                                                        'dist_ta_1',
+                                                        'id_ta_3',
+                                                        'dist_ta_3'])
+df_close_ta.set_index('id_station', inplace = True)
+
 # MERGE AND OUTPUT
 
 df_comp = pd.merge(df_nb_comp, df_area_nb, left_index = True, right_index = True)
 df_comp = pd.merge(df_comp, df_area_same, left_index = True, right_index = True)
 df_comp = pd.merge(df_comp, df_clc, left_index = True, right_index = True)
+df_comp = pd.merge(df_comp, df_close_ta, left_index = True, right_index = True)
 
 # fix stations with no group
 # counted in nb_AU2010 (e.g.) but not in nb_c
