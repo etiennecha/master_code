@@ -89,6 +89,7 @@ dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
 # LOAD DATA
 # #############
 
+# todo: add day count before after
 df_coeffs = pd.read_csv(os.path.join(path_dir_built_csv,
                                      'df_coeffs_ttac.csv'),
                         dtype = {'id_station' : str,
