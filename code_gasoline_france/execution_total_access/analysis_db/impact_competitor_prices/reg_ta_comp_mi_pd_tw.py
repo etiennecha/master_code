@@ -7,6 +7,7 @@ from generic_master_price import *
 from generic_master_info import *
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from pandas.stats.plm import PanelOLS
 
 path_dir_built_paper = os.path.join(path_data,
                                     u'data_gasoline',
@@ -119,8 +120,13 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items():
 #plt.show()
 
 # ###################
-# DIFF IN DIFF
+# POOLED OLS
 # ###################
+
+# Pooled OLS regression to estimate aggrefate treatment effect 
+# Includes day and station FE
+# Unsure if should expect different result vs. FE estimation (std errors?)
+# Run with PanelOLS first... not necessarily very trustworthy?
 
 df_prices = df_prices_ttc
 
@@ -131,8 +137,7 @@ df_dd_control = pd.DataFrame(df_prices[ls_control_ids].mean(1),
                              df_prices.index, ['price'])
 df_dd_control['time'] = df_dd_control.index
 ls_df_dd = []
-ls_station_fe_vars = []
-for id_station, ls_ta_comp in dict_ls_ta_comp.items()[:2000]:
+for id_station, ls_ta_comp in dict_ls_ta_comp.items()[0:4000]:
   if df_info.ix[id_station]['brand_0'] not in ['ELF', 'TOTAL', 'TOTAL_ACCESS', 'ELAN']:
     # Need to have pp change and dates of transition
     ls_ta_comp = [(comp_id, distance) for comp_id, distance in ls_ta_comp\
@@ -158,124 +163,62 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items()[:2000]:
       df_dd_comp['treatment_ind'] = 0
       if df_info.ix[id_station]['group_type'] == 'IND':
         df_dd_comp.loc[date_end:, 'treatment_ind'] = 1
-      ls_df_dd.append(df_dd_comp)
+      ls_df_dd.append(df_dd_comp) # restriction on days considered
 
-df_dd = pd.concat(ls_df_dd, ignore_index = True)
-df_dd.set_index(['time', 'id_station'], inplace = True, verify_integrity = True)
-from pandas.stats.plm import PanelOLS
-reg  = PanelOLS(y=df_dd['price'],
-                x=df_dd[['treatment', 'treatment_sup', 'treatment_ind']],
-                time_effects=True,
-                entity_effects=True)
-print reg
+ls_ls_start_end = [[0,1200], # all?
+                   [0, 600],
+                   [600, 1200],
+                   [300, 900]]
 
-#fm  = pd.fama_macbeth(y=df_dd['price'],
-#                      x=df_dd[['treatment']])
-#print fm
+for start, end in ls_ls_start_end:
+  ls_df_dd_temp = [df_dd_comp[start:end] for df_dd_comp in ls_df_dd]
+  df_dd = pd.concat(ls_df_dd_temp, ignore_index = True)
+  print u'Data contains: {:d} days and {:d} stations'.format(\
+         len(df_dd['time'].unique()),
+         len(df_dd['id_station'].unique()))
+  print u'First date: {:s}'.format(df_dd['time'].min().strftime('%d/%m/%Y'))
+  print u'Last date: {:s}'.format(df_dd['time'].max().strftime('%d/%m/%Y'))
+  
+  df_dd.set_index(['time', 'id_station'], inplace = True, verify_integrity = True)
+  
+  print u'\nPooled OLS with single streatment (day & station FE)'
+  reg_one  = PanelOLS(y=df_dd['price'],
+                      x=df_dd[['treatment']],
+                      time_effects=True,
+                      entity_effects=True)
+  print reg_one
+  
+  #print u'\nPooled OLS reg with treatment for Oil/Sup/Ind (day & station FE)'
+  #reg_two  = PanelOLS(y=df_dd['price'],
+  #                    x=df_dd[['treatment', 'treatment_sup', 'treatment_ind']],
+  #                    time_effects=True,
+  #                    entity_effects=True)
+  #print reg_two
 
-## Add stations never affected in regression?
+## (VERIFICATION) MANUAL POOLED OLS (UNSURE ABOUT DIFF... STD ERRORS?)
 #
-## start, end = 0, 100
-#ls_df_res = []
-## for i in range(0, 200, 00):
-#start, end = 200, 400 #i, i+100
-## df_dd = pd.concat([df_dd_control] + ls_df_dd[start:end], ignore_index = True)
-#df_dd = pd.concat(ls_df_dd[start:end], ignore_index = True)
-#df_dd.fillna(value = {x : 0 for x in ls_station_fe_vars[start:end] + ['treatment']},
-#             inplace = True)
+## Same as above but using simple ols and adding day and station FE
+## Too heavy with all days (seems around 150 days supported at CREST...)
+## => either reduce nb of days
+## => or use sparse matrices
+## Consistent with results from Pooled OLS
 #
-#str_station_fe = ' + '.join(ls_station_fe_vars[start:end])
-#
+#print u'\nPooled OLS reg with treatment for Oil/Sup/Ind (day & station FE)'
 #df_dd = df_dd[~pd.isnull(df_dd['price'])]
 #
-#reg_dd_res = smf.ols('price ~ C(time) + %s + treatment - 1' %str_station_fe,
+#df_dd.reset_index(inplace = True, drop = False)
+#reg_three = smf.ols('price ~ C(time) + C(id_station) + treatment - 1',
 #                     data = df_dd,
 #                     missing = 'drop').fit()
 #
-#ls_tup_coeffs = zip(reg_dd_res.params.index.values.tolist(),
-#                    reg_dd_res.params.values.tolist(),
-#                    reg_dd_res.bse.values.tolist(),
-#                    reg_dd_res.tvalues.values.tolist(),
-#                    reg_dd_res.pvalues.values.tolist())
+#ls_tup_coeffs = zip(reg_three.params.index.values.tolist(),
+#                    reg_three.params.values.tolist(),
+#                    reg_three.bse.values.tolist(),
+#                    reg_three.tvalues.values.tolist(),
+#                    reg_three.pvalues.values.tolist())
 #
-#df_res_temp = pd.DataFrame(ls_tup_coeffs,
+#df_reg_three = pd.DataFrame(ls_tup_coeffs,
 #                           columns = ['name', 'coeff', 'se', 'tval', 'pval'])
-##df_res_temp.set_index('id_station', inplace = True)
-##ls_df_res.append(df_res_temp)
-##
-##df_res = pd.concat(ls_df_res)
-#
-#
-### Table: TA chge vs. TA comp
-##ls_pcts = [0.1, 0.25, 0.5, 0.75, 0.9]
-##df_ta_chge_vs_ta_comp =\
-##  pd.concat([(-df_info_ta.ix[ls_ta_chge_ids]['pp_chge']).describe(percentiles=ls_pcts),
-##             df_res_sf['coeff'].describe(percentiles=ls_pcts),
-##             df_res_sf['coeff'][df_res_sf['distance'] <= 2].describe(percentiles=ls_pcts),
-##             df_res_sf['coeff'][df_res_sf['distance'] <= 1].describe(percentiles=ls_pcts)],
-##             keys = ['TA', 'TA_comp_3km', 'TA_comp_2km' ,'TA_comp_1km'], axis = 1)
-##print df_ta_chge_vs_ta_comp.to_string()
-##
-### describe by brand
-##ls_df_desc = []
-##ls_desc_brands = df_res_sf['brand_0'].value_counts()[0:10].index
-##for brand in ls_desc_brands:
-##  df_temp_desc = df_res_sf['coeff'][\
-##                    df_res_sf['brand_0'] == brand].describe()
-##  ls_df_desc.append(df_temp_desc)
-##df_desc = pd.concat(ls_df_desc, axis = 1, keys = ls_desc_brands)
-##df_desc.rename(columns = {'CARREFOUR_MARKET' : 'CARREFOUR_M'}, inplace = True)
-##print df_desc.to_string()
-##
-### small reg to explain coeff
-##print smf.ols('coeff ~ C(brand_0) + distance + pp_chge',
-##              data = df_res_sf).fit().summary()
-#
-#
-### #######
-### GRAPHS
-### #######
-##
-##from pylab import *
-##rcParams['figure.figsize'] = 16, 6
-##
-##plt.rc('font', **{'family' : 'Computer Modern Roman',
-##                  'size'   : 20})
-##
-### Obfuscate then match TA price (check 2100012)
-### 95100025   -0.077 0.001 -107.343 0.000  95100016     0.070
-### Match TA price then give up
-### 91000006   -0.057 0.001  -68.342 0.000  91000003     1.180
-### Match TA price
-### 5100004 ... lost the line
-##
-##ls_pair_display = [['95100025', '95100016'],
-##                   ['91000006', '91000003'],
-##                   ['5100004', '5100007'],
-##                   ['22500002', '22500003'],
-##                   ['69005002', '69009005'],
-##                   ['69110003', '69009005']]
-##
-##for i, (id_1, id_2) in enumerate(ls_pair_display):
-##  fig = plt.figure()
-##  ax1 = fig.add_subplot(111)
-##  l1 = ax1.plot(df_prices_ht.index, df_prices_ht[id_1].values,
-##                c = 'b', label = '%s_%s' %(id_1, df_info.ix[id_1]['brand_0']))
-##  l2 = ax1.plot(df_prices_ht.index, df_prices_ht[id_2].values,
-##                c = 'g', label = '%s_%s' %(id_2, df_info.ix[id_2]['brand_0']))
-##  l3 = ax1.plot(df_prices_ht.index, df_prices_ht[ls_control_ids].mean(1).values,
-##                c = 'r', label = 'Control')
-##  lns = l1 + l2 + l3
-##  labs = [l.get_label() for l in lns]
-##  ax1.legend(lns, labs, loc=0)
-##  ax1.grid()
-##  plt.tight_layout()
-##  #plt.show()
-##  plt.savefig(os.path.join(path_dir_built_graphs,
-##                           'competitor_reactions',
-##                           'ex_%s.png' %i))
-#
-### Quick Graph
-## ax = df_prices_ht[['69005002', '69009005']].plot()
-## df_prices_ht[ls_control_ids].mean(1).plot(ax = ax)
-## plt.show()
+#print df_reg_three
+
+## (VERIFICATION) MANUAL POOLED OLS WITH SPARSE MATRICES (todo)
