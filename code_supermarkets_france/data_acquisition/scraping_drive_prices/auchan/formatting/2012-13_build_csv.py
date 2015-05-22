@@ -11,23 +11,27 @@ path_auchan = os.path.join(path_data,
                            u'data_drive_supermarkets',
                            u'data_auchan')
 
-path_price_source = os.path.join(path_auchan,
-                                 u'data_source',
-                                 u'data_json_auchan_velizy')
+path_price_json_velizy = os.path.join(path_auchan,
+                                      u'data_source',
+                                      u'data_json_auchan_velizy')
 
-path_price_bu_duplicates = os.path.join(path_price_source,
-                                        u'bu_duplicates')
+path_price_json_velizy_duplicates = os.path.join(path_price_json_velizy,
+                                                 u'bu_duplicates')
 
-path_price_built_csv = os.path.join(path_auchan,
-                                    u'data_built',
-                                    u'data_csv_auchan_velizy')
+path_price_json_plaisir = os.path.join(path_auchan,
+                                        u'data_source',
+                                        u'data_json_auchan_plaisir')
+
+path_price_source_csv = os.path.join(path_auchan,
+                                     u'data_source',
+                                     u'data_csv_auchan')
 
 ## ###########################
 ## CHECK ONE FILE WITH PANDAS
 ## ###########################
 #
 #date_str = '20121122'
-#path_file = os.path.join(path_price_bu_duplicates,
+#path_file = os.path.join(path_price_json_velizy_duplicates,
 #                         '{:s}_auchan_velizy'.format(date_str))
 #period_file = dec_json(path_file)
 #
@@ -43,15 +47,18 @@ path_price_built_csv = os.path.join(path_auchan,
 # BUILD DF MASTER
 # ###################
 
-ls_loop = [[path_price_bu_duplicates, date(2012,11,22), date(2013,4,11)],
-           [path_price_source, date(2013,4,11), date(2013,8,9)]]
+ls_loop = [[path_price_json_velizy_duplicates, 'velizy', date(2012,11,22), date(2013,4,11)],
+           [path_price_json_velizy, 'velizy', date(2013,4,11), date(2013,8,8)],
+           [path_price_json_plaisir, 'plaisir', date(2013,6,27), date(2013,8,8)]]
 
-for path_temp, start_date, end_date in ls_loop:
+ls_df_master = []
+
+for path_temp, store_extension, start_date, end_date in ls_loop:
   ls_dates = get_date_range(start_date, end_date)
   ls_df_products = []
   for date_str in ls_dates:
     path_file = os.path.join(path_temp,
-                             '{:s}_auchan_velizy'.format(date_str))
+                             '{:s}_auchan_{:s}'.format(date_str, store_extension))
     if os.path.exists(path_file):
       period_file = dec_json(path_file)
        
@@ -82,51 +89,67 @@ for path_temp, start_date, end_date in ls_loop:
   
   df_master = pd.concat(ls_df_products, axis = 0)
   
-  # ################
-  # CLEAN DF MASTER
-  # ################
+  df_master.columns = [col.replace('product_', '') for col in df_master.columns]
   
+  # FORMAT UNIT PRICE
   def fix_unit_price(x):
-    x = re.sub('&euro;$', '', x)
-    x = x.replace(' <br /> ', ' ')
+    x = re.sub('&euro;$', '', x)\
+        .replace(' <br /> ', ' ')\
+        .replace(u'\\u20ac', u'').strip()
     return x
+  df_master['unit_price'] = df_master['unit_price'].apply(lambda x: fix_unit_price(x))
+   
+  df_master['price_lab_2'], df_master['price_2'] =\
+    zip(*df_master['unit_price'].apply(lambda x: [x.strip() for x in x.split(':')]))
   
-  df_master['product_unit_price'] =\
-    df_master['product_unit_price'].apply(lambda x: fix_unit_price(x))
+  df_master['price_2'] =\
+    df_master['price_2'].apply(lambda x: x.replace(u'\\u20ac', u'')\
+                                               .replace(u',', u'.')\
+                                               .strip()).astype(float)
+  df_master['unit_price'] = df_master['price_2']
+  df_master['unit'] = df_master['price_lab_2']
+  df_master.drop(labels = ['price_2', 'price_lab_2'], axis = 1, inplace = True)
   
-  # todo: split (later)
-  #df_master['unit'] =\
-  #   df_master['product_unit_price'].apply(lambda x: re.search('^(.*?): ', x).group(1))
-  
+  # FORMAT TOTAL PRICE
   def fix_total_price(x):
-    x = re.sub('<span>&euro;</span></sub>$', '', x)
-    x = x.replace(' <sub>', '')
+    x = re.sub('<span>&euro;</span></sub>$', '', x)\
+        .replace(' <sub>', '')\
+        .replace(u'\\u20ac', u'')\
+        .replace(u',', u'.').strip()
     return x
+  df_master['total_price'] =\
+    df_master['total_price'].apply(lambda x: fix_total_price(x)).astype(float)
   
-  df_master['product_total_price'] =\
-    df_master['product_total_price'].apply(lambda x: fix_total_price(x))
-  
-  def fix_product_flag(x):
+  # FORMAT FLAG
+  def fix_flag(x):
     x = re.sub('angle(\sflag_)?', '', x)
     return x
+  df_master['flag'] = df_master['flag'].apply(lambda x: fix_flag(x))
   
-  df_master['product_flag'] =\
-    df_master['product_flag'].apply(lambda x: fix_product_flag(x))
-  
-  def fix_product_promo(x):
+  # FORMAT PROMO & VIGNETTE
+  def fix_promo(x):
     if x:
-      x = x.replace(' <sup>%</sup>', '%')
-      x = x.replace(' <sup>&euro;</sup>', 'euros')
+      x = x.replace(u' <sup>%</sup>', u'%')
+      x = x.replace(u' <sup>&euro;</sup>', u'euros')
     return x
+  df_master['promo'] = df_master['promo'].apply(lambda x: fix_promo(x))
   
-  df_master['product_promo'] =\
-    df_master['product_promo'].apply(lambda x: fix_product_promo(x))
+  df_master['promo_vignette'] =\
+    df_master['promo_vignette'].apply(lambda x: x.replace(u'&#8364;',
+                                                          u'euros') if x else x)
   
-  df_master['product_promo_vignette'] =\
-    df_master['product_promo_vignette'].apply(lambda x: x.replace('&#8364;',
-                                                                    'euros') if x else x)
-  
-  for field in ['product_title', 'department', 'sub_department']:
+  # ADD AVAILABLE IF MISSING
+  for field in ['available', 'pictos']:
+    if field not in df_master.columns:
+      df_master[field] = None
+
+  # REPLACE NAN BY NONE IN TEXT FIELDS (WHEN MISSING...)
+  for field in ['available', 'flag', 'pictos', 'promo', 'promo_vignette']:
+    df_master.loc[df_master[field].isnull(),
+                  field] = None
+
+  # FORMAT TEXT FIELDS
+  for field in ['title', 'department', 'sub_department']:
     df_master[field] =\
       df_master[field].apply(lambda x: x.strip()\
                                         .replace(u'&amp;', u'&')\
@@ -135,25 +158,21 @@ for path_temp, start_date, end_date in ls_loop:
                                         .replace(u'&OElig;', u'Œ')
                                if x else x)
   
-  # Some harmonization in sub_department
+  # SOME HARMONIZATION IN SUB_DEPARTMENTS
   dict_repl_subdpt = {u'Idées apréritives' : u'Idées apéritives',
                       u'Hygiène intime - Incontinences' :\
-                         u'Hygiène intime - Incontinence',
+                        u'Hygiène intime - Incontinence',
                       u'Lessive' : u'Lessives',
                       u'Shampoings' : u'Shampooings'}
   for old, new in dict_repl_subdpt.items():
     df_master.loc[df_master['sub_department'] == old,
                   'sub_department'] = new
   
-  #ls_di = ['department', 'sub_department', 'product_title',
-  #         'product_total_price', 'product_unit_price',
-  #         'available', 'product_promo', 'product_promo_vignette']
-  
-  df_master.columns = [col.replace('product_', '') for col in df_master.columns]
   ls_di = ['department', 'sub_department', 'title',
-           'total_price', 'unit_price',
+           'total_price', 'unit_price', 'unit',
            'available', 'promo', 'promo_vignette']
   
+  # INSPECT RESULTS
   print u'\nInspect dpt and subdpts:'
   print df_master[['department', 'sub_department']].drop_duplicates().to_string()
   
@@ -162,11 +181,14 @@ for path_temp, start_date, end_date in ls_loop:
   
   print u'\nFilled sub_department (top 20):'
   print df_master[ls_di][~df_master['sub_department'].isnull()][0:20].to_string()
+  
+  ls_df_master.append(df_master)
 
-  df_master.to_csv(os.path.join(path_price_built_csv,
-                                'df_auchan_velizy_{:s}_{:s}.csv'\
-                                   .format(ls_dates[0], ls_dates[-1])),
+  df_master.to_csv(os.path.join(path_price_source_csv,
+                                'df_auchan_{:s}_{:s}_{:s}.csv'\
+                                   .format(store_extension, ls_dates[0], ls_dates[-1])),
                    encoding = 'utf-8',
+                   float_format='%.2f',
                    index = False)
 
 ## ##############################
