@@ -70,6 +70,8 @@ for file_title in ['velizy_0', 'velizy_1', 'plaisir_1']:
 # OUPUT DATA AUCHAN (VELIZY + PLAISIR) 2013
 # ##########################################
 
+ls_dup_id_cols = ['store', 'date', 'department', 'sub_department', 'title']
+
 df_velizy_1 = dict_dfs['velizy_1'].copy()
 df_velizy_1['store'] = 'velizy' # changes original anyway?
 
@@ -87,13 +89,13 @@ dict_auchan_2013 = {'df_master_auchan_2013' : df_master_auchan_2013}
 # (right now: still some risk of merging different products across periods)
 
 #df_dup_auchan_2013 =\
-#  df_master_auchan_2013[(df_master_auchan_2013.duplicated(ls_prod_id_cols)) |\
-#                        (df_master_auchan_2013.duplicated(ls_prod_id_cols,
+#  df_master_auchan_2013[(df_master_auchan_2013.duplicated(ls_dup_id_cols)) |\
+#                        (df_master_auchan_2013.duplicated(ls_dup_id_cols,
 #                                                          take_last = True))].copy()
 
 df_nodup_auchan_2013 =\
-  df_master_auchan_2013[~((df_master_auchan_2013.duplicated(ls_prod_id_cols)) |\
-                          (df_master_auchan_2013.duplicated(ls_prod_id_cols,
+  df_master_auchan_2013[~((df_master_auchan_2013.duplicated(ls_dup_id_cols)) |\
+                          (df_master_auchan_2013.duplicated(ls_dup_id_cols,
                                                             take_last = True)))]
 
 ls_price_cols = ['store', 'date', 'title',
