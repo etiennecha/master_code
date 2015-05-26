@@ -15,10 +15,10 @@ path_price_json_auchan = os.path.join(path_auchan,
                                       u'data_source',
                                       u'data_json_auchan')
 
-# or directly to built if can be formatted easily?
-path_price_source_csv = os.path.join(path_auchan,
-                                     u'data_source',
-                                     u'data_csv_auchan')
+# no need for intermediate csv
+path_price_built_csv = os.path.join(path_auchan,
+                                    u'data_built',
+                                    u'data_csv_auchan')
 
 # ################
 # CHECK ONE FILE
@@ -167,3 +167,17 @@ ls_price_cols = ['store', 'date', 'title',
 df_prices = df_master_nodup[ls_price_cols].drop_duplicates(['date', 'store', 'title'])
 
 df_products = df_master_nodup[['department', 'sub_department', 'title']].drop_duplicates()
+
+
+# OUTPUT
+
+dict_auchan_2015 = {'df_master_auchan_2015' : df_master,
+                    'df_prices_auchan_2015' : df_prices,
+                    'df_products_auchan_2015': df_products}
+
+for file_title, df_file in dict_auchan_2015.items():
+  df_file.to_csv(os.path.join(path_price_built_csv,
+                              '{:s}.csv'.format(file_title)),
+                   encoding = 'utf-8',
+                   float_format='%.2f',
+                   index = False)

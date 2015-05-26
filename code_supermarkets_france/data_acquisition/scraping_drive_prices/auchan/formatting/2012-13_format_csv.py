@@ -109,14 +109,14 @@ dict_auchan_2013['df_prices_auchan_2013'] =\
 dict_auchan_2013['df_products_auchan_2013'] =\
   df_nodup_auchan_2013[ls_prod_id_cols[1:]].drop_duplicates(ls_prod_id_cols[1:])
 
-## OUTPUT
-#
-#for file_title, df_file in dict_auchan_2013.items():
-#  df_file.to_csv(os.path.join(path_price_built_csv,
-#                              '{:s}.csv'.format(file_title)),
-#                   encoding = 'utf-8',
-#                   float_format='%.2f',
-#                   index = False)
+# OUTPUT
+
+for file_title, df_file in dict_auchan_2013.items():
+  df_file.to_csv(os.path.join(path_price_built_csv,
+                              '{:s}.csv'.format(file_title)),
+                   encoding = 'utf-8',
+                   float_format='%.2f',
+                   index = False)
 
 # ##################################
 # OUPUT DATA AUCHAN VELIZY 2012-13
