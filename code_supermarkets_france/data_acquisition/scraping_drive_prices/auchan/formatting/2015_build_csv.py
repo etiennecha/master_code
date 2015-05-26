@@ -35,7 +35,7 @@ for store, ls_dict_stores in dict_period.items():
   for dict_product in ls_dict_stores:
     for product_key in dict_product.keys():
       dict_fields.setdefault(product_key, []).append(dict_product.get('product_title',
-                                                                    None))
+                                                                      None))
 
 print u'\nStats des on fields for ref file:'
 for k,v in dict_fields.items():
@@ -99,6 +99,17 @@ df_master['price_2'] =\
 df_master['unit_price'] = df_master['price_2']
 df_master['unit'] = df_master['price_lab_2']
 df_master.drop(labels = ['price_2', 'price_lab_2'], axis = 1, inplace = True)
+
+dict_replace_unit = {u'/ kg' : u'Prix/kg',
+                     u'/ l'  : u'Prix/l',
+                     u'/ m'  : u'Prix/mtr',
+                     u'/ pce': u'Prix/pce'}
+df_master['unit'] =\
+  df_master['unit'].apply(lambda x: dict_replace_unit.get(x)\
+                                      if x and x in dict_replace_unit else x)
+
+print u'\nOverview unit:'
+print df_master['unit'].value_counts()
 
 # FORMAT TOTAL PRICES
 df_master['total_price'] =\
@@ -167,7 +178,6 @@ ls_price_cols = ['store', 'date', 'title',
 df_prices = df_master_nodup[ls_price_cols].drop_duplicates(['date', 'store', 'title'])
 
 df_products = df_master_nodup[['department', 'sub_department', 'title']].drop_duplicates()
-
 
 # OUTPUT
 

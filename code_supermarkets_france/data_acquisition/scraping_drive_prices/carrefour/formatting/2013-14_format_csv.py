@@ -12,9 +12,9 @@ path_carrefour = os.path.join(path_data,
                            u'data_drive_supermarkets',
                            u'data_carrefour')
 
-path_price_built_csv_voisins = os.path.join(path_carrefour,
-                                            u'data_built',
-                                            u'data_csv_carrefour_voisins')
+path_price_source_csv = os.path.join(path_carrefour,
+                                     u'data_source',
+                                     u'data_csv_carrefour')
 
 path_price_built_csv = os.path.join(path_carrefour,
                                     u'data_built',
@@ -26,9 +26,10 @@ ls_file_names = ['df_carrefour_voisins_20130418_20131128.csv',
 
 ls_df_master = []
 for file_name in ls_file_names:
-  ls_df_master.append(pd.read_csv(os.path.join(path_price_built_csv_voisins,
+  ls_df_master.append(pd.read_csv(os.path.join(path_price_source_csv,
                                                file_name),
                       encoding = 'utf-8'))
+
 # parse_dates = ['date']))
 # parse_dates a bit slow and not really necessary
 
@@ -46,7 +47,7 @@ df_master_2013.loc[df_master_2013['promo'] == u'Prix Promo',
 
 ### UNIQUE PRODUCTS IN 2013-2014
 
-ls_prod_id_cols = ['date', 'department', 'sub_department', 'title', 'price_lab_1']
+ls_prod_id_cols = ['date', 'department', 'sub_department', 'title', 'label']
 df_dup_2013 = df_master_2013[(df_master_2013.duplicated(ls_prod_id_cols)) |\
                              (df_master_2013.duplicated(ls_prod_id_cols,
                                                         take_last = True))].copy()
@@ -59,13 +60,13 @@ df_unique_2013 = df_master_2013[~((df_master_2013.duplicated(ls_prod_id_cols)) |
                                   (df_master_2013.duplicated(ls_prod_id_cols,
                                                              take_last = True)))].copy()
 
-ls_dsd_cols = ls_prod_id_cols[1:] + ['price_lab_2']
+ls_dsd_cols = ls_prod_id_cols[1:] + ['unit']
 df_dsd_2013 = df_unique_2013[ls_dsd_cols]\
                 .drop_duplicates(ls_dsd_cols[:-1])
 
 ### UNIQUE PRODUCTS IN 2015
 
-ls_prod_id_cols_2 = ['date', 'department', 'sub_department', 'title_2', 'price_lab_1']
+ls_prod_id_cols_2 = ['date', 'department', 'sub_department', 'title', 'label', 'brand']
 df_dup_2015 = df_master_2015[(df_master_2015.duplicated(ls_prod_id_cols_2)) |\
                              (df_master_2015.duplicated(ls_prod_id_cols_2,
                                                         take_last = True))].copy()
@@ -73,9 +74,9 @@ df_unique_2015 = df_master_2015[~((df_master_2015.duplicated(ls_prod_id_cols_2))
                                   (df_master_2015.duplicated(ls_prod_id_cols_2,
                                                              take_last = True)))].copy()
 
-ls_dsd_cols_2 = ls_prod_id_cols_2[1:] + ['title_1', 'price_lab_2']
+ls_dsd_cols_2 = ls_prod_id_cols_2[1:] + ['unit']
 df_dsd_2015 = df_unique_2015[ls_dsd_cols_2]\
-                .drop_duplicates(ls_dsd_cols_2[:-2])
+                .drop_duplicates(ls_dsd_cols_2[:-1])
 
 ### IMPORT BRANDS FROM 2015 IN 2013-14
 
@@ -83,32 +84,24 @@ df_dsd_2015 = df_unique_2015[ls_dsd_cols_2]\
 # In df_dsd_2015: ('title', 'price_lab_1') non unique (several sub dpts)
 # Hence need to drop duplicates before merging
 df_dsd_2013 = pd.merge(df_dsd_2013,
-                       df_dsd_2015[['title_1',
-                                    'title_2',
-                                    'price_lab_1']].drop_duplicates('title_2',
-                                                                    'price_lab_1'),
-                       left_on = ['title', 'price_lab_1'],
-                       right_on = ['title_2', 'price_lab_1'],
+                       df_dsd_2015[['title',
+                                    'brand',
+                                    'label']].drop_duplicates('title',
+                                                              'label'),
+                       left_on = ['title', 'label'],
+                       right_on = ['title', 'label'],
                        how = 'left')
-df_dsd_2013.drop(['title_2'], axis = 1, inplace = True)
-df_dsd_2013.rename(columns = {'title' : 'title_2'}, inplace = True)
+#df_dsd_2013.drop(['title_2'], axis = 1, inplace = True)
+#df_dsd_2013.rename(columns = {'title' : 'title_2'}, inplace = True)
 
 # print len(df_dsd_2013[~df_dsd_2013['title_1'].isnull()])
 # 4974 among 16615...
-
-# Extract brand when there is one (cannot use regex easily cuz + etc in str)
-df_dsd_2013['brand'] =\
-  df_dsd_2013.apply(lambda row: row['title_1'].replace(row['title_2'], '').strip()\
-                                if not pd.isnull(row['title_1']) else None, axis = 1)
 
 # todo: propagate brand
 
 ### ADD PROMOTIONS BY PRODUCT TO df_dsd_2013
 
 # add nb periods and nb promo
-df_unique_2013.rename(columns = {'title' : 'title_2'},
-                      inplace = True)
-
 se_nb_per = df_unique_2013.groupby(ls_dsd_cols_2[:-2]).size()
 se_nb_promo = df_unique_2013[~pd.isnull(df_unique_2013['promo'])]\
                 .groupby(ls_dsd_cols_2[:-2]).size()
@@ -138,12 +131,12 @@ print u'\nNb products with at least one promo: {:d}'\
 # ##################
 
 df_master_2013.to_csv(os.path.join(path_price_built_csv,
-                                 'df_carrefour_voisins_2013_2014.csv'),
+                                 'df_master_voisins_2013_2014.csv'),
                       encoding = 'utf-8',
                       index = False)
 
 df_dsd_2013.to_csv(os.path.join(path_price_built_csv,
-                                'df_dsd_voisins_2013_2014.csv'),
+                                'df_products_voisins_2013_2014.csv'),
                    encoding = 'utf-8',
                    index = False)
 
@@ -221,7 +214,7 @@ df_brand_promo.sort('nb_prods', ascending = False, inplace = True)
 ### DEPARTMENTS: NB PRODUCTS AND PROMO
 
 # Nb products
-df_dpt_nb_prod = df_master_2013.pivot_table(values='price_1',
+df_dpt_nb_prod = df_master_2013.pivot_table(values='total_price',
                                             index='date',
                                             columns='department',
                                             aggfunc='count')
@@ -232,7 +225,7 @@ df_dpt_nb_prod = df_dpt_nb_prod.reindex(index_overview, fill_value = np.nan)
 
 # Nb promo
 df_dpt_nb_promo = df_master_2013[~df_master_2013['promo'].isnull()]\
-                    .pivot_table(values='price_1',
+                    .pivot_table(values='total_price',
                                  index='date',
                                  columns='department',
                                  aggfunc='count')
@@ -263,7 +256,7 @@ plt.show()
 ### SUBDEPARTMENTS: NB PRODUCTS AND PROMO
 
 # Nb products
-df_subdpt_nb_prod = df_master_2013.pivot_table(values='price_1',
+df_subdpt_nb_prod = df_master_2013.pivot_table(values='total_price',
                                           index='date',
                                           columns=['department', 'sub_department'],
                                           aggfunc='count')
@@ -290,7 +283,7 @@ print u"\nNb of subdpts with 100 products Q75% days: {:d} among {:d}"\
 
 # Nb products: focus on one departement (drop?) 
 df_sdpt_nb_prod = df_master_2013[df_master_2013['department'] == u'Maison & Entretien']\
-                  .pivot_table(values='price_1',
+                  .pivot_table(values='total_price',
                                index='date',
                                columns='sub_department',
                                aggfunc='count')
@@ -301,7 +294,7 @@ df_sdpt_nb_prod = df_sdpt_nb_prod.reindex(index_overview, fill_value = np.nan)
 
 # Nb promo
 df_subdpt_nb_promo = df_master_2013[~df_master_2013['promo'].isnull()]\
-                       .pivot_table(values='price_1',
+                       .pivot_table(values='total_price',
                                     index='date',
                                     columns=['department', 'sub_department'],
                                     aggfunc='count')

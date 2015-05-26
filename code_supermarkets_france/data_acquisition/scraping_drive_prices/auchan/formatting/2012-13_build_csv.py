@@ -110,6 +110,18 @@ for path_temp, store_extension, start_date, end_date in ls_loop:
   df_master['unit'] = df_master['price_lab_2']
   df_master.drop(labels = ['price_2', 'price_lab_2'], axis = 1, inplace = True)
   
+  dict_replace_unit = {u'Prix/K' : u'Prix/kg',
+                       u'Prix/L'  : u'Prix/l',
+                       u'Prix/M'  : u'Prix/mtr',
+                       u'Prix/PIECE': u'Prix/pce'}
+  df_master['unit'] =\
+    df_master['unit'].apply(lambda x: dict_replace_unit.get(x)\
+                                        if x and x in dict_replace_unit else x)
+
+  
+  print u'\nOverview unit:'
+  print df_master['unit'].value_counts()
+
   # FORMAT TOTAL PRICE
   def fix_total_price(x):
     x = re.sub('<span>&euro;</span></sub>$', '', x)\

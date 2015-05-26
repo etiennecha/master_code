@@ -13,72 +13,71 @@ path_carrefour = os.path.join(path_data,
 
 path_price_source = os.path.join(path_carrefour,
                                  u'data_source',
-                                 u'data_json_carrefour')
+                                 u'data_json_carrefour_voisins')
 
-path_price_built_csv = os.path.join(path_carrefour,
-                                    u'data_built',
-                                    u'data_csv_carrefour')
+path_price_source_csv = os.path.join(path_carrefour,
+                                     u'data_source',
+                                     u'data_csv_carrefour')
 
 # ###########################
 # CHECK ONE FILE WITH PANDAS
 # ###########################
 
-date_str = '20150505'
+date_str = '20150503'
 path_file = os.path.join(path_price_source,
-                         '{:s}_dict_carrefour'.format(date_str))
-dict_period = dec_json(path_file)
+                         '{:s}_carrefour_voisins'.format(date_str))
+period_file = dec_json(path_file)
 
 # Check fields for each product (with stats)
 dict_fields = {}
-for store, ls_dict_stores in dict_period.items():
-  for dict_product in ls_dict_stores:
-    for product_key in dict_product.keys():
-      dict_fields.setdefault(product_key, []).append(dict_product.get('product_title',
+for dict_product in period_file:
+  for product_key in dict_product.keys():
+    dict_fields.setdefault(product_key, []).append(dict_product.get('product_title',
                                                                     None))
 for k,v in dict_fields.items():
   print k, len(v)
-
-# Need to consider period with same fields
-ls_fields = dict_fields.keys()
 
 # ###################
 # BUILD DF MASTER
 # ###################
 
-path_temp = path_price_source
-start_date, end_date = date(2015,5,5), date(2015,5,18)
-ls_dates = get_date_range(start_date, end_date)
-ls_df_products = []
-for date_str in ls_dates:
-  path_file = os.path.join(path_temp,
-                           '{:s}_dict_carrefour'.format(date_str))
-  if os.path.exists(path_file):
-    dict_period = dec_json(path_file)
-     
-    ## Find all keys appearing in at least one product dictionary
-    #ls_all_fields = []
-    #for dict_product in period_file:
-    #  ls_all_fields += dict_product.keys()
-    #ls_fields = list(set(ls_all_fields))
-    
-    # Build dataframe
-    ls_rows_products = []
-    for store, ls_dict_stores in dict_period.items():
-      for dict_product in ls_dict_stores:
+ls_loop = [[path_price_source, date(2015,5,3), date(2015,5,3)]]
+ls_df_master = []
+for path_temp, start_date, end_date in ls_loop:
+  ls_dates = get_date_range(start_date, end_date)
+  ls_df_products = []
+  for date_str in ls_dates:
+    path_file = os.path.join(path_temp,
+                             '{:s}_carrefour_voisins'.format(date_str))
+    if os.path.exists(path_file):
+      period_file = dec_json(path_file)
+       
+      # Find all keys appearing in at least one product dictionary
+      ls_all_fields = []
+      for dict_product in period_file:
+        ls_all_fields += dict_product.keys()
+      ls_fields = list(set(ls_all_fields))
+      
+      # Build dataframe
+      ls_rows_products = []
+      for dict_product in period_file:
         row = [dict_product.get(field, 'None') for field in ls_fields]
         row = [' '.join(x) if isinstance(x, list) else x for x in row]
-        row = [store] + [x if x else None for x in row]
+        row = [x if x else None for x in row]
         ls_rows_products.append(row)
-    df_products = pd.DataFrame(ls_rows_products,
-                               columns = ['store'] + ls_fields)
-    df_products['date'] = date_str
-    ls_df_products.append(df_products)
-df_master = pd.concat(ls_df_products, axis = 0, ignore_index = True)
+      df_products = pd.DataFrame(ls_rows_products,
+                                 columns = ls_fields)
+      
+      df_products['date'] = date_str
+      ls_df_products.append(df_products)
+  
+  df_master = pd.concat(ls_df_products, axis = 0, ignore_index = True)
+  ls_df_master.append(df_master)
 
-# Not starting with price: promo?
-df_master.drop(['ls_unit_price', 'ls_reduction'],
-               axis = 1,
-               inplace = True)
+## Not starting with price: promo?
+#df_master.drop(['ls_unit_price', 'ls_reduction'],
+#               axis = 1,
+#               inplace = True)
 
 # ###################
 # CLEAN DF MASTER
@@ -144,11 +143,14 @@ df_price = pd.DataFrame(ls_price_rows,
 
 df_master_bu = df_master.copy()
 
-df_master = pd.concat([df_master[['store', 'date',
-                                  'department', 'sub_department',
-                                  'ls_product_title', 'img_name']],
+df_master = pd.concat([df_master[['date', 'department', 'sub_department',
+                                    'ls_product_title', 'img_name']],
                       df_price],
                       axis = 1)
+
+# try to save memory (could drop also unused columns)
+del(ls_price_rows)
+del(df_price)
 
 # FORMAT SIMPLE TEXT FIELDS
 
@@ -160,9 +162,7 @@ for field in ['department', 'sub_department', 'ls_product_title', 'img_name']:
 # CONVERT PRICES TO NUMERIC
 
 df_master['price_1'] =\
-   df_master['price_1'].apply(lambda x: x.replace(u' \u20ac ', u'.')\
-                                         .replace(u'\xa0', u'')\
-                                         .strip())
+   df_master['price_1'].apply(lambda x: x.replace(u' \u20ac ', u'.').strip())
 df_master['price_1'] = df_master['price_1'].astype(float)
 
 df_master['price_2'] =\
@@ -196,83 +196,85 @@ df_master['promo'] =\
                                                re.DOTALL).strip()\
                                         if x else x)
 
-df_master['promo'] =\
-   df_master['promo'].apply(lambda x: re.sub(u'Remise Fidélité\s+soit.*',
-                                             u'Remise Fidélité',
-                                             x,
-                                             re.DOTALL).strip()\
-                                        if x else x)
 
-print u'\nView promo:'
-#print df_master[~pd.isnull(df_master['promo'])]['promo'][0:500].to_string()
-print df_master['promo'].value_counts()
+# CREATE BRAND
 
-# todo: check this promo vs promo field (some unexplained inconsistencies)
+df_master['brand'] =\
+  df_master.apply(lambda row: row['img_name'].replace(row['ls_product_title'], '').strip()\
+                                if not pd.isnull(row['img_name']) else None, axis = 1)
 
-# Weird prix_2 to be checked later... not so many
+df_master.rename(columns = {u'ls_product_title' : u'title',
+                            u'img_name'         : u'title_with_brand',
+                            u'price_1'          : u'total_price',
+                            u'price_2'          : u'unit_price',
+                            u'price_lab_1'      : u'label',
+                            u'price_lab_2'      : u'unit'},
+                 inplace = True)
 
-print u'\nProduct total and unit price overview:'
-print df_master[['price_1', 'price_2']].describe()
+df_master.drop(labels = ['title_with_brand'], axis = 1, inplace = True)
 
-df_master.rename(columns = {'img_name' : 'title_1',
-                            'ls_product_title' : 'title_2'},
-                   inplace = True)
+## CHECK FORMATTING
+#
+#print u'\nView promo:'
+##print df_master[~pd.isnull(df_master['promo'])]['promo'][0:500].to_string()
+#print df_master['promo'].value_counts()
+#
+## todo: check this promo vs promo field (some unexplained inconsistencies)
+#
+## Weird unit_price to be checked later... not so many
+#
+#print u'\nProduct total and unit price overview:'
+#print df_master[['total_price', 'unit_price']].describe()
 
-print u'\nOverview departments and sub_departments:'
-df_dsd = df_master[['department', 'sub_department']].drop_duplicates()
-df_dsd.sort(['department', 'sub_department'], inplace = True)
-print df_dsd.to_string()
-
-df_master.to_csv(os.path.join(path_price_built_csv,
-                              'df_carrefour_{:s}_{:s}.csv'.format(ls_dates[0],
-                                                                  ls_dates[-1])),
+df_master.to_csv(os.path.join(path_price_source_csv,
+                              'df_carrefour_voisins_2015_ref.csv'),
                    encoding = 'utf-8',
                    index = False)
 
-### ######
-### BACKUP
-### ######
-##  for field in ['product_title', 'department', 'sub_department']:
-##    df_master[field] =\
-##      df_master[field].apply(lambda x: x.strip()\
-##                                          .replace(u'&amp;', u'&')\
-##                                          .replace(u'&Agrave;', u'À')\
-##                                          .replace(u'&ndash;', u'-')\
-##                                          .replace(u'&OElig;', u'Œ')
-##                               if x else x)
-##
+## ######
+## BACKUP
+## ######
+#  for field in ['product_title', 'department', 'sub_department']:
+#    df_master[field] =\
+#      df_master[field].apply(lambda x: x.strip()\
+#                                          .replace(u'&amp;', u'&')\
+#                                          .replace(u'&Agrave;', u'À')\
+#                                          .replace(u'&ndash;', u'-')\
+#                                          .replace(u'&OElig;', u'Œ')
+#                               if x else x)
+
 
 # ##############################
 # CHECK DUPLICATES IN ONE PERIOD
 # ##############################
 
-df_master_int, date_ex = df_master, '20150505'
+df_master_int, date_ex = df_master, '20150503'
 
-df_period = df_master_int[(df_master_int['date'] == date_ex) &\
-                          (df_master_int['store'] == u'78 - VOISINS LE BRETONNEUX')]
+df_period = df_master_int[df_master_int['date'] == date_ex].copy()
 
-# Check w/ title_2 (short) vs. title_1 (with brand)
-# Check interest of adding format (price_lab_1)
+## Check w/ title (short) vs. title, label, brand
 
-print u'\nNb duplicates based on dpt, sub_dpt, title_2 (short):'
+print u'\nNb duplicates based on dpt, sub_dpt, title (short):'
 print len(df_period[df_period.duplicated(['department',
                                           'sub_department',
-                                          'title_2'])])
+                                          'title'])])
 
-print u'\nNb duplicates based on dpt, sub_dpt, title_1 (with brand):'
+print u'\nNb duplicates based on dpt, sub_dpt, title, label:'
 print len(df_period[df_period.duplicated(['department',
                                           'sub_department',
-                                          'title_1'])])
+                                          'title',
+                                          'label'])])
 
-print u'\nNb duplicates based on dpt, sub_dpt, title, unit:'
+print u'\nNb duplicates based on dpt, sub_dpt, title, label, brand:'
 print len(df_period[df_period.duplicated(['department',
                                           'sub_department',
-                                          'title_1',
-                                          'price_lab_1'])])
+                                          'title',
+                                          'label',
+                                          'brand'])])
 
 # Restriction to non ambiguous rows
 
-ls_fordup = ['department', 'sub_department', 'title_1', 'price_lab_1']
+ls_fordup = ['department', 'sub_department', 'title', 'label', 'brand']
 
 print u'\nNb of ambiguous rows:'
 print len(df_period[(df_period.duplicated(ls_fordup)) |\
@@ -296,59 +298,15 @@ print df_loss[~df_loss['promo'].isnull()].to_string()
 df_ok = df_period[(~df_period.duplicated(ls_fordup)) &\
                   (~df_period.duplicated(ls_fordup, take_last = True))].copy()
 
-ls_fordup2 = ['title_1', 'price_lab_1']
+ls_fordup2 = ['title', 'label', 'brand']
 df_ok_dup = df_ok[(df_ok.duplicated(ls_fordup2)) |\
                   (df_ok.duplicated(ls_fordup2, take_last = True))].copy()
 df_ok_dup.sort(ls_fordup2, inplace = True)
 
 print u'\nCheck if dup products across dpt sub_dpts have same price:'
-print len(df_ok_dup[(~df_ok_dup.duplicated(['price_1'])) &\
-                    (~df_ok_dup.duplicated(['price_1'], take_last = True))])
+print len(df_ok_dup[(~df_ok_dup.duplicated(['total_price'])) &\
+                    (~df_ok_dup.duplicated(['total_price'], take_last = True))])
 
 print u'\nNb rows with no ambiguity (incl price):'
-print len(df_period[(~df_period.duplicated(ls_fordup + ['price_1'])) &\
-                    (~df_period.duplicated(ls_fordup + ['price_1'], take_last = True))])
-
-# ##############################
-# OUTPUT NON AMBIGUOUS ROWS
-# ##############################
-
-# todo: promo field could be filled for first product only and rest same
-# sort data so as to have non null promo field kept whenever data are dropped
-
-df_prod_final = df_ok[['department',
-                       'sub_department',
-                       'title_1',
-                       'price_lab_1']].drop_duplicates()
-
-df_prices_final = df_ok[['title_1',
-                         'title_2',
-                         'price_lab_1',
-                         'price_1',
-                         'price_lab_2',
-                         'price_2',
-                         'promo']].drop_duplicates(['title_1', 'price_lab_1'])
-
-# Add nb of dpt/sub_dpt in df_prices_final
-se_nb_dsd = df_prod_final.groupby(['title_1', 'price_lab_1']).size()
-df_nb_dsd = se_nb_dsd.reset_index()
-df_nb_dsd.rename(columns = {0 : 'nb_dsd'}, inplace = True)
-df_prices_final = pd.merge(df_prices_final,
-                           df_nb_dsd,
-                           on = ['title_1', 'price_lab_1'],
-                           how = 'left')
-
-# Check nb of promo lost while filtering data
-# Can be that two different products with same name and format are on promotion
-# Can be that product is listed once with a promotion once without (technical issue)
-print u'\nNb of promo after treatment {:d}'.format(\
-          df_prices_final[~df_prices_final['promo'].isnull()]['nb_dsd'].sum())
-
-print u'\nNb of promo at beginning (total) {:d}'.format(\
-          len(df_period[~df_period['promo'].isnull()]))
-
-# Count promo by dpt and sub dpt (in general could be several period...)
-# (actually kind of need to rebuild df_ok then...)
-df_dsd_promo = df_ok[~df_ok['promo'].isnull()]\
-                 .groupby(['department', 'sub_department']).size()
-# todo: divide by nb of prods (float)... do with dpt and check over time
+print len(df_period[(~df_period.duplicated(ls_fordup + ['total_price'])) &\
+                    (~df_period.duplicated(ls_fordup + ['total_price'], take_last = True))])

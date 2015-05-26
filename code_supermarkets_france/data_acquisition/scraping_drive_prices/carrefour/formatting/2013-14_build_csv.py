@@ -15,9 +15,9 @@ path_price_source = os.path.join(path_carrefour,
                                  u'data_source',
                                  u'data_json_carrefour_voisins')
 
-path_price_built_csv = os.path.join(path_carrefour,
-                                    u'data_built',
-                                    u'data_csv_carrefour_voisins')
+path_price_source_csv = os.path.join(path_carrefour,
+                                     u'data_source',
+                                     u'data_csv_carrefour')
 
 # ###########################
 # CHECK ONE FILE WITH PANDAS
@@ -146,11 +146,11 @@ df_master_1.drop(['product_title_2', 'main_price_caption'],
                  axis = 1,
                  inplace = True)
 
-df_master_1.rename(columns = {'product_title_1' : 'title',
-                              'main_price_bloc' : 'price_1',
-                              'main_price_unit' : 'price_lab_1',
-                              'sec_price_bloc' : 'price_2',
-                              'sec_price_caption': 'price_lab_2'},
+df_master_1.rename(columns = {'product_title_1'  : 'title',
+                              'main_price_unit'  : 'label',
+                              'main_price_bloc'  : 'total_price',
+                              'sec_price_bloc'   : 'unit_price',
+                              'sec_price_caption': 'unit'},
                    inplace = True)
 
 ls_fields = [u'department', u'sub_department', u'title']
@@ -161,7 +161,7 @@ for field in ls_fields:
 print u'\n Check first lines'
 print df_master_1[0:10].to_string()
 
-print df_master_1[['price_1', 'price_2']].describe()
+print df_master_1[['total_price', 'unit_price']].describe()
 
 #print u'\n Check weird prices'
 #pbm_title = u'Colle universelle instantanée, ultra gel - Super glue-3'
@@ -171,7 +171,7 @@ print df_master_1[['price_1', 'price_2']].describe()
 ## ok: 4.2 / 3.0  * 1000 = 1400
 
 print u'\nTodo: fix (extract displayed)'
-print df_master_1[df_master_1['price_2'] <= 0.01][0:10].to_string()
+print df_master_1[df_master_1['unit_price'] <= 0.01][0:10].to_string()
 
 df_1_dsd = df_master_1[['department', 'sub_department']].drop_duplicates()
 print df_1_dsd.to_string()
@@ -183,7 +183,7 @@ print df_1_dsd.to_string()
 #print df_master_1[df_master_1['sub_department'] == u'La cave à vin'][0:100][['title']]\
 #        .drop_duplicates().to_string(index = False)
 
-df_master_1.to_csv(os.path.join(path_price_built_csv,
+df_master_1.to_csv(os.path.join(path_price_source_csv,
                                 'df_carrefour_voisins_{:s}_{:s}.csv'\
                                    .format('20130418', '20131128')),
                    encoding = 'utf-8',
@@ -349,11 +349,14 @@ df_master_2['promo'] =\
                                                re.DOTALL).strip()\
                                         if x else x)
 
-#df_2_dsd = df_master_2[['department', 'sub_department']].drop_duplicates()
-#df_2_dsd.sort(['department', 'sub_department'], inplace = True)
-#print df_2_dsd.to_string()
+df_master_2.rename(columns = {u'ls_product_title' : u'title',
+                            u'price_1'          : u'total_price',
+                            u'price_2'          : u'unit_price',
+                            u'price_lab_1'      : u'label',
+                            u'price_lab_2'      : u'unit'},
+                   inplace = True)
 
-df_master_2.to_csv(os.path.join(path_price_built_csv,
+df_master_2.to_csv(os.path.join(path_price_source_csv,
                                 'df_carrefour_voisins_{:s}_{:s}.csv'\
                                    .format('20131129', '20141205')),
                    encoding = 'utf-8',
@@ -370,7 +373,6 @@ df_master_2.to_csv(os.path.join(path_price_built_csv,
 #                                          .replace(u'&ndash;', u'-')\
 #                                          .replace(u'&OElig;', u'Œ')
 #                               if x else x)
-#
 
 # ##############################
 # CHECK DUPLICATES IN ONE PERIOD
@@ -384,10 +386,10 @@ print u'\nNb duplicates based on dpt, sub_dpt, title, unit:'
 print len(df_period[df_period.duplicated(['department',
                                           'sub_department',
                                           'title',
-                                          'price_lab_1'])])
+                                          'label'])])
 
 print u'\nNb duplicates based on title, unit:'
-print len(df_period[df_period.duplicated(['title', 'price_lab_1'])])
+print len(df_period[df_period.duplicated(['title', 'label'])])
 
 print u'\nNb with no dpt or sub_dpt'
 print len(df_period[(df_period['department'].isnull()) |\
@@ -395,63 +397,3 @@ print len(df_period[(df_period['department'].isnull()) |\
 
 print u'\nNb with no sub_dpt:'
 print len(df_period[df_period['sub_department'].isnull()])
-
-## VISUAL INSPECTION
-#print u'\n', df_period[df_period.duplicated(['department',
-#                                             'sub_department',
-#                                             'title'])].to_string()
-#
-#print u'\n', df_period[df_period['title'] == 'carottes sachet 1kg'].to_string()
-#
-#print u'\'n', len(df_period[df_period.duplicated(['department',
-#                                                  'title'])])
-#
-#print u'\n', len(df_period[df_period.duplicated(['department',
-#                                                 'sub_department',
-#                                                 'title'])])
-#
-## Duplicates due to one line for regular price and one for promo price
-## Note sure if all duplicates are legit (carottes sachet in épicerie?)
-#
-## Check if no subdpt (None) are always duplicates?
-#ls_prod_nosd = df_period['title'][df_period['sub_department'].isnull()]\
-#                 .unique().tolist()
-#print u'\nNb of prod with no sub_dpt: {:d}'.format(len(ls_prod_nosd))
-#
-#ls_prod_nosd_dup = df_period['title'][(df_period.duplicated(['title'])) &\
-#                                      (df_period['title'].isin(ls_prod_nosd))]\
-#                     .unique().tolist()
-#print u'\nNb of prod with no sub_dpt and dup exists: {:d}'.format(len(ls_prod_nosd_dup))
-## Seems ok to drop anytime no sub_dpt since duplicate exists
-#
-## Check if promo always imply two lines: reg and promo price (check in more recent df?)
-## actually with df_period['flag']: even more promo
-#ls_prod_promo = df_period['title'][(~df_period['promo_vignette'].isnull()) |
-#                                   (~df_period['promo'].isnull())]\
-#                  .unique().tolist()
-#print u'\nNb of prod with promo: {:d}'.format(len(ls_prod_promo))
-#
-#ls_prod_promo_dup = df_period['title'][(df_period.duplicated(['title'])) &\
-#                                      (df_period['title'].isin(ls_prod_promo))]\
-#                      .unique().tolist()
-#print u'\nNb of prod with no sub_dpt and dup exists: {:d}'.format(len(ls_prod_promo_dup))
-## There is not always a duplicate but can drop if so (regular price is interesting tho)
-## Caution: might be duplicates due to several dpts... not always reg and promo price
-#
-## todo: except for products with regular and promo price... check same price
-#len(df_period['title'].unique())
-#len(df_period[['title', 'total_price']].drop_duplicates())
-#
-#df_ttp = df_period[['title', 'total_price']].drop_duplicates()
-#ls_dup_ttp = df_ttp['title'][df_ttp.duplicated(['title'])].unique().tolist()
-#print df_period[df_period['title'].isin(ls_dup_ttp)].to_string()
-#
-## Get all (unique) legit (product, dpt, subdpt)
-## Too slow if want to run with df_master
-#ls_legit_pds = []
-#for x in df_period[['title', 'department', 'sub_department']].values:
-#  if tuple(x) not in ls_legit_pds:
-#    ls_legit_pds.append(tuple(x))
-#
-#df_pds = df_master[['title', 'department', 'sub_department']].drop_duplicates()
-#df_pds.sort(['title', 'department', 'sub_department'], inplace = True)
