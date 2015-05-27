@@ -126,7 +126,8 @@ for x in df_master['promo']:
     break
 
 df_master['promo_vignette'], df_master['promo'] =\
-  zip(*df_master['promo'].apply(lambda x: [x.strip() for x in x.split(u']')] if x else [None, None]))
+  zip(*df_master['promo'].apply(lambda x: [x.strip() for x in x.split(u']')]\
+                                  if x else [None, None]))
 
 # FORMAT PROMO VIGNETTE
 
@@ -137,7 +138,8 @@ def format_promo_vignette(pro_vi):
   return pro_vi
 
 df_master['promo_vignette'] =\
-  df_master['promo_vignette'].apply(lambda x: format_promo_vignette(x + u"]") if x else None)
+  df_master['promo_vignette'].apply(lambda x: format_promo_vignette(x + u"]")\
+                                      if x else None)
 
 print u'\nStats des on promo_vignette:'
 print df_master['promo_vignette'].value_counts()
