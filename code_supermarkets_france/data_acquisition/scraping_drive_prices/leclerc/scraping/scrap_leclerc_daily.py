@@ -182,11 +182,11 @@ print today_date, len(dict_store_prices)
 #         os.path.join(path_leclerc,
 #                      u'data_source',
 #                      u'data_json_leclerc',
-#                      u'{:s}_dict_leclerc_all_2'.format(today_date))
+#                      u'{:s}_dict_leclerc_all_2'.format(today_date)))
 #
 #ls_stores_all = dict_store_prices.keys()
-#enc_json(ls_store_all,
+#enc_json(ls_stores_all,
 #         os.path.join(path_leclerc,
 #                      u'data_source',
 #                      u'data_json_leclerc',
-#                      u'{:s}_ls_leclerc_all_2'.format(today_date))
+#                      u'{:s}_ls_leclerc_all_2'.format(today_date)))
