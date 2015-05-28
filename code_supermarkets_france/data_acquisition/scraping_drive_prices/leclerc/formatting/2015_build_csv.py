@@ -46,7 +46,7 @@ ls_fields = dict_fields.keys()
 # ###################
 
 path_temp = path_price_source
-start_date, end_date = date(2015,5,5), date(2015,5,18)
+start_date, end_date = date(2015,5,7), date(2015,5,27)
 ls_dates = get_date_range(start_date, end_date)
 ls_df_products = []
 for date_str in ls_dates:
@@ -113,6 +113,7 @@ dict_clean_text = {u'&#224;' : u'à',
                    u'&#249;' : u'ù',
                    u'&#251;' : u'û',
                    u'&#231;' : u'ç',
+                   u'&amp;'  : u'&',
                    u'&#176;' : u'°'}
 
 def clean_text(x):
@@ -162,6 +163,10 @@ df_master['unit_price'] =\
 df_master['total_price'] =\
   df_master['total_price'].apply(lambda x: x.replace(u'\u20ac', u'')\
                                             .strip() if x else x).astype(float)
+
+df_master['promo'] =\
+  df_master['promo'].apply(lambda x: x.replace(u'\u20ac', u'')\
+                                      .strip() if x else x).astype(float)
 
 #df_sub = df_master[(df_master['date'] == '20150509') &\
 #                   (df_master['store'] == 'Clermont Ferrand')]

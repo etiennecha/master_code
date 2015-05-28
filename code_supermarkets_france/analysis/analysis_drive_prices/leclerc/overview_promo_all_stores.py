@@ -64,7 +64,7 @@ df_products = dict_df['df_products_leclerc_2015']
 
 df_promo = pd.pivot_table(df_prices[df_prices['dum_promo'] == True],
                             columns = 'store',
-                            index = ['date', 'title', 'label'],
+                            index = ['date', 'idProduit', 'title', 'label'],
                             aggfunc = 'size')
 df_promo.fillna(0, inplace = True)
 df_promo['nb_stores'] = df_promo[df_prices['store'].unique().tolist()].sum(1)
@@ -86,7 +86,7 @@ print df_promo_su.to_string()
 
 df_loyalty = pd.pivot_table(df_prices[~df_prices['loyalty'].isnull()],
                           columns = 'store',
-                          index = ['date', 'title', 'label'],
+                          index = ['date', 'idProduit', 'title', 'label'],
                           aggfunc = 'size')
 df_loyalty.fillna(0, inplace = True)
 df_loyalty['nb_stores'] = df_loyalty[df_prices['store'].unique().tolist()].sum(1)
@@ -103,3 +103,10 @@ df_loyalty_su = pd.pivot_table(df_loyalty,
                                aggfunc = 'size')
 df_loyalty_su.fillna(0, inplace = True)
 print df_loyalty_su.to_string()
+
+# Check products with highest nb of stores
+print df_promo[(df_promo['date'] == '20150526') & (df_promo['nb_stores'] == 6)].to_string()
+print df_loyalty[(df_loyalty['date'] == '20150514') & (df_loyalty['nb_stores'] == 6)].to_string()
+
+#print df_prices[(df_prices[u'store'] == "Bois d'Arcy") &\
+#                (df_prices[u'idProduit'] == 2582)][['total_price', 'promo']]

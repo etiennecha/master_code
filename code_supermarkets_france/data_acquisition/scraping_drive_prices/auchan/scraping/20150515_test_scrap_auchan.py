@@ -119,22 +119,32 @@ soup = BeautifulSoup(data)
 
 # Browse stores (html)
 bloc_stores = soup.find('div', {'class' : 'zoneRight right float'})
-#bloc_li_stores = bloc_stores.find('div', {'id' : 'liste_drives'})
-#ls_bloc_stores = bloc_li_stores.findAll('li')
+ls_bloc_stores = bloc_stores.findAll('li')
 
-# Browse dict store markers (json)
-dict_json_stores = json.loads(bloc_stores.script.text\
-                                                .lstrip(u'var shopList = ')\
-                                                .rstrip(u';'))
-ls_dict_stores = dict_json_stores['markers']
+dict_stores = {}
+for bloc_store in ls_bloc_stores:
+  bloc_store_a = bloc_store.find('a', {'href' : True})
+  bloc_store_entree = bloc_store.find('a', {'class' : 'entreDrive full'})
+  if bloc_store_a and bloc_store_entree:
+    dict_stores[unicode(bloc_store_a.text)] = (unicode(bloc_store_entree['href']),
+                                               unicode(bloc_store_a['href']))
+ 
+store_url_extension = dict_stores['Plaisir'][0]
+store_referer = dict_stores['Plaisir'][1]
 
-# VELIZY DRIVE PAGE: GET DPTS AND SUB DPT LINKS
-store_id = u'Plaisir' # u'VELIZY Cedex'
-for dict_store in ls_dict_stores:
-  if dict_store[u'Ville'] == store_id:
-    store_url_extension = dict_store[u'UrlEntreeMagasin']
-    store_referer = dict_store['UrlFicheMagasin']
-    break
+## Browse dict store markers (json)
+#dict_json_stores = json.loads(bloc_stores.script.text\
+#                                                .lstrip(u'var shopList = ')\
+#                                                .rstrip(u';'))
+#ls_dict_stores = dict_json_stores['markers']
+#
+## VELIZY DRIVE PAGE: GET DPTS AND SUB DPT LINKS
+#store_id = u'Plaisir' # u'VELIZY Cedex'
+#for dict_store in ls_dict_stores:
+#  if dict_store[u'Ville'] == store_id:
+#    store_url_extension = dict_store[u'UrlEntreeMagasin']
+#    store_referer = dict_store['UrlFicheMagasin']
+#    break
 
 # GET COOKIE TO ENTER STORE
 # Alternative way: cookie_jar.set_cookie(makeCookie('auchanCook','"935|"'))
@@ -168,6 +178,8 @@ for dpt_bloc in ls_dpt_blocs:
 ## todo: finish (affichePopinProduit + addProductToShoppingList2 blocks)
 #sub_dpt_title  = u'Cr\xe8merie'
 #sub_dpt_href = u'/drive/Velizy-935/Produits-Frais-R3686962/Cremerie-3686963/'
+
+# Why empty pages???
 
 ls_dict_products = []
 for dpt_title, ls_sub_dpts in dict_dpt_sub_dpts.items():
@@ -229,7 +241,7 @@ for dpt_title, ls_sub_dpts in dict_dpt_sub_dpts.items():
           soup_products = BeautifulSoup(json_content['zones']['itemsList'])
           ls_products += self.parse_product_page(soup_products, dpt_title, sub_dpt_title)
         except:
-          print u'Empty page in sub_dpt:', sub_dpt_title, 'in store:', store_url
+          print u'Empty page in sub_dpt:', sub_dpt_title, 'in store:', store_url_extension
     else:
       print u'\nDisp 100 items per page did not work:', sub_dpt_title
       good_part = re.search(u'<!-- FIN PAGINATION -->(.*?)<!-- PAGINATION -->', data_3, re.DOTALL)

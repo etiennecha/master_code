@@ -19,6 +19,10 @@ def enc_json(data, path_data):
   with open(path_data, 'w') as f:
     json.dump(data, f)
 
+def dec_json(chemin):
+  with open(chemin, 'r') as fichier:
+    return json.loads(fichier.read())
+
 def makeCookie(name, value):
   return Cookie(
     version=0,
@@ -104,6 +108,19 @@ ls_store_subset = [u"Bois d'Arcy",
                    u"Massy Palaiseau",
                    u"Trappes"]
 
+## TO GET ALL
+#ls_store_subset = dict_drives.keys()
+## take non collected so far
+#path_leclerc = os.path.join(path_data,
+#                            u'data_drive_supermarkets',
+#                            u'data_leclerc')
+#today_date = date.today().strftime(u"%Y%m%d")
+#ls_stores_collected = dec_json(os.path.join(path_leclerc,
+#                                            u'data_source',
+#                                            u'data_json_leclerc',
+#                                            u'{:s}_ls_leclerc_all'.format(today_date)))
+#ls_store_subset = [x for x in ls_store_subset if x not in ls_stores_collected]
+
 dict_store_prices = {}
 for store_id in ls_store_subset:
   try:
@@ -159,3 +176,17 @@ enc_json(dict_store_prices,
                       u'{:s}_dict_leclerc'.format(today_date)))
 
 print today_date, len(dict_store_prices)
+
+## TO GET ALL
+#enc_json(dict_store_prices,
+#         os.path.join(path_leclerc,
+#                      u'data_source',
+#                      u'data_json_leclerc',
+#                      u'{:s}_dict_leclerc_all_2'.format(today_date))
+#
+#ls_stores_all = dict_store_prices.keys()
+#enc_json(ls_store_all,
+#         os.path.join(path_leclerc,
+#                      u'data_source',
+#                      u'data_json_leclerc',
+#                      u'{:s}_ls_leclerc_all_2'.format(today_date))
