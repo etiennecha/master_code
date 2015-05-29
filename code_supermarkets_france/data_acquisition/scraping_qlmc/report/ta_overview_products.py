@@ -77,6 +77,7 @@ se_chain_vc = df_france['chain'].value_counts()
 #               'REC' : 'RECORD',
 #               'HAU' : "LES HALLES D'AUCHAN"}
 
+# todo: transform in one line with groupby
 df_france.set_index('product', inplace = True)
 df_france['freq_prod'] = se_prod_vc
 df_france.reset_index(inplace = True)
@@ -88,3 +89,20 @@ df_u_prod = df_u_prod[['family', 'subfamily', 'product', 'freq_prod']][0:50]
 df_u_prod.set_index(['family', 'subfamily', 'product'], inplace = True)
 df_u_prod.sort_index(inplace = True)
 print df_u_prod.to_string()
+
+# Fastest way to compare two stores?
+# Use Leclerc's markets btw
+df_sub = df_france[df_france['store_id'].isin([u'atac-autun', u'atac-auxerre'])]
+
+df_comparison = df_sub[['product', 'store_id', 'price']].\
+                  pivot('product', 'store_id', 'price')
+
+df_comparison_alt =  pd.pivot_table(df_sub,
+                                    index = ['family', 'subfamily', 'product'],
+                                    columns = ['store_id'],
+                                    values = 'price',
+                                    aggfunc = 'min')
+
+## Slicing with Multi-Index DataFrame
+#print df_comparison_alt.ix[(u'Aliments bébé et Diététique', u'Aliments Bébé')].to_string()
+#print df_comparison_alt.loc[(slice(None), u'Aliments Bébé'),:].to_string()
