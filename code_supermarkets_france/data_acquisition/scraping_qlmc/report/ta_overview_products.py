@@ -90,19 +90,121 @@ df_u_prod.set_index(['family', 'subfamily', 'product'], inplace = True)
 df_u_prod.sort_index(inplace = True)
 print df_u_prod.to_string()
 
-# Fastest way to compare two stores?
-# Use Leclerc's markets btw
-df_sub = df_france[df_france['store_id'].isin([u'atac-autun', u'atac-auxerre'])]
+# ###################
+# COMPARE TWO STORES
+# ###################
 
-df_comparison = df_sub[['product', 'store_id', 'price']].\
-                  pivot('product', 'store_id', 'price')
+# todo: use Leclerc's markets btw
 
-df_comparison_alt =  pd.pivot_table(df_sub,
-                                    index = ['family', 'subfamily', 'product'],
-                                    columns = ['store_id'],
-                                    values = 'price',
-                                    aggfunc = 'min')
+# Build DataFrame with two (or more) store prices
+
+store_a, store_b = u'atac-autun', u'atac-auxerre'
+df_sub = df_france[df_france['store_id'].isin([store_a, store_b])]
+
+#df_comparison_prelim = df_sub[['product', 'store_id', 'price']].\
+#                         pivot('product', 'store_id', 'price')
+
+df_comparison =  pd.pivot_table(df_sub,
+                                index = ['family', 'subfamily', 'product'],
+                                columns = ['store_id'],
+                                values = 'price',
+                                aggfunc = 'min')
+
 
 ## Slicing with Multi-Index DataFrame
-#print df_comparison_alt.ix[(u'Aliments bébé et Diététique', u'Aliments Bébé')].to_string()
-#print df_comparison_alt.loc[(slice(None), u'Aliments Bébé'),:].to_string()
+#print df_comparison.ix[(u'Aliments bébé et Diététique', u'Aliments Bébé')].to_string()
+#print df_comparison.loc[(slice(None), u'Aliments Bébé'),:].to_string()
+
+# Comparison
+# df_comparison.reset_index(level = 'product', drop = False, inplace = True)
+
+store_a, store_b = 'atac-autun', 'atac-auxerre'
+
+cust = lambda g: (df_comparison.ix[g.index][store_a] -\
+                    df_comparison.ix[g.index][store_b]).sum()
+
+def nb_products(df_temp):
+  return len(df_temp.index)
+
+def value_total(df_temp):
+  return df_comparison.ix[df_temp.index][[store_a, store_b]].mean(1).sum()
+
+def value_diff(df_temp):
+  return (df_comparison.ix[df_temp.index][store_a] -\
+            df_comparison.ix[df_temp.index][store_b]).sum()
+
+def abs_value_diff(df_temp):
+  return (df_comparison.ix[df_temp.index][store_a] -\
+            df_comparison.ix[df_temp.index][store_b]).abs().sum()
+
+def mean_abs_value_diff(df_temp):
+  return (df_comparison.ix[df_temp.index][store_a] -\
+            df_comparison.ix[df_temp.index][store_b]).abs().mean()
+
+def mean_abs_pct_diff(df_temp):
+  return (df_comparison.ix[df_temp.index][[store_a, store_b]].min(1) /\
+            df_comparison.ix[df_temp.index][[store_a, store_b]].max(1) - 1).abs().mean()
+
+def nb_a_cheaper(df_temp):
+  return (df_comparison.ix[df_temp.index][store_a] <\
+           df_comparison.ix[df_temp.index][store_b]).sum()
+
+def nb_b_cheaper(df_temp):
+  return (df_comparison.ix[df_temp.index][store_a] >\
+           df_comparison.ix[df_temp.index][store_b]).sum()
+
+def nb_draw(df_temp):
+  return (df_comparison.ix[df_temp.index][store_a] ==\
+           df_comparison.ix[df_temp.index][store_b]).sum()
+
+def pct_rank_reversals(df_temp):
+  return min((df_comparison.ix[df_temp.index][store_a] >\
+                df_comparison.ix[df_temp.index][store_b]).sum(),
+              (df_comparison.ix[df_temp.index][store_a] <\
+                    df_comparison.ix[df_temp.index][store_b]).sum()) /\
+           float(len(df_temp.index))
+
+def pct_draws(df_temp):
+  return (df_comparison.ix[df_temp.index][store_a] ==\
+           df_comparison.ix[df_temp.index][store_b]).sum() /\
+           float(len(df_temp.index))
+
+df_comparison.dropna(inplace = True)
+df_comparison.reset_index(drop = False, inplace = True)
+
+ls_func_1 = [nb_products,
+             value_total,
+             value_diff,
+             abs_value_diff,
+             mean_abs_value_diff,
+             mean_abs_pct_diff,
+             nb_a_cheaper,
+             nb_b_cheaper,
+             nb_draw]
+
+ls_func_2 = [nb_products,
+             value_total,
+             value_diff,
+             abs_value_diff,
+             mean_abs_value_diff,
+             mean_abs_pct_diff,
+             pct_rank_reversals,
+             pct_draws]
+
+df_res_pre = df_comparison[['family', store_a, store_b]]\
+               .groupby('family').agg({store_a : ls_func_1})[store_a]
+
+print u'\nFirst set of functions:'
+print df_res_pre.to_string()
+
+df_res = df_comparison[['family', store_a, store_b]]\
+           .groupby('family').agg({store_a : ls_func_2})[store_a]
+
+
+print u'\nSecond set of functions:'
+print df_res.to_string()
+
+# todo: 
+# stack all competitor pairs and use groupby to make global stats
+# could keep rayons btw?
+# for this: loop over leclerc competitor pairs and index with pair
