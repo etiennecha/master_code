@@ -129,13 +129,24 @@ def nb_products(df_temp):
 def value_total(df_temp):
   return df_comparison.ix[df_temp.index][[store_a, store_b]].mean(1).sum()
 
-def value_diff(df_temp):
-  return (df_comparison.ix[df_temp.index][store_a] -\
-            df_comparison.ix[df_temp.index][store_b]).sum()
+def mean_value(df_temp):
+  return df_comparison.ix[df_temp.index][[store_a, store_b]].mean(1).mean()
 
-def abs_value_diff(df_temp):
+#def value_diff(df_temp):
+#  return (df_comparison.ix[df_temp.index][store_a] -\
+#            df_comparison.ix[df_temp.index][store_b]).sum()
+#
+#def abs_value_diff(df_temp):
+#  return (df_comparison.ix[df_temp.index][store_a] -\
+#            df_comparison.ix[df_temp.index][store_b]).abs().sum()
+
+def mean_value_diff(df_temp):
   return (df_comparison.ix[df_temp.index][store_a] -\
-            df_comparison.ix[df_temp.index][store_b]).abs().sum()
+            df_comparison.ix[df_temp.index][store_b]).mean()
+
+def mean_pct_diff(df_temp):
+  return (df_comparison.ix[df_temp.index][store_a] /\
+            df_comparison.ix[df_temp.index][store_b] - 1).mean()
 
 def mean_abs_value_diff(df_temp):
   return (df_comparison.ix[df_temp.index][store_a] -\
@@ -174,8 +185,8 @@ df_comparison.reset_index(drop = False, inplace = True)
 
 ls_func_1 = [nb_products,
              value_total,
-             value_diff,
-             abs_value_diff,
+             mean_value_diff,
+             mean_pct_diff,
              mean_abs_value_diff,
              mean_abs_pct_diff,
              nb_a_cheaper,
@@ -183,9 +194,9 @@ ls_func_1 = [nb_products,
              nb_draw]
 
 ls_func_2 = [nb_products,
-             value_total,
-             value_diff,
-             abs_value_diff,
+             mean_value,
+             mean_value_diff,
+             mean_pct_diff,
              mean_abs_value_diff,
              mean_abs_pct_diff,
              pct_rank_reversals,
@@ -200,11 +211,51 @@ print df_res_pre.to_string()
 df_res = df_comparison[['family', store_a, store_b]]\
            .groupby('family').agg({store_a : ls_func_2})[store_a]
 
-
 print u'\nSecond set of functions:'
 print df_res.to_string()
+
+print u'\nSecond set of functions w/ all products:'
+print df_comparison.groupby(lambda idx: 0).agg(ls_func_2)['family'].T.to_string()
 
 # todo: 
 # stack all competitor pairs and use groupby to make global stats
 # could keep rayons btw?
 # for this: loop over leclerc competitor pairs and index with pair
+
+print u'Nb stores by chain:'
+print df_france[['chain', 'store_id']]\
+        .drop_duplicates(['chain', 'store_id']).groupby('chain').agg('size')
+
+import itertools
+some_chain = 'ATA'
+df_chain = df_france[df_france['chain'] == some_chain]
+ls_chain_stores = df_chain['store_id'].unique().tolist()
+ls_chain_pairs = [x for x in itertools.combinations(ls_chain_stores, 2)]
+
+ls_df_comparison = []
+for store_a, store_b in ls_chain_pairs:
+  df_sub = df_chain[df_chain['store_id'].isin([store_a, store_b])]
+  df_comparison =  pd.pivot_table(df_sub,
+                                  index = ['family', 'subfamily', 'product'],
+                                  columns = ['store_id'],
+                                  values = 'price',
+                                  aggfunc = 'min')
+  df_comparison.rename(columns = {store_a : 'price_a',
+                                  store_b : 'price_b'},
+                       inplace = True)
+  df_comparison['store_pair'] = u'{:s} vs. {:s}'.format(store_a, store_b)
+  ls_df_comparison.append(df_comparison)
+
+df_chain_comparison = pd.concat(ls_df_comparison)
+df_chain_comparison.dropna(inplace = True)
+df_chain_comparison.reset_index(drop = False, inplace = True)
+
+store_a, store_b = 'price_a', 'price_b' # global vars in comp functions
+df_comparison = df_chain_comparison # global var in comp functions
+df_res_chain = df_chain_comparison[['store_pair', store_a, store_b]]\
+                 .groupby('store_pair').agg({store_a : ls_func_2})[store_a]
+
+print u'\nOverview chain pairs:'
+print df_res_chain.to_string()
+
+# todo: add distance between pairs

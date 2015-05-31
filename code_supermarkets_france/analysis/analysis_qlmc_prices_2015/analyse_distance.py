@@ -44,8 +44,10 @@ ls_fix_gps = [['intermarche-super-le-portel', (50.7093, 1.5789)], # too far
               ['centre-e-leclerc-san-giuliano', (42.2625, 9.5480)]]
 
 for store_id, (store_lat, store_lng) in ls_fix_gps:
-  df_comp.loc[df_comp['store_id'] == store_id, ['store_lat', 'store_lng']] = [store_lat, store_lng]
-  df_stores.loc[df_stores['store_id'] == store_id, ['store_lat', 'store_lng']] = [store_lat, store_lng]
+  df_comp.loc[df_comp['store_id'] == store_id,
+              ['store_lat', 'store_lng']] = [store_lat, store_lng]
+  df_stores.loc[df_stores['store_id'] == store_id,
+                ['store_lat', 'store_lng']] = [store_lat, store_lng]
 
 # Merge df_comp and df_stores to add info about leclerc competitor to df_comp
 df_comp = pd.merge(df_comp,

@@ -85,7 +85,7 @@ path_dir_geofla = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84')
 m_fra.readshapefile(os.path.join(path_dir_geofla, 'COMMUNE'), u'communes_fr',
                     color = 'none', zorder=2)
 
-df_com = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.communes_fr],
+df_com = pd.DataFrame({'poly'     : [Polygon(xy) for xy in m_fra.communes_fr],
                        'com_name' : [d['NOM_COMM'] for d in m_fra.communes_fr_info],
                        'com_code' : [d['INSEE_COM'] for d in m_fra.communes_fr_info],
                        'dpt_name' : [d['NOM_DEPT'] for d in m_fra.communes_fr_info],

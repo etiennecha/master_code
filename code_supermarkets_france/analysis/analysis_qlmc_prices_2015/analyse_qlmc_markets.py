@@ -45,15 +45,15 @@ df_france = pd.read_csv(os.path.join(path_csv,
 
 # TEMP: define market (INSEE and LSA matching not performed so far)
 ls_corse_ids = ['centre-e-leclerc-corbara',
-                 'centre-e-leclerc-ajaccio-rte-d-alata',
-                 'centre-e-leclerc-ajaccio-prince-imperial',
-                 'centre-e-leclerc-porto-vecchio',
-                 'centre-e-leclerc-ghisonaccia',
-                 'centre-e-leclerc-aleria',
-                 'centre-e-leclerc-san-giuliano',
-                 'centre-e-leclerc-oletta',
-                 'leclerc-express-borgo',
-                 'centre-e-leclerc-bastia']
+                'centre-e-leclerc-ajaccio-rte-d-alata',
+                'centre-e-leclerc-ajaccio-prince-imperial',
+                'centre-e-leclerc-porto-vecchio',
+                'centre-e-leclerc-ghisonaccia',
+                'centre-e-leclerc-aleria',
+                'centre-e-leclerc-san-giuliano',
+                'centre-e-leclerc-oletta',
+                'leclerc-express-borgo',
+                'centre-e-leclerc-bastia']
 
 # TEMP: keep only stores present in data
 ls_collected_store_ids = df_france['store_id'].unique().tolist()
@@ -61,7 +61,8 @@ ls_market_ids = [store_id for store_id in ls_corse_ids\
                    if store_id in ls_collected_store_ids]
 
 # Merge store prices (inner for now... but intersection quickly reduces)
-df_market = df_france[df_france['store_id'] == ls_market_ids[0]][['family', 'subfamily', 'product' ,'price']]
+df_market = df_france[df_france['store_id'] == ls_market_ids[0]]\
+              [['family', 'subfamily', 'product' ,'price']]
 for store_id in ls_market_ids[1:]:
   df_market = pd.merge(df_market,
                        df_france[df_france['store_id'] == store_id][['product', 'price']],
@@ -95,14 +96,16 @@ ls_france_ids = df_stores[(df_stores['store_chain'] == 'LEC') &\
 ls_market_2_ids = [store_id for store_id in ls_france_ids\
                      if store_id in ls_collected_store_ids]
 
-df_market_2 = df_france[df_france['store_id'] == ls_market_2_ids[0]][['family', 'subfamily', 'product' ,'price']]
+df_market_2 = df_france[df_france['store_id'] == ls_market_2_ids[0]]\
+                [['family', 'subfamily', 'product' ,'price']]
 for store_id in ls_market_2_ids[1:]:
   df_market_2 = pd.merge(df_market_2,
-                       df_france[df_france['store_id'] == store_id][['product', 'price']],
-                       on = 'product',
-                       suffixes = ('', '_{:s}'.format(store_id)),
-                       how = 'inner')
-df_market_2.rename(columns = {'price' : 'price_{:s}'.format(ls_market_2_ids[0])}, inplace = True)
+                         df_france[df_france['store_id'] == store_id][['product', 'price']],
+                         on = 'product',
+                         suffixes = ('', '_{:s}'.format(store_id)),
+                         how = 'inner')
+df_market_2.rename(columns = {'price' : 'price_{:s}'.format(ls_market_2_ids[0])},
+                   inplace = True)
 
 df_market_2_pr = df_market_2.drop(['subfamily', 'family'], axis = 1)
 df_market_2_pr.set_index('product', inplace = True)

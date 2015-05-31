@@ -153,10 +153,10 @@ for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
         df_city_stores_alt['qlmc_lng'] = row['store_lng']
         df_city_stores_alt['dist'] =\
            df_city_stores_alt.apply(lambda x: compute_distance_ar(x['qlmc_lat'],
-                                                              x['qlmc_lng'],
-                                                              x['Latitude'],
-                                                              x['Longitude']),
-                                axis = 1)
+                                                                  x['qlmc_lng'],
+                                                                  x['Latitude'],
+                                                                  x['Longitude']),
+                                     axis = 1)
         print u'\n', tup_store_info
         print df_city_stores_alt[['Ident', 'Enseigne', 'ADRESSE1',
                               'Code postal', 'Ville', 'dist']].to_string()
