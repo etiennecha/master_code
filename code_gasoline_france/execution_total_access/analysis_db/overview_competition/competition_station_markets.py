@@ -100,6 +100,10 @@ for title, df_temp in ls_title_dfs:
   print u'\n', title
   print df_temp[['nb_c_1km', 'nb_c_2km', 'nb_c_3km', 'dist_c', 'dist_c_sup']].describe()
 
+# One issue: different market conditions a bit further!
+# Possible solution: check Elf-TA (no shock) vs. Total-TA (shock)
+# But are competitors of Elf-TA similar to Total-TA?
+
 ## ###################
 ## MARKET COMPETITION
 ## ###################
