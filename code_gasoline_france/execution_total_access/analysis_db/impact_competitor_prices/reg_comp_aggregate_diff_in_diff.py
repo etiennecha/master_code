@@ -73,11 +73,13 @@ df_info = df_info[df_info['highway'] != 1]
 # LOAD PRICES
 # ############
 
-df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ht_final.csv'),
                         parse_dates = ['date'])
 df_prices_ht.set_index('date', inplace = True)
 
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
                         parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
@@ -120,15 +122,16 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items():
 # DIFF IN DIFF
 # ###################
 
-ls_ta_chge_ids = list(df_info_ta.index[(df_info_ta['pp_chge'] >= 0.02) &\
+df_prices = df_prices_ttc
+
+ls_ta_chge_ids = list(df_info_ta.index[(df_info_ta['pp_chge'] >= 0.05) &\
                                        (~pd.isnull(df_info_ta['date_beg']))])
 
-df_dd_control = pd.DataFrame(df_prices_ht[ls_control_ids].mean(1), df_prices_ht.index, ['price'])
+df_dd_control = pd.DataFrame(df_prices[ls_control_ids].mean(1),
+                             df_prices.index, ['price'])
 df_dd_control['time'] = df_dd_control.index
 ls_df_dd = []
 ls_station_fe_vars = []
-ls_treatment_vars = []
-ls_rows_close_ta = []
 for id_station, ls_ta_comp in dict_ls_ta_comp.items():
   if df_info.ix[id_station]['brand_0'] not in ['ELF', 'TOTAL', 'TOTAL_ACCESS', 'ELAN']:
     # Need to have pp change and dates of transition
@@ -140,101 +143,73 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items():
       distance = ls_ta_comp[0][1]
       date_beg = df_info_ta.ix[id_ta]['date_beg']
       date_end = df_info_ta.ix[id_ta]['date_end']
-      df_dd_comp = pd.DataFrame(df_prices_ht[id_station].values, df_prices_ht.index, ['price'])
+      df_dd_comp = pd.DataFrame(df_prices[id_station].values,
+                                df_prices.index, ['price'])
       df_dd_comp.loc[date_beg:date_end, 'price'] = np.nan
       df_dd_comp['time'] = df_dd_comp.index
+      df_dd_comp['time'] = df_dd_comp['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
       df_dd_comp['fe_%s' %id_station] = 1
-      df_dd_comp['tr_%s' %id_station] = 0
-      df_dd_comp.loc[date_end:, 'tr_%s' %id_station] = 1
+      df_dd_comp['treatment'] = 0
+      df_dd_comp.loc[date_end:, 'treatment'] = 1
       ls_df_dd.append(df_dd_comp)
       ls_station_fe_vars.append('fe_%s' %id_station)
-      ls_treatment_vars.append('tr_%s' %id_station)
-      ls_rows_close_ta.append((id_station, id_ta, distance, df_info_ta.ix[id_ta]['pp_chge']))
-
-print u'\nLoop finished'
 
 # start, end = 0, 100
 ls_df_res = []
-for i in range(0, 200, 100):
-  start, end = i, i+100
-  # df_dd = pd.concat([df_dd_control] + ls_df_dd[start:end], ignore_index = True)
-  df_dd = pd.concat(ls_df_dd[start:end], ignore_index = True)
-  df_dd.fillna(value = {x : 0 for x in ls_station_fe_vars[start:end] +\
-                                       ls_treatment_vars[start:end]},
-               inplace = True)
-  
-  str_station_fe = ' + '.join(ls_station_fe_vars[start:end])
-  str_treatment = ' + '.join(ls_treatment_vars[start:end])
-  
-  df_dd = df_dd[~pd.isnull(df_dd['price'])]
-  
-  print u'\nDataframe built'
-  
-  reg_dd_res = smf.ols('price ~ C(time) + %s + %s' %(str_station_fe, str_treatment),
-                       data = df_dd,
-                       missing = 'drop').fit()
-  
-  print u'\nReg finished'
-  
-  ls_tup_coeffs = zip(reg_dd_res.params.index.values.tolist(),
-                      reg_dd_res.params.values.tolist(),
-                      reg_dd_res.bse.values.tolist(),
-                      reg_dd_res.tvalues.values.tolist(),
-                      reg_dd_res.pvalues.values.tolist())
-  
-  ls_tup_treatment = [list(coeff) for coeff in ls_tup_coeffs if 'tr_' in coeff[0]]
-  ls_rows_treatment = [[row[0][3:]] + row[1:] for row in ls_tup_treatment]
-  df_res_temp = pd.DataFrame(ls_rows_treatment,
-                             columns = ['id_station', 'coeff', 'se', 'tval', 'pval'])
-  df_res_temp.set_index('id_station', inplace = True)
-  ls_df_res.append(df_res_temp)
+# for i in range(0, 200, 00):
+start, end = 100, 150 #i, i+100
+# df_dd = pd.concat([df_dd_control] + ls_df_dd[start:end], ignore_index = True)
+df_dd = pd.concat(ls_df_dd[start:end], ignore_index = True)
+df_dd.fillna(value = {x : 0 for x in ls_station_fe_vars[start:end] + ['treatment']},
+             inplace = True)
 
-df_res = pd.concat(ls_df_res)
+str_station_fe = ' + '.join(ls_station_fe_vars[start:end])
 
-# add nearby TA id and distance
-df_close_ta = pd.DataFrame(ls_rows_close_ta,
-                           columns = ['id_station', 'id_ta', 'distance', 'pp_chge'])
-df_close_ta.set_index('id_station', inplace = True)
-df_res = pd.merge(df_res,
-                  df_close_ta,
-                  how = 'left',
-                  left_index = True,
-                  right_index = True)
+df_dd = df_dd[~pd.isnull(df_dd['price'])]
 
-# add brand
-df_res = pd.merge(df_res,
-                  df_info[['brand_0']],
-                  how = 'left',
-                  left_index = True,
-                  right_index = True)
+reg_dd_res = smf.ols('price ~ C(time) + %s + treatment - 1' %str_station_fe,
+                     data = df_dd,
+                     missing = 'drop').fit()
 
-df_res_sf = df_res[df_res['pval'] <= 0.05].copy()
-df_res_sf.sort('coeff', inplace = True)
+ls_tup_coeffs = zip(reg_dd_res.params.index.values.tolist(),
+                    reg_dd_res.params.values.tolist(),
+                    reg_dd_res.bse.values.tolist(),
+                    reg_dd_res.tvalues.values.tolist(),
+                    reg_dd_res.pvalues.values.tolist())
 
-# Table: TA chge vs. TA comp
-ls_pcts = [0.1, 0.25, 0.5, 0.75, 0.9]
-df_ta_chge_vs_ta_comp =\
-  pd.concat([(-df_info_ta.ix[ls_ta_chge_ids]['pp_chge']).describe(percentiles=ls_pcts),
-             df_res_sf['coeff'].describe(percentiles=ls_pcts),
-             df_res_sf['coeff'][df_res_sf['distance'] <= 2].describe(percentiles=ls_pcts),
-             df_res_sf['coeff'][df_res_sf['distance'] <= 1].describe(percentiles=ls_pcts)],
-             keys = ['TA', 'TA_comp_3km', 'TA_comp_2km' ,'TA_comp_1km'], axis = 1)
-print df_ta_chge_vs_ta_comp.to_string()
+df_res_temp = pd.DataFrame(ls_tup_coeffs,
+                           columns = ['name', 'coeff', 'se', 'tval', 'pval'])
+#df_res_temp.set_index('id_station', inplace = True)
+#ls_df_res.append(df_res_temp)
+#
+#df_res = pd.concat(ls_df_res)
 
-# describe by brand
-ls_df_desc = []
-ls_desc_brands = df_res_sf['brand_0'].value_counts()[0:10].index
-for brand in ls_desc_brands:
-  df_temp_desc = df_res_sf['coeff'][\
-                    df_res_sf['brand_0'] == brand].describe()
-  ls_df_desc.append(df_temp_desc)
-df_desc = pd.concat(ls_df_desc, axis = 1, keys = ls_desc_brands)
-df_desc.rename(columns = {'CARREFOUR_MARKET' : 'CARREFOUR_M'}, inplace = True)
-print df_desc.to_string()
 
-# small reg to explain coeff
-print smf.ols('coeff ~ C(brand_0) + distance + pp_chge',
-              data = df_res_sf).fit().summary()
+## Table: TA chge vs. TA comp
+#ls_pcts = [0.1, 0.25, 0.5, 0.75, 0.9]
+#df_ta_chge_vs_ta_comp =\
+#  pd.concat([(-df_info_ta.ix[ls_ta_chge_ids]['pp_chge']).describe(percentiles=ls_pcts),
+#             df_res_sf['coeff'].describe(percentiles=ls_pcts),
+#             df_res_sf['coeff'][df_res_sf['distance'] <= 2].describe(percentiles=ls_pcts),
+#             df_res_sf['coeff'][df_res_sf['distance'] <= 1].describe(percentiles=ls_pcts)],
+#             keys = ['TA', 'TA_comp_3km', 'TA_comp_2km' ,'TA_comp_1km'], axis = 1)
+#print df_ta_chge_vs_ta_comp.to_string()
+#
+## describe by brand
+#ls_df_desc = []
+#ls_desc_brands = df_res_sf['brand_0'].value_counts()[0:10].index
+#for brand in ls_desc_brands:
+#  df_temp_desc = df_res_sf['coeff'][\
+#                    df_res_sf['brand_0'] == brand].describe()
+#  ls_df_desc.append(df_temp_desc)
+#df_desc = pd.concat(ls_df_desc, axis = 1, keys = ls_desc_brands)
+#df_desc.rename(columns = {'CARREFOUR_MARKET' : 'CARREFOUR_M'}, inplace = True)
+#print df_desc.to_string()
+#
+## small reg to explain coeff
+#print smf.ols('coeff ~ C(brand_0) + distance + pp_chge',
+#              data = df_res_sf).fit().summary()
+
 
 ## #######
 ## GRAPHS
@@ -283,29 +258,3 @@ print smf.ols('coeff ~ C(brand_0) + distance + pp_chge',
 # ax = df_prices_ht[['69005002', '69009005']].plot()
 # df_prices_ht[ls_control_ids].mean(1).plot(ax = ax)
 # plt.show()
-
-
-
-#### Highest coeffs: interesting stories
-###  coeff    se    tval  pval id_station  dist     id_TA           brand_0
-### -0.061 0.001 -52.103 0.000   91000006 3.310  91130002              AVIA
-### -0.056 0.001 -38.847 0.000   91000006 1.180  91000003              AVIA
-### -0.052 0.001 -37.759 0.000   95100025 2.610  95100028              ESSO
-### -0.051 0.002 -33.315 0.000   95100025 3.120  78800002              ESSO
-### -0.049 0.001 -64.158 0.000   74000013 0.240  74000003              AGIP
-### -0.048 0.001 -41.728 0.000    5100004 0.000   5100007  CARREFOUR_MARKET
-### -0.044 0.002 -27.133 0.000   66000015 2.500  66000009            DYNEFF
-### -0.038 0.002 -21.534 0.000   95100025 4.270  95370004              ESSO
-### -0.038 0.001 -37.516 0.000   54520004 0.150  54520003              AVIA
-### -0.037 0.001 -53.502 0.000   77170007 3.520  77150001       INTERMARCHE
-##
-##
-###ls_visu = [id_station] + ['88300004', '88300005', '88300001', '88300006', '88300007', '88307001']
-###ls_visu_2 = [id_station] + ['88300004', '88300005', '88300001', '88307001']
-###
-###df_info.ix[ls_visu]['brand_0']
-###
-###df_visu = df_prices_ht[ls_visu]
-###df_visu = df_visu - df_prices_ht[ls_control_ids].mean(1)
-###df_visu.plot()
-###plt.show()

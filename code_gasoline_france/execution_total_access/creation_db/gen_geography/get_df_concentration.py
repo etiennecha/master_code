@@ -63,6 +63,10 @@ dict_ls_close = dec_json(os.path.join(path_dir_built_json,
 # MARKETS AROUND STATIONS
 # ################################
 
+# Caution: need to check group and independent (small groups?)
+df_info.loc[df_info['group'].isnull(),
+            'group'] = 'INDEPENDANT'
+
 # RADIUS (3km for now)
 
 ls_rows = []
@@ -111,7 +115,7 @@ df_info = pd.merge(df_info,
                    left_on = 'ci_ardt_1',
                    right_on = 'CODGEO',
                    how = 'left')
-# df_info.set_index('id_station', inplace = True)
+#df_info.set_index('id_station', inplace = True)
 
 area_field, area_lib = 'AU2010', 'LIBAU2010'
 #area_field, area_lib = 'UU2010', 'LIBUU2010'
@@ -125,13 +129,15 @@ df_area_nb = pd.concat([row[1] for row in ls_se_area_nb],
                        keys = [row[0] for row in ls_se_area_nb], axis = 1).T
 df_area_nb.fillna(0, inplace = True)
 df_area_nb['HHI'] = df_area_nb.apply(lambda x: ((x[ls_chains] * 100 / x.sum())**2).sum() +\
-                                               ((100 / x.sum())**2) * x['INDEPENDANT'],  axis = 1)
+                                               ((100 / x.sum())**2) * x['INDEPENDANT'],
+                                     axis = 1)
 
 df_info = pd.merge(df_info,
                    df_area_nb[['HHI']],
                    left_on = area_field,
                    right_index = True,
                    how = 'left')
+df_info.set_index('id_station', inplace = True)
 
 # ################################
 # STABLE MARKETS
@@ -139,3 +145,30 @@ df_info = pd.merge(df_info,
 
 ls_robust_markets = dec_json(os.path.join(path_dir_built_json,
                                           'ls_robust_stable_markets.json'))
+
+ls_rows_robust = []
+for ls_market_ids in ls_robust_markets:
+  ls_robust_ids = [(id_station, df_info.ix[id_station]['group'])\
+                        for id_station in ls_market_ids]
+  df_robust = pd.DataFrame(ls_robust_ids, columns = ['id', 'group'])
+  se_robust_nb = df_robust['group'].value_counts()
+  ls_rows_robust.append((id_station, se_robust_nb))
+
+df_robust_nb = pd.concat([row[1] for row in ls_rows_robust],
+                         keys = [row[0] for row in ls_rows_robust], axis = 1).T
+df_robust_nb.fillna(0, inplace = True)
+
+ls_chains = list(df_robust_nb.columns)
+if 'INDEPENDANT' in ls_chains:
+  ls_chains.remove('INDEPENDANT')
+df_robust_nb['HHI'] =\
+  df_robust_nb.apply(lambda x: ((x[ls_chains] * 100 / x.sum())**2).sum() +\
+                               ((100 / x.sum())**2) * x['INDEPENDANT'],  axis = 1)
+
+print u'\nOverview HHI robust markets'
+print df_robust_nb['HHI'].describe()
+
+# Can combine HHI within INSEE area & stable markets to find high concentration
+# or around stations instead of stable markets
+# How to take demand into account? (station network density?)
+# pop/station? threshold? nb of supermarkets plays a role?

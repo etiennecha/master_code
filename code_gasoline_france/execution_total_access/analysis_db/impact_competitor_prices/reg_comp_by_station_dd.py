@@ -119,7 +119,7 @@ df_prices = df_prices_ttc[90:]
 # LONG PANEL: COMP OF TOTAL => TOTAL ACCESS
 # ##########################################
 
-ls_ta_chge_ids = list(df_info_ta.index[(df_info_ta['pp_chge'] >= 0.05) &\
+ls_ta_chge_ids = list(df_info_ta.index[(df_info_ta['pp_chge'] >= 0.04) &\
                                        (~pd.isnull(df_info_ta['date_beg']))])
 
 #df_tta_lg_control = pd.DataFrame(df_prices[ls_control_ids].mean(1),
@@ -128,7 +128,7 @@ ls_ta_chge_ids = list(df_info_ta.index[(df_info_ta['pp_chge'] >= 0.05) &\
 
 ls_rows_ttac= []
 # for id_station, ls_ta_comp in [['6156001', dict_ls_ta_comp['6156001']]]:
-for id_station, ls_ta_comp in dict_ls_ta_comp.items():
+for id_station, ls_ta_comp in dict_ls_ta_comp.items()[0:50]:
   if (id_station in ls_keep_ids) and\
      (df_info.ix[id_station]['group'] != 'TOTAL'):
     # Need to have pp change and dates of transition
@@ -200,7 +200,6 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items():
       except:
         print id_station, ': could not estimate treatment'
         pass
-
 
 df_coeffs_ttac = pd.DataFrame(ls_rows_ttac, columns = ['id_station',
                                                        'id_ta',

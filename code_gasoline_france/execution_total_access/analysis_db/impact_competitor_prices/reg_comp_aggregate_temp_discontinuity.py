@@ -130,7 +130,7 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items():
 
 df_prices = df_prices_ttc
 
-ls_ta_chge_ids = list(df_info_ta.index[(df_info_ta['pp_chge'] >= 0.05) &\
+ls_ta_chge_ids = list(df_info_ta.index[(df_info_ta['pp_chge'] >= 0.04) &\
                                        (~pd.isnull(df_info_ta['date_beg']))])
 
 df_dd_control = pd.DataFrame(df_prices[ls_control_ids].mean(1),
