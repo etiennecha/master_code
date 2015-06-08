@@ -132,111 +132,111 @@ plt.show()
 # df_prices_ttc[ls_total].iloc[-1][df_prices_ttc[ls_total].iloc[-1] > 1.5].index
 # df_prices_ttc[['37000002', '6000010']].plot()
 
-# ############################
-# GRAPHS: TOTAL ACCESS TRENDS
-# ############################
-
-# Think of puting on same graph?
-
-# BEFORE REBRANDING VS. NO TA
-for date in ['2013-01-01', '2014-01-01']:
-  
-  # plot no ta and ta
-  ls_ids_disp = df_ta_mc.index[df_ta_mc['pp_chge_date'] >= date]
-  lab1 = 'Rebranded after {:s} ({:d})'.format(date, len(ls_ids_disp))
-  lab2 = 'Control ({:d})'.format(len(ls_ids_nota))
-  ax = df_prices_ttc[ls_ids_disp].mean(1).ix[:date].plot(label = lab1)
-  df_prices_ttc[ls_ids_nota].mean(1).ix[:date].plot(ax = ax, label = lab2)
-  plt.legend()
-  plt.show()
-  
-  ## plot difference
-  #se_diff = df_prices_ttc[ls_ids_nota].mean(1).ix[:date] -\
-  #            df_prices_ttc[ls_ids_disp].mean(1).ix[:date]
-  #se_diff.plot()
-  #plt.show()
-
-# AFTER REBRANDING VS. NO TA
-for date in ['2013-01-01', '2014-01-01']:
-  
-  # plot no ta and ta
-  ls_ids_disp = df_ta_mc.index[df_ta_mc['pp_chge_date'] <= date]
-  lab1 = 'Rebranded before {:s} ({:d})'.format(date, len(ls_ids_disp))
-  lab2 = 'Control ({:d})'.format(len(ls_ids_nota))
-  ax = df_prices_ttc[ls_ids_disp].mean(1).ix[date:].plot(label = lab1)
-  df_prices_ttc[ls_ids_nota].mean(1).ix[date:].plot(ax = ax, label = lab2)
-  plt.legend()
-  plt.show()
-  
-  ## plot difference
-  #se_diff = df_prices_ttc[ls_ids_nota].mean(1).ix[date:] -\
-  #            df_prices_ttc[ls_ids_disp].mean(1).ix[date:]
-  #se_diff.plot()
-  #plt.show()
-
-# #########################################
-# GRAPHS: TOTAL ACCESS PRICES W/ QUANTILES
-# #########################################
-
-date = '2014-01-01'
-ls_ids_disp = df_ta_mc.index[df_ta_mc['pp_chge_date'] <= date]
-lab_ref = 'Rebranded before {:s} ({:d})'.format(date, len(ls_ids_disp))
-ax = df_prices_ttc[ls_ids_disp].mean(1).ix[date:].plot(c = 'b', ls = '-', label = lab_ref)
-df_prices_ttc[ls_ids_disp].quantile(0.25, 1).ix[date:].plot(ax = ax , label = 'Q25',
-                                                            c = 'b', ls = '--')
-df_prices_ttc[ls_ids_disp].quantile(0.75, 1).ix[date:].plot(ax = ax, label = 'Q75',
-                                                            c = 'b', ls = '--')
-plt.legend()
-plt.show()
-
-# ###########################
-# GRAPHS: ELF TRENDS
-# ###########################
-
-
-ls_ids_disp = list(df_elf_nomc.index)
-
-## ELF
-#lab_ref = 'Elf rebranded ({:d})'.format(len(ls_ids_disp))
-#ax = df_prices_ttc[ls_ids_disp].mean(1).plot(c = 'b', ls = '-', label = lab_ref)
-#df_prices_ttc[ls_ids_disp].quantile(0.25, 1).plot(ax = ax,
-#                                                  c = 'b', ls = '--')
-#df_prices_ttc[ls_ids_disp].quantile(0.75, 1).plot(ax = ax,
-#                                                  c = 'b', ls = '--')
-## CONTROL
-#lab_ctrl = 'Control ({:d})'.format(len(ls_ids_disp))
-#df_prices_ttc[ls_ids_nota].mean(1).plot(ax = ax, c = 'g', ls = '-', label = lab_ctrl)
-#df_prices_ttc[ls_ids_nota].quantile(0.25, 1).plot(ax = ax ,
-#                                                  c = 'g', ls = '--')
-#df_prices_ttc[ls_ids_nota].quantile(0.75, 1).plot(ax = ax,
-#                                                  c = 'g', ls = '--')
+## ############################
+## GRAPHS: TOTAL ACCESS TRENDS
+## ############################
 #
+## Think of puting on same graph?
+#
+## BEFORE REBRANDING VS. NO TA
+#for date in ['2013-01-01', '2014-01-01']:
+#  
+#  # plot no ta and ta
+#  ls_ids_disp = df_ta_mc.index[df_ta_mc['pp_chge_date'] >= date]
+#  lab1 = 'Rebranded after {:s} ({:d})'.format(date, len(ls_ids_disp))
+#  lab2 = 'Control ({:d})'.format(len(ls_ids_nota))
+#  ax = df_prices_ttc[ls_ids_disp].mean(1).ix[:date].plot(label = lab1)
+#  df_prices_ttc[ls_ids_nota].mean(1).ix[:date].plot(ax = ax, label = lab2)
+#  plt.legend()
+#  plt.show()
+#  
+#  ## plot difference
+#  #se_diff = df_prices_ttc[ls_ids_nota].mean(1).ix[:date] -\
+#  #            df_prices_ttc[ls_ids_disp].mean(1).ix[:date]
+#  #se_diff.plot()
+#  #plt.show()
+#
+## AFTER REBRANDING VS. NO TA
+#for date in ['2013-01-01', '2014-01-01']:
+#  
+#  # plot no ta and ta
+#  ls_ids_disp = df_ta_mc.index[df_ta_mc['pp_chge_date'] <= date]
+#  lab1 = 'Rebranded before {:s} ({:d})'.format(date, len(ls_ids_disp))
+#  lab2 = 'Control ({:d})'.format(len(ls_ids_nota))
+#  ax = df_prices_ttc[ls_ids_disp].mean(1).ix[date:].plot(label = lab1)
+#  df_prices_ttc[ls_ids_nota].mean(1).ix[date:].plot(ax = ax, label = lab2)
+#  plt.legend()
+#  plt.show()
+#  
+#  ## plot difference
+#  #se_diff = df_prices_ttc[ls_ids_nota].mean(1).ix[date:] -\
+#  #            df_prices_ttc[ls_ids_disp].mean(1).ix[date:]
+#  #se_diff.plot()
+#  #plt.show()
+#
+## #########################################
+## GRAPHS: TOTAL ACCESS PRICES W/ QUANTILES
+## #########################################
+#
+#date = '2014-01-01'
+#ls_ids_disp = df_ta_mc.index[df_ta_mc['pp_chge_date'] <= date]
+#lab_ref = 'Rebranded before {:s} ({:d})'.format(date, len(ls_ids_disp))
+#ax = df_prices_ttc[ls_ids_disp].mean(1).ix[date:].plot(c = 'b', ls = '-', label = lab_ref)
+#df_prices_ttc[ls_ids_disp].quantile(0.25, 1).ix[date:].plot(ax = ax , label = 'Q25',
+#                                                            c = 'b', ls = '--')
+#df_prices_ttc[ls_ids_disp].quantile(0.75, 1).ix[date:].plot(ax = ax, label = 'Q75',
+#                                                            c = 'b', ls = '--')
 #plt.legend()
 #plt.show()
-
-plt.figure()
-# ELF
-lab_ref = 'Elf rebranded ({:d})'.format(len(ls_ids_disp))
-plt.plot(df_prices_ttc.index,
-         df_prices_ttc[ls_ids_disp].mean(1),
-         c = 'b', ls = '-', label = lab_ref)
-plt.plot(df_prices_ttc.index,
-         df_prices_ttc[ls_ids_disp].quantile(0.25, 1),
-         c = 'b', ls = '--')
-plt.plot(df_prices_ttc.index,
-         df_prices_ttc[ls_ids_disp].quantile(0.75, 1),
-         c = 'b', ls = '--')
-# CONTROL
-lab_ctrl = 'Control ({:d})'.format(len(ls_ids_nota))
-plt.plot(df_prices_ttc.index,
-         df_prices_ttc[ls_ids_nota].mean(1),
-         c = 'g', ls = '-', label = lab_ctrl)
-plt.plot(df_prices_ttc.index,
-         df_prices_ttc[ls_ids_nota].quantile(0.25, 1),
-         c = 'g', ls = '--')
-plt.plot(df_prices_ttc.index,
-         df_prices_ttc[ls_ids_nota].quantile(0.75, 1),
-         c = 'g', ls = '--')
-plt.legend()
-plt.grid()
-plt.show()
+#
+## ###########################
+## GRAPHS: ELF TRENDS
+## ###########################
+#
+#
+#ls_ids_disp = list(df_elf_nomc.index)
+#
+### ELF
+##lab_ref = 'Elf rebranded ({:d})'.format(len(ls_ids_disp))
+##ax = df_prices_ttc[ls_ids_disp].mean(1).plot(c = 'b', ls = '-', label = lab_ref)
+##df_prices_ttc[ls_ids_disp].quantile(0.25, 1).plot(ax = ax,
+##                                                  c = 'b', ls = '--')
+##df_prices_ttc[ls_ids_disp].quantile(0.75, 1).plot(ax = ax,
+##                                                  c = 'b', ls = '--')
+### CONTROL
+##lab_ctrl = 'Control ({:d})'.format(len(ls_ids_disp))
+##df_prices_ttc[ls_ids_nota].mean(1).plot(ax = ax, c = 'g', ls = '-', label = lab_ctrl)
+##df_prices_ttc[ls_ids_nota].quantile(0.25, 1).plot(ax = ax ,
+##                                                  c = 'g', ls = '--')
+##df_prices_ttc[ls_ids_nota].quantile(0.75, 1).plot(ax = ax,
+##                                                  c = 'g', ls = '--')
+##
+##plt.legend()
+##plt.show()
+#
+#plt.figure()
+## ELF
+#lab_ref = 'Elf rebranded ({:d})'.format(len(ls_ids_disp))
+#plt.plot(df_prices_ttc.index,
+#         df_prices_ttc[ls_ids_disp].mean(1),
+#         c = 'b', ls = '-', label = lab_ref)
+#plt.plot(df_prices_ttc.index,
+#         df_prices_ttc[ls_ids_disp].quantile(0.25, 1),
+#         c = 'b', ls = '--')
+#plt.plot(df_prices_ttc.index,
+#         df_prices_ttc[ls_ids_disp].quantile(0.75, 1),
+#         c = 'b', ls = '--')
+## CONTROL
+#lab_ctrl = 'Control ({:d})'.format(len(ls_ids_nota))
+#plt.plot(df_prices_ttc.index,
+#         df_prices_ttc[ls_ids_nota].mean(1),
+#         c = 'g', ls = '-', label = lab_ctrl)
+#plt.plot(df_prices_ttc.index,
+#         df_prices_ttc[ls_ids_nota].quantile(0.25, 1),
+#         c = 'g', ls = '--')
+#plt.plot(df_prices_ttc.index,
+#         df_prices_ttc[ls_ids_nota].quantile(0.75, 1),
+#         c = 'g', ls = '--')
+#plt.legend()
+#plt.grid()
+#plt.show()

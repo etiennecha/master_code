@@ -95,7 +95,7 @@ print df_prices_ttc.iloc[0].max()
 
 # First day
 
-for group_name in dict_group_ids.keys():
+for group_name in dict_group_ids.keys()[0:1]:
   bins = np.linspace(1.20, 1.60, 41)
   plt.hist(df_prices_ttc.iloc[10].values,
            bins, alpha=0.5, label='All prices', color = 'g')

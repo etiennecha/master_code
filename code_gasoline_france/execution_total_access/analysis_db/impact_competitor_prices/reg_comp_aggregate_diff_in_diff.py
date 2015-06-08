@@ -179,6 +179,7 @@ ls_tup_coeffs = zip(reg_dd_res.params.index.values.tolist(),
 
 df_res_temp = pd.DataFrame(ls_tup_coeffs,
                            columns = ['name', 'coeff', 'se', 'tval', 'pval'])
+
 #df_res_temp.set_index('id_station', inplace = True)
 #ls_df_res.append(df_res_temp)
 #
