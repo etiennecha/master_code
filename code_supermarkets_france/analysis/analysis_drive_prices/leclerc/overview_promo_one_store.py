@@ -24,7 +24,8 @@ for df_file_title in ls_df_leclerc_2015:
   dict_df[df_file_title] =\
     pd.read_csv(os.path.join(path_price_built_csv,
                              '{:s}.csv'.format(df_file_title)),
-                dtype = {'date' : str},
+                dtype = {'date' : str,
+                         'idProduit': str},
                 encoding = 'utf-8')
 
 df_master = dict_df['df_master_leclerc_2015']
@@ -54,3 +55,34 @@ print len(df_sub_master[df_sub_master['dum_promo'] == True])
 print len(df_sub_master[df_sub_master['dum_promo'] == True]['idProduit'].unique())
 
 print df_sub_prices[df_sub_prices['dum_promo'] == True].to_string()
+
+# Caution: when promo: real price is in 'promo'
+
+# Restriction to one store
+
+df_prices['listed_price'] = df_prices['total_price']
+df_prices.loc[df_prices['promo'] != 0,
+              'listed_price'] = df_prices['promo']
+
+# Work on regular prices for now
+df_store_listed_prices = df_prices[['date', 'idProduit', 'listed_price']]\
+                           [df_prices['store'] == 'Clermont Ferrand']
+
+df_prices_cols = df_store_listed_prices.pivot(values = 'listed_price',
+                                              columns = 'idProduit',
+                                              index = 'date')
+
+df_prices_cols.index = pd.to_datetime(df_prices_cols.index, format = '%Y%m%d')
+
+# Count nb price chges by day and products
+# pbm: num to nan, nan to num? (missing days? products?)
+ 
+df_prices_cols_diff = df_prices_cols.shift(1) - df_prices_cols
+
+se_prod_nb_chges = df_prices_cols_diff.apply(lambda x: len(x[x.abs() > 1e-05]),
+                                            axis = 0)
+
+se_day_nb_chges = df_prices_cols_diff.apply(lambda x: len(x[x.abs() > 1e-05]),
+                                           axis = 1)
+
+print se_day_nb_chges.to_string()

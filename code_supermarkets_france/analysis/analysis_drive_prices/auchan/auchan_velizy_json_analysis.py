@@ -251,7 +251,8 @@ ls_df_dpt_products = []
 for date_ind in pd_df_price.index:
   pd_df_period = pd_pd_master.major_xs(date_ind).T
   pd_df_period['ls_price'] = pd_df_period['ls_price'].astype(np.float32)
-  ls_df_dpt_products.append(pd_df_period['dpt'][~np.isnan(pd_df_period['ls_price'])].value_counts())
+  ls_df_dpt_products.append(pd_df_period['dpt']\
+                              [~np.isnan(pd_df_period['ls_price'])].value_counts())
 pd_df_all_dpt_products = pd.concat(ls_df_dpt_products,
                                    axis=1,
                                    keys = pd_df_price.index).T
