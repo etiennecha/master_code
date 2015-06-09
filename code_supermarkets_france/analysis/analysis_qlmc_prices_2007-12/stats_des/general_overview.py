@@ -28,7 +28,7 @@ df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
 
 print u'Adding store lsa indexes'
 df_stores = pd.read_csv(os.path.join(path_dir_built_csv,
-                             'df_qlmc_stores.csv'),
+                                     'df_qlmc_stores.csv'),
                         dtype = {'id_lsa': str,
                                  'INSE_ZIP' : str,
                                  'INSEE_Dpt' : str,
@@ -194,6 +194,19 @@ print '\nNb id_lsa associated with two different stores:',\
        len(df_matched[df_matched.duplicated(subset = ['P', 'id_lsa'])])
 ls_tup_dup = df_matched[['P', 'id_lsa']]\
                [df_matched.duplicated(subset = ['P', 'id_lsa'])].values
+
+ls_nodup_cols = ['P', 'Magasin', 'Rayon', 'Famille', 'Produit_norm']
+df_qlmc_keep = df_qlmc[~df_qlmc['id_lsa'].isnull()]
+df_duplicates = df_qlmc_keep[(df_qlmc_keep.duplicated(ls_nodup_cols, take_last = False)) |\
+                             (df_qlmc_keep.duplicated(ls_nodup_cols, take_last = True))]
+
+print u'\nNb duplicated rows: {:d}'.format(len(df_duplicates))
+
+print u'\nConcerned stores:'
+print df_duplicates[['P', 'id_lsa', 'Magasin']].drop_duplicates(['P', 'Magasin'])
+
+print u'\nInspect some duplicates:'
+print df_duplicates[0:30][ls_nodup_cols + ['Prix', 'Magasin', 'Date']].to_string()
 
 # Inspect store
 for per, id_lsa in ls_tup_dup:

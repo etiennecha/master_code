@@ -271,21 +271,19 @@ print df_matched[ls_final_disp][df_matched['id_lsa'].isin(ls_pbm_lsa_ids)]
 
 # TODO: OUTPUT NO MATCH FOR POTENTIAL HAND WRITTEN UPDATES
 
-## OUTPUT
-#
-## HDF (abandon?)
-#path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-#qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-#qlmc_data['df_qlmc_stores'] = df_stores
-#qlmc_data.close()
-#
-## CSV
-#df_stores.to_csv(os.path.join(path_dir_built_csv,
-#                             'df_qlmc_stores.csv'),
-#                index = False,
-#                encoding = 'UTF-8')
+# OUTPUT
 
+# HDF (abandon?)
+path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+qlmc_data['df_qlmc_stores'] = df_stores
+qlmc_data.close()
 
+# CSV
+df_stores.to_csv(os.path.join(path_dir_built_csv,
+                             'df_qlmc_stores.csv'),
+                index = False,
+                encoding = 'UTF-8')
 
 # DEPREACTED
 
