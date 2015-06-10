@@ -35,6 +35,7 @@ df_stores = pd.read_csv(os.path.join(path_dir_built_csv,
                                  'INSEE_Code' : str,
                                  'QLMC_Dpt' : str},
                         encoding = 'UTF-8')
+
 df_stores['Magasin'] = df_stores['Enseigne'] + u' ' + df_stores['Commune']
 df_qlmc = pd.merge(df_stores,
                    df_qlmc,
@@ -57,7 +58,6 @@ print u'Adding Produit_norm: normalized product name'
 for field in ['marque', 'nom', 'format']:
   df_qlmc[field].fillna(u'', inplace = True)
 df_qlmc['Produit_norm'] = df_qlmc['marque'] + ' ' + df_qlmc['nom']+ ' ' + df_qlmc['format']
-
 
 # ################
 # GENERAL OVERVIEW
@@ -189,6 +189,7 @@ for per in range(13):
 # #############################
 # INSPECT LSA DUPLICATE PRICES
 # #############################
+
 df_matched = df_stores[~pd.isnull(df_stores['id_lsa'])]
 print '\nNb id_lsa associated with two different stores:',\
        len(df_matched[df_matched.duplicated(subset = ['P', 'id_lsa'])])

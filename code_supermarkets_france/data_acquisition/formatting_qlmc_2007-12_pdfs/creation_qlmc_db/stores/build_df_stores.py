@@ -136,7 +136,7 @@ dict_lsa_stores_alt_brand = {u'INTERMARCHE SUPER': u'INTERMARCHE',
                              u'CENTRE E.LECLERC' : u'LECLERC',
                              u'LECLERC EXPRESS' : u'LECLERC'}
 
-ls_matching = [[u'INTERMARCHE', u'XXX', u'INTERMARCHE'], # give up direct matching (first period...)
+ls_matching = [[u'INTERMARCHE', u'XXX', u'INTERMARCHE'], # give up direct matching (first period..)
                [u'INTERMARCHE SUPER', u'INTERMARCHE SUPER', u'INTERMARCHE'],
                [u'INTERMARCHE HYPER', u'INTERMARCHE HYPER', u'INTERMARCHE'],
                [u'AUCHAN', u'AUCHAN', u'AUCHAN'],
@@ -209,11 +209,10 @@ df_qlmc_stores_ma = pd.merge(df_matching, df_qlmc_stores,
                              on = ['P', 'Enseigne', 'Commune'],
                              how = 'right')
 
-
-
 # READ MATCHED STORES FROM CSV FILE AND UPDATE FIX
+file_fix_matching = 'fix_store_matching.csv'
 df_read_fix_ms = pd.read_csv(os.path.join(path_dir_built_excel,
-                                          'fix_store_matching.csv'),
+                                          file_fix_matching),
                                sep = ';',
                                dtype = {'P' : str,
                                         'INSEE_Code' : str,
@@ -221,6 +220,7 @@ df_read_fix_ms = pd.read_csv(os.path.join(path_dir_built_excel,
                                         'id_lsa' : str,
                                         'id_fra_stores_2' : str},
                                encoding = 'latin-1')
+
 # keep only those with some added info
 df_read_fix_ms = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['id_lsa'])) |
                                 (~pd.isnull(df_read_fix_ms['id_fra_stores_2'])) |
@@ -228,10 +228,12 @@ df_read_fix_ms = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['id_lsa'])) |
 # df_read_fix_ms contains all ad hoc matching
 df_read_fix_ms.rename(columns={'id_lsa' : 'id_lsa_adhoc'}, inplace = True)
 df_stores = pd.merge(df_read_fix_ms[['P', 'Enseigne', 'Commune',
-                                    'id_lsa_adhoc', 'id_fra_stores', 'id_fra_stores_2',
+                                    'id_lsa_adhoc',
+                                    'id_fra_stores', 'id_fra_stores_2',
                                     'street_fra_stores']],
-                    df_qlmc_stores_ma, on = ['P', 'Enseigne', 'Commune'],
-                    how = 'right')
+                     df_qlmc_stores_ma,
+                     on = ['P', 'Enseigne', 'Commune'],
+                     how = 'right')
 # priority given to hand info
 df_stores.loc[~pd.isnull(df_stores['id_lsa_adhoc']), 'Q'] = 'manuel'
 
@@ -243,41 +245,53 @@ df_stores.loc[pd.isnull(df_stores['Q']), 'Q'] = 'ambigu' # check
 df_stores.drop(['id_lsa_adhoc'], axis = 1, inplace = True)
 df_stores.sort(columns=['P', 'INSEE_Code', 'Enseigne'], inplace = True)
 
-# INSPECT NO MATCH
-df_unmatched = df_stores[pd.isnull(df_stores['id_lsa'])]
-print '\nTop insee areas in terms of no match'
-print df_unmatched['INSEE_Code'].value_counts()[0:10]
-print '\nINSEE area with code 49007:'
-ls_store_disp = ['P', 'Magasin', 'INSEE_Code', 'Commune', 'QLMC_Surface', 'id_lsa', 'Q']
-print df_stores[ls_store_disp][df_stores['INSEE_Code'] == u'49007'].to_string()
-
-# DIPLAY MAIN NO MATCH MUNICIPALITIES
-ls_df_toextract = []
-for insee_code in df_unmatched['INSEE_Code'].value_counts()[0:30].index:
-  ls_df_toextract.append(df_stores[df_stores['INSEE_Code'] == insee_code])
-df_to_extract = pd.concat(ls_df_toextract)
-df_to_extract.sort(columns=['INSEE_Code', 'Enseigne', 'Commune'], inplace = True)
-print df_to_extract[ls_store_disp].to_string()
-
-# INSPECT MATCHES: DUPLICATES?
-
+# CHECK FOR DUPLICATES IN MATCHING
 df_matched = df_stores[~pd.isnull(df_stores['id_lsa'])]
-print '\nNb id_lsa associated with two different stores:',\
-       len(df_matched[df_matched.duplicated(subset = ['P', 'id_lsa'])])
-ls_pbm_lsa_ids = df_matched['id_lsa'][df_matched.duplicated(subset = ['P', 'id_lsa'])].values
-print 'Inspect concerned stores:'
-ls_final_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code', 'id_lsa']
-print df_matched[ls_final_disp][df_matched['id_lsa'].isin(ls_pbm_lsa_ids)]
+df_dup = df_matched[(df_matched.duplicated(subset = ['P', 'id_lsa'],
+                                           take_last = True)) |\
+                    (df_matched.duplicated(subset = ['P', 'id_lsa'],
+                                           take_last = False))]
+print '\nNb id_lsa associated with two different stores: {:d}'.format(len(df_dup))
+print '\nInspect duplicates:'
+ls_dup_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code', 'id_lsa']
+print df_dup[ls_dup_disp].to_string()
 
-# TODO: OUTPUT NO MATCH FOR POTENTIAL HAND WRITTEN UPDATES
+# OUTPUT NO MATCH (INCLUDING MANUAL INPUT) FOR FURTHER INVESTIGATIONS
+df_unmatched = df_stores[(pd.isnull(df_stores['id_lsa'])) |\
+                         (df_stores['Q'] == 'manuel')].copy()
+# Cannot accomodate null INSEE_Code with following method
+# Anyway.. if insee code could not be found...?
+df_unmatched = df_unmatched[~df_unmatched['INSEE_Code'].isnull()]
+df_unmatched['Nb_Same_IC'] =\
+  df_unmatched.groupby('INSEE_Code').INSEE_Code.transform('size')
+df_unmatched.sort(['Nb_Same_IC', 'INSEE_Code', 'Magasin', 'P'],
+                  ascending = False,
+                  inplace = True)
+#df_unmatched.drop(labels = 'Nb_Same_IC', axis = 1, inplace = True)
+ls_unmatched_disp = ['P', 'Enseigne', 'Commune',
+                     'street_fra_stores', 'id_fra_stores', 'id_fra_stores_2',
+                     'id_lsa', 'Q', 'INSEE_Code', 'Nb_Same_IC',
+                     'QLMC_Surface', 'QLMC_Dpt']
 
-# OUTPUT
+print u'\nNb unmatched period/store (before): {:d}'.format(len(df_unmatched))
+print u'\nNb manually matched: {:d}'.format(\
+        len(df_unmatched[~df_unmatched['id_lsa'].isnull()]))
+print '\nInspect unmatched:'
+print df_unmatched[ls_unmatched_disp][0:30].to_string()
 
-# HDF (abandon?)
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-qlmc_data['df_qlmc_stores'] = df_stores
-qlmc_data.close()
+# OUTPUT (try to make it an Excel standard csv?)
+df_unmatched[ls_unmatched_disp].to_csv(os.path.join(path_dir_built_excel,
+                                                    'fix_store_matching.csv'),
+                                       index = False,
+                                       encoding = 'latin-1',
+                                       sep = ';',
+                                       quoting = 3) # no impact, cannot have trailing 0s
+
+## HDF (deprecated)
+#path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+#qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+#qlmc_data['df_qlmc_stores'] = df_stores
+#qlmc_data.close()
 
 # CSV
 df_stores.to_csv(os.path.join(path_dir_built_csv,
@@ -285,17 +299,11 @@ df_stores.to_csv(os.path.join(path_dir_built_csv,
                 index = False,
                 encoding = 'UTF-8')
 
+# ############
 # DEPREACTED
+# ############
 
-# ADD QLMC NO MATCH TO BE EXAMINED (MOVE ?)
-
-#df_to_extract = pd.merge(df_fix_ms, df_to_extract, on=['P', 'Enseigne', 'Commune'], how='right')
-#df_to_extract.sort(columns = ['INSEE_Code', 'Enseigne', 'P', 'Commune'], inplace = True)
-#ls_extract_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code',
-#                   'id_fra_stores', 'id_lsa', 'id_fra_stores_2', 'street_fra_stores']
-
-# UPDATE JSON FILE WITH MATCHED STORES
-
+## UPDATE JSON FILE WITH MATCHED STORES
 ## list for json
 #ls_read_fix_ms = [list(x) for x in df_read_fix_ms.to_records(index=False)]
 ## NB: no equality when nan (even in list)
@@ -326,9 +334,7 @@ df_stores.to_csv(os.path.join(path_dir_built_csv,
 #df_qlmc_stores_matched.to_csv(os.path.join(path_dir_built_csv, 'df_qlmc_stores_matched.csv'),
 #                              float_format='%.0f', encoding='utf-8', index=False)
 
-
 ## READ MANUAL LSA MATCHING BASED ON XLS FILE
-
 #df_read_fix_ms = pd.read_excel(os.path.join(path_dir_built_excel, 'fix_store_matching.xlsx'),
 #                               sheetname = 'Sheet1')
 #df_read_fix_ms_fi = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['id_lsa'])) |
