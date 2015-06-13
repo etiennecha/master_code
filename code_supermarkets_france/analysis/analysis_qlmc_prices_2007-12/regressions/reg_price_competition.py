@@ -43,12 +43,12 @@ df_stores = df_stores[['P', 'Magasin', 'Enseigne', 'id_lsa',
 # LOAD DF COMP
 
 df_comp_h = pd.read_csv(os.path.join(path_dir_built_csv,
-                                     'df_comp_H_ac_vs_cont.csv'),
+                                     'df_eval_comp_H_v_all.csv'), #'df_comp_H_ac_vs_cont.csv'),
                         dtype = {'Ident': str},
                         encoding = 'latin-1')
 
 df_comp_s = pd.read_csv(os.path.join(path_dir_built_csv,
-                                     'df_comp_S_ac_vs_cont.csv'),
+                                     'df_eval_comp_S_v_all.csv'), #'df_comp_S_ac_vs_cont.csv'),
                         dtype = {'Ident': str},
                         encoding = 'latin-1')
 
@@ -74,7 +74,7 @@ ls_lsa_info_cols = [u'Surface',
                     u'Enseigne_alt',
                     u'Type_alt']
 
-ls_lsa_comp_cols = ['ac_nb_store',
+ls_lsa_comp_cols = ['ac_nb_stores',
                     'ac_nb_comp',
                     'ac_store_share',
                     'ac_group_share',
@@ -96,7 +96,10 @@ df_qlmc = pd.merge(df_qlmc,
                    on = ['P', 'Magasin'],
                    how = 'left')
 
+# get rid of no id_lsa match
 df_qlmc = df_qlmc[~df_qlmc['id_lsa'].isnull()]
+# get rid of closed (so far but should accomodate later)
+df_qlmc = df_qlmc[~df_qlmc['Enseigne_alt'].isnull()]
 
 se_prod = df_qlmc.groupby(['Rayon', 'Famille', 'Produit']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
@@ -164,6 +167,10 @@ def price_2_freq(se_prices):
   else:
     return 0
 
+ls_pd_disp = ['nb_obs',
+              'price_1', 'price_2',
+              'price_1_freq', 'price_2_freq', 'price_12_freq']
+
 # One period (need product to be available in this one)
 df_qlmc_prod_per = df_qlmc_prod[df_qlmc_prod['P'] == 1]
 df_pd =  df_qlmc_prod_per[['Prix', 'Enseigne_alt']]\
@@ -174,7 +181,7 @@ df_pd =  df_qlmc_prod_per[['Prix', 'Enseigne_alt']]\
                                          price_2_freq])['Prix']
 df_pd.sort('nb_obs', ascending = False, inplace = True)
 df_pd['price_12_freq'] = df_pd[['price_1_freq', 'price_2_freq']].sum(axis = 1)
-print df_pd.to_string()
+print df_pd[ls_pd_disp].to_string()
 
 # All periods
 df_pd_2 =  df_qlmc_prod[['P', 'Prix', 'Enseigne_alt']]\
@@ -190,11 +197,11 @@ df_pd_2.sort(['P', 'nb_obs'], ascending = False, inplace = True)
 df_pd_2.set_index('P', append = True, inplace = True)
 df_pd_2 = df_pd_2.swaplevel(0, 1, axis = 0)
 df_pd_2['price_12_freq'] = df_pd_2[['price_1_freq', 'price_2_freq']].sum(axis = 1)
-print df_pd_2[df_pd_2['nb_obs'] >= 10].to_string()
+print df_pd_2[df_pd_2['nb_obs'] >= 10][ls_pd_disp].to_string()
 
 # Extract by chain
 df_pd_2.sortlevel(inplace = True)
-print df_pd_2.loc[(slice(None), 'CENTRE E.LECLERC'),:]
+print df_pd_2.loc[(slice(None), u'CENTRE E.LECLERC'),:][ls_pd_disp].to_string()
 
 # Todo: Expand 
 # => over products if can be
@@ -213,3 +220,11 @@ df_pd_3 =  df_sub[['Prix', 'Produit']]\
                                         price_2,
                                         price_2_freq])['Prix']
 df_pd_3['price_12_freq'] = df_pd_3[['price_1_freq', 'price_2_freq']].sum(axis = 1)
+
+print df_pd_3[ls_pd_disp].to_string()
+
+# Todo: 
+# for one chain: one row by period (could add by dpt)
+# price distribution for each unique product (rayon/famille/prod)
+# take avg of first freq and second freq (could take interquartile gap etc)
+# keep only if enough products

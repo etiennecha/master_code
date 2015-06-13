@@ -51,6 +51,7 @@ df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
                      parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv',
                                     u'DATE chg enseigne', u'DATE chgt surf'],
                      encoding = 'UTF-8')
+
 df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
                 (~pd.isnull(df_lsa['Longitude']))].copy()
 
