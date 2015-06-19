@@ -334,10 +334,10 @@ df_com.set_index('index', inplace = True)
 ls_percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]
 print df_hhi['hhi'].describe(percentiles = ls_percentiles)
 
-# requires package wquantiles
-import weighted
-for quantile in ls_percentiles:
-  print weighted.quantile(df_hhi['hhi'], df_hhi['pop'], quantile)
+## requires package wquantiles
+#import weighted
+#for quantile in ls_percentiles:
+#  print weighted.quantile(df_hhi['hhi'], df_hhi['pop'], quantile)
 
 # todo: code weighted mean and std (count, min, max, unchanged) + check vs. STATA
 

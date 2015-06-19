@@ -31,7 +31,7 @@ path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 # READ CSV FILE
 # #############
 
-df_lsa_int = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_int.csv'),
+df_lsa_int = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
                          encoding = 'UTF-8')
 # Todo: fix in a better way?
 df_lsa_int['Code INSEE'] = df_lsa_int['Code INSEE'].apply(\
