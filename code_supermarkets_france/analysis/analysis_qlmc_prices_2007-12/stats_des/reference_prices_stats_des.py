@@ -117,9 +117,11 @@ se_prod = df_qlmc.groupby(['Rayon', 'Famille', 'Produit']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
 
 # retail_chain = 'CARREFOUR'
-retail_chain = 'GEANT CASINO'
+retail_chain = 'CARREFOUR' # 'GEANT CASINO'
 nb_obs_min = 10
 pct_min = 0.33
+
+print '\nStats des on ref prices for {:s} :'.format(retail_chain)
 
 for per_ind in range(13):
   print u'\n' + '-'*80
@@ -201,24 +203,29 @@ for per_ind in range(13):
                             aggfunc = len,
                             fill_value = 0).astype(int)
     
-    # drop if not enough data (but should report ?)
-    se_nb_tot_obs = df_ref.sum(axis = 1).astype(int)
-    se_insuff = df_ref['insuff'] / df_ref.sum(axis = 1)
-    df_ref.drop(labels = ['insuff'], axis = 1, inplace = True)
-    
-    df_ref_pct = df_ref.apply(lambda x: x / x.sum(), axis = 1)
-    df_ref_pct['nb_obs'] = df_ref.sum(axis = 1).astype(int)
-    df_ref_pct['nb_tot_obs'] = se_nb_tot_obs
-    df_ref_pct['insuff'] = se_insuff
-    
-    #print u'\nOverview ref prices:'
-    #print df_ref.to_string()
-    
-    print u'\nOverview ref prices:'
-    print df_ref_pct[['nb_tot_obs',
-                      'insuff',
-                      'nb_obs',
-                      'no_ref',
-                      'diff',
-                      'price_1',
-                      'price_2']].describe()
+    try:
+      # drop if not enough data (but should report ?)
+      se_nb_tot_obs = df_ref.sum(axis = 1).astype(int)
+      se_insuff = df_ref['insuff'] / df_ref.sum(axis = 1)
+      df_ref.drop(labels = ['insuff'], axis = 1, inplace = True)
+      
+      df_ref_pct = df_ref.apply(lambda x: x / x.sum(), axis = 1)
+      df_ref_pct['nb_obs'] = df_ref.sum(axis = 1).astype(int)
+      df_ref_pct['nb_tot_obs'] = se_nb_tot_obs
+      df_ref_pct['insuff'] = se_insuff
+      
+      #print u'\nOverview ref prices:'
+      #print df_ref.to_string()
+      
+      print u'\nOverview ref prices:'
+      print df_ref_pct[['nb_tot_obs',
+                        'insuff',
+                        'nb_obs',
+                        'no_ref',
+                        'diff',
+                        'price_1',
+                        'price_2']].describe()
+    except:
+      print u'\nNot enough data to display store ref prices'
+
+# print df_qlmc['Enseigne_alt'].value_counts()
