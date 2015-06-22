@@ -116,26 +116,109 @@ def price_2_freq(se_prices):
 se_prod = df_qlmc.groupby(['Rayon', 'Famille', 'Produit']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
 
-# How close stores are to reference price
-df_sub = df_qlmc[(df_qlmc['P'] == 0) &\
-                 (df_qlmc['Enseigne_alt'] == 'CENTRE E.LECLERC')]
+# retail_chain = 'CARREFOUR'
+retail_chain = 'GEANT CASINO'
+nb_obs_min = 10
+pct_min = 0.33
 
-#ls_sub_top_prods = df_sub['Produit'].value_counts().index[0:20].tolist()
-#df_sub = df_sub[df_sub['Produit'].isin(ls_sub_top_prods)]
-#
-#df_pd_3 =  df_sub[['Prix', 'Produit']]\
-#             .groupby(['Produit']).agg([nb_obs,
-#                                        price_1,
-#                                        price_1_freq,
-#                                        price_2,
-#                                        price_2_freq])['Prix']
-#df_pd_3['price_12_freq'] = df_pd_3[['price_1_freq', 'price_2_freq']].sum(axis = 1)
-#
-#print u'\nPrice frequencies for 20 products and one chain in one period'
-#print df_pd_3[ls_pd_disp].to_string()
-#
-## Todo: 
-## for one chain: one row by period (could add by dpt)
-## price distribution for each unique product (rayon/famille/prod)
-## take avg of first freq and second freq (could take interquartile gap etc)
-## keep only if enough products
+for per_ind in range(13):
+  print u'\n' + '-'*80
+  print u'Period {:d}'.format(per_ind)
+  # How close stores are to reference price
+  df_sub = df_qlmc[(df_qlmc['P'] == per_ind) &\
+                   (df_qlmc['Enseigne_alt'] == retail_chain)]
+  
+  # Check duplicates at store level
+  ls_sub_dup_cols = ['Rayon', 'Famille', 'Produit', 'id_lsa']
+  df_sub_dup = df_sub[(df_sub.duplicated(ls_sub_dup_cols, take_last = True)) |\
+                      (df_sub.duplicated(ls_sub_dup_cols, take_last = False))]
+  # Make sure no duplicate
+  df_sub = df_sub.drop_duplicates(ls_sub_dup_cols)
+  
+  # Build df with product most common prices
+  df_sub_products =  df_sub[['Rayon', 'Famille', 'Produit', 'Prix']]\
+                       .groupby(['Rayon', 'Famille', 'Produit'])\
+                       .agg([nb_obs,
+                             price_1,
+                             price_1_freq,
+                             price_2,
+                             price_2_freq])['Prix']
+  
+  df_sub_products['price_12_freq'] =\
+    df_sub_products[['price_1_freq', 'price_2_freq']].sum(axis = 1)
+  
+  print u'\nOverview products:'
+  print df_sub_products.describe()
+  
+  df_enough_obs = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min)]
+  df_ref_price = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min) &\
+                                 (df_sub_products['price_1_freq'] >= pct_min)]
+
+  if len(df_enough_obs) > 0:
+    
+    print u'Nb prod w/ >= {:d} obs: {:d}'.format(\
+            nb_obs_min, len(df_enough_obs))
+    
+    print u'Nb prod w/ >= {:d} obs and no ref price (0.33): {:d}'.format(\
+            nb_obs_min, len(df_ref_price))
+                
+    print u'Pct prod w/ >= 20 obs and no ref price (0.33): {:.2f}'.format(\
+            nb_obs_min, len(df_ref_price) / float(len(df_enough_obs)))
+    
+    df_sub_products.reset_index(drop = False, inplace = True)
+    
+    df_sub = pd.merge(df_sub,
+                      df_sub_products,
+                      on = ['Rayon', 'Famille', 'Produit'],
+                      how = 'left')
+    
+    # Build df stores accounting for match with ref prices
+    
+    ## With dummy
+    #df_sub['ref_price_dum'] = 0
+    #df_sub.loc[df_sub['Prix'] == df_sub['price_1'],
+    #           'ref_price_dum'] = 1
+    ## Pbm Magasin can be slightly diff from id_lsa but...
+    #df_ref = df_sub[['Magasin', 'ref_price_dum']]\
+    #           .groupby('Magasin').agg([np.size,
+    #                                    sum])
+    #print df_ref[0:20].to_string()
+    
+    df_sub['ref_price'] = 'diff'
+    df_sub.loc[df_sub['Prix'] == df_sub['price_1'],
+               'ref_price'] = 'price_1'
+    df_sub.loc[(df_sub['Prix'] != df_sub['price_1']) &\
+               (df_sub['Prix'] == df_sub['price_2']),
+               'ref_price'] = 'price_2'
+    df_sub.loc[(df_sub['price_1_freq'] <= pct_min),
+               'ref_price'] = 'no_ref'
+    df_sub.loc[df_sub['nb_obs'] <= nb_obs_min,
+               'ref_price'] = 'insuff'
+    
+    df_ref = pd.pivot_table(data = df_sub[['Magasin', 'ref_price']],
+                            index = 'Magasin',
+                            columns = 'ref_price',
+                            aggfunc = len,
+                            fill_value = 0).astype(int)
+    
+    # drop if not enough data (but should report ?)
+    se_nb_tot_obs = df_ref.sum(axis = 1).astype(int)
+    se_insuff = df_ref['insuff'] / df_ref.sum(axis = 1)
+    df_ref.drop(labels = ['insuff'], axis = 1, inplace = True)
+    
+    df_ref_pct = df_ref.apply(lambda x: x / x.sum(), axis = 1)
+    df_ref_pct['nb_obs'] = df_ref.sum(axis = 1).astype(int)
+    df_ref_pct['nb_tot_obs'] = se_nb_tot_obs
+    df_ref_pct['insuff'] = se_insuff
+    
+    #print u'\nOverview ref prices:'
+    #print df_ref.to_string()
+    
+    print u'\nOverview ref prices:'
+    print df_ref_pct[['nb_tot_obs',
+                      'insuff',
+                      'nb_obs',
+                      'no_ref',
+                      'diff',
+                      'price_1',
+                      'price_2']].describe()
