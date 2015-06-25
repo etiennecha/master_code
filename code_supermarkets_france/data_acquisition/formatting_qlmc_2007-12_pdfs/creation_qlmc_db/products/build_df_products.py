@@ -13,85 +13,93 @@ import pandas as pd
 
 path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 
-path_dir_source_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
+path_dir_source_json = os.path.join(path_dir_qlmc,
+                                    'data_source',
+                                    'data_json_qlmc')
 
-# LOAD PRODUCTS (directly from original data?)
+path_dir_built_json = os.path.join(path_dir_qlmc,
+                                   'data_built',
+                                   'data_json')
 
-ls_ls_products = dec_json(os.path.join(path_dir_built_json, 'ls_ls_products.json'))
+path_dir_built_csv = os.path.join(path_dir_qlmc,
+                                  'data_built',
+                                  'data_csv')
+
+pd.set_option('display.max_colwidth', 80) # default 50 ? 
+
+# BUILD DF PRODUCTS (directly from original data?)
+
+ls_ls_products = dec_json(os.path.join(path_dir_built_json,
+                                       'ls_ls_products.json'))
+
 ls_rows = [[i] + product for i, ls_products\
              in enumerate(ls_ls_products)\
                for product in ls_products]
 ls_rows =  [row + get_split_brand_product(row[3], ls_brand_patches)\
               for row in ls_rows]
-
 ls_columns = ['P', 'Rayon', 'Famille', 'Produit', 'Marque', 'Libelle']
 df_products = pd.DataFrame(ls_rows, columns = ls_columns)
-
-ls_disp_1 = ['P', 'Rayon', 'Famille', 'Produit']
-
-pd.set_option('display.max_colwidth', 80) # default 50 ? 
-
 # Keep original name to match later with price data
 df_products['Produit_O'] = df_products['Produit']
 
+ls_disp_1 = ['P', 'Rayon', 'Famille', 'Produit']
+
 # ###############################
-# FIX PRODUCTS: REPLACE PRODUCTS
+# REPLACE PRODUCTS
 # ###############################
 
-ls_fixed_products = [[u'mozzarella 19% mat. gr. environ - 125 g environ',
-                      u'mozzarella 19% mat. gr. environ, 125 g environ'],
-                     [u'Mozzarella 19% mat. gr. environ - 125 g environ',
-                      u'Mozzarella 19% mat. gr. environ, 125 g environ'],
-                     [u'mozzarella 18% mat. gr. minimum - 125 g environ',
-                      u'mozzarella 18% mat. gr. minimum, 125 g environ'],
-                     [u'Evian - Eau minérale naturelle, 1,5L',
-                      u'Evian - Eau minérale naturelle plate, 1,5L'],
-                     [u'Evian - Eau minéralenaturelle, 1L',
-                      u'Evian - Eau minérale plate naturelle, 1L'],
-                     [u'Evian - Eau minérale naturelle, 6x1,5L',
-                      u'Evian - Eau minérale naturelle plate, 6x1,5L'],
-                     [u'Evian - Eau minérale naturelle, 6x0,5L',
-                      u'Evian - Eau minérale naturelle plate, 6 x 0,5L'], # not all periods
-                     [u'Courmayeur - Eau minérale naturelle, 1,5L',
-                      u'Courmayeur - Eau minérale plate naturelle, 1,5L'],
-                     [u'Hepar - Eau minérale naturelle, 1L',
-                      u'Hepar - Eau minérale naturelle plate, 1L'],
-                     [u'Contrex - Eau minérale naturelle, 6x50cl',
-                      u'Contrex - Eau minérale plate naturelle, 6x50cl'],
-                     [u'Contrex - Eau minérale naturelle plate, 6x50cl',
-                      u'Contrex - Eau minérale plate naturelle, 6x50cl'],
-                     [u'Contrex - Eau minérale naturelle, 6x1,5L',
-                      u'Contrex - Eau minérale naturelle plate, 6x1,5L'],
-                     [u'Contrex - Eau minérale naturelle, 1,5L',
-                      u'Contrex - Eau minérale naturelle plate, 1,5L'],
-                     [u"Ballantines - Whisky blend ecossais 7 ans d'âge 40%, 70cl", # more to do
-                      u"Ballantines - Whisky blend écossais 7ans d'âge 40 degrés, 70cl"]]
+ls_replace_product = [[u'mozzarella 19% mat. gr. environ - 125 g environ',
+                       u'mozzarella 19% mat. gr. environ, 125 g environ'],
+                      [u'Mozzarella 19% mat. gr. environ - 125 g environ',
+                       u'Mozzarella 19% mat. gr. environ, 125 g environ'],
+                      [u'mozzarella 18% mat. gr. minimum - 125 g environ',
+                       u'mozzarella 18% mat. gr. minimum, 125 g environ'],
+                      [u'Evian - Eau minérale naturelle, 1,5L',
+                       u'Evian - Eau minérale naturelle plate, 1,5L'],
+                      [u'Evian - Eau minéralenaturelle, 1L',
+                       u'Evian - Eau minérale plate naturelle, 1L'],
+                      [u'Evian - Eau minérale naturelle, 6x1,5L',
+                       u'Evian - Eau minérale naturelle plate, 6x1,5L'],
+                      [u'Evian - Eau minérale naturelle, 6x0,5L',
+                       u'Evian - Eau minérale naturelle plate, 6 x 0,5L'], # not all periods
+                      [u'Courmayeur - Eau minérale naturelle, 1,5L',
+                       u'Courmayeur - Eau minérale plate naturelle, 1,5L'],
+                      [u'Hepar - Eau minérale naturelle, 1L',
+                       u'Hepar - Eau minérale naturelle plate, 1L'],
+                      [u'Contrex - Eau minérale naturelle, 6x50cl',
+                       u'Contrex - Eau minérale plate naturelle, 6x50cl'],
+                      [u'Contrex - Eau minérale naturelle plate, 6x50cl',
+                       u'Contrex - Eau minérale plate naturelle, 6x50cl'],
+                      [u'Contrex - Eau minérale naturelle, 6x1,5L',
+                       u'Contrex - Eau minérale naturelle plate, 6x1,5L'],
+                      [u'Contrex - Eau minérale naturelle, 1,5L',
+                       u'Contrex - Eau minérale naturelle plate, 1,5L'],
+                      [u"Ballantines - Whisky blend ecossais 7 ans d'âge 40%, 70cl", # todo more
+                       u"Ballantines - Whisky blend écossais 7ans d'âge 40 degrés, 70cl"]]
 
-def fix_produit(product, ls_replace_products = ls_fixed_products):
-  for old, new in ls_replace_products:
+def replace_product(product, ls_replace_product = ls_replace_product):
+  for old, new in ls_replace_product:
     if product == old:
       return new
   return product
 
-df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit(x))
+df_products['Produit'] = df_products['Produit'].apply(lambda x: replace_product(x))
 
 # #####################################
-# FIX PRODUCTS: REPLACE CHARS + SPACES
+# FIX PRODUCTS (SPECIAL CHARS + SPACES)
 # #####################################
 
-ls_replace_products = [[u'gazeuze', u'gazeuse'],
-                       [u'Âoeuf', u"oeuf"],
-                       [u', ,', u','],
-                       [u' ,', u',']]
+ls_fix_product = [[u'gazeuze', u'gazeuse'],
+                  [u'Âoeuf', u"oeuf"],
+                  [u', ,', u','],
+                  [u' ,', u',']]
 
-def fix_produit_2(product, ls_replace_products = ls_replace_products):
-  for old, new in ls_replace_products:
+def fix_product(product, ls_fix_product = ls_fix_product):
+  for old, new in ls_fix_product:
     product = product.replace(old, new)
   return u' '.join([x for x in product.split(u' ') if x])
 
-df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit_2(x))
+df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_product(x))
 
 # ###########
 # FIX ACCENTS
@@ -99,32 +107,35 @@ df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_produit_2(x)
 
 # "Marie - Paà«lla royale, 1,1kg"
 # "Matines Å'ufs frais (...?)"
+print u'\nOverview accent issues:'
 for str_pbm in [u'Å"', u"à´", u'à´', u"à»", u"à¯", u'à´', ]:
   print df_products['Produit'][df_products['Produit'].str.contains(str_pbm)].to_string()
 
-ls_fix_accents = [(u"à»", u"û"),
-                  (u"à¯", u"ï"),
-                  (u"à´", u"ô"),
-                  (u'Å"', u'oe'),
-                  (u"Å'", u'oe'),
-                  (u'à´', u'oe'),
-                  (u'à«', u'ë')]
+ls_fix_accent = [(u"à»", u"û"),
+                 (u"à¯", u"ï"),
+                 (u"à´", u"ô"),
+                 (u'Å"', u'oe'),
+                 (u"Å'", u'oe'),
+                 (u'à´', u'oe'),
+                 (u'à«', u'ë')]
 
-def fix_accent(product, ls_fix):
-  for old, new in ls_fix_accents:
+def fix_accent(product, ls_fix_accent = ls_fix_accent):
+  for old, new in ls_fix_accent:
     product = product.replace(old, new)
   return product
 
-df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_accent(x, ls_fix_accents))
+df_products['Produit'] = df_products['Produit'].apply(lambda x: fix_accent(x))
 
 # ##########
 # FIX ALCOOL
 # ##########
 
 # u'degré' vs. u'\xb0' => check robustness
+
 def fix_alcool(product):
   product = re.sub(u'\xb0C?', u' degrés', product)
   return u' '.join([x for x in product.split(u' ') if x])
+
 df_products.loc[(df_products['Rayon'] == u'Boissons') |\
                 (df_products['Rayon'] == u'Bières et alcool'),
                 'Produit'] = \
@@ -153,10 +164,12 @@ df_products['Produit'] = df_products['Produit'].apply(\
 df_products['Produit'] = df_products['Produit'].apply(\
                            lambda x: re.sub(u'([0-9])x,\s?', '\\1x', x, re.IGNORECASE))
 
-# Check spaces between ints...
+# Spaces between numbers (some to be dropped)
+print u'\nOverview: spaces between numbers:'
 for x in df_products['Produit'].unique():
   if re.search(u'[0-9]\s[0-9]', x):
     print x
+
 # todo: fix u'Vieux Papes - Vin de table rouge Vieux Papes 12°, 7 5cl' etc.
 
 # ########################
@@ -166,6 +179,7 @@ for x in df_products['Produit'].unique():
 df_products['marque'], df_products['libelle'] =\
   zip(*df_products['Produit'].map(\
     lambda x: get_marque_and_libelle(x, ls_brand_patches = ls_brand_patches)))
+
 ## Inspect marque
 #print df_products['marque'].value_counts().to_string()
 
@@ -184,6 +198,7 @@ df_products['libelle'] = df_products['libelle'].apply(\
 
 ## todo: inspect ',' between two ints: safe to transform it to '.'?
 ## there are generally many spaces... so must be a float if ',' between ints
+
 def convert_float(libelle):
   # avoid: u'Levure boulangère spécial pain Francine x6,30g'
   if not re.search(u'\sx[0-9]+,[0-9]+[a-z]$', libelle, flags=re.IGNORECASE):
@@ -191,6 +206,8 @@ def convert_float(libelle):
   else:
     print libelle
   return libelle
+
+print u'\nFixing libelle:'
 df_products['libelle'] = df_products['libelle'].apply(lambda x: convert_float(x))
 
 ## inspect no ',' in libelle
@@ -207,11 +224,12 @@ df_products['libelle'] = df_products['libelle'].apply(lambda x: convert_float(x)
 
 df_products['nom'], df_products['format'] =\
   zip(*df_products['libelle'].map(lambda x: get_nom_and_format(x)))
+
 df_products['format'] = df_products['format'].apply(\
                           lambda x: x.lstrip(u',').lstrip(u'-').strip())
 
-#print df_products[['marque', 'nom', 'format']][df_products['P'] == 0].to_string()
-print '\n', df_products['nom'][(df_products['P'] == 0) &\
+print u'\nOverview no format in period 0:'
+print df_products['nom'][(df_products['P'] == 0) &\
                                (df_products['format'] == u'')].to_string()
 ## caution: some have a format which is wrong:
 #print '\n', df_products.ix[2165] # replace ',' by '.' in float to avoid such pbms!
@@ -246,19 +264,23 @@ ls_sub_format = [u'bouteilles?',
                  u'papier',
                  u'carton',
                  u'relief']
+
 def clean_format(str_format, ls_sub_format = ls_sub_format):
   for sub_format in ls_sub_format:
     str_format = re.sub(sub_format, u'', str_format, flags=re.IGNORECASE)
   return u' '.join([x for x in str_format.split(u' ') if x])
+
 df_products['format'] = df_products['format'].apply(lambda x: clean_format(x))
 
 # Conservative fix for u'x 80' => u'x80' (other spaces pbms to deal with)
 df_products['format'] = df_products['format'].apply(\
                           lambda x: re.sub(u'^x ([0-9])', u'x\\1', x, flags=re.IGNORECASE))
 
-# ################
-# PRODUCT TURNOVER
-# ################
+# ########################
+# POST TREATMENT OVERVIEW
+# ########################
+
+# PRODUCT SURVIVAL
 
 ls_alive_products = df_products['Produit'][df_products['P'] == 1].unique()
 ls_dead_products = []
@@ -279,26 +301,24 @@ print u'\nProduct of brand', marque, 'from period', per_start, 'to', per_end
 for period in range(per_start, per_end):
   print '\n', df_products[ls_disp_1][(df_products['marque'] == marque) &\
                                      (df_products['P'] == period)].to_string()
+
+print u'\nOverview of one marque_nom over time:'
 print df_products[['P', 'marque', 'nom', 'format']]\
         [df_products['marque_nom'] == u'Contrex Eau minérale naturelle plate']
 # Contrex: pbm with presence or not of word "plate'
 # Taillefine: "0% de mg" vs. "0% de matière grasse"
 
-# ################################
 # MOST POPULAR BRANDS (PER PERIOD)
-# ################################
 
 per_ind = 2
-print '\nMost popular brands at period', per_ind
+print '\nMost popular brands at period:', per_ind
 for rayon in df_products['Rayon'][df_products['P'] == per_ind].unique():
   print '\n', rayon, len(df_products[(df_products['P'] == per_ind) &\
                                      (df_products['Rayon'] == rayon)])
   print df_products['marque'][(df_products['P'] == per_ind) &\
                               (df_products['Rayon'] == rayon)].value_counts()[0:10].to_string()
 
-# #########################################################
 # PRODUCTS WITH SAME CONTENT/DIFFERENT FORMATS (PER PERIOD)
-# #########################################################
 
 per_ind = 2
 ls_disp_expl = ['marque', 'nom', 'format']
@@ -317,18 +337,15 @@ se_mn_vc = df_products['marque_nom'][df_products['P'] == per_ind].value_counts()
 se_mn_multi = se_mn_vc[se_mn_vc > 1]
 # print se_mn_multi.to_string() # can merge back to df_products...
 
-# todo:
-# 1/ Split brand product
-# 3/ Clean product name and format name (print all format name per period etc)
-# 4/ Check products across periods? (string or tuple comparison)
-# todo: lower case... possibly no accent for product nom...
-# todo: loopup in other periods levenshtein stat vs. other products of same format (if stded)
-# todo: 'else': most popular name per marque
-
-# e.g.
+# Example of evolution of product name:
 # u'Lesieur Huile Tournesol 1ère Pression' # 0-7
 # u'Lesieur Huile tournesol 1ère Pression' # 8-11 (compare lower case)
 # u'Lesieur Huile de tournesol 1ère pression' # 12 (compare lower case and get rid of 'de')
+
+## Check that can use ' _ ' to safely generate standardized product field
+#print df_products[(df_products['marque'].str.contains('_')) |
+#                  (df_products['nom'].str.contains('_')) |
+#                  (df_products['format'].str.contains('_'))].to_string()
 
 # NB: non NaN here: no format => u''
 df_products['produit'] = df_products['marque'].str.lower() + u' _ ' +\
@@ -339,7 +356,7 @@ se_produits_vc = df_products['produit'].value_counts()
 
 print '\nNb products across all periods:', len(se_produits_vc[se_produits_vc == 13])
 
-print '\nProducts which lack one period'
+print '\nProducts which lack one period:'
 print se_produits_vc[se_produits_vc == 12][0:10] # look missing one...
 
 # Check if products with 10/11/12 records follow same period pattern
@@ -353,6 +370,7 @@ for prod in se_produits_vc[se_produits_vc == 12].index:
 # pbm 'x 80' vs 'x80'
 # clear pattern of exit too...
 
+print u'\nInspect marque:'
 print df_products[['marque', 'nom', 'format']][(df_products['marque'] == u'Le Ster') &\
                                                (df_products['P'] == 0)].to_string()
 
@@ -364,10 +382,12 @@ print df_products[['P', 'produit']][df_products['produit'] == prod].to_string()
 #print df_products[['P', 'marque', 'nom', 'format']][0:10].to_string()
 pd.set_option('display.max_colwidth', 100)
 df_temp = df_products[['produit', 'marque', 'nom', 'format']].copy()
-df_temp.drop_duplicates('produit', take_last=True, inplace=True)
+df_temp.drop_duplicates('produit', take_last = True, inplace = True)
 df_temp.sort(columns = ['marque', 'nom', 'format'], inplace = True)
 # todo: add value counts if possible (then need to load all)
-print df_temp[['marque', 'nom', 'format']][0:1000].to_string()
+
+print u'\nOverview of processed info:'
+print df_temp[['marque', 'nom', 'format']][0:10].to_string()
 
 # ######
 # OUTPUT
@@ -376,12 +396,6 @@ print df_temp[['marque', 'nom', 'format']][0:1000].to_string()
 df_products_op = df_products[['Produit_O', 'marque', 'nom', 'format']].copy()
 df_products_op.rename(columns={'Produit_O': 'Produit'}, inplace = True)
 df_products_op.drop_duplicates('Produit', take_last=True, inplace=True)
-
-# HDF5 (drop?)
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-qlmc_data['df_qlmc_products'] = df_products_op
-qlmc_data.close()
 
 # CSV (no ',' in fields? how is it dealt with?)
 df_products_op.to_csv(os.path.join(path_dir_built_csv,

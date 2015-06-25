@@ -9,10 +9,17 @@ import pandas as pd
 
 path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
 
-path_dir_source_json = os.path.join(path_dir_qlmc, 'data_source', 'data_json_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+path_dir_source_json = os.path.join(path_dir_qlmc,
+                                    'data_source',
+                                    'data_json_qlmc')
+
+path_dir_built_json = os.path.join(path_dir_qlmc,
+                                   'data_built',
+                                   'data_json')
+
+path_dir_built_csv = os.path.join(path_dir_qlmc,
+                                  'data_built',
+                                  'data_csv')
 
 ls_json_files = [u'200705_releves_QLMC',
                  u'200708_releves_QLMC',
@@ -27,8 +34,6 @@ ls_json_files = [u'200705_releves_QLMC',
                  u'201110_releves_QLMC', # "No brand" starts to be massive
                  u'201201_releves_QLMC',
                  u'201206_releves_QLMC']
-
-qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
 
 print u'Reading json qlmc price records:'
 ls_ls_records = []
@@ -55,6 +60,7 @@ for ls_records in ls_ls_records:
   for record in ls_records:
     set_products.add(tuple(record[0:3]))
   ls_ls_products.append([list(x) for x in list(set_products)])
+
 enc_json(ls_ls_products,
          os.path.join(path_dir_built_json, 'ls_ls_products.json'))
 
@@ -74,7 +80,7 @@ df_qlmc['Prix'] = df_qlmc['Prix'].astype(np.float32)
 
 print u'\nAdd store lsa indexes'
 df_stores = pd.read_csv(os.path.join(path_dir_built_csv,
-                             'df_qlmc_stores.csv'),
+                                     'df_qlmc_stores.csv'),
                         dtype = {'id_lsa': str,
                                  'INSE_ZIP' : str,
                                  'INSEE_Dpt' : str,
@@ -104,7 +110,6 @@ print u'\nAdd Produit_norm: normalized product name'
 for field in ['marque', 'nom', 'format']:
   df_qlmc[field].fillna(u'', inplace = True)
 df_qlmc['Produit_norm'] = df_qlmc['marque'] + ' ' + df_qlmc['nom']+ ' ' + df_qlmc['format']
-
 
 # ################
 # GENERAL OVERVIEW
@@ -308,197 +313,213 @@ for per in range(13):
   #  print '\n', rayon, se_rp_vc.sum()
   #  print se_rp_vc
 
-# ############################
-# DUPLICATE REMEDIATION
-# ############################
+ls_dup_disp = ['P',
+               'Magasin',
+               'Rayon',
+               'Famille',
+               'Produit_norm',
+               'Date',
+               'Prix']
 
-print '\nNb rows before droping duplicates:', len(df_qlmc)
+df_qlmc_exact_dup = df_qlmc[df_qlmc.duplicated(take_last = False) |\
+                            df_qlmc.duplicated(take_last = True)]
 
-# Remediation for "perfect" duplicates: same period/product/store/price
-df_qlmc.drop_duplicates(subset = ['P', 'Magasin', 'Produit_norm', 'Prix'],
-                        inplace = True)
+print df_qlmc_exact_dup[0:4].T.to_string()
+print df_qlmc_exact_dup[ls_dup_disp][0:100].to_string()
 
-print 'Nb rows after droping non pbmatic duplicates:', len(df_qlmc)
+#df_qlmc.drop_duplicates(inplace = True)
+#
+#ls_unique_cols = ['P', 'Magasin', 'Produit_norm']
+#df_qlmc_dup = df_qlmc[df_qlmc.duplicated(ls_unique_cols, take_last = False) |\
+#                      df_qlmc.duplicated(ls_unique_cols, take_last = True)]
+#print df_qlmc_dup[['P', 'Magasin', 'Rayon', 'Famille',
+#                   'Produit_norm', 'Date', 'Prix']][0:10].to_string()
 
-se_dup_bool = df_qlmc.duplicated(subset = ['P', 'Magasin', 'Produit_norm'])
-df_dup = df_qlmc[['P', 'Magasin', 'Produit_norm', 'Prix']][se_dup_bool]
-ls_se_dup_stores = []
-ls_se_dup_products = []
-for per in range(13):
-  se_dup_products = df_dup['Produit_norm'][(df_dup['P'] == per)].value_counts()
-  ls_dup_few = list(se_dup_products.index[se_dup_products <= 10])
-  se_dup_stores = df_dup['Magasin'][df_dup['Produit_norm'].isin(ls_dup_few)].value_counts()
-  #print '\nDuplicates in period:', per
-  #print '-'*20
-  #print 'Stores to check:'
-  #print se_dup_stores[0:10]
-  #print '-'*20
-  #print 'Products to check:'
-  #print se_dup_products[se_dup_products > 10]
-  ls_se_dup_stores.append((per, se_dup_stores))
-  ls_se_dup_products.append((per, se_dup_products))
-
-#pd.set_option('display.max_colwidth', 200)
-#print '\nInspect prices of products with duplicates'
-#for per, se_dup_vc in ls_se_dup_check:
-#  print '-'*20
-#  print per
-#  for prod in se_dup_vc.index[se_dup_vc > 10]:
-#    print '\n', prod
-#    df_temp = df_qlmc[['P', 'Produit', 'Magasin', 'Prix', 'Date']]\
-#                [(df_qlmc['P'] == per) &\
-#                 (df_qlmc['Produit_norm'] == prod)].copy()
-#    df_temp.sort('Magasin', inplace = True)
-#    print df_temp.to_string()
-
-# Remediations for duplicates
-# First pass: drop if same period/magasin/prod/price
-# Second pass: keep last if only a few products / see if a lot (either drop or keep last)
-
-# per 0:
-# Blédina: same day, 10c gap, unsure why
-# Viva TGV 6x50cl: same day, big pricd diff, check if no price b/ 1 & 2: bottle vs. pack?
-
-# per 1:
-# Blédina: same as in per 0
-# Elle & Vire 250g: same day, 10-20c gap, unsure why
-# Viva TGV 6x50cl: same as in per 0
-# Viva TGV 1L: same day, 10c gap, unsure why
-# Silhouette UHT 1L: same day, 10-20c gap, unsure why
-
-# per 2:
-# Elle & Vire 250g: same as in 0, 1
-# William Saurin: same day, 50c diff a.e., promotion?
-# Geant Vert: same day, 50-150c diff a.e., promotion?
-# Viva TGV 1L: same as in 1
-# Viva TGV 6x50cl: same as in 0, 1
-# Silhouette UHT 1L: same as in 1
-# Silhouette UHT 6x1L: same day, in fact two prod names... small diff not everywhere
-
-# per 3:
-# Blédina: same as in per 0, 1, 2
-# William Saurin: same as in per 2
-# Elle & Vire 250g: same as in 0, 1, 2
-# Geant Vert: same as in per 2
-# Viva TGV 6x50cl: same as in 0, 1, 2
-# Viva TGV 1L: same as in 1, 2
-# Silhouette UHT 1L: same as in 1, 2
-# Silhouette UHT 6x1L: same as in per 2
-
-# per 4:
-# Elle & Vire 250g: same as in 0, 1, 2, 3
-# Viva TGV 1L: same as in 1, 2, 3
-# Viva TGV 6x50cl: same as in 0, 1, 2, 3
-# Silhouette UHT 1L: same as in 1, 2, 3
-
-# per 5
-# Viva TGV 6x50cl: same as in 0, 1, 2, 3, 4
-# Viva TGV 1L: same as in 1, 2, 3, 4
-# Silhouette UHT 1L: same as in 1, 2, 3, 4
-
-# per 6
-# Viva TGV 1L: same as in 1, 2, 3, 4, 5
-# Silhouette UHT 1L: same as in 1, 2, 3, 4, 5
-
-# per 7
-# Viva TGV 1L: same as in 1, 2, 3, 4, 5, 6
-# Viva TGV 6x50cl: same as in 0, 1, 2, 3, 4, 5
-# Silhouette UHT 1L: same as in 1, 2, 3, 4, 5, 6
-# Nos villages oeufs: same day, 50c diff, not everywhere
-
-# per 8
-# Viva TGV 1L: same as in 1, 2, 3, 4, 5, 6, 7
-# Viva TGV 6x50cl: same as in 0, 1, 2, 3, 4, 5, 7
-# Silhouette UHT 1L: same as in 1, 2, 3, 4, 5, 6, 7
-# Nos villages oeufs: same as in 7 (Prod name differs tho)
-
-# TBC: anyway drop all
-
-ls_dup_drop = [(0, u"Blédina - Pêche fraise dès 4 mois, 2 Pots - 260g"),
-               (0, u"Viva - Lait TGV demi-écrémé vitaminé, Bouteille plastique 6x50cl"),
-               (1, u"Blédina - Pêche fraise, 260g"),
-               (1, u"Elle & Vire - Beurre doux tendre, 250g"),
-               (1, u"Viva Lait TGV demi-écrémé vitaminé 6x50cl"),
-               (1, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
-               (1, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
-               (2, u"Elle & Vire Beurre doux tendre 250g"),
-               (2, u"William Saurin Choucroute garnie au vin blanc 400g"),
-               (2, u"Geant Vert - Asperges blanches, 190g"),
-               (2, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
-               (2, u"Viva - Lait TGV demi-écrémé vitaminé, 6x50cl"),
-               (2, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
-               (2, u"Silhouette - Lait UHT écrémé vitaminé, 6x1L"), # check both
-               (2, u" Silhouette -Lait UHT écrémé vitaminé, 6x1L"),
-               (3, u"Blédina Pêche fraise 260g"),
-               (3, u"William Saurin Choucroute garnie au vin blanc 400g"),
-               (3, u"Elle & Vire - Beurre doux tendre, 250g"),
-               (3, u"Geant Vert - Asperges blanches, 190g"),
-               (3, u"Viva Lait TGV demi-écrémé vitaminé 6x50cl"),
-               (3, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
-               (3, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
-               (2, u"Silhouette - Lait UHT écrémé vitaminé, 6x1L"),
-               (3, u" Silhouette -Lait UHT écrémé vitaminé, 6x1L"),
-               (4, u"Elle & Vire - Beurre doux tendre, 250g"),
-               (4, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
-               (4, u"Viva - Lait TGV demi-écrémé vitaminé, 6x50cl"),
-               (4, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
-               (5, u"Viva - Lait TGV demi-écrémé vitaminé, 6x50cl"),
-               (5, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
-               (5, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
-               (6, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
-               (6, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
-               (7, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
-               (7, u"Viva - Lait TGV demi-écrémé vitaminé, 6x50cl"),
-               (7, u"Silhouette Lait UHT écrémé source équilibre 1L"),
-               (7, u'Nos villages - Gros Å"ufs fermiers, x6'),
-               (8, u'Viva - Lait TGV demi-écrémé vitaminé, 1L'),
-               (8, u"Viva - Lait TGV demi-écrémé vitaminé, 6x50cl"),
-               (8, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
-               (8, u"Nos villages - Gros Sufs fermiers, x6")]
-
-# Remediation
-for per, se_dup_prod_vc in ls_se_dup_products:
-  ls_drop_prod = list(se_dup_prod_vc.index[se_dup_prod_vc > 10])
-  df_qlmc = df_qlmc[~((df_qlmc['P'] == per) &\
-                      (df_qlmc['Produit_norm'].isin(ls_drop_prod)))]
-
-for per, se_dup_store_vc in ls_se_dup_stores:
-  ls_drop_stores = list(se_dup_store_vc.index[se_dup_store_vc > 10])
-  df_qlmc = df_qlmc[~((df_qlmc['P'] == per) &\
-                      (df_qlmc['Magasin'].isin(ls_drop_prod)))]
-
-print 'Nb rows after droping examined pbmatic duplicates:', len(df_qlmc)
-
-df_qlmc.drop_duplicates(subset = ['P', 'Magasin', 'Produit_norm'],
-                        inplace = True)
-
-print 'Nb rows after droping remaining pbmatic duplicates:', len(df_qlmc)
-
-if len(df_qlmc[df_qlmc[['P', 'Magasin', 'Produit_norm']].duplicated()]) == 0:
-  print 'No duplicate (P/Magasin/Produit_norm) left'
-else:
-  print 'CAUTION: Duplicates (P/Magasin/Produit_norm) still in data'
-
-# TODO: 2 stores in same period w/ same LSA index
-
-# ######
-# OUTPUT
-# ######
-
-# keep light (i.e. to be merged then w/ df_stores and df_products)
-df_qlmc_op = df_qlmc[['P', 'Rayon', 'Famille', 'Produit', 'Magasin', 'Prix', 'Date']]
-
-# HDF5 (drop?)
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-qlmc_data['df_qlmc_prices'] = df_qlmc_op
-qlmc_data.close()
-
-# CSV (no ',' in fields? how is it dealt with?)
-df_qlmc_op.to_csv(os.path.join(path_dir_built_csv,
-                               'df_qlmc_prices.csv'),
-                  float_format='%.2f',
-                  encoding='utf-8',
-                  index=False)
-
-# todo: store by period too?
+## ############################
+## DUPLICATE REMEDIATION
+## ############################
+#
+#print '\nNb rows before droping duplicates:', len(df_qlmc)
+#
+## Remediation for "perfect" duplicates: same period/product/store/price
+#df_qlmc.drop_duplicates(subset = ['P', 'Magasin', 'Produit_norm', 'Prix'],
+#                        inplace = True)
+#
+#print 'Nb rows after droping non pbmatic duplicates:', len(df_qlmc)
+#
+#se_dup_bool = df_qlmc.duplicated(subset = ['P', 'Magasin', 'Produit_norm'])
+#df_dup = df_qlmc[['P', 'Magasin', 'Produit_norm', 'Prix']][se_dup_bool]
+#ls_se_dup_stores = []
+#ls_se_dup_products = []
+#for per in range(13):
+#  se_dup_products = df_dup['Produit_norm'][(df_dup['P'] == per)].value_counts()
+#  ls_dup_few = list(se_dup_products.index[se_dup_products <= 10])
+#  se_dup_stores = df_dup['Magasin'][df_dup['Produit_norm'].isin(ls_dup_few)].value_counts()
+#  #print '\nDuplicates in period:', per
+#  #print '-'*20
+#  #print 'Stores to check:'
+#  #print se_dup_stores[0:10]
+#  #print '-'*20
+#  #print 'Products to check:'
+#  #print se_dup_products[se_dup_products > 10]
+#  ls_se_dup_stores.append((per, se_dup_stores))
+#  ls_se_dup_products.append((per, se_dup_products))
+#
+##pd.set_option('display.max_colwidth', 200)
+##print '\nInspect prices of products with duplicates'
+##for per, se_dup_vc in ls_se_dup_check:
+##  print '-'*20
+##  print per
+##  for prod in se_dup_vc.index[se_dup_vc > 10]:
+##    print '\n', prod
+##    df_temp = df_qlmc[['P', 'Produit', 'Magasin', 'Prix', 'Date']]\
+##                [(df_qlmc['P'] == per) &\
+##                 (df_qlmc['Produit_norm'] == prod)].copy()
+##    df_temp.sort('Magasin', inplace = True)
+##    print df_temp.to_string()
+#
+## Remediations for duplicates
+## First pass: drop if same period/magasin/prod/price
+## Second pass: keep last if only a few products / see if a lot (either drop or keep last)
+#
+## per 0:
+## Blédina: same day, 10c gap, unsure why
+## Viva TGV 6x50cl: same day, big pricd diff, check if no price b/ 1 & 2: bottle vs. pack?
+#
+## per 1:
+## Blédina: same as in per 0
+## Elle & Vire 250g: same day, 10-20c gap, unsure why
+## Viva TGV 6x50cl: same as in per 0
+## Viva TGV 1L: same day, 10c gap, unsure why
+## Silhouette UHT 1L: same day, 10-20c gap, unsure why
+#
+## per 2:
+## Elle & Vire 250g: same as in 0, 1
+## William Saurin: same day, 50c diff a.e., promotion?
+## Geant Vert: same day, 50-150c diff a.e., promotion?
+## Viva TGV 1L: same as in 1
+## Viva TGV 6x50cl: same as in 0, 1
+## Silhouette UHT 1L: same as in 1
+## Silhouette UHT 6x1L: same day, in fact two prod names... small diff not everywhere
+#
+## per 3:
+## Blédina: same as in per 0, 1, 2
+## William Saurin: same as in per 2
+## Elle & Vire 250g: same as in 0, 1, 2
+## Geant Vert: same as in per 2
+## Viva TGV 6x50cl: same as in 0, 1, 2
+## Viva TGV 1L: same as in 1, 2
+## Silhouette UHT 1L: same as in 1, 2
+## Silhouette UHT 6x1L: same as in per 2
+#
+## per 4:
+## Elle & Vire 250g: same as in 0, 1, 2, 3
+## Viva TGV 1L: same as in 1, 2, 3
+## Viva TGV 6x50cl: same as in 0, 1, 2, 3
+## Silhouette UHT 1L: same as in 1, 2, 3
+#
+## per 5
+## Viva TGV 6x50cl: same as in 0, 1, 2, 3, 4
+## Viva TGV 1L: same as in 1, 2, 3, 4
+## Silhouette UHT 1L: same as in 1, 2, 3, 4
+#
+## per 6
+## Viva TGV 1L: same as in 1, 2, 3, 4, 5
+## Silhouette UHT 1L: same as in 1, 2, 3, 4, 5
+#
+## per 7
+## Viva TGV 1L: same as in 1, 2, 3, 4, 5, 6
+## Viva TGV 6x50cl: same as in 0, 1, 2, 3, 4, 5
+## Silhouette UHT 1L: same as in 1, 2, 3, 4, 5, 6
+## Nos villages oeufs: same day, 50c diff, not everywhere
+#
+## per 8
+## Viva TGV 1L: same as in 1, 2, 3, 4, 5, 6, 7
+## Viva TGV 6x50cl: same as in 0, 1, 2, 3, 4, 5, 7
+## Silhouette UHT 1L: same as in 1, 2, 3, 4, 5, 6, 7
+## Nos villages oeufs: same as in 7 (Prod name differs tho)
+#
+## TBC: anyway drop all
+#
+#ls_dup_drop = [(0, u"Blédina - Pêche fraise dès 4 mois, 2 Pots - 260g"),
+#               (0, u"Viva - Lait TGV demi-écrémé vitaminé, Bouteille plastique 6x50cl"),
+#               (1, u"Blédina - Pêche fraise, 260g"),
+#               (1, u"Elle & Vire - Beurre doux tendre, 250g"),
+#               (1, u"Viva Lait TGV demi-écrémé vitaminé 6x50cl"),
+#               (1, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
+#               (1, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
+#               (2, u"Elle & Vire Beurre doux tendre 250g"),
+#               (2, u"William Saurin Choucroute garnie au vin blanc 400g"),
+#               (2, u"Geant Vert - Asperges blanches, 190g"),
+#               (2, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
+#               (2, u"Viva - Lait TGV demi-écrémé vitaminé, 6x50cl"),
+#               (2, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
+#               (2, u"Silhouette - Lait UHT écrémé vitaminé, 6x1L"), # check both
+#               (2, u" Silhouette -Lait UHT écrémé vitaminé, 6x1L"),
+#               (3, u"Blédina Pêche fraise 260g"),
+#               (3, u"William Saurin Choucroute garnie au vin blanc 400g"),
+#               (3, u"Elle & Vire - Beurre doux tendre, 250g"),
+#               (3, u"Geant Vert - Asperges blanches, 190g"),
+#               (3, u"Viva Lait TGV demi-écrémé vitaminé 6x50cl"),
+#               (3, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
+#               (3, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
+#               (2, u"Silhouette - Lait UHT écrémé vitaminé, 6x1L"),
+#               (3, u" Silhouette -Lait UHT écrémé vitaminé, 6x1L"),
+#               (4, u"Elle & Vire - Beurre doux tendre, 250g"),
+#               (4, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
+#               (4, u"Viva - Lait TGV demi-écrémé vitaminé, 6x50cl"),
+#               (4, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
+#               (5, u"Viva - Lait TGV demi-écrémé vitaminé, 6x50cl"),
+#               (5, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
+#               (5, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
+#               (6, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
+#               (6, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
+#               (7, u"Viva - Lait TGV demi-écrémé vitaminé, 1L"),
+#               (7, u"Viva - Lait TGV demi-écrémé vitaminé, 6x50cl"),
+#               (7, u"Silhouette Lait UHT écrémé source équilibre 1L"),
+#               (7, u'Nos villages - Gros Å"ufs fermiers, x6'),
+#               (8, u'Viva - Lait TGV demi-écrémé vitaminé, 1L'),
+#               (8, u"Viva - Lait TGV demi-écrémé vitaminé, 6x50cl"),
+#               (8, u"Silhouette - Lait UHT écrémé source équilibre, 1L"),
+#               (8, u"Nos villages - Gros Sufs fermiers, x6")]
+#
+## Remediation
+#for per, se_dup_prod_vc in ls_se_dup_products:
+#  ls_drop_prod = list(se_dup_prod_vc.index[se_dup_prod_vc > 10])
+#  df_qlmc = df_qlmc[~((df_qlmc['P'] == per) &\
+#                      (df_qlmc['Produit_norm'].isin(ls_drop_prod)))]
+#
+#for per, se_dup_store_vc in ls_se_dup_stores:
+#  ls_drop_stores = list(se_dup_store_vc.index[se_dup_store_vc > 10])
+#  df_qlmc = df_qlmc[~((df_qlmc['P'] == per) &\
+#                      (df_qlmc['Magasin'].isin(ls_drop_prod)))]
+#
+#print 'Nb rows after droping examined pbmatic duplicates:', len(df_qlmc)
+#
+#df_qlmc.drop_duplicates(subset = ['P', 'Magasin', 'Produit_norm'],
+#                        inplace = True)
+#
+#print 'Nb rows after droping remaining pbmatic duplicates:', len(df_qlmc)
+#
+#if len(df_qlmc[df_qlmc[['P', 'Magasin', 'Produit_norm']].duplicated()]) == 0:
+#  print 'No duplicate (P/Magasin/Produit_norm) left'
+#else:
+#  print 'CAUTION: Duplicates (P/Magasin/Produit_norm) still in data'
+#
+## TODO: 2 stores in same period w/ same LSA index
+#
+## ######
+## OUTPUT
+## ######
+#
+## keep light (i.e. to be merged then w/ df_stores and df_products)
+#df_qlmc_op = df_qlmc[['P', 'Rayon', 'Famille', 'Produit', 'Magasin', 'Prix', 'Date']]
+#
+## CSV (no ',' in fields? how is it dealt with?)
+#df_qlmc_op.to_csv(os.path.join(path_dir_built_csv,
+#                               'df_qlmc_prices.csv'),
+#                  float_format='%.2f',
+#                  encoding='utf-8',
+#                  index=False)
+#
+## todo: store by period too?
