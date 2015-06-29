@@ -14,18 +14,29 @@ import pandas as pd
 from mpl_toolkits.basemap import Basemap
 import pprint
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
+path_dir_qlmc = os.path.join(path_data,
+                             'data_supermarkets',
+                             'data_qlmc_2007-12')
 
-path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
+path_dir_built_csv = os.path.join(path_dir_qlmc,
+                                  'data_built',
+                                  'data_csv')
 
-# LOAD DATA STORES
-ls_ls_stores = dec_json(os.path.join(path_dir_built_json, 'ls_ls_stores.json'))
-# qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
+path_dir_match_insee = os.path.join(path_data,
+                                    u'data_insee',
+                                    u'match_insee_codes')
+
+## LOAD DATA STORES
+df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_raw_qlmc.csv'),
+                      encoding = 'UTF-8')
+df_raw_stores = df_qlmc[['Period', 'Store']].drop_duplicates()
+
+#ls_ls_stores = dec_json(os.path.join(path_dir_built_json, 'ls_ls_stores.json'))
 
 # MATCH STORES WITH INSEE COMMUNE
-df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
+df_corr = pd.read_csv(os.path.join(path_dir_match_insee,
+                                   'df_corr_gas.csv'),
                       dtype = str)
 ls_corr = [list(x) for x in df_corr.to_records(index = False)]
 ls_corr = format_correspondence(ls_corr)
@@ -40,10 +51,10 @@ ls_str_insee_replace = [[u'\xc9', u'E'],
                         [u'\xce', u'I'],
                         [u"''", u" "],
                         [u"'", u" "]]
+
 ls_rows = []
-for i, ls_stores in enumerate(ls_ls_stores):
-  for store in ls_stores:
-    chain, city = get_split_chain_city(store, ls_chain_brands)
+for i, row_store in df_raw_stores.iterrows():
+    chain, city = get_split_chain_city(row_store['Store'], ls_chain_brands)
     row = [i, chain, city, []]
     ## todo: refactor standardization
     #city_standardized = re.sub(u'^SAINT(E\s|\s)', u'ST\\1', city.replace(u'-', u' '))
@@ -288,6 +299,6 @@ qlmc_data.close()
 
 # CSV
 df_stores_all.to_csv(os.path.join(path_dir_built_csv,
-                                  'df_qlmc_stores_raw.csv'),
+                                  'df_raw_stores.csv'),
                      index = False,
                      encoding = 'UTF-8')

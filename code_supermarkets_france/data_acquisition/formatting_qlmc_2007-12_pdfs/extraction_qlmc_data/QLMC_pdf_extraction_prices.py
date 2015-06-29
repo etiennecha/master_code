@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
-import os
-import sys
+import add_to_path
+from add_to_path import path_data
+import os, sys
 import subprocess
 from subprocess import PIPE, Popen
 import re
@@ -20,9 +21,11 @@ def enc_json(database, chemin):
     json.dump(database, fichier)
 
 def read_pdftotext(path_file, path_pdftotext):
-  file = subprocess.Popen([path_pdftotext + r'/pdftotext.exe',\
-                            '-layout' , path_file, '-'], stdout=PIPE)
-  data = file.communicate()[0].split('\r\n') # not good on linux?
+  temp_file = subprocess.Popen([path_pdftotext,
+                           '-layout' ,
+                           path_file,
+                           '-'], stdout=PIPE)
+  data = temp_file.communicate()[0].split('\r\n') # not good on linux?
   return data
 
 def get_split_on_brands(string_to_split, list_split_string):
@@ -175,7 +178,9 @@ def format_200804(data):
           observation_list = [''.join(observation_list[:-3])]+\
                            observation_list[-3:]
           observation_list = cache_observation_list[:2]+\
-                             [''.join([cache_observation_list[2], observation_list[0], cache_observation_list[3]])]+\
+                             [''.join([cache_observation_list[2],
+                                       observation_list[0],
+                                       cache_observation_list[3]])]+\
                              observation_list[1:]
           list_reconstitutions_2.append((observation_index, observation_list))
           master_period.append(observation_list)
@@ -308,13 +313,17 @@ def format_200909(data):
         list_cache_updates.append(cache_observation_list)
       else:
         # case where product name (the bulk of it) precedes product info
-        if len(observation_list) == 6 and cache_observation_list and len(cache_observation_list) == 1:
+        if (len(observation_list) == 6) and\
+           (cache_observation_list) and\
+           (len(cache_observation_list) == 1):
           observation_list = observation_list[:2] +\
                              [''.join(cache_observation_list[0] + observation_list[2])] +\
                              observation_list[3:]
           list_reconstitutions_1.append((observation_index, observation_list))
         # case where product family name and store precedes date and price
-        elif len(observation_list) == 2 and cache_observation_list and len(cache_observation_list) == 4:
+        elif (len(observation_list) == 2) and\
+             (cache_observation_list) and\
+             (len(cache_observation_list) == 4):
           observation_list = cache_observation_list + observation_list
           list_reconstitutions_2.append((observation_index, observation_list))
         elif cache_observation_list:
@@ -338,46 +347,48 @@ def print_dict_stats(dict_stat_des):
   for key, content in dict_stat_des.iteritems():
     print key, len(content)
 
-# path_data: data folder at different locations at CREST vs. HOME
-# could do the same for path_code if necessary (import etc).
-if os.path.exists(r'W:/Bureau/Etienne_work/Data'):
-  path_data = r'W:/Bureau/Etienne_work/Data'
-else:
-  path_data = r'C:/Users/etna/Desktop/Etienne_work/Data'
-folder_source_json = r'/data_qlmc/data_source/data_json'
+path_source = os.path.join(path_data,
+                           'data_supermarkets',
+                           'data_qlmc_2007-12',
+                           'data_source')
+                          
+path_source_pdf = os.path.join(path_source, 'data_pdf')
+path_source_json = os.path.join(path_source, 'data_json')                          
 
-folder_source_pdftottext = r'/data_qlmc/data_source/data_pdf_qlmc'
-list_folders_source_pdf = [r'/data_qlmc/data_source/data_pdf_qlmc/0_old_with_recent_format',
-                           r'/data_qlmc/data_source/data_pdf_qlmc/1_previous_format',
-                           r'/data_qlmc/data_source/data_pdf_qlmc/2_recent_format',
-                           r'/data_qlmc/data_source/data_pdf_qlmc/3_forgotten_files']
-path_pdftotext = path_data + folder_source_pdftottext
+path_pdftotext = os.path.join(path_source_pdf, 'pdftotext.exe')
 
-list_to_iterate = [(format_simple, list_folders_source_pdf[0], r'/200705_releves_QLMC','pd'),
-                   (format_simple, list_folders_source_pdf[0], r'/200708_releves_QLMC','pd'),
-                   (format_simple, list_folders_source_pdf[0], r'/200801_releves_QLMC','pd'),
-                   (format_200804, list_folders_source_pdf[0], r'/200804_releves_QLMC','pd'),
-                   (format_200903, list_folders_source_pdf[3], r'/200903_releves_QLMC','pd'),
-                   (format_200909, list_folders_source_pdf[3], r'/200909_releves_QLMC','dp'),
-                   (format_simple, list_folders_source_pdf[1], r'/201003_releves_QLMC','dp'),
-                   (format_simple, list_folders_source_pdf[1], r'/201010_releves_QLMC','dp'),
-                   (format_simple, list_folders_source_pdf[1], r'/201101_releves_QLMC','dp'),
-                   (format_simple, list_folders_source_pdf[1], r'/201104_releves_QLMC','dp'),
-                   (format_simple, list_folders_source_pdf[2], r'/201110_releves_QLMC','pd'),
-                   (format_simple, list_folders_source_pdf[2], r'/201201_releves_QLMC','pd'),
-                   (format_simple, list_folders_source_pdf[2], r'/201206_releves_QLMC','pd')]
+ls_path_folder_pdfs = [os.path.join(path_source_pdf, temp_dir)\
+                         for temp_dir in ['0_old_with_recent_format',
+                                          '1_previous_format',
+                                          '2_recent_format',
+                                          '3_forgotten_files']]
+
+ls_to_iterate = [(format_simple, ls_path_folder_pdfs[0], '200705_releves_QLMC.pdf','pd'),
+                 (format_simple, ls_path_folder_pdfs[0], '200708_releves_QLMC.pdf','pd'),
+                 (format_simple, ls_path_folder_pdfs[0], '200801_releves_QLMC.pdf','pd'),
+                 (format_200804, ls_path_folder_pdfs[0], '200804_releves_QLMC.pdf','pd'),
+                 (format_200903, ls_path_folder_pdfs[3], '200903_releves_QLMC.pdf','pd'),
+                 (format_200909, ls_path_folder_pdfs[3], '200909_releves_QLMC.pdf','dp'),
+                 (format_simple, ls_path_folder_pdfs[1], '201003_releves_QLMC.pdf','dp'),
+                 (format_simple, ls_path_folder_pdfs[1], '201010_releves_QLMC.pdf','dp'),
+                 (format_simple, ls_path_folder_pdfs[1], '201101_releves_QLMC.pdf','dp'),
+                 (format_simple, ls_path_folder_pdfs[1], '201104_releves_QLMC.pdf','dp'),
+                 (format_simple, ls_path_folder_pdfs[2], '201110_releves_QLMC.pdf','pd'),
+                 (format_simple, ls_path_folder_pdfs[2], '201201_releves_QLMC.pdf','pd'),
+                 (format_simple, ls_path_folder_pdfs[2], '201206_releves_QLMC.pdf','pd')]
 
 # LOOP ON ALL FILES
 master_check = []
-for format_function, folder, file, order in list_to_iterate[0:1]:
-  print file, '\n'
+for format_function, path_folder, file_name, order in ls_to_iterate:
+  print file_name, '\n'
   # Read pdf with pdftotext
-  data = read_pdftotext(path_data + folder + file + '.pdf', path_pdftotext)
+  data = read_pdftotext(os.path.join(path_folder, file_name),
+                        path_pdftotext)
   # Correct some specific problems
-  if file == r'/200705_releves_QLMC':
+  if file_name == '200705_releves_QLMC.pdf':
     data = zip(data[:554692], data[554692:-1])
     data = [elt[0] + '  ' + elt[1] for elt in data]
-  if file == r'/201010_releves_QLMC':
+  if file_name == '201010_releves_QLMC.pdf':
     data[385200] = data[385200].replace('02/11/201;01,72 "', '02/11/2010          1,72 ')
   # Format master (order, decode string)
   master, dict_len, list_reconstitutions = format_function(data)
@@ -393,40 +404,37 @@ for format_function, folder, file, order in list_to_iterate[0:1]:
   # Check consistency and encode json master
   familles, magasins, produits = get_preliminary_check(master)
   master_check.append((list_reconstitutions, familles, magasins, produits))
-  enc_json(master, path_data + folder_source_json + file)
+  enc_json(master, os.path.join(path_source_json,
+                                file_name[:-3] + 'json'))
   # Print dict_len: can't store it since it contains data  
   print_dict_stats(dict_len)
   print '--------------------\n'
 
-# EXTRACT ONE FILE
-"""
-path_file = path_data + list_folders_source_pdf[3] + r'/200909_releves_QLMC.pdf'
-data = read_pdftotext(path_file, path_pdftotext)
-master, dict_len, list_reconstitutions = format_200909(data)
-familles, magasins, produits = get_preliminary_check(master)
-"""
+## EXTRACT ONE FILE
+#path_file = path_data + list_folders_source_pdf[3] + r'/200909_releves_QLMC.pdf'
+#data = read_pdftotext(path_file, path_pdftotext)
+#master, dict_len, list_reconstitutions = format_200909(data)
+#familles, magasins, produits = get_preliminary_check(master)
 
-# PATH/ORDER REMINDER
-"""
-# rayon - famille - produit - magasin - prix - date
-path_file_200708 = path_data + list_folders_source_pdf[0] + r'/200708_releves_QLMC.pdf'
-path_file_200801 = path_data + list_folders_source_pdf[0] + r'/200801_releves_QLMC.pdf'
-path_file_200804 = path_data + list_folders_source_pdf[0] + r'/200804_releves_QLMC.pdf'
-
-# rayon - famille - produit - magasin - prix - date
-path_file_200903 = path_data + list_folders_source_pdf[3] + r'/200903_releves_QLMC.pdf'
-
-# rayon - famille - produit - magasin - date - prix
-path_file_200909 = path_data + list_folders_source_pdf[3] + r'/200909_releves_QLMC.pdf'
-
-# rayon - famille - produit - magasin - date - prix
-path_file_201003 = path_data + list_folders_source_pdf[1] + r'/201003_releves_QLMC.pdf'
-path_file_201010 = path_data + list_folders_source_pdf[1] + r'/201010_releves_QLMC.pdf'
-path_file_201101 = path_data + list_folders_source_pdf[1] + r'/201101_releves_QLMC.pdf'
-path_file_201104 = path_data + list_folders_source_pdf[1] + r'/201104_releves_QLMC.pdf'
-
-# rayon - famille - produit - magasin - prix - date
-path_file_201110 = path_data + list_folders_source_pdf[2] + r'/201110_releves_QLMC.pdf'
-path_file_201201 = path_data + list_folders_source_pdf[2] + r'/201201_releves_QLMC.pdf'
-path_file_201206 = path_data + list_folders_source_pdf[2] + r'/201206_releves_QLMC.pdf'
-"""
+## PATH/ORDER REMINDER
+## rayon - famille - produit - magasin - prix - date
+#path_file_200708 = path_data + list_folders_source_pdf[0] + r'/200708_releves_QLMC.pdf'
+#path_file_200801 = path_data + list_folders_source_pdf[0] + r'/200801_releves_QLMC.pdf'
+#path_file_200804 = path_data + list_folders_source_pdf[0] + r'/200804_releves_QLMC.pdf'
+#
+## rayon - famille - produit - magasin - prix - date
+#path_file_200903 = path_data + list_folders_source_pdf[3] + r'/200903_releves_QLMC.pdf'
+#
+## rayon - famille - produit - magasin - date - prix
+#path_file_200909 = path_data + list_folders_source_pdf[3] + r'/200909_releves_QLMC.pdf'
+#
+## rayon - famille - produit - magasin - date - prix
+#path_file_201003 = path_data + list_folders_source_pdf[1] + r'/201003_releves_QLMC.pdf'
+#path_file_201010 = path_data + list_folders_source_pdf[1] + r'/201010_releves_QLMC.pdf'
+#path_file_201101 = path_data + list_folders_source_pdf[1] + r'/201101_releves_QLMC.pdf'
+#path_file_201104 = path_data + list_folders_source_pdf[1] + r'/201104_releves_QLMC.pdf'
+#
+## rayon - famille - produit - magasin - prix - date
+#path_file_201110 = path_data + list_folders_source_pdf[2] + r'/201110_releves_QLMC.pdf'
+#path_file_201201 = path_data + list_folders_source_pdf[2] + r'/201201_releves_QLMC.pdf'
+#path_file_201206 = path_data + list_folders_source_pdf[2] + r'/201206_releves_QLMC.pdf'

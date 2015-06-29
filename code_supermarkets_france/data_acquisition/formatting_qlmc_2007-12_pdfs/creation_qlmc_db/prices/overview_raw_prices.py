@@ -14,19 +14,19 @@ path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json')
 path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
 path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
 
-ls_json_files = [u'200705_releves_QLMC',
-                 u'200708_releves_QLMC',
-                 u'200801_releves_QLMC',
-                 u'200804_releves_QLMC',
-                 u'200903_releves_QLMC',
-                 u'200909_releves_QLMC',
-                 u'201003_releves_QLMC',
-                 u'201010_releves_QLMC', 
-                 u'201101_releves_QLMC',
-                 u'201104_releves_QLMC',
-                 u'201110_releves_QLMC', # "No brand" starts to be massive
-                 u'201201_releves_QLMC',
-                 u'201206_releves_QLMC']
+ls_json_files = [u'200705_releves_QLMC.json',
+                 u'200708_releves_QLMC.json',
+                 u'200801_releves_QLMC.json',
+                 u'200804_releves_QLMC.json',
+                 u'200903_releves_QLMC.json',
+                 u'200909_releves_QLMC.json',
+                 u'201003_releves_QLMC.json',
+                 u'201010_releves_QLMC.json', 
+                 u'201101_releves_QLMC.json',
+                 u'201104_releves_QLMC.json',
+                 u'201110_releves_QLMC.json', # "No brand" starts to be massive
+                 u'201201_releves_QLMC.json',
+                 u'201206_releves_QLMC.json']
 
 qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
 

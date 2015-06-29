@@ -684,7 +684,14 @@ ls_match = [[[u'SYSTEME U', u'BARALLE MARQUION'], ['BARALLE', '62860', 'PAS DE C
             [[u'LECLERC', u'ST PRIEST'], ['ST PRIEST', '69800', 'RHONE', '69290']],
             [[u'SUPER U', u'CHANGE'], ['CHANGE', '72560', 'SARTHE', '72058']]]
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json')
+path_dir_qlmc = os.path.join(path_data,
+                             'data_supermarkets',
+                             'data_qlmc_2007-12')
 
-enc_json(ls_match, os.path.join(path_dir_built_json, 'ls_city_match.json'))
+path_dir_source_json = os.path.join(path_dir_qlmc,
+                                    'data_source',
+                                    'data_json')
+
+enc_json(ls_match,
+         os.path.join(path_dir_source_json,
+                      'ls_city_match.json'))
