@@ -14,28 +14,31 @@ import pandas as pd
 from mpl_toolkits.basemap import Basemap
 import pprint
 
-path_dir_qlmc = os.path.join(path_data,
+path_qlmc = os.path.join(path_data,
                              'data_supermarkets',
                              'data_qlmc_2007-12')
 
-path_dir_built_csv = os.path.join(path_dir_qlmc,
-                                  'data_built',
-                                  'data_csv')
+path_source_csv = os.path.join(path_qlmc,
+                               'data_source',
+                               'data_csv')
 
-path_dir_match_insee = os.path.join(path_data,
-                                    u'data_insee',
-                                    u'match_insee_codes')
+path_source_json = os.path.join(path_qlmc,
+                                'data_source',
+                                'data_json')
+
+path_match_insee = os.path.join(path_data,
+                                u'data_insee',
+                                u'match_insee_codes')
 
 ## LOAD DATA STORES
-df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_raw_qlmc.csv'),
+df_raw_stores = pd.read_csv(os.path.join(path_source_csv,
+                                         'df_stores_raw.csv'),
                       encoding = 'UTF-8')
-df_raw_stores = df_qlmc[['Period', 'Store']].drop_duplicates()
 
 #ls_ls_stores = dec_json(os.path.join(path_dir_built_json, 'ls_ls_stores.json'))
 
 # MATCH STORES WITH INSEE COMMUNE
-df_corr = pd.read_csv(os.path.join(path_dir_match_insee,
+df_corr = pd.read_csv(os.path.join(path_match_insee,
                                    'df_corr_gas.csv'),
                       dtype = str)
 ls_corr = [list(x) for x in df_corr.to_records(index = False)]
@@ -55,7 +58,7 @@ ls_str_insee_replace = [[u'\xc9', u'E'],
 ls_rows = []
 for i, row_store in df_raw_stores.iterrows():
     chain, city = get_split_chain_city(row_store['Store'], ls_chain_brands)
-    row = [i, chain, city, []]
+    row = [row_store['Period'], chain, city, []]
     ## todo: refactor standardization
     #city_standardized = re.sub(u'^SAINT(E\s|\s)', u'ST\\1', city.replace(u'-', u' '))
     #for old, new in ls_str_insee_replace:
@@ -67,7 +70,8 @@ for i, row_store in df_raw_stores.iterrows():
     ls_rows.append(row)
 
 # Check problems and, aside, manually establish a list of corrections
-ls_city_match = dec_json(os.path.join(path_dir_built_json, 'ls_city_match.json'))
+ls_city_match = dec_json(os.path.join(path_source_json,
+                                      'ls_city_match.json'))
 c = 0
 ls_pbms = []
 for row in ls_rows:
@@ -119,8 +123,12 @@ m_fra = Basemap(resolution='i',
                 llcrnrlon=x1,
                 urcrnrlon=x2)
 
-path_dir_geofla = os.path.join(path_data, u'data_maps', u'GEOFLA_COM_WGS84')
-m_fra.readshapefile(os.path.join(path_dir_geofla, u'COMMUNE'),
+path_geofla = os.path.join(path_data,
+                               u'data_maps',
+                               u'GEOFLA_COM_WGS84')
+
+m_fra.readshapefile(os.path.join(path_geofla,
+                                 u'COMMUNE'),
                     u'communes_fr',
                     color = u'none',
                     zorder=2)
@@ -187,8 +195,8 @@ ls_rows = [row[:3] + list(row[3]) if row[3] else row[:3] + [None, None, None, No
 
 # BUILD STORE DATAFRAME
 
-ls_columns = ['P', 'Enseigne', 'Commune',
-              'INSEE_Commune', 'INSEE_ZIP', 'INSEE_Dpt', 'INSEE_Code']
+ls_columns = ['Period', 'Store_Chain', 'Store_Municipality',
+              'INSEE_Municipality', 'INSEE_ZIP', 'INSEE_Departement', 'INSEE_Code']
 df_stores = pd.DataFrame(ls_rows, columns = ls_columns)
 
 # CHECK SUPERMARKET NAMES
@@ -198,20 +206,21 @@ df_stores = pd.DataFrame(ls_rows, columns = ls_columns)
 #print df_stores[df_stores['INSEE_ZIP'].str.slice(stop=2) == '75'].to_string()
 #print df_stores[(df_stores['Commune'].str.contains('carcassonne', case=False)) |\
 #                (df_stores['INSEE_Commune'].str.contains('carcassonne', case=False))]
-df_stores.sort(['INSEE_Code', 'P', 'Enseigne'], inplace = True)
+df_stores.sort(['INSEE_Code', 'Period', 'Store_Municipality'], inplace = True)
 se_insee_vc = df_stores['INSEE_Code'].value_counts()
 # default: sorted in decreasing order
 for insee_code in se_insee_vc[0:20].index:
 	print '\n\n', df_stores[df_stores['INSEE_Code'] == insee_code].to_string()
 
-
 # LOAD QLMC STORE INFO
 
-df_stores['Magasin'] = df_stores['Enseigne'] + ' ' + df_stores['Commune']
-ls_ls_qlmc_store_info = dec_json(os.path.join(path_dir_built_json,
+df_stores['Store'] = df_stores['Store_Chain'] + ' ' + df_stores['Store_Municipality']
+
+ls_ls_qlmc_store_info = dec_json(os.path.join(path_source_json,
                                               'ls_ls_qlmc_store_info.json'))
+
 # Store names in qlmc price files
-ls_ls_store_names = [list(df_stores['Magasin'][df_stores['P'] == i].values)\
+ls_ls_store_names = [list(df_stores['Store'][df_stores['Period'] == i].values)\
                        for i in range(13)]
 
 # Store names in info files
@@ -258,47 +267,46 @@ set_nomatch_10 = set(ls_ls_store_names[10]).difference(set_store_info_names)
 ls_rows_qlmc_store_info  = [[i] + store for i, ls_store in enumerate(ls_ls_qlmc_store_info)\
                               for store in ls_store]
 df_qlmc_store_info = pd.DataFrame(ls_rows_qlmc_store_info,
-                                  columns = ['P_info', 'Magasin', 'QLMC_Dpt', 'QLMC_Surface'])
+                                  columns = ['Period', 'Store', 'QLMC_Departement', 'QLMC_Surface'])
 # print df_qlmc_stores.to_string()
 
 # todo: make sure never two stores with same name / diff dpt or surface across info files
-se_qsi_vc = df_qlmc_store_info['Magasin'].value_counts()
+se_qsi_vc = df_qlmc_store_info['Store'].value_counts()
 #for x in se_qsi_vc[se_qsi_vc > 1].index:
 #  print df_qlmc_store_info[df_qlmc_store_info['Magasin'] == x]
 ## presen of variations in surfaces (maybe precision issue sometimes but also chges)
 
 # Merge store_info with df_stores conservatively i.e. by period
-df_qlmc_store_info = df_qlmc_store_info[(df_qlmc_store_info['P_info'] != 0) &\
-                                        (df_qlmc_store_info['P_info'] != 5)]
+df_qlmc_store_info = df_qlmc_store_info[(df_qlmc_store_info['Period'] != 0) &\
+                                        (df_qlmc_store_info['Period'] != 5)]
 
 ls_replace_periods = [(1,6),
                       (2,7),
                       (3,9),
                       (4,11)]
 for store_info_per, qlmc_per in ls_replace_periods:
-  df_qlmc_store_info.loc[df_qlmc_store_info['P_info'] == store_info_per,
-                         'P_info'] = qlmc_per
-df_qlmc_store_info.rename(columns = {'P_info' : 'P'}, inplace = True)
+  df_qlmc_store_info.loc[df_qlmc_store_info['Period'] == store_info_per,
+                         'Period'] = qlmc_per
 
 # Delete duplicate in period 9
-df_qlmc_store_info.drop_duplicates(subset = ['P', 'Magasin'], inplace = True)
+df_qlmc_store_info.drop_duplicates(subset = ['Period', 'Store'], inplace = True)
 
-df_stores_all = pd.merge(df_qlmc_store_info, df_stores, how = 'right', on = ['P', 'Magasin'])
-df_stores_all['QLMC_Dpt'] = df_stores_all['QLMC_Dpt'].apply(lambda x: x.rjust(2,'0')\
-                                                              if not pd.isnull(x) else x)
+df_stores_all = pd.merge(df_qlmc_store_info,
+                         df_stores,
+                         how = 'right',
+                         on = ['Period', 'Store'])
+df_stores_all['QLMC_Departement'] =\
+  df_stores_all['QLMC_Departement'].apply(lambda x: x.rjust(2,'0')\
+                                                    if not pd.isnull(x) else x)
 # any use?
-df_stores_all['P'] = df_stores_all['P'].apply(lambda x: int(x))
+df_stores_all['Period'] = df_stores_all['Period'].apply(lambda x: int(x))
 
-# STORE DF STORES
-
-# HDF (abandon?)
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-qlmc_data['df_qlmc_stores'] = df_stores_all
-qlmc_data.close()
+# #######
+# OUTPUT
+# #######
 
 # CSV
-df_stores_all.to_csv(os.path.join(path_dir_built_csv,
-                                  'df_raw_stores.csv'),
+df_stores_all.to_csv(os.path.join(path_source_csv,
+                                  'df_stores_w_municipality.csv'),
                      index = False,
                      encoding = 'UTF-8')

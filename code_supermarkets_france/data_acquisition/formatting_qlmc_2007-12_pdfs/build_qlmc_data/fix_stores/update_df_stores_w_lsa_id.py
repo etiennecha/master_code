@@ -13,21 +13,32 @@ import pandas as pd
 from mpl_toolkits.basemap import Basemap
 import pprint
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_excel = os.path.join(path_dir_qlmc, 'data_built' , 'data_excel')
+path_qlmc = os.path.join(path_data,
+                         'data_supermarkets',
+                         'data_qlmc_2007-12')
+
+path_source_csv = os.path.join(path_qlmc,
+                               'data_source',
+                               'data_csv')
+
+path_source_json = os.path.join(path_qlmc,
+                                'data_source',
+                                'data_json')
+
+path_source_excel = os.path.join(path_qlmc,
+                                 'data_source',
+                                 'data_excel')
 
 # #############
 # LOAD DF QLMC
 # #############
 
-df_qlmc_stores = pd.read_csv(os.path.join(path_dir_built_csv,
-                                      'df_qlmc_stores_raw.csv'),
-                             dtype = {'P' : str,
-                                      'QLMC_Dpt': str,
+df_qlmc_stores = pd.read_csv(os.path.join(path_source_csv,
+                                          'df_stores_w_municipality.csv'),
+                             dtype = {'Period' : str,
+                                      'QLMC_Departement': str,
                                       'INSEE_ZIP': str,
-                                      'INSEE_Dpt' : str,
+                                      'INSEE_Departement' : str,
                                       'INSEE_Code' : str},
                              encoding = 'UTF-8')
 
@@ -73,7 +84,7 @@ df_qlmc_stores = pd.read_csv(os.path.join(path_dir_built_csv,
 # LOAD DF LSA
 # ############
 
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
+df_lsa = pd.read_csv(os.path.join(path_source_csv,
                                   'df_lsa_for_qlmc.csv'),
                      dtype = {'Ident': str,
                               'Code INSEE' : str,
@@ -172,30 +183,31 @@ for date_ind, qlmc_date in enumerate(ls_qlmc_dates):
                                             else x)
   ls_matched_stores = []
   for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
-    for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Enseigne'] == enseigne_qlmc) &\
-                                       (df_qlmc_stores['P'] == '{:d}'.format(date_ind))].iterrows():
+    for row_ind, row in df_qlmc_stores[(df_qlmc_stores['Store_Chain'] == enseigne_qlmc) &\
+                                       (df_qlmc_stores['Period'] == '{:d}'.format(date_ind))]\
+                                          .iterrows():
       insee_code = row['INSEE_Code']
       df_city_stores = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
                               (df_lsa['type'] == enseigne_fra)]
       if len(df_city_stores) == 1:
-        ls_matched_stores.append((row['P'],
-                                  row['Enseigne'],
-                                  row['Commune'],
+        ls_matched_stores.append((row['Period'],
+                                  row['Store_Chain'],
+                                  row['Store_Municipality'],
                                   df_city_stores.iloc[0]['Ident'],
                                   'direct'))
       elif len(df_city_stores) == 0:
         df_city_stores_alt = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
                                     (df_lsa['type_alt'] == enseigne_fra_alt)]
         if len(df_city_stores_alt) == 1:
-          ls_matched_stores.append((row['P'],
-                                    row['Enseigne'],
-                                    row['Commune'],
+          ls_matched_stores.append((row['Period'],
+                                    row['Store_Chain'],
+                                    row['Store_Municipality'],
                                     df_city_stores_alt.iloc[0]['Ident'],
                                     'indirect'))
         elif len(df_city_stores_alt) == 0:
-          ls_matched_stores.append((row['P'],
-                                    row['Enseigne'],
-                                    row['Commune'],
+          ls_matched_stores.append((row['Period'],
+                                    row['Store_Chain'],
+                                    row['Store_Municipality'],
                                     None,
                                     'aucun'))
   ls_ls_matched_stores.append(ls_matched_stores)
@@ -203,18 +215,23 @@ for date_ind, qlmc_date in enumerate(ls_qlmc_dates):
 ls_matched_stores = [ms for ls_ms in ls_ls_matched_stores for ms in ls_ms]
 
 df_matching = pd.DataFrame(ls_matched_stores,
-                          columns = ['P', 'Enseigne', 'Commune', 'id_lsa', 'Q'])
+                           columns = ['Period',
+                                      'Store_Chain',
+                                      'Store_Municipality',
+                                      'id_lsa',
+                                      'Q'])
 
-df_qlmc_stores_ma = pd.merge(df_matching, df_qlmc_stores,
-                             on = ['P', 'Enseigne', 'Commune'],
+df_qlmc_stores_ma = pd.merge(df_matching,
+                             df_qlmc_stores,
+                             on = ['Period', 'Store_Chain', 'Store_Municipality'],
                              how = 'right')
 
 # READ MATCHED STORES FROM CSV FILE AND UPDATE FIX
 file_fix_matching = 'fix_store_matching.csv'
-df_read_fix_ms = pd.read_csv(os.path.join(path_dir_built_excel,
+df_read_fix_ms = pd.read_csv(os.path.join(path_source_excel,
                                           file_fix_matching),
                                sep = ';',
-                               dtype = {'P' : str,
+                               dtype = {'Period' : str,
                                         'INSEE_Code' : str,
                                         'id_fra_stores' : str,
                                         'id_lsa' : str,
@@ -227,13 +244,14 @@ df_read_fix_ms = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['id_lsa'])) |
                                 (~pd.isnull(df_read_fix_ms['street_fra_stores']))].copy()
 # df_read_fix_ms contains all ad hoc matching
 df_read_fix_ms.rename(columns={'id_lsa' : 'id_lsa_adhoc'}, inplace = True)
-df_stores = pd.merge(df_read_fix_ms[['P', 'Enseigne', 'Commune',
+df_stores = pd.merge(df_read_fix_ms[['Period', 'Store_Chain', 'Store_Municipality',
                                     'id_lsa_adhoc',
                                     'id_fra_stores', 'id_fra_stores_2',
                                     'street_fra_stores']],
                      df_qlmc_stores_ma,
-                     on = ['P', 'Enseigne', 'Commune'],
+                     on = ['Period', 'Store_Chain', 'Store_Municipality'],
                      how = 'right')
+
 # priority given to hand info
 df_stores.loc[~pd.isnull(df_stores['id_lsa_adhoc']), 'Q'] = 'manuel'
 
@@ -243,17 +261,17 @@ df_stores.loc[~pd.isnull(df_stores['id_lsa_adhoc']),
 df_stores.loc[pd.isnull(df_stores['Q']), 'Q'] = 'ambigu' # check
 
 df_stores.drop(['id_lsa_adhoc'], axis = 1, inplace = True)
-df_stores.sort(columns=['P', 'INSEE_Code', 'Enseigne'], inplace = True)
+df_stores.sort(columns=['Period', 'INSEE_Code', 'Store_Chain'], inplace = True)
 
 # CHECK FOR DUPLICATES IN MATCHING
 df_matched = df_stores[~pd.isnull(df_stores['id_lsa'])]
-df_dup = df_matched[(df_matched.duplicated(subset = ['P', 'id_lsa'],
+df_dup = df_matched[(df_matched.duplicated(subset = ['Period', 'id_lsa'],
                                            take_last = True)) |\
-                    (df_matched.duplicated(subset = ['P', 'id_lsa'],
+                    (df_matched.duplicated(subset = ['Period', 'id_lsa'],
                                            take_last = False))]
 print '\nNb id_lsa associated with two different stores: {:d}'.format(len(df_dup))
 print '\nInspect duplicates:'
-ls_dup_disp = ['P', 'Enseigne', 'Commune', 'INSEE_Code', 'id_lsa']
+ls_dup_disp = ['Period', 'Store_Chain', 'Store_Municipality', 'INSEE_Code', 'id_lsa']
 print df_dup[ls_dup_disp].to_string()
 
 # OUTPUT NO MATCH (INCLUDING MANUAL INPUT) FOR FURTHER INVESTIGATIONS
@@ -264,14 +282,14 @@ df_unmatched = df_stores[(pd.isnull(df_stores['id_lsa'])) |\
 df_unmatched = df_unmatched[~df_unmatched['INSEE_Code'].isnull()]
 df_unmatched['Nb_Same_IC'] =\
   df_unmatched.groupby('INSEE_Code').INSEE_Code.transform('size')
-df_unmatched.sort(['Nb_Same_IC', 'INSEE_Code', 'Magasin', 'P'],
+df_unmatched.sort(['Nb_Same_IC', 'INSEE_Code', 'Store', 'Period'],
                   ascending = False,
                   inplace = True)
 #df_unmatched.drop(labels = 'Nb_Same_IC', axis = 1, inplace = True)
-ls_unmatched_disp = ['P', 'Enseigne', 'Commune',
+ls_unmatched_disp = ['Period', 'Store_Chain', 'Store_Municipality',
                      'street_fra_stores', 'id_fra_stores', 'id_fra_stores_2',
                      'id_lsa', 'Q', 'INSEE_Code', 'Nb_Same_IC',
-                     'QLMC_Surface', 'QLMC_Dpt']
+                     'QLMC_Surface', 'QLMC_Departement']
 
 print u'\nNb unmatched period/store (before): {:d}'.format(len(df_unmatched))
 print u'\nNb manually matched: {:d}'.format(\
@@ -280,7 +298,7 @@ print '\nInspect unmatched:'
 print df_unmatched[ls_unmatched_disp][0:30].to_string()
 
 # OUTPUT (try to make it an Excel standard csv?)
-df_unmatched[ls_unmatched_disp].to_csv(os.path.join(path_dir_built_excel,
+df_unmatched[ls_unmatched_disp].to_csv(os.path.join(path_source_excel,
                                                     'fix_store_matching.csv'),
                                        index = False,
                                        encoding = 'latin-1',
@@ -294,8 +312,8 @@ df_unmatched[ls_unmatched_disp].to_csv(os.path.join(path_dir_built_excel,
 #qlmc_data.close()
 
 # CSV
-df_stores.to_csv(os.path.join(path_dir_built_csv,
-                             'df_qlmc_stores.csv'),
+df_stores.to_csv(os.path.join(path_source_csv,
+                             'df_stores_w_municipality_and_lsa_id.csv'),
                 index = False,
                 encoding = 'UTF-8')
 
@@ -312,7 +330,7 @@ df_stores.to_csv(os.path.join(path_dir_built_csv,
 # enc_json(ls_fix_ms, os.path.join(path_dir_built_json, u'ls_fix_ms.json'))
 
 ## LOAD HAND WRITTEN LSA/QLMC MATCHES (JSON => DEPRECATE?)
-#ls_columns_fix_ms = ['P', 'Enseigne', 'Commune', 'INSEE_Code',
+#ls_columns_fix_ms = ['Period', 'Store_Chain', 'Store_Municipality', 'INSEE_Code',
 #                     'id_fra_stores', 'id_lsa', 'id_fra_stores_2', 'street_fra_stores']
 #ls_fix_ms = dec_json(os.path.join(path_dir_built_json, u'ls_fix_ms.json'))
 #df_fix_ms = pd.DataFrame(ls_fix_ms, columns = ls_columns_fix_ms)
@@ -340,7 +358,7 @@ df_stores.to_csv(os.path.join(path_dir_built_csv,
 #df_read_fix_ms_fi = df_read_fix_ms[(~pd.isnull(df_read_fix_ms['id_lsa'])) |
 #                                   (~pd.isnull(df_read_fix_ms['id_fra_stores_2'])) |
 #                                   (~pd.isnull(df_read_fix_ms['street_fra_stores']))].copy()
-##df_read_fix_ms_fi['P'] = df_read_fix_ms_fi['P'].apply(lambda x: int(x))
+##df_read_fix_ms_fi['Period'] = df_read_fix_ms_fi['Period'].apply(lambda x: int(x))
 #ls_read_fix_ms = [list(x) for x in df_read_fix_ms_fi.to_records(index=False)]
 #
 #def get_as_str(some_number, missing = None):
