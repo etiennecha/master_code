@@ -16,12 +16,13 @@ path_dir_rotterdam = os.path.join(path_data,
 path_dir_reuters = os.path.join(path_dir_rotterdam, 'data_reuters')
 path_xls_reuters_diesel = os.path.join(path_dir_reuters, 'diesel_data_to_import.xls')
 path_xls_eia = os.path.join(path_dir_rotterdam, 'PET_PRI_SPT_S1_D.xls')
-path_xlsx_ufip = os.path.join(path_dir_rotterdam, 'ufip-valeurs_2006-01-01_au_2013-12-31.xlsx')
+# path_xlsx_ufip = os.path.join(path_dir_rotterdam, 'ufip-valeurs_2006-01-01_au_2013-12-31.xlsx')
+path_xlsx_ufip = os.path.join(path_dir_rotterdam, 'ufip-valeurs_2006-01-01_au_2015-06-30.xlsx')
 path_xml_ecb = os.path.join(path_dir_rotterdam, 'usd.xml')
 
-path_dir_built_paper = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_built')
+path_dir_built = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built')
 
 # REUTERS FILE
 reuters_diesel_excel_file = pd.ExcelFile(path_xls_reuters_diesel)
@@ -83,7 +84,7 @@ df_ufip.set_index('Date', inplace = True)
 
 # REGROUP EIA, ECB UFIP and REUTERS IN ONE DATAFRAME (arbitrary date range)
 index = pd.date_range(start = pd.to_datetime('20110904'),
-                      end   = pd.to_datetime('20140123'), 
+                      end   = pd.to_datetime('20150630'), 
                       freq='D')
 df_all = pd.DataFrame(None, index = index)
 for df_temp in [df_eia_brent, df_eia_diesel, df_ecb, df_ufip, df_reuters_diesel]:
@@ -193,6 +194,14 @@ ls_output_columns = ['UFIP RT Diesel R5 EL',
 
 df_all[ls_output_columns].to_csv(os.path.join(path_dir_built,
                                               'data_paper_dispersion',
+                                              'data_csv',
+                                              'df_quotations.csv'),
+                                 index_label = 'date',
+                                 float_format= '%.3f',
+                                 encoding = 'utf-8')
+
+df_all[ls_output_columns].to_csv(os.path.join(path_dir_built,
+                                              'data_paper_total_access',
                                               'data_csv',
                                               'df_quotations.csv'),
                                  index_label = 'date',

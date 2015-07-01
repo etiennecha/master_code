@@ -30,6 +30,13 @@ pd.set_option('float_format', '{:,.3f}'.format)
 #format_float_int = lambda x: '{:10,.0f}'.format(x)
 #format_float_float = lambda x: '{:10,.2f}'.format(x)
 
+from pylab import *
+rcParams['figure.figsize'] = 16, 6
+
+# french date format
+import locale
+locale.setlocale(locale.LC_ALL, 'fra_fra')
+
 # #############
 # LOAD INFO TA
 # #############
@@ -114,8 +121,6 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items():
 # GRAPHS: COMPETITOR REACTIONS
 # ###############################
 
-from pylab import *
-rcParams['figure.figsize'] = 16, 6
 
 #plt.rc('font', **{'family' : 'Computer Modern Roman',
 #                  'size'   : 15})
@@ -142,7 +147,7 @@ for i, (id_1, id_2) in enumerate(ls_pair_display):
   l2 = ax1.plot(df_prices_ttc.index, df_prices_ttc[id_2].values,
                 c = 'g', label = 'Station %s' %(df_info.ix[id_2]['brand_0']))
   l3 = ax1.plot(df_prices_ttc.index, df_prices_ttc[ls_control_ids].mean(1).values,
-                c = 'r', label = 'Control')
+                c = 'r', label = 'Moyenne nationale')
   lns = l1 + l2 + l3
   labs = [l.get_label() for l in lns]
   ax1.legend(lns, labs, loc=0)
@@ -150,7 +155,7 @@ for i, (id_1, id_2) in enumerate(ls_pair_display):
   plt.tight_layout()
   #plt.show()
   plt.savefig(os.path.join(path_dir_built_graphs,
-                           'competitor_reactions',
+                           'french_version',
                            'ex_%s.png' %i),
               bbox_inches='tight')
   plt.close()
@@ -174,8 +179,8 @@ pp_chge = row['pp_chge']
 pp_chge_date = row['pp_chge_date']
 gov_chge_date = row['TA_day']
 ta_chge_date = row['ta_chge_date']
-ax = df_prices_ttc[id_station].plot(label = 'Station Total rebranded Total Access')
-se_mean_prices.plot(ax=ax, label = 'Control')
+ax = df_prices_ttc[id_station].plot(label = 'Station Total convertie')
+se_mean_prices.plot(ax=ax, label = 'Moyenne Nationale')
 handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles, labels, loc = 1)
 ax.axvline(x = pp_chge_date, color = 'b', ls = 'dashed')
@@ -189,7 +194,7 @@ ax.axvline(x = gov_chge_date, color = 'b', ls = 'dotted')
 # plt.show()
 plt.xlabel('')
 plt.savefig(os.path.join(path_dir_built_graphs,
-                         'report_specific',
-                         'price_cut_detection.png'.format(id_station, pp_chge)),
+                         'french_version',
+                         'fr_price_cut_detection.png'.format(id_station, pp_chge)),
             bbox_inches='tight')
 plt.close()

@@ -237,7 +237,7 @@ print u'\nNb of sign estimations {:d}'.format(len(df_res_tr_sg))
 
 len(df_res_tr_sg[df_res_tr_sg['coeff'].abs() > 0.01])
 
-print df_res_tr_sg.describe(percentiles = [0.1, 0.25, 0.5, 0.75, 0.9])
+print df_res_tr.describe(percentiles = [0.1, 0.25, 0.5, 0.75, 0.9])
 
 df_res.to_csv(os.path.join(path_dir_built_csv,
                            'df_tta_by_dpt.csv'),
@@ -245,17 +245,19 @@ df_res.to_csv(os.path.join(path_dir_built_csv,
               index = False)
 
 # Merge with station details
-df_res_tr_sg['id_station'] = df_res_tr_sg['name'].apply(lambda x: x[3:])
-df_res_tr_sg.set_index('id_station', inplace = True)
+df_res_tr['id_station'] = df_res_tr['name'].apply(lambda x: x[3:])
+df_res_tr.set_index('id_station', inplace = True)
 df_tot_comp_details = pd.DataFrame(ls_rows_tot_comp_details,
                                    columns = ['id_station', 'group_type', 'id_ta', 'distance'])
 df_tot_comp_details.set_index('id_station', inplace = True)
 
-df_tot_comp_final = pd.merge(df_res_tr_sg,
+df_tot_comp_final = pd.merge(df_res_tr,
                              df_tot_comp_details,
                              left_index = True,
                              right_index = True,
                              how = 'left')
+
+# TODO: save df_tot_comp_final
 
 ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
 
