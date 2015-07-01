@@ -15,22 +15,28 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import pprint
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
+path_qlmc = os.path.join(path_data,
+                         'data_supermarkets',
+                         'data_qlmc_2007-12')
 
-path_dir_source_lsa = os.path.join(path_dir_qlmc, 'data_source', 'data_lsa_xls')
+path_source_csv = os.path.join(path_qlmc,
+                               'data_source',
+                               'data_csv')
+
+path_lsa_csv = os.path.join(path_data,
+                            'data_supermarkets',
+                            'data_lsa',
+                            'data_built',
+                            'data_csv')
 
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
 
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-
-# READ LSA EXCEL FILE
+# READ LSA FILE
 # need to work with _no1900 at CREST for now (older versions of numpy/pandas/xlrd...?)
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
-                                        'df_lsa.csv'),
+df_lsa = pd.read_csv(os.path.join(path_lsa_csv,
+                                  'df_lsa.csv'),
                      dtype = {'Ident': str,
                               'Code INSEE' : str,
                               'Code INSEE ardt' : str},
@@ -179,7 +185,7 @@ for qlmc_date in ls_qlmc_dates:
   df_lsa.loc[(qlmc_date >= df_lsa[u'DATE ouv']) &\
              (qlmc_date < df_lsa[u'DATE chg enseigne']), qlmc_date] = df_lsa['Ex enseigne']
 
-df_lsa.to_csv(os.path.join(path_dir_built_csv,
+df_lsa.to_csv(os.path.join(path_source_csv,
                            'df_lsa_for_qlmc.csv'),
               index = False,
               encoding = 'UTF-8')
@@ -194,6 +200,6 @@ df_lsa.to_csv(os.path.join(path_dir_built_csv,
 #                                        if type(x) is pd.tslib.Timestamp\
 #                                        else pd.tslib.NaT)
 #
-#writer = pd.ExcelWriter(os.path.join(path_dir_built_csv, 'LSA_enriched.xlsx'))
+#writer = pd.ExcelWriter(os.path.join(path_source_csv, 'LSA_enriched.xlsx'))
 #df_lsa.to_excel(writer, index = False)
 #writer.close()

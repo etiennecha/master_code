@@ -15,8 +15,8 @@ from mpl_toolkits.basemap import Basemap
 import pprint
 
 path_qlmc = os.path.join(path_data,
-                             'data_supermarkets',
-                             'data_qlmc_2007-12')
+                         'data_supermarkets',
+                         'data_qlmc_2007-12')
 
 path_source_csv = os.path.join(path_qlmc,
                                'data_source',
