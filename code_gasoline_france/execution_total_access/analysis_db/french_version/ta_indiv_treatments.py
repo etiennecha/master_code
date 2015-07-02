@@ -17,9 +17,12 @@ path_dir_built_paper = os.path.join(path_data,
 path_dir_built_csv = os.path.join(path_dir_built_paper,
                                   u'data_csv')
 
-df_res = pd.read_csv(os.path.join(path_dir_built_csv,
-                                  'df_tta_by_dpt.csv'),
-                     encoding = 'utf-8',
-                     index = False)
+df_tta_res = pd.read_csv(os.path.join(path_dir_built_csv,
+                                      'df_tta_by_dpt_final.csv'),
+                         dtype = {'id_ta' : str},
+                         encoding = 'utf-8')
 
-
+df_elfta_res = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_elfta_by_dpt_final.csv'),
+                           dtype = {'id_ta' : str},
+                           encoding = 'utf-8')
