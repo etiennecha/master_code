@@ -61,3 +61,51 @@ for pop, pop_type, df_temp in ls_loop_overview:
           100 * len(df_temp[df_temp['coeff'] >= diff]) / float(len(df_temp)))
   print u'In bewteen       : {:.2f} %'.format(\
           100 * len(df_temp[df_temp['coeff'].abs() < diff]) / float(len(df_temp)))
+
+# GRAPH (TOTAL COMP)
+
+ax = df_tta_dist[df_tta_dist['group_type'] == 'SUP']\
+       .plot(kind = 'scatter',
+             x = 'distance',
+             y = 'coeff',
+             color = 'r',
+             label = 'SUPERMARKETS')
+
+df_tta_dist[df_tta_dist['group_type'] != 'SUP']\
+  .plot(kind = 'scatter',
+        x = 'distance',
+        y = 'coeff',
+        ax = ax,
+        color = 'b',
+        label = 'OTHERS')
+
+xmin, xmax = ax.get_xlim()
+ax.hlines(y=[-0.01, 0.01], xmin=xmin, xmax=xmax, color='k', linestyle = '--')
+ax.hlines(y=[-0.02, 0.02], xmin=xmin, xmax=xmax, color='k', linestyle = ':')
+ax.set_xlim(xmin, xmax)
+ax.set_ylim(-0.10, 0.10)
+plt.show()
+
+# GRAPH (ELF COMP)
+
+ax = df_elfta_dist[df_elfta_dist['group_type'] == 'SUP']\
+       .plot(kind = 'scatter',
+             x = 'distance',
+             y = 'coeff',
+             color = 'r',
+             label = 'SUPERMARKETS')
+
+df_elfta_dist[df_elfta_dist['group_type'] != 'SUP']\
+  .plot(kind = 'scatter',
+        x = 'distance',
+        y = 'coeff',
+        ax = ax,
+        color = 'b',
+        label = 'OTHERS')
+
+xmin, xmax = ax.get_xlim()
+ax.hlines(y=[-0.01, 0.01], xmin=xmin, xmax=xmax, color='k', linestyle = '--')
+ax.hlines(y=[-0.02, 0.02], xmin=xmin, xmax=xmax, color='k', linestyle = ':')
+ax.set_xlim(xmin, xmax)
+ax.set_ylim(-0.10, 0.10)
+plt.show()
