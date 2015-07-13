@@ -7,9 +7,13 @@ from functions_generic_qlmc import *
 import numpy as np
 import pandas as pd
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-#path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+path_dir_qlmc = os.path.join(path_data,
+                             'data_supermarkets',
+                             'data_qlmc_2007-12')
+
+path_dir_built_csv = os.path.join(path_dir_qlmc,
+                                  'data_built',
+                                  'data_csv')
 
 # #######################
 # BUILD DF QLMC
@@ -20,7 +24,7 @@ path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
 ## CSV (no ',' in fields? how is it dealt with?)
 print u'Loading qlmc prices'
 df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_qlmc_prices.csv'),
+                                   'df_qlmc.csv'),
                       encoding = 'utf-8')
 # date parsing slow... better if specified format?
 

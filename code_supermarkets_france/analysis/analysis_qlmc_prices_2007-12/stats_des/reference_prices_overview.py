@@ -9,9 +9,13 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-#path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+path_dir_qlmc = os.path.join(path_data,
+                             'data_supermarkets',
+                             'data_qlmc_2007-12')
+
+path_dir_built_csv = os.path.join(path_dir_qlmc,
+                                  'data_built',
+                                  'data_csv')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 
@@ -23,7 +27,7 @@ pd.set_option('float_format', '{:,.2f}'.format)
 print u'Loading qlmc prices'
 # date parsing slow... better if specified format?
 df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_qlmc_prices.csv'),
+                                   'df_qlmc.csv'),
                       encoding = 'utf-8')
 
 # LOAD DF STORES
