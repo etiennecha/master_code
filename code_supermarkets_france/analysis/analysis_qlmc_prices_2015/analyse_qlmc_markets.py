@@ -17,26 +17,19 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_qlmc_scraped = os.path.join(path_data,
-                                  'data_qlmc',
-                                  'data_source',
-                                  'data_scraped')
-
 path_csv = os.path.join(path_data,
-                        'data_qlmc',
+                        'data_supermarkets',
+                        'data_qlmc_2015',
                         'data_built',
-                        'data_csv')
+                        'data_csv_201503')
 
 df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'qlmc_scraped',
                                      'df_stores.csv'))
 
 df_comp = pd.read_csv(os.path.join(path_csv,
-                                   'qlmc_scraped',
                                    'df_competitors.csv'))
 
 df_france = pd.read_csv(os.path.join(path_csv,
-                                     'qlmc_scraped',
                                      'df_france.csv'))
 
 # Based on group of ids... build df with stores as columns (inner join to start with)

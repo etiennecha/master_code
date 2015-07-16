@@ -202,7 +202,7 @@ df_pd_2['price_12_freq'] = df_pd_2[['price_1_freq', 'price_2_freq']].sum(axis = 
 df_pd_2_final = df_pd_2[df_pd_2['nb_obs'] >= 10].copy()
 
 print u'\nOverview most frequent prices by retail chain and period:'
-print u'(Kept only if >= 20 obs)'
+print u'(Single product, only if >= 20 obs within period)'
 print df_pd_2_final[ls_pd_disp].to_string()
 
 # Extract by chain
@@ -211,7 +211,7 @@ df_pd_2_final.sortlevel(inplace = True)
 
 retail_chain = 'CENTRE E.LECLERC'
 print u'\nOverview most frequent prices among {:s} stores by period:'.format(retail_chain)
-print u'(Kept only if >= 20 obs)'
+print u'(Single product, only if >= 20 obs within period)'
 print df_pd_2_final.loc[(slice(None), retail_chain),:][ls_pd_disp].to_string()
 
 # Todo: Expand 

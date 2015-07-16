@@ -18,30 +18,30 @@ format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 path_qlmc_scraped = os.path.join(path_data,
-                                  'data_qlmc',
-                                  'data_source',
-                                  'data_scraped')
+                                 'data_supermarkets',
+                                 'data_qlmc_2015',
+                                 'data_source',
+                                 'data_scraped_201503')
 
 path_csv = os.path.join(path_data,
-                        'data_qlmc',
+                        'data_supermarkets',
+                        'data_qlmc_2015',
                         'data_built',
-                        'data_csv')
+                        'data_csv_201503')
 
 df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'qlmc_scraped',
                                      'df_stores.csv'))
 
 df_comp = pd.read_csv(os.path.join(path_csv,
-                                   'qlmc_scraped',
                                    'df_competitors.csv'))
 
 # Fix gps problems (move later?)
-ls_fix_gps = [['intermarche-super-le-portel', (50.7093, 1.5789)], # too far
-              ['casino-l-ile-rousse',         (42.6327, 8.9383)],
-              ['centre-e-leclerc-lassigny',   (49.5898, 2.8531)],
-              ['carrefour-market-chateau-gontier', (47.8236, -0.7064)],
-              ['casino-san-nicolao', (42.3742, 9.5299)], # too close
-              ['centre-e-leclerc-san-giuliano', (42.2625, 9.5480)]]
+ls_fix_gps = [['intermarche-super-le-portel',       (50.7093, 1.5789)], # too far
+              ['casino-l-ile-rousse',               (42.6327, 8.9383)],
+              ['centre-e-leclerc-lassigny',         (49.5898, 2.8531)],
+              ['carrefour-market-chateau-gontier',  (47.8236, -0.7064)],
+              ['casino-san-nicolao',                (42.3742, 9.5299)], # too close
+              ['centre-e-leclerc-san-giuliano',     (42.2625, 9.5480)]]
 
 for store_id, (store_lat, store_lng) in ls_fix_gps:
   df_comp.loc[df_comp['store_id'] == store_id,

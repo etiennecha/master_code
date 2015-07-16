@@ -20,17 +20,18 @@ format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 path_qlmc_scraped = os.path.join(path_data,
-                                  'data_qlmc',
-                                  'data_source',
-                                  'data_scraped')
+                                 'data_supermarkets',
+                                 'data_qlmc_2015',
+                                 'data_source',
+                                 'data_scraped_201503')
 
 path_csv = os.path.join(path_data,
-                        'data_qlmc',
+                        'data_supermarkets',
+                        'data_qlmc_2015',
                         'data_built',
-                        'data_csv')
+                        'data_csv_201503')
 
 df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'qlmc_scraped',
                                      'df_stores_final.csv'),
                         dtype = {'ic' : str,
                                  'lsa_id' : str,
