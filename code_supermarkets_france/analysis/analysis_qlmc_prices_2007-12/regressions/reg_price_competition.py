@@ -25,8 +25,19 @@ path_lsa = os.path.join(path_data,
 
 pd.set_option('float_format', '{:,.2f}'.format)
 
+# LOAD DF QLMC
+
+print u'Loading df_qlmc'
+df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_qlmc.csv'),
+                      dtype = {'id_lsa' : str,
+                               'INSEE_ZIP' : str,
+                               'INSEE_Code' : str},
+                      encoding = 'utf-8')
+
 # LOAD DF COMP
 
+print u'Loading df_comp'
 df_comp_h = pd.read_csv(os.path.join(path_lsa,
                                      'df_eval_comp_H_v_all.csv'), #'df_comp_H_ac_vs_cont.csv'),
                         dtype = {'Ident': str},
@@ -65,12 +76,12 @@ ls_lsa_comp_cols = ['ac_nb_stores',
                     'ac_group_share',
                     'ac_hhi']
 
-df_stores = pd.merge(df_stores,
-                     df_comp[['id_lsa'] +\
-                             ls_lsa_info_cols +\
-                             ls_lsa_comp_cols],
-                     on = 'id_lsa',
-                     how = 'left')
+df_qlmc = pd.merge(df_qlmc,
+                   df_comp[['id_lsa'] +\
+                           ls_lsa_info_cols +\
+                           ls_lsa_comp_cols],
+                   on = 'id_lsa',
+                   how = 'left')
 
 # ######################################
 # REG MOST COMMON PRODUCT PRICES ON COMP
@@ -98,7 +109,14 @@ df_qlmc_prod = df_qlmc[(df_qlmc['Department'] == rayon) &\
                        (df_qlmc['Family'] == famille) &\
                        (df_qlmc['Product'] == produit)].copy()
 
-reg = smf.ols('Price ~ C(P) + Surface + Groupe_alt + ac_hhi',
+print u'\nRegression of price of {:s}'.format(produit)
+reg = smf.ols('Price ~ C(Period) + Surface + Enseigne_alt + ac_hhi',
+              data = df_qlmc_prod[df_qlmc_prod['Type_alt'] == 'H'],
+              missing = 'drop').fit()
+print reg.summary()
+
+print u'\nRegression of log price of {:s}'.format(produit)
+reg = smf.ols('ln_Price ~ C(Period) + Surface + Enseigne_alt + ac_hhi',
               data = df_qlmc_prod[df_qlmc_prod['Type_alt'] == 'H'],
               missing = 'drop').fit()
 print reg.summary()
@@ -111,13 +129,14 @@ print reg.summary()
 ls_top_prod = [x[-1] for x in se_prod.index[0:20]]
 df_qlmc_prods = df_qlmc[df_qlmc['Product'].isin(ls_top_prod)].copy()
 
-reg = smf.ols('Price ~ C(P) + C(Product) + Surface + Groupe_alt + ac_hhi',
+print u'\nRegression of price of top 20 products (avail in data)'
+reg = smf.ols('Price ~ C(Period) + C(Product) + Surface + Enseigne_alt + ac_hhi',
               data = df_qlmc_prods[df_qlmc_prods['Type_alt'] == 'H'],
               missing = 'drop').fit()
 print reg.summary()
 
-
-reg = smf.ols('ln_Price ~ C(P) + C(Product) + Surface + Groupe_alt + ac_hhi',
+print u'\nRegression of log price of top 20 products (avail in data)'
+reg = smf.ols('ln_Price ~ C(Period) + C(Product) + Surface + Enseigne_alt + ac_hhi',
               data = df_qlmc_prods[df_qlmc_prods['Type_alt'] == 'H'],
               missing = 'drop').fit()
 print reg.summary()
@@ -161,15 +180,17 @@ df_pd =  df_qlmc_prod_per[['Price', 'Enseigne_alt']]\
                                          price_2_freq])['Price']
 df_pd.sort('nb_obs', ascending = False, inplace = True)
 df_pd['price_12_freq'] = df_pd[['price_1_freq', 'price_2_freq']].sum(axis = 1)
+
+print u'\nOverview most frequent prices by retail chain in period 1:'
 print df_pd[ls_pd_disp].to_string()
 
 # All periods
 df_pd_2 =  df_qlmc_prod[['Period', 'Price', 'Enseigne_alt']]\
              .groupby(['Period', 'Enseigne_alt']).agg([nb_obs,
-                                                  price_1,
-                                                  price_1_freq,
-                                                  price_2,
-                                                  price_2_freq])['Price']
+                                                       price_1,
+                                                       price_1_freq,
+                                                       price_2,
+                                                       price_2_freq])['Price']
 
 # Sort by nb of obs within each period             
 df_pd_2.reset_index('Period', drop = False, inplace = True)
@@ -177,19 +198,32 @@ df_pd_2.sort(['Period', 'nb_obs'], ascending = False, inplace = True)
 df_pd_2.set_index('Period', append = True, inplace = True)
 df_pd_2 = df_pd_2.swaplevel(0, 1, axis = 0)
 df_pd_2['price_12_freq'] = df_pd_2[['price_1_freq', 'price_2_freq']].sum(axis = 1)
-print df_pd_2[df_pd_2['nb_obs'] >= 10][ls_pd_disp].to_string()
+
+df_pd_2_final = df_pd_2[df_pd_2['nb_obs'] >= 10].copy()
+
+print u'\nOverview most frequent prices by retail chain and period:'
+print u'(Kept only if >= 20 obs)'
+print df_pd_2_final[ls_pd_disp].to_string()
 
 # Extract by chain
-df_pd_2.sortlevel(inplace = True)
-print df_pd_2.loc[(slice(None), u'CENTRE E.LECLERC'),:][ls_pd_disp].to_string()
+
+df_pd_2_final.sortlevel(inplace = True)
+
+retail_chain = 'CENTRE E.LECLERC'
+print u'\nOverview most frequent prices among {:s} stores by period:'.format(retail_chain)
+print u'(Kept only if >= 20 obs)'
+print df_pd_2_final.loc[(slice(None), retail_chain),:][ls_pd_disp].to_string()
 
 # Todo: Expand 
 # => over products if can be
 # => baskets of good (by period / chain given product scarcity)
 
 # For one chain within period, if no need to take same store sample:
-df_sub = df_qlmc[(df_qlmc['Period'] == 0) &\
-                 (df_qlmc['Enseigne_alt'] == 'CENTRE E.LECLERC')]
+
+retail_chain = 'CENTRE E.LECLERC'
+
+df_sub = df_qlmc[(df_qlmc['Period'] == 1) &\
+                 (df_qlmc['Enseigne_alt'] == retail_chain)]
 ls_sub_top_prods = df_sub['Product'].value_counts().index[0:20].tolist()
 df_sub = df_sub[df_sub['Product'].isin(ls_sub_top_prods)]
 
@@ -201,6 +235,8 @@ df_pd_3 =  df_sub[['Price', 'Product']]\
                                         price_2_freq])['Price']
 df_pd_3['price_12_freq'] = df_pd_3[['price_1_freq', 'price_2_freq']].sum(axis = 1)
 
+print u'\nOverview most freq. prices among {:s} stores by product:'.format(retail_chain)
+print u'(Top 20 avail. products and in period 1)'
 print df_pd_3[ls_pd_disp].to_string()
 
 # Todo: 
