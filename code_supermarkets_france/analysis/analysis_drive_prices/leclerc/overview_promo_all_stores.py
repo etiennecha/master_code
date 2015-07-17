@@ -8,7 +8,8 @@ from datetime import date, timedelta
 from functions_generic_drive import *
 
 path_leclerc = os.path.join(path_data,
-                            u'data_drive_supermarkets',
+                            u'data_supermarkets',
+                            u'data_drive',
                             u'data_leclerc')
 
 path_price_built_csv = os.path.join(path_leclerc,
@@ -105,8 +106,10 @@ df_loyalty_su.fillna(0, inplace = True)
 print df_loyalty_su.to_string()
 
 # Check products with highest nb of stores
-print df_promo[(df_promo['date'] == '20150526') & (df_promo['nb_stores'] == 6)].to_string()
-print df_loyalty[(df_loyalty['date'] == '20150514') & (df_loyalty['nb_stores'] == 6)].to_string()
+print df_promo[(df_promo['date'] == '20150526') &\
+               (df_promo['nb_stores'] == 6)].to_string()
+print df_loyalty[(df_loyalty['date'] == '20150514') &\
+                 (df_loyalty['nb_stores'] == 6)].to_string()
 
 #print df_prices[(df_prices[u'store'] == "Bois d'Arcy") &\
 #                (df_prices[u'idProduit'] == 2582)][['total_price', 'promo']]

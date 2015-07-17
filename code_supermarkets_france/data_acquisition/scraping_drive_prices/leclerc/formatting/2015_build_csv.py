@@ -8,7 +8,8 @@ from datetime import date, timedelta
 from functions_generic_drive import *
 
 path_leclerc = os.path.join(path_data,
-                            u'data_drive_supermarkets',
+                            u'data_supermarkets',
+                            u'data_drive',
                             u'data_leclerc')
 
 path_price_source = os.path.join(path_leclerc,

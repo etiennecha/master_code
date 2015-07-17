@@ -8,7 +8,8 @@ from datetime import date, timedelta
 from functions_generic_drive import *
 
 path_leclerc = os.path.join(path_data,
-                            u'data_drive_supermarkets',
+                            u'data_supermarkets',
+                            u'data_drive',
                             u'data_leclerc')
 
 path_price_built_csv = os.path.join(path_leclerc,
@@ -77,6 +78,9 @@ df_prices_cols.index = pd.to_datetime(df_prices_cols.index, format = '%Y%m%d')
 # Count nb price chges by day and products
 # pbm: num to nan, nan to num? (missing days? products?)
  
+df_prices_cols =\
+  df_prices_cols.apply(lambda x: x.str.rstrip(u'\u20ac')).astype(float)
+
 df_prices_cols_diff = df_prices_cols.shift(1) - df_prices_cols
 
 se_prod_nb_chges = df_prices_cols_diff.apply(lambda x: len(x[x.abs() > 1e-05]),
