@@ -47,7 +47,7 @@ ls_fields = dict_fields.keys()
 # ###################
 
 path_temp = path_price_source
-start_date, end_date = date(2015,5,7), date(2015,6,7)
+start_date, end_date = date(2015,5,7), date(2015,6,28)
 ls_dates = get_date_range(start_date, end_date)
 ls_df_products = []
 for date_str in ls_dates:
