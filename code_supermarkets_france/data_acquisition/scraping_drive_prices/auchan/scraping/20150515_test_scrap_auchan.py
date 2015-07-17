@@ -265,7 +265,8 @@ for dict_product in ls_dict_products:
 
 ## structure of the data folder should be the same
 #path_auchan = os.path.join(path_data,
-#                           u'data_drive_supermarkets',
+#                           u'data_supermarkets',
+#                           u'data_drive',
 #                           u'data_auchan')
 #
 #today_date = date.today().strftime("%Y%m%d")

@@ -22,7 +22,8 @@ ls_store_subset = [u'06 - ANTIBES (HYPER)',
                    u'33 - MERIGNAC (HYPER)']
 
 path_carrefour = os.path.join(path_data,
-                              u'data_drive_supermarkets',
+                              u'data_supermarkets',
+                              u'data_drive',
                               u'data_carrefour')
 
 today_date = date.today().strftime(u"%Y%m%d")

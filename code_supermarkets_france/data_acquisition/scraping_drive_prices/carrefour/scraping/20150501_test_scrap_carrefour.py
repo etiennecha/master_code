@@ -211,7 +211,8 @@ for dpt, ls_sds in dict_dsds.items():
 # seems ls_promo should be empty but returns ls_price (print soup)
 
 #path_carrefour = os.path.join(path_data,
-#                              u'data_drive_supermarkets',
+#                              u'data_supermarkets',
+#                              u'data_drive',
 #                              u'data_carrefour')
 #
 #today_date = date.today().strftime(u"%Y%m%d")

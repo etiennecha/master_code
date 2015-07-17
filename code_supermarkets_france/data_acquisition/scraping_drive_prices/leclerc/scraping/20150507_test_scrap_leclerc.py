@@ -147,7 +147,8 @@ for store_id in ls_store_subset:
     print e
 
 path_leclerc = os.path.join(path_data,
-                            u'data_drive_supermarkets',
+                            u'data_supermarkets',
+                            u'data_drive',
                             u'data_leclerc')
 
 today_date = date.today().strftime(u"%Y%m%d")

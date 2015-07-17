@@ -22,7 +22,8 @@ ls_store_subset = [u'VELIZY Cedex',
                    u'BORDEAUX LE LAC CEDEX']
 
 path_auchan = os.path.join(path_data,
-                              u'data_drive_supermarkets',
+                              u'data_supermarkets',
+                              u'data_drive',
                               u'data_auchan')
 
 today_date = date.today().strftime(u"%Y%m%d")
