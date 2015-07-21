@@ -20,6 +20,8 @@ ls_df_leclerc_2015 = ['df_master_leclerc_2015',
                       'df_prices_leclerc_2015',
                       'df_products_leclerc_2015']
 
+ls_disp_prod = ['idProduit', 'title', 'label']
+
 dict_df = {}
 for df_file_title in ls_df_leclerc_2015:
   dict_df[df_file_title] =\
@@ -73,7 +75,7 @@ df_promo.reset_index(drop = False, inplace = True)
 
 print u'\nTop promo (by nb of stores) on first day:'
 df_promo.sort(['date', 'nb_stores'], ascending = False, inplace = True)
-print df_promo[df_promo['date'] == '20150507'][0:10].to_string()
+print df_promo[df_promo['date'] == '20150507'][ls_disp_prod][0:10].to_string()
 
 print u'\nPromo by nb of stores over time:'
 df_promo_su = pd.pivot_table(df_promo,
@@ -95,7 +97,7 @@ df_loyalty.reset_index(drop = False, inplace = True)
 
 print u'\nTop loyalty promo (by nb of stores) on first day:'
 df_loyalty.sort(['date', 'nb_stores'], ascending = False, inplace = True)
-print df_loyalty[df_loyalty['date'] == '20150507'][0:10].to_string()
+print df_loyalty[df_loyalty['date'] == '20150507'][ls_disp_prod][0:10].to_string()
 
 print u'\nLoyalty promo by nb of stores over time:'
 df_loyalty_su = pd.pivot_table(df_loyalty,
@@ -106,10 +108,14 @@ df_loyalty_su.fillna(0, inplace = True)
 print df_loyalty_su.to_string()
 
 # Check products with highest nb of stores
+
+print u'\nProd with highest nb of promo on 20150526:'
 print df_promo[(df_promo['date'] == '20150526') &\
-               (df_promo['nb_stores'] == 6)].to_string()
+               (df_promo['nb_stores'] == 6)][ls_disp_prod].to_string()
+
+print u'\nProd with highest nb of loyaty promo on 20150514:'
 print df_loyalty[(df_loyalty['date'] == '20150514') &\
-                 (df_loyalty['nb_stores'] == 6)].to_string()
+                 (df_loyalty['nb_stores'] == 6)][ls_disp_prod].to_string()
 
 #print df_prices[(df_prices[u'store'] == "Bois d'Arcy") &\
 #                (df_prices[u'idProduit'] == 2582)][['total_price', 'promo']]
