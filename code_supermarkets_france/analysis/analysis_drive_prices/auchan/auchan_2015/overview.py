@@ -86,27 +86,66 @@ df_dup_1 = df_master[df_master.duplicated(ls_dup_cols_1, take_last = False) |\
                      df_master.duplicated(ls_dup_cols_1, take_last = True)].copy()
 df_dup_1.sort(ls_dup_cols_1, inplace = True)
 
-print u'\nPct of rows involving duplicates: {:.2f}'.format(\
+print u'\nPct of rows involving duplicates (simple): {:.2f}'.format(\
         len(df_dup_1) / float(len(df_master)) * 100)
 
-# drop duplicates (drop concerned products in all periods? stats des?)
-df_master = df_master[~(df_master.duplicated(ls_dup_cols_1, take_last = False) |\
-                        df_master.duplicated(ls_dup_cols_1, take_last = True))]
+## drop simple duplicates (drop concerned products in all periods? stats des?)
+#df_master = df_master[~(df_master.duplicated(ls_dup_cols_1, take_last = False) |\
+#                        df_master.duplicated(ls_dup_cols_1, take_last = True))]
+#
+#df_prices = df_master[['store', 'date',
+#                       'department', 'sub_department', 'title',
+#                       'dum_available', 'dum_promo', 'dum_loyalty',
+#                       'promo_vignette', 'promo',
+#                       'total_price', 'unit_price', 'unit']].copy()
+#
+#df_products = df_master[['department', 'sub_department', 'title']].drop_duplicates()
+
+# make sure same price/promo for all products with same title
+ls_dup_cols_a = ['date', 'store', 'title']
+df_dup_a = df_master[df_master.duplicated(ls_dup_cols_a, take_last = False) |\
+                     df_master.duplicated(ls_dup_cols_a, take_last = True)].copy()
+
+ls_dup_cols_b = ['date', 'store', 'title', 'total_price', 'unit_price', 'promo_vignette']
+df_dup_b = df_master[df_master.duplicated(ls_dup_cols_b, take_last = False) |\
+                     df_master.duplicated(ls_dup_cols_b, take_last = True)].copy()
+
+ls_ind_pbms = set(df_dup_a.index.tolist()).difference(set(df_dup_b.index.tolist()))
+df_pbms = df_master.ix[ls_ind_pbms].copy()
+df_pbms.sort(['date', 'store', 'title'], inplace = True)
+
+# best to drop all involved titles to avoid mismatching across periods
+ls_title_pbms = df_pbms['title'].unique().tolist()
+
+df_drop = df_master[df_master['title'].isin(ls_title_pbms)]
+print u'\nPct of rows involving duplicates (extensive): {:.2f}'.format(\
+        len(df_drop) / float(len(df_master)) * 100)
+
+# drop duplicates (extensive) and get df_prices with unique products (by title)
+# may bias data if stores don't use same categories (comprehensive though)
+df_master = df_master[~df_master['title'].isin(ls_title_pbms)]
 
 df_prices = df_master[['store', 'date',
-                       'department', 'sub_department', 'title',
-                       'dum_available', 'dum_promo', 'promo_vignette', 'promo',
-                       'total_price', 'unit_price', 'unit']].copy()
+                       'title',
+                       'dum_available', 'dum_promo', 'dum_loyalty',
+                       'promo_vignette', 'promo',
+                       'total_price', 'unit_price', 'unit']]\
+              .drop_duplicates(['store', 'date', 'title'])
 
 df_products = df_master[['department', 'sub_department', 'title']].drop_duplicates()
 
+# ###########
+# FILTER DATA
+# ###########
+
+# Exclude stores not present on 2015/05/07 (more on first day but then no more)
+ls_keep_stores = df_master[df_master['date'] == '20150507']['store'].unique().tolist()
+df_master = df_master[df_master['store'].isin(ls_keep_stores)]
+df_prices = df_prices[df_prices['store'].isin(ls_keep_stores)]
 
 # #########
-# OVERVIEW
+# PRODUCTS
 # #########
-
-# Exclude first day (more stores but once only)
-df_master = df_master[df_master['date'] != '20150506']
 
 # NB PRODUCTS BY DAY AND STORE
 # can drop 20150506 which has more store (unique occurence)
