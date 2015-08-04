@@ -92,7 +92,7 @@ ls_stores = df_master['store'].unique().tolist()
 
 # NB PRODUCTS
 
-print u'\nNb promo by nb of stores over time:'
+print u'\nNb products by nb of stores over time:'
 df_nb_prod = pd.pivot_table(df_prices,
                             columns = 'store',
                             index = 'date',
@@ -127,8 +127,11 @@ print df_nb_loyalty.to_string()
 # GENERAL OVERVIEW: DYNAMIC
 # #########################
 
+df_temp = df_prices[~df_prices['loyalty'].isnull()] # df_prices[df_prices['dum_promo'] == True]
+df_nb_temp = df_nb_loyalty # df_nb_promo
+
 # todo: nb new/old products, promo etc.
-df_test = pd.pivot_table(df_prices,
+df_test = pd.pivot_table(df_temp,
                          columns = 'date',
                          index = ['store', 'idProduit'],
                          aggfunc = 'size')
@@ -142,13 +145,16 @@ df_test = df_test.T
 df_test.index = pd.to_datetime(df_test.index, format = '%Y%m%d')
 
 df_dtest = df_test.shift(1) - df_test
-se_day_beg_prod = df_dtest.apply(lambda x: (x==1).sum(), axis = 1)
-se_day_end_prod = df_dtest.apply(lambda x: (x==-1).sum(), axis = 1)
+se_day_beg_prod = df_dtest.apply(lambda x: (x==-1).sum(), axis = 1)
+se_day_end_prod = df_dtest.apply(lambda x: (x==1).sum(), axis = 1)
 df_dyna_prod = pd.concat([se_day_beg_prod, se_day_end_prod],
                           axis = 1,
                           keys = ['beg', 'end'])
-df_dyna_prod['nb_prod'] = df_nb_prod[ls_stores[0]]
-# not consistent... check what is wrong (nan?)
+df_dyna_prod['nb_prod'] = df_nb_temp[ls_stores[0]]
+# seems beg/end are inversed... check what is wrong (nan?)
+
+print u'\nOverview of promo strat of store {:s}'.format(ls_stores[0])
+print df_dyna_prod.to_string()
 
 # ###################
 # BY PRODUCT
@@ -194,3 +200,78 @@ print df_prod_loyalty[(df_prod_loyalty['date'] == '20150514') &\
 
 #print df_prices[(df_prices[u'store'] == "Bois d'Arcy") &\
 #                (df_prices[u'idProduit'] == 2582)][['total_price', 'promo']]
+
+# #####################
+# PROMO AND STOCK
+# #####################
+
+print u'\nPrint 10 promo rows:'
+print df_prices[df_prices['dum_promo'] == True][0:10].to_string()
+
+# During promo: 
+# - total_price and unit_price remain unchanged
+# - promo and promo_per_unit provide actual prices
+
+print u'\nInspect given product at given store:'
+print df_prices[(df_prices['store'] == 'Clermont Ferrand') &\
+                (df_prices['idProduit'] == 39117)].to_string()
+
+# Stock becomes NaN instead of 0 (no 0 in data)
+# Product row can disappear (here after two days of no stock)
+# When back: no promo at first but then again (maybe a mistake only for Drive?)
+
+# Possibility to compute sales on one day when stock only decreases?
+# Would then be interesting to scrap all stores during 7 days
+
+# STOCK VARIATION FOR ONE STORE
+
+df_store_prices = df_prices[df_prices['store'] == ls_stores[0]]
+df_stock = df_store_prices.pivot(index = 'date',
+                                 columns = 'idProduit',
+                                 values = 'stock')
+df_stock.fillna(0, inplace = True)
+df_dstock = df_stock - df_stock.shift(1)
+
+# nb positive variations by row
+df_dstock.index = pd.to_datetime(df_dstock.index, format = '%Y%m%d')
+
+print u'\nNb positive variations in stock:'
+print df_dstock.apply(lambda x: (x>0).sum(), axis = 1)
+
+print u'\nNb negative variations in stock:'
+print df_dstock.apply(lambda x: (x<=0).sum(), axis = 1)
+
+# todo: by rayon
+ls_se_dpts = []
+for ind in df_dstock.index:
+  ls_ids = list(df_dstock.ix[ind][df_dstock.ix[ind] > 0].index)
+  ls_se_dpts.append(df_products[df_products['idProduit'].isin(ls_ids)]\
+                      ['department'].value_counts())
+print pd.concat(ls_se_dpts,
+                axis = 1,
+                keys = df_dstock.index).fillna(0).T.to_string()
+
+# ##################
+# PRICE VARIATIONS
+# ##################
+
+# Price var not related to promo
+df_store_prices = df_prices[df_prices['store'] == ls_stores[0]]
+df_total_price = df_store_prices.pivot(index = 'date',
+                                 columns = 'idProduit',
+
+                                 values = 'total_price')
+df_dtotal_price = df_total_price - df_total_price.shift(1)
+
+df_dtotal_price.index = pd.to_datetime(df_dtotal_price.index, format = '%Y%m%d')
+
+print u'\nNb positive product price vars:'
+se_pos_vars =  df_dtotal_price.apply(lambda x: (x>0).sum(), axis = 1)
+se_neg_vars = df_dtotal_price.apply(lambda x: (x<0).sum(), axis = 1)
+df_total_price_vars = pd.concat([se_pos_vars, se_neg_vars],
+                                axis = 1,
+                                keys = ['pos', 'neg'])
+
+# check if looks ok and sign is right
+# coordination among stores? which output?
+# size of price variations? inverse variations? no connection to promo/loyalty?
