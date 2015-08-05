@@ -201,9 +201,9 @@ print df_prod_loyalty[(df_prod_loyalty['date'] == '20150514') &\
 #print df_prices[(df_prices[u'store'] == "Bois d'Arcy") &\
 #                (df_prices[u'idProduit'] == 2582)][['total_price', 'promo']]
 
-# #####################
-# PROMO AND STOCK
-# #####################
+# ##############################
+# PROMO AND STOCK (STORE LEVEL)
+# ##############################
 
 print u'\nPrint 10 promo rows:'
 print df_prices[df_prices['dum_promo'] == True][0:10].to_string()
@@ -251,12 +251,12 @@ print pd.concat(ls_se_dpts,
                 axis = 1,
                 keys = df_dstock.index).fillna(0).T.to_string()
 
-# ##################
-# PRICE VARIATIONS
-# ##################
+# ###############################
+# PRICE VARIATIONS (STORE LEVEL)
+# ###############################
 
 # Price var not related to promo
-df_store_prices = df_prices[df_prices['store'] == ls_stores[0]]
+df_store_prices = df_prices[df_prices['store'] == ls_stores[0]].copy()
 df_total_price = df_store_prices.pivot(index = 'date',
                                  columns = 'idProduit',
 
@@ -265,13 +265,59 @@ df_dtotal_price = df_total_price - df_total_price.shift(1)
 
 df_dtotal_price.index = pd.to_datetime(df_dtotal_price.index, format = '%Y%m%d')
 
-print u'\nNb positive product price vars:'
-se_pos_vars =  df_dtotal_price.apply(lambda x: (x>0).sum(), axis = 1)
+print u'\nNb price chges per period:'
+se_pos_vars = df_dtotal_price.apply(lambda x: (x>0).sum(), axis = 1)
 se_neg_vars = df_dtotal_price.apply(lambda x: (x<0).sum(), axis = 1)
 df_total_price_vars = pd.concat([se_pos_vars, se_neg_vars],
                                 axis = 1,
                                 keys = ['pos', 'neg'])
+print df_total_price_vars.to_string()
 
-# check if looks ok and sign is right
 # coordination among stores? which output?
 # size of price variations? inverse variations? no connection to promo/loyalty?
+
+print u'\nNb price chges per product over the period:'
+se_prod_vars = df_dtotal_price.apply(lambda x: (x.abs()>0).sum(), axis = 0)
+print se_prod_vars.describe()
+
+#se_prod_vars.sort(ascending = False)
+
+df_prod_temp = df_products.copy()
+df_prod_temp.set_index('idProduit', inplace = True)
+df_prod_temp['nb_price_vars'] = se_prod_vars
+df_prod_temp.sort('nb_price_vars', ascending = False, inplace = True)
+print df_prod_temp[0:100].to_string()
+
+# Exemple (todo: fill index + put stock on right axis)
+df_store_prices['date'] = pd.to_datetime(df_store_prices['date'], format = '%Y%m%d')
+df_product = df_store_prices[['total_price', 'promo', 'stock', 'date']]\
+               [df_store_prices['idProduit'] == 34305] # 40204
+df_product.set_index('date', inplace = True)
+index = pd.date_range(start = df_product.index[0],
+                      end   = df_product.index[-1], 
+                      freq = 'D')
+df_product = df_product.reindex(index = index)
+
+import matplotlib.pyplot as plt
+
+fig = plt.figure()
+ax1 = fig.add_subplot(111)
+line_1 = ax1.plot(df_product.index,
+                  df_product['total_price'].values,
+                  ls='-', c='b', label='Product price (euros)')
+ax2 = ax1.twinx()
+line_2 = ax2.plot(df_product.index,
+                  df_product['stock'].values,
+                  ls='-', c= 'g',
+                  label=r'Product stock')
+
+lns = line_1 + line_2
+labs = [l.get_label() for l in lns]
+ax1.legend(lns, labs, loc=0)
+
+#ax1.grid()
+##ax1.set_title(r"Add title here")
+#ax1.set_ylabel(r"French retail diesel (euros/l)")
+#ax2.set_ylabel(r"Rotterdam wholesale diesel (euros/l)")
+#plt.tight_layout()
+plt.show()
