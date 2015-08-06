@@ -167,6 +167,51 @@ print len(df_su_day_prices[(df_su_day_prices['count'] >= 4) &\
 # PROMO COMPARISON
 # ###################
 
+df_prod_promo = pd.pivot_table(df_prices[df_prices['dum_promo'] == True],
+                               columns = 'store',
+                               index = ['date', 'idProduit', 'title', 'label'],
+                               aggfunc = 'size')
+df_prod_promo.fillna(0, inplace = True)
+df_prod_promo['nb_stores'] = df_prod_promo[ls_stores].sum(1)
+df_prod_promo.reset_index(drop = False, inplace = True)
+
+print u'\nTop promo (by nb of stores) on first day:'
+df_prod_promo.sort(['date', 'nb_stores'], ascending = False, inplace = True)
+print df_prod_promo[df_prod_promo['date'] == '20150507']\
+        [ls_disp_prod + ['nb_stores']][0:10].to_string()
+
+print u'\nNb stores concerned by each product in promo per day'
+df_promo_nb_stores = pd.pivot_table(df_prod_promo,
+                                    columns = 'nb_stores',
+                                    index = 'date',
+                                    aggfunc = 'size')
+df_promo_nb_stores.fillna(0, inplace = True)
+print df_promo_nb_stores.to_string()
+
+# Add display of nb of promo by store (both at the same time)
+# 
+
 # ###################
 # LOYALTY COMPARISON
 # ###################
+
+df_prod_loyalty = pd.pivot_table(df_prices[~df_prices['loyalty'].isnull()],
+                                 columns = 'store',
+                                 index = ['date', 'idProduit', 'title', 'label'],
+                                 aggfunc = 'size')
+df_prod_loyalty.fillna(0, inplace = True)
+df_prod_loyalty['nb_stores'] = df_prod_loyalty[ls_stores].sum(1)
+df_prod_loyalty.reset_index(drop = False, inplace = True)
+
+print u'\nTop loyalty promo (by nb of stores) on first day:'
+df_prod_loyalty.sort(['date', 'nb_stores'], ascending = False, inplace = True)
+print df_prod_loyalty[df_prod_loyalty['date'] == '20150507']\
+        [ls_disp_prod + ['nb_stores']][0:10].to_string()
+
+print u'\nNb stores concerned by each product in loyalty per day'
+df_loyalty_nb_stores = pd.pivot_table(df_prod_loyalty,
+                                      columns = 'nb_stores',
+                                      index = 'date',
+                                      aggfunc = 'size')
+df_loyalty_nb_stores.fillna(0, inplace = True)
+print df_loyalty_nb_stores.to_string()
