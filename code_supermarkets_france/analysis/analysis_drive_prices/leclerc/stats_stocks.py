@@ -146,7 +146,9 @@ print pd.concat(ls_se_dpts,
 df_q_sold = df_dstock.copy()
 df_q_sold[df_q_sold > 0] = np.nan
 df_q_sold = df_q_sold.abs()
+
 # how to fill? avg? avg of same week day? (how?)
+
 
 # Need a price dataframe (promotions?)
 df_total_price = df_store_prices.pivot(index = 'date',
