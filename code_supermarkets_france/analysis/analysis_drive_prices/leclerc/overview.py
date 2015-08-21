@@ -258,9 +258,8 @@ print pd.concat(ls_se_dpts,
 # Price var not related to promo
 df_store_prices = df_prices[df_prices['store'] == ls_stores[0]].copy()
 df_total_price = df_store_prices.pivot(index = 'date',
-                                 columns = 'idProduit',
-
-                                 values = 'total_price')
+                                       columns = 'idProduit',
+                                       values = 'total_price')
 df_dtotal_price = df_total_price - df_total_price.shift(1)
 
 df_dtotal_price.index = pd.to_datetime(df_dtotal_price.index, format = '%Y%m%d')
