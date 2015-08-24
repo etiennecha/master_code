@@ -147,9 +147,25 @@ df_q_sold = df_dstock.copy()
 df_q_sold[df_q_sold > 0] = np.nan
 df_q_sold = df_q_sold.abs()
 
-# how to fill? avg? avg of same week day? (how?) exclude promotions?
+# how to fill?
+# for now: avg of same week day? 
+# todo? exclude promotions?
 se_wd = df_q_sold.index.weekday
-se_daily_quantity = df_q_sold[df_q_sold.index.weekday == 1].mean(0)
+ls_se_wd_quantity = []
+for wd_ind in range(7):
+  se_wd_quantity = df_q_sold[df_q_sold.index.weekday == wd_ind].mean(0)
+  ls_se_wd_quantity.append(se_wd_quantity)
+df_wd_quantity = pd.concat(ls_se_wd_quantity, axis = 0, keys = range(7))
+# transform to have same index/columns as df_q_sold
+ls_rows_fill_quantity = []
+for wd in df_q_sold.index.weekday:
+  ls_rows_fill_quantity.append(df_wd_quantity.ix[wd])
+df_fill_quantity = pd.concat(ls_rows_fill_quantity,
+                             axis = 1,
+                             keys = df_q_sold.index).T
+df_fill_quantity.ix['2015-05-07'] = np.nan
+df_q_sold.fillna(value = df_fill_quantity, inplace = True)
+# todo ? convert to int
 
 # Need a price dataframe (promotions?)
 df_total_price = df_store_prices.pivot(index = 'date',
@@ -162,3 +178,10 @@ df_sales = df_total_price.mul(df_q_sold, 1)
 
 # Estimates of sales (before fill) by day
 print df_sales.sum(1)
+
+# Top products in terms of sales
+se_prod_sales = df_sales.sum(0)
+se_prod_sales.sort(ascending = False, inplace = True)
+
+print df_products[df_products['idProduit'].isin(se_prod_sales[0:10].index)]\
+        [['idProduit', 'brand', 'title', 'label']].to_string()
