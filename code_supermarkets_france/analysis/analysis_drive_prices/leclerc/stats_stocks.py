@@ -147,8 +147,9 @@ df_q_sold = df_dstock.copy()
 df_q_sold[df_q_sold > 0] = np.nan
 df_q_sold = df_q_sold.abs()
 
-# how to fill? avg? avg of same week day? (how?)
-
+# how to fill? avg? avg of same week day? (how?) exclude promotions?
+se_wd = df_q_sold.index.weekday
+se_daily_quantity = df_q_sold[df_q_sold.index.weekday == 1].mean(0)
 
 # Need a price dataframe (promotions?)
 df_total_price = df_store_prices.pivot(index = 'date',
