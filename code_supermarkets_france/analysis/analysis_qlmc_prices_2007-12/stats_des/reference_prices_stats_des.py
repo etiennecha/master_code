@@ -107,8 +107,8 @@ se_prod = df_qlmc.groupby(['Department', 'Family', 'Product']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
 
 # retail_chain = 'CARREFOUR'
-retail_chain = 'CARREFOUR' # 'GEANT CASINO'
-nb_obs_min = 10
+retail_chain = 'CENTRE E.LECLERC' # 'GEANT CASINO'
+nb_obs_min = 10 # Product must be observed at X stores at least
 pct_min = 0.33
 
 print '\nStats des on ref prices for {:s} :'.format(retail_chain)
@@ -139,14 +139,15 @@ for per_ind in range(13):
   df_sub_products['price_12_freq'] =\
     df_sub_products[['price_1_freq', 'price_2_freq']].sum(axis = 1)
   
-  print u'\nOverview products:'
-  print df_sub_products.describe()
-  
+  # Keep only products observed at enough stores
   df_enough_obs = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min)]
   df_ref_price = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min) &\
                                  (df_sub_products['price_1_freq'] >= pct_min)]
 
   if len(df_enough_obs) > 0:
+    
+    print u'\nOverview at product level'
+    print df_enough_obs.describe()
     
     print u'Nb prod w/ >= {:d} obs: {:d}'.format(\
             nb_obs_min, len(df_enough_obs))
@@ -157,10 +158,10 @@ for per_ind in range(13):
     print u'Pct prod w/ >= 20 obs and no ref price (0.33): {:.2f}'.format(\
             nb_obs_min, len(df_ref_price) / float(len(df_enough_obs)))
     
-    df_sub_products.reset_index(drop = False, inplace = True)
+    df_enough_obs.reset_index(drop = False, inplace = True)
     
     df_sub = pd.merge(df_sub,
-                      df_sub_products,
+                      df_enough_obs,
                       on = ['Department', 'Family', 'Product'],
                       how = 'left')
     
@@ -184,8 +185,8 @@ for per_ind in range(13):
                'ref_price'] = 'price_2'
     df_sub.loc[(df_sub['price_1_freq'] <= pct_min),
                'ref_price'] = 'no_ref'
-    df_sub.loc[df_sub['nb_obs'] <= nb_obs_min,
-               'ref_price'] = 'insuff'
+    #df_sub.loc[df_sub['nb_obs'] < nb_obs_min,
+    #           'ref_price'] = 'insuff'
     
     df_ref = pd.pivot_table(data = df_sub[['Store', 'ref_price']],
                             index = 'Store',
@@ -196,20 +197,19 @@ for per_ind in range(13):
     try:
       # drop if not enough data (but should report ?)
       se_nb_tot_obs = df_ref.sum(axis = 1).astype(int)
-      se_insuff = df_ref['insuff'] / df_ref.sum(axis = 1)
-      df_ref.drop(labels = ['insuff'], axis = 1, inplace = True)
+      #se_insuff = df_ref['insuff'] / df_ref.sum(axis = 1)
+      #df_ref.drop(labels = ['insuff'], axis = 1, inplace = True)
       
       df_ref_pct = df_ref.apply(lambda x: x / x.sum(), axis = 1)
       df_ref_pct['nb_obs'] = df_ref.sum(axis = 1).astype(int)
       df_ref_pct['nb_tot_obs'] = se_nb_tot_obs
-      df_ref_pct['insuff'] = se_insuff
+      #df_ref_pct['insuff'] = se_insuff
       
       #print u'\nOverview ref prices:'
       #print df_ref.to_string()
       
-      print u'\nOverview ref prices:'
-      print df_ref_pct[['nb_tot_obs',
-                        'insuff',
+      print u'\nOverview at store level:'
+      print df_ref_pct[['nb_tot_obs', # 'insuff',
                         'nb_obs',
                         'no_ref',
                         'diff',
