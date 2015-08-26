@@ -395,23 +395,28 @@ for Period, id_lsa in se_stores_dup[se_stores_dup != 1].index:
   print df_stores[(df_stores['Period'] == Period) &\
                   (df_stores['id_lsa'] == id_lsa)].to_string()
 
-## ######
-## OUTPUT
-## ######
+# PRODUCTS LISTED UNDER SEVERAL DPTS/FAMILIES?
 
-df_qlmc.drop(['id_fra_stores', 'id_fra_stores_2', 'street_fra_stores'],
-             axis = 1,
-             inplace = True)
+print len(df_qlmc[df_qlmc.duplicated(['Period', 'Store', 'Product_norm'], take_last = True) |\
+                  df_qlmc.duplicated(['Period', 'Store', 'Product_norm'], take_last = False)])
 
-df_qlmc.to_csv(os.path.join(path_built_csv,
-                            'df_qlmc.csv'),
-                  float_format='%.2f',
-                  encoding='utf-8',
-                  index=False)
-
-# todo: try working with lighter files
-# - split between products and stores
-# - drop Product_norm (can be easily re-created)
+### ######
+### OUTPUT
+### ######
+#
+#df_qlmc.drop(['id_fra_stores', 'id_fra_stores_2', 'street_fra_stores'],
+#             axis = 1,
+#             inplace = True)
+#
+#df_qlmc.to_csv(os.path.join(path_built_csv,
+#                            'df_qlmc.csv'),
+#                  float_format='%.2f',
+#                  encoding='utf-8',
+#                  index=False)
+#
+## todo: try working with lighter files
+## - split between products and stores
+## - drop Product_norm (can be easily re-created)
 
 
 
