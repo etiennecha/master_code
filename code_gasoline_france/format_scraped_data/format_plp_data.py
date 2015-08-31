@@ -14,6 +14,10 @@ path_dir_raw_plp = os.path.join(path_data,
                                 'data_prices',
                                 '20070311_20090330_plp')
 
+path_dir_source = os.path.join(path_data,
+                               'data_gasoline',
+                               'data_source')
+
 path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
                               u'data_built')
@@ -109,6 +113,16 @@ def harmonize_str(some_str):
 df_plp['brand'] = df_plp['brand'].apply(lambda x: harmonize_str(x)\
                                           if not pd.isnull(x) else x)
 
+dict_brands = dec_json(os.path.join(path_dir_source,
+                                    'data_other',
+                                    'dict_brands.json'))
+df_plp['brand_bu'] = df_plp['brand']
+
+df_plp['brand'] =\
+  df_plp['brand_bu'].apply(lambda x: dict_brands.get(x, [None])[0])
+
+df_plp['group'] =\
+  df_plp['brand_bu'].apply(lambda x: dict_brands.get(x, [None, None])[1])
 
 df_diesel_brands = pd.pivot_table(df_plp,
                                   columns = 'brand',
@@ -120,3 +134,14 @@ df_diesel_brands['ALL'] = se_diesel
 
 df_diesel_brands[['TOTAL', 'ESSO', 'LECLERC', 'INTERMARCHE', 'ALL']].plot()
 plt.show()
+
+# Check brand distributions
+# todo: create comparison between TOTAL and ESSO with exogeneously defined bins
+ax = df_plp['diesel'][(df_plp['date'] == '2007-03-12') &\
+                       (df_plp['brand'] == 'TOTAL')]\
+       .plot(kind = 'hist', bins = 30, alpha = 0.3, label = 'TOTAL')
+df_plp['diesel'][(df_plp['date'] == '2007-03-12') &\
+                 (df_plp['brand'] == 'ESSO')]\
+  .plot(kind = 'hist', bins = 30, alpha = 0.3, label = 'ESSO', ax = ax)
+plt.show()
+# todo: before/after test on all stations, in particular on ESSO (ESSO EXPRESS?)
