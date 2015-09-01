@@ -26,3 +26,60 @@ import datetime
 # - concat open data before + my scraped data when available (id reconciliations?)
 # - add missing stations from plp (fill prices using dates?)
 # - brand info from plp
+
+# ###########
+# LOAD DATA
+# ###########
+
+path_dir_built_csv = os.path.join(path_data,
+                                  'data_gasoline',
+                                  'data_built',
+                                  'data_paper_total_access',
+                                  'data_csv')
+
+path_dir_source = os.path.join(path_data,
+                               'data_gasoline',
+                               'data_source')
+
+path_dir_plp_csv = os.path.join(path_dir_source,
+                                'data_plp')
+
+path_dir_open_csv = os.path.join(path_dir_source,
+                                 'data_opendata',
+                                 'csv_files')
+
+# Load open data files
+df_open_info = pd.read_csv(os.path.join(path_dir_open_csv,
+                                        'df_info_all.csv'),
+                             encoding = 'utf-8',
+                           dtype = {'id_station' : str})
+
+df_open_prices = pd.read_csv(os.path.join(path_dir_open_csv,
+                                          'df_prices_all.csv'),
+                             encoding = 'utf-8')
+
+# Load plp files
+df_plp_info = pd.read_csv(os.path.join(path_dir_plp_csv,
+                                       'df_plp_info.csv'),
+                          encoding = 'utf-8',
+                          dtype = {'id_station' : str})
+df_plp_prices = pd.read_csv(os.path.join(path_dir_plp_csv,
+                                         'df_plp_diesel.csv'),
+                            encoding = 'utf-8')
+
+# Load my scraped data files
+df_my_info = pd.read_csv(os.path.join(path_dir_built_csv,
+                                     'df_station_info_final.csv'),
+                          encoding = 'utf-8',
+                          dtype = {'id_station' : str})
+df_my_prices = pd.read_csv(os.path.join(path_dir_built_csv,
+                                          'df_prices_ttc_final.csv'),
+                             encoding = 'utf-8')
+
+# ###########
+# MERGE DATA
+# ###########
+
+df_all_diesel = pd.concat([df_open_prices.ix[:'2011-09-04'],
+                           df_my_prices.ix['2011-09-04':]],
+                          axis = 0)
