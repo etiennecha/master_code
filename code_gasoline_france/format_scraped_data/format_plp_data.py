@@ -109,7 +109,6 @@ def harmonize_str(some_str):
 df_plp['brand'] = df_plp['brand'].apply(lambda x: harmonize_str(x)\
                                           if not pd.isnull(x) else x)
 
-
 df_diesel_brands = pd.pivot_table(df_plp,
                                   columns = 'brand',
                                   index = 'date',
