@@ -174,7 +174,7 @@ plt.close()
 # df_prices_ttc[['37000002', '6000010']].plot()
 
 ## ######################################
-## GRAPHS: PRICE HISTOGRAMES FOR TREATED
+## GRAPHS: PRICE HISTOGRAMS FOR TREATED
 ## ######################################
 
 ls_keep_info = list(df_info[df_info['highway'] != 1].index)
