@@ -108,6 +108,8 @@ se_prod.sort(ascending = False, inplace = True)
 
 # WITH ONE PRODUCT
 rayon, famille, produit = se_prod.index[0]
+produit = u'Coca Cola - Coca Cola avec caféine, 1,5L'
+
 df_qlmc_prod = df_qlmc[(df_qlmc['Department'] == rayon) &\
                        (df_qlmc['Family'] == famille) &\
                        (df_qlmc['Product'] == produit)].copy()
@@ -132,10 +134,10 @@ print df_pd[ls_pd_disp].to_string()
 # All periods
 df_pd_2 =  df_qlmc_prod[['Period', 'Price', 'Enseigne_alt']]\
              .groupby(['Period', 'Enseigne_alt']).agg([nb_obs,
-                                                  price_1,
-                                                  price_1_freq,
-                                                  price_2,
-                                                  price_2_freq])['Price']
+                                                       price_1,
+                                                       price_1_freq,
+                                                       price_2,
+                                                       price_2_freq])['Price']
 
 # Sort by nb of obs within each period             
 df_pd_2.reset_index('Period', drop = False, inplace = True)
