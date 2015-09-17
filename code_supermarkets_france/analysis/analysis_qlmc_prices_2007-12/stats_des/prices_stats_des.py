@@ -57,16 +57,33 @@ for sc_old, sc_new in ls_sc_replace:
 # STATS DES PRICES
 # #############################
 
+class PriceDispersion:
+  def cv(self, se_prices):
+    return se_prices.std() / se_prices.mean()
+  def iq_range(self, se_prices):
+    return se_prices.quantile(0.75) - se_prices.quantile(0.25)
+  def id_range(self, se_prices):
+    return se_prices.quantile(0.90) - se_prices.quantile(0.10)
+  def minmax_range(self, se_prices):
+    return se_prices.max() - se_prices.min()
+
+PD = PriceDispersion()
+
 # todo: add functions to describe prices (dispersion, ref prices)
 
 df_qlmc_per = df_qlmc[df_qlmc['Period'] == 1]
-df_qlmc_per = df_qlmc_per[df_qlmc_per['Store_Chain'] == 'CARREFOUR']
 
 print u'\nStats des prices within period'
 df_prod_per = pd.pivot_table(data = df_qlmc_per[['Department', 'Product', 'Price']],
                              index = ['Department', 'Product'],
                              values = 'Price',
-                             aggfunc = [len, np.mean, np.std],
+                             aggfunc = [len,
+                                        np.mean,
+                                        np.std,
+                                        PD.cv,
+                                        PD.iq_range,
+                                        PD.id_range,
+                                        PD.minmax_range],
                              fill_value = np.nan)
 print df_prod_per.describe()
 #df_prod_per.sort('len', ascending = False, inplace = True)
@@ -76,10 +93,25 @@ print df_prod_per.describe()
 #df_prod_per.sort('mean', ascending = True, inplace = True)
 #print df_prod_per[0:10].to_string()
 
-# Not much to see with first and last: prefer graph
-df_prod_per[(df_prod_per['len'] >= df_prod_per['len'].quantile(0.25)) &\
-            (df_prod_per['mean'] <= df_prod_per['mean'].quantile(0.75))]\
-               .plot(kind = 'scatter', x = 'mean', y = 'std')
+# stackoverflow.com/questions/21654635/scatter-plots-in-pandas-pyplot-how-to-plot-by-category
+
+# PRICE DISPERSION BY PRODUCT FAMILY
+
+fig, ax = plt.subplots()
+for dpt, c_dpt in [(u'Produits frais', 'b'),
+                   (u'Epicerie salée', 'g'),
+                   (u'Epicerie sucrée', 'r'),
+                   (u'Boissons', 'k')]:
+  df_temp = df_prod_per.loc[dpt]
+  df_temp = df_temp[(df_temp['len'] >= df_temp['len'].quantile(0.25)) &\
+                    (df_temp['mean'] <= df_temp['mean'].quantile(0.75))]
+  ax.plot(df_temp['mean'].values,
+          df_temp['cv'].values,
+          marker = 'o',
+          linestyle = '',
+          c = c_dpt,
+          label = dpt)
+ax.legend()
 plt.show()
 # todo: replicate for each brand and output
 # todo: distinguish families by colors
@@ -91,7 +123,49 @@ plt.show()
 #df_su_prod_per = pd.concat(ls_se_pp, axis= 1, keys = range(13))
 #print df_su_prod_per.to_string()
 
-## NB OBS BY PRODUCT AND CHAIN
+## PRICE DISPERSION BY STORE CHAIN
+#fig, ax = plt.subplots()
+#for chain, c_chain in [(u'LECLERC', 'b'),
+#                       (u'AUCHAN', 'g'),
+#                       (u'CARREFOUR', 'r'),
+#                       (u'INTERMARCHE', 'k')]:
+#  df_qlmc_per_chain = df_qlmc_per[(df_qlmc_per['Store_Chain'] == chain) &\
+#                                  (df_qlmc_per['Department'] == u'Produits frais')]
+#  df_prod_per_chain = pd.pivot_table(data = df_qlmc_per_chain[['Department',
+#                                                               'Product',
+#                                                               'Price']],
+#                                     index = ['Department', 'Product'],
+#                                     values = 'Price',
+#                                     aggfunc = [len, np.mean, np.std],
+#                                     fill_value = np.nan)
+#  df_temp = df_prod_per_chain
+#  df_temp = df_temp[(df_temp['len'] >= df_temp['len'].quantile(0.25)) &\
+#                    (df_temp['mean'] <= df_temp['mean'].quantile(0.75))]
+#  ax.plot(df_temp['mean'].values,
+#          df_temp['std'].values,
+#          marker = 'o',
+#          linestyle = '',
+#          c = c_chain,
+#          label = chain)
+#ax.legend()
+#plt.show()
+
+# #################
+# STATS DES: PRICES
+# #################
+
+## potential issue outlier detection
+## example: boxplot
+#import matplotlib.pyplot as plt
+##str_some_prod = u'Philips - Cafetière filtre Cucina lilas 1000W 1.2L (15 tasses) - X1'
+#str_some_prod = u'Canard-Duchene - Champagne brut 12 degrés - 75cl'
+#df_some_prod = df_qlmc[(df_qlmc['Period'] == 0) &\
+#                       (df_qlmc['Product_norm'] == str_some_prod)]
+#df_some_prod['Price'].plot(kind = 'box')
+## pbm... quite far away and other prices quite concentrated
+#plt.show()
+
+## BACKUP: NB OBS BY PRODUCT AND CHAIN
 #
 #print u'\nProduct nb of obs by period for each chain'
 #df_prod_chain_per = pd.pivot_table(data = df_qlmc[['Period',
@@ -110,18 +184,3 @@ plt.show()
 #  df_su_chain_prod_per = pd.concat(ls_se_chain_pp, axis= 1, keys = range(13))
 #  print u'\n', chain
 #  print df_su_chain_prod_per.to_string()
-
-# #################
-# STATS DES: PRICES
-# #################
-
-## potential issue outlier detection
-## example: boxplot
-#import matplotlib.pyplot as plt
-##str_some_prod = u'Philips - Cafetière filtre Cucina lilas 1000W 1.2L (15 tasses) - X1'
-#str_some_prod = u'Canard-Duchene - Champagne brut 12 degrés - 75cl'
-#df_some_prod = df_qlmc[(df_qlmc['Period'] == 0) &\
-#                       (df_qlmc['Product_norm'] == str_some_prod)]
-#df_some_prod['Price'].plot(kind = 'box')
-## pbm... quite far away and other prices quite concentrated
-#plt.show()
