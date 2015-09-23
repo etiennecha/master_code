@@ -25,13 +25,13 @@ path_ufip = os.path.join(path, file_ufip)
 eia_excel_file = pd.ExcelFile(path_eia)
 print 'EIA excel file sheets:', eia_excel_file.sheet_names
 # Brent price sheet
-df_eia_brent = eia_excel_file.parse('Data 1', skiprows = 1, header = 2, parse_dates = True)
+df_eia_brent = eia_excel_file.parse('Data 1', skiprows = 1, header = 1, parse_dates = True)
 dict_brent_cols = {u'Cushing, OK WTI Spot Price FOB (Dollars per Barrel)' : u'OK WTI Brent FOB DB',
                    u'Europe Brent Spot Price FOB (Dollars per Barrel)' : 'Europe Brent FOB DB'}
 df_eia_brent = df_eia_brent.rename(columns = dict_brent_cols)
 df_eia_brent.set_index('Date', inplace = True)
 # Diesel price sheet
-df_eia_diesel = eia_excel_file.parse('Data 5', skiprows = 1, header = 2, parse_dates = True)
+df_eia_diesel = eia_excel_file.parse('Data 5', skiprows = 1, header = 1, parse_dates = True)
 dict_d_cols = {u'New York Harbor Ultra-Low Sulfur No 2 Diesel Spot Price (Dollars per Gallon)':\
                    'NY Diesel DG',
                u'U.S. Gulf Coast Ultra-Low Sulfur No 2 Diesel Spot Price (Dollars per Gallon)':\

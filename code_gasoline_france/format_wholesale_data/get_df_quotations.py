@@ -13,11 +13,18 @@ path_dir_rotterdam = os.path.join(path_data,
                                   'data_source',
                                   'data_rotterdam')
 
-path_dir_reuters = os.path.join(path_dir_rotterdam, 'data_reuters')
-path_xls_reuters_diesel = os.path.join(path_dir_reuters, 'diesel_data_to_import.xls')
-path_xls_eia = os.path.join(path_dir_rotterdam, 'PET_PRI_SPT_S1_D.xls')
-# path_xlsx_ufip = os.path.join(path_dir_rotterdam, 'ufip-valeurs_2006-01-01_au_2013-12-31.xlsx')
-path_xlsx_ufip = os.path.join(path_dir_rotterdam, 'ufip-valeurs_2006-01-01_au_2015-06-30.xlsx')
+path_xls_reuters_diesel = os.path.join(path_dir_rotterdam,
+                                       'data_reuters',
+                                       'diesel_data_to_import.xls')
+
+path_xls_eia = os.path.join(path_dir_rotterdam,
+                            'PET_PRI_SPT_S1_D.xls')
+
+# path_xlsx_ufip = os.path.join(path_dir_rotterdam,
+#                               'ufip-valeurs_2006-01-01_au_2013-12-31.xlsx')
+path_xlsx_ufip = os.path.join(path_dir_rotterdam,
+                              'ufip-valeurs_2006-01-01_au_2015-06-30.xlsx')
+
 path_xml_ecb = os.path.join(path_dir_rotterdam, 'usd.xml')
 
 path_dir_built = os.path.join(path_data,

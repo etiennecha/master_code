@@ -97,11 +97,12 @@ print df_prod_per.describe()
 
 # PRICE DISPERSION BY PRODUCT FAMILY
 
+#                   (u'Epicerie salée', 'g'),
+#                   (u'Epicerie sucrée', 'k'),
+
 fig, ax = plt.subplots()
 for dpt, c_dpt in [(u'Produits frais', 'b'),
-                   (u'Epicerie salée', 'g'),
-                   (u'Epicerie sucrée', 'r'),
-                   (u'Boissons', 'k')]:
+                   (u'Boissons', 'r')]:
   df_temp = df_prod_per.loc[dpt]
   df_temp = df_temp[(df_temp['len'] >= df_temp['len'].quantile(0.25)) &\
                     (df_temp['mean'] <= df_temp['mean'].quantile(0.75))]
