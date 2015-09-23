@@ -9,9 +9,9 @@ from matching_insee import *
 import pprint
 
 path_dir_built_paper = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_built',
-                                    u'data_paper_dispersion')
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_scraped_2011_2014')
 
 path_dir_built_json = os.path.join(path_dir_built_paper, u'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
@@ -22,19 +22,17 @@ path_dir_insee_dpts_regions = os.path.join(path_data, u'data_insee', u'dpts_regi
 
 # LOAD GAS STATION ADDRESSES
 
-#master_price_raw = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel_raw.json'))
-#master_info_raw = dec_json(os.path.join(path_dir_built_json, u'master_info_raw.json'))
-
-master_price = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel_fixed.json'))
+#master_price = dec_json(os.path.join(path_dir_built_json, u'master_price_diesel_fixed.json'))
 master_info = dec_json(os.path.join(path_dir_built_json, u'master_info_fixed.json'))
 
 # Build master_addresses (addresses corrected for html pbms and somewhat stdized)
 dict_addresses = {indiv_id: [indiv_info['address'][i]\
-                               for i in (8, 7, 6, 5, 3, 4, 0) if indiv_info['address'][i]]\
-                                 for (indiv_id, indiv_info) in master_info.items()}
+                               for i in (8, 7, 6, 5, 3, 4, 0)\
+                                 if (indiv_info['address'][i]) and\
+                                    (len(indiv_info['address'][i]) == 2)]\
+                    for (indiv_id, indiv_info) in master_info.items()}
+
 master_addresses = build_master_addresses(dict_addresses)
-master_addresses['15400003'] = [(u'zone industrielle du sedour', u'15400 riom-\xc8s-montagnes')]
-master_addresses['76170004'] = [(u'autoroute a 29', u'76210 bolleville')]
 
 # Check zip from station address vs. zip from indiv_id (break if zip code not found in address)
 dict_describe_addresses = {}
@@ -90,7 +88,7 @@ for ls_match_res in ls_ls_match_res:
 
 # Explore cases with several different results
 dict_len = {}
-for i,x in enumerate(ls_rows):
+for i, x in enumerate(ls_rows):
   dict_len.setdefault(len(x),[]).append(i)
 for k, v in dict_len.items():
   print k, len(v)
@@ -105,10 +103,14 @@ df_com = pd.read_csv(os.path.join(path_dir_insee_extracts,
                      encoding = 'utf-8',
                      dtype = str)
 
+ls_valid_insee_codes = list(df_com['CODGEO'].values)
 ls_rows_final = []
 for row in ls_rows:
-  row_final = [refine_insee_code(df_com['CODGEO'].values, x) for x in row]
-  ls_rows_final.append([ic for ls_ic in row_final for ic in ls_ic])
+  if row:
+    row_final = [refine_insee_code(ls_valid_insee_codes, x) for x in row]
+    ls_rows_final.append([ic for ls_ic in row_final for ic in ls_ic])
+  else:
+    ls_rows_final.append([])
 
 # BUILD DF INSEE CODE
 df_ci = pd.DataFrame(ls_rows_final,

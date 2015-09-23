@@ -11,13 +11,13 @@ from mpl_toolkits.basemap import Basemap
 from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 import time
 
-path_dir_built_paper = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_built',
-                                    u'data_scraped_2011_2014')
+path_dir_built_scraped = os.path.join(path_data,
+                                      u'data_gasoline',
+                                      u'data_built',
+                                      u'data_scraped_2011_2014')
 
-path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
+path_dir_built_csv = os.path.join(path_dir_built_scraped, u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built_scraped, 'data_json')
 
 path_ar_cross_distances = os.path.join(path_dir_built_json, 'ar_cross_distances.npy')
 path_dict_ls_ids_gps = os.path.join(path_dir_built_json, 'dict_ls_ids_gps.json')
@@ -222,7 +222,7 @@ df_distances = pd.concat(ls_se_distances, axis = 1, keys = ls_ids)
 # need to add first and last to complete index/columns
 df_distances.ix[ls_ids[0]] = np.nan
 df_distances[ls_ids[-1]] = np.nan
-print u'\nLength of computation: {:.2f}'.format(time.time() - start)
+print u'\nLength of computation:', time.time() - start
 
 ## Check results
 ## print df_distances.ix[ls_ids][0:10]

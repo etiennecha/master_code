@@ -6,11 +6,12 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 from matching_insee import *
+import pprint
 
 path_dir_built_paper = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_built',
-                                    u'data_paper_dispersion')
+                                    'data_gasoline',
+                                    'data_built',
+                                    'data_scraped_2011_2014')
 
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
 
@@ -73,3 +74,5 @@ df_station_info.to_csv(os.path.join(path_dir_built_csv,
                        index_label = 'id_station',
                        float_format= '%.3f',
                        encoding = 'utf-8')
+
+# XLS (?)

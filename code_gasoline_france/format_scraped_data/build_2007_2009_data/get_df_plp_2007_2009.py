@@ -18,9 +18,10 @@ path_dir_source = os.path.join(path_data,
                                'data_gasoline',
                                'data_source')
 
-path_dir_built = os.path.join(path_data,
-                              u'data_gasoline',
-                              u'data_built')
+path_dir_built_plp = os.path.join(path_data,
+                                  u'data_gasoline',
+                                  u'data_built',
+                                  u'data_scraped_2007_2009')
 
 # ###############
 # READ EXCEL DATA
@@ -200,8 +201,8 @@ for row_ind, row in df_plp.iterrows():
   else:
     df_diesel.loc[row['date'],
                   row['id_station']] = row['diesel']     
-df_diesel.to_csv(os.path.join(path_dir_source,
-                              'data_plp',
+df_diesel.to_csv(os.path.join(path_dir_built_plp,
+                              'data_csv',
                               'df_plp_diesel.csv'),
                  index = False,
                  encoding = 'utf-8')
@@ -259,8 +260,8 @@ df_info = pd.merge(df_info,
                    left_on = 'id_station',
                    right_on = 'id_station')
 
-df_info.to_csv(os.path.join(path_dir_source,
-                            'data_plp',
+df_info.to_csv(os.path.join(path_dir_built_plp,
+                            'data_csv',
                             'df_plp_info.csv'),
                index = False,
                encoding = 'utf-8')
