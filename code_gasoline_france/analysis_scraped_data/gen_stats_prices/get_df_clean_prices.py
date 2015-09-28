@@ -11,12 +11,12 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from sklearn.feature_extraction import DictVectorizer
 
-path_dir_built_paper = os.path.join(path_data,
-                                    'data_gasoline',
-                                    'data_built',
-                                    'data_paper_total_access')
+path_dir_built_scraped = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_scraped_2011_2014')
 
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+path_dir_built_csv = os.path.join(path_dir_built_scraped, 'data_csv')
 
 # ###############
 # LOAD DATA
@@ -49,13 +49,13 @@ df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_fina
                         parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
-# LOAD DF PRICE STATS
-
-df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
-                                            'df_station_stats.csv'),
-                               dtype = {'id_station' : str},
-                               encoding = 'utf-8')
-df_station_stats.set_index('id_station', inplace = True)
+## LOAD DF PRICE STATS
+#
+#df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
+#                                            'df_station_stats.csv'),
+#                               dtype = {'id_station' : str},
+#                               encoding = 'utf-8')
+#df_station_stats.set_index('id_station', inplace = True)
 
 # LOAD DF MARGIN CHGE
 
@@ -70,12 +70,15 @@ set_keep_ids = set(df_prices_ttc.columns).intersection(set(df_info.index))
 df_prices_ht = df_prices_ht[list(set_keep_ids)]
 df_prices_ttc = df_prices_ttc[list(set_keep_ids)]
 
-# Set to nan stations with too few prices
-set_nan_ids = set_keep_ids.intersection(\
-                 df_station_stats.index[(df_station_stats['nb_chge'] < 5)|\
-                                        (df_station_stats['pct_chge'] < 0.03)])
-df_prices_ht[list(set_nan_ids)] = np.nan
-df_prices_ttc[list(set_nan_ids)] = np.nan
+# Chose before or after tax
+df_prices = df_prices_ttc
+
+## Set to nan stations with too few prices
+#set_nan_ids = set_keep_ids.intersection(\
+#                 df_station_stats.index[(df_station_stats['nb_chge'] < 5)|\
+#                                        (df_station_stats['pct_chge'] < 0.03)])
+#df_prices_ht[list(set_nan_ids)] = np.nan
+#df_prices_ttc[list(set_nan_ids)] = np.nan
 
 ## ############
 ## CLEAN PRICES
@@ -115,27 +118,30 @@ df_prices_ttc[list(set_nan_ids)] = np.nan
 #df_ids = pd.concat(ls_se_ids, axis = 1, keys = df_prices_ht)
 
 # BUILD DF IDS BASED ON PRICING CHANGES
+lim_var = 0.02
 ls_se_ids = []
-for id_station in df_prices_ht.columns:
-  se_temp = pd.Series(id_station + '_0', index = df_prices_ht.index)
+for id_station in df_prices.columns:
+  se_temp = pd.Series(id_station + '_0', index = df_prices.index)
   i = 0
-  if np.abs(df_margin_chge.ix[id_station]['value']) >= 0.03:
+  if (id_station in df_margin_chge.index) and\
+     (np.abs(df_margin_chge.ix[id_station]['value']) >= lim_var):
     se_temp.ix[df_margin_chge.ix[id_station]['date']:] = '%s_1' %id_station
   ls_se_ids.append(se_temp)
-df_ids = pd.concat(ls_se_ids, axis = 1, keys = df_prices_ht)
+df_ids = pd.concat(ls_se_ids, axis = 1, keys = df_prices.columns)
 
 # BUILD DF FINAL FOR REGRESSION
-ls_all_ids = [x for id_station in df_prices_ht.columns\
+ls_all_ids = [x for id_station in df_prices.columns\
                 for x in df_ids[id_station].values]
-ls_all_prices = [x for id_station in df_prices_ht.columns\
-                  for x in df_prices_ht[id_station].values]
-ls_all_dates = [x for id_station in df_prices_ht.columns\
-                  for x in df_prices_ht.index]
+ls_all_prices = [x for id_station in df_prices.columns\
+                  for x in df_prices[id_station].values]
+ls_all_dates = [x for id_station in df_prices.columns\
+                  for x in df_prices.index]
 
 df_final = pd.DataFrame(zip(ls_all_ids,
                             ls_all_dates,
                             ls_all_prices),
                         columns = ['id', 'date', 'price'])
+# need each id to have at least on price a priori
 df_final = df_final[~pd.isnull(df_final['price'])]
 
 # temp: erase if no id (because no brand: need to fix beginning date)
@@ -148,7 +154,11 @@ pd_as_dicts = [dict(r.iteritems()) for _, r in df_final[['id', 'date']].iterrows
 sparse_mat_id_dates = DictVectorizer(sparse=True).fit_transform(pd_as_dicts)
 res = scipy.sparse.linalg.lsqr(sparse_mat_id_dates,
                                df_final['price'].values,
-                               iter_lim = 100)
+                               iter_lim = 100,
+                               calc_var = True)
+
+# caution: content of res[0] : sorted according to param names
+# here: all dates in chronological order then 10000001_0, 10000005_0 etc.
 
 y_hat = sparse_mat_id_dates * res[0]
 df_final['yhat'] = y_hat
@@ -167,15 +177,45 @@ df_prices_cl.to_csv(os.path.join(path_dir_built_csv,
                     float_format='%.4f',
                     encoding='utf-8')
 
-# TREND
-se_mean_price_ttc = df_prices_ttc.mean(1)
-se_mean_price_ttc_nonan = se_mean_price_ttc[~pd.isnull(se_mean_price_ttc)]
-se_date_ind = se_mean_price_ttc_nonan.index
+# TIME FE
+se_mean_price = df_prices.mean(1)
+se_mean_price_nonan = se_mean_price[~pd.isnull(se_mean_price)]
+se_date_ind = se_mean_price_nonan.index
 se_day_fe = pd.Series(res[0][:len(se_date_ind)], index = se_date_ind)
 se_final_day_fe = se_day_fe.asfreq('1d')
 se_final_day_fe.plot() # dunno why... no scale
 plt.show()
 
-df_test = pd.concat([se_final_day_fe, se_mean_price_ttc],
-                    keys = ['trend', 'mean_ttc_price'],
+# STATION FE
+se_unique_ids = pd.concat(ls_se_ids, axis = 0, ignore_index = True)\
+                  .drop_duplicates(take_last = False)
+se_unique_ids.sort(inplace = True) # important step: res[0] sorted according to param names
+se_id_fe = pd.Series(res[0][len(se_date_ind):], index = se_unique_ids)
+df_id_fe = se_id_fe.reset_index(drop = False)
+df_id_fe['id_station'] = df_id_fe['index'].str.slice(stop = -2) # set id back!
+ind_ids_chge = df_margin_chge[df_margin_chge['value'].abs() >= lim_var].index
+#print df_id_fe[df_id_fe['id'].isin(ind_ids_chge)][0:20].to_string()
+
+# VAR IN STATION FE VS. MARGIN CHGE
+ls_rows_chge = []
+for id_station in ind_ids_chge:
+  ls_rows_chge.append((id_station,
+                       df_id_fe[df_id_fe['index'] ==\
+                         '{:s}_0'.format(id_station)][0].iloc[0],
+                       df_id_fe[df_id_fe['index'] ==\
+                         '{:s}_1'.format(id_station)][0].iloc[0]))
+df_fe_chge = pd.DataFrame(ls_rows_chge, columns = ['id_station', 'fe_0', 'fe_1'])
+df_fe_chge['var'] = df_fe_chge['fe_1'] - df_fe_chge['fe_0']
+df_margin_chge.reset_index(drop = False, inplace = True)
+df_chge = pd.merge(df_fe_chge,
+                   df_margin_chge,
+                   how = 'left',
+                   left_on = 'id_station',
+                   right_on = 'id_station')
+
+df_test = pd.concat([se_final_day_fe, se_mean_price],
+                    keys = ['trend', 'mean_price'],
                     axis = 1)
+
+## STD PARAMETERS
+#res[-1][-10:] * res[3]**2 / (sparse_mat_id_dates.shape[0] - len(res[0]))
