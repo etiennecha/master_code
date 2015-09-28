@@ -7,9 +7,9 @@ from generic_master_price import *
 from generic_master_info import *
 
 path_dir_built_paper = os.path.join(path_data,
-                                    'data_gasoline',
-                                    'data_built',
-                                    'data_paper_total_access')
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_scraped_2011_2014')
 
 path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')

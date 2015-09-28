@@ -14,7 +14,7 @@ import pprint
 path_dir_built_paper = os.path.join(path_data,
                                     u'data_gasoline',
                                     u'data_built',
-                                    u'data_paper_total_access') # params here too?
+                                    u'data_scraped_2011_2014') # params here too?
 
 path_dir_built_csv = os.path.join(path_dir_built_paper,
                                   u'data_csv')
@@ -93,7 +93,8 @@ dict_lsa_stores_alt_brand = {u'INTERMARCHE SUPER': u'INTERMARCHE',
                              # u'CASINO' : u'GEANT CASINO',
                              u'GEANT' : u'GEANT CASINO',
                              u'CENTRE E.LECLERC' : u'LECLERC',
-                             u'LECLERC EXPRESS' : u'LECLERC'}
+                             u'LECLERC EXPRESS' : u'LECLERC',
+                             u'SUPERMARCHE MATCH' : u'CORA'}
 
 # Overwrite enseigne alt to make most general
 df_lsa_gas['Enseigne_alt'] = df_lsa_gas['Enseigne_alt'].apply(\
@@ -107,6 +108,7 @@ ls_matching = [[u'INTERMARCHE', u'XXX', u'INTERMARCHE'], # give up direct matchi
                [u'LECLERC', u'CENTRE E.LECLERC', u'LECLERC'],
                [u'CARREFOUR', u'CARREFOUR', u'CARREFOUR'],
                [u'CARREFOUR_MARKET', u'CARREFOUR MARKET', u'CARREFOUR MARKET'],
+               [u'CARREFOUR_CONTACT', u'CARREFOUR CONTACT', u'CARREFOUR MARKET'],
                [u'CHAMPION', u'XXX', u'CARREFOUR MARKET'],
                [u'SHOPI', u'SHOPI', u'CARREFOUR MARKET'],
                [u'CORA', u'CORA', u'CORA'],
@@ -114,7 +116,6 @@ ls_matching = [[u'INTERMARCHE', u'XXX', u'INTERMARCHE'], # give up direct matchi
                [u'SYSTEMEU', u'XXX', 'SYSTEME U'],
                [u'SIMPLY', u'XXX', u'SIMPLY MARKET'],
                [u'CASINO', u'CASINO', u'CASINO'],
-               [u'CARREFOUR_CONTACT', u'CARREFOUR CONTACT', 'CARREFOUR MARKET'],
                [u'ECOMARCHE', u'XXX', u'INTERMARCHE'],
                [u'NETTO', u'NETTO', u'NETTO'],
                [u'COLRUYT', u'COLRUYT', u'COLRUYT'],
@@ -220,9 +221,9 @@ df_info_w_lsa.loc[~pd.isnull(df_info_w_lsa['id_lsa_adhoc']),
 # df_info_w_lsa.loc[pd.isnullf_info_w_lsa['Q']), 'Q'] = 'no' # check
 
 df_info_w_lsa.drop(['id_lsa_adhoc'], axis = 1, inplace = True)
-df_info_w_lsa.sort(columns=['ci_ardt_1', 'brand_0'], inplace = True)
 
 # CHECK FOR DUPLICATES IN MATCHING
+df_info_w_lsa.sort(columns=['id_lsa'], inplace = True)
 df_matched = df_info_w_lsa[~pd.isnull(df_info_w_lsa['id_lsa'])]
 df_dup = df_matched[(df_matched.duplicated(subset = ['id_lsa'],
                                            take_last = True)) |\
@@ -230,11 +231,13 @@ df_dup = df_matched[(df_matched.duplicated(subset = ['id_lsa'],
                                            take_last = False))]
 print '\nNb id_lsa associated with two different stores: {:d}'.format(len(df_dup))
 print '\nInspect duplicates:'
-ls_dup_disp = ['name', 'adr_street', 'adr_city', 'adr_zip', 'ci_ardt_1', 'id_lsa']
+ls_dup_disp = ['name', 'brand_0', 'adr_street',
+               'adr_city', 'adr_zip', 'ci_ardt_1', 'id_lsa']
 print df_dup[ls_dup_disp].to_string()
 
 # OUTPUT NO MATCH (INCLUDING MANUAL INPUT) FOR FURTHER INVESTIGATIONS
 # Impose Q non null: there must have been a matching attempt
+df_info_w_lsa.sort(columns=['ci_ardt_1', 'brand_0'], inplace = True)
 df_unmatched = df_info_w_lsa[(~pd.isnull(df_info_w_lsa['Q'])) &\
                              ((pd.isnull(df_info_w_lsa['id_lsa'])) |\
                               (df_info_w_lsa['Q'] == 'manuel'))].copy()
@@ -256,8 +259,9 @@ ls_unmatched_disp = ['id_station', 'Q', 'ci_ardt_1', 'adr_zip',
 print u'\nNb unmatched period/store (before): {:d}'.format(len(df_unmatched))
 print u'\nNb manually matched: {:d}'.format(\
         len(df_unmatched[~df_unmatched['id_lsa'].isnull()]))
-print '\nInspect unmatched:'
-print df_unmatched[ls_unmatched_disp][0:30].to_string(index = False)
+
+#print '\nInspect unmatched:'
+#print df_unmatched[ls_unmatched_disp][0:30].to_string(index = False)
 
 # OUTPUT (try to make it an Excel standard csv?)
 
