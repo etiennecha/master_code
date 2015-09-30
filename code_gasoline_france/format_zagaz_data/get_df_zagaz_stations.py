@@ -21,19 +21,33 @@ def str_zagaz_corrections(word):
                 word) 
   return word.strip()
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
 
-path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_data, u'data_insee', u'data_extracts')
+path_dir_match_insee = os.path.join(path_data,
+                                    u'data_insee',
+                                    u'match_insee_codes')
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_dir_zagaz = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
+path_dir_insee_extracts = os.path.join(path_data,
+                                       u'data_insee',
+                                       u'data_extracts')
+
+path_dir_source = os.path.join(path_data,
+                               'data_gasoline',
+                               'data_source')
+
+path_dir_zagaz = os.path.join(path_dir_source,
+                              'data_zagaz_scraped')
+
+path_dir_built_zagaz = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_zagaz')
 
 # #####################
 # LOAD ZAGAZ DATA
 # #####################
 
 dict_zagaz_stations = dec_json(os.path.join(path_dir_zagaz,
+                                            'data_json',
                                             '2012_dict_zagaz_info_gps.json'))
 
 #dict_zagaz_all = dec_json(os.path.join(path_dir_zagaz,
@@ -197,8 +211,9 @@ print df_zagaz[0:20].to_string()
 len(df_zagaz[pd.isnull(df_zagaz['ci_1'])])
 
 # OUTPUT
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
-df_zagaz.to_csv(os.path.join(path_dir_built_csv, 'df_zagaz_stations_2012.csv'),
+
+df_zagaz.to_csv(os.path.join(path_dir_built_zagaz,
+                             'df_zagaz_stations_2012.csv'),
                 index_label = 'id_zagaz',
                 float_format='%.3f',
                 encoding='utf-8')

@@ -21,33 +21,54 @@ def str_zagaz_corrections(word):
                 word) 
   return word.strip()
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
-path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
-path_dir_built_json = os.path.join(path_dir_built_paper, u'data_json')
+path_dir_scraped = os.path.join(path_data,
+                                u'data_gasoline',
+                                u'data_built',
+                                u'data_scraped_2011_2014')
 
-path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_data, u'data_insee', u'data_extracts')
+path_dir_scraped_csv = os.path.join(path_dir_scraped,
+                                    'data_csv')
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_dir_zagaz = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
+path_dir_scraped_json = os.path.join(path_dir_scraped,
+                                     'data_json')
+
+path_dir_zagaz = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_zagaz')
+
+path_dir_zagaz_csv = os.path.join(path_dir_zagaz, 'data_csv')
+
+path_dir_match_insee = os.path.join(path_data,
+                                    u'data_insee',
+                                    u'match_insee_codes')
+
+path_dir_insee_extracts = os.path.join(path_data,
+                                       u'data_insee',
+                                       u'data_extracts')
 
 # ################
 # LOAD DF GOUV
 # ################
 
 # duplicates within master_info... (hence might match dropped ids)
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
+master_info = dec_json(os.path.join(path_dir_scraped_json,
+                                    'master_info_fixed.json'))
 
-dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
+dict_brands = dec_json(os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_source',
+                                    'data_other',
+                                    'dict_brands.json'))
 dict_brands_std = {v[0]: v[1:] for k,v in dict_brands.items()}
 
-dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0)\
+dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (8, 7, 6, 5, 3, 4, 0)\
                                if indiv_info['address'][i]]\
                     for indiv_id, indiv_info in master_info.items()}
 master_addresses = build_master_addresses(dict_addresses)
 
-df_info = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_station_info.csv'),
+df_info = pd.read_csv(os.path.join(path_dir_scraped_csv,
+                                   'df_station_info_final.csv'),
                               encoding = 'utf-8',
                               dtype = {'id_station' : str,
                                        'adr_zip' : str,
@@ -63,7 +84,7 @@ df_info.set_index('id_station', inplace = True)
 # LOAD DF ZAGAZ
 # ################
 
-df_zagaz = pd.read_csv(os.path.join(path_dir_built_csv,
+df_zagaz = pd.read_csv(os.path.join(path_dir_zagaz_csv,
                                     'df_zagaz_stations_2012.csv'),
                        encoding='utf-8',
                        dtype = {'id_zagaz' : str,
@@ -270,7 +291,7 @@ ls_ma_di_1 = ['gov_id', 'zag_id', 'gov_city', 'zag_city',
 
 print df_matches[ls_ma_di_1][(df_matches['quality'] == 'ci_u_lev_bad') &\
                              ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
-                              (df_matches['zag_br'] == df_matches['gov_br_1']))].to_string()
+                              (df_matches['zag_br'] == df_matches['gov_br_1']))][0:30].to_string()
 
 print '\nMatched (bad) but unique at insee code level and diff brand:',\
       len(df_matches[(df_matches['quality'] == 'ci_u_lev_bad') &\
@@ -279,7 +300,7 @@ print '\nMatched (bad) but unique at insee code level and diff brand:',\
 
 print df_matches[ls_ma_di_1][(df_matches['quality'] == 'ci_u_lev_bad') &\
                              (df_matches['zag_br'] != df_matches['gov_br_0']) &\
-                             (df_matches['zag_br'] != df_matches['gov_br_1'])].to_string()
+                             (df_matches['zag_br'] != df_matches['gov_br_1'])][0:30].to_string()
 
 # OUTPUT ACCEPTED MATCHES
 df_output = df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
@@ -288,8 +309,8 @@ df_output = df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
                        ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
                         (df_matches['zag_br'] == df_matches['gov_br_1']))]
 
-df_output.to_csv(os.path.join(path_dir_built_csv,
-                              'df_zagaz_match_0.csv'),
+df_output.to_csv(os.path.join(path_dir_zagaz_csv,
+                              'df_zagaz_stations_2012_match_0.csv'),
                  encoding = 'UTF-8')
 
 ## ###########

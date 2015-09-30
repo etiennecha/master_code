@@ -21,21 +21,37 @@ def str_zagaz_corrections(word):
                 word) 
   return word.strip()
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
-path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
-path_dir_built_json = os.path.join(path_dir_built_paper, u'data_json')
+path_dir_scraped = os.path.join(path_data,
+                                u'data_gasoline',
+                                u'data_built',
+                                u'data_scraped_2011_2014')
 
-path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_data, u'data_insee', u'data_extracts')
+path_dir_scraped_csv = os.path.join(path_dir_scraped,
+                                    'data_csv')
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_dir_zagaz = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
+path_dir_scraped_json = os.path.join(path_dir_scraped,
+                                     'data_json')
+
+path_dir_zagaz = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_zagaz')
+
+path_dir_zagaz_csv = os.path.join(path_dir_zagaz, 'data_csv')
+
+path_dir_match_insee = os.path.join(path_data,
+                                    u'data_insee',
+                                    u'match_insee_codes')
+
+path_dir_insee_extracts = os.path.join(path_data,
+                                       u'data_insee',
+                                       u'data_extracts')
 
 # ################
 # LOAD DF ZAGAZ
 # ################
 
-df_zagaz = pd.read_csv(os.path.join(path_dir_built_csv,
+df_zagaz = pd.read_csv(os.path.join(path_dir_zagaz_csv,
                                     'df_zagaz_stations_2012.csv'),
                        encoding='utf-8',
                        dtype = {'id_zagaz' : str,
@@ -44,8 +60,11 @@ df_zagaz = pd.read_csv(os.path.join(path_dir_built_csv,
                                 'ci_ardt_1' : str})
 df_zagaz.set_index('id_zagaz', inplace = True)
 
-
-dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
+dict_brands = dec_json(os.path.join(path_data,
+                                    'data_gasoline',
+                                    'data_source',
+                                    'data_other',
+                                    'dict_brands.json'))
 
 # TODO: INTEGRATE IN BUILD DF ZAGAZ
 dict_brands_update = {'OIL' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
@@ -81,16 +100,17 @@ df_zagaz['brand'] = df_zagaz['brand'].apply(\
 # ################
 
 # duplicates within master_info... (hence might match dropped ids)
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
+master_info = dec_json(os.path.join(path_dir_scraped_json,
+                                    'master_info_fixed.json'))
 
 
-dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0)\
+dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (8, 7, 6, 5, 3, 4, 0)\
                                if indiv_info['address'][i]]\
                     for indiv_id, indiv_info in master_info.items()}
 master_addresses = build_master_addresses(dict_addresses)
 
-df_info = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_station_info.csv'),
+df_info = pd.read_csv(os.path.join(path_dir_scraped_csv,
+                                   'df_station_info_final.csv'),
                               encoding = 'utf-8',
                               dtype = {'id_station' : str,
                                        'adr_zip' : str,
@@ -110,8 +130,8 @@ for field_brand in ['brand_0', 'brand_1',  'brand_2']:
 # LOAD MATCH 0
 # #############
 
-df_zagaz_match_0 = pd.read_csv(os.path.join(path_dir_built_csv,
-                                            'df_zagaz_match_0.csv'),
+df_zagaz_match_0 = pd.read_csv(os.path.join(path_dir_zagaz_csv,
+                                            'df_zagaz_stations_2012_match_0.csv'),
                                dtype = {'zag_id' : str,
                                         'gov_id' : str,
                                         'ci' : 'str'},
@@ -133,19 +153,23 @@ dict_matching_quality = {'zag_ci_u_ebr' : [],
                          'zag_ci_m_ebr' : []} # several in ci but only one of same brand
 for gov_id, gov_station in df_info_um.iterrows():
   gov_station_ci = gov_station['ci_1']
-  brand_station = gov_station['brand_0']
+  brand_station_0 = gov_station['brand_0']
+  brand_station_1 = gov_station['brand_1']
   df_zagaz_ci = df_zagaz_um[df_zagaz_um['ci_1'] == gov_station_ci]
   if len(df_zagaz_ci) == 0:
     dict_no_match['zag_ci_n'].append(gov_id)
   elif len(df_zagaz_ci) == 1:
-    if len(df_zagaz_ci[df_zagaz_ci['brand'] == brand_station]) == 1:
+    if len(df_zagaz_ci[(df_zagaz_ci['brand'] == brand_station_0) |
+                       (df_zagaz_ci['brand'] == brand_station_1)]) == 1:
       dict_matching_quality['zag_ci_u_ebr'].append((gov_id,
                                                     df_zagaz_ci.index[0]))
     else:
       dict_matching_quality['zag_ci_u_dbr'].append((gov_id,
                                                     df_zagaz_ci.index[0]))
   else:
-    df_zagaz_ci_br = df_zagaz_ci[df_zagaz_ci['brand'] == brand_station]
+    # risk of loss due to less precision...
+    df_zagaz_ci_br = df_zagaz_ci[(df_zagaz_ci['brand'] == brand_station_0) |
+                                 (df_zagaz_ci['brand'] == brand_station_1)]
     if len(df_zagaz_ci_br) == 0:
       dict_no_match['zag_ci_m_nbr'].append(gov_id)
     elif len(df_zagaz_ci_br) == 1:
@@ -303,15 +327,15 @@ ls_ma_di_1 = ['gov_id', 'zag_id', 'gov_city', 'zag_city',
               'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
 
 # may not want to keep one result but diff brand?
-print '\n One match in ci, different brands:'
+print '\nOne match in ci, different brands:'
 print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_u_dbr'].to_string()
 # todo: drop this from final matching and keep only handpicked selection
 
-print '\n One match in ci, same brands:'
-print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_u_ebr'][0:200].to_string()
+print '\nOne match in ci, same brands:'
+print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_u_ebr'][0:30].to_string()
 
-print '\n Mult match in ci, only one w/ same brande:'
-print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_m_ebr'][0:200].to_string()
+print '\nMult match in ci, only one w/ same brande:'
+print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_m_ebr'][0:30].to_string()
 
 # ############################
 # DF OUTPUT (DF ZAGAZ MATCH 1)
@@ -322,7 +346,8 @@ print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_m_ebr'][0:200].to_
 
 df_output = pd.concat([df_zagaz_match_0,
                        df_matches[df_matches['quality'] != 'zag_ci_u_dbr']])
-print df_output[ls_ma_di_1][0:10].to_string()
+print u'\nOverview output:'
+print df_output[ls_ma_di_1][0:30].to_string()
 
 # Inspect duplicates (can be only in zagaz)
 se_zag_id_vc = df_output['zag_id'].value_counts()
@@ -335,7 +360,8 @@ df_duplicates = df_duplicates.loc[se_zag_id_dup.index]
 df_duplicates.reset_index(inplace = True)
 # might have want to be more careful before
 pd.set_option('display.max_colwidth', 30)
-print df_duplicates[ls_ma_di_1][0:100].to_string()
+print u'\nOverview duplicates:'
+print df_duplicates[ls_ma_di_1][0:30].to_string()
 
 ## #######################
 ## MATCHING GOUV VS. ZAGAZ

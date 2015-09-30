@@ -12,21 +12,29 @@ import copy
 import collections
 import pandas as pd
 
-path_dir_zagaz = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_zagaz')
-path_dir_zagaz_raw = os.path.join(path_dir_zagaz, 'data_zagaz_raw')
-path_dir_zagaz_json = os.path.join(path_dir_zagaz, 'data_zagaz_json')
+path_dir_source_zagaz = os.path.join(path_data,
+                                     u'data_gasoline',
+                                     u'data_source',
+                                     u'data_zagaz_scraped')
 
-dict_zagaz_stations_2012 = dec_json(os.path.join(path_dir_zagaz_json,
+dict_zagaz_stations_2012 = dec_json(os.path.join(path_dir_source_zagaz,
+                                                 'data_json',
                                                  '2012_dict_zagaz_stations.json'))
 
-dict_zagaz_station_ids = dec_json(os.path.join(path_dir_zagaz_json,\
+dict_zagaz_station_ids = dec_json(os.path.join(path_dir_source_zagaz,
+                                               'data_json',
                                                '20140124_dict_zagaz_station_ids.json'))
-dict_zagaz_prices = dec_json(os.path.join(path_dir_zagaz_json,
+
+dict_zagaz_prices = dec_json(os.path.join(path_dir_source_zagaz,
+                                          'data_json',
                                           '20140127_dict_zagaz_ext_prices.json'))
+
 ## todo: merge both?
-#dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz,
+#dict_zagaz_users = dec_json(os.path.join(path_dir_source_zagaz,
+#                                         'data_json',
 #                                         '20140124_dict_zagaz_users.json'))
-dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz_json,
+dict_zagaz_users = dec_json(os.path.join(path_dir_source_zagaz,
+                                         'data_json',
                                          '20140408_dict_zagaz_user_info.json'))
 
 # Content of station description within dict_zagaz_stations:
