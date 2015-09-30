@@ -14,7 +14,7 @@ import pprint
 path_dir_built_paper = os.path.join(path_data,
                                     u'data_gasoline',
                                     u'data_built',
-                                    u'data_scraped_2011_2014') # params here too?
+                                    u'data_scraped_2011_2014')
 
 path_dir_built_csv = os.path.join(path_dir_built_paper,
                                   u'data_csv')
@@ -53,7 +53,7 @@ df_info.set_index('id_station', inplace = True)
 # LOAD DF LSA
 # ############
 
-# TODO: use lsa file fitted for period considered
+# could use lsa file fitted for period considered
 df_lsa = pd.read_csv(os.path.join(path_lsa_csv,
                                   'df_lsa_active_fm_hsx.csv'),
                      dtype = {'Ident': str,
@@ -68,6 +68,7 @@ df_lsa = pd.read_csv(os.path.join(path_lsa_csv,
                      encoding = 'UTF-8')
 
 df_lsa_gas = df_lsa[~pd.isnull(df_lsa['Pompes'])].copy()
+# turns out this field is far from complete
 
 # ##########
 # MATCHING
@@ -159,16 +160,10 @@ df_matching = pd.DataFrame(ls_rows_matching,
 df_matching.set_index('id_station', inplace = True)
 
 df_info_w_lsa = pd.merge(df_info,
-                      df_matching,
-                      left_index = True,
-                      right_index = True,
-                      how = 'left')
-
-#df_info_w_lsa = pd.merge(df_info_w_lsa,
-#                         df_lsa,
-#                         left_on = 'id_lsa',
-#                         right_on = 'Ident',
-#                         how = 'left')
+                         df_matching,
+                         left_index = True,
+                         right_index = True,
+                         how = 'left')
 
 ls_disp_ma = ['Q', 'brand_0', 'Enseigne',
                    'adr_zip', 'Code postal'
@@ -287,15 +282,72 @@ df_unmatched[ls_unmatched_disp].to_csv(os.path.join(path_source_other,
 ## OUTPUT TO CSV
 ## ##############
 
-df_info_w_lsa_output = df_info_w_lsa.copy()
+#df_info_w_lsa_output = df_info_w_lsa.copy()
+#
+#df_info_w_lsa_output.loc[((df_info_w_lsa_output.duplicated(subset = ['id_lsa'],
+#                                                          take_last = True)) |\
+#                          (df_info_w_lsa_output.duplicated(subset = ['id_lsa'],
+#                                                          take_last = False))),
+#                         ['Q', 'id_lsa']] = ['dup', np.nan]
+#
+#df_info_w_lsa_output.to_csv(os.path.join(path_dir_built_csv,
+#                                         'df_station_info_final_w_lsa_ids.csv'),
+#                            index_label = 'id_station',
+#                            encoding = 'UTF-8')
 
-df_info_w_lsa_output.loc[((df_info_w_lsa_output.duplicated(subset = ['id_lsa'],
-                                                          take_last = True)) |\
-                          (df_info_w_lsa_output.duplicated(subset = ['id_lsa'],
-                                                          take_last = False))),
-                         ['Q', 'id_lsa']] = ['dup', np.nan]
+ls_fix_dup = [('27500001', '947'),
+              ('15300004', '12017'), # unsure: itm vs netto (closed)
+              ('34130005', '176538'), # itm vs netto
+              ('60800005', '48612'), # itm vs netto
+              ('45100004', '13387'),
+              ('87500004', '2040'),
+              ('3100007' , '1147'),
+              ('36250006', '183962'),
+              ('68200002', '3511'),
+              ('16320004', '4151'),
+              ('14700006', '1937'),
+              ('86000013', '18885'),
+              ('77130005', '1979'), # unclear if two stores (in lsa too)
+              ('49124003', '10451'),
+              ('40180003', '3031'),
+              ('53940001', '124704'),
+              ('35205001', '2977'),
+              ('14500008', '1499'),
+              ('37300007', '39411'), # check with prices
+              ('79300006', None), # station alone (None?)
+              ('34400013', '4478'),
+              ('57000001', '1800'),
+              ('57050001', '2611'),
+              ('85120004', '3644'),
+              ('13013007', '43713'),
+              ('14130003', '2698'),
+              ('87700005', '197460'),
+              ('2100001' , '95'), # AUCHAN SAINT QUENTIN => FAYET
+              ('59210004', '177517'),
+              ('57300001', '3877'),
+              ('58200002', '41979'),
+              ('45680003', '154948'), # other is closing
+              ('45680004', None), # ?
+              ('56000005', '10966'),
+              ('80000010', '209431'),
+              ('87000004', '1457'),
+              ('87000003', '3718'),
+              ('13370006', None),
+              ('60000008', '1093'),
+              ('60000011', '442'),
+              ('59650002', '1306'),
+              ('85000001', '223'),
+              ('61100008', '188041'),
+              ('30000016', '201143'),
+              ('17530001', '2504')]
 
-df_info_w_lsa_output.to_csv(os.path.join(path_dir_built_csv,
-                                         'df_station_info_final_w_lsa_ids.csv'),
-                            index_label = 'id_station',
-                            encoding = 'UTF-8')
+for id_station, id_lsa in ls_fix_dup:
+  df_info_w_lsa.loc[id_station , ['id_lsa',
+                                  'Q']] = [id_lsa, 'manuel']
+
+df_info_w_lsa.sort(columns=['id_lsa'], inplace = True)
+df_tp = df_info_w_lsa[~df_info_w_lsa['id_lsa'].isnull()]
+print df_tp[(df_tp.duplicated(subset = ['id_lsa'],
+                              take_last = True)) |\
+            (df_tp.duplicated(subset = ['id_lsa'],
+                              take_last = False))][ls_dup_disp].to_string()

@@ -95,9 +95,16 @@ def format_zagaz_station_2013(block_station):
                       highway]
   return ls_zagaz_station
 
-path_dir_zagaz = os.path.join(path_data, 'data_gasoline', 'data_source', 'data_zagaz')
-path_dir_zagaz_raw = os.path.join(path_dir_zagaz, 'data_zagaz_raw')
-path_dir_zagaz_json = os.path.join(path_dir_zagaz, 'data_zagaz_json')
+path_dir_zagaz = os.path.join(path_data,
+                              'data_gasoline',
+                              'data_source',
+                              'data_zagaz_scraped')
+
+path_dir_zagaz_raw = os.path.join(path_dir_zagaz,
+                                  'data_json_raw')
+
+path_dir_zagaz_json = os.path.join(path_dir_zagaz,
+                                   'data_json')
 
 # 2012: Oldest data: (check 2012?)
 ls_blocks_zagaz_stations = dec_json(os.path.join(path_dir_zagaz_raw,
@@ -108,9 +115,9 @@ for block_station in ls_blocks_zagaz_stations:
   ls_zagaz_station = format_zagaz_station(block_station)
   dict_zagaz_stations[ls_zagaz_station[0]] = ls_zagaz_station
 
-#enc_json(dict_zagaz_stations,
-#         os.path.join(path_dir_zagaz_json,
-#                      '2012_dict_zagaz_stations.json'))
+enc_json(dict_zagaz_stations,
+         os.path.join(path_dir_zagaz_json,
+                      '2012_dict_zagaz_stations.json'))
 
 # 2013 data (2013/11/15)
 
@@ -132,6 +139,6 @@ for path_zagaz_file in [path_json_zagaz_20131115_1, path_json_zagaz_20131115_2]:
     else:
       print u'Not recorded', u'{:>5s}'.format(ls_zagaz_station[0]), ls_zagaz_station[4]
 
-#enc_json(dict_zagaz_stations_2013,
-#         os.path.join(path_dir_zagaz_source,
-#                      '2013_dict_zagaz_stations.json'))
+enc_json(dict_zagaz_stations_2013,
+         os.path.join(path_dir_zagaz_json,
+                      '2013_dict_zagaz_stations.json'))
