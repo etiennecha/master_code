@@ -21,9 +21,16 @@ def str_zagaz_corrections(word):
                 word) 
   return word.strip()
 
-path_dir_built_paper = os.path.join(path_data, u'data_gasoline', u'data_built', u'data_paper')
-path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
-path_dir_built_json = os.path.join(path_dir_built_paper, u'data_json')
+path_dir_built_paper = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_scraped_2011_2014')
+
+path_dir_built_csv = os.path.join(path_dir_built_paper,
+                                  u'data_csv')
+
+path_dir_built_json = os.path.join(path_dir_built_paper,
+                                   u'data_json')
 
 path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
 path_dir_insee_extracts = os.path.join(path_data, u'data_insee', u'data_extracts')
@@ -41,13 +48,13 @@ master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json
 dict_brands = dec_json(os.path.join(path_dir_source, 'data_other', 'dict_brands.json'))
 dict_brands_std = {v[0]: v[1:] for k,v in dict_brands.items()}
 
-dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (5, 3, 4, 0)\
+dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (8, 7, 6 ,5, 3, 4, 0)\
                                if indiv_info['address'][i]]\
                     for indiv_id, indiv_info in master_info.items()}
 master_addresses = build_master_addresses(dict_addresses)
 
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_station_info.csv'),
+                                   'df_station_info_final.csv'),
                               encoding = 'utf-8',
                               dtype = {'id_station' : str,
                                        'adr_zip' : str,
