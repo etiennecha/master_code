@@ -41,46 +41,35 @@ path_dir_built_zagaz = os.path.join(path_data,
                                     u'data_built',
                                     u'data_zagaz')
 
+
 # #####################
 # LOAD ZAGAZ DATA
 # #####################
 
-dict_zagaz_stations_2012 = dec_json(os.path.join(path_dir_zagaz,
-                                                 'data_json',
-                                                 '2012_dict_zagaz_stations.json'))
-dict_zagaz_stations_2013 = dec_json(os.path.join(path_dir_zagaz,
+dict_dict_stations = {}
+dict_dict_stations['2012'] =  dec_json(os.path.join(path_dir_zagaz,
+                                                    'data_json',
+                                                    '2012_dict_zagaz_stations.json'))
+dict_dict_stations['2013'] = dec_json(os.path.join(path_dir_zagaz,
                                                  'data_json',
                                                  '2013_dict_zagaz_stations.json'))
-dict_zagaz_stations_2014 = dec_json(os.path.join(path_dir_zagaz,
-                                                 'data_json',
-                                                 '20140124_dict_zagaz_station_ids.json'))
 
-dict_zagaz_stations = dict_zagaz_stations_2013
-dict_zagaz_stations.update(dict_zagaz_stations_2012)
-
-# Content of station description within dict_zagaz_stations:
-# [id, brand, name, comment, street, zip_code, city, gps_tup, other?]
-
-# Build dicts: brands, gps quality and zip
-dict_zagaz_brands, dict_zagaz_gps_quality, dict_zagaz_zip = {}, {}, {}
-for zagaz_id, ls_zagaz_info in dict_zagaz_stations.items():
-  dict_zagaz_brands.setdefault(ls_zagaz_info[1], []).append(zagaz_id)
-  dict_zagaz_gps_quality.setdefault(ls_zagaz_info[7][2], []).append(zagaz_id)
-  dict_zagaz_zip.setdefault(ls_zagaz_info[5], []).append((zagaz_id, ls_zagaz_info[4]))
-
-# Inspect Zagaz brands and look for those missing in dict_brands
 dict_brands = dec_json(os.path.join(path_dir_source,
                                     'data_other',
                                     'dict_brands.json'))
 
-dict_missing_brands = {}
-for zagaz_brand, ls_zagaz_ids in dict_zagaz_brands.items():
-  str_standardized_brand = str_low_noacc(str_correct_html(zagaz_brand)).upper()
-  if str_standardized_brand not in dict_brands.keys():
-    dict_missing_brands[str_standardized_brand] = ls_zagaz_ids
-print 'Zagaz brands not in dict_brands: ', dict_missing_brands.keys()
+# ######################################
+# UPDATE dict_brands TO COVER ZAGAZ DATA
+# ######################################
 
-# u'MATCH' => u'SUPERMARCHE MATCH'
+dict_missing_brands = {}
+for year, dict_stations in dict_dict_stations.items():
+  for k, v in dict_stations.items():
+    str_standardized_brand = str_low_noacc(str_correct_html(v[1])).upper()
+    if str_standardized_brand not in dict_brands.keys():
+      dict_missing_brands.setdefault(str_standardized_brand, []).append(k)
+print u'\nBrands missing in dict_brands:'
+print dict_missing_brands.keys()
 # u'SPAR' = u'SPAR STATION' or u'SUPERMARCHES SPAR' check if real difference
 # u'8 A HUIT' => u'8  A HUIT'
 # u'ENI' => u'AGIP' check
@@ -99,13 +88,44 @@ dict_brands_update = {'OIL' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'IDS': [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       '8 A HUIT' : [u'HUIT_A_HUIT', u'CARREFOUR', u'SUP'],
                       'AS 24' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'AS24' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'SPAR' : [u'CASINO', u'CASINO', u'SUP'],
                       'ANTARGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'DIVERS' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'MATCH' : [u'CORA', u'CORA', u'SUP'],
                       'PRIMAGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND']}
+dict_brands.update(dict_brands_update)
 
-# Fix zagaz data based on observed matching pbms
+# #############################
+# BUILD df_stations DATAFRAMES
+# #############################
+
+dict_df_stations = {}
+for year, dict_stations in dict_dict_stations.items():
+  ls_rows_stations = []
+  for k,v in dict_stations.items():
+    if year == '2013':
+      v[4] = v[4][0]
+    ls_rows_stations.append(v[0:7] + v[7])
+  df_stations = pd.DataFrame(ls_rows_stations, columns = ['id_zagaz',
+                                                          'brand',
+                                                          'name',
+                                                          'comment',
+                                                          'street',
+                                                          'zip',
+                                                          'municipality',
+                                                          'lat',
+                                                          'lng',
+                                                          'Q'])
+  dict_df_stations[year] = df_stations
+
+
+# ###############################################
+# FIX STATION INFO (BASED ON INSEE MATCHING PBMS)
+# ###############################################
+
+# ADDRESS
+
 ls_fix_zip  = [[[u"Château-d'Olonne", u'85100'], u'85180'],
                [[u'Noiseau', u'94370'], u'94880'],
                [[u'Dompierre-sur-Chalaronne', u'01140'], u'01400'],
@@ -127,94 +147,132 @@ ls_fix_zip  = [[[u"Château-d'Olonne", u'85100'], u'85180'],
 ls_fix_city = [[[u'Périgueux', u'24750'], u'Boulazac'],
                [[u'Château-Chinon(Ville)', u'58120'], u'Château-Chinon Ville']]
 
-for indiv_id, ls_info in dict_zagaz_stations.items():
-  ls_info[6] = re.sub(ur'^Paris 0([1-9])eme$', ur'Paris \1eme', ls_info[6])
-  ls_info[6] = re.sub(ur'^Paris 01er$', ur'Paris 1er', ls_info[6])
-  ls_info[6] = ls_info[6].replace(u'\x9c', u'oe')
-  for (zagaz_city, zagaz_zip_code_bad), zagaz_zip_code_good in ls_fix_zip:
-    if ls_info[6] == zagaz_city and ls_info[5] == zagaz_zip_code_bad:
-      ls_info[5] = zagaz_zip_code_good
-  for (zagaz_city_bad, zagaz_zip_code), zagaz_city_good in ls_fix_city:
-    if ls_info[6] == zagaz_city_bad and ls_info[5] == zagaz_zip_code:
-      ls_info[6] = zagaz_city_good
-  dict_zagaz_stations[indiv_id] = ls_info
+def fix_municipality(municipality):
+  municipality = re.sub(ur'^Paris 0([1-9])eme$', ur'Paris \1eme', municipality)
+  municipality = re.sub(ur'^Paris 01er$', ur'Paris 1er', municipality)
+  municipality = municipality.replace(u'\x9c', u'oe')
+  return municipality
+
+
+for year, df_stations in dict_df_stations.items():
+  df_stations['municipality'] =\
+    df_stations['municipality'].apply(lambda x: fix_municipality(x))
+  for (muni, zip_code_old), zip_code_new in ls_fix_zip:
+    df_stations.loc[(df_stations['municipality'] == muni) &\
+                    (df_stations['zip'] == zip_code_old),
+                    'zip'] = zip_code_new
+  for (muni_old, zip_code), muni_new in ls_fix_city:
+    df_stations.loc[(df_stations['municipality'] == muni_old) &\
+                    (df_stations['zip'] == zip_code),
+                    'municipality'] = muni_new
+
+# GPS
+
+dict_gps_quality = {u"Ces coordonnées n'ont pas été vérifiées " +\
+                        u"et sont sujettes à caution" : "Unverified",
+                    u"Ces coordonnées ont été vérifiées " +\
+                        u"par un internaute" : "Verified"}
+
+for year, df_stations in dict_df_stations.items():
+  df_stations['Q'] = df_stations['Q'].apply(lambda x: dict_gps_quality.get(x, None))
 
 # ##########################################
 # LOAD INSEE CORRESPONDENCE AND RUN MATCHING
 # ##########################################
 
-# Load correspondence
-df_corr = pd.read_csv(os.path.join(path_dir_match_insee, 'df_corr_gas.csv'),
-                      dtype = str)
-ls_corr = [list(x) for x in df_corr.to_records(index = False)]
-ls_corr = format_correspondence(ls_corr)
-
-# Caution match_res can contain several results
-ls_index, ls_res, ls_ind_pbm = [], [], []
-for indiv_id, ls_info in dict_zagaz_stations.items():
-  ls_index.append(indiv_id)
-  zip_code = ls_info[5].rjust(5, '0')
-  city = ls_info[6]
-  match_res = match_insee_code(ls_corr, city, zip_code[:-3], zip_code)
-  if match_res[1] != 'no_match':
-    res = match_res[0][0][2]
-  else:
-    res = None
-    ls_ind_pbm.append(indiv_id)
-  ls_res.append(res)
-
-# CHECK INSEE CODES STILL IN USE + DISAMB BIG CITY ARDTS
+path_df_corr = os.path.join(path_dir_match_insee, 'df_corr_gas.csv')
+matching_insee = MatchingINSEE(path_df_corr)
 
 df_com = pd.read_csv(os.path.join(path_dir_insee_extracts,
                                   u'df_communes.csv'),
                      encoding = 'utf-8',
                      dtype = str)
+ls_active_cis = df_com['CODGEO'].values
 
-ls_rows_ci = []
-for res in ls_res:
-  ls_rows_ci.append(list(refine_insee_code(df_com['CODGEO'].values, res)))
+## Check: works ok, then do within dataframes
+## could merge both df_stations first
+#dict_ls_match_res = {}
+#for year, df_stations in dict_df_stations.items():
+#  ls_match_res = []
+#  for row_ind, row in df_stations.iterrows():
+#    match_res = matching_insee.match_city(row['municipality'],
+#                                          row['zip'][:-3],
+#                                          row['zip'])
+#    if match_res[1] == 'no_match':
+#      print u'\nNo match ({:s}):'.format(year), row_ind, row['zip'], row['municipality']
+#    ls_match_res.append((row_ind, match_res))
+#  dict_ls_match_res[year] = ls_match_res
+#
+## Check insee code still in use + disambiguate
+##set_active_cis = set(df_com['CODGEO'].values)
+##ls_2012_cis = [x[1][0][0][2] for x in dict_ls_match_res['2012']]
+##ls_2012_pbms = set(ls_2012_cis).difference(set_active_cis)
+#ls_active_cis = df_com['CODGEO'].values
+#dict_ls_final_match = {}
+#for year, ls_match_res in dict_ls_match_res.items():
+#  ls_final_match = [refine_insee_code(ls_active_cis, res[1][0][0][2])\
+#                      for res in ls_match_res]
+#  dict_ls_final_match[year] = ls_final_match
+#  print u'\nNb stations ({:s}):'.format(year), len(ls_final_match)
+#  print u'Nb matched ({:s}):'.format(year), len([x for x in ls_final_match if x[0]])
 
-df_ci_zagaz = pd.DataFrame(ls_rows_ci,
-                           columns = ['ci_1',
-                                      'ci_ardt_1'],
-                           index = ls_index)
+for year, df_stations in dict_df_stations.items():
+  df_stations['ci'] =\
+    df_stations.apply(lambda x: matching_insee.match_city(x['municipality'],
+                                                          x['zip'][:-3],
+                                                          x['zip'])[0][0][2],
+                      axis = 1)
+  df_stations['ci'], df_stations['ci_ardt'] =\
+      zip(*df_stations['ci'].apply(lambda x: refine_insee_code(ls_active_cis,
+                                                               x)))
+
+## Ok: same 4 which are located in Monaco hence no insee code
+#print dict_df_stations['2012'][dict_df_stations['2012']['ci_ardt'].isnull()].to_string()
+#print dict_df_stations['2013'][dict_df_stations['2013']['ci_ardt'].isnull()].to_string()
+
+# ##########################################
+# MERGE 2012 AND 2013
+# ##########################################
+
+df_2012, df_2013 = dict_df_stations['2012'], dict_df_stations['2013']
+set_dead_2012 = set(df_2012['id_zagaz'].values).difference(set(df_2013['id_zagaz'].values))
+df_2013.rename(columns = {'brand' : 'brand_2013'}, inplace = True)
+df_stations = pd.concat([df_2013,
+                         df_2012[df_2012['id_zagaz'].isin(list(set_dead_2012))]],
+                        axis = 0,
+                        ignore_index = True)
+df_stations.set_index('id_zagaz', inplace = True)
+df_2012.set_index('id_zagaz', inplace = True)
+df_stations['brand'] = df_2012['brand']
+df_stations.rename(columns = {'brand' : 'brand_2012'}, inplace = True)
+
+
+for year in ['2012', '2013']:
+  df_stations['brand_{:s}'.format(year)] =\
+      df_stations['brand_{:s}'.format(year)].apply(lambda x: str_low_noacc(str_correct_html(x)).upper()\
+                                                             if not pd.isnull(x) else None)
+  df_stations['brand_std_{:s}'.format(year)], df_stations['group_{:s}'.format(year)] =\
+      zip(*df_stations['brand_{:s}'.format(year)].apply(\
+             lambda x: (dict_brands[x][0],
+                        dict_brands[x][1]) if not pd.isnull(x) else (None, None)))
+
+#print u'\nNb not in 2012:', len(df_stations[df_stations['brand_2012'].isnull()])
+#print u'Nb not in 2013:', len(df_stations[df_stations['brand_2013'].isnull()])
+#print u'Nb Total Access in 2013:', len(df_stations[(df_stations['brand_2013'] ==\
+#                                         'TOTAL ACCESS')])
+#ls_di_0 = ['brand_2012', 'brand_2013', 'name', 'municipality', 'street', 'zip', 'ci', 'ci_ardt']
+#print u'\nChanges:'
+#print df_stations[(df_stations['brand_2013'] !=\
+#                     df_stations['brand_2012'])][ls_di_0].to_string()
+## Not much change between the two... probably too close
+## Recollect now to study closing
 
 # ##############
-# BUILD DF ZAGAZ
-# ##############
-
-# No brand harmonization for now
-ls_index, ls_rows = [], []
-for indiv_id, ls_info in dict_zagaz_stations.items():
-  ls_index.append(ls_info[0])
-  ls_rows.append(ls_info[1:7] +\
-                 list(ls_info[7]) +\
-                 ls_info[8:9])
-
-ls_columns = ['brand', 'name', 'comment', 'street', 'zip', 'city',
-              'lat', 'lng', 'quality', 'highway'] 
-df_zagaz = pd.DataFrame(ls_rows,
-                        index = ls_index,
-                        columns = ls_columns)
-
-dict_quality = {u"Ces coordonnées n'ont pas été vérifiées " +\
-                    u"et sont sujettes à caution" : "Unverified",
-                u"Ces coordonnées ont été vérifiées " +\
-                    u"par un internaute" : "Verified"}
-df_zagaz['quality'] = df_zagaz['quality'].apply(lambda x: dict_quality.get(x, None))
-
-df_zagaz = pd.merge(df_zagaz, df_ci_zagaz,
-                    left_index = True, right_index = True)
-
-pd.set_option("display.max_colwidth", 20)
-print df_zagaz[0:20].to_string()
-
-len(df_zagaz[pd.isnull(df_zagaz['ci_1'])])
-
 # OUTPUT
+# ##############
 
-df_zagaz.to_csv(os.path.join(path_dir_built_zagaz,
-                             'df_zagaz_stations.csv'),
-                index_label = 'id_zagaz',
-                float_format='%.3f',
-                encoding='utf-8')
+df_stations.to_csv(os.path.join(path_dir_built_zagaz,
+                                'df_zagaz_stations.csv'),
+                   index_label = 'id_zagaz',
+                   float_format='%.3f',
+                   encoding='utf-8')
