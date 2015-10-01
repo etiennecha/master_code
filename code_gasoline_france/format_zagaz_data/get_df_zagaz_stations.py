@@ -165,6 +165,7 @@ for year, df_stations in dict_df_stations.items():
     df_stations.loc[(df_stations['municipality'] == muni_old) &\
                     (df_stations['zip'] == zip_code),
                     'municipality'] = muni_new
+  df_stations['street'] = df_stations['street'].apply(lambda x: x.replace(u'\u017d', u"'"))
 
 # GPS
 
@@ -272,6 +273,7 @@ for year in ['2012', '2013']:
 # ##############
 
 df_stations.to_csv(os.path.join(path_dir_built_zagaz,
+                                'data_csv',
                                 'df_zagaz_stations.csv'),
                    index_label = 'id_zagaz',
                    float_format='%.3f',

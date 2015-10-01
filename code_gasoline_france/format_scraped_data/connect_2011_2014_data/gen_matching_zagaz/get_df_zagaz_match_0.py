@@ -60,6 +60,22 @@ dict_brands = dec_json(os.path.join(path_data,
                                     'data_source',
                                     'data_other',
                                     'dict_brands.json'))
+
+# update with zagaz
+dict_brands_update = {'OIL' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'TEXACO' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'ENI' : [u'AGIP', u'AGIP', u'OIL'],
+                      'IDS': [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      '8 A HUIT' : [u'HUIT_A_HUIT', u'CARREFOUR', u'SUP'],
+                      'AS 24' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'AS24' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'SPAR' : [u'CASINO', u'CASINO', u'SUP'],
+                      'ANTARGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'DIVERS' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'MATCH' : [u'CORA', u'CORA', u'SUP'],
+                      'PRIMAGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND']}
+dict_brands.update(dict_brands_update)
+
 dict_brands_std = {v[0]: v[1:] for k,v in dict_brands.items()}
 
 dict_addresses = {indiv_id: [indiv_info['address'][i] for i in (8, 7, 6, 5, 3, 4, 0)\
@@ -85,38 +101,16 @@ df_info.set_index('id_station', inplace = True)
 # ################
 
 df_zagaz = pd.read_csv(os.path.join(path_dir_zagaz_csv,
-                                    'df_zagaz_stations_2012.csv'),
+                                    'df_zagaz_stations.csv'),
                        encoding='utf-8',
                        dtype = {'id_zagaz' : str,
                                 'zip' : str,
-                                'ci_1' : str,
-                                'ci_ardt_1' : str})
+                                'ci' : str,
+                                'ci_ardt' : str})
 df_zagaz.set_index('id_zagaz', inplace = True)
-
-# u'MATCH' => u'SUPERMARCHE MATCH'
-# u'SPAR' = u'SPAR STATION' or u'SUPERMARCHES SPAR' check if real difference
-# u'8 A HUIT' => u'8  A HUIT'
-# u'ENI' => u'AGIP' check
-
-# 'OIL' / 'TEXACO' / 'IDS' / 'AS24' / 'ANTARGAZ' / 'PRIMAGAZ' / 'DIVERS'
-# 'OIL' (18) => Indpt ss enseigne or small
-# 'TEXACO' (2) => not really in france
-# 'IDS' (2) => Indpt ss enseigne
-# 'AS24' (2) => Not in my data... (one became Total Access?)
-# 'ANTARGAZ' / 'PRIMAGAZ' => Not in my data
-# 'DIVERS' (1394) => Indpt ss enseigne... or else?
-
-dict_brands_update = {'OIL' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
-                      'TEXACO' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
-                      'ENI' : [u'AGIP', u'AGIP', u'OIL'],
-                      'IDS': [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
-                      '8 A HUIT' : [u'HUIT_A_HUIT', u'CARREFOUR', u'SUP'],
-                      'AS 24' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
-                      'SPAR' : [u'CASINO', u'CASINO', u'SUP'],
-                      'ANTARGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
-                      'DIVERS' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
-                      'MATCH' : [u'CORA', u'CORA', u'SUP'],
-                      'PRIMAGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND']}
+df_zagaz['brand_std_last'] = df_zagaz['brand_std_2013']
+df_zagaz.loc[df_zagaz['brand_std_last'].isnull(),
+             'brand_std_last'] = df_zagaz['brand_std_2012']
 
 # #######################
 # MATCHING GOUV VS. ZAGAZ
@@ -147,10 +141,10 @@ for gov_id, gov_row in df_info.iterrows():
   if master_addresses.get(gov_id, None):
     gov_addresses = master_addresses[gov_id]
     # check if any zagaz station has same ci
-    if gov_row['ci_1'] in df_zagaz['ci_1'].unique():
+    if gov_row['ci_1'] in df_zagaz['ci'].unique():
       ls_station_results = []
       # loop on zagaz stations with same ci
-      for zag_id, zag_row in df_zagaz[df_zagaz['ci_1'] == gov_row['ci_1']].iterrows():
+      for zag_id, zag_row in df_zagaz[df_zagaz['ci'] == gov_row['ci_1']].iterrows():
         ls_station_levenshtein = []
         # want to compare each sub gov address
         for gov_street in str_low_noacc(gov_row['adr_street']).split(' - '):
@@ -210,8 +204,8 @@ for quality, ls_matches in dict_matching_quality.items():
                                                     'lng_gov_1',
                                                     'ci_1']]) +\
                            list(df_zagaz.ix[zag_id][['street',
-                                                     'city',
-                                                     'brand',
+                                                     'municipality',
+                                                     'brand_std_last',
                                                      'lat',
                                                      'lng']]))
 
@@ -234,12 +228,6 @@ df_matches['dist'] = df_matches.apply(\
 
 # CHECK RESULT QUALITY WITH BRAND / GROUP
 
-# Update dict_brands with zagaz specific brands
-dict_brands.update(dict_brands_update)
-
-df_matches['zag_br'] = df_matches['zag_br'].apply(\
-                         lambda x: dict_brands[str_low_noacc(x).upper()][0])
-
 # Further normalize brands (applied to standardized brands)
 dict_brands_norm = {u'SHOPI': [u'CARREFOUR', u'GMS'],
                     u'CARREFOUR_CONTACT': [u'CARREFOUR', u'GMS'],
@@ -247,6 +235,7 @@ dict_brands_norm = {u'SHOPI': [u'CARREFOUR', u'GMS'],
                     u'INTERMARCHE_CONTACT' : [u'MOUSQUETAIRES', u'GMS'],
                     u'INTERMARCHE' : [u'MOUSQUETAIRES', u'GMS'],
                     u'ESSO_EXPRESS' : [u'ESSO', u'OIL']}
+
 dict_brands_std.update(dict_brands_norm)
 for field_brand in ['zag_br', 'gov_br_0', 'gov_br_1']:
   df_matches[field_brand] = df_matches[field_brand].apply(\
@@ -310,8 +299,16 @@ df_output = df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
                         (df_matches['zag_br'] == df_matches['gov_br_1']))]
 
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
-                              'df_zagaz_stations_2012_match_0.csv'),
+                              'df_zagaz_stations_match_0.csv'),
                  encoding = 'UTF-8')
+
+df_output.to_csv(os.path.join(path_dir_zagaz_csv,
+                              'df_zagaz_stations_match_0_excel.csv'),
+                              index = False,
+                              encoding = 'latin-1',
+                              sep = ';',
+                              escapechar = '\\',
+                              quoting = 3) 
 
 ## ###########
 ## DEPRECATED?

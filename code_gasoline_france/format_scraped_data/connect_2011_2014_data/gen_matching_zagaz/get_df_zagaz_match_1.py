@@ -52,7 +52,7 @@ path_dir_insee_extracts = os.path.join(path_data,
 # ################
 
 df_zagaz = pd.read_csv(os.path.join(path_dir_zagaz_csv,
-                                    'df_zagaz_stations_2012.csv'),
+                                    'df_zagaz_stations.csv'),
                        encoding='utf-8',
                        dtype = {'id_zagaz' : str,
                                 'zip' : str,
@@ -66,21 +66,20 @@ dict_brands = dec_json(os.path.join(path_data,
                                     'data_other',
                                     'dict_brands.json'))
 
-# TODO: INTEGRATE IN BUILD DF ZAGAZ
+# update with zagaz
 dict_brands_update = {'OIL' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'TEXACO' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'ENI' : [u'AGIP', u'AGIP', u'OIL'],
                       'IDS': [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       '8 A HUIT' : [u'HUIT_A_HUIT', u'CARREFOUR', u'SUP'],
                       'AS 24' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
+                      'AS24' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'SPAR' : [u'CASINO', u'CASINO', u'SUP'],
                       'ANTARGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'DIVERS' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'MATCH' : [u'CORA', u'CORA', u'SUP'],
                       'PRIMAGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND']}
 dict_brands.update(dict_brands_update)
-df_zagaz['brand'] = df_zagaz['brand'].apply(\
-                      lambda x: dict_brands.get(str_low_noacc(x).upper(), [None, None])[0])
 
 # NORMALIZATION FOR MATCHING
 dict_brands_std = {v[0]: v[1:] for k,v in dict_brands.items()}
@@ -92,8 +91,12 @@ dict_brands_norm = {u'SHOPI': [u'CARREFOUR', u'GMS'],
                     u'ESSO_EXPRESS' : [u'ESSO', u'OIL']}
 dict_brands_std.update(dict_brands_norm)
 
-df_zagaz['brand'] = df_zagaz['brand'].apply(\
-                      lambda x: dict_brands_std.get(x, [None, None])[0])
+df_zagaz['brand_std_last'] = df_zagaz['brand_std_2013']
+df_zagaz.loc[df_zagaz['brand_std_last'].isnull(),
+             'brand_std_last'] = df_zagaz['brand_std_2012']
+
+df_zagaz['brand_std_last'] = df_zagaz['brand_std_last'].apply(\
+                               lambda x: dict_brands_std.get(x, [None, None])[0])
 
 # ################
 # LOAD DF GOUV
@@ -131,7 +134,7 @@ for field_brand in ['brand_0', 'brand_1',  'brand_2']:
 # #############
 
 df_zagaz_match_0 = pd.read_csv(os.path.join(path_dir_zagaz_csv,
-                                            'df_zagaz_stations_2012_match_0.csv'),
+                                            'df_zagaz_stations_match_0.csv'),
                                dtype = {'zag_id' : str,
                                         'gov_id' : str,
                                         'ci' : 'str'},
@@ -155,12 +158,12 @@ for gov_id, gov_station in df_info_um.iterrows():
   gov_station_ci = gov_station['ci_1']
   brand_station_0 = gov_station['brand_0']
   brand_station_1 = gov_station['brand_1']
-  df_zagaz_ci = df_zagaz_um[df_zagaz_um['ci_1'] == gov_station_ci]
+  df_zagaz_ci = df_zagaz_um[df_zagaz_um['ci'] == gov_station_ci]
   if len(df_zagaz_ci) == 0:
     dict_no_match['zag_ci_n'].append(gov_id)
   elif len(df_zagaz_ci) == 1:
-    if len(df_zagaz_ci[(df_zagaz_ci['brand'] == brand_station_0) |
-                       (df_zagaz_ci['brand'] == brand_station_1)]) == 1:
+    if len(df_zagaz_ci[(df_zagaz_ci['brand_std_last'] == brand_station_0) |
+                       (df_zagaz_ci['brand_std_last'] == brand_station_1)]) == 1:
       dict_matching_quality['zag_ci_u_ebr'].append((gov_id,
                                                     df_zagaz_ci.index[0]))
     else:
@@ -168,8 +171,8 @@ for gov_id, gov_station in df_info_um.iterrows():
                                                     df_zagaz_ci.index[0]))
   else:
     # risk of loss due to less precision...
-    df_zagaz_ci_br = df_zagaz_ci[(df_zagaz_ci['brand'] == brand_station_0) |
-                                 (df_zagaz_ci['brand'] == brand_station_1)]
+    df_zagaz_ci_br = df_zagaz_ci[(df_zagaz_ci['brand_std_last'] == brand_station_0) |
+                                 (df_zagaz_ci['brand_std_last'] == brand_station_1)]
     if len(df_zagaz_ci_br) == 0:
       dict_no_match['zag_ci_m_nbr'].append(gov_id)
     elif len(df_zagaz_ci_br) == 1:
@@ -300,8 +303,8 @@ for quality, ls_matches in dict_matching_quality.items():
                                                     'lng_gov_1',
                                                     'ci_1']]) +\
                            list(df_zagaz.ix[zag_id][['street',
-                                                     'city',
-                                                     'brand',
+                                                     'municipality',
+                                                     'brand_std_last',
                                                      'lat',
                                                      'lng']]))
 
@@ -362,6 +365,21 @@ df_duplicates.reset_index(inplace = True)
 pd.set_option('display.max_colwidth', 30)
 print u'\nOverview duplicates:'
 print df_duplicates[ls_ma_di_1][0:30].to_string()
+
+df_output.to_csv(os.path.join(path_dir_zagaz_csv,
+                              'df_zagaz_stations_match_1.csv'),
+                 encoding = 'UTF-8')
+
+ls_di_oexcel = ['gov_id', 'zag_id', 'gov_br_0', 'gov_br_1', 'zag_br',
+                'gov_street', 'zag_street', 'gov_city', 'zag_city',
+                'ci', 'quality', 'dist']
+df_output[ls_di_oexcel].to_csv(os.path.join(path_dir_zagaz_csv,
+                               'df_zagaz_stations_match_1_excel.csv'),
+                               index = False,
+                               encoding = 'latin-1',
+                               sep = ';',
+                               escapechar = '\\',
+                               quoting = 3) 
 
 ## #######################
 ## MATCHING GOUV VS. ZAGAZ
