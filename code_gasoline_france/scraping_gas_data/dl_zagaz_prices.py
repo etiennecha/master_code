@@ -41,7 +41,8 @@ def parse_soup_bloc_stations(soup):
           # ls_address = bloc_station.find('div', {'class' : 'station_add'}).findAll(text=True)
           # ls_address = [x for x in map(lambda x: x.strip(), ls_address)  if x]
           ls_ls_address = bloc_station.find('div', {'class' : 'station_add'}).findAll('p')
-          ls_ls_address = [map(lambda x: x.strip(), ls_address.findAll(text=True)) for ls_address in ls_ls_address]
+          ls_ls_address = [map(lambda x: x.strip(), ls_address.findAll(text=True))\
+                             for ls_address in ls_ls_address]
           ls_ls_address = [[x for x in ls_address if x] for ls_address in  ls_ls_address]
                     
           detail_user = bloc_station.find('a', {'href' : re.compile('userDetail.*')})
@@ -101,7 +102,8 @@ for department in departments:
   while not soup.find('div', {'class' : 'suiv'}).string:
     dict_all_stations.update(parse_soup_bloc_stations(soup))
     bloc_next_page = soup.find('div', {'class' : 'suiv'})
-    next_page_url_extension = bloc_next_page.find('a', {'href' : re.compile('prix-carburant.php*')})['href']
+    next_page_url_extension =\
+        bloc_next_page.find('a', {'href' : re.compile('prix-carburant.php*')})['href']
     response = urllib2.urlopen(base_url + r'/' + next_page_url_extension)
     data = response.read()
     soup = BeautifulSoup(data)

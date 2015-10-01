@@ -21,7 +21,6 @@ def str_zagaz_corrections(word):
                 word) 
   return word.strip()
 
-
 path_dir_match_insee = os.path.join(path_data,
                                     u'data_insee',
                                     u'match_insee_codes')
@@ -46,16 +45,18 @@ path_dir_built_zagaz = os.path.join(path_data,
 # LOAD ZAGAZ DATA
 # #####################
 
-dict_zagaz_stations = dec_json(os.path.join(path_dir_zagaz,
-                                            'data_json',
-                                            '2012_dict_zagaz_info_gps.json'))
+dict_zagaz_stations_2012 = dec_json(os.path.join(path_dir_zagaz,
+                                                 'data_json',
+                                                 '2012_dict_zagaz_stations.json'))
+dict_zagaz_stations_2013 = dec_json(os.path.join(path_dir_zagaz,
+                                                 'data_json',
+                                                 '2013_dict_zagaz_stations.json'))
+dict_zagaz_stations_2014 = dec_json(os.path.join(path_dir_zagaz,
+                                                 'data_json',
+                                                 '20140124_dict_zagaz_station_ids.json'))
 
-#dict_zagaz_all = dec_json(os.path.join(path_dir_zagaz,
-#                                       '20140124_zagaz_stations.json'))
-#dict_zagaz_prices = dec_json(os.path.join(path_dir_zagaz,
-#                                          '20140127_zagaz_dict_ext_prices.json'))
-#dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz,
-#                                         '20140124_zagaz_dict_active_users.json'))
+dict_zagaz_stations = dict_zagaz_stations_2013
+dict_zagaz_stations.update(dict_zagaz_stations_2012)
 
 # Content of station description within dict_zagaz_stations:
 # [id, brand, name, comment, street, zip_code, city, gps_tup, other?]
@@ -213,7 +214,7 @@ len(df_zagaz[pd.isnull(df_zagaz['ci_1'])])
 # OUTPUT
 
 df_zagaz.to_csv(os.path.join(path_dir_built_zagaz,
-                             'df_zagaz_stations_2012.csv'),
+                             'df_zagaz_stations.csv'),
                 index_label = 'id_zagaz',
                 float_format='%.3f',
                 encoding='utf-8')
