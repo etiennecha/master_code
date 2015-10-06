@@ -52,11 +52,11 @@ print df_info[pd.isnull(df_info['name'])][ls_disp_noinfo].to_string()
 # #########################
 
 df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht.csv'),
-                        parse_dates = ['date'])
+                           parse_dates = ['date'])
 df_prices_ht.set_index('date', inplace = True)
 
 df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc.csv'),
-                        parse_dates = ['date'])
+                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
 # BU so results can be checked

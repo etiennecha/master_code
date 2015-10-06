@@ -381,39 +381,39 @@ df_output[ls_di_oexcel].to_csv(os.path.join(path_dir_zagaz_csv,
                                escapechar = '\\',
                                quoting = 3) 
 
-### ###########
-### DEPRECATED?
-### ###########
-## Strategy 1: within similar ZIP, compare standardized address 
-##             + check on name station (print) if score is ambiguous
-## Strategy 2: compare standardized string: address, ZIP, City
+## ###########
+## DEPRECATED?
+## ###########
+# Strategy 1: within similar ZIP, compare standardized address 
+#             + check on name station (print) if score is ambiguous
+# Strategy 2: compare standardized string: address, ZIP, City
+
+# Standardization: suppress '-' (?), replace ' st ' by 'saint'
+# master: 26200005, 40390001 (C/C => Centre Commercial ?), 35230001, 13800007 (Av. => Avenue)
+# master: 67540002 (\\ => ), 59860002 (386/388 => 386/388 (?))
+# master: lack of space (not necessarily big pbm) 78120010
+# check weird : 18000014, 82500001, 58240002
+
+# loop on all zagaz stations within zip code area
+# loop on all master sub-adresses vs. zagaz sub-addresses: keep best match
+# produces a list with best match for each zagaz station within zip code are
+# can be more than 2 components... some seem to have standard format DXXX=NXX
+
+## Distance : gouv error: 13115001 ("big" mistake still on website)
+## Correct zagaz error
+#dict_zagaz_stations['14439'][7] = (dict_zagaz_stations['14439'][7][0],
+#                                   str(-float(dict_zagaz_stations['14439'][7][1])),
+#                                   dict_zagaz_stations['14439'][7][2]) # was fixed on zagaz already
+#dict_zagaz_stations['19442'][7] = (u'46.527805',
+#                                   u'5.60754',
+#                                   dict_zagaz_stations['19442'][7][2]) # fixed it on zagaz
 #
-## Standardization: suppress '-' (?), replace ' st ' by 'saint'
-## master: 26200005, 40390001 (C/C => Centre Commercial ?), 35230001, 13800007 (Av. => Avenue)
-## master: 67540002 (\\ => ), 59860002 (386/388 => 386/388 (?))
-## master: lack of space (not necessarily big pbm) 78120010
-## check weird : 18000014, 82500001, 58240002
-#
-## loop on all zagaz stations within zip code area
-## loop on all master sub-adresses vs. zagaz sub-addresses: keep best match
-## produces a list with best match for each zagaz station within zip code are
-## can be more than 2 components... some seem to have standard format DXXX=NXX
-#
-### Distance : gouv error: 13115001 ("big" mistake still on website)
-### Correct zagaz error
-##dict_zagaz_stations['14439'][7] = (dict_zagaz_stations['14439'][7][0],
-##                                   str(-float(dict_zagaz_stations['14439'][7][1])),
-##                                   dict_zagaz_stations['14439'][7][2]) # was fixed on zagaz already
-##dict_zagaz_stations['19442'][7] = (u'46.527805',
-##                                   u'5.60754',
-##                                   dict_zagaz_stations['19442'][7][2]) # fixed it on zagaz
-##
-### Stations out of France: short term fix for GFT/GMap output
-##ls_temp_matching = {'4140001'  : '20101',
-##                    '33830004' : '17259',
-##                    '13115001' : '20072', # included in top mistakes found upon matching
-##                    '20189002' : '1980',  # from here on: Corsica
-##                    '20167010' : '13213',
-##                    '20118004' : '13220',
-##                    '20213004' : '13600',
-##                    '20213003' : '17310'}
+## Stations out of France: short term fix for GFT/GMap output
+#ls_temp_matching = {'4140001'  : '20101',
+#                    '33830004' : '17259',
+#                    '13115001' : '20072', # included in top mistakes found upon matching
+#                    '20189002' : '1980',  # from here on: Corsica
+#                    '20167010' : '13213',
+#                    '20118004' : '13220',
+#                    '20213004' : '13600',
+#                    '20213003' : '17310'}

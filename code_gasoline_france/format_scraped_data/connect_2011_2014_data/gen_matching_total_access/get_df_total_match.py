@@ -26,10 +26,10 @@ path_dir_built_ta = os.path.join(path_data,
                                  u'data_total_access')
 
 path_dir_built_ta_json = os.path.join(path_dir_built_ta, 
-                                      'json')
+                                      'data_json')
 
 path_dir_built_ta_csv = os.path.join(path_dir_built_ta, 
-                                     'csv')
+                                     'data_csv')
 
 # #########################
 # LOAD INFO STATIONS

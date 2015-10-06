@@ -374,4 +374,4 @@ df_info_w_lsa['dist'] = df_info_w_lsa.apply(\
                           axis = 1)
 
 print df_info_w_lsa[df_info_w_lsa['dist'] > 5]\
-        [ls_dup_disp + ['dist'].to_string()
+        [ls_dup_disp + ['dist']].to_string()
