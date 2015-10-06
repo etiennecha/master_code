@@ -299,8 +299,8 @@ for quality, ls_matches in dict_matching_quality.items():
                                                     'adr_city',
                                                     'brand_0',
                                                     'brand_1',
-                                                    'lat_gov_1',
-                                                    'lng_gov_1',
+                                                    'lat',
+                                                    'lng',
                                                     'ci_1']]) +\
                            list(df_zagaz.ix[zag_id][['street',
                                                      'municipality',
@@ -381,10 +381,9 @@ df_output[ls_di_oexcel].to_csv(os.path.join(path_dir_zagaz_csv,
                                escapechar = '\\',
                                quoting = 3) 
 
-## #######################
-## MATCHING GOUV VS. ZAGAZ
-## #######################
-#
+### ###########
+### DEPRECATED?
+### ###########
 ## Strategy 1: within similar ZIP, compare standardized address 
 ##             + check on name station (print) if score is ambiguous
 ## Strategy 2: compare standardized string: address, ZIP, City
@@ -399,186 +398,6 @@ df_output[ls_di_oexcel].to_csv(os.path.join(path_dir_zagaz_csv,
 ## loop on all master sub-adresses vs. zagaz sub-addresses: keep best match
 ## produces a list with best match for each zagaz station within zip code are
 ## can be more than 2 components... some seem to have standard format DXXX=NXX
-#
-## To make comparison easier
-#df_zagaz.loc[pd.isnull(df_zagaz['street']), 'street'] = u''
-#
-## MATCHING BASED ON INSEE CODE
-#dict_matches = {}
-#ls_ci_not_in_zag = []
-#for gov_id, gov_row in df_info.iterrows():
-#  if master_addresses.get(gov_id, None):
-#    gov_addresses = master_addresses[gov_id]
-#    # check if any zagaz station has same ci
-#    if gov_row['ci_1'] in df_zagaz['ci_1'].unique():
-#      ls_station_results = []
-#      # loop on zagaz stations with same ci
-#      for zag_id, zag_row in df_zagaz[df_zagaz['ci_1'] == gov_row['ci_1']].iterrows():
-#        ls_station_levenshtein = []
-#        # want to compare each sub gov address
-#        for gov_street in str_low_noacc(gov_row['adr_street']).split(' - '):
-#          for zag_street in zag_row['street'].split(' - '):
-#            if not ('=' in zag_street):
-#              std_zag_street = str_corr_low_std_noacc(zag_street, False)
-#              levenshtein_tuple = get_levenshtein_tuple(gov_street, std_zag_street)
-#              ls_station_levenshtein.append(levenshtein_tuple)
-#            else:
-#              for sub_zag_street in zag_street.split('='):
-#                std_sub_zag_street = str_corr_low_std_noacc(sub_zag_street, False)
-#                std_sub_zag_street = str_zagaz_corrections(std_sub_zag_street)
-#                levenshtein_tuple = get_levenshtein_tuple(gov_street, std_sub_zag_street)
-#                ls_station_levenshtein.append(levenshtein_tuple)
-#        ls_station_levenshtein = sorted(ls_station_levenshtein, key=lambda tup: tup[0])
-#        ls_station_results.append([zag_id] + list(ls_station_levenshtein[0]))
-#      dict_matches[gov_id] = sorted(ls_station_results, key=lambda tup: tup[1])
-#    else:
-#      ls_ci_not_in_zag.append(gov_id)
-#  else:
-#    print gov_id, 'no address'
-#
-## Results are ranked based on first but if short... second could be right one
-#dict_matching_quality = {}
-#for gov_id, ls_matches in dict_matches.items():
-#  if not ls_matches:
-#    pass
-#  elif len(ls_matches) == 1:
-#    if ls_matches[0][1] == 0:
-#      dict_matching_quality.setdefault('ci_u_lev_top', []).append((gov_id, ls_matches[0][0]))
-#    elif (min(*ls_matches[0][2:4]) >= 8) and\
-#        (1 - float(ls_matches[0][1])/float(ls_matches[0][3]) >= 0.5):
-#      dict_matching_quality.setdefault('ci_u_lev_ok', []).append((gov_id, ls_matches[0][0]))
-#    else:
-#      dict_matching_quality.setdefault('ci_u_lev_bad', []).append((gov_id, ls_matches[0][0]))
-#  else:
-#    if ls_matches[0][1] == 0:
-#      dict_matching_quality.setdefault('ci_m_lev_top', []).append((gov_id, ls_matches[0][0]))
-#    elif (min(*ls_matches[0][2:4]) >= 8) and\
-#        (1 - float(ls_matches[0][1])/float(ls_matches[0][3]) >= 0.5):
-#      dict_matching_quality.setdefault('ci_m_lev_ok', []).append((gov_id, ls_matches[0][0]))
-#    else:
-#      dict_matching_quality.setdefault('ci_m_lev_bad', []).append((gov_id, ls_matches[0][0]))
-#
-## Build df results (slight pbm... not gov address from master_address but df_info)
-#ls_rows_matches = []
-#for quality, ls_matches in dict_matching_quality.items():
-#  for gov_id, zag_id in ls_matches:
-#    ls_rows_matches.append([quality,
-#                            gov_id,
-#                            zag_id] +\
-#                           list(df_info.ix[gov_id][['adr_street',
-#                                                    'adr_city',
-#                                                    'brand_0',
-#                                                    'brand_1',
-#                                                    'lat_gov_1',
-#                                                    'lng_gov_1',
-#                                                    'ci_1']]) +\
-#                           list(df_zagaz.ix[zag_id][['street',
-#                                                     'city',
-#                                                     'brand',
-#                                                     'lat',
-#                                                     'lng']]))
-#
-#ls_columns = ['quality', 'gov_id', 'zag_id',
-#              'gov_street', 'gov_city',
-#              'gov_br_0', 'gov_br_1', 'gov_lat', 'gov_lng', 'ci',
-#              'zag_street', 'zag_city',
-#              'zag_br', 'zag_lat', 'zag_lng']
-#df_matches = pd.DataFrame(ls_rows_matches,
-#                          columns = ls_columns)
-#
-#df_matches['dist'] = df_matches.apply(\
-#                           lambda x: compute_distance(\
-#                                            (x['gov_lat'], x['gov_lng']),
-#                                            (x['zag_lat'], x['zag_lng'])), axis = 1)
-#
-## todo: check on brand (flexibility?) + gps coordinates
-## get rid of pbms by observation
-## then restart procss on remaining stations
-#
-## CHECK RESULT QUALITY WITH BRAND / GROUP
-#
-## Update dict_brands with zagaz specific brands
-#dict_brands.update(dict_brands_update)
-#
-#df_matches['zag_br'] = df_matches['zag_br'].apply(\
-#                         lambda x: dict_brands[str_low_noacc(x).upper()][0])
-#
-## Further normalize brands (applied to standardized brands)
-#dict_brands_norm = {u'SHOPI': [u'CARREFOUR', u'GMS'],
-#                    u'CARREFOUR_CONTACT': [u'CARREFOUR', u'GMS'],
-#                    u'ECOMARCHE' : [u'MOUSQUETAIRES', u'GMS'],
-#                    u'INTERMARCHE_CONTACT' : [u'MOUSQUETAIRES', u'GMS'],
-#                    u'INTERMARCHE' : [u'MOUSQUETAIRES', u'GMS'],
-#                    u'ESSO_EXPRESS' : [u'ESSO', u'OIL']}
-#dict_brands_std.update(dict_brands_norm)
-#for field_brand in ['zag_br', 'gov_br_0', 'gov_br_1']:
-#  df_matches[field_brand] = df_matches[field_brand].apply(\
-#                              lambda x: dict_brands_std.get(x, [None, None])[0])
-#
-## Top quality
-#print '\nMatched (top) and same brand:',\
-#      len(df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
-#                      (df_matches['quality'] == 'ci_m_lev_top')) &\
-#                     ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
-#                      (df_matches['zag_br'] == df_matches['gov_br_1']))])
-#
-#print 'Matched (top) and diff brand:',\
-#      len(df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
-#                      (df_matches['quality'] == 'ci_m_lev_top')) &\
-#                     (df_matches['zag_br'] != df_matches['gov_br_0']) &\
-#                     (df_matches['zag_br'] != df_matches['gov_br_1'])])
-#
-## Different brand: really not to be matched?
-#
-#ls_ma_di_0 = ['gov_id', 'zag_id',
-#              'gov_street', 'zag_street',
-#              'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
-#
-#print df_matches[ls_ma_di_0][((df_matches['quality'] == 'ci_u_lev_top') |\
-#                               (df_matches['quality'] == 'ci_m_lev_top')) &\
-#                              (df_matches['zag_br'] != df_matches['gov_br_0']) &\
-#                              (df_matches['zag_br'] != df_matches['gov_br_1'])].to_string()
-#
-## Unique possibility at code insee level but matching not great: just diff address?
-#
-#pd.set_option('display.max_colwidth', 30)
-#
-#print '\nMatched (bad) but unique at insee code level and same brand:',\
-#      len(df_matches[(df_matches['quality'] == 'ci_u_lev_bad') &\
-#                     ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
-#                      (df_matches['zag_br'] == df_matches['gov_br_1']))])
-#
-#ls_ma_di_1 = ['gov_id', 'zag_id', 'gov_city', 'zag_city',
-#              'gov_street', 'zag_street',
-#              'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
-#
-#print df_matches[ls_ma_di_1][(df_matches['quality'] == 'ci_u_lev_bad') &\
-#                             ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
-#                              (df_matches['zag_br'] == df_matches['gov_br_1']))].to_string()
-#
-#print '\nMatched (bad) but unique at insee code level and diff brand:',\
-#      len(df_matches[(df_matches['quality'] == 'ci_u_lev_bad') &\
-#                     (df_matches['zag_br'] != df_matches['gov_br_0']) &\
-#                     (df_matches['zag_br'] != df_matches['gov_br_1'])])
-#
-#print df_matches[ls_ma_di_1][(df_matches['quality'] == 'ci_u_lev_bad') &\
-#                             (df_matches['zag_br'] != df_matches['gov_br_0']) &\
-#                             (df_matches['zag_br'] != df_matches['gov_br_1'])].to_string()
-#
-## OUTPUT ACCEPTED MATCHES
-#df_output = df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
-#                        (df_matches['quality'] == 'ci_u_lev_bad') |\
-#                        (df_matches['quality'] == 'ci_m_lev_top')) &\
-#                       ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
-#                        (df_matches['zag_br'] == df_matches['gov_br_1']))]
-#
-#df_output.to_csv(os.path.join(path_dir_built_csv,
-#                              'df_match_zagaz_0.csv'),
-#                 encoding = 'UTF-8')
-#
-### ###########
-### DEPRECATED?
-### ###########
 #
 ### Distance : gouv error: 13115001 ("big" mistake still on website)
 ### Correct zagaz error

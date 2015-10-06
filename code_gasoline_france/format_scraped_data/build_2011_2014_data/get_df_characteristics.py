@@ -8,49 +8,43 @@ from generic_master_info import *
 from matching_insee import *
 import pprint
 
-path_dir_built_paper = os.path.join(path_data,
+path_dir_source = os.path.join(path_data,
+                               'data_gasoline',
+                               'data_source',
+                               'data_gouv_scraped')
+
+path_dir_built = os.path.join(path_data,
                                     'data_gasoline',
                                     'data_built',
                                     'data_scraped_2011_2014')
 
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+path_dir_built_json = os.path.join(path_dir_built, 'data_json')
+path_dir_built_csv = os.path.join(path_dir_built, 'data_csv')
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_csv_rls = os.path.join(path_dir_source, 'data_other', 'data_rls.csv')
-path_dir_gps_coordinates = os.path.join(path_dir_source, 'data_stations', 'data_gouv_gps')
-ls_dict_gouv_gps_file_names = ['20130117_dict_gps_essence.json',
-                               '20130117_dict_gps_diesel.json',
-                               '20130724_dict_gps_essence.json',
-                               '20130724_dict_gps_diesel.json',
-                               '20131115_dict_gps_essence.json',
-                               '20131115_dict_gps_diesel.json',
-                               '20141206_dict_gps_essence.json',
-                               '20141206_dict_gps_diesel.json']
-
-# ######################
-# LOAD GAS STATION DATA
-# ######################
-
-#master_price_raw = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_raw.json'))
-#master_info_raw = dec_json(os.path.join(path_dir_built_json, 'master_info_raw.json'))
-
-master_price = dec_json(os.path.join(path_dir_built_json, 'master_price_diesel_fixed.json'))
-master_info = dec_json(os.path.join(path_dir_built_json, 'master_info_fixed.json'))
-
-# BUILD master_addresses (addresses corrected for html pbms and somewhat stdized
-dict_addresses = {indiv_id: [indiv_info['address'][i]\
-                               for i in (8, 7, 6, 5, 3, 4, 0) if indiv_info['address'][i]]\
-                    for (indiv_id, indiv_info) in master_info.items()}
-master_addresses = build_master_addresses(dict_addresses)
+#master_info_raw = dec_json(os.path.join(path_dir_built_json,
+#                                        'master_info_raw.json'))
+master_info = dec_json(os.path.join(path_dir_built_json,
+                                    'master_info_fixed.json'))
 
 # ########################################
 # GAS STATIONS GPS COORDINATES (FROM GOUV)
 # ########################################
 
+path_dir_gps = os.path.join(path_dir_source,
+                            'data_gps')
+
+ls_gps_file_names = ['20130117_dict_gps_essence.json',
+                     '20130117_dict_gps_diesel.json',
+                     '20130724_dict_gps_essence.json',
+                     '20130724_dict_gps_diesel.json',
+                     '20131115_dict_gps_essence.json',
+                     '20131115_dict_gps_diesel.json',
+                     '20141206_dict_gps_essence.json',
+                     '20141206_dict_gps_diesel.json']
+
 # Load gps collected from prix-carburant.gouv.fr
-ls_dict_gouv_gps = [dec_json(os.path.join(path_dir_gps_coordinates, gps_file))\
-                      for gps_file in ls_dict_gouv_gps_file_names]
+ls_dict_gouv_gps = [dec_json(os.path.join(path_dir_gps, gps_file_name))\
+                      for gps_file_name in ls_gps_file_names]
 
 dict_gps = {}
 for dict_gouv_gps in ls_dict_gouv_gps:
@@ -74,12 +68,18 @@ df_gps = pd.DataFrame(ls_rows_gps, index = ls_index_gps, columns = ls_columns_gp
 df_gps = df_gps.astype(float)
 
 # Load gps provided by Ronan (from prix-carburant.gouv.fr but older)
-df_rls = pd.read_csv(path_csv_rls, dtype = {'idpdv' : str})
+df_rls = pd.read_csv(os.path.join(path_dir_source,
+                                  'data_station_info',
+                                  'data_rls.csv'),
+                     dtype = {'idpdv' : str})
 df_rls.set_index('idpdv', inplace = True)
 
 # Get final df_gps
-df_gps = pd.merge(df_gps, df_rls[['latDeg', 'longDeg']],
-                       left_index = True, right_index = True, how = 'left')
+df_gps = pd.merge(df_gps,
+                  df_rls[['latDeg', 'longDeg']],
+                  left_index = True,
+                  right_index = True,
+                  how = 'left')
 df_gps.rename(columns = {'latDeg' : 'lat_rls',
                          'longDeg' : 'lng_rls'}, inplace = True)
 df_gps = df_gps.apply(lambda x: np.round(x, 3))
@@ -89,9 +89,13 @@ df_gps = df_gps.apply(lambda x: np.round(x, 3))
 # #######################
 
 ls_gouv_highway_ids = dec_json(os.path.join(path_dir_source,
-                                            u'data_stations',
-                                            u'data_gouv_highway',
+                                            u'data_highway',
                                             u'20141206_ls_highway_ids.json'))
+
+dict_addresses = {indiv_id: [indiv_info['address'][i]\
+                               for i in (8, 7, 6, 5, 3, 4, 0) if indiv_info['address'][i]]\
+                    for (indiv_id, indiv_info) in master_info.items()}
+master_addresses = build_master_addresses(dict_addresses)
 
 set_highway_ids = set()
 for indiv_id, ls_addresses in master_addresses.items():
@@ -104,9 +108,6 @@ for indiv_id, ls_addresses in master_addresses.items():
 ls_mistakes_highway = ['93130007', '75017016', '56190007', '68127001', '7580002']
 ls_highway_ids = [indiv_id for indiv_id in list(set_highway_ids)\
                           if indiv_id not in ls_mistakes_highway]
-# for indiv_id in list(set_highway_ids):
-  # if indiv_id in master_price['dict_info'].keys():
-    # print indiv_id, master_price['dict_info'][indiv_id]['name'], master_addresses[indiv_id]
 # # excluded: 93130007 (address incl. 'chasse a 3'), 75017016 ('6 a 8'),  56190007 (dummy 1), 
 # # excluded: 68127001 ('pres sortie...'), 7580002 (dummy 1, RN)
 ls_index = master_info.keys()

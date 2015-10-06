@@ -200,8 +200,8 @@ for quality, ls_matches in dict_matching_quality.items():
                                                     'adr_city',
                                                     'brand_0',
                                                     'brand_1',
-                                                    'lat_gov_1',
-                                                    'lng_gov_1',
+                                                    'lat',
+                                                    'lng',
                                                     'ci_1']]) +\
                            list(df_zagaz.ix[zag_id][['street',
                                                      'municipality',
@@ -248,55 +248,61 @@ print '\nMatched (top) and same brand:',\
                      ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
                       (df_matches['zag_br'] == df_matches['gov_br_1']))])
 
-print 'Matched (top) and diff brand:',\
-      len(df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
-                      (df_matches['quality'] == 'ci_m_lev_top')) &\
-                     (df_matches['zag_br'] != df_matches['gov_br_0']) &\
-                     (df_matches['zag_br'] != df_matches['gov_br_1'])])
+print '\nMatched (top) and diff brand:',\
+        len(df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
+                        (df_matches['quality'] == 'ci_m_lev_top')) &\
+                       (df_matches['zag_br'] != df_matches['gov_br_0']) &\
+                       (df_matches['zag_br'] != df_matches['gov_br_1'])])
 
-# Different brand: really not to be matched?
+# Good match but different brands
+# Decision: keep in matching
 
 ls_ma_di_0 = ['gov_id', 'zag_id',
               'gov_street', 'zag_street',
               'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
 
-print df_matches[ls_ma_di_0][((df_matches['quality'] == 'ci_u_lev_top') |\
-                               (df_matches['quality'] == 'ci_m_lev_top')) &\
-                              (df_matches['zag_br'] != df_matches['gov_br_0']) &\
-                              (df_matches['zag_br'] != df_matches['gov_br_1'])].to_string()
+df_good_db = df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
+                         (df_matches['quality'] == 'ci_m_lev_top')) &\
+                        (df_matches['zag_br'] != df_matches['gov_br_0']) &\
+                        (df_matches['zag_br'] != df_matches['gov_br_1'])]
 
-# Unique possibility at code insee level but matching not great: just diff address?
+print u'\nTop address match but different brands (extract - keep):',\
+          len(df_good_db)
+
+print df_good_db[ls_ma_di_0][0:30].to_string()
+
+# Unique possibility at code insee level but matching not great
+# Decision: accept if same brand
 
 pd.set_option('display.max_colwidth', 30)
-
-print '\nMatched (bad) but unique at insee code level and same brand:',\
-      len(df_matches[(df_matches['quality'] == 'ci_u_lev_bad') &\
-                     ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
-                      (df_matches['zag_br'] == df_matches['gov_br_1']))])
 
 ls_ma_di_1 = ['gov_id', 'zag_id', 'gov_city', 'zag_city',
               'gov_street', 'zag_street',
               'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
 
-print df_matches[ls_ma_di_1][(df_matches['quality'] == 'ci_u_lev_bad') &\
-                             ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
-                              (df_matches['zag_br'] == df_matches['gov_br_1']))][0:30].to_string()
+df_bad_unique_sb = df_matches[(df_matches['quality'] == 'ci_u_lev_bad') &\
+                              ((df_matches['zag_br'] == df_matches['gov_br_0']) | \
+                               (df_matches['zag_br'] == df_matches['gov_br_1']))]
 
-print '\nMatched (bad) but unique at insee code level and diff brand:',\
-      len(df_matches[(df_matches['quality'] == 'ci_u_lev_bad') &\
-                     (df_matches['zag_br'] != df_matches['gov_br_0']) &\
-                     (df_matches['zag_br'] != df_matches['gov_br_1'])])
+print '\nBad matching but unique in insee code, same brands (extract - keep):',\
+         len(df_bad_unique_sb)
 
-print df_matches[ls_ma_di_1][(df_matches['quality'] == 'ci_u_lev_bad') &\
-                             (df_matches['zag_br'] != df_matches['gov_br_0']) &\
-                             (df_matches['zag_br'] != df_matches['gov_br_1'])][0:30].to_string()
+print df_bad_unique_sb[ls_ma_di_1][0:30].to_string()
+
+df_bad_unique_db = df_matches[(df_matches['quality'] == 'ci_u_lev_bad') &\
+                              ((df_matches['zag_br'] != df_matches['gov_br_0']) & \
+                               (df_matches['zag_br'] != df_matches['gov_br_1']))]
+
+print '\nBad matching but unique in insee code, diff brands (extract - drop):',\
+         len(df_bad_unique_db)
+print df_bad_unique_db[ls_ma_di_1][0:30].to_string()
 
 # OUTPUT ACCEPTED MATCHES
 df_output = df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
                         (df_matches['quality'] == 'ci_u_lev_bad') |\
                         (df_matches['quality'] == 'ci_m_lev_top')) &\
                        ((df_matches['zag_br'] == df_matches['gov_br_0']) |\
-                        (df_matches['zag_br'] == df_matches['gov_br_1']))]
+                        (df_matches['zag_br'] == df_matches['gov_br_1']))].copy()
 
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
                               'df_zagaz_stations_match_0.csv'),

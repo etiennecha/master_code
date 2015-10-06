@@ -3,8 +3,9 @@
 
 import add_to_path
 from add_to_path import *
-#from generic_master_price import *
-#from generic_master_info import *
+from generic_master_price import *
+from generic_master_info import *
+from generic_competition import *
 import os, sys
 import re
 import numpy as np
@@ -220,15 +221,18 @@ df_info_w_lsa.drop(['id_lsa_adhoc'], axis = 1, inplace = True)
 # CHECK FOR DUPLICATES IN MATCHING
 df_info_w_lsa.sort(columns=['id_lsa'], inplace = True)
 df_matched = df_info_w_lsa[~pd.isnull(df_info_w_lsa['id_lsa'])]
-df_dup = df_matched[(df_matched.duplicated(subset = ['id_lsa'],
-                                           take_last = True)) |\
-                    (df_matched.duplicated(subset = ['id_lsa'],
-                                           take_last = False))]
-print '\nNb id_lsa associated with two different stores: {:d}'.format(len(df_dup))
-print '\nInspect duplicates:'
+
 ls_dup_disp = ['name', 'brand_0', 'adr_street',
                'adr_city', 'adr_zip', 'ci_ardt_1', 'id_lsa']
-print df_dup[ls_dup_disp].to_string()
+
+## Most fixed manually... see remaining at the end
+#df_dup = df_matched[(df_matched.duplicated(subset = ['id_lsa'],
+#                                           take_last = True)) |\
+#                    (df_matched.duplicated(subset = ['id_lsa'],
+#                                           take_last = False))]
+#print '\nNb id_lsa associated with two different stores: {:d}'.format(len(df_dup))
+#print '\nInspect duplicates:'
+#print df_dup[ls_dup_disp].to_string()
 
 # OUTPUT NO MATCH (INCLUDING MANUAL INPUT) FOR FURTHER INVESTIGATIONS
 # Impose Q non null: there must have been a matching attempt
@@ -265,11 +269,6 @@ for col_str in ['name', 'adr_street']:
     df_unmatched[col_str].apply(lambda x: x.replace(u'"', u"'").replace(u';', u' ')\
                                             if x and not isinstance(x, float) else x)
 
-## dunno why float...
-#for col_str in ['name', 'id_lsa']:
-#  df_unmatched.loc[pd.isnull(df_unmatched[col_str]),
-#                   col_str] = None
-
 df_unmatched[ls_unmatched_disp].to_csv(os.path.join(path_source_other,
                                                     'fix_gas_lsa_matching.csv'),
                                        index = False,
@@ -281,7 +280,7 @@ df_unmatched[ls_unmatched_disp].to_csv(os.path.join(path_source_other,
 ## ##############
 ## OUTPUT TO CSV
 ## ##############
-
+#
 #df_info_w_lsa_output = df_info_w_lsa.copy()
 #
 #df_info_w_lsa_output.loc[((df_info_w_lsa_output.duplicated(subset = ['id_lsa'],
@@ -294,6 +293,10 @@ df_unmatched[ls_unmatched_disp].to_csv(os.path.join(path_source_other,
 #                                         'df_station_info_final_w_lsa_ids.csv'),
 #                            index_label = 'id_station',
 #                            encoding = 'UTF-8')
+
+# ###############
+# FIX DUPLICATES
+# ###############
 
 ls_fix_dup = [('27500001', '947'),
               ('15300004', '12017'), # unsure: itm vs netto (closed)
@@ -347,7 +350,28 @@ for id_station, id_lsa in ls_fix_dup:
 
 df_info_w_lsa.sort(columns=['id_lsa'], inplace = True)
 df_tp = df_info_w_lsa[~df_info_w_lsa['id_lsa'].isnull()]
+
+print u'\nUnresolved duplicates:'
 print df_tp[(df_tp.duplicated(subset = ['id_lsa'],
                               take_last = True)) |\
             (df_tp.duplicated(subset = ['id_lsa'],
                               take_last = False))][ls_dup_disp].to_string()
+
+# ###############
+# CHECK DISTANCE
+# ###############
+
+df_info_w_lsa = pd.merge(df_info_w_lsa,
+                         df_lsa[['Ident', 'Longitude', 'Latitude']],
+                         how = 'right',
+                         left_on = 'id_lsa',
+                         right_on = 'Ident')
+
+df_info_w_lsa['dist'] = df_info_w_lsa.apply(\
+                          lambda x: compute_distance(\
+                                           (x['lng'], x['lat']),
+                                           (x['Longitude'], x['Latitude'])),
+                          axis = 1)
+
+print df_info_w_lsa[df_info_w_lsa['dist'] > 5]\
+        [ls_dup_disp + ['dist'].to_string()

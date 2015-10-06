@@ -6,35 +6,36 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 
-path_dir_built_paper = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_built',
-                                    u'data_paper_total_access') # params here too?
+path_dir_built_scraped = os.path.join(path_data,
+                                      u'data_gasoline',
+                                      u'data_built',
+                                      u'data_scraped_2011_2014')
 
-path_dir_built_csv = os.path.join(path_dir_built_paper,
-                                  u'data_csv')
+path_dir_built_scraped_csv = os.path.join(path_dir_built_scraped,
+                                          u'data_csv')
 
-path_dir_built_json = os.path.join(path_dir_built_paper,
-                                   'data_json')
+path_dir_source_ta_csv = os.path.join(path_data,
+                                      u'data_gasoline',
+                                      u'data_source',
+                                      u'data_total_sa',
+                                      u'data_csv')
 
-path_dir_built_graphs = os.path.join(path_dir_built_paper,
-                                     'data_graphs')
+path_dir_built_ta = os.path.join(path_data,
+                                 u'data_gasoline',
+                                 u'data_built',
+                                 u'data_total_access')
 
-path_dir_insee_extracts = os.path.join(path_data,
-                                       'data_insee',
-                                       'data_extracts')
+path_dir_built_ta_json = os.path.join(path_dir_built_ta, 
+                                      'json')
 
-path_dir_total = os.path.join(path_data,
-                              u'data_gasoline',
-                              u'data_source',
-                              u'data_total')
-path_dir_total_csv = os.path.join(path_dir_total, 'data_total_csv')
+path_dir_built_ta_csv = os.path.join(path_dir_built_ta, 
+                                     'csv')
 
 # #########################
 # LOAD INFO STATIONS
 # #########################
 
-df_info = pd.read_csv(os.path.join(path_dir_built_csv,
+df_info = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
                                    'df_station_info_final.csv'),
                       encoding = 'utf-8',
                       dtype = {'id_station' : str,
@@ -77,14 +78,14 @@ print df_info[ls_disp_ta][df_info['TA'] == 1][0:10].to_string()
 # DATE CONVERSION TOTAL ACCESS
 # ################################
 
-df_total_ouv = pd.read_csv(os.path.join(path_dir_total_csv,
+df_total_ouv = pd.read_csv(os.path.join(path_dir_source_ta_csv,
                                     'df_total_ouv.csv'),
                           dtype = {'CP' : str,
                                    'ci_1': str,
                                    'ci_ardt_1' : str},
                           parse_dates = [u'Date'])
 
-df_total_fer = pd.read_csv(os.path.join(path_dir_total_csv,
+df_total_fer = pd.read_csv(os.path.join(path_dir_source_ta_csv,
                                     'df_total_fer.csv'),
                           dtype = {'CP' : str,
                                    'ci_1' : str,
@@ -399,7 +400,6 @@ ls_ouv_2 = [('10362', 'RELAIS SAINTE SAVINE', '04/06/2012', '10300004'),
             ('95280', 'RELAIS GOUSSAINVILLE A.SARRAUT', '21/04/2012', '95190001'),
             ('95680', 'RELAIS VILLIERS LE BEL LES ERABLES', '13/04/2012', '95400002')]
 
-
 # Generally: no TA yet in my data... hence enlarge period to include
 ls_lo_match = [('94060', 'LA QUEUE EN BRIE-EURO', '94510001'), # not TA in my data
                ('30189', 'RELAIS KM DELTA', '30900009'), # not TA in my data
@@ -436,11 +436,9 @@ for ci, name_ta_ouv, str_date, id_gouv in ls_ouv + ls_ouv_2:
   if not pd.isnull(date):
     dict_ta_dates.setdefault(id_gouv, []).append(date)
 
-print u'\nNb TAs not matched:'
+print u'\nNb TAs from gouv not matched:'
 df_info_ta['id_gouv'] = df_info_ta.index
 print len(df_info_ta[~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))])
-
-print u'\nInspect TAs not matched:'
 
 def disp_date(some_date):
   try:
@@ -455,11 +453,14 @@ ls_disp_info_ta = ['ci_ardt_1', 'name', 'adr_street', 'adr_city',
 dict_formatters = dict([('start', disp_date), ('end', disp_date)] +\
                          [('day_%s' %i, disp_date) for i in range(4)])
 
-#print df_info_ta[ls_disp_info_ta[:-4]][~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))]\
-#         .to_string(formatters = dict_formatters)
+print u'\nOverview TAs (from gouv) not matched:'
+print df_info_ta[ls_disp_info_ta[:-4]]\
+                [~(df_info_ta['id_gouv'].isin(dict_ta_dates.keys()))][0:30]\
+                  .to_string(formatters = dict_formatters)
 
-#print df_total_fer[['Type station', 'Station', 'Adresse', 'Ville', 'insee_code']]\
-#        [df_total_fer['Ville'].str.contains('Marseille', case = False)].to_string()
+print u'\nInspect TAs (from Total) in Marseille in df_total_fer:'
+print df_total_fer[['Type station', 'Station', 'Adresse', 'Ville', 'ci_1']]\
+        [df_total_fer['Ville'].str.contains('Marseille', case = False)].to_string()
 
 ls_pbm = [('13215', 'RELAIS MISTRAL', '13015014')] # why not matched?
 
@@ -473,68 +474,65 @@ ls_pbm = [('13215', 'RELAIS MISTRAL', '13015014')] # why not matched?
 #                  (df_lo['Station'] == row[1]))]
 #
 
-c_multi = 0
+# Sort dates and check nb of dates per station
+dict_nb_dates = {}
 for id_station, ls_dates in dict_ta_dates.items():
-  if len(ls_dates) > 1:
-    c_multi += 1
+  ls_dates.sort()
+  dict_nb_dates.setdefault(len(ls_dates), []).append(id_station)
 
-## #####################################
-## POLICY PRICE CHANGE
-## #####################################
+print u'\nNb of dates obtained by TA station:'
+for k, v in dict_nb_dates.items():
+  print k, len(v)
 
-# LOAD DF PRICES
-df_prices = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
-                        parse_dates = ['date'])
-df_prices.set_index('date', inplace = True)
-ls_keep_ids = [id_station for id_station in df_prices.columns if\
-                id_station in df_info.index]
-df_prices = df_prices[ls_keep_ids]
-se_mean_prices = df_prices.mean(1)
+dict_ta_dates_str = {k: [pd.to_datetime(str(x)).strftime('%d/%m/%Y')\
+                           for x in v] for k, v in dict_ta_dates.items()}
 
-# LOAD DF MARGIN CHGE
-df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_margin_chge.csv'),
-                             encoding = 'utf-8',
-                             dtype = {'id_station' : str},
-                             parse_dates = ['date'])
-df_margin_chge.set_index('id_station', inplace = True)
+enc_json(dict_ta_dates_str,
+         os.path.join(path_dir_built_ta_json,
+                      'dict_ta_dates_str.json'))
 
-#df_info['pp_chge'] = df_margin_chge['value']
-#df_info['pp_chge_date'] = df_margin_chge['date']
-## check chge in policy not TA
-#df_info = pd.merge(df_info, df_ta,
-#                   left_index = True, right_index = True, how = 'left')
-#ls_disp = ['name', 'adr_city', 'adr_dpt', 'brand_0', 'brand_1', 'brand_2',
-#           'pp_chge_date', 'id_cl_ta_0', 'dist_cl_ta_0']
-#print '\nMargin chge not Total Access:'
-#print df_info[ls_disp][(df_info['pp_chge'].abs() >= 0.04) &\
-#                       (df_info['TA'] != 1)].to_string()
-## Not TA => Gvt announces?
-#ax = df_prices[['93420001', '93420006']].plot()
-#ax.axvline(x = pd.to_datetime('2012-10-15'), color = 'k', ls = 'dashed')
-#ax.axvline(x = pd.to_datetime('2012-10-26'), color = 'k', ls = 'dashed')
-#df_prices.mean(1).plot(ax = ax)
-#plt.show()
+### #####################################
+### POLICY PRICE CHANGE
+### #####################################
+##
+##df_info['pp_chge'] = df_margin_chge['value']
+##df_info['pp_chge_date'] = df_margin_chge['date']
+### check chge in policy not TA
+##df_info = pd.merge(df_info, df_ta,
+##                   left_index = True, right_index = True, how = 'left')
+##ls_disp = ['name', 'adr_city', 'adr_dpt', 'brand_0', 'brand_1', 'brand_2',
+##           'pp_chge_date', 'id_cl_ta_0', 'dist_cl_ta_0']
+##print '\nMargin chge not Total Access:'
+##print df_info[ls_disp][(df_info['pp_chge'].abs() >= 0.04) &\
+##                       (df_info['TA'] != 1)].to_string()
+### Not TA => Gvt announces?
+##ax = df_prices[['93420001', '93420006']].plot()
+##ax.axvline(x = pd.to_datetime('2012-10-15'), color = 'k', ls = 'dashed')
+##ax.axvline(x = pd.to_datetime('2012-10-26'), color = 'k', ls = 'dashed')
+##df_prices.mean(1).plot(ax = ax)
+##plt.show()
+#
+## UPDATE DF TA WITH TOTAL AND MARGIN CHGE DATE IF PRESENT
+#
+#df_info_ta['pp_chge'] = df_margin_chge['value']
+#df_info_ta['pp_chge_date'] = df_margin_chge['date']
+#
+#df_info_ta['ta_chge_date'] = np.datetime64()
+#for id_station, ls_dates in dict_ta_dates.items():
+#  if id_station in df_info_ta.index:
+#    df_info_ta.loc[id_station, 'ta_chge_date'] = max(ls_dates)
+#  else:
+#    print id_station, 'not in df_info_ta'
 
-# UPDATE DF TA WITH TOTAL AND MARGIN CHGE DATE IF PRESENT
+## ###############
+## OUTPUT
+## ################
+#
+#df_info_ta.to_csv(os.path.join(path_dir_built_csv,
+#                               'df_info_ta.csv'),
+#                               encoding = 'utf-8')
 
-df_info_ta['pp_chge'] = df_margin_chge['value']
-df_info_ta['pp_chge_date'] = df_margin_chge['date']
 
-df_info_ta['ta_chge_date'] = np.datetime64()
-for id_station, ls_dates in dict_ta_dates.items():
-  if id_station in df_info_ta.index:
-    df_info_ta.loc[id_station, 'ta_chge_date'] = max(ls_dates)
-  else:
-    print id_station, 'not in df_info_ta'
-
-# ###############
-# OUTPUT
-# ################
-
-df_info_ta.to_csv(os.path.join(path_dir_built_csv,
-                               'df_info_ta.csv'),
-                               encoding = 'utf-8')
 
 ## ################
 ## GRAPH INSPECTION
@@ -577,146 +575,3 @@ df_info_ta.to_csv(os.path.join(path_dir_built_csv,
 #                             'total_access_price_series',
 #                             '%s' %id_station), dpi = 200, bbox_inches='tight')
 #  plt.close()
-
-## ##############################
-## TOTAL ACCESS WITHIN INSEE AREA
-## ##############################
-#
-#df_insee_areas = pd.read_csv(os.path.join(path_dir_insee_extracts,
-#                                          'df_insee_areas.csv'),
-#                             dtype = {'CODGEO' : str,
-#                                      'AU2010': str,
-#                                      'UU2010': str,
-#                                      'BV' : str},
-#                             encoding = 'utf-8')
-#
-#df_info = df_info.reset_index().merge(df_insee_areas[['CODGEO', 'AU2010', 'UU2010', 'BV']],
-#                                      left_on = 'ci_1', right_on = 'CODGEO',
-#                                      how = 'left').set_index('id_station')
-#
-#ls_areas = ['ci_1', 'AU2010', 'UU2010', 'BV']
-#df_ta = df_info[ls_areas].copy()
-#for area in ls_areas:
-#  df_ta_area = df_info[[area, 'TA']].groupby(area).agg([sum])['TA']
-#  #df_ta_area = df_info[[area, 'TA', 'TA_chge']].groupby(area).agg([sum])
-#  #df_ta_area.columns = ['_'.join(col).strip() for col in df_ta_area.columns.values]
-#  df_ta_area.rename(columns = {'sum': 'TA_%s' %area}, inplace = True)
-#  df_ta = df_ta.reset_index().merge(df_ta_area,
-#                                    left_on = area,
-#                                    right_index = True,
-#                                    how = 'left').set_index('id_station')
-#  df_ta.drop(area, axis = 1, inplace = True)
-#
-#print '\nOverview of TAs within INSEE area', area
-#
-## Check % of TA within area
-#df_ta_area['Nb_%s' %area] = df_info[area].value_counts() # keep active only...
-#df_ta_area['Pct_TA'] = df_ta_area['TA_%s' %area] / df_ta_area['Nb_%s' %area]
-#df_ta_area.sort('Nb_%s' %area, ascending = False, inplace = True)
-#
-#pd.set_option('float_format', '{:,.2f}'.format)
-#ls_dpt_ta_col_disp = ['Nb_%s' %area, 'TA_%s' %area, 'Pct_TA']
-#
-#print '\nNb of areas:', len(df_ta_area)
-#nb_areas_no_TA = len(df_ta_area[df_ta_area['TA_%s' %area] == 0])
-#print 'Nb of areas with 0 TA:', nb_areas_no_TA
-#
-#if nb_areas_no_TA > 10:
-#  #print '\nAreas with TA:'
-#  #print df_ta_area[ls_dpt_ta_col_disp][df_ta_area['TA_%s' %area] != 0].to_string()
-#  print '\nTop 20 biggest areas in terms of general count:'
-#  print df_ta_area[ls_dpt_ta_col_disp][0:20].to_string()
-#else:
-#  print '\nAll areas:'
-#  print df_ta_area[ls_dpt_ta_col_disp].to_string()
-#
-## Need ids of TAs within areas to find dates
-#
-## ################################
-## TOTAL ACCESS WITHIN X KM RADIUS
-## ################################
-#
-#dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
-#                                     'dict_ls_comp.json'))
-#dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
-#ls_ta_ids = list(df_info.index[df_info['TA'] == 1])
-#ls_rows_ta_around = []
-#for id_station in df_info.index:
-#  ls_comp = dict_ls_comp.get(id_station, [])
-#  row_ta_around = [(id_comp, dist) for id_comp, dist in ls_comp\
-#                      if id_comp in ls_ta_ids]
-#  ls_rows_ta_around.append([x for ls_x in row_ta_around[0:2] for x in ls_x])
-#df_ta_around = pd.DataFrame(ls_rows_ta_around,
-#                            columns = ['id_cl_ta_0', 'dist_cl_ta_0',
-#                                       'id_cl_ta_1', 'dist_cl_ta_1'],
-#                            index = df_info.index)
-#df_ta = pd.merge(df_ta, df_ta_around,
-#                 left_index = True, right_index = True, how = 'left')
-#
-
-
-## ########
-## MARGIN
-## ########
-#
-#df_quotations = pd.read_csv(os.path.join(path_dir_built_csv, 'df_quotations.csv'),
-#                        parse_dates = ['date'])
-#df_quotations.set_index('date', inplace = True)
-#df_quotations = df_quotations.ix[:'2013-06-04']
-#
-## Check graph 1
-#ax = df_prices[indiv_id].plot()
-#df_quotations['ULSD 10 CIF NWE R5 EL'].plot(ax=ax)
-#plt.plot()
-#
-## Check graph 2
-#df_quotations['france_prices'] = df_prices.mean(1)
-#df_quotations['temp_prices'] = df_prices[indiv_id]
-#df_quotations['temp_margin'] = df_quotations['temp_prices'] -\
-#                                 df_quotations['ULSD 10 CIF NWE R5 EL']
-#df_quotations['temp_margin'].plot()
-#plt.show()
-#
-## Check graph 3
-#from pylab import *
-#rcParams['figure.figsize'] = 16, 6
-#
-#fig = plt.figure()
-#ax1 = fig.add_subplot(111)
-## ax1 = plt.subplot(frameon=False)
-#line_1 = ax1.plot(df_quotations.index, df_quotations['temp_prices'].values,
-#                  ls='--', c='b', label='Station price before tax')
-#line_1[0].set_dashes([4,2])
-#line_2 = ax1.plot(df_quotations.index, df_quotations['ULSD 10 CIF NWE R5 EL'].values,
-#                  ls='--', c= 'g', label=r'Diesel cost')
-#line_2[0].set_dashes([8,2])
-#ax2 = ax1.twinx()
-#line_3 = ax2.plot(df_quotations.index, df_quotations['temp_margin'].values,
-#                  ls='-', c='r', label=r'Staton retail gross margin')
-#
-#lns = line_1 + line_2 + line_3
-#labs = [l.get_label() for l in lns]
-#ax1.legend(lns, labs, loc=0)
-#
-#ax1.grid()
-##ax1.set_title(r"Title here")
-#ax1.set_ylabel(r"Price and Cost (euros)")
-#ax2.set_ylabel(r"Margin (euros)")
-#plt.tight_layout()
-#plt.show()
-
-# #####################
-# ARCHIVE: GRAPH SYNTAX
-# #####################
-
-#ax = df_price[['51520001','51000009', '51000007']].plot()
-#handles, labels = ax.get_legend_handles_labels()
-#ax.legend(handles, [u'Total Access', u'Intermarché', 'Esso'], loc = 1)
-#plt.tight_layout()
-#plt.show()
-
-#ax = df_price[['avg_price', indiv_id]].plot(xlim = (df_price.index[0], df_price.index[-1]),
-#                                            ylim=(1.2, 1.6))
-#ax.axvline(x = se_argmax[indiv_id], color='k', ls='dashed')
-#plt.savefig(os.path.join(path_dir_temp, 'chge_id_%s' %indiv_id))
-#plt.close()

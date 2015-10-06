@@ -119,7 +119,6 @@ for year, dict_stations in dict_dict_stations.items():
                                                           'Q'])
   dict_df_stations[year] = df_stations
 
-
 # ###############################################
 # FIX STATION INFO (BASED ON INSEE MATCHING PBMS)
 # ###############################################
@@ -152,7 +151,6 @@ def fix_municipality(municipality):
   municipality = re.sub(ur'^Paris 01er$', ur'Paris 1er', municipality)
   municipality = municipality.replace(u'\x9c', u'oe')
   return municipality
-
 
 for year, df_stations in dict_df_stations.items():
   df_stations['municipality'] =\

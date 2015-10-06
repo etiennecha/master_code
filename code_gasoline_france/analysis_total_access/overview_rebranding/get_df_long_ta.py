@@ -22,10 +22,6 @@ path_dir_built_json = os.path.join(path_dir_built_paper,
 path_dir_built_graphs = os.path.join(path_dir_built_paper,
                                      'data_graphs')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
-
 pd.set_option('float_format', '{:,.3f}'.format)
 #format_float_int = lambda x: '{:10,.0f}'.format(x)
 #format_float_float = lambda x: '{:10,.2f}'.format(x)

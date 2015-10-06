@@ -6,13 +6,13 @@ from generic_master_price import *
 from generic_master_info import *
 import matplotlib.pyplot as plt
 
-path_dir_built_paper = os.path.join(path_data,
-                                    'data_gasoline',
-                                    'data_built',
-                                    'data_scraped_2011_2014')
+path_dir_built = os.path.join(path_data,
+                              'data_gasoline',
+                              'data_built',
+                              'data_scraped_2011_2014')
 
-path_dir_built_json = os.path.join(path_dir_built_paper, 'data_json')
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+path_dir_built_json = os.path.join(path_dir_built, 'data_json')
+path_dir_built_csv = os.path.join(path_dir_built, 'data_csv')
 
 path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 
@@ -78,12 +78,14 @@ df_prices_ht.ix['2012-12-21':'2013-01-11'] = df_prices_ht.ix['2012-12-21':'2013-
 
 # todo: check results under excel
 
-df_prices_ttc.to_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc.csv'),
+df_prices_ttc.to_csv(os.path.join(path_dir_built_csv,
+                                  'df_prices_ttc.csv'),
                      index_label = 'date',
                      float_format= '%.3f',
                      encoding = 'utf-8')
 
-df_prices_ht.to_csv(os.path.join(path_dir_built_csv, 'df_prices_ht.csv'),
+df_prices_ht.to_csv(os.path.join(path_dir_built_csv,
+                                 'df_prices_ht.csv'),
                     index_label = 'date',
                     float_format= '%.3f',
                     encoding = 'utf-8')
