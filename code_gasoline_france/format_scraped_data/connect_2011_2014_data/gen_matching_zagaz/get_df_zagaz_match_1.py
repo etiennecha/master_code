@@ -148,8 +148,8 @@ df_info_um = df_info.ix[ls_unmatched_gov_ids].copy()
 df_zagaz_um = df_zagaz.ix[ls_unmatched_zag_ids].copy()
 
 ls_cols = 0
-dict_no_match = {'zag_ci_n' : [],
-                 'zag_ci_m_nbr' : [],
+dict_no_match = {'zag_ci_n' : [], # one in ci, no one of same brand
+                 'zag_ci_m_nbr' : [], # seberal in ci, no one of same brand
                  'zag_ci_m_mbr' : []} # several in ci, several of same brand
 dict_matching_quality = {'zag_ci_u_ebr' : [],
                          'zag_ci_u_dbr' : [], # diff brand, match but not good?
@@ -374,7 +374,8 @@ ls_di_oexcel = ['gov_id', 'zag_id', 'gov_br_0', 'gov_br_1', 'zag_br',
                 'gov_street', 'zag_street', 'gov_city', 'zag_city',
                 'ci', 'quality', 'dist']
 df_output[ls_di_oexcel].to_csv(os.path.join(path_dir_zagaz_csv,
-                               'df_zagaz_stations_match_1_excel.csv'),
+                                            'csv_excel',
+                                            'df_zagaz_stations_match_1_excel.csv'),
                                index = False,
                                encoding = 'latin-1',
                                sep = ';',

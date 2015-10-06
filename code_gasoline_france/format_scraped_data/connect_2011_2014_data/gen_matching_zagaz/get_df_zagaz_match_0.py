@@ -309,12 +309,13 @@ df_output.to_csv(os.path.join(path_dir_zagaz_csv,
                  encoding = 'UTF-8')
 
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
+                              'csv_excel',
                               'df_zagaz_stations_match_0_excel.csv'),
-                              index = False,
-                              encoding = 'latin-1',
-                              sep = ';',
-                              escapechar = '\\',
-                              quoting = 3) 
+                 index = False,
+                 encoding = 'latin-1',
+                 sep = ';',
+                 escapechar = '\\',
+                 quoting = 3) 
 
 ## ###########
 ## DEPRECATED?
