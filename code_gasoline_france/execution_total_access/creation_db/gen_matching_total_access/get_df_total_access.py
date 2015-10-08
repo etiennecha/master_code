@@ -27,8 +27,10 @@ path_dir_insee_extracts = os.path.join(path_data,
 path_dir_total = os.path.join(path_data,
                               u'data_gasoline',
                               u'data_source',
-                              u'data_total')
-path_dir_total_csv = os.path.join(path_dir_total, 'data_total_csv')
+                              u'data_total_sa')
+
+path_dir_total_csv = os.path.join(path_dir_total,
+                                  'data_csv')
 
 # #########################
 # LOAD INFO STATIONS
