@@ -138,17 +138,17 @@ for k, v in dict_reco.items():
     dict_reco_final[k] = v
 
 # TA chge date candidates from Total SA data
-df_info['ta_chge_date'] = np.datetime64()
+df_info['ta_tot_date'] = np.datetime64()
 print u'\nFill df_info with info from Total SA'
 ls_ta_lost = []
 for id_station, ls_dates in dict_ta_dates_str.items():
   ls_dates = [pd.to_datetime(x, format = '%d/%m/%Y') for x in ls_dates]
   if id_station in df_info.index:
     df_info.loc[id_station,
-                'ta_chge_date'] = max(ls_dates)
+                'ta_tot_date'] = max(ls_dates)
   elif dict_reco_final.get(id_station) in df_info.index:
     df_info.loc[dict_reco_final[id_station],
-                'ta_chge_date'] = max(ls_dates)
+                'ta_tot_date'] = max(ls_dates)
     ls_ta_lost.append(id_station)
   else:
     print id_station, 'not in df_info'
@@ -157,7 +157,7 @@ for id_station, ls_dates in dict_ta_dates_str.items():
 # TA chge date candidates from gouv data
 for i in range(3):
   df_info.loc[df_info['brand_{:d}'.format(i)] == 'TOTAL_ACCESS',
-              'ta_brand_day'] = df_info['day_{:d}'.format(i)]
+              'ta_gov_date'] = df_info['day_{:d}'.format(i)]
 
 # ########################
 # STATS DES ON TA STATIONS
@@ -184,7 +184,7 @@ print u'\nNb stations starting with a brand before TA:',\
 print u'Nb stations starting with two brands before TA:',\
         len(df_info[df_info['brand_2'] == 'TOTAL_ACCESS'])
 
-df_info.sort('ta_brand_day', ascending = True, inplace = True)
+df_info.sort('ta_gov_date', ascending = True, inplace = True)
 
 print u'\nInspect first TAs with change:'
 ls_disp_ta_chge = ['name', 'adr_street', 'adr_city',
@@ -312,11 +312,11 @@ df_ta_pp_chge = pd.merge(df_ta_pp_chge,
                          right_index = True)
 
 # Check gap between date given by total sa and gov
-df_ta_pp_chge['gov_vs_tot'] = df_ta_pp_chge['ta_brand_day'] -\
-                                   df_ta_pp_chge['ta_chge_date']
-df_ta_pp_chge['gov_vs_pp'] = df_ta_pp_chge['ta_brand_day'] -\
+df_ta_pp_chge['gov_vs_tot'] = df_ta_pp_chge['ta_gov_date'] -\
+                                   df_ta_pp_chge['ta_tot_date']
+df_ta_pp_chge['gov_vs_pp'] = df_ta_pp_chge['ta_gov_date'] -\
                                   df_ta_pp_chge['pp_chge_date']
-df_ta_pp_chge['tot_vs_pp'] = df_ta_pp_chge['ta_chge_date'] -\
+df_ta_pp_chge['tot_vs_pp'] = df_ta_pp_chge['ta_tot_date'] -\
                                df_ta_pp_chge['pp_chge_date']
 
 print u'\nDate comparisons (pp chge):'
@@ -348,7 +348,7 @@ print u'\nNb TA (brand_chge) with pp_chge st below {:.2f} cents: {:d}'\
 # only those announced too early by Total doc
 # otherwise gov website is assumed to be updated with delay
 
-ls_fix_ta_chge_date =\
+ls_fix_ta_tot_date =\
   [['56690003', '27/01/2014', '02/04/2014'], # seems confirmed
    ['95400002', pd.NaT      , '13/04/2012'],
    ['78760003', '10/09/2012', '28/09/2012'],
@@ -376,14 +376,14 @@ ls_fix_ta_chge_date =\
 
 # 17138005: info not in dict_ta_dates_str but is in pdf so: matching mistake?
 
-for id_station, date_beg, date_end in ls_fix_ta_chge_date:
+for id_station, date_beg, date_end in ls_fix_ta_tot_date:
   if id_station in df_ta_no_pp_chge.index:
     df_ta_no_pp_chge.loc[id_station,
-                         'ta_chge_date'] = pd.to_datetime(date_end,
+                         'ta_tot_date'] = pd.to_datetime(date_end,
                                                           format = '%d/%m/%Y')
 
-df_ta_no_pp_chge['gov_vs_tot'] = df_ta_no_pp_chge['ta_brand_day'] -\
-                                   df_ta_no_pp_chge['ta_chge_date']
+df_ta_no_pp_chge['gov_vs_tot'] = df_ta_no_pp_chge['ta_gov_date'] -\
+                                   df_ta_no_pp_chge['ta_tot_date']
 # positive: later on Gov site than according to Total SA
 
 print u'\nDate comparison (no pp chge):'
@@ -392,7 +392,7 @@ print df_ta_no_pp_chge['gov_vs_tot'].describe()
 df_ta_no_pp_chge.sort('gov_vs_tot', ascending = True, inplace = True)
 
 ls_di_ta_gap = ['name', 'adr_street', 'adr_city',
-                'brand_0', 'ta_brand_day', 'ta_chge_date', 'gov_vs_tot']
+                'brand_0', 'ta_gov_date', 'ta_tot_date', 'gov_vs_tot']
 
 print u'\nOverview of TA (no chge) announced sooner by Gov than Total SA:'
 print df_ta_no_pp_chge[ls_di_ta_gap][0:10].to_string()
@@ -402,7 +402,7 @@ print df_ta_no_pp_chge[~pd.isnull(df_ta_no_pp_chge['gov_vs_tot'])]\
                       [ls_di_ta_gap][-10:].to_string()
 
 print u'\nNb of TA (no chge) for which gov website has to be relied on so far:',\
-          len(df_ta_no_pp_chge[pd.isnull(df_ta_no_pp_chge['ta_chge_date'])])
+          len(df_ta_no_pp_chge[pd.isnull(df_ta_no_pp_chge['ta_tot_date'])])
 print u'Overview (latest conversions):'
 print df_ta_no_pp_chge[pd.isnull(df_ta_no_pp_chge['gov_vs_tot'])]\
                       [ls_di_ta_gap[:-2]][-20:].to_string()
@@ -419,52 +419,52 @@ print df_ta_no_pp_chge[pd.isnull(df_ta_no_pp_chge['gov_vs_tot'])]\
 # todo: non total access (threshold? reg before/after?)
 # todo: total access with no margin chge detected
 
-for row_ind, row in df_ta_pp_chge.iterrows():
-  id_station = row_ind
-  pp_chge = row['pp_chge']
-  pp_chge_date = row['pp_chge_date'] # margin chge detected
-  gov_chge_date = row['ta_brand_day'] # date from gov data
-  ta_chge_date = row['ta_chge_date'] # date from total
-  date_beg = row['date_beg']
-  date_end = row['date_end']
-  plt.rcParams['figure.figsize'] = 16, 6
-  ax = df_prices[id_station].plot()
-  se_mean_prices.plot(ax=ax)
-  handles, labels = ax.get_legend_handles_labels()
-  ax.legend(handles, [id_station, u'mean price'], loc = 1)
-  # margin chge: date and interval
-  ax.axvspan(date_beg, date_end, alpha=0.2, color='blue')
-  ln_da_0 = ax.axvline(x = pp_chge_date, color = 'b', ls = '--', alpha = 0.8, lw = 1.2)
-  ln_da_0.set_dashes([8,8])
-  # brand chge from gov data: date
-  ln_da_1 = ax.axvline(x = ta_chge_date, color = '#FFA500', ls = '--', alpha = 0.8, lw = 1.2)
-  ln_da_1.set_dashes([8,8])
-  # brand chge from Total SA data: date 
-  ln_da_2 = ax.axvline(x = gov_chge_date, color = 'r', ls = '--', alpha = 0.8, lw = 1.2)
-  ln_da_2.set_dashes([4,4])
-  footnote_text = '\n'.join(row[['name',
-                                 'adr_street',
-                                 'adr_city',
-                                 'ci_ardt_1']].values)
-  plt.figtext(0.1, -0.1, footnote_text) 
-  file_name = '_'.join([row['brand_0'],
-                        id_station,
-                        u'{:.3f}'.format(pp_chge)]) + '.png'
-  if row[['gov_vs_pp', 'tot_vs_pp']][~pd.isnull(row[['gov_vs_pp', 'tot_vs_pp']])]\
-       .abs().min() <= pd.Timedelta(days = 30):
-    path_file = os.path.join(path_dir_built_ta_graphs,
-                             'price_series',
-                             'ta_pp_chge_ok',
-                             file_name)
-  else:
-    path_file = os.path.join(path_dir_built_ta_graphs,
-                             'price_series',
-                             'ta_pp_chge_check',
-                             file_name)
-  plt.savefig(path_file,
-              dpi = 200,
-              bbox_inches='tight')
-  plt.close()
+#for row_ind, row in df_ta_pp_chge.iterrows():
+#  id_station = row_ind
+#  pp_chge = row['pp_chge']
+#  pp_chge_date = row['pp_chge_date'] # margin chge detected
+#  gov_chge_date = row['ta_gov_date'] # date from gov data
+#  ta_tot_date = row['ta_tot_date'] # date from total
+#  date_beg = row['date_beg']
+#  date_end = row['date_end']
+#  plt.rcParams['figure.figsize'] = 16, 6
+#  ax = df_prices[id_station].plot()
+#  se_mean_prices.plot(ax=ax)
+#  handles, labels = ax.get_legend_handles_labels()
+#  ax.legend(handles, [id_station, u'mean price'], loc = 1)
+#  # margin chge: date and interval
+#  ax.axvspan(date_beg, date_end, alpha=0.2, color='blue')
+#  ln_da_0 = ax.axvline(x = pp_chge_date, color = 'b', ls = '--', alpha = 0.8, lw = 1.2)
+#  ln_da_0.set_dashes([8,8])
+#  # brand chge from gov data: date
+#  ln_da_1 = ax.axvline(x = ta_tot_date, color = '#FFA500', ls = '--', alpha = 0.8, lw = 1.2)
+#  ln_da_1.set_dashes([8,8])
+#  # brand chge from Total SA data: date 
+#  ln_da_2 = ax.axvline(x = gov_chge_date, color = 'r', ls = '--', alpha = 0.8, lw = 1.2)
+#  ln_da_2.set_dashes([4,4])
+#  footnote_text = '\n'.join(row[['name',
+#                                 'adr_street',
+#                                 'adr_city',
+#                                 'ci_ardt_1']].values)
+#  plt.figtext(0.1, -0.1, footnote_text) 
+#  file_name = '_'.join([row['brand_0'],
+#                        id_station,
+#                        u'{:.3f}'.format(pp_chge)]) + '.png'
+#  if row[['gov_vs_pp', 'tot_vs_pp']][~pd.isnull(row[['gov_vs_pp', 'tot_vs_pp']])]\
+#       .abs().min() <= pd.Timedelta(days = 30):
+#    path_file = os.path.join(path_dir_built_ta_graphs,
+#                             'price_series',
+#                             'ta_pp_chge_ok',
+#                             file_name)
+#  else:
+#    path_file = os.path.join(path_dir_built_ta_graphs,
+#                             'price_series',
+#                             'ta_pp_chge_check',
+#                             file_name)
+#  plt.savefig(path_file,
+#              dpi = 200,
+#              bbox_inches='tight')
+#  plt.close()
 
 # todo: get last date when change... check with graph that it's ok
 # todo: fix manually if needed (+ get sample diff pp_chge_date vs. rebranding)
@@ -501,8 +501,8 @@ ls_fix_date_ref = [['6800011', +10], # enough?
 #  id_station = row_ind
 #  pp_chge = row['pp_chge']
 #  pp_chge_date = row['pp_chge_date'] # margin chge detected
-#  gov_chge_date = row['ta_brand_day'] # date from gov data
-#  ta_chge_date = row['ta_chge_date'] # date from total
+#  gov_chge_date = row['ta_gov_date'] # date from gov data
+#  ta_tot_date = row['ta_tot_date'] # date from total
 #  plt.rcParams['figure.figsize'] = 16, 6
 #  ax = df_prices[id_station].plot()
 #  se_mean_prices.plot(ax=ax)
@@ -512,7 +512,7 @@ ls_fix_date_ref = [['6800011', +10], # enough?
 #  ln_da_0 = ax.axvline(x = pp_chge_date, color = 'b', ls = '--', alpha = 0.8, lw = 1.2)
 #  ln_da_0.set_dashes([8,8])
 #  # brand chge from gov data: date
-#  ln_da_1 = ax.axvline(x = ta_chge_date, color = '#FFA500', ls = '--', alpha = 0.8, lw = 1.2)
+#  ln_da_1 = ax.axvline(x = ta_tot_date, color = '#FFA500', ls = '--', alpha = 0.8, lw = 1.2)
 #  ln_da_1.set_dashes([8,8])
 #  # brand chge from Total SA data: date 
 #  ln_da_2 = ax.axvline(x = gov_chge_date, color = 'r', ls = '--', alpha = 0.8, lw = 1.2)
@@ -525,7 +525,7 @@ ls_fix_date_ref = [['6800011', +10], # enough?
 #  file_name = '_'.join([row['brand_0'],
 #                        id_station,
 #                        u'{:.3f}'.format(pp_chge)]) + '.png'
-#  if not pd.isnull(row['ta_chge_date']):
+#  if not pd.isnull(row['ta_tot_date']):
 #    file_name = '_'.join([row['brand_0'],
 #                          id_station,
 #                          u'{:.3f}'.format(pp_chge),
@@ -544,19 +544,15 @@ ls_fix_date_ref = [['6800011', +10], # enough?
 #              bbox_inches='tight')
 #  plt.close()
 
-## ################
-## OUTPUT
-## ################
-#
-#df_info.to_csv(os.path.join(path_dir_built_ta_csv,
-#                            'df_info_ta.csv'),
-#               encoding = 'utf-8')
-#df_info_ta_final = pd.concat([df_pp_chge,
-#                              df_ta_no_pp_chge])
-## for output
-#df_info_ta_final['ta_gap'] = df_info_ta_final['ta_gap'].apply(\
-#                               lambda x: str(pd.Timedelta(x).days) if not pd.isnull(x) else '')
-#
-##df_info_ta_final.to_csv(os.path.join(path_dir_built_csv,
-##                                     'df_info_ta_fixed.csv'),
-##                                     encoding = 'utf-8')
+# ################
+# OUTPUT
+# ################
+
+df_info_ta = pd.concat([df_ta_pp_chge,
+                        df_ta_no_pp_chge])
+# pbm with column order... make sure got all
+df_info_ta = df_info_ta[df_ta_pp_chge.columns]
+
+df_info_ta.to_csv(os.path.join(path_dir_built_ta_csv,
+                               'df_info_ta.csv'),
+                  encoding = 'utf-8')
