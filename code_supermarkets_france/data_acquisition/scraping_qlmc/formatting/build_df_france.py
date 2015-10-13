@@ -67,7 +67,6 @@ ls_fra_regions = [u'picardie',
 ls_df_regions = []
 for region in ls_fra_regions:
   df_region = pd.read_csv(os.path.join(path_csv,
-                                       'qlmc_scraped',
                                        'df_region_{:s}.csv'.format(region)))
   ls_df_regions.append(df_region)
 
@@ -80,11 +79,3 @@ df_france.to_csv(os.path.join(path_csv,
                    encoding = 'utf-8',
                    float_format='%.3f',
                    index = False)
-
-## STATS DES
-#
-## Top present products
-#print df_france['product'].value_counts()[0:20].to_string()
-#
-## Check coca cola
-#df_france[df_france['product'].str.match(u'^COCA')]['product'].value_counts()

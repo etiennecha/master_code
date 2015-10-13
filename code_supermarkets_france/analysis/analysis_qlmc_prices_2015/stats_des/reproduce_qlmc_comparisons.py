@@ -31,17 +31,17 @@ path_csv = os.path.join(path_data,
                         'data_csv_201503')
 
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_csv,
-                                               'df_qlmc_comparisons.csv'),
+                                               'df_qlmc_competitors.csv'),
                                   encoding = 'utf-8')
 
-df_france = pd.read_csv(os.path.join(path_csv,
-                                     'df_france.csv'),
+df_prices = pd.read_csv(os.path.join(path_csv,
+                                     'df_prices.csv'),
                         encoding = 'utf-8')
 
-# Costly to search by store_id within df_france
-# hence first split df_france in chain dataframes
-dict_chain_dfs = {chain: df_france[df_france['chain'] == chain]\
-                    for chain in df_france['chain'].unique()}
+# Costly to search by store_id within df_prices
+# hence first split df_prices in chain dataframes
+dict_chain_dfs = {chain: df_prices[df_prices['chain'] == chain]\
+                    for chain in df_prices['chain'].unique()}
 
 # #########################
 # REPRODUCE QLMC COMPARISON
@@ -49,12 +49,12 @@ dict_chain_dfs = {chain: df_france[df_france['chain'] == chain]\
 
 # Pick any scraped comparison
 print u'\nExample of comparison displayed on QLMC:'
-print df_qlmc_comparisons[~df_qlmc_comparisons['nb_obs'].isnull()].iloc[0]
+print df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()].iloc[0]
 
 # Replicate comparison
 
 lec_chain = 'LEC'
-lec_id, comp_id, comp_chain = df_qlmc_comparisons[~df_qlmc_comparisons['nb_obs'].isnull()]\
+lec_id, comp_id, comp_chain = df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()]\
                                 .iloc[0][['lec_id', 'comp_id', 'comp_chain']].values
 
 start = timeit.default_timer()
@@ -99,12 +99,12 @@ ls_rows_compa = []
 lec_chain = 'LEC'
 lec_id_save = None
 for lec_id, comp_id, comp_chain\
-  in df_qlmc_comparisons[~df_qlmc_comparisons['nb_obs'].isnull()]\
+  in df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()]\
        [['lec_id', 'comp_id', 'comp_chain']].values:
   
-  ##before split of df_france       
-  #df_lec  = df_france[df_france['store_id'] == lec_id].copy()
-  #df_comp = df_france[df_france['store_id'] == comp_id].copy()
+  ##before split of df_prices       
+  #df_lec  = df_prices[df_prices['store_id'] == lec_id].copy()
+  #df_comp = df_prices[df_prices['store_id'] == comp_id].copy()
   
   ##before taking advantage of order
   #df_lec  = dict_chain_dfs[lec_chain][dict_chain_dfs[lec_chain]['store_id'] == lec_id]
@@ -151,7 +151,7 @@ df_repro_compa.loc[df_repro_compa['nb_comp_wins'] >\
                    'rr'] = df_repro_compa['nb_lec_wins'] /\
                              df_repro_compa['nb_obs'] * 100
 
-import matplotlib.plt as pyplot
+import matplotlib.pyplot as plt
 df_repro_compa.plot(kind = 'scatter', x = 'pct_compa', y = 'rr')
 plt.show()
 

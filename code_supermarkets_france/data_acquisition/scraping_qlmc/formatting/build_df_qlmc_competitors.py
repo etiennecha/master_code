@@ -42,10 +42,52 @@ dict_leclerc_comp = dec_json(os.path.join(path_qlmc_scraped,
                                           'dict_leclerc_comp.json'))
 
 
-
 # ##############################
-# BUILD DF SCRAPED COMPARISONS
-# #############################
+# BUILD DF ALL COMPETITOR PAIRS
+# ##############################
+
+# df with all comparisons including those not scraped
+
+# Get dict of leclerc with leclerc info
+dict_leclerc_stores = {}
+for reg, ls_reg_dict_leclerc_stores in dict_reg_leclerc.items():
+  for dict_leclerc_store in ls_reg_dict_leclerc_stores:
+    dict_leclerc_stores[dict_leclerc_store['slug']] = dict_leclerc_store
+
+# Exclude Leclerc from competitors (not compared on website)
+for leclerc_id, ls_comp in dict_leclerc_comp.items():
+  ls_comp_cl = [comp for comp in ls_comp if comp['signCode'] != u'LEC']
+  dict_leclerc_comp[leclerc_id] = ls_comp_cl
+
+# Build df
+ls_rows_all = []
+for leclerc_id, ls_comp in dict_leclerc_comp.items():
+  for dict_comp in ls_comp:
+    row = [leclerc_id,
+           dict_leclerc_stores[leclerc_id]['title'],
+           dict_leclerc_stores[leclerc_id]['latitude'],
+           dict_leclerc_stores[leclerc_id]['longitude'],
+           dict_comp['slug'],
+           dict_comp['title'],
+           dict_comp['latitude'],
+           dict_comp['longitude'],
+           dict_comp['signCode']]
+    ls_rows_all.append(row)
+
+df_all = pd.DataFrame(ls_rows_all,
+                      columns = ['lec_id',
+                                 'lec_name',
+                                 'lec_lat',
+                                 'lec_lng',
+                                 'comp_id',
+                                 'comp_name',
+                                 'comp_lat',
+                                 'comp_lng',
+                                 'comp_chain'])
+
+# ##################################
+# BUILD DF SCRAPED COMPETITOR PAIRS
+# ##################################
 
 ls_regions = [u'picardie',
               u'franche-comte',
@@ -114,70 +156,27 @@ for region in ls_regions:
     row_res += [pct_compa, winner]
     ls_rows_res.append([region] + row_res)
 
-df_covered = pd.DataFrame(ls_rows_res,
+df_scraped = pd.DataFrame(ls_rows_res,
                           columns = ['region',
                                      'lec_id',
                                      'comp_id',
                                      'date_beg',
                                      'date_end',
-                                     'nb_obs',
-                                     'pct_compa',
-                                     'winner'])
+                                     'qlmc_nb_obs',
+                                     'qlmc_pct_compa',
+                                     'qlmc_winner'])
 
-df_covered['nb_obs'] =\
-   df_covered['nb_obs'].apply(lambda x: x.replace(' ', '')).astype(float)
+df_scraped['qlmc_nb_obs'] =\
+   df_scraped['qlmc_nb_obs'].apply(lambda x: x.replace(' ', '')).astype(float)
 
-df_covered['pct_compa'] = df_covered['pct_compa'].astype(float)
-
-# #########################
-# BUILD DF ALL COMPARISONS
-# #########################
-
-# df with all comparisons including those not scraped
-
-# Get dict of leclerc with leclerc info
-dict_leclerc_stores = {}
-for reg, ls_reg_dict_leclerc_stores in dict_reg_leclerc.items():
-  for dict_leclerc_store in ls_reg_dict_leclerc_stores:
-    dict_leclerc_stores[dict_leclerc_store['slug']] = dict_leclerc_store
-
-# Exclude Leclerc from competitors (not compared on website)
-for leclerc_id, ls_comp in dict_leclerc_comp.items():
-  ls_comp_cl = [comp for comp in ls_comp if comp['signCode'] != u'LEC']
-  dict_leclerc_comp[leclerc_id] = ls_comp_cl
-
-# Build df
-ls_rows_all = []
-for leclerc_id, ls_comp in dict_leclerc_comp.items():
-  for dict_comp in ls_comp:
-    row = [leclerc_id,
-           dict_leclerc_stores[leclerc_id]['title'],
-           dict_leclerc_stores[leclerc_id]['latitude'],
-           dict_leclerc_stores[leclerc_id]['longitude'],
-           dict_comp['slug'],
-           dict_comp['title'],
-           dict_comp['latitude'],
-           dict_comp['longitude'],
-           dict_comp['signCode']]
-    ls_rows_all.append(row)
-
-df_all = pd.DataFrame(ls_rows_all,
-                      columns = ['lec_id',
-                                 'lec_name',
-                                 'lec_lat',
-                                 'lec_lng',
-                                 'comp_id',
-                                 'comp_name',
-                                 'comp_lat',
-                                 'comp_lng',
-                                 'comp_chain'])
+df_scraped['qlmc_pct_compa'] = df_scraped['qlmc_pct_compa'].astype(float)
 
 # ########
 # MERGE
 # ########
 
-df_qlmc_comparisons = pd.merge(df_all,
-                               df_covered,
+df_qlmc_competitors = pd.merge(df_all,
+                               df_scraped,
                                on = ['lec_id', 'comp_id'],
                                how = 'left')
 
@@ -185,8 +184,8 @@ df_qlmc_comparisons = pd.merge(df_all,
 # OUTPUT
 # #########
 
-df_qlmc_comparisons.to_csv(os.path.join(path_csv,
-                                        'df_qlmc_comparisons.csv'),
+df_qlmc_competitors.to_csv(os.path.join(path_csv,
+                                        'df_qlmc_competitors.csv'),
                            encoding = 'UTF-8',
                            float_format='%.3f',
                            index = False)

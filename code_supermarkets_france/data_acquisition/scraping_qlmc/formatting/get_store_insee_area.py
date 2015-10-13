@@ -36,17 +36,16 @@ path_dir_match_insee = os.path.join(path_data,
                                     u'match_insee_codes')
 
 df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'qlmc_scraped',
                                      'df_stores.csv'),
                         encoding = 'utf-8')
 
 # Fix some problematic store locations (found through competitor pair analysis)
-ls_fix_gps = [['intermarche-super-le-portel', (50.7093, 1.5789)], # too far
-              ['casino-l-ile-rousse',         (42.6327, 8.9383)],
-              ['centre-e-leclerc-lassigny',   (49.5898, 2.8531)],
+ls_fix_gps = [['intermarche-super-le-portel',      (50.7093, 1.5789)], # too far
+              ['casino-l-ile-rousse',              (42.6327, 8.9383)],
+              ['centre-e-leclerc-lassigny',        (49.5898, 2.8531)],
               ['carrefour-market-chateau-gontier', (47.8236, -0.7064)],
-              ['casino-san-nicolao', (42.3742, 9.5299)], # too close
-              ['centre-e-leclerc-san-giuliano', (42.2625, 9.5480)]]
+              ['casino-san-nicolao',               (42.3742, 9.5299)], # too close
+              ['centre-e-leclerc-san-giuliano',    (42.2625, 9.5480)]]
 for store_id, (store_lat, store_lng) in ls_fix_gps:
   df_stores.loc[df_stores['store_id'] == store_id,
                 ['store_lat', 'store_lng']] = [store_lat, store_lng]
@@ -165,7 +164,7 @@ df_stores.drop(['insee_matching', 'ic_alt', 'ic_city_alt'],
                inplace = 1)
 
 df_stores.to_csv(os.path.join(path_csv,
-                              'df_stores.csv'),
+                              'df_stores_final.csv'),
                  encoding = 'utf-8',
                  float_format='%.4f',
                  index = False)

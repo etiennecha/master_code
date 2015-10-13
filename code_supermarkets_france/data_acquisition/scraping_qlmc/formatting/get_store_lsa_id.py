@@ -38,9 +38,15 @@ path_lsa_csv = os.path.join(path_data,
                             'data_csv')
 
 df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'df_stores.csv'),
+                                     'df_stores_final.csv'),
                         encoding = 'utf-8',
                         dtype = {'ic' : str})
+
+# drop lsa_id if already exists
+if 'lsa_id' in df_stores.columns:
+  df_stores.drop(labels = ['lsa_id'],
+                 axis = 1,
+                 inplace = True)
 
 # todo: move to dedicated script
 df_stores.loc[df_stores['store_id'] == 'centre-e-leclerc-clichy',
@@ -276,7 +282,11 @@ print df_matching[df_matching['lsa_id'].isnull()].to_string()
 # todo: check for new stores (not in LSA?)
 # todo: check results for Casino and others? (pbm in chosing type? use gps dist)
 
-# Check matching with distance
+# ######################
+# CHECK DISTANCE VS. LSA
+# ######################
+
+# Check matching by computing distance between lsa gps and qlmc gps
 df_stores_f = pd.merge(df_stores,
                        df_matching[['store_id', 'lsa_id']],
                        on = 'store_id',
@@ -284,19 +294,14 @@ df_stores_f = pd.merge(df_stores,
 
 ls_lsa_cols = ['Ident',
                'Enseigne',
-               'Enseigne_Alt',
                'Groupe',
                'Adresse1',
                'Ville',
                'C_INSEE_Ardt',
                'Surface',
-               'Nb_Caisses',
-               'Nb_Emplois',
-               'Nb_Pompes',
                'Longitude',
                'Latitude',
-               'Verif',
-               'Type']
+               'Verif']
 
 df_stores_f = pd.merge(df_stores_f,
                        df_lsa[ls_lsa_cols],
@@ -339,8 +344,18 @@ ls_final_gps = [['casino-prunelli-di-fiumorbo', 'qlmc'], # 4 and bad
 #print u'\n', df_stores_f[(df_stores_f['Verif'] == 1) &\
 #                         (df_stores_f['dist'] >= 1)][ls_di + ['dist']].to_string()
 
-df_stores_f.to_csv(os.path.join(path_csv,
-                                'df_stores_final.csv'),
-                   encoding = 'utf-8',
-                   float_format='%.4f',
-                   index = False)
+# todo: output to excel csv format to allow visual check
+
+# #########
+# OUTPUT
+# #########
+
+# Drop LSA variables before output
+df_stores_final = df_stores_f.drop(labels = ls_lsa_cols + ['dist'],
+                                   axis = 1)
+
+df_stores_final.to_csv(os.path.join(path_csv,
+                                    'df_stores_final.csv'),
+                       encoding = 'utf-8',
+                       float_format='%.4f',
+                       index = False)

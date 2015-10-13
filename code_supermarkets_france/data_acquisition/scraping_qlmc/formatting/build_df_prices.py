@@ -35,12 +35,6 @@ path_csv = os.path.join(path_data,
                         'data_qlmc_2015',
                         'data_csv_201503')
 
-#dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scraped,
-#                                         'dict_reg_leclerc_stores.json'))
-#
-#dict_leclerc_comp = dec_json(os.path.join(path_qlmc_scraped,
-#                                          'dict_leclerc_comp.json'))
-
 ls_fra_regions = [u'picardie',
                   u'franche-comte',
                   u'languedoc-roussillon',
@@ -64,6 +58,7 @@ ls_fra_regions = [u'picardie',
                   u'provence-alpes-cote-d-azur',
                   u'limousin']
 
+ls_df_regions = []
 for region in ls_fra_regions:
   path_dict_reg_comparisons = os.path.join(path_qlmc_scraped,
                                            'dict_reg_comparisons_{:s}.json'.format(region))
@@ -133,21 +128,25 @@ for region in ls_fra_regions:
     
     ls_df_pair_products.append(df_pair_products)
   
-  df_products = pd.concat(ls_df_pair_products)
-  df_products.sort(['store_id', 'family', 'subfamily', 'product'], inplace = True)
+  df_region = pd.concat(ls_df_pair_products)
+  df_region.sort(['store_id', 'family', 'subfamily', 'product'], inplace = True)
   
   # drop duplicate at this stage but must do also with global df
-  df_products.drop_duplicates(['store_id', 'family', 'subfamily', 'product'], inplace = True)
+  df_region.drop_duplicates(['store_id', 'family', 'subfamily', 'product'], inplace = True)
   
-  #df_products[['family', 'subfamily', 'chain', 'price', 'date']]\
-  #           .to_csv(os.path.join(path_csv,
-  #                                'df_region_{:s}.csv'.format(region)),
+  #df_region.to_csv(os.path.join(path_csv,
+  #                              'df_region_{:s}.csv'.format(region)),
   #                   encoding = 'utf-8',
   #                   float_format='%.3f',
   #                   index = False)
+  ls_df_regions.append(df_region)
 
-  df_products.to_csv(os.path.join(path_csv,
-                                  'df_region_{:s}.csv'.format(region)),
-                     encoding = 'utf-8',
-                     float_format='%.3f',
-                     index = False)
+df_prices = pd.concat(ls_df_regions)
+df_prices.sort(['store_id', 'family', 'subfamily', 'product'], inplace = True)
+df_prices.drop_duplicates(['store_id', 'family', 'subfamily', 'product'], inplace = True)
+
+df_prices.to_csv(os.path.join(path_csv,
+                              'df_prices.csv'),
+                   encoding = 'utf-8',
+                   float_format='%.3f',
+                   index = False)

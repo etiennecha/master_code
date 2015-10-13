@@ -42,28 +42,25 @@ dict_leclerc_comp = dec_json(os.path.join(path_qlmc_scraped,
                                           'dict_leclerc_comp.json'))
 
 # dict_leclerc_comp should contain all stores including leclerc
-ls_rows_comp = []
+ls_rows_stores = []
 for leclerc_id, ls_stores in dict_leclerc_comp.items():
   for store in ls_stores:
-    ls_rows_comp.append([store['slug'],
+    ls_rows_stores.append([store['slug'],
                          store['city'],
                          store['title'],
                          store['signCode'],
                          store['latitude'],
-                         store['longitude'],
-                         leclerc_id])
+                         store['longitude']])
 
-df_comp = pd.DataFrame(ls_rows_comp, columns = ['store_id',
-                                                'store_city',
-                                                'store_name',
-                                                'store_chain',
-                                                'store_lat',
-                                                'store_lng',
-                                                'store_leclerc_id'])
+df_stores = pd.DataFrame(ls_rows_stores,
+                         columns = ['store_id',
+                                    'store_city',
+                                    'store_name',
+                                    'store_chain',
+                                    'store_lat',
+                                    'store_lng'])
 
 # unique stores listed
-df_stores = df_comp.copy()
-df_stores.drop('store_leclerc_id', axis = 1, inplace = True)
 df_stores.drop_duplicates('store_id', inplace = True)
 
 df_stores.to_csv(os.path.join(path_csv,
@@ -71,12 +68,3 @@ df_stores.to_csv(os.path.join(path_csv,
                  encoding = 'utf-8',
                  float_format='%.4f',
                  index = False)
-
-# pairs of competitors (not necessarily scraped of course)
-df_comp = df_comp[df_comp['store_id'] != df_comp['store_leclerc_id']]
-
-df_comp.to_csv(os.path.join(path_csv,
-                            'df_competitors.csv'),
-               encoding = 'utf-8',
-               float_format='%.4f',
-               index = False)

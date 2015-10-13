@@ -33,7 +33,7 @@ df_stores = pd.read_csv(os.path.join(path_csv,
                                      'df_stores.csv'))
 
 df_comp = pd.read_csv(os.path.join(path_csv,
-                                   'df_competitors.csv'))
+                                   'df_qlmc_competitors.csv'))
 
 # Fix gps problems (move later?)
 ls_fix_gps = [['intermarche-super-le-portel',       (50.7093, 1.5789)], # too far
@@ -44,47 +44,41 @@ ls_fix_gps = [['intermarche-super-le-portel',       (50.7093, 1.5789)], # too fa
               ['centre-e-leclerc-san-giuliano',     (42.2625, 9.5480)]]
 
 for store_id, (store_lat, store_lng) in ls_fix_gps:
-  df_comp.loc[df_comp['store_id'] == store_id,
-              ['store_lat', 'store_lng']] = [store_lat, store_lng]
+  df_comp.loc[df_comp['comp_id'] == store_id,
+              ['comp_lat', 'comp_lng']] = [store_lat, store_lng]
+  df_comp.loc[df_comp['lec_id'] == store_id,
+              ['lec_lat', 'lec_lng']] = [store_lat, store_lng]
   df_stores.loc[df_stores['store_id'] == store_id,
                 ['store_lat', 'store_lng']] = [store_lat, store_lng]
 
-# Merge df_comp and df_stores to add info about leclerc competitor to df_comp
-df_comp = pd.merge(df_comp,
-                   df_stores[['store_id', 'store_lat', 'store_lng',
-                              'store_name', 'store_city']],
-                   left_on = 'store_leclerc_id',
-                   right_on = 'store_id',
-                   how = 'left',
-                   suffixes = ('', '_lec'))
-df_comp.drop('store_leclerc_id', axis = 1, inplace = True) # should be here?
+# Compute distances
+df_comp['dist'] = compute_distance_ar(df_comp['lec_lat'].values,
+                                      df_comp['lec_lng'].values,
+                                      df_comp['comp_lat'].values,
+                                      df_comp['comp_lng'].values)
 
-df_comp['dist'] = compute_distance_ar(df_comp['store_lat'].values,
-                                      df_comp['store_lng'].values,
-                                      df_comp['store_lat_lec'].values,
-                                      df_comp['store_lng_lec'].values)
-
-ls_disp_dist = ['store_id', 'store_id_lec', 'store_city_lec',
-                'store_lat', 'store_lng', 'store_lat_lec', 'store_lng_lec', 'dist']
+ls_disp_dist = ['lec_id', 'comp_id',
+                'lec_lat', 'lec_lng', 'comp_lat', 'comp_lng',
+                'dist']
 
 ## Check high distances to find obvious location mistakes
 #print df_comp[df_comp['dist'] > 30][ls_disp_dist].to_string()
 #print df_comp[df_comp['dist'] <= 0.1][ls_disp_dist].to_string()
 
 # Overview of pair distance distribution
-print u'Overview pair dist (km):'
+print u'\nOverview pair dist (km):'
 print df_comp['dist'].describe()
 
 # Overview of leclercs' competitors
-print u'Overview market dist (km) around leclerc stores:'
-df_leclerc_comp = df_comp[['store_name_lec', 'dist']]\
-                    .groupby('store_name_lec').agg([len,
-                                                    min,
-                                                    max,
-                                                    np.mean,
-                                                    np.median])['dist']
-print df_leclerc_comp.describe()
-
+print u'\nOverview market dist (km) around leclerc stores:'
+df_leclerc_comp = df_comp[['lec_name', 'dist']]\
+                    .groupby('lec_name').agg([len,
+                                              min,
+                                              max,
+                                              np.mean,
+                                              np.median])['dist']
+ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
+print df_leclerc_comp.describe(percentiles = ls_pctiles)
 
 ## todo: check for each trigram if name starts with cor. dict entry
 #dict_chains = {'ITM' : 'INTERMARCHE SUPER',
