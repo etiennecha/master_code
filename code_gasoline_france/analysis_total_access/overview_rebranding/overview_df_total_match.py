@@ -120,23 +120,6 @@ print df_info[ls_disp][(df_info['pp_chge'].abs() >= 0.04) &\
 #df_prices.mean(1).plot(ax = ax)
 #plt.show()
 
-# Deal with duplicate reconciliations (todo: move backward)
-ls_reco = dec_json(os.path.join(path_dir_source_other,
-                                'ls_id_reconciliations.json'))
-dict_reco = {x[0] : x[1] for x in ls_reco}
-dict_reco_final = {}
-# assume depth max 2
-for k, v in dict_reco.items():
-  if v in dict_reco.keys():
-    if dict_reco[v] in dict_reco.keys():
-      dict_reco_final[k] = dict_reco[dict_reco[v]]
-      if dict_reco[dict_reco[v]] in dict_reco.keys():
-        print k, 'depth over 2'
-    else:
-      dict_reco_final[k] = dict_reco[v]
-  else:
-    dict_reco_final[k] = v
-
 # TA chge date candidates from Total SA data
 df_info['ta_tot_date'] = np.datetime64()
 print u'\nFill df_info with info from Total SA'
@@ -146,10 +129,6 @@ for id_station, ls_dates in dict_ta_dates_str.items():
   if id_station in df_info.index:
     df_info.loc[id_station,
                 'ta_tot_date'] = max(ls_dates)
-  elif dict_reco_final.get(id_station) in df_info.index:
-    df_info.loc[dict_reco_final[id_station],
-                'ta_tot_date'] = max(ls_dates)
-    ls_ta_lost.append(id_station)
   else:
     print id_station, 'not in df_info'
     ls_ta_lost.append(id_station)

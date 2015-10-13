@@ -31,6 +31,11 @@ path_dir_built_ta_json = os.path.join(path_dir_built_ta,
 path_dir_built_ta_csv = os.path.join(path_dir_built_ta, 
                                      'data_csv')
 
+path_dir_source_other = os.path.join(path_data,
+                                     'data_gasoline',
+                                     'data_source',
+                                     'data_other')
+
 # #########################
 # LOAD INFO STATIONS
 # #########################
@@ -166,16 +171,16 @@ for ci in df_info_ta['ci_ardt_1'].unique():
 
 # Based on matching when several TA in insee area
 
-ls_fer = [('95535', 'RELAIS SAGY 1', '95450004'),
+ls_fer = [('95535', 'RELAIS SAGY 1', '95450005'),
           ('95424', 'RELAIS DU CROISILLON', '95370004'),
-          ('95424', 'RELAIS MONTIGNY LES CORMEILLE S', '95370002'),
+          ('95424', 'RELAIS MONTIGNY LES CORMEILLE S', '95370006'),
           ('95582', 'RELAIS SANNOIS GABRIEL PERI', '95110005'),
           ('95582', 'RELAIS BUTTE SANNOIS', '95110001'),
           ('95018', 'RELAIS DES IMPRESSIO NNISTES', '95100028'),
           ('95018', 'RELAIS ARGENTEUI L CHATEAUBR IANT', '95100016'),
           ('95018', 'RELAIS ARGENTEUI L', '95100027'),
           ('92026', 'RELAIS DE COURBEVOI E', '92400001'),
-          ('92023', 'RELAIS CLAMART TREBIGNAU D  2', '92140006'), # 1 av..
+          ('92023', 'RELAIS CLAMART TREBIGNAU D  2', '92140013'), # 1 av..
           ('91692', 'RELAIS ORSAY LES ULIS', '91940004'), # also in ouv
           ('91552', 'RELAIS GRANDE FOLIE', '91180006'),
           ('91552', "RELAIS SAINT GERMAIN L'ARPAJON", '91290001'),
@@ -185,7 +190,7 @@ ls_fer = [('95535', 'RELAIS SAGY 1', '95450004'),
           ('90010', 'RELAIS DES GLACIS', '90000004'),
           ('90010', 'RELAIS BELFORT LECLERC', '90000010'),
           ('87085', 'RELAIS DU GOLF', '87000011'), # not TA in my data
-          ('87085', 'RELAIS LIMOGES LECLERC STAR', '87100003'),
+          ('87085', 'RELAIS LIMOGES LECLERC STAR', '87000026'),
           ('87085', 'RELAIS LIMOGES GROSSEREI X', '87280004'),
           ('83137', 'RELAIS TOULON LA RADE', '83000001'),
           ('83137', 'RELAIS TOULON LA RODE OUEST', '83000008'),
@@ -207,24 +212,24 @@ ls_fer = [('95535', 'RELAIS SAGY 1', '95450004'),
           ('69387', 'RELAIS TONY GARNIER', '69007001'),
           ('69387', 'relais de Gerland', '69007004'),
           ('68224', 'RELAIS DE DORNACH', '68200007'),
-          ('68224', 'RELAIS DES COTEAUX', '68200006'),
+          ('68224', 'RELAIS DES COTEAUX', '68200016'),
           ('63113', 'RELAIS CLERMONT- FERRAND LAVOISIER', '63000020'),
           ('63113', 'RELAIS CHAMPRAD ET', '63000006'),
           ('63113', 'RELAIS DU BREZET', '63100006'),
           ('59560', 'SA GARAGE WACRENIER', '59474001'),
           ('54304', 'RELAIS BEAUREGA RD', '54520003'),
           ('54304', 'RELAIS DE LAXOU', '54520005'),
-          ('54547', 'RELAIS DE BRABOIS', '54500002'),
+          ('54547', 'RELAIS DE BRABOIS', '54500006'),
           ('53130', 'RELAIS LAVAL TRAPPISTIN ES', '53000001'),
           ('53130', 'RELAIS LA CLOSERIE', '53000002'),
           ('51454', 'RELAIS DU ROUILLAT', '51100014'),
           ('51454', 'RELAIS DES CHATILLON S', '51100032'),
           ('50129', 'RELAIS CHERBOUR G LES BASSINS', '50100005'),
-          ('50129', 'RELAIS CHERBOUR G LEMONNIER', '50100004'),
+          ('50129', 'RELAIS CHERBOUR G LEMONNIER', '50100006'),
           ('49007', 'RELAIS BAUMETTES B', '49000008'),
           ('45234', 'RELAIS DU CEDRE', '45000001'),
           ('45903', 'RELAIS ORLEANS LA SOURCE', '45100002'),
-          ('44035', 'RELAIS JONELIERE', '44240006'),
+          ('44035', 'RELAIS JONELIERE', '44240009'),
           ('44035', 'RELAIS LA CHAPELLE SUR ERDRE', '44240008'),
           ('42218', 'RELAIS ST ETIENNE MASSENET', '42000002'),
           ('42218', 'RELAIS 5 CHEMINS ST ETIENNE', '42100014'), # not TA in my data
@@ -235,7 +240,7 @@ ls_fer = [('95535', 'RELAIS SAGY 1', '95450004'),
           ('35288', 'RELAIS ST MALO OUEST PETIT COTE', '35132001'),
           ('35288', 'RELAIS ST MALO EST - GD COTE', '35400005'),
           ('35238', 'RELAIS BARRE THOMAS', '35000009'), # not TA in my data
-          ('35238', 'RELAIS RENNES ALMA', '35000002'), # not TA in my data, active?
+          ('35238', 'RELAIS RENNES ALMA', '35000016'), # not TA in my data, active?
           ('35238', 'RELAIS RENNES ALMA COCO CODO X DODO COM DODO', '35000002'), # DUP!
           ('35238', 'RELAIS MALIFEU', '35000001'),
           ('35238', 'RELAIS RENNES HIPPODROM E', '35000003'),
@@ -245,14 +250,14 @@ ls_fer = [('95535', 'RELAIS SAGY 1', '95450004'),
           ('34172', 'RELAIS MONTPELLI ER VANIERES', '34000002'),
           ('33281', 'RELAIS MERIGNAC', '33700003'),
           ('33535', 'SARL PATACHON', '33370002'),
-          ('33535', 'RELAIS TRESSES STAR', '33370004'),
+          ('33535', 'RELAIS TRESSES STAR', '33370012'),
           ('33063', 'RELAIS DE TOURATTE', '33000003'),
           ('33063', 'RELAIS GRAND PARC', '33300002'), # not TA in my data
           ('31069', 'RELAIS BLAGNAC ROCADE', '31700002'),
           ('31069', 'RELAIS BLAGNAC LOMAGNE', '31700003'),
           ('31555', 'RELAIS DE LA PIMPE', '31200011'),
           ('31555', 'RELAIS ROSERAIE', '31000002'),
-          ('31555', 'RELAIS LE MIRAIL', '31100007'),
+          ('31555', 'RELAIS LE MIRAIL', '31100009'),
           ('29019', 'RELAIS BREST EUROPE', '29200003'),
           ('29019', 'RELAIS DE KERANROY', '29200011'),
           ('29232', 'RELAIS QUIMPER CENTRE', '29000003'),
@@ -269,7 +274,7 @@ ls_fer = [('95535', 'RELAIS SAGY 1', '95450004'),
           ('17306', 'RELAIS DE ROYAN', '17200002'),
           ('17291', 'RELAIS DE PUILBOREA U', '17138004'),
           ('17291', 'RELAIS DE BEAULIEU', '17138005'),
-          ('14118', 'RELAIS ROUEN COTE DE NACRE', '14000001'),
+          ('14118', 'RELAIS ROUEN COTE DE NACRE', '14000015'),
           ('13039', 'RELAIS FOS SUR MER', '13270001'),
           ('13039', 'RELAIS DU VENTILLON', '13270002'),
           ('13039', 'RELAIS MARRONED E', '13270009'),
@@ -282,7 +287,7 @@ ls_fer = [('95535', 'RELAIS SAGY 1', '95450004'),
 
 ls_ouv = [('95018', 'RELAIS ARGENTEUIL BALMONT', '11/05/2012', '95100002'),
           ('92026', 'RELAIS COURBEVOIE VERDUN', '11/06/2012', '92400007'),
-          ('92023', 'RELAIS CLAMART TREBIGNAUD', '24/05/2012', '92140001'),
+          ('92023', 'RELAIS CLAMART TREBIGNAUD', '24/05/2012', '92140012'),
           ('91692', 'RELAIS ORSAY LES ULIS 2', '22/06/2012', '91940004'),
           ('91692', 'RELAIS ORSAY LES ULIS 1 COURTABOEUF', '08/06/2012', '91940001'),
           ('91521', 'RELAIS DE RIS', '12/11/2012', '91130002'),
@@ -293,7 +298,7 @@ ls_ouv = [('95018', 'RELAIS ARGENTEUIL BALMONT', '11/05/2012', '95100002'),
           ('73065', 'RELAIS CHAMBERY', '13/11/2012', '73000011'),
           ('71270', 'RELAIS CONDEMINES', '24/03/2012', '71000007'),
           ('54547', 'RELAIS  VANDOEUVRE', '30/06/2012', '54500003'),
-          ('51454', 'RELAIS CHAMPENOISE', '06/04/2012', '51100005'),
+          ('51454', 'RELAIS CHAMPENOISE', '06/04/2012', '51100041'),
           ('51454', 'RELAIS REIMS BREBANT', '10/03/2012', '51100035'),
           ('38565', 'RELAIS DES BALMES', '12/06/2012', '38340007'),
           ('34032', "RELAIS L'HORT MONSEIGNEUR", '21/12/2012', '34500016'),
@@ -302,7 +307,7 @@ ls_ouv = [('95018', 'RELAIS ARGENTEUIL BALMONT', '11/05/2012', '95100002'),
           ('33063', 'RELAIS RAVEZIES', '21/12/2012', '33300004'),
           ('29019', 'ATELIERS CAUGANT SA', '18/10/2012', '29200004'),
           ('26362', 'RELAIS PETIT ROUSSET', '13/06/2012', '26000004'),
-          ('10387', 'RELAIS TROYES MAISONNEUVE', '17/03/2012', '10000014')]
+          ('10387', 'RELAIS TROYES MAISONNEUVE', '17/03/2012', '10000017')]
 
 # Based on matching when one TA in insee area with several matches in Total file
 
@@ -341,8 +346,8 @@ ls_ouv_2 = [('10362', 'RELAIS SAINTE SAVINE', '04/06/2012', '10300004'),
             ('33192', 'RELAIS DE GRADIGNAN DE GAULLE', '27/04/2012', '33170006'),
             ('33529', 'RELAIS LA TESTE', '22/04/2013', '33260009'), # two dates
             ('33322', 'M. HADJADJ', '01/12/2012', '33290001'),
-            ('33056', 'RELAIS DE LA RENNEY', '02/04/2012', '33290005'),
-            ('33162', 'RELAIS EYSINES STAR', '12/04/2012', '33320006'),
+            ('33056', 'RELAIS DE LA RENNEY', '02/04/2012', '33290008'),
+            ('33162', 'RELAIS EYSINES STAR', '12/04/2012', '33320007'),
             ('34301', 'RELAIS DU TRIOLET', '24/04/2012', '34200004'),
             ('34192', 'RELAIS 4 CANAUX', '18/04/2012', '34250001'),
             ('37261', 'RELAIS TOURS', '17/12/2012', '37100004'),
@@ -372,13 +377,13 @@ ls_ouv_2 = [('10362', 'RELAIS SAINTE SAVINE', '04/06/2012', '10300004'),
             ('71591', 'EURL PHILIPPE GOUPIL', '01/12/2012', '71260005'),
             ('75113', 'RELAIS VINCENT AURIOL', '14/02/2012', '75013015'),
             ('76533', 'RELAIS DE ROGERVILLE', '03/03/2012', '76700002'),
-            ('76575', 'RELAIS CANADIENS', '05/04/2013', '76800006'),
+            ('76575', 'RELAIS CANADIENS', '05/04/2013', '76800008'),
             ('77131', 'RELAIS COULOMMIERS', '23/05/2012', '77120002'),
             ('77053', "RELAIS DE L'YERRES",  '28/12/2011', '77170001'),
             ('77053', "RELAIS ELF DE L'YERRES", '22/12/2011', '77170001'), # almost DUP
             ('77363', 'RELAIS DU PIN', '30/04/2012', '77181001'),
             ('77392', 'RELAIS DE CHANTEMERLE', '27/03/2012', '77230002'),
-            ('77407', 'RELAIS MAISON ROUGE', '16/04/2012', '77310005'),
+            ('77407', 'RELAIS MAISON ROUGE', '16/04/2012', '77310008'),
             ('77285', 'RELAIS LA MEE SUR SEINE COURTILLE', '10/04/2012', '77350001'),
             ('78440', 'RELAIS BOUGIMONTS', '04/05/2012', '78130010'),
             ('78524', 'RELAIS DE ROCQUENCOURT', '03/10/2011', '78150001'),
@@ -484,94 +489,38 @@ print u'\nNb of dates obtained by TA station:'
 for k, v in dict_nb_dates.items():
   print k, len(v)
 
+## ###########################
+## DUPLICATE RECONCILIATIONS
+## ###########################
+#
+## Deal with duplicate reconciliations (todo: move backward)
+#ls_reco = dec_json(os.path.join(path_dir_source_other,
+#                                'ls_id_reconciliations.json'))
+#dict_reco = {x[0] : x[1] for x in ls_reco}
+#dict_reco_final = {}
+## assume depth max 2
+#for k, v in dict_reco.items():
+#  if v in dict_reco.keys():
+#    if dict_reco[v] in dict_reco.keys():
+#      dict_reco_final[k] = dict_reco[dict_reco[v]]
+#      if dict_reco[dict_reco[v]] in dict_reco.keys():
+#        print k, 'depth over 2'
+#    else:
+#      dict_reco_final[k] = dict_reco[v]
+#  else:
+#    dict_reco_final[k] = v
+#
+#for x in dict_ta_dates.keys():
+#  if x not in df_info.index:
+#    print x, dict_reco_final[x]
+
+# ###################
+# OUTPUT
+# ###################
+
 dict_ta_dates_str = {k: [pd.to_datetime(str(x)).strftime('%d/%m/%Y')\
                            for x in v] for k, v in dict_ta_dates.items()}
-
 enc_json(dict_ta_dates_str,
          os.path.join(path_dir_built_ta_json,
                       'dict_ta_dates_str.json'))
 
-### #####################################
-### POLICY PRICE CHANGE
-### #####################################
-##
-##df_info['pp_chge'] = df_margin_chge['value']
-##df_info['pp_chge_date'] = df_margin_chge['date']
-### check chge in policy not TA
-##df_info = pd.merge(df_info, df_ta,
-##                   left_index = True, right_index = True, how = 'left')
-##ls_disp = ['name', 'adr_city', 'adr_dpt', 'brand_0', 'brand_1', 'brand_2',
-##           'pp_chge_date', 'id_cl_ta_0', 'dist_cl_ta_0']
-##print '\nMargin chge not Total Access:'
-##print df_info[ls_disp][(df_info['pp_chge'].abs() >= 0.04) &\
-##                       (df_info['TA'] != 1)].to_string()
-### Not TA => Gvt announces?
-##ax = df_prices[['93420001', '93420006']].plot()
-##ax.axvline(x = pd.to_datetime('2012-10-15'), color = 'k', ls = 'dashed')
-##ax.axvline(x = pd.to_datetime('2012-10-26'), color = 'k', ls = 'dashed')
-##df_prices.mean(1).plot(ax = ax)
-##plt.show()
-#
-## UPDATE DF TA WITH TOTAL AND MARGIN CHGE DATE IF PRESENT
-#
-#df_info_ta['pp_chge'] = df_margin_chge['value']
-#df_info_ta['pp_chge_date'] = df_margin_chge['date']
-#
-#df_info_ta['ta_chge_date'] = np.datetime64()
-#for id_station, ls_dates in dict_ta_dates.items():
-#  if id_station in df_info_ta.index:
-#    df_info_ta.loc[id_station, 'ta_chge_date'] = max(ls_dates)
-#  else:
-#    print id_station, 'not in df_info_ta'
-
-## ###############
-## OUTPUT
-## ################
-#
-#df_info_ta.to_csv(os.path.join(path_dir_built_csv,
-#                               'df_info_ta.csv'),
-#                               encoding = 'utf-8')
-
-
-
-## ################
-## GRAPH INSPECTION
-## ################
-#
-## date on gvt website (always if change)
-## date of price policy change (can separate small or beginning/end vs. significant)
-## date of chge in my data (unsure if correct but check!)
-#
-#id_station = df_info_ta.index[0]
-#pp_chge_date = df_info_ta['pp_chge_date'].iloc[0]
-#ta_chge_date = df_info_ta['ta_chge_date'].iloc[0]
-#
-#for row_ind, row in df_info_ta.iterrows():
-#  id_station = row_ind
-#  pp_chge_date = row['pp_chge_date']
-#  ta_chge_date = row['ta_chge_date']
-#  plt.rcParams['figure.figsize'] = 16, 6
-#  ax = df_prices[id_station].plot()
-#  se_mean_prices.plot(ax=ax)
-#  handles, labels = ax.get_legend_handles_labels()
-#  ax.legend(handles, [id_station, u'mean price'], loc = 1)
-#  ax.axvline(x = pp_chge_date, color = 'b', ls = 'dashed')
-#  ax.axvline(x = ta_chge_date, color = 'r', ls = 'dashed')
-#  #plt.ylim(plt.ylim()[0]-0.5, plt.ylim()[1])
-#  #print ax.get_position()
-#  #ax.set_position((0.125, 0.2, 0.8, 0.7))
-#  
-#  footnote_text = '\n'.join([row['name'], row['adr_street'], row['adr_city'], row['ci_ardt_1']])
-#  plt.figtext(0.1, -0.1, footnote_text) 
-#  # plt.text(.02, .02, footnote_text)
-#  # plt.tight_layout()
-#  # plt.show()
-#  if pd.isnull(ta_chge_date):
-#    plt.savefig(os.path.join(path_dir_built_graphs,
-#                             'total_access_price_series',
-#                             'notadate_%s' %id_station), dpi = 200, bbox_inches='tight')
-#  else:
-#    plt.savefig(os.path.join(path_dir_built_graphs,
-#                             'total_access_price_series',
-#                             '%s' %id_station), dpi = 200, bbox_inches='tight')
-#  plt.close()
