@@ -322,7 +322,7 @@ df_stores.to_csv(os.path.join(path_source_csv,
 
 
 # ############
-# DEPREACTED
+# DEPRECATED
 # ############
 
 ## UPDATE JSON FILE WITH MATCHED STORES

@@ -36,8 +36,8 @@ def read_pdftotext(path_file, path_pdftotext):
 
 path_source = os.path.join(path_data,
                            'data_supermarkets',
-                           'data_qlmc_2007-12',
-                           'data_source')
+                           'data_source',
+                           'data_qlmc_2007-12')
                           
 path_source_pdf = os.path.join(path_source, 'data_pdf')
 path_source_json = os.path.join(path_source, 'data_json')                          

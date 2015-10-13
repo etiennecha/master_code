@@ -7,16 +7,20 @@ from functions_generic_qlmc import *
 import numpy as np
 import pandas as pd
 
-path_qlmc = os.path.join(path_data,
-                         'data_supermarkets',
-                         'data_qlmc_2007-12')
+path_source = os.path.join(path_data,
+                           'data_supermarkets',
+                           'data_source',
+                           'data_qlmc_2007-12')
 
-path_source_csv = os.path.join(path_qlmc,
-                               'data_source',
+path_source_csv = os.path.join(path_source,
                                'data_csv')
 
-path_built_csv = os.path.join(path_qlmc,
-                              'data_built',
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_qlmc_2007-12')
+
+path_built_csv = os.path.join(path_built,
                               'data_csv')
 
 # #######################

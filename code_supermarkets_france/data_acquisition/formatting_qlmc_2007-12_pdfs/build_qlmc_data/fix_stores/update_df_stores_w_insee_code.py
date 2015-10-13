@@ -14,16 +14,15 @@ import pandas as pd
 from mpl_toolkits.basemap import Basemap
 import pprint
 
-path_qlmc = os.path.join(path_data,
-                         'data_supermarkets',
-                         'data_qlmc_2007-12')
+path_source = os.path.join(path_data,
+                           'data_supermarkets',
+                           'data_source',
+                           'data_qlmc_2007-12')
 
-path_source_csv = os.path.join(path_qlmc,
-                               'data_source',
+path_source_csv = os.path.join(path_source,
                                'data_csv')
 
-path_source_json = os.path.join(path_qlmc,
-                                'data_source',
+path_source_json = os.path.join(path_source,
                                 'data_json')
 
 path_match_insee = os.path.join(path_data,

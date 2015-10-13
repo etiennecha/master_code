@@ -349,8 +349,8 @@ def print_dict_stats(dict_stat_des):
 
 path_source = os.path.join(path_data,
                            'data_supermarkets',
-                           'data_qlmc_2007-12',
-                           'data_source')
+                           'data_source',
+                           'data_qlmc_2007-12')
                           
 path_source_pdf = os.path.join(path_source, 'data_pdf')
 path_source_json = os.path.join(path_source, 'data_json')                          

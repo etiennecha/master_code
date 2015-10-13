@@ -11,13 +11,10 @@ import re
 import numpy as np
 import pandas as pd
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-
-
 path_source = os.path.join(path_data,
                            'data_supermarkets',
-                           'data_qlmc_2007-12',
-                           'data_source')
+                           'data_source',
+                           'data_qlmc_2007-12')
 
 path_source_json = os.path.join(path_source, 'data_json')                          
 path_source_csv = os.path.join(path_source, 'data_csv')
