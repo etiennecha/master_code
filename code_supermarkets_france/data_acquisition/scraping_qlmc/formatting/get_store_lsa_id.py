@@ -20,17 +20,24 @@ format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 path_qlmc_scraped = os.path.join(path_data,
-                                  'data_qlmc',
-                                  'data_source',
-                                  'data_scraped')
+                                 'data_supermarkets',
+                                 'data_source',
+                                 'data_qlmc_2015',
+                                 'data_scraped_201503')
 
 path_csv = os.path.join(path_data,
-                        'data_qlmc',
+                        'data_supermarkets',
                         'data_built',
-                        'data_csv')
+                        'data_qlmc_2015',
+                        'data_csv_201503')
+
+path_lsa_csv = os.path.join(path_data,
+                            'data_supermarkets',
+                            'data_built',
+                            'data_lsa',
+                            'data_csv')
 
 df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'qlmc_scraped',
                                      'df_stores.csv'),
                         encoding = 'utf-8',
                         dtype = {'ic' : str})
@@ -39,16 +46,17 @@ df_stores = pd.read_csv(os.path.join(path_csv,
 df_stores.loc[df_stores['store_id'] == 'centre-e-leclerc-clichy',
               'ic'] = '92024'
 
-df_lsa = pd.read_csv(os.path.join(path_csv,
+df_lsa = pd.read_csv(os.path.join(path_lsa_csv,
                                   'df_lsa_active.csv'),
-                     encoding = 'UTF-8',
-                     dtype = {'Ident' : str,
-                              'Code INSEE' : str,
-                              'Code INSEE ardt' : str,
-                              'Code postal' : str},
-                     parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv'])
-
-
+                     dtype = {u'C_INSEE' : str,
+                              u'C_INSEE_Ardt' : str,
+                              u'C_Postal' : str,
+                              u'SIREN' : str,
+                              u'NIC' : str,
+                              u'SIRET' : str},
+                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
+                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
+                     encoding = 'UTF-8')
 #df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
 #                        lambda x: Point(m_fra(x[0], x[1])), axis = 1)
 
@@ -108,7 +116,7 @@ ls_matched_stores = []
 for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
   for row_ind, row in df_stores[(df_stores['store_chain'] == enseigne_qlmc)].iterrows():
     insee_code = row['ic']
-    df_city_stores = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
+    df_city_stores = df_lsa[(df_lsa['C_INSEE_Ardt'] == insee_code) &\
                             (df_lsa['Enseigne'] == enseigne_fra)].copy()
     tup_store_info = tuple(row[['store_chain', 'store_id', 'store_city',
                                 'ic_city', 'ic']].values)
@@ -128,8 +136,8 @@ for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
                                                             x['Longitude']),
                               axis = 1)
       print u'\n', tup_store_info
-      print df_city_stores[['Ident', 'Enseigne', 'ADRESSE1',
-                            'Code postal', 'Ville', 'dist']].to_string()
+      print df_city_stores[['Ident', 'Enseigne', 'Adresse1',
+                            'C_Postal', 'Ville', 'dist']].to_string()
       if len(df_city_stores[df_city_stores['dist'] <= 0.1]) == 1:
         ls_matched_stores.append(tup_store_info +\
                                  (df_city_stores\
@@ -140,7 +148,7 @@ for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
         ls_matched_stores.append(tup_store_info +\
                                  (None, enseigne_fra, 'ambiguous'))
     elif len(df_city_stores) == 0:
-      df_city_stores_alt = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
+      df_city_stores_alt = df_lsa[(df_lsa['C_INSEE_Ardt'] == insee_code) &\
                                   (df_lsa['Enseigne_matching'] == enseigne_fra_alt)].copy()
       if len(df_city_stores_alt) == 1:
         ls_matched_stores.append(tup_store_info +\
@@ -158,8 +166,8 @@ for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
                                                                   x['Longitude']),
                                      axis = 1)
         print u'\n', tup_store_info
-        print df_city_stores_alt[['Ident', 'Enseigne', 'ADRESSE1',
-                              'Code postal', 'Ville', 'dist']].to_string()
+        print df_city_stores_alt[['Ident', 'Enseigne', 'Adresse1',
+                                  'C_Postal', 'Ville', 'dist']].to_string()
         if len(df_city_stores_alt[df_city_stores_alt['dist'] <= 0.1]) == 1:
           ls_matched_stores.append(tup_store_info +\
                                    (df_city_stores_alt\
@@ -276,16 +284,18 @@ df_stores_f = pd.merge(df_stores,
 
 ls_lsa_cols = ['Ident',
                'Enseigne',
-               'ADRESSE1',
+               'Enseigne_Alt',
+               'Groupe',
+               'Adresse1',
                'Ville',
-               'Code INSEE ardt',
-               'Surf Vente',
-               'Nbr de caisses',
-               'Nbr emp',
+               'C_INSEE_Ardt',
+               'Surface',
+               'Nb_Caisses',
+               'Nb_Emplois',
+               'Nb_Pompes',
                'Longitude',
                'Latitude',
                'Verif',
-               'Groupe',
                'Type']
 
 df_stores_f = pd.merge(df_stores_f,
@@ -302,7 +312,7 @@ df_stores_f['dist'] =\
                         axis = 1)
 
 ls_di = ['store_id', 'store_lat', 'store_lng',
-         'Enseigne', 'ADRESSE1', 'Ville', 'Latitude', 'Longitude', 'Verif']
+         'Enseigne', 'Adresse1', 'Ville', 'Latitude', 'Longitude', 'Verif']
 
 print u'\n', df_stores_f[df_stores_f['dist'] > 5][ls_di + ['dist']].to_string()
 # todo: extend to 3
@@ -330,7 +340,6 @@ ls_final_gps = [['casino-prunelli-di-fiumorbo', 'qlmc'], # 4 and bad
 #                         (df_stores_f['dist'] >= 1)][ls_di + ['dist']].to_string()
 
 df_stores_f.to_csv(os.path.join(path_csv,
-                                'qlmc_scraped',
                                 'df_stores_final.csv'),
                    encoding = 'utf-8',
                    float_format='%.4f',

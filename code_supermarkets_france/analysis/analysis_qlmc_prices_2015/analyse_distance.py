@@ -19,14 +19,14 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 path_qlmc_scraped = os.path.join(path_data,
                                  'data_supermarkets',
-                                 'data_qlmc_2015',
                                  'data_source',
+                                 'data_qlmc_2015',
                                  'data_scraped_201503')
 
 path_csv = os.path.join(path_data,
                         'data_supermarkets',
-                        'data_qlmc_2015',
                         'data_built',
+                        'data_qlmc_2015',
                         'data_csv_201503')
 
 df_stores = pd.read_csv(os.path.join(path_csv,
@@ -72,13 +72,19 @@ ls_disp_dist = ['store_id', 'store_id_lec', 'store_city_lec',
 #print df_comp[df_comp['dist'] <= 0.1][ls_disp_dist].to_string()
 
 # Overview of pair distance distribution
+print u'Overview pair dist (km):'
 print df_comp['dist'].describe()
 
 # Overview of leclercs' competitors
+print u'Overview market dist (km) around leclerc stores:'
 df_leclerc_comp = df_comp[['store_name_lec', 'dist']]\
-                    .groupby('store_name_lec').agg([len, min, max, np.mean])['dist']
-
+                    .groupby('store_name_lec').agg([len,
+                                                    min,
+                                                    max,
+                                                    np.mean,
+                                                    np.median])['dist']
 print df_leclerc_comp.describe()
+
 
 ## todo: check for each trigram if name starts with cor. dict entry
 #dict_chains = {'ITM' : 'INTERMARCHE SUPER',

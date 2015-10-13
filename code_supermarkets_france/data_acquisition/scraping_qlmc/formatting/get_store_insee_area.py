@@ -20,14 +20,16 @@ format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 path_qlmc_scraped = os.path.join(path_data,
-                                  'data_qlmc',
-                                  'data_source',
-                                  'data_scraped')
+                                 'data_supermarkets',
+                                 'data_source',
+                                 'data_qlmc_2015',
+                                 'data_scraped_201503')
 
 path_csv = os.path.join(path_data,
-                        'data_qlmc',
+                        'data_supermarkets',
                         'data_built',
-                        'data_csv')
+                        'data_qlmc_2015',
+                        'data_csv_201503')
 
 path_dir_match_insee = os.path.join(path_data,
                                     u'data_insee',
@@ -37,7 +39,6 @@ df_stores = pd.read_csv(os.path.join(path_csv,
                                      'qlmc_scraped',
                                      'df_stores.csv'),
                         encoding = 'utf-8')
-
 
 # Fix some problematic store locations (found through competitor pair analysis)
 ls_fix_gps = [['intermarche-super-le-portel', (50.7093, 1.5789)], # too far
@@ -164,7 +165,6 @@ df_stores.drop(['insee_matching', 'ic_alt', 'ic_city_alt'],
                inplace = 1)
 
 df_stores.to_csv(os.path.join(path_csv,
-                              'qlmc_scraped',
                               'df_stores.csv'),
                  encoding = 'utf-8',
                  float_format='%.4f',

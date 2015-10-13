@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import re
 import json
 import pandas as pd
+import timeit
 
 def enc_json(data, path_file):
   with open(path_file, 'w') as f:
@@ -23,221 +24,141 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_qlmc_scraped = os.path.join(path_data,
-                                 'data_supermarkets',
-                                 'data_qlmc_2015',
-                                 'data_source',
-                                 'data_scraped_201503')
-
 path_csv = os.path.join(path_data,
                         'data_supermarkets',
-                        'data_qlmc_2015',
                         'data_built',
+                        'data_qlmc_2015',
                         'data_csv_201503')
 
-dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scraped,
-                                         'dict_reg_leclerc_stores.json'))
+df_qlmc_comparisons = pd.read_csv(os.path.join(path_csv,
+                                               'df_qlmc_comparisons.csv'),
+                                  encoding = 'utf-8')
 
-dict_leclerc_comp = dec_json(os.path.join(path_qlmc_scraped,
-                                          'dict_leclerc_comp.json'))
+df_france = pd.read_csv(os.path.join(path_csv,
+                                     'df_france.csv'),
+                        encoding = 'utf-8')
 
-# Define list of pairs to scrap by region
-# Want to minimize number of pairs to collect
-# Check that at least one not scraped before
-# Arbitrary order (keys in dict_reg_leclerc...)
+# Costly to search by store_id within df_france
+# hence first split df_france in chain dataframes
+dict_chain_dfs = {chain: df_france[df_france['chain'] == chain]\
+                    for chain in df_france['chain'].unique()}
 
-ls_covered_comp = [] # should be stored and updated?
-ls_pairs = []
-dict_reg_pairs = {}
-for region, ls_leclerc in dict_reg_leclerc.items():
-  ls_reg_pairs = []
-  for leclerc in ls_leclerc:
-    ls_comp = dict_leclerc_comp[leclerc['slug']]
-    # keep competitors not met in scrapping so far (store itself included in list)
-    ls_comp_todo = [comp for comp in ls_comp if\
-                      (comp['slug'] not in ls_covered_comp) and\
-                      (comp['signCode'] != u'LEC')]
-    # if all scraped, take first one to get current Leclerc's prices
-    if not ls_comp_todo:
-      ls_comp_todo = ls_comp[:1]
-    for comp in ls_comp_todo:
-      ls_pairs.append((leclerc['slug'], comp['slug']))
-      ls_reg_pairs.append((leclerc['slug'], comp['slug']))
-      ls_covered_comp.append(comp['slug'])
-  dict_reg_pairs[region] = ls_reg_pairs
+# #########################
+# REPRODUCE QLMC COMPARISON
+# #########################
 
-ls_regions_done = [u'nord-pas-de-calais', # crest
-                   u'ile-de-france',
-                   u'champagne-ardenne',
-                   u'haute-normandie',
-                   u'lorraine',
-                   u'pays-de-la-loire',
-                   u'rhone-alpes',
-                   u'picardie', # home / one leclerc beaten
-                   u'auvergne',
-                   u'alsace',
-                   u'basse-normandie',
-                   u'bourgogne',
-                   u'bretagne',
-                   u'franche-comte',
-                   u'limousin',
-                   u'languedoc-roussillon',
-                   u'centre', # one leclerc beaten
-                   u'midi-pyrenees',
-                   u'provence-alpes-cote-d-azur']
+# Pick any scraped comparison
+print u'\nExample of comparison displayed on QLMC:'
+print df_qlmc_comparisons[~df_qlmc_comparisons['nb_obs'].isnull()].iloc[0]
 
-# Choice of region
-region = ls_regions_done[-12] 
-ls_pairs = dict_reg_pairs[region]
+# Replicate comparison
 
-# Load dict region if exists or create it
-path_dict_reg_comparisons = os.path.join(path_qlmc_scraped,
-                                         'dict_reg_comparisons_{:s}.json'.format(region))
-if os.path.exists(path_dict_reg_comparisons):
-  dict_reg_comparisons_json = dec_json(path_dict_reg_comparisons)
-  # convert keys from string to tuple
-  dict_reg_comparisons = {tuple(json.loads(k)):v\
-                     for k,v in dict_reg_comparisons_json.items()}
-  print u'Found and loaded dict_reg_comparisons for {:s}'.format(region)
-else:
-  dict_reg_comparisons = {}
-  print u'No dict_reg_comparisons for {:s} so created one'.format(region)
+lec_chain = 'LEC'
+lec_id, comp_id, comp_chain = df_qlmc_comparisons[~df_qlmc_comparisons['nb_obs'].isnull()]\
+                                .iloc[0][['lec_id', 'comp_id', 'comp_chain']].values
 
-# READ GENERAL INFORMATION
-#for k,v in dict_reg_comparisons.items():
-#  print v[0][0]
-ls_rows_res = []
-for k,v in dict_reg_comparisons.items():
-  row_res = list(k)
-  re_general = re.search(u'Prix collectés entre le '
-                         u'(.*?) et le (.*?) 2015 sur '
-                         u'(.*?) produits comparés', v[0][0])
-  if re_general:
-    row_res += [re_general.group(1),
-               re_general.group(2),
-               re_general.group(3)]
-  else:
-    row_res += [None, None, None]
-  # % comparison
-  pct_compa, winner = None, None
-  if v[0][-1]:
-    re_compa = re.match(u'(.*?)%', v[0][-1])
-    if re_compa:
-      pct_compa = re_compa.group(1)
-    if 'PLUS CHER que E.Leclerc' in v[0][-1]:
-      winner = 'LEC'
-  elif 'MOINS CHER que E.Leclerc' in v[0][2]:
-    re_compa = re.match(u'(.*?)%', v[0][2])
-    if re_compa:
-      pct_compa = re_compa.group(1)
-    winner = 'OTH'
-  row_res += [pct_compa, winner]
-  ls_rows_res.append(row_res)
+start = timeit.default_timer()
+df_lec  = dict_chain_dfs[lec_chain][dict_chain_dfs[lec_chain]['store_id'] == lec_id].copy()
+df_comp = dict_chain_dfs[comp_chain][dict_chain_dfs[comp_chain]['store_id'] == comp_id].copy()
+print u'Time to select', timeit.default_timer() - start
 
-df_overview = pd.DataFrame(ls_rows_res, columns = ['leclerc',
-                                                   'competitor',
-                                                   'date_beg',
-                                                   'date_end',
-                                                   'nb_obs',
-                                                   'pct_compa',
-                                                   'winner'])
-
-df_overview['nb_obs'] =\
-   df_overview['nb_obs'].apply(lambda x: x.replace(' ', '')).astype(float)
-
-df_overview['pct_compa'] = df_overview['pct_compa'].astype(float)
-
-print df_overview.to_string()
-
-# READ PRODUCT COMPARISONS
-
-print u'\n', dict_reg_comparisons[dict_reg_comparisons.keys()[0]][0]
-dict_pair_products = dict_reg_comparisons[dict_reg_comparisons.keys()[0]][1]
-ls_rows_products = []
-for family, dict_sfamily in dict_pair_products.items():
-  for sfamily, ls_sfamily_products in dict_sfamily.items():
-    for ls_prod in ls_sfamily_products:
-      ls_rows_products.append([family,
-                               sfamily,
-                               ls_prod[0]]+\
-                              ls_prod[1][0])
-      ls_rows_products.append([family,
-                               sfamily,
-                               ls_prod[0]]+\
-                              ls_prod[1][1])
-
-df_products = pd.DataFrame(ls_rows_products,
-                           columns = ['family',
-                                      'subfamily',
-                                      'product',
-                                      'date',
-                                      'chain',
-                                      'price'])
-
-dict_replace_family = {u'familyId_2'  : u'Fruits et Légumes',
-                       u'familyId_4'  : u'Frais',
-                       u'familyId_5'  : u'Surgelés',
-                       u'familyId_6'  : u'Epicerie salée',
-                       u'familyId_7'  : u'Epicerie sucrée',
-                       u'familyId_8'  : u'Aliments bébé et Diététique',
-                       u'familyId_9'  : u'Boissons',
-                       u'familyId_10' : u'Hygiène et Beauté',
-                       u'familyId_11' : u'Nettoyage',
-                       u'familyId_12' : u'Animalerie',
-                       u'familyId_13' : u'Bazar et textile'}
-
-df_products['family'] =\
-   df_products['family'].apply(lambda x: dict_replace_family[x])
-
-df_products['price'] =\
-  df_products['price'].apply(lambda x: x.replace(u'\xa0\u20ac', u'')).astype(float)
-
-df_products['chain'] =\
-  df_products['chain'].apply(\
-    lambda x: re.match(u'/bundles/qelmcsite/images/signs/header/(.*?)\.png',
-                       x).group(1))
-
-df_products['date'] =\
-  df_products['date'].apply(\
-    lambda x: re.match(u'Prix relevé le (.*?)$',
-                       x).group(1))
-
-# Families and subfamilies
-print pd.pivot_table(df_products[df_products['chain'] == 'LEC'],
-                     index=['family','subfamily'],
-                     values=['price'],
-                     aggfunc=[len])
-
-# Comparison of prices
-
-print u'\nPct difference in total sum'
-# se_sum = df_products[['chain', 'price']].groupby('chain').agg(sum)
-# print se_sum.ix['LEC'] / se_sum.ix['SCA'] - 1
-print df_products[df_products['chain'] != 'LEC']['price'].sum() /\
-      df_products[df_products['chain'] == 'LEC']['price'].sum() - 1
-
-# Build df duel to make product by product comparison easier
-df_lec = df_products[df_products['chain'] == 'LEC'].copy()
-df_oth = df_products[df_products['chain'] != 'LEC'].copy()
+start = timeit.default_timer()
 df_duel = pd.merge(df_lec,
-                   df_oth,
+                   df_comp,
                    how = 'inner',
                    on = ['family', 'subfamily', 'product'],
-                   suffixes = ['_lec', '_oth'])
-df_duel.drop(['chain_lec', 'chain_oth'], axis = 1, inplace = True)
+                   suffixes = ['_lec', '_comp'])
+# df_duel.drop(['chain_lec', 'chain_comp'], axis = 1, inplace = True)
+print u'Time to merge', timeit.default_timer() - start
 
-print u'\nOverview product prices'
-print df_duel[['price_lec', 'price_oth']].describe()
+print u'\nReplication of comparison:'
+print (df_duel['price_comp'].sum() / df_duel['price_lec'].sum() - 1) * 100
+
+print u'\nOverview product prices:'
+print df_duel[['price_lec', 'price_comp']].describe()
 
 print u'\nAverage on product by product comparison'
 # (todo: add weighted pct (Leclerc's method?))
-df_duel['diff'] = df_duel['price_oth'] - df_duel['price_lec']
-df_duel['pct_diff'] = df_duel['price_oth'] / df_duel['price_lec'] - 1
+df_duel['diff'] = df_duel['price_comp'] - df_duel['price_lec']
+df_duel['pct_diff'] = df_duel['price_comp'] / df_duel['price_lec'] - 1
 print df_duel[['diff', 'pct_diff']].describe()
 
-print u'\nDesc of abs value of percent difference'
+print u'\nDesc of abs value of percent difference:'
 print df_duel['pct_diff'].abs().describe(\
         percentiles = [0.1, 0.25, 0.5, 0.75, 0.9])
 
 #df_duel.sort('diff', ascending = False, inplace = True)
 #print df_duel[0:10].to_string()
+
+# ############
+# LOOP
+# ############
+
+start = timeit.default_timer()
+ls_rows_compa = []
+lec_chain = 'LEC'
+lec_id_save = None
+for lec_id, comp_id, comp_chain\
+  in df_qlmc_comparisons[~df_qlmc_comparisons['nb_obs'].isnull()]\
+       [['lec_id', 'comp_id', 'comp_chain']].values:
+  
+  ##before split of df_france       
+  #df_lec  = df_france[df_france['store_id'] == lec_id].copy()
+  #df_comp = df_france[df_france['store_id'] == comp_id].copy()
+  
+  ##before taking advantage of order
+  #df_lec  = dict_chain_dfs[lec_chain][dict_chain_dfs[lec_chain]['store_id'] == lec_id]
+  #df_comp = dict_chain_dfs[comp_chain][dict_chain_dfs[comp_chain]['store_id'] == comp_id]
+  
+  # taking advantage of order requires caution on first loop
+  if lec_id != lec_id_save:
+    df_lec  = dict_chain_dfs[lec_chain][dict_chain_dfs[lec_chain]['store_id'] == lec_id]
+    lec_id_save = df_lec['store_id'].iloc[0]
+  df_comp = dict_chain_dfs[comp_chain][dict_chain_dfs[comp_chain]['store_id'] == comp_id]
+  
+  # todo: see if need family and subfamily for matching (not much chge)
+  df_duel = pd.merge(df_lec,
+                     df_comp,
+                     how = 'inner',
+                     on = ['family', 'subfamily', 'product'],
+                     suffixes = ['_lec', '_comp'])
+  ls_rows_compa.append((lec_id,
+                        comp_id,
+                        len(df_duel),
+                        len(df_duel[df_duel['price_lec'] < df_duel['price_comp']]),
+                        len(df_duel[df_duel['price_lec'] > df_duel['price_comp']]),
+                        len(df_duel[df_duel['price_lec'] == df_duel['price_comp']]),
+                        (df_duel['price_comp'].sum() / df_duel['price_lec'].sum() - 1) * 100))
+
+df_repro_compa = pd.DataFrame(ls_rows_compa,
+                              columns = ['lec_id',
+                                         'comp_id',
+                                         'nb_obs',
+                                         'nb_lec_wins',
+                                         'nb_comp_wins',
+                                         'nb_draws',
+                                         'pct_compa'])
+print u'Time for loop', timeit.default_timer() - start
+
+ls_pctiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
+print df_repro_compa['pct_compa'].describe(percentiles = ls_pctiles)
+
+df_repro_compa['rr'] = df_repro_compa['nb_comp_wins'] /\
+                         df_repro_compa['nb_obs'] * 100
+
+df_repro_compa.loc[df_repro_compa['nb_comp_wins'] >\
+                     df_repro_compa['nb_lec_wins'],
+                   'rr'] = df_repro_compa['nb_lec_wins'] /\
+                             df_repro_compa['nb_obs'] * 100
+
+import matplotlib.plt as pyplot
+df_repro_compa.plot(kind = 'scatter', x = 'pct_compa', y = 'rr')
+plt.show()
+
+# todo:
+# add precision in price comparison: product family level rank reversals
+# enrich compara dataframe: distance, brands, competition/environement vars
+# try to account for dispersion
+# also investigate link between dispersion and price levels?
+# do same exercise with non leclerc pairs (control for differentiation)
+# would be nice to check if products on which leclerc is beaten are underpriced vs market

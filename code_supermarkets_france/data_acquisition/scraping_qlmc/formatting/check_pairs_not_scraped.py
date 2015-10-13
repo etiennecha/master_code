@@ -24,14 +24,16 @@ format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 path_qlmc_scraped = os.path.join(path_data,
-                                  'data_qlmc',
-                                  'data_source',
-                                  'data_scraped')
+                                 'data_supermarkets',
+                                 'data_source',
+                                 'data_qlmc_2015',
+                                 'data_scraped_201503')
 
 path_csv = os.path.join(path_data,
-                        'data_qlmc',
+                        'data_supermarkets',
                         'data_built',
-                        'data_csv')
+                        'data_qlmc_2015',
+                        'data_csv_201503')
 
 dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scraped,
                                          'dict_reg_leclerc_stores.json'))
@@ -39,17 +41,13 @@ dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scraped,
 dict_leclerc_comp = dec_json(os.path.join(path_qlmc_scraped,
                                           'dict_leclerc_comp.json'))
 
-df_comp = pd.read_csv(os.path.join(path_csv,
-                                   'qlmc_scraped',
-                                   'df_competitors.csv'))
-
 # Exclude Leclerc from competitors (not compared on website)
 for leclerc_id, ls_comp in dict_leclerc_comp.items():
   ls_comp_cl = [comp for comp in ls_comp if comp['signCode'] != u'LEC']
   dict_leclerc_comp[leclerc_id] = ls_comp_cl
 
 # Count all competitor pairs from website
-ls_all_pairs = [(leclerc_id, comp['slug']\
+ls_all_pairs = [(leclerc_id, comp['slug'])\
                   for leclerc_id, ls_comp in dict_leclerc_comp.items()\
                     for comp in ls_comp]
 
@@ -79,4 +77,4 @@ ls_exclude_pairs = [(leclerc_id, comp_id) for (leclerc_id, comp_id) in ls_all_pa
                       if (leclerc_id, comp_id) not in ls_collect_pairs]
 
 print u'\nTotal nb pairs listed on website {:d}'.format(len(ls_all_pairs))
-print u'\nNumber of pairs queried {:d}'.format(len(ls_pairs))
+print u'\nNumber of pairs queried {:d}'.format(len(ls_collect_pairs))

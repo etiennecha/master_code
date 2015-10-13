@@ -13,21 +13,25 @@ import pandas as pd
 from mpl_toolkits.basemap import Basemap
 import pprint
 
-path_qlmc = os.path.join(path_data,
-                         'data_supermarkets',
-                         'data_qlmc_2007-12')
+path_source = os.path.join(path_data,
+                           'data_supermarkets',
+                           'data_source',
+                           'data_qlmc_2007-12')
 
-path_source_csv = os.path.join(path_qlmc,
-                               'data_source',
+path_source_csv = os.path.join(path_source,
                                'data_csv')
 
-path_source_json = os.path.join(path_qlmc,
-                                'data_source',
+path_source_json = os.path.join(path_source,
                                 'data_json')
 
-path_source_excel = os.path.join(path_qlmc,
-                                 'data_source',
+path_source_excel = os.path.join(path_source,
                                  'data_excel')
+
+path_built_lsa_csv = os.path.join(path_data,
+                                  'data_supermarkets',
+                                  'data_built',
+                                  'data_lsa',
+                                  'data_csv')
 
 # #############
 # LOAD DF QLMC
@@ -84,17 +88,16 @@ df_qlmc_stores = pd.read_csv(os.path.join(path_source_csv,
 # LOAD DF LSA
 # ############
 
-df_lsa = pd.read_csv(os.path.join(path_source_csv,
+df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
                                   'df_lsa_for_qlmc.csv'),
-                     dtype = {'Ident': str,
-                              'Code INSEE' : str,
-                              'Code INSEE ardt' : str,
-                              'Siret' : str},
-                     parse_dates = [u'DATE ouv',
-                                    u'DATE ferm',
-                                    u'DATE réouv',
-                                    u'DATE chg enseigne',
-                                    u'DATE chgt surf'],
+                     dtype = {u'C_INSEE' : str,
+                              u'C_INSEE_Ardt' : str,
+                              u'C_Postal' : str,
+                              u'SIREN' : str,
+                              u'NIC' : str,
+                              u'SIRET' : str},
+                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
+                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
                      encoding = 'UTF-8')
 
 ## todo: fix and drop
@@ -118,9 +121,10 @@ ls_qlmc_dates = ['2007-05',
 
 #qlmc_date = ls_qlmc_dates[date_ind]
 #print df_lsa[qlmc_date].value_counts().to_string()
-#ls_disp_2 = [u'Ident', u'Enseigne', u'ADRESSE1', u'Ville', 'Code INSEE',
-#             u'DATE ouv', u'DATE chg enseigne', 'Ex enseigne']
-#print df_lsa[ls_disp_2][df_lsa[qlmc_date] == 'CARREFOUR MARKET'][0:30].to_string()
+#lsds = [u'Ident', u'Enseigne', u'Adresse1', u'Ville', 'C_INSEE',
+#         u'Date_Ouv', u'Date_Chg_Enseigne', 'Ex_Enseigne']
+#print df_lsa[lsd0][df_lsa['Enseigne_Alt_{:s}'.format(qlmc_date)] ==\
+#                     'CARREFOUR MARKET'][0:30].to_string()
 
 # ##########
 # MATCHING
@@ -175,9 +179,9 @@ ls_matching = [[u'INTERMARCHE', u'XXX', u'INTERMARCHE'], # give up direct matchi
 
 ls_ls_matched_stores = []
 for date_ind, qlmc_date in enumerate(ls_qlmc_dates):
-  df_lsa['type'] = df_lsa[qlmc_date]
+  df_lsa['EA_Temp'] = df_lsa['Enseigne_Alt_{:s}'.format(qlmc_date)]
   
-  df_lsa['type_alt'] = df_lsa['type'].apply(\
+  df_lsa['EA_Temp_2'] = df_lsa['EA_Temp'].apply(\
                                 lambda x: dict_lsa_stores_alt_brand[x]\
                                             if dict_lsa_stores_alt_brand.get(x)\
                                             else x)
@@ -187,8 +191,8 @@ for date_ind, qlmc_date in enumerate(ls_qlmc_dates):
                                        (df_qlmc_stores['Period'] == '{:d}'.format(date_ind))]\
                                           .iterrows():
       insee_code = row['INSEE_Code']
-      df_city_stores = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
-                              (df_lsa['type'] == enseigne_fra)]
+      df_city_stores = df_lsa[(df_lsa['C_INSEE_Ardt'] == insee_code) &\
+                              (df_lsa['EA_Temp'] == enseigne_fra)]
       if len(df_city_stores) == 1:
         ls_matched_stores.append((row['Period'],
                                   row['Store_Chain'],
@@ -196,8 +200,8 @@ for date_ind, qlmc_date in enumerate(ls_qlmc_dates):
                                   df_city_stores.iloc[0]['Ident'],
                                   'direct'))
       elif len(df_city_stores) == 0:
-        df_city_stores_alt = df_lsa[(df_lsa['Code INSEE ardt'] == insee_code) &\
-                                    (df_lsa['type_alt'] == enseigne_fra_alt)]
+        df_city_stores_alt = df_lsa[(df_lsa['C_INSEE_Ardt'] == insee_code) &\
+                                    (df_lsa['EA_Temp_2'] == enseigne_fra_alt)]
         if len(df_city_stores_alt) == 1:
           ls_matched_stores.append((row['Period'],
                                     row['Store_Chain'],
@@ -297,7 +301,11 @@ print u'\nNb manually matched: {:d}'.format(\
 print '\nInspect unmatched:'
 print df_unmatched[ls_unmatched_disp][0:30].to_string()
 
-# OUTPUT (try to make it an Excel standard csv?)
+# ######
+# OUTPUT
+# ######
+
+# STORES NOT FOUND: STANDARD EXCEL CSV FOR MANUAL MATCHING
 df_unmatched[ls_unmatched_disp].to_csv(os.path.join(path_source_excel,
                                                     'fix_store_matching.csv'),
                                        index = False,
@@ -305,17 +313,13 @@ df_unmatched[ls_unmatched_disp].to_csv(os.path.join(path_source_excel,
                                        sep = ';',
                                        quoting = 3) # no impact, cannot have trailing 0s
 
-## HDF (deprecated)
-#path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-#qlmc_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'qlmc_data.h5'))
-#qlmc_data['df_qlmc_stores'] = df_stores
-#qlmc_data.close()
-
-# CSV
+# MATCHED STORES: CSV
 df_stores.to_csv(os.path.join(path_source_csv,
                              'df_stores_w_municipality_and_lsa_id.csv'),
                 index = False,
                 encoding = 'UTF-8')
+
+
 
 # ############
 # DEPREACTED

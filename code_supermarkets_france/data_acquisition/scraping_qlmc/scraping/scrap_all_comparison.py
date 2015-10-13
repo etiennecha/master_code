@@ -54,28 +54,28 @@ for region, ls_leclerc in dict_reg_leclerc.items():
       ls_covered_comp.append(comp['slug'])
   dict_reg_pairs[region] = ls_reg_pairs
 
-ls_fra_regions = [u'picardie', # ok (home)
-                  u'franche-comte', # ok (home)
-                  u'languedoc-roussillon', # ok (home)
-                  u'rhone-alpes', # ok (crest)
-                  u'basse-normandie', # ok (rerun - home)
-                  u'poitou-charentes', # ok (crest)
-                  u'pays-de-la-loire', # ok (crest)
-                  u'lorraine', # ok (rerun)
-                  u'midi-pyrenees', # in progress (home)
-                  u'nord-pas-de-calais', # ok (crest)
-                  u'centre', # ok (rerun home)
-                  u'bretagne', # ok (rerun home)
-                  u'bourgogne', # ok (home)
-                  u'aquitaine', # ok (crest)
-                  u'auvergne', # ok (home)
-                  u'alsace', # ok (home)
-                  u'corse', # in progress (crest)
-                  u'champagne-ardenne', # ok
-                  u'haute-normandie', # ok
-                  u'ile-de-france', # ok (todo: rerun)
-                  u'provence-alpes-cote-d-azur',
-                  u'limousin'] # ok (home)
+ls_fra_regions = [u'picardie',                    # ok (home)
+                  u'franche-comte',               # ok (home)
+                  u'languedoc-roussillon',        # ok (home)
+                  u'rhone-alpes',                 # ok (crest)
+                  u'basse-normandie',             # ok (rerun - home)
+                  u'poitou-charentes',            # ok (crest)
+                  u'pays-de-la-loire',            # ok (crest)
+                  u'lorraine',                    # ok (rerun)
+                  u'midi-pyrenees',               # in progress (home)
+                  u'nord-pas-de-calais',          # ok (crest)
+                  u'centre',                      # ok (rerun home)
+                  u'bretagne',                    # ok (rerun home)
+                  u'bourgogne',                   # ok (home)
+                  u'aquitaine',                   # ok (crest)
+                  u'auvergne',                    # ok (home)
+                  u'alsace',                      # ok (home)
+                  u'corse',                       # in progress (crest)
+                  u'champagne-ardenne',           # ok
+                  u'haute-normandie',             # ok
+                  u'ile-de-france',               # ok (todo: rerun)
+                  u'provence-alpes-cote-d-azur',  # ok
+                  u'limousin']                    # ok (home)
 
 # Choice of region
 region = u'provence-alpes-cote-d-azur'
