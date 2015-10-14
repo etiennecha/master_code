@@ -16,9 +16,9 @@ import pprint
 #from mpl_toolkits.basemap import Basemap
 
 path_dir_built = os.path.join(path_data,
-                               'data_supermarkets',
-                               'data_built',
-                               'data_lsa')
+                              'data_supermarkets',
+                              'data_built',
+                              'data_lsa')
 
 path_dir_csv = os.path.join(path_dir_built,
                             'data_csv')

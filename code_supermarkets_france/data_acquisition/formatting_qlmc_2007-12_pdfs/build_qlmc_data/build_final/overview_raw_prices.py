@@ -7,16 +7,20 @@ from functions_generic_qlmc import *
 import numpy as np
 import pandas as pd
 
-path_qlmc = os.path.join(path_data,
-                         'data_supermarkets',
-                         'data_qlmc_2007-12')
+path_source = os.path.join(path_data,
+                           'data_supermarkets',
+                           'data_source',
+                           'data_qlmc_2007-12')
 
-path_source_csv = os.path.join(path_qlmc,
-                               'data_source',
+path_source_csv = os.path.join(path_source,
                                'data_csv')
 
-path_built_csv = os.path.join(path_qlmc,
-                              'data_built',
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_qlmc_2007-12')
+
+path_built_csv = os.path.join(path_built,
                               'data_csv')
 
 # #######################
@@ -61,6 +65,10 @@ df_qlmc = pd.merge(df_prod_names,
 print u'\nAdd Product_norm: normalized product name'
 for field in ['Product_brand', 'Product_name', 'Product_format']:
   df_qlmc[field].fillna(u'', inplace = True)
+
+df_qlmc.loc[df_qlmc['Product_brand'] == u'',
+            'Product_brand'] = 'Sans Marque'
+
 df_qlmc['Product_norm'] = df_qlmc['Product_brand'] + ' - ' +\
                           df_qlmc['Product_name'] + ' - ' +\
                           df_qlmc['Product_format']
@@ -90,13 +98,6 @@ df_qlmc.loc[(df_qlmc['Store'] == 'SUPER U BEAUCOUZE'),
 # #######################
 
 pd.set_option('float_format', '{:4,.2f}'.format)
-
-# improve following... need empty for concat as it is
-for field in ['Product_brand', 'Product_name', 'Product_format']:
-  df_qlmc[field].fillna(u'', inplace = True)
-df_qlmc['Product_norm'] = df_qlmc['Product_brand'] + ' - ' +\
-                          df_qlmc['Product_name']+ ' ' +\
-                          df_qlmc['Product_format']
 
 # PRODUCTS PRESENT IN ALL PERIODS
 ls_ls_prod = []

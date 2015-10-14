@@ -65,6 +65,10 @@ df_qlmc = pd.merge(df_prod_names,
 print u'\nAdd Product_norm: normalized product name'
 for field in ['Product_brand', 'Product_name', 'Product_format']:
   df_qlmc[field].fillna(u'', inplace = True)
+
+df_qlmc.loc[df_qlmc['Product_brand'] == u'',
+            'Product_brand'] = 'Sans Marque'
+
 df_qlmc['Product_norm'] = df_qlmc['Product_brand'] + ' - ' +\
                           df_qlmc['Product_name'] + ' - ' +\
                           df_qlmc['Product_format']
@@ -87,7 +91,7 @@ for period, old_Store, new_Store_Chain, new_Store_Municipality in ls_fix_stores:
 
 # To have perfect harmonization
 df_qlmc.loc[(df_qlmc['Store'] == 'SUPER U BEAUCOUZE'),
-            'INSEE_Municipality'] == u'BEAUCOUZE'
+            'INSEE_Municipality'] = u'BEAUCOUZE'
 
 # ################
 # GENERAL OVERVIEW
@@ -401,26 +405,52 @@ for Period, id_lsa in se_stores_dup[se_stores_dup != 1].index:
 
 # PRODUCTS LISTED UNDER SEVERAL DPTS/FAMILIES?
 
+print u'\nProducts listed under several dpt/families:'
 print len(df_qlmc[df_qlmc.duplicated(['Period', 'Store', 'Product_norm'], take_last = True) |\
                   df_qlmc.duplicated(['Period', 'Store', 'Product_norm'], take_last = False)])
 
-### ######
-### OUTPUT
-### ######
-#
-#df_qlmc.drop(['id_fra_stores', 'id_fra_stores_2', 'street_fra_stores'],
-#             axis = 1,
-#             inplace = True)
-#
-#df_qlmc.to_csv(os.path.join(path_built_csv,
-#                            'df_qlmc.csv'),
-#                  float_format='%.2f',
-#                  encoding='utf-8',
-#                  index=False)
-#
-## todo: try working with lighter files
-## - split between products and stores
-## - drop Product_norm (can be easily re-created)
+# ######
+# OUTPUT
+# ######
+
+df_qlmc.drop(['id_fra_stores',
+              'id_fra_stores_2',
+              'street_fra_stores',
+              'Product',
+              'Q',
+              'QLMC_Departement',
+              'INSEE_ZIP',
+              'INSEE_Departement'],
+             axis = 1,
+             inplace = True)
+
+df_qlmc.to_csv(os.path.join(path_built_csv,
+                            'df_qlmc.csv'),
+                  float_format='%.2f',
+                  encoding='utf-8',
+                  index=False)
+
+df_prices = df_qlmc[['Period', 'Store', 'Product_norm',
+                     'Department', 'Family',
+                     'Product_brand', 'Product_name', 'Product_format',
+                     'Price', 'Date']]
+
+df_prices.to_csv(os.path.join(path_built_csv,
+                           'df_prices.csv'),
+                 float_format='%.2f',
+                 encoding='utf-8',
+                 index=False)
+
+df_stores = df_qlmc[['Period', 'Store',
+                     'Store_Chain', 'Store_Municipality',
+                     'INSEE_Code', 'INSEE_Municipality',
+                     'QLMC_Surface', 'id_lsa']].drop_duplicates()
+
+df_stores.to_csv(os.path.join(path_built_csv,
+                              'df_stores.csv'),
+                 float_format='%.2f',
+                 encoding='utf-8',
+                 index=False)
 
 
 
