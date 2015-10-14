@@ -151,7 +151,7 @@ def compare_stores_det(field_store, store_a, store_b, df_prices, category, perio
     df_prices_per = df_prices[df_prices['P'] == period_ind]
   else:
     df_prices_per = df_prices
-  df_store_a = df_prices_per[['Prix','Produit','Rayon','Famille']]\
+  df_store_a = df_prices_per[['Prix', 'Produit', 'Rayon', 'Famille']]\
                            [(df_prices_per[field_store] == store_a)].copy()
   df_store_a.rename(columns = {'Prix' : 'Prix_a'}, inplace = True)
   df_store_b = df_prices_per[['Prix','Produit']]\
@@ -170,7 +170,7 @@ def compare_stores_det(field_store, store_a, store_b, df_prices, category, perio
   return [ls_str_categories, ls_a_cheaper, ls_b_cheaper, ls_a_equal_b]
 
 def compare_stores(df_prices, field_id, id_0, id_1):
-  df_store_0 = df_prices[['Prix','Produit','Rayon','Famille']]\
+  df_store_0 = df_prices[['Prix', 'Produit', 'Rayon', 'Famille']]\
                            [(df_prices[field_id] == id_0)].copy()
   df_store_0.rename(columns = {'Prix' : 'Prix_0'}, inplace = True)
   df_store_1 = df_prices[['Prix','Produit']]\

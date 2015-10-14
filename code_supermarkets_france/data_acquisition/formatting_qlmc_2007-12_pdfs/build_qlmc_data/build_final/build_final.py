@@ -424,14 +424,19 @@ df_qlmc.drop(['id_fra_stores',
              axis = 1,
              inplace = True)
 
+df_qlmc.rename(columns = {'Department' : 'Family',
+                          'Family' : 'Subfamily',
+                          'Product_norm' : 'Product'},
+               inplace = True)
+
 df_qlmc.to_csv(os.path.join(path_built_csv,
                             'df_qlmc.csv'),
                   float_format='%.2f',
                   encoding='utf-8',
                   index=False)
 
-df_prices = df_qlmc[['Period', 'Store', 'Product_norm',
-                     'Department', 'Family',
+df_prices = df_qlmc[['Period', 'Store', 'Product',
+                     'Family', 'Subfamily',
                      'Product_brand', 'Product_name', 'Product_format',
                      'Price', 'Date']]
 

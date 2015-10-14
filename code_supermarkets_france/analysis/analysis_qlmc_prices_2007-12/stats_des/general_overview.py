@@ -7,13 +7,13 @@ from functions_generic_qlmc import *
 import numpy as np
 import pandas as pd
 
-path_dir_qlmc = os.path.join(path_data,
-                             'data_supermarkets',
-                             'data_qlmc_2007-12')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_qlmc_2007-12')
 
-path_dir_built_csv = os.path.join(path_dir_qlmc,
-                                  'data_built',
-                                  'data_csv')
+path_built_csv = os.path.join(path_built,
+                              'data_csv')
 
 # #######################
 # LOAD DF QLMC
@@ -22,9 +22,6 @@ path_dir_built_csv = os.path.join(path_dir_qlmc,
 print u'Loading df_qlmc'
 df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_qlmc.csv'),
-                      dtype = {'id_lsa' : str,
-                               'INSEE_ZIP' : str,
-                               'INSEE_Code' : str},
                       encoding = 'utf-8')
 # date parsing slow... better if specified format?
 
@@ -42,21 +39,21 @@ df_go_date = df_qlmc[['Date', 'Period']].groupby('Period').agg([min, max])['Date
 df_go_date['spread'] = df_go_date['max'] - df_go_date['min']
 
 # DF ROWS
-df_go_rows = df_qlmc[['Product', 'Period']].groupby('Period').agg(len)
+df_go_rows = df_qlmc[['Product_norm', 'Period']].groupby('Period').agg(len)
 
 # DF UNIQUE STORES / PRODUCTS
-df_go_unique = df_qlmc[['Product', 'Store', 'Period']].groupby('Period').agg(lambda x: len(x.unique()))
+df_go_unique = df_qlmc[['Product_norm', 'Store', 'Period']].groupby('Period').agg(lambda x: len(x.unique()))
 
 # DF GO
 df_go = pd.merge(df_go_date, df_go_unique, left_index = True, right_index = True)
-df_go['Nb rows'] = df_go_rows['Product']
+df_go['Nb rows'] = df_go_rows['Product_norm']
 for field in ['Nb rows', 'Store', 'Product']:
   df_go[field] = df_go[field].astype(float) # to have thousand separator
 df_go['Date start'] = df_go['min'].apply(lambda x: x.strftime('%d/%m/%Y'))
 df_go['Date end'] = df_go['max'].apply(lambda x: x.strftime('%d/%m/%Y'))
 df_go['Avg nb products/store'] = df_go['Nb rows'] / df_go['Store']
 df_go.rename(columns = {'Store' : 'Nb stores',
-                        'Product' : 'Nb products'},
+                        'Product_norm' : 'Nb products'},
              inplace = True)
 df_go.reset_index(inplace = True)
 
