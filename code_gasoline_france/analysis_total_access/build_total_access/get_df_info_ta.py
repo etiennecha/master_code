@@ -538,7 +538,9 @@ ls_fix_date_ref = [['6800011', +10], # enough?
 # OUTPUT
 # ################
 
-df_info_ta = pd.concat([df_ta_pp_chge,
+# also include no chg in brand
+df_info_ta = pd.concat([df_info[(df_info['TA'] == 1) & (df_info['TA_chge'] == 0)],
+                        df_ta_pp_chge,
                         df_ta_no_pp_chge])
 # pbm with column order... make sure got all
 df_info_ta = df_info_ta[df_ta_pp_chge.columns]

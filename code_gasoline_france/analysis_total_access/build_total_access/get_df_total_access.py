@@ -106,18 +106,23 @@ for df_temp in [df_price_stats[df_price_stats['nb_chge'] < 5],
 # exclude total access at beginning
 ls_exclude_ta_beg = list(set(df_info_ta[df_info_ta['brand_0']  == 'TOTAL_ACCESS'].index)\
                                   .intersection(set(df_info.index)))
-df_info.loc[df_info['brand_0'] == 'TOTAL_ACCESS',
+df_info.loc[(df_info['filter'] == 0) &\
+            (df_info['brand_0'] == 'TOTAL_ACCESS'),
             'filter'] = 2
 # exclude total access ex total with small pp_chge
 ls_exclude_ta_no_pp_chge = list(set(df_info_ta[(df_info_ta['brand_0'] == 'TOTAL') &\
                                                (df_info_ta['pp_chge'].abs() < 0.04)].index)\
                                   .intersection(set(df_info.index)))
-df_info.loc[ls_exclude_ta_no_pp_chge,
+df_info.loc[(df_info['filter'] == 0) &\
+            (df_info.index.isin(ls_exclude_ta_no_pp_chge)),
             'filter'] = 3
-# exclude total access previously non total
-ls_exclude_ta_not_tot = list(set(df_info_ta[~df_info_ta['brand_0'].isin(['ELF', 'TOTAL'])].index)\
+# exclude total access previously non total/elf/total_access
+ls_exclude_ta_not_tot = list(set(df_info_ta[~df_info_ta['brand_0'].isin(['ELF',
+                                                                         'TOTAL',
+                                                                         'TOTAL_ACCESS'])].index)\
                                   .intersection(set(df_info.index)))
-df_info.loc[ls_exclude_ta_not_tot,
+df_info.loc[(df_info['filter'] == 0 ) &\
+            (df_info.index.isin(ls_exclude_ta_not_tot)),
             'filter'] = 4
 
 # todo: exclude stations within 5 km of the last 3
@@ -136,7 +141,8 @@ for id_station in df_info.index:
   ls_close_temp = [x[0] for x in dict_close.get(id_station, []) if x[1] <= 5]
   if set(ls_close_temp).intersection(set(ls_exclude_comp_of)):
     ls_exclude_comp.append(id_station)
-df_info.loc[ls_exclude_comp,
+df_info.loc[(df_info['filter'] == 0) &\
+            (df_info.index.isin(ls_exclude_comp)),
             'filter'] = 5
 
 # #############################
@@ -148,14 +154,16 @@ df_ta_pp_chge = df_info_ta[(df_info_ta['brand_0'] == 'TOTAL') &\
                            (df_info_ta['pp_chge'].abs() >= 0.04)]
 dict_ta_pp_chge = {row_i : list(row[['date_beg', 'date_end']].values)\
                      for row_i, row in df_ta_pp_chge.iterrows()}
-df_info.loc[dict_ta_pp_chge.keys(),
+df_info.loc[(df_info['filter'] == 0) &\
+            (df_info.index.isin(dict_ta_pp_chge.keys())),
             'filter'] = 6
 
 # elf => total access
 df_ta_elf = df_info_ta[(df_info_ta['brand_0'] == 'ELF')]
 dict_ta_elf = {row_i : list(row[['date_beg', 'date_end']].values)\
                  for row_i, row in df_ta_elf.iterrows()}
-df_info.loc[dict_ta_pp_chge.keys(),
+df_info.loc[(df_info['filter'] == 0) &\
+            (df_info.index.isin(dict_ta_elf.keys())),
             'filter'] = 7
 
 # total, elf, elan : based on last observed brand
@@ -288,6 +296,10 @@ df_info.loc[dict_ta_pp_chge.keys(),
 df_info.loc[dict_ta_elf.keys(),
             'treatment_0'] = 6
 
+# remaining 0:
+# either not in df_comp (no competitor... fix this)
+# TA less than 5 km away but not treated (no pp chge etc)
+
 # ##########
 # STATS DES
 # ##########
@@ -295,8 +307,15 @@ df_info.loc[dict_ta_elf.keys(),
 print u'\nOverview of filter categorcial variable:'
 print df_info['filter'].value_counts().to_string()
 
+# se_vc_filter = df_info['filter'].value_counts()
+# print se_vc_filter.ix[range(1,13)].to_string()
+
 print u'\nOverview of treatment categorical variable:'
 print df_info['treatment_0'].value_counts().to_string()
+
+# se_vc_treatment_0 = df_info['treatment_0'].value_counts()
+# print se_vc_treatment_0.ix[range(0,7)].to_string()
+
 
 # Caution: not done in treatment:
 # - excluding station with incorrect data (filter 1)
@@ -304,6 +323,36 @@ print df_info['treatment_0'].value_counts().to_string()
 # - distinguishing TOTAL group station (filter 7:9)
 # - distinguishing non TOTAL group station (not in 1:9)
 
+# #################################
+# ADD TOTAL ACCESS INFO IN DF INFO
+# #################################
+
+df_info['d_ta_pp_chge'] = 0
+df_info['pp_chge'] = np.nan
+df_info['ta_date_beg'] = None
+df_info['ta_date_end'] = None
+
+for row_i, row in df_ta_pp_chge.iterrows():
+  df_info.loc[row_i,
+              ['d_ta_pp_chge',
+               'pp_chge',
+               'ta_date_beg',
+               'ta_date_end']] = [1,
+                               row['pp_chge'],
+                               row['date_beg'],
+                               row['date_end']]
+
+df_info['d_ta_elf'] = 0
+for row_i, row in df_ta_elf.iterrows():
+  df_info.loc[row_i,
+              ['d_ta_elf',
+               'ta_date_beg',
+               'ta_date_end']] = [1,
+                               row['date_beg'],
+                               row['date_end']]
+
 # #######
 # OUTPUT
 # #######
+
+
