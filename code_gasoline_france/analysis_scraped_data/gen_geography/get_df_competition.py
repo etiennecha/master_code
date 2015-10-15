@@ -14,7 +14,6 @@ path_dir_built_scraped = os.path.join(path_data,
 path_dir_built_json = os.path.join(path_dir_built_scraped, 'data_json')
 path_dir_built_csv = os.path.join(path_dir_built_scraped, u'data_csv')
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
 path_dir_insee_extracts = os.path.join(path_data, 'data_insee', 'data_extracts')
 
 # ###############
@@ -191,12 +190,12 @@ df_clc = pd.DataFrame(ls_rows_clc,
 # CLOSEST TOTAL ACCESS
 ls_ta_ids = df_info[(df_info['brand_last'] == 'TOTAL_ACCESS')].index.tolist()
 ls_rows_close_ta = []
-bound_nb_ta, max_nb_ta = 10, 0
+max_nb_ta = 0
 for id_station, ls_comp in dict_ls_comp.items():
   # keep info even for Total SA group stations
   #if df_info.ix[id_station]['brand_0'] not in ['ELF', 'TOTAL', 'TOTAL_ACCESS', 'ELAN']:
   ls_ta_comp = [(comp_id, distance) for comp_id, distance in ls_comp\
-                                    if comp_id in ls_ta_ids][0:bound_nb_ta]
+                                    if comp_id in ls_ta_ids]
   ls_ta_comp_flat = [x for ls_x in ls_ta_comp for x in ls_x]
   max_nb_ta = max(max_nb_ta, len(ls_ta_comp))
   ls_rows_close_ta.append([id_station] + ls_ta_comp_flat)

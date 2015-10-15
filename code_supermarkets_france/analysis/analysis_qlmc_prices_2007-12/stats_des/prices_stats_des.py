@@ -8,13 +8,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-path_dir_qlmc = os.path.join(path_data,
-                             'data_supermarkets',
-                             'data_qlmc_2007-12')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_qlmc_2007-12')
 
-path_dir_built_csv = os.path.join(path_dir_qlmc,
-                                  'data_built',
-                                  'data_csv')
+path_built_csv = os.path.join(path_built,
+                              'data_csv')
 
 pd.set_option('float_format', '{:4,.2f}'.format)
 format_str = lambda x: u'{:}'.format(x[:20])
@@ -24,7 +24,7 @@ format_str = lambda x: u'{:}'.format(x[:20])
 # #######################
 
 print u'Loading df_qlmc'
-df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
+df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
                       encoding = 'utf-8')
 # date parsing slow... better if specified format?
@@ -74,8 +74,8 @@ PD = PriceDispersion()
 df_qlmc_per = df_qlmc[df_qlmc['Period'] == 1]
 
 print u'\nStats des prices within period'
-df_prod_per = pd.pivot_table(data = df_qlmc_per[['Department', 'Product', 'Price']],
-                             index = ['Department', 'Product'],
+df_prod_per = pd.pivot_table(data = df_qlmc_per[['Family', 'Product', 'Price']],
+                             index = ['Family', 'Product'],
                              values = 'Price',
                              aggfunc = [len,
                                         np.mean,
@@ -131,11 +131,11 @@ plt.show()
 #                       (u'CARREFOUR', 'r'),
 #                       (u'INTERMARCHE', 'k')]:
 #  df_qlmc_per_chain = df_qlmc_per[(df_qlmc_per['Store_Chain'] == chain) &\
-#                                  (df_qlmc_per['Department'] == u'Produits frais')]
-#  df_prod_per_chain = pd.pivot_table(data = df_qlmc_per_chain[['Department',
+#                                  (df_qlmc_per['Family'] == u'Produits frais')]
+#  df_prod_per_chain = pd.pivot_table(data = df_qlmc_per_chain[['Family',
 #                                                               'Product',
 #                                                               'Price']],
-#                                     index = ['Department', 'Product'],
+#                                     index = ['Family', 'Product'],
 #                                     values = 'Price',
 #                                     aggfunc = [len, np.mean, np.std],
 #                                     fill_value = np.nan)
@@ -161,7 +161,7 @@ plt.show()
 ##str_some_prod = u'Philips - Cafetière filtre Cucina lilas 1000W 1.2L (15 tasses) - X1'
 #str_some_prod = u'Canard-Duchene - Champagne brut 12 degrés - 75cl'
 #df_some_prod = df_qlmc[(df_qlmc['Period'] == 0) &\
-#                       (df_qlmc['Product_norm'] == str_some_prod)]
+#                       (df_qlmc['Product'] == str_some_prod)]
 #df_some_prod['Price'].plot(kind = 'box')
 ## pbm... quite far away and other prices quite concentrated
 #plt.show()
@@ -171,9 +171,9 @@ plt.show()
 #print u'\nProduct nb of obs by period for each chain'
 #df_prod_chain_per = pd.pivot_table(data = df_qlmc[['Period',
 #                                                   'Store_Chain',
-#                                                   'Department',
+#                                                   'Family',
 #                                                   'Product']],
-#                                   index = ['Store_Chain', 'Department', 'Product'],
+#                                   index = ['Store_Chain', 'Family', 'Product'],
 #                                   columns = 'Period',
 #                                   aggfunc = len,
 #                                   fill_value = 0).astype(int)

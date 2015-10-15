@@ -20,7 +20,7 @@ path_built_csv = os.path.join(path_built,
 # #######################
 
 print u'Loading df_qlmc'
-df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
+df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
                       encoding = 'utf-8')
 # date parsing slow... better if specified format?
@@ -39,21 +39,21 @@ df_go_date = df_qlmc[['Date', 'Period']].groupby('Period').agg([min, max])['Date
 df_go_date['spread'] = df_go_date['max'] - df_go_date['min']
 
 # DF ROWS
-df_go_rows = df_qlmc[['Product_norm', 'Period']].groupby('Period').agg(len)
+df_go_rows = df_qlmc[['Product', 'Period']].groupby('Period').agg(len)
 
 # DF UNIQUE STORES / PRODUCTS
-df_go_unique = df_qlmc[['Product_norm', 'Store', 'Period']].groupby('Period').agg(lambda x: len(x.unique()))
+df_go_unique = df_qlmc[['Product', 'Store', 'Period']].groupby('Period').agg(lambda x: len(x.unique()))
 
 # DF GO
 df_go = pd.merge(df_go_date, df_go_unique, left_index = True, right_index = True)
-df_go['Nb rows'] = df_go_rows['Product_norm']
+df_go['Nb rows'] = df_go_rows['Product']
 for field in ['Nb rows', 'Store', 'Product']:
   df_go[field] = df_go[field].astype(float) # to have thousand separator
 df_go['Date start'] = df_go['min'].apply(lambda x: x.strftime('%d/%m/%Y'))
 df_go['Date end'] = df_go['max'].apply(lambda x: x.strftime('%d/%m/%Y'))
 df_go['Avg nb products/store'] = df_go['Nb rows'] / df_go['Store']
 df_go.rename(columns = {'Store' : 'Nb stores',
-                        'Product_norm' : 'Nb products'},
+                        'Product' : 'Nb products'},
              inplace = True)
 df_go.reset_index(inplace = True)
 
@@ -90,7 +90,7 @@ for per in range(13):
   print u'-'*80, u'\n'
   print 'Stats descs: per', per
   df_qlmc_per = df_qlmc[df_qlmc['Period'] == per]
-  df_pero = df_qlmc_per[['Product_norm', 'Price']].groupby('Product_norm').\
+  df_pero = df_qlmc_per[['Product', 'Price']].groupby('Product').\
               agg([len, np.median, np.mean, np.std, min, max])['Price']
   df_pero['spread'] = df_pero['max'] - df_pero['min']
   df_pero['r_spread'] = (df_pero['max'] - df_pero['min']) / df_pero['mean']
@@ -103,7 +103,7 @@ for per in range(13):
   #print df_pero[-10:].to_string()
   df_temp = pd.concat([df_pero[0:10], df_pero[-10:]])
   df_temp.reset_index(inplace = True)
-  print df_temp.to_string(formatters = {'Product_norm' : format_str})
+  print df_temp.to_string(formatters = {'Product' : format_str})
   
   # Top XX most and lest expensive products
   print '\nTop 10 most and least expensive products'
@@ -117,32 +117,32 @@ for per in range(13):
   df_pero.sort('r_spread', inplace = True, ascending = False)
   print df_pero[0:10].to_string()
   
-  # Summary of Departments and Familys
+  # Summary of Familys and Subfamilys
   
-  # Get Department DF
-  df_qlmc_r = df_qlmc_per[['Department', 'Product_norm']]\
-                .groupby('Department').agg([len])['Product_norm']
+  # Get Family DF
+  df_qlmc_r = df_qlmc_per[['Family', 'Product']]\
+                .groupby('Family').agg([len])['Product']
   
-  # Get unique Departments and Family DF
+  # Get unique Familys and Subfamily DF
   df_qlmc_per_rayons =\
-     df_qlmc_per[['Department', 'Family']].drop_duplicates(['Department', 'Family'])
-  df_qlmc_per_prod = df_qlmc_per.drop_duplicates('Product_norm')
+     df_qlmc_per[['Family', 'Subfamily']].drop_duplicates(['Family', 'Subfamily'])
+  df_qlmc_per_prod = df_qlmc_per.drop_duplicates('Product')
   df_qlmc_per_familles =\
-      df_qlmc_per_prod[['Family', 'Product_norm']].groupby('Family').agg([len])['Product_norm']
+      df_qlmc_per_prod[['Subfamily', 'Product']].groupby('Subfamily').agg([len])['Product']
   df_qlmc_per_familles.reset_index(inplace = True)
   if len(df_qlmc_per_familles) == len(df_qlmc_per_rayons):
     df_pero_su = pd.merge(df_qlmc_per_rayons,
                           df_qlmc_per_familles,
-                          left_on = 'Family',
-                          right_on = 'Family') 
+                          left_on = 'Subfamily',
+                          right_on = 'Subfamily') 
   
-  # Get SE Family by Department
+  # Get SE Subfamily by Family
   print '\nNb of products in famille by rayon\n'
   df_qlmc_per_rp =\
-    df_qlmc_per[['Department', 'Family', 'Product_norm']].\
-      drop_duplicates(['Department', 'Family', 'Product_norm'])
-  for rayon in df_qlmc_per_rp['Department'].unique():
-    se_rp_vc = df_qlmc_per_rp['Family'][df_qlmc_per_rp['Department'] == rayon].value_counts()
+    df_qlmc_per[['Family', 'Subfamily', 'Product']].\
+      drop_duplicates(['Family', 'Subfamily', 'Product'])
+  for rayon in df_qlmc_per_rp['Family'].unique():
+    se_rp_vc = df_qlmc_per_rp['Subfamily'][df_qlmc_per_rp['Family'] == rayon].value_counts()
     # display with total line... (function? + add bar?)
     se_rp_vc.ix[rayon] = se_rp_vc.sum()
     len_ind = max([len(x) for x in se_rp_vc.index])

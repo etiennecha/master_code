@@ -7,13 +7,13 @@ from functions_generic_qlmc import *
 import numpy as np
 import pandas as pd
 
-path_dir_qlmc = os.path.join(path_data,
-                             'data_supermarkets',
-                             'data_qlmc_2007-12')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_qlmc_2007-12')
 
-path_dir_built_csv = os.path.join(path_dir_qlmc,
-                                  'data_built',
-                                  'data_csv')
+path_built_csv = os.path.join(path_built,
+                              'data_csv')
 
 pd.set_option('float_format', '{:4,.2f}'.format)
 format_str = lambda x: u'{:}'.format(x[:20])
@@ -23,7 +23,7 @@ format_str = lambda x: u'{:}'.format(x[:20])
 # #######################
 
 print u'Loading df_qlmc'
-df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
+df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
                       encoding = 'utf-8')
 # date parsing slow... better if specified format?
@@ -32,8 +32,8 @@ df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
 # STATS DES: PRELIM
 # ##################
 
-ls_unique_prod_cols = ['Department',
-                       'Family',
+ls_unique_prod_cols = ['Family',
+                       'Subfamily',
                        'Product']
 
 ls_unique_store_cols = ['Store_Chain',
@@ -43,8 +43,8 @@ ls_unique_store_cols = ['Store_Chain',
 
 print u'\nProduct departments by period:'
 df_prod = df_qlmc[['Period'] + ls_unique_prod_cols].drop_duplicates()
-df_rayons = pd.pivot_table(data = df_prod[['Period', 'Department', 'Product']],
-                           index = 'Department',
+df_rayons = pd.pivot_table(data = df_prod[['Period', 'Family', 'Product']],
+                           index = 'Family',
                            columns = 'Period',
                            aggfunc = len,
                            fill_value = 0).astype(int)['Product']
@@ -119,8 +119,8 @@ for sc_old, sc_new in ls_sc_replace:
 # NB OBS BY PRODUCT
 
 print u'\nProduct nb of obs by period'
-df_prod_per = pd.pivot_table(data = df_qlmc[['Period', 'Department', 'Product']],
-                             index = ['Department', 'Product'],
+df_prod_per = pd.pivot_table(data = df_qlmc[['Period', 'Family', 'Product']],
+                             index = ['Family', 'Product'],
                              columns = 'Period',
                              aggfunc = len,
                              fill_value = 0).astype(int)
@@ -136,9 +136,9 @@ print df_su_prod_per.to_string()
 #print u'\nProduct nb of obs by period for each chain'
 #df_prod_chain_per = pd.pivot_table(data = df_qlmc[['Period',
 #                                                   'Store_Chain',
-#                                                   'Department',
+#                                                   'Family',
 #                                                   'Product']],
-#                                   index = ['Store_Chain', 'Department', 'Product'],
+#                                   index = ['Store_Chain', 'Family', 'Product'],
 #                                   columns = 'Period',
 #                                   aggfunc = len,
 #                                   fill_value = 0).astype(int)
@@ -161,7 +161,7 @@ print df_su_prod_per.to_string()
 ##str_some_prod = u'Philips - Cafetière filtre Cucina lilas 1000W 1.2L (15 tasses) - X1'
 #str_some_prod = u'Canard-Duchene - Champagne brut 12 degrés - 75cl'
 #df_some_prod = df_qlmc[(df_qlmc['Period'] == 0) &\
-#                       (df_qlmc['Product_norm'] == str_some_prod)]
+#                       (df_qlmc['Product'] == str_some_prod)]
 #df_some_prod['Price'].plot(kind = 'box')
 ## pbm... quite far away and other prices quite concentrated
 #plt.show()

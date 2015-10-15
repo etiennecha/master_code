@@ -128,8 +128,7 @@ df_station_info = pd.merge(df_station_info,
                            right_on = 'code_insee',
                            how = 'left')
 df_station_info.set_index('id_station', inplace = True)
-# Get rid of highway (gps too unreliable so far + require diff treatment)
-df_station_info = df_station_info[df_station_info['highway'] != 1]
+
 
 # Update those for which more recent info (fixes existing issues?)
 for i in [1,2]:
@@ -159,12 +158,16 @@ df_station_info.loc[df_station_info['lng_gov_0'] > df_station_info['lat_gov_0'],
 df_station_info.loc[df_station_info['lng_gov_0'] > df_station_info['lat_gov_0'],
             'lat_best'] = df_station_info['lng_gov_0']
 
+# Get rid of highway gps (too unreliable so far)
+df_station_info.loc[df_station_info['highway'] == 1,
+                    ['lat_best', 'lng_best']] = np.nan, np.nan
+
 # COMPUTE DISTANCE TO MUNICIPALITY CENTER TO DETECT ERRORS
 
 df_station_info['dist_cl'] = compute_distance_ar(df_station_info['lat_best'],
-                                         df_station_info['lng_best'],
-                                         df_station_info['lat_ct'],
-                                         df_station_info['lng_ct'])
+                                                 df_station_info['lng_best'],
+                                                 df_station_info['lat_ct'],
+                                                 df_station_info['lng_ct'])
 
 # Threshold picked: 20 km... if more, try with gps from geocoding
 print u'\nNb of wrong gov coordinates (dist to municipality center too high):',\
@@ -176,9 +179,9 @@ df_station_info.loc[df_station_info['dist_cl'] > 20,
                     'lng_best'] = df_station_info['lng_gc']
 
 df_station_info['dist_cl'] = compute_distance_ar(df_station_info['lat_best'],
-                                         df_station_info['lng_best'],
-                                         df_station_info['lat_ct'],
-                                         df_station_info['lng_ct'])
+                                                 df_station_info['lng_best'],
+                                                 df_station_info['lat_ct'],
+                                                 df_station_info['lng_ct'])
 
 df_station_info['dist_gc'] = compute_distance_ar(df_station_info['lat_best'],
                                                  df_station_info['lng_best'],
@@ -244,6 +247,10 @@ df_station_info.drop(['lat_gov_0', 'lng_gov_0',
 df_station_info.rename(columns = {'lat_best': 'lat',
                                   'lng_best': 'lng'},
                        inplace = True)
+
+# Make sure no gps for highway gas stations (so far)
+df_station_info.loc[df_station_info['highway'] == 1,
+                    ['lat', 'lng']] = np.nan, np.nan
 
 # ######
 # OUTPUT

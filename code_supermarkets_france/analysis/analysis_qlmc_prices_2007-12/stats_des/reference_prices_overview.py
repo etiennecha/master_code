@@ -9,19 +9,19 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_dir_qlmc = os.path.join(path_data,
-                             'data_supermarkets',
-                             'data_qlmc_2007-12')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_qlmc_2007-12')
 
-path_dir_built_csv = os.path.join(path_dir_qlmc,
+path_built_csv = os.path.join(path_built,
+                              'data_csv')
+
+path_built_lsa_csv = os.path.join(path_data,
+                                  'data_supermarkets',
                                   'data_built',
+                                  'data_lsa',
                                   'data_csv')
-
-path_lsa = os.path.join(path_data,
-                        'data_supermarkets',
-                        'data_lsa',
-                        'data_built',
-                        'data_csv')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 
@@ -30,45 +30,34 @@ pd.set_option('float_format', '{:,.2f}'.format)
 # #######################
 
 # LOAD DF QLMC
-df_qlmc = pd.read_csv(os.path.join(path_dir_built_csv,
+df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
-                      dtype = {'id_lsa' : str,
-                               'INSEE_ZIP' : str,
-                               'INSEE_Code' : str},
+                      dtype = {'INSEE_Code' : str},
                       encoding = 'utf-8')
 # date parsing slow... better if specified format?
 
 # LOAD DF LSA
-df_lsa = pd.read_csv(os.path.join(path_lsa,
-                                  'df_lsa_active_fm_hsx.csv'),
-                     dtype = {u'Ident': str,
-                              u'Code INSEE' : str,
-                              u'Code INSEE ardt' : str,
-                              u'N°Siren' : str,
-                              u'N°Siret' : str},
-                     parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv',
-                                    u'DATE chg enseigne', u'DATE chgt surf'],
+df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
+                                  'df_lsa_for_qlmc.csv'),
+                     dtype = {u'C_INSEE' : str,
+                              u'C_INSEE_Ardt' : str,
+                              u'C_Postal' : str,
+                              u'SIREN' : str,
+                              u'NIC' : str,
+                              u'SIRET' : str},
+                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
+                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
                      encoding = 'UTF-8')
 
-df_lsa.rename(columns = {u'Ident': 'id_lsa',
-                         u'Surf Vente' : 'Surface',
-                         u'Nbr de caisses' : u'Nb_checkouts',
-                         u'Nbr emp' : 'Nb_emp',
-                         u'Nbr parking' : 'Nb_parking',
-                         u'Intégré / Indépendant' : u'Indpt'},
-               inplace = True)
-
-df_qlmc = pd.merge(df_qlmc,
-                   df_lsa,
-                   on = 'id_lsa',
-                   how = 'left')
-
-# high memory usage..
-
-# get rid of no id_lsa match
+# drop null id_lsa else gets too big
+# todo: take Period into account (chges of chains)
 df_qlmc = df_qlmc[~df_qlmc['id_lsa'].isnull()]
-# get rid of closed (so far but should accomodate later)
-df_qlmc = df_qlmc[~df_qlmc['Enseigne_alt'].isnull()]
+df_qlmc = pd.merge(df_qlmc,
+                   df_lsa[['Ident', 'Enseigne_Alt', 'Groupe', 'Surface']],
+                   left_on = 'id_lsa',
+                   right_on = 'Ident',
+                   how = 'left')
+# high memory usage..
 
 # Avoid error msg on condition number
 df_qlmc['Surface'] = df_qlmc['Surface'].apply(lambda x: x/1000.0)
@@ -103,24 +92,24 @@ def price_2_freq(se_prices):
   else:
     return 0
 
-se_prod = df_qlmc.groupby(['Department', 'Family', 'Product']).agg('size')
+se_prod = df_qlmc.groupby(['Family', 'Subfamily', 'Product']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
 
 # WITH ONE PRODUCT
-rayon, famille, produit = se_prod.index[0]
-produit = u'Coca Cola - Coca Cola avec caféine, 1,5L'
+family, subfamily, product = se_prod.index[0]
+# produit = u'Coca Cola - Coca Cola avec caféine, 1,5L'
 
-df_qlmc_prod = df_qlmc[(df_qlmc['Department'] == rayon) &\
-                       (df_qlmc['Family'] == famille) &\
-                       (df_qlmc['Product'] == produit)].copy()
+df_qlmc_prod = df_qlmc[(df_qlmc['Family'] == family) &\
+                       (df_qlmc['Subfamily'] == subfamily) &\
+                       (df_qlmc['Product'] == product)].copy()
 ls_pd_disp = ['nb_obs',
               'price_1', 'price_2',
               'price_1_freq', 'price_2_freq', 'price_12_freq']
 
 # One period (need product to be available in this one)
 df_qlmc_prod_per = df_qlmc_prod[df_qlmc_prod['Period'] == 1]
-df_pd =  df_qlmc_prod_per[['Price', 'Enseigne_alt']]\
-           .groupby('Enseigne_alt').agg([nb_obs,
+df_pd =  df_qlmc_prod_per[['Price', 'Enseigne_Alt']]\
+           .groupby('Enseigne_Alt').agg([nb_obs,
                                          price_1,
                                          price_1_freq,
                                          price_2,
@@ -132,8 +121,8 @@ print u'\nPrice frequencies per chains for one product in period 1'
 print df_pd[ls_pd_disp].to_string()
 
 # All periods
-df_pd_2 =  df_qlmc_prod[['Period', 'Price', 'Enseigne_alt']]\
-             .groupby(['Period', 'Enseigne_alt']).agg([nb_obs,
+df_pd_2 =  df_qlmc_prod[['Period', 'Price', 'Enseigne_Alt']]\
+             .groupby(['Period', 'Enseigne_Alt']).agg([nb_obs,
                                                        price_1,
                                                        price_1_freq,
                                                        price_2,
@@ -160,7 +149,7 @@ print df_pd_2.loc[(slice(None), u'CENTRE E.LECLERC'),:][ls_pd_disp].to_string()
 
 # For one chain within period, if no need to take same store sample:
 df_sub = df_qlmc[(df_qlmc['Period'] == 0) &\
-                 (df_qlmc['Enseigne_alt'] == 'CENTRE E.LECLERC')]
+                 (df_qlmc['Enseigne_Alt'] == 'CENTRE E.LECLERC')]
 ls_sub_top_prods = df_sub['Product'].value_counts().index[0:20].tolist()
 df_sub = df_sub[df_sub['Product'].isin(ls_sub_top_prods)]
 
