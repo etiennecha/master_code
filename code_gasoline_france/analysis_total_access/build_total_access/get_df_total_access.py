@@ -107,18 +107,18 @@ for df_temp in [df_price_stats[df_price_stats['nb_chge'] < 5],
 ls_exclude_ta_beg = list(set(df_info_ta[df_info_ta['brand_0']  == 'TOTAL_ACCESS'].index)\
                                   .intersection(set(df_info.index)))
 df_info.loc[df_info['brand_0'] == 'TOTAL_ACCESS',
-            'filter'] = 1
+            'filter'] = 2
 # exclude total access ex total with small pp_chge
 ls_exclude_ta_no_pp_chge = list(set(df_info_ta[(df_info_ta['brand_0'] == 'TOTAL') &\
                                                (df_info_ta['pp_chge'].abs() < 0.04)].index)\
                                   .intersection(set(df_info.index)))
 df_info.loc[ls_exclude_ta_no_pp_chge,
-            'filter'] = 2
+            'filter'] = 3
 # exclude total access previously non total
 ls_exclude_ta_not_tot = list(set(df_info_ta[~df_info_ta['brand_0'].isin(['ELF', 'TOTAL'])].index)\
                                   .intersection(set(df_info.index)))
 df_info.loc[ls_exclude_ta_not_tot,
-            'filter'] = 3
+            'filter'] = 4
 
 # todo: exclude stations within 5 km of the last 3
 ls_exclude_comp_of = ls_exclude_ta_beg +\
@@ -137,44 +137,48 @@ for id_station in df_info.index:
   if set(ls_close_temp).intersection(set(ls_exclude_comp_of)):
     ls_exclude_comp.append(id_station)
 df_info.loc[ls_exclude_comp,
-            'filter'] = 4
+            'filter'] = 5
 
 # #############################
 # FINISH CLASSIFICATION
 # #############################
 
+# total => total access with pp_chge
 df_ta_pp_chge = df_info_ta[(df_info_ta['brand_0'] == 'TOTAL') &\
                            (df_info_ta['pp_chge'].abs() >= 0.04)]
 dict_ta_pp_chge = {row_i : list(row[['date_beg', 'date_end']].values)\
                      for row_i, row in df_ta_pp_chge.iterrows()}
 df_info.loc[dict_ta_pp_chge.keys(),
-            'filter'] = 5
+            'filter'] = 6
 
+# elf => total access
 df_ta_elf = df_info_ta[(df_info_ta['brand_0'] == 'ELF')]
 dict_ta_elf = {row_i : list(row[['date_beg', 'date_end']].values)\
                  for row_i, row in df_ta_elf.iterrows()}
 df_info.loc[dict_ta_pp_chge.keys(),
-            'filter'] = 6
-
-df_info.loc[(df_info['filter'] == 0) &\
-            (df_info['brand_last'] == 'TOTAL'),
             'filter'] = 7
 
+# total, elf, elan : based on last observed brand
 df_info.loc[(df_info['filter'] == 0) &\
-            (df_info['brand_last'] == 'ELF'),
+            (df_info['brand_last'] == 'TOTAL'),
             'filter'] = 8
 
 df_info.loc[(df_info['filter'] == 0) &\
-            (df_info['brand_last'] == 'ELAN'),
+            (df_info['brand_last'] == 'ELF'),
             'filter'] = 9
 
 df_info.loc[(df_info['filter'] == 0) &\
-            (df_info['group_type_last'] == 'SUP'),
+            (df_info['brand_last'] == 'ELAN'),
             'filter'] = 10
 
+# other stations
 df_info.loc[(df_info['filter'] == 0) &\
-            (df_info['group_type_last'] == 'OIL'),
+            (df_info['group_type_last'] == 'SUP'),
             'filter'] = 11
+
+df_info.loc[(df_info['filter'] == 0) &\
+            (df_info['group_type_last'].isin(['OIL', 'IND'])),
+            'filter'] = 12
 
 # ##############################
 # TREATED TA (W/ CHANGE) AND ELF
@@ -268,31 +272,31 @@ df_info.loc[ls_control_ids,
             'control'] = 1
 
 df_info.loc[(df_info['control'] == 1),
-            'treatment'] = 3
+            'treatment_0'] = 3
 
 # Out of market(s): may miss those with no competitors
 df_info['out'] = 0
 df_info.loc[ls_out_ids,
             'out'] = 1
-df_info.loc[(df_info['control'] == 1),
-            'treatment'] = 4
+df_info.loc[(df_info['out'] == 1),
+            'treatment_0'] = 4
 
-# Not sure about those
+# Not really needed (already in filter)
 df_info.loc[dict_ta_pp_chge.keys(),
-            'treatment'] = 5
+            'treatment_0'] = 5
 
 df_info.loc[dict_ta_elf.keys(),
-            'treatment'] = 6
+            'treatment_0'] = 6
 
 # ##########
 # STATS DES
 # ##########
 
-print u'\nOverview of filter categorial variable:'
+print u'\nOverview of filter categorcial variable:'
 print df_info['filter'].value_counts().to_string()
 
 print u'\nOverview of treatment categorical variable:'
-print df_info['treatment'].value_counts().to_string()
+print df_info['treatment_0'].value_counts().to_string()
 
 # Caution: not done in treatment:
 # - excluding station with incorrect data (filter 1)
