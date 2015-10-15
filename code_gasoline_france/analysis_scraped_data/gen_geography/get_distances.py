@@ -55,7 +55,9 @@ for id_station, row in df_info.iterrows():
 start = time.time()
 ls_se_distances = []
 for i, (id_station, gps_station) in enumerate(zip(ls_ids, ls_gps)[:-1]):
-  df_temp = pd.DataFrame(ls_gps[i+1:], columns = ['lat_1', 'lng_1'], index = ls_ids[i+1:])
+  df_temp = pd.DataFrame(ls_gps[i+1:],
+                         columns = ['lat_1', 'lng_1'],
+                         index = ls_ids[i+1:])
   df_temp['lat_0'] = gps_station[0]
   df_temp['lng_0'] = gps_station[1]
   df_temp['dist'] = compute_distance_ar(df_temp['lat_0'],

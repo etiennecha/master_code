@@ -313,6 +313,13 @@ print df_ta_pp_chge_pbm[['name', 'adr_street', 'adr_city',
                          'pp_chge', 'pp_chge_date',
                          'gov_vs_pp', 'tot_vs_pp']].to_string()
 
+# Extend time interval if less than 5 days
+ls_fixed_dates_pp_chge = []
+for row_i, row in df_ta_pp_chge.iterrows():
+  if row['date_end'] - row['date_beg'] <= pd.Timedelta(days = 5):
+    df_ta_pp_chge.loc[row_i, 'date_end'] = row['date_end'] + pd.Timedelta(days = 10)
+    ls_fixed_dates_pp_chge.append(row_i)
+
 # ##############################
 # TA STATIONS WITH NO PP CHANGE
 # ##############################
@@ -390,6 +397,10 @@ print df_ta_no_pp_chge[pd.isnull(df_ta_no_pp_chge['gov_vs_tot'])]\
 ## Looks gov always late... rather trust gov website?
 #len(df_ta_no_pp_chge[df_ta_no_pp_chge['ta_gap'] > pd.Timedelta(days = 30)])
 #len(df_ta_no_pp_chge[df_ta_no_pp_chge['ta_gap'] < -pd.Timedelta(days = 30)])
+
+# Arbitrary: assume station has already been closed for some time
+df_ta_no_pp_chge['date_beg'] = df_ta_no_pp_chge['ta_tot_date'] - pd.Timedelta(days = 15)
+df_ta_no_pp_chge['date_end'] = df_ta_no_pp_chge['ta_tot_date']
 
 # ###################
 # GRAPHS: TA PP CHGE
