@@ -11,33 +11,39 @@ import pprint
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tkr
 
+pd.set_option('float_format', '{:,.1f}'.format)
+
+path_built = os.path.join(path_data,
+                          u'data_ameli',
+                          u'data_built')
+
+path_built_csv = os.path.join(path_built, 'data_csv')
+path_built_json = os.path.join(path_built, u'data_json')
+path_built_graphs = os.path.join(path_built, u'data_graphs')
+
+path_dir_insee = os.path.join(path_data, u'data_insee')
+path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+
 # ############
 # LOAD DATA
 # ############
 
-# LOAD AMELI DATA
-path_dir_ameli = os.path.join(path_data, u'data_ameli', 'data_source', 'ameli_2014')
-path_dir_built_csv= os.path.join(path_data, u'data_ameli', 'data_built', 'csv')
-path_dir_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json')
-path_dir_built_png = os.path.join(path_data, u'data_ameli', 'data_built', 'png')
-#path_dir_built_hdf5 = os.path.join(path_data, u'data_ameli', 'data_built', 'hdf5')
-#ameli_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'ameli_data.h5'))
-
+# LOAD DF PHYSICIANS
 file_extension = u'ophtalmologiste_suburb_2014'
-df_physicians = pd.read_csv(os.path.join(path_dir_built_csv, '%s.csv' %file_extension),
+df_physicians = pd.read_csv(os.path.join(path_built_csv,
+                                         '%s.csv' %file_extension),
                             encoding = 'utf-8')
 
 ## BIAS?
 for field in ['c_base', 'c_proba', 'c_min', 'c_max']:
-  df_physicians[field][df_physicians['status'] == 'Hopital L'] = np.nan
-df_physicians = df_physicians[df_physicians['status'] != 'Hopital L'].copy()
+  df_physicians.loc[df_physicians['status'] == 'Hopital L',
+                    field] = np.nan
+df_physicians = df_physicians[df_physicians['status'] != 'Hopital L']
 
 ## todo: geog and distance in other script (try to separate creation vs. analysis)
 #dict_gps = dec_json(os.path.join(path_dir_built_json, 'dict_gps_%s.json' %file_extension))
 
 # LOAD INSEE DATA
-path_dir_insee = os.path.join(path_data, u'data_insee')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
 df_inscom = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_communes.csv'),
                         dtype = {'CODGEO': np.object_,
                                  'LIBGEO': np.object_,
@@ -53,17 +59,20 @@ path_dir_match_insee = os.path.join(path_data, u'data_insee', 'match_insee_codes
 
 # Load zip code - insee code correspondence file
 file_correspondence = open(os.path.join(path_dir_match_insee,
+                                        'backup',
                                         'corr_cinsee_cpostal'),'r')
 correspondence = file_correspondence.read().split('\n')[1:-1]
 
 # Update changes in city codes (correspondence is a bit old)
 file_correspondence_update = open(os.path.join(path_dir_match_insee,
+                                               'backup',
                                                'corr_cinsee_cpostal_update'),'r')
 correspondence_update = file_correspondence_update.read().split('\n')[1:]
 correspondence += correspondence_update
 
 # Patch ad hoc for gas station cedexes
 file_correspondence_gas_path = open(os.path.join(path_dir_match_insee,
+                                                 'backup',
                                                  'corr_cinsee_cpostal_gas_patch'),'r')
 correspondence_gas_patch = file_correspondence_gas_path.read().split('\n')
 correspondence += correspondence_gas_patch
@@ -74,7 +83,6 @@ correspondence = format_correspondence(correspondence)
 # ############
 # STATS DES
 # ############
-pd.set_option('float_format', '{:,.1f}'.format)
 
 # COMMUNES
 pat_zip = "([0-9]?[0-9AB][0-9]{3})\s"
@@ -95,21 +103,21 @@ for old, new in ls_city_fix:
 
 # todo: automated insee code matching based on dpt and commune name
 ls_match_res = []
+ls_rows = []
 for row_i, row in df_physicians.iterrows():
   city, dpt_code, zip_code = format_str_city_insee(row['city']), row['dpt'], row['zip']
   match_res = match_insee_code(correspondence, city, dpt_code, zip_code)
   ls_match_res.append(match_res)
 # if several matched: check if only one code insee, if not: None + error message
-ls_rows = []
-for match_res in ls_match_res:
-  if (len(match_res[0]) == 1) or\
+  if not match_res[0]:
+    ls_rows.append(None)
+  elif (len(match_res[0]) == 1) or\
      ([x[2] == match_res[0][0][2] for x in match_res[0]]):
     ls_rows.append(match_res[0][0][2])
   else:
     ls_rows.append(None)
 se_insee_codes = pd.Series(ls_rows, index = df_physicians.index)
 df_physicians['CODGEO'] = se_insee_codes
-
 
 ## ARDT
 #

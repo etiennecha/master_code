@@ -9,29 +9,35 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tkr
 
+pd.set_option('float_format', '{:,.1f}'.format)
+
+path_built = os.path.join(path_data,
+                          u'data_ameli',
+                          u'data_built')
+
+path_built_csv = os.path.join(path_built, 'data_csv')
+path_built_json = os.path.join(path_built, u'data_json')
+path_built_graphs = os.path.join(path_built, u'data_graphs')
+
+path_dir_insee = os.path.join(path_data, u'data_insee')
+path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+
 # ############
 # LOAD DATA
 # ############
 
-# LOAD AMELI DATA
-path_dir_ameli = os.path.join(path_data, u'data_ameli', 'data_source', 'ameli_2014')
-path_dir_built_csv= os.path.join(path_data, u'data_ameli', 'data_built', 'csv')
-path_dir_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json')
-path_dir_built_png = os.path.join(path_data, u'data_ameli', 'data_built', 'png')
-#path_dir_built_hdf5 = os.path.join(path_data, u'data_ameli', 'data_built', 'hdf5')
-#ameli_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'ameli_data.h5'))
-
+# LOAD DF PHYSICIANS
 file_extension = u'generaliste_75_2014'
-df_physicians = pd.read_csv(os.path.join(path_dir_built_csv, '%s.csv' %file_extension),
+df_physicians = pd.read_csv(os.path.join(path_built_csv,
+                                         '%s.csv' %file_extension),
                             encoding = 'utf-8')
 
 ## todo: geog and distance in other script (try to separate creation vs. analysis)
 #dict_gps = dec_json(os.path.join(path_dir_built_json, 'dict_gps_%s.json' %file_extension))
 
 # LOAD INSEE DATA
-path_dir_insee = os.path.join(path_data, u'data_insee')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
-df_inscom = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_communes.csv'),
+df_inscom = pd.read_csv(os.path.join(path_dir_insee_extracts,
+                                     'df_communes.csv'),
                         dtype = {'CODGEO': np.object_,
                                  'LIBGEO': np.object_,
                                  'REG': np.object_,
@@ -43,7 +49,6 @@ ls_disp_base = ['gender','name', 'surname', 'zip_city',
 # ############
 # STATS DES
 # ############
-pd.set_option('float_format', '{:,.1f}'.format)
 
 # ARDT
 
@@ -104,7 +109,8 @@ plt.ylabel('Nb of GPs per 100,000 inhab.')
 #plt.title('Density of GPs vs. revenue by district')
 plt.tight_layout() 
 fig.set_size_inches(width, height)
-plt.savefig(os.path.join(path_dir_built_png, 'GP_Ardt_DensityVsRevenue.png'),
+plt.savefig(os.path.join(path_built_graphs,
+                         'GP_Ardt_DensityVsRevenue.png'),
             dpi = dpi)
 #plt.show()
 
@@ -121,7 +127,8 @@ plt.ylabel('Nb of Sector 1 GPs per 100,000 inhab.')
 #plt.title('Density of Sector 1 GPs vs. revenue by district')
 plt.tight_layout()
 fig.set_size_inches(width, height)
-plt.savefig(os.path.join(path_dir_built_png, 'GP_Ardt_DensityS1VsRevenue.png'),
+plt.savefig(os.path.join(path_built_graphs,
+                         'GP_Ardt_DensityS1VsRevenue.png'),
             dpi = dpi)
 #plt.show()
 
@@ -138,7 +145,8 @@ plt.ylabel('Nb of Sector 2 GPs per 100,000 inhab.')
 #plt.title('Density of Sector 2 GPs vs. revenue by district')
 plt.tight_layout()
 fig.set_size_inches(width, height)
-plt.savefig(os.path.join(path_dir_built_png, 'GP_Ardt_DensityS2VsRevenue.png'),
+plt.savefig(os.path.join(path_built_graphs,
+                         'GP_Ardt_DensityS2VsRevenue.png'),
             dpi = dpi)
 #plt.show()
 
@@ -155,7 +163,8 @@ plt.ylabel('Average sector 2 consultation price (euros)')
 #plt.title('Average sector 2 consultation price vs. revenue by district')
 plt.tight_layout()
 fig.set_size_inches(width, height)
-plt.savefig(os.path.join(path_dir_built_png, 'GP_Ardt_ConsultationS2VsRevenue.png'),
+plt.savefig(os.path.join(path_built_graphs,
+                         'GP_Ardt_ConsultationS2VsRevenue.png'),
             dpi = dpi)
 #plt.show()
 
@@ -163,7 +172,10 @@ plt.savefig(os.path.join(path_dir_built_png, 'GP_Ardt_ConsultationS2VsRevenue.pn
 
 import statsmodels.formula.api as smf
 df_physicians_s2 = df_physicians[df_physicians['convention'] == '2'].copy()
-df_physicians_s2 = pd.merge(df_physicians_s2, df_ardts, left_on = 'CODGEO', right_on = 'CODGEO')
+df_physicians_s2 = pd.merge(df_physicians_s2,
+                            df_ardts,
+                            left_on = 'CODGEO',
+                            right_on = 'CODGEO')
 
 formula = 'c_base ~ C(status) + phy_density + QUAR2UC10'
 res01 = smf.ols(formula = formula, data = df_physicians_s2, missing= 'drop').fit()

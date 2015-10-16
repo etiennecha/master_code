@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.collections import PatchCollection
 import matplotlib.font_manager as fm
-import shapefile
+#import shapefile
 from mpl_toolkits.basemap import Basemap
 from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 from shapely.prepared import prep
@@ -20,16 +20,20 @@ from descartes import PolygonPatch
 from pysal.esda.mapclassify import Natural_Breaks as nb
 from matplotlib import colors
 
-path_dir_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json')
-path_dir_built_csv = os.path.join(path_data, u'data_ameli', 'data_built', 'csv')
+path_built = os.path.join(path_data,
+                          u'data_ameli',
+                          u'data_built')
+path_built_csv = os.path.join(path_built, 'data_csv')
+path_built_json = os.path.join(path_built, u'data_json')
+
 path_dir_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
 
 # DF OPHTALMO 75
 
-file_extension = u'ophtalmologiste_75'
-ls_ls_physicians = dec_json(os.path.join(path_dir_built_json,
+file_extension = u'ophtalmologiste_75_2014'
+ls_ls_physicians = dec_json(os.path.join(path_built_json,
                                          '%s.json' %file_extension))
-dict_gps_physicians = dec_json(os.path.join(path_dir_built_json,
+dict_gps_physicians = dec_json(os.path.join(path_built_json,
                                             'dict_gps_%s.json' %file_extension))
 for i, ls_physician in enumerate(ls_ls_physicians):
   best_geo = get_best_google_geocoding_info(dict_gps_physicians[ls_physician[0]][1])
@@ -44,11 +48,13 @@ ls_columns = ['id_physician', 'gender', 'name', 'surname',
               'street', 'zip_city', 'convention', 'carte_vitale', 'status',
               'injection_med', 'examen_mot', 'imagerie', 'traitement_las',
               'fond', 'examen_vis', 'chirurgie_cat', 'consultation', 'avis']
-df_physicians = pd.DataFrame(ls_ls_physicians, columns = ls_columns + ['lat', 'lng'])
+df_physicians = pd.DataFrame(ls_ls_physicians, columns = ls_columns + ['x', 'y', 'z', 'lat', 'lng'])
 df_physicians.index = df_physicians['id_physician']
 # do the following after geocoding?
-df_physicians.to_csv(os.path.join(path_dir_built_csv, '%s.csv' %file_extension),
-                     float_format = '%.3f', index = False)
+df_physicians.to_csv(os.path.join(path_built_csv,
+                                  '%s.csv' %file_extension),
+                     float_format = '%.3f',
+                     index = False)
 
 # MAP OF PARIS
 
