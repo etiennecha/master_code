@@ -27,7 +27,7 @@ def format_str_city_insee(word):
   word = format_str_low_noacc(word)
   word = re.sub(ur"(^|\s)st(s?)(\s|$|-)", ur" saint\2 ", word)
   word = re.sub(ur"(^|\s)ste(s?)(\s|$|-)", ur" sainte\2 ", word)
-  word = word.replace("'", " ")
+  word = word.replace("'", " "
   word = word.replace("-", " ")
   word = re.sub(u'cedex', u'', word)
   return ' '.join(word.strip().split())

@@ -38,10 +38,10 @@ df_physicians = pd.read_csv(os.path.join(path_built_csv,
 # LOAD INSEE DATA
 df_inscom = pd.read_csv(os.path.join(path_dir_insee_extracts,
                                      'df_communes.csv'),
-                        dtype = {'CODGEO': np.object_,
-                                 'LIBGEO': np.object_,
-                                 'REG': np.object_,
-                                 'DEP': np.object_})
+                        dtype = {'CODGEO': str,
+                                 'LIBGEO': str,
+                                 'REG': str,
+                                 'DEP': str})
 
 ls_disp_base = ['gender','name', 'surname', 'zip_city',
                 'convention', 'carte_vitale', 'status', 'spe', 'nb_loc']

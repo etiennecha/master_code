@@ -14,16 +14,22 @@ import pandas as pd
 import statsmodels as sm
 import statsmodels.formula.api as smf
 
-path_dir_ameli = os.path.join(path_data, u'data_ameli', 'data_source', 'ameli_2014')
-path_dir_built_csv= os.path.join(path_data, u'data_ameli', 'data_built', 'csv')
-path_dir_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json')
-#path_dir_built_hdf5 = os.path.join(path_data, u'data_ameli', 'data_built', 'hdf5')
-#ameli_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'ameli_data.h5'))
+path_source_2014 = os.path.join(path_data,
+                                u'data_ameli',
+                                u'data_source',
+                                u'ameli_2014')
 
+path_built = os.path.join(path_data,
+                          u'data_ameli',
+                          'data_built')
+
+path_built_csv = os.path.join(path_built, 'data_csv')
+path_built_json = os.path.join(path_built, 'data_json')
+
+# LOAD DATA
 file_extension = u'ophtalmologiste_75'
-
-#ls_ls_physicians = dec_json(os.path.join(path_dir_ameli, u'ls_ls_%s' %file_extension))
-dict_physicians = dec_json(os.path.join(path_dir_ameli, u'dict_%s' %file_extension))
+dict_physicians = dec_json(os.path.join(path_source_2014,
+                                        u'dict_%s' %file_extension))
 
 # Content for each physician: [ls_address_name, ls_places, ls_infos, ls_actes]
 # Explore field contents (all are lists, None are not counted)
@@ -246,7 +252,9 @@ ls_disp_base_2 = ['gender','name', 'surname', 'zip_city',
                   'convention', 'carte_vitale', 'status']
 ls_disp_services = ['c_base', 'c_proba', 'c_min', 'c_max',
                     'avis', 'fond', 'imagerie', 'chirurgie_cat']
-print df_physicians[ls_disp_base_1 + ls_disp_services[:4]].to_string()
+
+print u'\nOverview:'
+print df_physicians[ls_disp_base_1 + ls_disp_services[:4]][0:10].to_string()
 # pprint.pprint(dict_physicians['B7c1mzE3MTOx'])
 # pbm with Chirurgie: truncated?
 
@@ -256,51 +264,27 @@ print df_physicians[ls_disp_base_1 + ls_disp_services[:4]].to_string()
 # STORE
 
 # Add base price when only min and max provided
-df_physicians['c_base'][(pd.isnull(df_physicians['c_base'])) &\
-                          (~(pd.isnull(df_physicians['c_min'])))] =\
+df_physicians.loc[(pd.isnull(df_physicians['c_base'])) &\
+                  (~(pd.isnull(df_physicians['c_min']))),
+                  'c_base'] =\
   df_physicians[['c_min', 'c_max']][(pd.isnull(df_physicians['c_base'])) &\
-                            (~(pd.isnull(df_physicians['c_min'])))].mean(axis = 1)
+                                    (~(pd.isnull(df_physicians['c_min'])))].mean(axis = 1)
 
-## CSV
-#df_physicians[ls_disp_base_1 + ls_disp_services[:4]].\
-#  to_csv(os.path.join(path_dir_built_csv, '%s_2014.csv' %file_extension),
-#         encoding = u'utf-8',
-#         float_format = u'%.1f')
+# #######
+# OUTPUT
+# #######
+
+file_extension = 'ophtalmo_75_2014'
+
+# CSV
+df_physicians[ls_disp_base_1 + ls_disp_services[:4]].\
+  to_csv(os.path.join(path_built_csv,
+                      'df_{:s}.csv'.format(file_extension)),
+         encoding = u'utf-8',
+         float_format = u'%.1f')
 
 ## JSON
 #df_physicians.reset_index(inplace = True)
 #ls_ls_physicians = [list(x) for x in df_physicians.values]
-#enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, '%s_2014.json' %file_extension))
-### todo: set id_physician back as index?
-
-# PRELIMINARY STATS DES
-
-df_physicians_a = df_physicians[df_physicians['status'] != u'Hopital L'].copy()
-
-
-# old way => used pd
-print u'\nNb of Physicians, mean and median visit price by ardt'
-print u'-'*30
-print u'{0:12}{1:>8}{2:>10}{3:>10}'.format(u'Ardt', u'#Phys', u'Mean', u'Med')
-for zc in df_physicians_a['zip_city'].unique():
-  nb_physicians = len(df_physicians_a[df_physicians_a['zip_city'] == zc])
-  mean_consultation = df_physicians_a['c_base'][df_physicians_a['zip_city'] == zc].mean()
-  med_consultation = df_physicians_a['c_base'][df_physicians_a['zip_city'] == zc].median()
-  print u'{0:12}{1:8d}{2:10.2f}{3:10.2f}'.format(zc,
-                                                 nb_physicians,
-                                                 mean_consultation,
-                                                 med_consultation)
-
-## SYNTAX ELEMENTS
-##df_physicians[['zip_city', 'consultation']].groupby('convention').agg([len, np.mean])
-#gb_zip_city = df_physicians[['zip_city'] + ls_disp_services].groupby('zip_city')
-#df_ardt_count = gb_zip_city.count()
-#df_ardt_mean = gb_zip_city.mean()
-#df_ardt_med = gb_zip_city.median()
-## print gb_zip_city.describe().to_string()
-
-## todo: stats des by ardt with groupby
-#df_physicians[['zip_city', 'consultation']].groupby('zip_city').aggregate([len, np.mean])
-
-# TODO: GEOCODING (?), LOAD INSEE DATA + INTEGRATE WITH OTHER PHYSICIAN DATA
-# TODO: PUT FOLLOWING IN ANOTHER SCRIPT (AND LOAD DF PHYSICIANS)
+#enc_json(ls_ls_physicians, os.path.join(path_built_json,
+#                                        'ls_{:s}.json'.format(file_extension)))

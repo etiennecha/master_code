@@ -14,16 +14,26 @@ import pandas as pd
 import statsmodels as sm
 import statsmodels.formula.api as smf
 
-path_dir_ameli = os.path.join(path_data, u'data_ameli', 'data_source', 'ameli_2014')
-path_dir_built_csv= os.path.join(path_data, u'data_ameli', 'data_built', 'csv')
-path_dir_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json')
-#path_dir_built_hdf5 = os.path.join(path_data, u'data_ameli', 'data_built', 'hdf5')
-#ameli_data = pd.HDFStore(os.path.join(path_dir_built_hdf5, 'ameli_data.h5'))
+path_source_ameli = os.path.join(path_data,
+                                 u'data_ameli',
+                                 u'data_source',
+                                 u'ameli_2014')
+
+path_built_ameli = os.path.join(path_data,
+                                u'data_ameli',
+                                u'data_built')
+
+path_built_csv= os.path.join(path_built_ameli, 'data_csv')
+path_built_json = os.path.join(path_built_ameli, u'data_json')
+
+# #########
+# LOAD DATA
+# #########
 
 dict_physicians = {}
 for i in range(1, 21):
   dict_physicians.update(\
-    dec_json(os.path.join(path_dir_ameli,
+    dec_json(os.path.join(path_source_ameli,
                           u'dict_medecin-generaliste_750{:02d}'.format(i))))
 
 # Content for each physician: [ls_address_name, ls_places, ls_infos, ls_actes]
@@ -142,7 +152,9 @@ ls_consultations_avg = [np.mean(map(lambda x:\
                                   ls_prices))\
                             for ls_prices in ls_consultations_prices]
 
-# BUILD DF PHYSICIANS
+# ########
+# BUILD DF
+# ########
 
 ls_unique_services.remove('Consultation')
 
@@ -190,7 +202,9 @@ print df_physicians.info() #seems displays column count only if index set
 #print df_physicians[['gender', 'name', 'surname', 'street', 'zip_city',
 #                     'convention', 'carte_vitale', 'status', 'Consultation']].to_string() 
 
-# CLEAN DF TO IMPROVE DISPLAY
+# #########
+# FORMAT DF
+# #########
 
 # overview of fields to be standardized
 for field in ['gender', 'zip_city', 'convention', 'carte_vitale', 'status']:
@@ -258,6 +272,10 @@ df_physicians.rename(\
                 u"c_2-6a",
              u"Électrocardiographie [ECG]" : "ecg"}, inplace = True)
 
+# ###############
+# GET INSEE CODES
+# ###############
+
 # zip_city
 def standardize_string(dict_search_replace, str_to_std):
   for k,v in dict_search_replace.items():
@@ -269,16 +287,25 @@ dict_zip_city_rep = {u'CEDEX 14' : u'75014 PARIS',
                      u'CEDEX 12' : u'75012 PARIS',
                      u'PARIS CEDEX 20': u'75020 PARIS',
                      u'PARIS CEDEX 10' : u'75010 PARIS',
-                     u'75116 PARIS' : '75016 PARIS'}
+                     u'75116 PARIS' : u'75016 PARIS'}
 df_physicians['zip_city'] =\
   df_physicians['zip_city'].apply(
      lambda x: standardize_string(dict_zip_city_rep, x))
 # df_physicians = df_physicians[df_physicians['zip_city'] != '75175 ROUEN CEDEX'].copy()
 
+df_physicians['zip'] = df_physicians['zip_city'].str.slice(stop = 5)
+df_physicians['city'] = df_physicians['zip_city'].str.slice(start = 5).str.strip()
+df_physicians['CODGEO'] = df_physicians['zip'].apply(\
+                            lambda x: re.sub(u'750([0-9]{2})', u'751\\1', x))
+df_physicians.drop(['zip_city'], axis = 1, inplace = True)
+
+# ########
 # DISPLAY
-ls_disp_base_1 = ['gender','name', 'surname', 'street', 'zip_city',
+# ########
+
+ls_disp_base_1 = ['gender', 'name', 'surname', 'street', 'zip', 'city',
                   'convention', 'carte_vitale', 'status', 'spe', 'nb_loc']
-ls_disp_base_2 = ['gender','name', 'surname', 'zip_city',
+ls_disp_base_2 = ['gender', 'name', 'surname', 'zip', 'city',
                   'convention', 'carte_vitale', 'status', 'spe', 'nb_loc']
 ls_disp_services = ['c_base', 'c_proba', 'c_min', 'c_max',
                     'c_0-2a', 'c_2-6a', 'ecg']
@@ -289,75 +316,22 @@ ls_disp_services = ['c_base', 'c_proba', 'c_min', 'c_max',
 # DEAL WITH DUPLICATES I.E. PHYSICIANS WITH SEVERAL LOCATIONS
 # locations to be kept.. ok for several line but identify (propagate tarifs?)
 
-# STORE
+# #######
+# OUTPUT
+# #######
 
-file_extension = 'generaliste_75_2014'
+file_extension = 'gp_75_2014'
 
 # CSV
 df_physicians[ls_disp_base_1 + ls_disp_services].\
-  to_csv(os.path.join(path_dir_built_csv, '%s.csv' %file_extension),
+  to_csv(os.path.join(path_built_csv, 'df_{:s}.csv'.format(file_extension)),
          encoding = u'utf-8',
          float_format = u'%.1f')
 
-# JSON
-df_physicians = df_physicians[ls_disp_base_1 + ls_disp_services].copy()
-df_physicians.reset_index(inplace = True)
-ls_ls_physicians = [list(x) for x in df_physicians.values]
-#enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, '%s_2014.json' %file_extension))
-## todo: set id_physician back as index?
-
-# PRELIMINARY STATS DES
-
-# exclude these?
-df_physicians_a =\
-  df_physicians[(df_physicians['status'] != u'Hopital L')].copy()
-
-#  Overview Paris (compare with official stats?)
-print u'\nNb of Physicians, mean and median visit price by ardt'
-print u'-'*30
-ls_title_print = [u'Ardt', u'#Phys', u'#Phys1', u'#Phys2', u'Mean', u'Med']
-print u'{0:12}{1:>10}{2:>10}{3:>10}{4:>10}{5:>10}'.format(*ls_title_print)
-for zc in df_physicians_a['zip_city'].unique():
-  nb_physicians = len(df_physicians_a[df_physicians_a['zip_city'] == zc])
-  nb_physicians_1 = len(df_physicians_a[(df_physicians_a['zip_city'] == zc) &\
-                                        (df_physicians_a['convention'] == '1')]) 
-  nb_physicians_2 = len(df_physicians_a[(df_physicians_a['zip_city'] == zc) &\
-                                        (df_physicians_a['convention'] == '2')]) 
-  mean_consultation = df_physicians_a['c_base']\
-                        [df_physicians_a['zip_city'] == zc].mean()
-  med_consultation = df_physicians_a['c_base']\
-                       [df_physicians_a['zip_city'] == zc].median()
-  print u'{0:12}{1:10d}{2:10d}{3:10d}{4:10.2f}{5:10.2f}'.format(zc,
-                                                 nb_physicians,
-                                                 nb_physicians_1,
-                                                 nb_physicians_2,
-                                                 mean_consultation,
-                                                 med_consultation)
-# Secteur 2 in paris
-df_physicians.sort('zip_city', inplace = True)
-print df_physicians[['id_physician'] + ls_disp_base_2 + ls_disp_services]\
-        [(df_physicians['convention'] == '2') &\
-         (df_physicians['spe'] == 'MG')].to_string()
-
-# TODO: either drop pediatrie or generalize price extraction
-
-## Display consultations in Paris
-#print df_physicians_a[ls_disp_base_2 + ['consultation', 'id_physician']]\
-#        [df_physicians_a['zip_city'].str.slice(start = -5) == 'PARIS'].to_string()
-## incoherence
-#print dict_physicians['B7c1mjI4ODa7']
-#print dict_physicians['B7c1ljE3MjSw']
-
-## SYNTAX ELEMENTS
-##df_physicians[['zip_city', 'consultation']].groupby('convention').agg([len, np.mean])
-#gb_zip_city = df_physicians[['zip_city'] + ls_disp_services].groupby('zip_city')
-#df_ardt_count = gb_zip_city.count()
-#df_ardt_mean = gb_zip_city.mean()
-#df_ardt_med = gb_zip_city.median()
-## print gb_zip_city.describe().to_string()
-
-## todo: stats des by ardt with groupby
-#df_physicians[['zip_city', 'consultation']].groupby('zip_city').aggregate([len, np.mean])
-
-# TODO: GEOCODING (?), LOAD INSEE DATA + INTEGRATE WITH OTHER PHYSICIAN DATA
-# TODO: PUT FOLLOWING IN ANOTHER SCRIPT (AND LOAD DF PHYSICIANS)
+## JSON
+#df_physicians = df_physicians[ls_disp_base_1 + ls_disp_services].copy()
+#df_physicians.reset_index(inplace = True)
+#ls_ls_physicians = [list(x) for x in df_physicians.values]
+##enc_json(ls_ls_physicians,
+##         os.path.join(path_dir_built_json,
+##                      'ls_{:s}.json'.format(file_extension))

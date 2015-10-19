@@ -14,13 +14,22 @@ import pandas as pd
 import statsmodels as sm
 import statsmodels.formula.api as smf
 
-path_dir_ameli = os.path.join(path_data, u'data_ameli', 'data_source', 'ameli_2014')
-path_dir_built_json = os.path.join(path_data, u'data_ameli', 'data_built', 'json')
+path_source_2014 = os.path.join(path_data,
+                                u'data_ameli',
+                                u'data_source',
+                                u'ameli_2014')
 
+path_built = os.path.join(path_data,
+                          u'data_ameli',
+                          'data_built')
+
+path_built_csv = os.path.join(path_built, 'data_csv')
+path_built_json = os.path.join(path_built, 'data_json')
+
+# LOAD DATA
 file_extension = u'gynecologue-medical_75'
-
-#ls_ls_physicians = dec_json(os.path.join(path_dir_ameli, u'ls_ls_%s' %file_extension))
-dict_physicians = dec_json(os.path.join(path_dir_ameli, u'dict_%s' %file_extension))
+dict_physicians = dec_json(os.path.join(path_source_2014,
+                                        u'dict_%s' %file_extension))
 
 # Content for each physician: [ls_address_name, ls_places, ls_infos, ls_actes]
 # Explore field contents (all are lists, None are not counted)
@@ -245,48 +254,21 @@ print df_physicians[ls_disp_base_2 + ls_disp_services].to_string()
 # DEAL WITH DUPLICATES I.E. PHYSICIANS WITH SEVERAL LOCATIONS
 # locations to be kept.. ok for several line but identify (propagate tarifs?)
 
-# STORE
+# #######
+# OUTPUT
+# #######
 
-df_physicians = df_physicians[ls_disp_base_1 + ls_disp_services].copy()
-df_physicians.reset_index(inplace = True)
-ls_ls_physicians = [list(x) for x in df_physicians.values]
-enc_json(ls_ls_physicians, os.path.join(path_dir_built_json, '%s.json' %file_extension))
-# todo: set id_physician back as index?
+file_extension = 'gyneco_75_2014'
 
-# PRELIMINARY STATS DES
+# CSV
+df_physicians[ls_disp_base_1 + ls_disp_services].\
+  to_csv(os.path.join(path_built_csv, 'df_{:s}.csv'.format(file_extension)),
+         encoding = u'utf-8',
+         float_format = u'%.1f')
 
-df_physicians_a = df_physicians[df_physicians['status'] != u'Hopital L'].copy()
-
-# old way => used pd
-print u'\nNb of Physicians, mean and median visit price by ardt'
-print u'-'*30
-ls_title_print = [u'Ardt', u'#Phys', u'#Phys1', u'#Phys2', u'Mean', u'Med']
-print u'{0:12}{1:>10}{2:>10}{3:>10}{4:>10}{5:>10}'.format(*ls_title_print)
-for zc in df_physicians_a['zip_city'].unique():
-  nb_physicians = len(df_physicians_a[df_physicians_a['zip_city'] == zc])
-  nb_physicians_1 = len(df_physicians_a[(df_physicians_a['zip_city'] == zc) &\
-                                        (df_physicians_a['convention'] == '1')]) 
-  nb_physicians_2 = len(df_physicians_a[(df_physicians_a['zip_city'] == zc) &\
-                                        (df_physicians_a['convention'] == '2')]) 
-  mean_consultation = df_physicians_a['consultation'][df_physicians_a['zip_city'] == zc].mean()
-  med_consultation = df_physicians_a['consultation'][df_physicians_a['zip_city'] == zc].median()
-  print u'{0:12}{1:10d}{2:10d}{3:10d}{4:10.2f}{5:10.2f}'.format(zc,
-                                                 nb_physicians,
-                                                 nb_physicians_1,
-                                                 nb_physicians_2,
-                                                 mean_consultation,
-                                                 med_consultation)
-
-## SYNTAX ELEMENTS
-##df_physicians[['zip_city', 'consultation']].groupby('convention').agg([len, np.mean])
-#gb_zip_city = df_physicians[['zip_city'] + ls_disp_services].groupby('zip_city')
-#df_ardt_count = gb_zip_city.count()
-#df_ardt_mean = gb_zip_city.mean()
-#df_ardt_med = gb_zip_city.median()
-## print gb_zip_city.describe().to_string()
-
-## todo: stats des by ardt with groupby
-#df_physicians[['zip_city', 'consultation']].groupby('zip_city').aggregate([len, np.mean])
-
-# TODO: GEOCODING (?), LOAD INSEE DATA + INTEGRATE WITH OTHER PHYSICIAN DATA
-# TODO: PUT FOLLOWING IN ANOTHER SCRIPT (AND LOAD DF PHYSICIANS)
+## JSON
+#df_physicians = df_physicians[ls_disp_base_1 + ls_disp_services].copy()
+#df_physicians.reset_index(inplace = True)
+#ls_ls_physicians = [list(x) for x in df_physicians.values]
+#enc_json(ls_ls_physicians, os.path.join(path_built_json,
+#                                        'ls_{:s}.json'.format(file_extension)))

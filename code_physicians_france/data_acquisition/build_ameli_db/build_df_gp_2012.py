@@ -4,6 +4,7 @@
 import add_to_path
 from add_to_path import path_data
 from generic_ameli import *
+from matching_insee import *
 import pprint
 import re
 import numpy as np
@@ -12,25 +13,39 @@ import matplotlib.pyplot as plt
 
 # Working with "old" (around 2012?) ameli files
 
-# SHORT TERM
-# todo: to be integrated with more recent data / specialist data (paris/idf only?)
-# todo: lack of competition among ophtalmo/gyneco?
+# todo:
+# to be integrated with more recent data / specialist data (paris/idf only?)
+# integrate official stats by dpt to evaluate representativity / density
+# see if easy to assess where medecins missing (dpt with > 500: zip codes etc?)
+# medecins by insee code area (usual matching from commune + zip to insee code)
+# are prices useless ? only share or non conv etc? (btw salaries? location?)
 
-# MEDIUM TERM
-# todo: integrate official stats by dpt to evaluate representativity / density
-# todo: see if easy to assess where medecins missing (dpt with > 500: zip codes etc?)
-# todo: medecins by insee code area (usual matching from commune + zip to insee code)
-# todo: are prices useless ? only share or non conv etc? (btw salaries? location?)
+path_source_ameli = os.path.join(path_data,
+                                 u'data_ameli',
+                                 u'data_source',
+                                 u'ameli_2012')
 
-path_folder_ameli = os.path.join(path_data, 'data_ameli', u'data_source', 'ameli_2012')
+path_built_ameli = os.path.join(path_data,
+                                u'data_ameli',
+                                u'data_built')
+
+path_built_csv= os.path.join(path_built_ameli, 'data_csv')
+path_built_json = os.path.join(path_built_ameli, u'data_json')
+
+path_dir_match_insee = os.path.join(path_data,
+                                    u'data_insee',
+                                    u'match_insee_codes')
+
+# #########
+# LOAD DATA
+# #########
 
 ls_ameli_file_names = [u'actes_medecins',
                        u'actes_medecins2',
                        u'actes_medecins3',
                        u'dbtoprint_json',
                        u'all_out']
-
-ls_files_ameli = [dec_json(os.path.join(path_folder_ameli, file_name))\
+ls_files_ameli = [dec_json(os.path.join(path_source_ameli, file_name))\
                     for file_name in ls_ameli_file_names]
 
 print u'\nRead and describe ameli files'
@@ -89,13 +104,15 @@ ls_consultations_avg = [np.mean(map(lambda x:\
                                   ls_prices))\
                             for ls_prices in ls_consultations_prices]
 
-# Build df
+# ###################
+# BUILD DF PHYSICIANS
+# ###################
 
 # Services kept apart from Consultation
 ls_services_todf.remove('Consultation')
 
 print u'\nCollect info to build df (print exceptions)'
-ls_columns = ['name', 'zip_code', 'city', 'sector', 'card', 'spe']
+ls_columns = ['name', 'zip', 'city', 'sector', 'card', 'spe']
 ls_c_cols = ['c_norm', 'c_occu', 'c_min', 'c_max']
 ls_indexes = []
 ls_ls_df_indiv_info = []
@@ -182,39 +199,64 @@ df_ameli['spe'] =\
 # Excludes non GP (a priori)
 #df_gp_2012 = df_ameli[(~df_ameli['spe'].str.contains('exclusif')) &\
 #                      (df_ameli['spe'] != u'Médecin gériatre')].copy()
-df_gp_2012 = df_ameli[df_ameli['spe'] == u'MG'].copy()
+df_physicians = df_ameli[df_ameli['spe'] == u'MG'].copy()
 
-# Number by sector
-print u'\nNb of physicians by "secteur"'
-print df_gp_2012['sector'].value_counts()
+# gender
+ls_fix_name = [[' HELENE ROLLAND CAPPIELLO', 'Mme  HELENE ROLLAND CAPPIELLO'],
+               [' CHRISTIAN BASTIEN', 'M. CHRISTIAN BASTIEN'],
+               [' ERIC DHENNAIN', 'M. ERIC DHENNAIN']]
+for old_name, new_name in ls_fix_name:
+  df_physicians.loc[df_physicians['name'] == old_name,
+                 'name'] = new_name
 
-## Overview
-#print df_gp_2012[(df_gp_2012['dpt'] == '01') & (df_gp_2012['sector'] == 'secteur2')]\
-#        [ls_columns + ['Consultation']].to_string()
+df_physicians['gender'], df_physicians['full_name'] = \
+  zip(*df_physicians.apply(lambda x: re.split('(M\.|Mme)', x['name'])[1:3], axis = 1))
+df_physicians['full_name'] = df_physicians['full_name'].str.strip()
+df_physicians.drop(['name'], axis = 1, inplace = True)
 
-# Number by dpt and sector
-print u'\nNb of physicians by "département" and "secteur"'
-df_gp_2012['dpt'] = df_gp_2012['zip_code'].apply(lambda x: x[:2])
-se_nb_by_dpt_and_sector = df_gp_2012.groupby(['sector', 'dpt']).size()
-# print se_nb_by_dpt_and_sector.to_string()
-ls_str_sectors = ('nonconv', 'secteur2', 'secteur1')
-ls_se_sectors_by_dpt = []
-for str_sector in ls_str_sectors:
-  df_sector = df_gp_2012[df_gp_2012['sector'] == str_sector]
-  ls_se_sectors_by_dpt.append(df_sector.groupby('dpt').size())
-df_sectors_by_dpt = pd.concat(dict(zip(ls_str_sectors, ls_se_sectors_by_dpt)), axis= 1)
-df_sectors_by_dpt = df_sectors_by_dpt.fillna(0)
-df_sectors_by_dpt['total'] = df_sectors_by_dpt.sum(axis = 1)
-#df_sectors_by_dpt['total'] = df_sectors_by_dpt['nonconv'] +\
-#                             df_sectors_by_dpt['secteur2'] +\
-#                             df_sectors_by_dpt['secteur1']
-print df_sectors_by_dpt.to_string()
+# ###############
+# GET INSEE CODES
+# ###############
 
-# plt.scatter(df_sectors_by_dpt['total'], df_sectors_by_dpt['secteur2'])
-# plt.show()
+df_physicians['dpt'] = df_physicians['zip'].str.slice(stop = 2)
 
-# REMARKS:
-# Paris 16: only zip 75116... not 75016
-# Issue can be similar for other zip codes
-# Can bias nb of competitors for a physician/within an area
-# Still in any not too small area: should have a big enough sample of physicians (biases?)
+matching_insee = MatchingINSEE(os.path.join(path_dir_match_insee,
+                                            'df_corr_gas.csv'))
+
+ls_match_res = []
+ls_rows = []
+for row_i, row in df_physicians.iterrows():
+  # city, dpt_code, zip_code = format_str_city_insee(row['city']), row['dpt'], row['zip']
+  match_res = matching_insee.match_city(row['city'], row['dpt'], row['zip'])
+  ls_match_res.append(match_res)
+# if several matched: check if only one code insee, if not: None + error message
+  if not match_res[0]:
+    ls_rows.append(None)
+  elif (len(match_res[0]) == 1) or\
+     ([x[2] == match_res[0][0][2] for x in match_res[0]]):
+    ls_rows.append(match_res[0][0][2])
+  else:
+    ls_rows.append(None)
+se_insee_codes = pd.Series(ls_rows, index = df_physicians.index)
+df_physicians['CODGEO'] = se_insee_codes
+# print df_physicians[df_physicians['CODGEO'].isnull()].T.to_string()
+
+# #######
+# OUTPUT
+# #######
+
+file_extension = 'gp_2012'
+
+# CSV
+df_physicians.to_csv(os.path.join(path_built_csv,
+                                u'df_{:s}.csv'.format(file_extension)),
+                  encoding = u'utf-8',
+                  float_format = u'%.1f')
+
+## JSON
+#df_physicians = df_physicians.copy()
+#df_physicians.reset_index(inplace = True)
+#ls_ls_physicians = [list(x) for x in df_physicians.values]
+##enc_json(ls_ls_physicians,
+##         os.path.join(path_dir_built_json,
+##                      ls_'%s.json' %file_extension))
