@@ -355,4 +355,6 @@ for row_i, row in df_ta_elf.iterrows():
 # OUTPUT
 # #######
 
-
+df_info.to_csv(os.path.join(path_dir_built_ta_csv,
+                            'df_total_access.csv'),
+               encoding = 'utf-8')

@@ -26,14 +26,23 @@ from descartes import PolygonPatch
 from pysal.esda.mapclassify import Natural_Breaks as nb
 from matplotlib import colors
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_png = os.path.join(path_dir_qlmc, 'data_built' , 'data_png')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+path_built_csv = os.path.join(path_built,
+                            'data_csv')
+
+path_graphs = os.path.join(path_built,
+                           'data_graphs')
+
+path_insee = os.path.join(path_data,
+                          'data_insee')
+
+path_insee_extracts = os.path.join(path_data,
+                                   'data_insee',
+                                   'data_extracts')
 
 # #############
 # LOAD DATA
@@ -86,11 +95,17 @@ df_com = pd.DataFrame({'poly'       : [Polygon(xy) for xy in m_fra.com],
 df_com = df_com[df_com['reg_name'] != 'CORSE']
 
 # LSA Data
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
-                     encoding = 'UTF-8',
-                     dtype = {'Code INSEE' : str,
-                              'Code INSEE ardt' : str,
-                              'Code postal' : str})
+df_lsa = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {u'C_INSEE' : str,
+                              u'C_INSEE_Ardt' : str,
+                              u'C_Postal' : str,
+                              u'SIREN' : str,
+                              u'NIC' : str,
+                              u'SIRET' : str},
+                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
+                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
+                     encoding = 'UTF-8')
 
 df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
                         lambda x: Point(m_fra(x[0], x[1])), axis = 1)
@@ -106,8 +121,8 @@ df_com.set_index('insee_code', inplace = True)
 #df_lsa['Code INSEE'] = df_lsa['Code INSEE ardt'].apply(lambda x : u'{:05d}'.format(x))
 #df_lsa['Code postal'] = df_lsa['Code postal'].apply(lambda x : u'{:05d}'.format(x))
 
-se_ci_vc = df_lsa['Code INSEE ardt'].value_counts()
-ls_pbms = [insee_code for insee_code in df_lsa['Code INSEE ardt'].unique()\
+se_ci_vc = df_lsa['C_INSEE_Ardt'].value_counts()
+ls_pbms = [insee_code for insee_code in df_lsa['C_INSEE_Ardt'].unique()\
              if insee_code not in df_com.index]
 
 # NB STORES BY COMMUNE
@@ -115,10 +130,11 @@ df_com['nb_stores'] = se_ci_vc
 
 # SURFACE BY COMMUNE
 df_com['store_surface'] =\
-   df_lsa[['Code INSEE ardt', 'Surf Vente']].groupby('Code INSEE ardt').agg(np.sum)['Surf Vente']
+   df_lsa[['C_INSEE_Ardt', 'Surface']].groupby('C_INSEE_Ardt').agg(np.sum)['Surface']
 
-# INSEE AREAS (TODO: check if necessary here: move?)
-df_insee_a = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_insee_areas.csv'),
+# INSEE AREAS (todo: check if necessary here: move?)
+df_insee_a = pd.read_csv(os.path.join(path_insee_extracts,
+                                      'df_insee_areas.csv'),
                          encoding = 'UTF-8')
 # Get rid of Corsica and DOMTOM
 df_insee_a = df_insee_a[~(df_insee_a['CODGEO'].str.slice(stop = -3).isin(['2A', '2B', '97']))]
@@ -135,7 +151,7 @@ for ic_main, ls_ic_ardts in ls_insee_ardts:
 df_lsa = pd.merge(df_insee_a,
                   df_lsa,
                   left_on = 'CODGEO',
-                  right_on = 'Code INSEE',
+                  right_on = 'C_INSEE_Ardt',
                   how = 'right')
 
 # LOAD DF AREAS
@@ -145,12 +161,12 @@ ls_areas = [['df_au_agg_final.csv', 'dict_AU2010_l93_coords.json', 'AU2010'],
 
 dict_df_areas = {}
 for df_area_file, dict_area_coords_file, area in ls_areas:
-  df_area = pd.read_csv(os.path.join(path_dir_insee_extracts,
+  df_area = pd.read_csv(os.path.join(path_insee_extracts,
                                      df_area_file),
                     encoding = 'UTF-8')
-  dict_area_coords = dec_json(os.path.join(path_dir_insee,
-                                         'insee_areas',
-                                         dict_area_coords_file))
+  dict_area_coords = dec_json(os.path.join(path_insee,
+                                           'insee_areas',
+                                           dict_area_coords_file))
   
   # nb stores
   se_area_vc = df_lsa[area].value_counts()
@@ -159,7 +175,7 @@ for df_area_file, dict_area_coords_file, area in ls_areas:
   
   # cum store surface
   df_area['store_surface'] =\
-     df_lsa[[area, 'Surf Vente']].groupby(area).agg(np.sum)['Surf Vente']
+     df_lsa[[area, 'Surface']].groupby(area).agg(np.sum)['Surface']
   
   df_area_coords = pd.DataFrame([(k, Polygon(v)) for k,v in dict_area_coords.items()],
                                  columns = [area, 'poly'])
@@ -195,7 +211,7 @@ for area, df_area in dict_df_areas.items():
     jb = pd.DataFrame({'jenks_bins': breaks.yb},
                       index=df_area_temp[df_area_temp[field].notnull()].index)
     
-    # need to drop duplicate index in jb, TODO: check why need area here (MI?)
+    # need to drop duplicate index in jb, todo: check why need area here (MI?)
     jb = jb.reset_index().drop_duplicates(subset=[area],
                                           take_last=True).set_index(area)
     # propagated to all rows in df_com with same index
@@ -250,12 +266,9 @@ for area, df_area in dict_df_areas.items():
     plt.title(u'{:s} by {:s}'.format(dict_titles[field], area))
     plt.tight_layout()
     # fig.set_size_inches(7.22, 5.25) # set the image width to 722px
-    plt.savefig(os.path.join(path_data,
-                             'data_maps',
-                             'data_built',
-                             'graphs',
-                             'lsa',
-                             'insee_areas',
-                             '%s_%s.png' %(area, field)),
+    plt.savefig(os.path.join(path_graphs,
+                             'overview',
+                             'nb_stores',
+                             '{:s}_{:s}.png'.format(area, field)),
                 dpi=300,
                 alpha=True)

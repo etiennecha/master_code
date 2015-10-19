@@ -18,7 +18,6 @@ import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 from matplotlib.collections import PatchCollection
 import matplotlib.font_manager as fm
-#import shapefile
 from mpl_toolkits.basemap import Basemap
 from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 from shapely.prepared import prep
@@ -26,14 +25,20 @@ from descartes import PolygonPatch
 from pysal.esda.mapclassify import Natural_Breaks as nb
 from matplotlib import colors
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_png = os.path.join(path_dir_qlmc, 'data_built' , 'data_png')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+path_built_csv = os.path.join(path_built,
+                            'data_csv')
+
+path_graphs = os.path.join(path_built,
+                           'data_graphs')
+
+path_insee_extracts = os.path.join(path_data,
+                                   'data_insee',
+                                   'data_extracts')
 
 # #############
 # LOAD DATA
@@ -86,12 +91,17 @@ df_com = pd.DataFrame({'poly'       : [Polygon(xy) for xy in m_fra.com],
 df_com = df_com[df_com['reg_name'] != 'CORSE']
 
 # LSA Data
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
-                     encoding = 'UTF-8',
-                     dtype = {'Code INSEE' : str,
-                              'Code INSEE ardt' : str,
-                              'Code postal' : str},
-                     parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv'])
+df_lsa = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {u'C_INSEE' : str,
+                              u'C_INSEE_Ardt' : str,
+                              u'C_Postal' : str,
+                              u'SIREN' : str,
+                              u'NIC' : str,
+                              u'SIRET' : str},
+                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
+                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
+                     encoding = 'UTF-8')
 
 df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
                         lambda x: Point(m_fra(x[0], x[1])), axis = 1)
@@ -102,13 +112,8 @@ df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
 
 # MATCH LSA INSEE CODES WITH GEO FLA COM INSEE CODES
 df_com.set_index('insee_code', inplace = True)
-
-#df_lsa['Code INSEE ardt'] = df_lsa['Code INSEE ardt'].apply(lambda x : u'{:05d}'.format(x))
-#df_lsa['Code INSEE'] = df_lsa['Code INSEE ardt'].apply(lambda x : u'{:05d}'.format(x))
-#df_lsa['Code postal'] = df_lsa['Code postal'].apply(lambda x : u'{:05d}'.format(x))
-
-se_ci_vc = df_lsa['Code INSEE ardt'].value_counts()
-ls_pbms = [insee_code for insee_code in df_lsa['Code INSEE ardt'].unique()\
+se_ci_vc = df_lsa['C_INSEE_Ardt'].value_counts()
+ls_pbms = [insee_code for insee_code in df_lsa['C_INSEE_Ardt'].unique()\
              if insee_code not in df_com.index]
 
 # NB STORES BY COMMUNE
@@ -116,10 +121,11 @@ df_com['nb_stores'] = se_ci_vc
 
 # SURFACE BY COMMUNE
 df_com['store_surface'] =\
-   df_lsa[['Code INSEE ardt', 'Surf Vente']].groupby('Code INSEE ardt').agg(np.sum)['Surf Vente']
+   df_lsa[['C_INSEE_Ardt', 'Surface']].groupby('C_INSEE_Ardt').agg(np.sum)['Surface']
 
-# INSEE AREAS (TODO: check if necessary here: move?)
-df_insee_a = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_insee_areas.csv'),
+# INSEE AREAS (todo: check if necessary here: move?)
+df_insee_a = pd.read_csv(os.path.join(path_insee_extracts,
+                                      'df_insee_areas.csv'),
                          encoding = 'UTF-8')
 # Get rid of Corsica and DOMTOM
 df_insee_a = df_insee_a[~(df_insee_a['CODGEO'].str.slice(stop = -3).isin(['2A', '2B', '97']))]
@@ -136,28 +142,28 @@ for ic_main, ls_ic_ardts in ls_insee_ardts:
 df_lsa = pd.merge(df_insee_a,
                   df_lsa,
                   left_on = 'CODGEO',
-                  right_on = 'Code INSEE',
+                  right_on = 'C_INSEE',
                   how = 'right')
 
 # #########################
 # ADD DECADE
 # #########################
 
-df_lsa['DEC ouv'] = np.nan
+df_lsa['Dec_Ouv'] = np.nan
 ls_decades = [(1890, 1950)] + [(1900+i, 1910+i) for i in range(50, 120, 10)]
 for date_a, date_b in ls_decades:
-  df_lsa.loc[(df_lsa['DATE ouv'] > u"{:d}".format(date_a)) &\
-             (df_lsa['DATE ouv'] <= u"{:d}".format(date_b)), 'DEC ouv'] = date_a
+  df_lsa.loc[(df_lsa['Date_Ouv'] > u"{:d}".format(date_a)) &\
+             (df_lsa['Date_Ouv'] <= u"{:d}".format(date_b)), 'DEC ouv'] = date_a
 # All
-df_lsa_dec_ouv = df_lsa[['DEC ouv', 'Groupe_alt']].groupby('DEC ouv').agg([len])
+df_lsa_dec_ouv = df_lsa[['Dec_Ouv', 'Groupe_Alt']].groupby('Dec_Ouv').agg([len])
 
 # By retail group
 ls_se_decade = []
-for rg in df_lsa['Groupe_alt'].unique():
-  df_rg_dec_ouv = df_lsa[['DEC ouv', 'Groupe_alt']][df_lsa['Groupe_alt'] == rg]\
-                    .groupby('DEC ouv').agg([len])
-  ls_se_decade.append(df_rg_dec_ouv['Groupe_alt']['len'])
-df_rgs = pd.concat(ls_se_decade, axis = 1, keys = df_lsa['Groupe_alt'].unique())
+for rg in df_lsa['Groupe_Alt'].unique():
+  df_rg_dec_ouv = df_lsa[['Dec_Ouv', 'Groupe_Alt']][df_lsa['Groupe_Alt'] == rg]\
+                    .groupby('Dec_Ouv').agg([len])
+  ls_se_decade.append(df_rg_dec_ouv['Groupe_Alt']['len'])
+df_rgs = pd.concat(ls_se_decade, axis = 1, keys = df_lsa['Groupe_Alt'].unique())
 
 
 # #########################
@@ -180,8 +186,8 @@ for rg, ls_dates in dict_maps.items():
   
   # UPPER LEFT
   ax1 = fig.add_subplot(321, aspect = 'equal') #, frame_on = False)
-  se1 = df_lsa[(df_lsa['Groupe_alt'] == rg) &\
-               (df_lsa['DATE ouv'] <= ls_dates[0])]['point']
+  se1 = df_lsa[(df_lsa['Groupe_Alt'] == rg) &\
+               (df_lsa['Date_Ouv'] <= ls_dates[0])]['point']
   ax1.scatter([store.x for store in se1],
               [store.y for store in se1],
               3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
@@ -196,11 +202,11 @@ for rg, ls_dates in dict_maps.items():
   
   # UPPER RIGHT
   ax2 = fig.add_subplot(322, aspect = 'equal') #, frame_on = False)
-  se_b = df_lsa[(df_lsa['Groupe_alt']== rg) &\
-                (df_lsa['DATE ouv'] <= ls_dates[0])]['point']
-  se_a = df_lsa[(df_lsa['Groupe_alt']== rg) &\
-                (df_lsa['DATE ouv'] > ls_dates[0]) &\
-                (df_lsa['DATE ouv'] <= ls_dates[1])]['point']
+  se_b = df_lsa[(df_lsa['Groupe_Alt']== rg) &\
+                (df_lsa['Date_Ouv'] <= ls_dates[0])]['point']
+  se_a = df_lsa[(df_lsa['Groupe_Alt']== rg) &\
+                (df_lsa['Date_Ouv'] > ls_dates[0]) &\
+                (df_lsa['Date_Ouv'] <= ls_dates[1])]['point']
   ax2.scatter([store.x for store in se_b],
               [store.y for store in se_b],
               3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
@@ -219,11 +225,11 @@ for rg, ls_dates in dict_maps.items():
   
   # MID LEFT
   ax3 = fig.add_subplot(323, aspect = 'equal') #, frame_on = False)
-  se_b = df_lsa[(df_lsa['Groupe_alt']== rg) &\
-                (df_lsa['DATE ouv'] <= ls_dates[1])]['point']
-  se_a = df_lsa[(df_lsa['Groupe_alt']== rg) &\
-                (df_lsa['DATE ouv'] > ls_dates[1]) &\
-                (df_lsa['DATE ouv'] <= ls_dates[2])]['point']
+  se_b = df_lsa[(df_lsa['Groupe_Alt']== rg) &\
+                (df_lsa['Date_Ouv'] <= ls_dates[1])]['point']
+  se_a = df_lsa[(df_lsa['Groupe_Alt']== rg) &\
+                (df_lsa['Date_Ouv'] > ls_dates[1]) &\
+                (df_lsa['Date_Ouv'] <= ls_dates[2])]['point']
   ax3.scatter([store.x for store in se_b],
               [store.y for store in se_b],
               3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
@@ -242,11 +248,11 @@ for rg, ls_dates in dict_maps.items():
   
   # MID RIGHT
   ax4 = fig.add_subplot(324, aspect = 'equal') #, frame_on = False)
-  se_b = df_lsa[(df_lsa['Groupe_alt']== rg) &\
-                (df_lsa['DATE ouv'] <= ls_dates[2])]['point']
-  se_a = df_lsa[(df_lsa['Groupe_alt']== rg) &\
-                (df_lsa['DATE ouv'] > ls_dates[2]) &\
-                (df_lsa['DATE ouv'] <= ls_dates[3])]['point']
+  se_b = df_lsa[(df_lsa['Groupe_Alt']== rg) &\
+                (df_lsa['Date_Ouv'] <= ls_dates[2])]['point']
+  se_a = df_lsa[(df_lsa['Groupe_Alt']== rg) &\
+                (df_lsa['Date_Ouv'] > ls_dates[2]) &\
+                (df_lsa['Date_Ouv'] <= ls_dates[3])]['point']
   ax4.scatter([store.x for store in se_b],
               [store.y for store in se_b],
               3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
@@ -265,11 +271,11 @@ for rg, ls_dates in dict_maps.items():
   
   # LOW LEFT
   ax5 = fig.add_subplot(325, aspect = 'equal') #, frame_on = False)
-  se_b = df_lsa[(df_lsa['Groupe_alt']== rg) &\
-                (df_lsa['DATE ouv'] <= ls_dates[3])]['point']
-  se_a = df_lsa[(df_lsa['Groupe_alt']== rg) &\
-                (df_lsa['DATE ouv'] > ls_dates[3]) &\
-                (df_lsa['DATE ouv'] <= ls_dates[4])]['point']
+  se_b = df_lsa[(df_lsa['Groupe_Alt']== rg) &\
+                (df_lsa['Date_Ouv'] <= ls_dates[3])]['point']
+  se_a = df_lsa[(df_lsa['Groupe_Alt']== rg) &\
+                (df_lsa['Date_Ouv'] > ls_dates[3]) &\
+                (df_lsa['Date_Ouv'] <= ls_dates[4])]['point']
   ax5.scatter([store.x for store in se_b],
               [store.y for store in se_b],
               3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
@@ -288,11 +294,11 @@ for rg, ls_dates in dict_maps.items():
   
   # LOW RIGHT
   ax6 = fig.add_subplot(326, aspect = 'equal') #, frame_on = False)
-  se_b = df_lsa[(df_lsa['Groupe_alt']== rg) &\
-                (df_lsa['DATE ouv'] <= ls_dates[4])]['point']
-  se_a = df_lsa[(df_lsa['Groupe_alt']== rg) &\
-                (df_lsa['DATE ouv'] > ls_dates[4]) &\
-                (df_lsa['DATE ouv'] <= ls_dates[5])]['point']
+  se_b = df_lsa[(df_lsa['Groupe_Alt']== rg) &\
+                (df_lsa['Date_Ouv'] <= ls_dates[4])]['point']
+  se_a = df_lsa[(df_lsa['Groupe_Alt']== rg) &\
+                (df_lsa['Date_Ouv'] > ls_dates[4]) &\
+                (df_lsa['Date_Ouv'] <= ls_dates[5])]['point']
   ax6.scatter([store.x for store in se_b],
               [store.y for store in se_b],
               3, marker = 'o', lw=0.25, facecolor = '#000000', edgecolor = 'w', alpha = 0.9,
@@ -315,13 +321,10 @@ for rg, ls_dates in dict_maps.items():
   
   #plt.show()
   
-  plt.savefig(os.path.join(path_data,
-                           'data_maps',
-                           'data_built',
-                           'graphs',
-                           'lsa',
-                           'history',
-                           '%s.png' %rg),
+  plt.savefig(os.path.join(path_graphs,
+                           'overview',
+                           'group_histories',
+                           '{:s}.png'.format(rg)),
               dpi=300,
               alpha=True,
               bbox_inches = 'tight')

@@ -97,13 +97,13 @@ path_120_nod = os.path.join(path_dir_120, 'NOEUD_ROUTIER')
 m_fra.readshapefile(path_120_rte, 'routes_fr', color = 'none', zorder=2)
 m_fra.readshapefile(path_120_nod, 'noeuds_fr', color = 'none', zorder=2)
 
-df_com = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.communes_fr],
-                       'x_center' : [d['X_CENTROID'] for d in m_fra.communes_fr_info],
-                       'y_center' : [d['Y_CENTROID'] for d in m_fra.communes_fr_info],
-                       'x_cl' : [d['X_CHF_LIEU'] for d in m_fra.communes_fr_info],
-                       'y_cl' : [d['Y_CHF_LIEU'] for d in m_fra.communes_fr_info],
+df_com = pd.DataFrame({'poly' :       [Polygon(xy) for xy in m_fra.communes_fr],
+                       'x_center' :   [d['X_CENTROID'] for d in m_fra.communes_fr_info],
+                       'y_center' :   [d['Y_CENTROID'] for d in m_fra.communes_fr_info],
+                       'x_cl' :       [d['X_CHF_LIEU'] for d in m_fra.communes_fr_info],
+                       'y_cl' :       [d['Y_CHF_LIEU'] for d in m_fra.communes_fr_info],
                        'code_insee' : [d['INSEE_COM'] for d in m_fra.communes_fr_info],
-                       'commune' : [d['NOM_COMM'] for d in m_fra.communes_fr_info]})
+                       'commune' :    [d['NOM_COMM'] for d in m_fra.communes_fr_info]})
 # keep only one line per commune (several polygons for some)
 df_com['poly_area'] = df_com['poly'].apply(lambda x: x.area)
 df_com.sort(columns = ['code_insee', 'poly_area'],

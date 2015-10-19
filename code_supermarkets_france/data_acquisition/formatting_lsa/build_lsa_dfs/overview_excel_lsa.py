@@ -15,24 +15,26 @@ import matplotlib.pyplot as plt
 import pprint
 #from mpl_toolkits.basemap import Basemap
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
+path_dir_source = os.path.join(path_data,
+                               'data_supermarkets',
+                               'data_source',
+                               'data_lsa')
 
-path_dir_source_lsa = os.path.join(path_dir_qlmc, 'data_source', 'data_lsa_xls')
+path_dir_insee = os.path.join(path_data,
+                              'data_insee')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
-
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
-
+# ###################
 # READ LSA EXCEL FILE
+# ###################
+
 # need to work with _no1900 at CREST for now (older versions of numpy/pandas/xlrd...?)
-df_lsa_all = pd.read_excel(os.path.join(path_dir_source_lsa,
-                                               '2014-07-30-export_CNRS_no1900.xlsx'),
-                           sheetname = 'Feuil1')
-df_lsa = df_lsa_all
+df_lsa = pd.read_excel(os.path.join(path_dir_source,
+                                    '2014-07-30-export_CNRS_no1900.xlsx'),
+                       sheetname = 'Feuil1')
+
+# #####################
+# FORMAT DATES
+# #####################
 
 # Convert dates to pandas friendly format
 # Can not use np.datetime64() as missing value
@@ -43,6 +45,10 @@ for field in [u'DATE ouv', u'DATE ferm', u'DATE réouv',
                                         if (type(x) is datetime.datetime) or\
                                            (type(x) is pd.Timestamp)
                                         else pd.tslib.NaT)
+
+# #####################
+# CHAINS AND GROUPS
+# #####################
 
 print u'Stores in data (active or not): {0:5d}'.format(len(df_lsa))
 
@@ -150,6 +156,9 @@ df_lsa['Groupe'] = df_lsa['Enseigne'].apply(\
 df_lsa['Ex groupe'] = df_lsa['Ex enseigne'].apply(\
                      lambda x: dict_enseigne_groupe.get(x, 'AUTRE') if not pd.isnull(x)\
                                                        else None)
+# #####################
+# OPENED/CLOSED STORES
+# #####################
 
 # Stores still operating (add for any date e.g. 01/01/2014)
 df_lsa_active = df_lsa[(pd.isnull(df_lsa[u'DATE ferm'])) |\
@@ -161,6 +170,10 @@ print u'Stores still operating: {0:5d}'.format(len(df_lsa_active))
 df_lsa_inactive = df_lsa[(~pd.isnull(df_lsa[u'DATE ferm'])) &\
                          (pd.isnull(df_lsa[u'DATE réouv']))].copy()
 print u'Stores no more operating: {0:5d}'.format(len(df_lsa_inactive))
+
+# ####################
+# STATS DES
+# ####################
 
 # Describe variables of operating stores
 for field in ['Statut', 'Type', 'Enseigne', 'Ex enseigne', 'Groupe']:
@@ -314,9 +327,6 @@ print df_reg[ls_reg_disp].to_latex()
 # row: TOT
 print 'TOTAL &', ' & '.join(map(lambda x: '{:4.0f}'.format(x),
                             df_reg[ls_reg_disp].sum(axis = 0).values)), '\\\\'
-## OUTPUT FOR MAP CREATION
-#df_lsa_active.to_csv(os.path.join(path_dir_built_csv, 'df_lsa_active.csv'),
-#                     encoding = 'UTF-8', float_format='%.3f')
 
 # INSPECT ACT ANNEXES / DRIVE
 ls_drive_temp = df_lsa_active['Act Annexes'][~pd.isnull(df_lsa_active['Act Annexes'])].values
