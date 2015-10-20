@@ -70,7 +70,9 @@ ls_lsa_comp_cols = ['ac_nb_stores',
                     'ac_nb_comp',
                     'ac_store_share',
                     'ac_group_share',
-                    'ac_hhi']
+                    'ac_hhi',
+                    'dist_cl_comp',
+                    'dist_cl_groupe']
 
 df_qlmc = pd.merge(df_qlmc,
                    df_comp[['Ident'] +\
@@ -80,25 +82,27 @@ df_qlmc = pd.merge(df_qlmc,
                    right_on = 'Ident',
                    how = 'left')
 
-# ######################################
-# REG MOST COMMON PRODUCT PRICES ON COMP
-# ######################################
-
-# get rid of no id_lsa match
+# Get rid of no id_lsa match
 df_qlmc = df_qlmc[~df_qlmc['id_lsa'].isnull()]
-# get rid of closed (so far but should accomodate later)
+# Get rid of closed (so far but should accomodate later)
 df_qlmc = df_qlmc[~df_qlmc['Enseigne_Alt'].isnull()]
-
-se_prod = df_qlmc.groupby(['Family', 'Subfamily', 'Product']).agg('size')
-se_prod.sort(ascending = False, inplace = True)
-
-# Aavoid error msg on condition number
+# Avoid error msg on condition number
 df_qlmc['Surface'] = df_qlmc['Surface'].apply(lambda x: x/1000.0)
 # df_qlmc_prod['ac_hhi'] = df_qlmc_prod['ac_hhi'] * 10000
 # Try with log of price (semi elasticity)
 df_qlmc['ln_Price'] = np.log(df_qlmc['Price'])
 # Control for dpt (region?)
 df_qlmc['Dpt'] = df_qlmc['INSEE_Code'].str.slice(stop = 2)
+
+# ############
+# REGRESSIONS
+# ############
+
+df_qlmc = df_qlmc[(df_qlmc['Period'] == 1) &\
+                  (df_qlmc['Enseigne_Alt'] == 'CENTRE E.LECLERC')]
+
+se_prod = df_qlmc.groupby(['Family', 'Subfamily', 'Product']).agg('size')
+se_prod.sort(ascending = False, inplace = True)
 
 # WITH ONE PRODUCT
 rayon, famille, produit = se_prod.index[0]
@@ -122,21 +126,36 @@ print reg.summary()
 # More convincing with store FE? set of products? 
 # Do with LECLERC products?
 
-# WITH TOP 20 PRODUCTS
-ls_top_prod = [x[-1] for x in se_prod.index[0:100]]
+# WITH TOP 100 PRODUCTS
+ls_top_prod = [x[-1] for x in se_prod.index[0:200]]
 df_qlmc_prods = df_qlmc[df_qlmc['Product'].isin(ls_top_prod)].copy()
 
 print u'\nRegression of price of top 20 products (avail in data)'
-reg = smf.ols('Price ~ C(Period) + C(Product) + Surface + Enseigne_Alt + ac_hhi',
-              data = df_qlmc_prods[df_qlmc_prods['Type_Alt'] == 'H'],
+reg = smf.ols('Price ~ C(Product) + Surface + ac_hhi',
+              data = df_qlmc_prods,
               missing = 'drop').fit()
 print reg.summary()
 
 print u'\nRegression of log price of top 20 products (avail in data)'
-reg = smf.ols('ln_Price ~ C(Period) + C(Product) + Surface + Enseigne_Alt + ac_hhi',
-              data = df_qlmc_prods[df_qlmc_prods['Type_Alt'] == 'H'],
+reg = smf.ols('ln_Price ~ C(Product) + Surface + ac_hhi',
+              data = df_qlmc_prods,
               missing = 'drop').fit()
 print reg.summary()
+
+print u'\nBuild market power variable (dummy so far)'
+print df_qlmc_prods[['ac_hhi', 'ac_group_share']].describe()
+df_qlmc_prods['dum_mp'] = 0
+df_qlmc_prods.loc[(df_qlmc['ac_hhi'] >= 0.21) &\
+                  (df_qlmc['ac_group_share'] >= 0.24), 'dum_mp'] = 1
+# todo: endogenize
+print df_qlmc_prods['dum_mp'].describe()
+
+reg = smf.ols('ln_Price ~ C(Product) + Surface + dum_mp',
+              data = df_qlmc_prods,
+              missing = 'drop').fit()
+print reg.summary()
+
+# try: control by region or biggests UUs etc.
 
 ## #############################################
 ## PRICE DISTRIBUTION PER CHAIN FOR TOP PRODUCTS

@@ -4,21 +4,9 @@
 import add_to_path
 from add_to_path import *
 import os, sys
-import httplib
-import urllib, urllib2
-from bs4 import BeautifulSoup
-import re
-import json
+import numpy as np
 import pandas as pd
 import timeit
-
-def enc_json(data, path_file):
-  with open(path_file, 'w') as f:
-    json.dump(data, f)
-
-def dec_json(path_file):
-  with open(path_file, 'r') as f:
-    return json.loads(f.read())
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -128,7 +116,8 @@ for lec_id, comp_id, comp_chain\
                         len(df_duel[df_duel['price_lec'] < df_duel['price_comp']]),
                         len(df_duel[df_duel['price_lec'] > df_duel['price_comp']]),
                         len(df_duel[df_duel['price_lec'] == df_duel['price_comp']]),
-                        (df_duel['price_comp'].sum() / df_duel['price_lec'].sum() - 1) * 100))
+                        (df_duel['price_comp'].sum() / df_duel['price_lec'].sum() - 1) * 100,
+                        df_duel['price_comp'].mean() - df_duel['price_lec'].mean()))
 
 df_repro_compa = pd.DataFrame(ls_rows_compa,
                               columns = ['lec_id',
@@ -137,10 +126,13 @@ df_repro_compa = pd.DataFrame(ls_rows_compa,
                                          'nb_lec_wins',
                                          'nb_comp_wins',
                                          'nb_draws',
-                                         'pct_compa'])
+                                         'pct_compa',
+                                         'mean_compa'])
 print u'Time for loop', timeit.default_timer() - start
 
 ls_pctiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
+
+print u'\nDescribe pct_compa:'
 print df_repro_compa['pct_compa'].describe(percentiles = ls_pctiles)
 
 df_repro_compa['rr'] = df_repro_compa['nb_comp_wins'] /\
@@ -162,3 +154,20 @@ plt.show()
 # also investigate link between dispersion and price levels?
 # do same exercise with non leclerc pairs (control for differentiation)
 # would be nice to check if products on which leclerc is beaten are underpriced vs market
+
+df_delta = pd.merge(df_qlmc_comparisons[['lec_id', 'comp_id',
+                                        'qlmc_nb_obs', 'qlmc_pct_compa',
+                                        'qlmc_winner']],
+                   df_repro_compa[['lec_id', 'comp_id', 'nb_obs', 'pct_compa']],
+                   on = ['lec_id', 'comp_id'],
+                   how = 'left')
+
+# Ok with comparisons when Leclerc loses
+print u'\nCheck comparisons when Leclerc loses:'
+print df_delta[df_delta['pct_compa'] <= 0].to_string()
+print len(df_delta[df_delta['qlmc_winner'] == 'OTH'])
+
+print u'\nCheck replication of qlmc comparisons:'
+df_delta = df_delta[df_delta['pct_compa'] >= 0]
+df_delta['delta'] = df_delta['qlmc_pct_compa'] - df_delta['pct_compa']
+print df_delta['delta'].describe()
