@@ -25,18 +25,16 @@ from descartes import PolygonPatch
 from matplotlib import colors
 import time
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_png = os.path.join(path_dir_qlmc, 'data_built' , 'data_png')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
 
-path_dir_source_lsa = os.path.join(path_dir_qlmc, 'data_source', 'data_lsa_xls')
+path_built_csv = os.path.join(path_built,
+                        'data_csv')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
-
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+path_insee = os.path.join(path_data, 'data_insee')
+path_insee_extracts = os.path.join(path_insee, 'data_extracts')
 
 pd.set_option('float_format', '{:10,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -46,19 +44,27 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # READ CSV FILES
 # ##############
 
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
-                                  'df_lsa_active_fm_hsx.csv'),
-                     dtype = {'Code INSEE' : str,
-                              'Code INSEE ardt' : str},
+df_lsa = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_lsa_active.csv'),
+                     dtype = {u'C_INSEE' : str,
+                              u'C_INSEE_Ardt' : str,
+                              u'C_Postal' : str,
+                              u'SIREN' : str,
+                              u'NIC' : str,
+                              u'SIRET' : str},
+                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
+                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
                      encoding = 'UTF-8')
+
 df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
                 (~pd.isnull(df_lsa['Longitude']))].copy()
 
-df_com_insee = pd.read_csv(os.path.join(path_dir_insee_extracts,
+df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
                                         'df_communes.csv'),
                            dtype = {'DEP': str,
                                     'CODGEO' : str},
                            encoding = 'UTF-8')
+
 df_com_insee.set_index('CODGEO', inplace = True)
 
 # #############
@@ -90,12 +96,11 @@ path_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
 m_fra.readshapefile(path_dpt, 'departements_fr', color = 'none', zorder=2)
 m_fra.readshapefile(path_com, 'communes_fr', color = 'none', zorder=2)
 
-path_dir_120 = os.path.join(path_data, 'data_maps', 'ROUTE120_WGS84')
-path_120_rte = os.path.join(path_dir_120, 'TRONCON_ROUTE')
-path_120_nod = os.path.join(path_dir_120, 'NOEUD_ROUTIER')
-
-m_fra.readshapefile(path_120_rte, 'routes_fr', color = 'none', zorder=2)
-m_fra.readshapefile(path_120_nod, 'noeuds_fr', color = 'none', zorder=2)
+#path_dir_120 = os.path.join(path_data, 'data_maps', 'ROUTE120_WGS84')
+#path_120_rte = os.path.join(path_dir_120, 'TRONCON_ROUTE')
+#path_120_nod = os.path.join(path_dir_120, 'NOEUD_ROUTIER')
+#m_fra.readshapefile(path_120_rte, 'routes_fr', color = 'none', zorder=2)
+#m_fra.readshapefile(path_120_nod, 'noeuds_fr', color = 'none', zorder=2)
 
 df_com = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.communes_fr],
                        'x_center' : [d['X_CENTROID'] for d in m_fra.communes_fr_info],
@@ -192,7 +197,7 @@ for store_type in ls_st:
                                               df_lsa_type['Longitude'],
                                               df_lsa_type['lat_com'],
                                               df_lsa_type['lng_com'])
-    df_lsa_type['wgt_surf'] = np.exp(-df_lsa_type['dist']/10) * df_lsa_type['Surf Vente']
+    df_lsa_type['wgt_surf'] = np.exp(-df_lsa_type['dist']/10) * df_lsa_type['Surface']
     row_res = [i, df_lsa_type['wgt_surf'].sum()]
     # df_com.loc[i, 'avail_surf'] = df_lsa_type['wgt_surf'].sum()
     
@@ -212,15 +217,15 @@ for store_type in ls_st:
   df_com['avail_surf_%s' %store_type] = df_com_type['avail_surf']
 
 # SURFACE IN EACH COMMUNE
-se_com_surf = df_lsa[['Code INSEE ardt', 'Surf Vente']]\
-                .groupby('Code INSEE ardt').agg(np.sum)['Surf Vente']
+se_com_surf = df_lsa[['C_INSEE_Ardt', 'Surface']]\
+                .groupby('C_INSEE_Ardt').agg(np.sum)['Surface']
 df_com['surf'] = se_com_surf
 
 # SURFACE IN EACH COMMUNE BY TYPE
 for store_type in ls_st:
   df_lsa_type = df_lsa[df_lsa['Type_alt'] == store_type].copy()
-  se_type_com_surf = df_lsa_type[['Code INSEE ardt', 'Surf Vente']]\
-                     .groupby('Code INSEE ardt').agg(np.sum)['Surf Vente']
+  se_type_com_surf = df_lsa_type[['C_INSEE_Ardt', 'Surface']]\
+                     .groupby('C_INSEE_Ardt').agg(np.sum)['Surface']
   df_com['surf_%s' %store_type] = se_type_com_surf
 
 # add surface 
@@ -230,6 +235,7 @@ ls_disp_com_st = ['avail_surf', 'surf'] +\
 
 # OUTPUT TO CSV
 df_com[ls_disp_com_st].to_csv(os.path.join(path_dir_built_csv,
+                                           '201407_competition',
                                           'df_com_avail_surf_type.csv'),
                               index_label = 'code_insee',
                               encoding = 'utf-8',

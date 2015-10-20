@@ -12,13 +12,20 @@ from shapely.prepared import prep
 from descartes import PolygonPatch
 from matplotlib.text import TextPath
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_png = os.path.join(path_dir_qlmc, 'data_built' , 'data_png')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+path_built_csv = os.path.join(path_built,
+                              'data_csv')
+path_built_json = os.path.join(path_built,
+                               'data_json')
+path_built_graphs = os.path.join(path_built,
+                                 'data_graphs')
+
+path_insee = os.path.join(path_data, 'data_insee')
+path_insee_extracts = os.path.join(path_insee, 'data_extracts')
 
 pd.set_option('float_format', '{:10,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -28,29 +35,35 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # LOAD LSA data
 # ##############
 
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
-                                  'df_lsa_active_fm_hsx.csv'),
-                     dtype = {u'Code INSEE' : str,
-                              u'Code INSEE ardt' : str,
-                              u'N°Siren' : str,
-                              u'N°Siret' : str},
-                     parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv',
-                                    u'DATE chg enseigne', u'DATE chgt surf'],
+df_lsa = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_lsa_active.csv'),
+                     dtype = {u'C_INSEE' : str,
+                              u'C_INSEE_Ardt' : str,
+                              u'C_Postal' : str,
+                              u'SIREN' : str,
+                              u'NIC' : str,
+                              u'SIRET' : str},
+                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
+                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
                      encoding = 'UTF-8')
+
 df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
                 (~pd.isnull(df_lsa['Longitude']))].copy()
 
-ls_disp_lsa = [u'Enseigne',
-               u'ADRESSE1',
-               u'Code postal',
-               u'Ville'] # u'Latitude', u'Longitude']
+lsd0 = [u'Enseigne',
+        u'Adresse1',
+        u'C_Postal',
+        u'Ville'] #, u'Latitude', u'Longitude']
 
 # ###############
 # LOAD SUBSET LSA
 # ###############
 
-df_comp = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_example_comp.csv'),
+# todo: update once it has ben rerun
+
+df_comp = pd.read_csv(os.path.join(path_built_csv,
+                                   '201407_competition',
+                                   'df_km_vs_time_comp_ex.csv'),
                       dtype = {u'Code INSEE' : str,
                                u'Code INSEE ardt' : str,
                                u'N°Siren' : str,
@@ -63,8 +76,11 @@ df_comp = pd.read_csv(os.path.join(path_dir_built_csv,
 # LOAD SUBSET COMMUNES
 # #####################
 
-df_mun = pd.read_csv(os.path.join(path_dir_built_csv,
-                                  'df_example_mun.csv'),
+# todo: update once it has ben rerun
+
+df_mun = pd.read_csv(os.path.join(path_built_csv,
+                                  '201407_competition',
+                                  'df_km_vs_time_mun_ex.csv'),
                      dtype = {'code_insee' : str},
                      encoding = 'latin-1')
 
@@ -82,13 +98,13 @@ df_lsa_ot = df_lsa[df_lsa['Ident'] != 49]
 df_lsa_ot_H = df_lsa_ot[df_lsa_ot['Type'] == 'H']
 df_lsa_ot_nH = df_lsa_ot[df_lsa_ot['Type'] != 'H']
 
-df_lsa_ot_H_sg = df_lsa_ot[(df_lsa_ot['Type_alt'] == 'H') & (df_lsa_ot['Groupe'] == 'CARREFOUR')]
-df_lsa_ot_X_sg = df_lsa_ot[(df_lsa['Type_alt'] == 'X') & (df_lsa_ot['Groupe'] == 'CARREFOUR')]
-df_lsa_ot_S_sg = df_lsa_ot[(df_lsa['Type_alt'] == 'S') & (df_lsa_ot['Groupe'] == 'CARREFOUR')]
+df_lsa_ot_H_sg = df_lsa_ot[(df_lsa_ot['Type_Alt'] == 'H') & (df_lsa_ot['Groupe'] == 'CARREFOUR')]
+df_lsa_ot_X_sg = df_lsa_ot[(df_lsa['Type_Alt'] == 'X') & (df_lsa_ot['Groupe'] == 'CARREFOUR')]
+df_lsa_ot_S_sg = df_lsa_ot[(df_lsa['Type_Alt'] == 'S') & (df_lsa_ot['Groupe'] == 'CARREFOUR')]
 
-df_lsa_ot_H_og = df_lsa_ot[(df_lsa_ot['Type_alt'] == 'H') & (df_lsa_ot['Groupe'] != 'CARREFOUR')]
-df_lsa_ot_X_og = df_lsa_ot[(df_lsa_ot['Type_alt'] == 'X') & (df_lsa_ot['Groupe'] != 'CARREFOUR')]
-df_lsa_ot_S_og = df_lsa_ot[(df_lsa_ot['Type_alt'] == 'S') & (df_lsa_ot['Groupe'] != 'CARREFOUR')]
+df_lsa_ot_H_og = df_lsa_ot[(df_lsa_ot['Type_Alt'] == 'H') & (df_lsa_ot['Groupe'] != 'CARREFOUR')]
+df_lsa_ot_X_og = df_lsa_ot[(df_lsa_ot['Type_Alt'] == 'X') & (df_lsa_ot['Groupe'] != 'CARREFOUR')]
+df_lsa_ot_S_og = df_lsa_ot[(df_lsa_ot['Type_Alt'] == 'S') & (df_lsa_ot['Groupe'] != 'CARREFOUR')]
 
 # http://www.autoritedelaconcurrence.fr/doc/fiche1_concentration_dec10.pdf
 # hyper: 30 mins by car
@@ -191,7 +207,6 @@ xmax_deg, ymax_deg = m(xmax, ymax, inverse = True)
 
 ## add mapscale manually
 #x_r_ms = m(xmin_deg + radius_for_tissot(10), ymin)
-
 
 plt.tight_layout()
 plt.show()

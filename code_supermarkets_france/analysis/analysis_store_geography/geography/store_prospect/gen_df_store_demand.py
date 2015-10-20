@@ -10,13 +10,19 @@ from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 from shapely.prepared import prep
 from descartes import PolygonPatch
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_png = os.path.join(path_dir_qlmc, 'data_built' , 'data_png')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+path_built_csv = os.path.join(path_built,
+                        'data_csv')
+path_built_json = os.path.join(path_built,
+                               'data_json')
+
+path_insee_extracts = os.path.join(path_data,
+                                   'data_insee',
+                                   'data_extracts')
 
 pd.set_option('float_format', '{:10,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -37,28 +43,31 @@ def convert_from_ign(x_l_93_ign, y_l_93_ign):
 # LOAD LSA data
 # ##############
 
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
-                                  'df_lsa_active_fm_hsx.csv'),
-                     dtype = {u'Code INSEE' : str,
-                              u'Code INSEE ardt' : str,
-                              u'N°Siren' : str,
-                              u'N°Siret' : str},
-                     parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv',
-                                    u'DATE chg enseigne', u'DATE chgt surf'],
+df_lsa = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_lsa_active.csv'),
+                     dtype = {u'C_INSEE' : str,
+                              u'C_INSEE_Ardt' : str,
+                              u'C_Postal' : str,
+                              u'SIREN' : str,
+                              u'NIC' : str,
+                              u'SIRET' : str},
+                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
+                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
                      encoding = 'UTF-8')
+
 df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
                 (~pd.isnull(df_lsa['Longitude']))].copy()
 
-ls_disp_lsa = [u'Enseigne',
-               u'ADRESSE1',
-               u'Code postal',
-               u'Ville'] # u'Latitude', u'Longitude']
+lsd0 = [u'Enseigne',
+        u'Adresse1',
+        u'C_Postal',
+        u'Ville'] #, u'Latitude', u'Longitude']
 
 # ###############
 # LOAD COMMUNES
 # ###############
 
-df_com_insee = pd.read_csv(os.path.join(path_dir_insee_extracts,
+df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
                                         'df_communes.csv'),
                            dtype = {'DEP': str,
                                     'CODGEO' : str},
@@ -97,7 +106,6 @@ df_com = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.communes_fr],
                        'y_cl' : [d['Y_CHF_LIEU'] for d in m_fra.communes_fr_info],
                        'code_insee' : [d['INSEE_COM'] for d in m_fra.communes_fr_info],
                        'commune' : [d['NOM_COMM'] for d in m_fra.communes_fr_info]})
-
 
 # Drop Corsica (make sure dropped in LSA as well?)
 df_com['dpt'] = df_com['code_insee'].str.slice(stop=-3)
@@ -142,7 +150,7 @@ ls_h_and_s_demand = [['H', 25],
                      ['S', 10]]
 
 for type_store, dist_demand in ls_h_and_s_demand:
-  df_lsa_type = df_lsa[df_lsa['Type_alt'] == type_store].copy()
+  df_lsa_type = df_lsa[df_lsa['Type_Alt'] == type_store].copy()
   
   # Population available for one store
   
@@ -177,20 +185,20 @@ for type_store, dist_demand in ls_h_and_s_demand:
                          left_index = True,
                          right_index = True)
   
-  df_lsa_type.sort(['Code INSEE ardt', 'Enseigne'], inplace = True)
+  df_lsa_type.sort(['C_INSEE_Ardt', 'Enseigne'], inplace = True)
   
-  ls_disp_lsa_comp = ls_disp_lsa + ['ac_pop', 'pop']
+  ls_disp_lsa_comp = lsd0 + ['ac_pop', 'pop']
 
   print u'\n', type_store
   print df_lsa_type[ls_disp_lsa_comp][0:10].to_string()
   
-  # temp: avoid error with dates before 1900 and strftime (when outputing to csv)
-  df_lsa_type.loc[df_lsa_type[u'DATE ouv'] <= '1900', 'DATE ouv'] =\
-     pd.to_datetime('1900/01/01', format = '%Y/%m/%d')
+  ## temp: avoid error with dates before 1900 and strftime (when outputing to csv)
+  #df_lsa_type.loc[df_lsa_type[u'Date_Ouv'] <= '1900', 'Date_Ouv'] =\
+  #   pd.to_datetime('1900/01/01', format = '%Y/%m/%d')
 
-  df_lsa_type.to_csv(os.path.join(path_dir_built_csv,
-                                  'df_store_demand_%s.csv' %type_store),
-                     encoding = 'latin-1',
+  df_lsa_type.to_csv(os.path.join(path_built_csv,
+                                  '201407_competition',
+                                  'df_store_prospect_demand_%s.csv' %type_store),
                      float_format ='%.3f',
-                     date_format='%Y%m%d',
-                     index = False)
+                     index = False,
+                     encoding = 'utf-8')

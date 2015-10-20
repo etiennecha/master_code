@@ -24,18 +24,16 @@ from descartes import PolygonPatch
 #from pysal.esda.mapclassify import Natural_Breaks as nb
 from matplotlib import colors
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_png = os.path.join(path_dir_qlmc, 'data_built' , 'data_png')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
 
-path_dir_source_lsa = os.path.join(path_dir_qlmc, 'data_source', 'data_lsa_xls')
+path_built_csv = os.path.join(path_built,
+                        'data_csv')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
-
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+path_insee = os.path.join(path_data, 'data_insee')
+path_insee_extracts = os.path.join(path_insee, 'data_extracts')
 
 pd.set_option('float_format', '{:10,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -45,18 +43,27 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # READ CSV FILES
 # ##############
 
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
-                                  'df_lsa_active_fm_hsx.csv'),
-                     dtype = {'Code INSEE' : str},
+df_lsa = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_lsa_active.csv'),
+                     dtype = {u'C_INSEE' : str,
+                              u'C_INSEE_Ardt' : str,
+                              u'C_Postal' : str,
+                              u'SIREN' : str,
+                              u'NIC' : str,
+                              u'SIRET' : str},
+                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
+                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
                      encoding = 'UTF-8')
+
 df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
                 (~pd.isnull(df_lsa['Longitude']))].copy()
 
-df_com_insee = pd.read_csv(os.path.join(path_dir_insee_extracts,
+df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
                                         'df_communes.csv'),
                            dtype = {'DEP': str,
                                     'CODGEO' : str},
                            encoding = 'UTF-8')
+
 df_com_insee.set_index('CODGEO', inplace = True)
 
 # #############
@@ -68,10 +75,6 @@ x1 = -5.
 x2 = 9.
 y1 = 42
 y2 = 52.
-
-#w = x2 - x1
-#h = y2 - y1
-#extra = 0.025
 
 # Lambert conformal for France (as suggested by IGN... check WGS84 though?)
 m_fra = Basemap(resolution='i',
@@ -85,10 +88,6 @@ m_fra = Basemap(resolution='i',
                 urcrnrlat=y2,
                 llcrnrlon=x1,
                 urcrnrlon=x2)
-#                llcrnrlat=y1 - extra * h,
-#                urcrnrlat=y2 + extra * h,
-#                llcrnrlon=x1 - extra * w,
-#                urcrnrlon=x2 + extra * w)
 
 path_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
 path_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
@@ -96,12 +95,12 @@ path_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
 m_fra.readshapefile(path_dpt, 'departements_fr', color = 'none', zorder=2)
 m_fra.readshapefile(path_com, 'communes_fr', color = 'none', zorder=2)
 
-path_dir_120 = os.path.join(path_data, 'data_maps', 'ROUTE120_WGS84')
-path_120_rte = os.path.join(path_dir_120, 'TRONCON_ROUTE')
-path_120_nod = os.path.join(path_dir_120, 'NOEUD_ROUTIER')
-
-m_fra.readshapefile(path_120_rte, 'routes_fr', color = 'none', zorder=2)
-m_fra.readshapefile(path_120_nod, 'noeuds_fr', color = 'none', zorder=2)
+#path_dir_120 = os.path.join(path_data, 'data_maps', 'ROUTE120_WGS84')
+#path_120_rte = os.path.join(path_dir_120, 'TRONCON_ROUTE')
+#path_120_nod = os.path.join(path_dir_120, 'NOEUD_ROUTIER')
+#
+#m_fra.readshapefile(path_120_rte, 'routes_fr', color = 'none', zorder=2)
+#m_fra.readshapefile(path_120_nod, 'noeuds_fr', color = 'none', zorder=2)
 
 #df_dpt = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.departements_fr],
 #                       'dpt_name' : [d['NOM_DEPT'] for d in m_fra.departements_fr_info],
@@ -146,6 +145,8 @@ def convert_from_ign(x_l_93_ign, y_l_93_ign):
   x, y = m_fra(x, y, inverse = True)
   return x, y
 
+# todo: move to functions...
+
 print u'\nTest with commune', df_com['commune'].iloc[0]
 x_test, y_test = df_com['x_center'].iloc[0], df_com['y_center'].iloc[0]
 print convert_from_ign(x_test, y_test)
@@ -171,27 +172,19 @@ for col in ['lng_ct', 'lat_ct', 'lng_cl', 'lat_cl']:
 # TESTS
 # #####
 
-## DISTANCE OF STORE TO ALL COMMUNES
-#df_com['lat_store'] = df_lsa['Latitude'].iloc[0]
-#df_com['lng_store'] = df_lsa['Longitude'].iloc[0]
-#df_com['dist'] = compute_distance_ar(df_com['lat_store'],
-#                                     df_com['lng_store'],
-#                                     df_com['lng_ct'],
-#                                     df_com['lat_ct'])
-
-# SURFACE AVAILABLE TO COMMUNE
-df_lsa['lat_com'] = df_com['lat_cl'].iloc[0] #.iloc[0]
-df_lsa['lng_com'] = df_com['lng_cl'].iloc[0] #.iloc[0]
+# COMPUTE SURFACE AVAILABLE TO MUNICIPALITY
+df_lsa['lat_com'] = df_com['lat_cl'].iloc[0]
+df_lsa['lng_com'] = df_com['lng_cl'].iloc[0]
 df_lsa['dist'] = compute_distance_ar(df_lsa['Latitude'],
                                      df_lsa['Longitude'],
                                      df_lsa['lat_com'],
                                      df_lsa['lng_com'])
-ls_disp_a = ['Enseigne', 'ADRESSE1', 'Ville',
+ls_disp_a = ['Enseigne', 'Adresse1', 'Ville',
                 'Latitude', 'Longitude', 'dist']
-ls_disp_b = ls_disp_a + ['Surf Vente' , 'wgt_surf']
+ls_disp_b = ls_disp_a + ['Surface' , 'wgt_surf']
 print df_lsa[ls_disp_a][df_lsa['dist'] < 10].to_string()
 # Compute surface weighted by distance
-df_lsa['wgt_surf'] = np.exp(-df_lsa['dist']/10) * df_lsa['Surf Vente']
+df_lsa['wgt_surf'] = np.exp(-df_lsa['dist']/10) * df_lsa['Surface']
 print df_lsa[ls_disp_b][df_lsa['dist'] < 10].to_string()
 store_avail_surface = df_lsa['wgt_surf'].sum()
 
@@ -249,14 +242,16 @@ hhi = (df_rgps['market_share']**2).sum()
 #                    'All_dist', 'H_dist', 'S_dist', 'X_dist',
 #                    'H_ens', 'S_ens', 'X_ens']
 #df_com[ls_disp_com_comp].to_csv(os.path.join(path_dir_built_csv,
+#                                             '201407_competition',
 #                                             'df_com_comp.csv'),
 #                                 index = False,
 #                                 encoding = 'utf-8',
 #                                 float_format='%.3f')
 
 # READ STORED df_com_comp and MERGE BACK
-df_com_comp = pd.read_csv(os.path.join(path_dir_built_csv,
-                                             'df_com_comp.csv'))
+df_com_comp = pd.read_csv(os.path.join(path_built_csv,
+                                       '201407_competition',
+                                       'df_com_comp.csv'))
 df_com_comp['code_insee'] = df_com_comp['code_insee'].apply(\
                               lambda x: "{:05d}".format(x)\
                                 if (type(x) == np.int64 or type(x) == long) else x)
@@ -265,8 +260,8 @@ df_com = pd.merge(df_com, df_com_comp,
 
 # Add nb of stores and surf. by municipality
 
-se_nb_stores = df_lsa['Code INSEE'].value_counts()
-se_surf_stores = df_lsa[['Surf Vente', 'Code INSEE']].groupby('Code INSEE').agg(sum)['Surf Vente']
+se_nb_stores = df_lsa['C_INSEE'].value_counts()
+se_surf_stores = df_lsa[['Surface', 'C_INSEE']].groupby('C_INSEE').agg(sum)['Surface']
 
 df_com.set_index('code_insee', inplace = True)
 df_com['nb_stores'] = se_nb_stores

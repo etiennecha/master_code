@@ -15,13 +15,20 @@ import urllib2
 # Run with ubuntu hence path fixed
 path_data = '/home/etna/Etienne/sf_Data'
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_png = os.path.join(path_dir_qlmc, 'data_built' , 'data_png')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+path_built_csv = os.path.join(path_built,
+                              'data_csv')
+path_built_json = os.path.join(path_built,
+                               'data_json')
+path_built_graphs = os.path.join(path_built,
+                                 'data_graphs')
+
+path_insee = os.path.join(path_data, 'data_insee')
+path_insee_extracts = os.path.join(path_insee, 'data_extracts')
 
 pd.set_option('float_format', '{:10,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -42,29 +49,31 @@ def convert_from_ign(x_l_93_ign, y_l_93_ign):
 # LOAD LSA data
 # ##############
 
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
-                                  'df_lsa_active_fm_hsx.csv'),
-                     dtype = {u'Code INSEE' : str,
-                              u'Code INSEE ardt' : str,
-                              u'N°Siren' : str,
-                              u'N°Siret' : str},
-                     parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv',
-                                    u'DATE chg enseigne', u'DATE chgt surf'],
+df_lsa = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_lsa_active.csv'),
+                     dtype = {u'C_INSEE' : str,
+                              u'C_INSEE_Ardt' : str,
+                              u'C_Postal' : str,
+                              u'SIREN' : str,
+                              u'NIC' : str,
+                              u'SIRET' : str},
+                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
+                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
                      encoding = 'UTF-8')
 
 df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
                 (~pd.isnull(df_lsa['Longitude']))].copy()
 
-ls_disp_lsa = [u'Enseigne',
-               u'ADRESSE1',
-               u'Code postal',
-               u'Ville'] # u'Latitude', u'Longitude']
+lsd0 = [u'Enseigne',
+        u'Adresse1',
+        u'C_Postal',
+        u'Ville'] #, u'Latitude', u'Longitude']
 
 # ###############
 # LOAD COMMUNES
 # ###############
 
-df_com_insee = pd.read_csv(os.path.join(path_dir_insee_extracts,
+df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
                                         'df_communes.csv'),
                            dtype = {'DEP': str,
                                     'CODGEO' : str},
@@ -201,9 +210,10 @@ df_com_sub['dist_osrm'] = df_com_sub['dist_osrm'] / 1000.0 # m to km
 #print df_com_sub[0:20].to_string()
 print df_com_sub[['dist', 'dist_osrm', 'time_osrm']].describe()
 
-df_com_sub.to_csv(os.path.join(path_dir_built_csv,
-                               'df_example_mun.csv'),
-                  encoding = 'latin-1',
+df_com_sub.to_csv(os.path.join(path_built_csv,
+                               '201407_competition',
+                               'df_km_vs_time_mun_ex.csv'),
+                  encoding = 'utf-8',
                   float_format = '%.3f',
                   index_label = 'code_insee')
 
@@ -262,10 +272,12 @@ df_lsa_sub['dist_osrm'] = df_lsa_sub['dist_osrm'] / 1000.0 # m to km
 print df_lsa_sub[['dist', 'dist_osrm', 'time_osrm']].describe()
 
 df_lsa_sub.to_csv(os.path.join(path_dir_built_csv,
-                               'df_example_comp.csv'),
-                  encoding = 'latin-1',
+                               '201407_competition',
+                               'df_km_vs_time_comp_ex.csv'),
+                  encoding = 'utf-8',
                   float_format = '%.3f',
                   index_label = 'code_insee')
+
 #import httplib2
 #h = httplib2.Http(".cache")
 #resp, content = h.request(query, 'GET')
