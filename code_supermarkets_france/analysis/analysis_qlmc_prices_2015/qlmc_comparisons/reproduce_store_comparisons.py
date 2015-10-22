@@ -12,17 +12,17 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_csv = os.path.join(path_data,
-                        'data_supermarkets',
-                        'data_built',
-                        'data_qlmc_2015',
-                        'data_csv_201503')
+path_built_csv = os.path.join(path_data,
+                              'data_supermarkets',
+                              'data_built',
+                              'data_qlmc_2015',
+                              'data_csv_201503')
 
-df_qlmc_comparisons = pd.read_csv(os.path.join(path_csv,
+df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
                                                'df_qlmc_competitors.csv'),
                                   encoding = 'utf-8')
 
-df_prices = pd.read_csv(os.path.join(path_csv,
+df_prices = pd.read_csv(os.path.join(path_built_csv,
                                      'df_prices.csv'),
                         encoding = 'utf-8')
 
@@ -112,6 +112,7 @@ for lec_id, comp_id, comp_chain\
                      suffixes = ['_lec', '_comp'])
   ls_rows_compa.append((lec_id,
                         comp_id,
+                        comp_chain,
                         len(df_duel),
                         len(df_duel[df_duel['price_lec'] < df_duel['price_comp']]),
                         len(df_duel[df_duel['price_lec'] > df_duel['price_comp']]),
@@ -122,6 +123,7 @@ for lec_id, comp_id, comp_chain\
 df_repro_compa = pd.DataFrame(ls_rows_compa,
                               columns = ['lec_id',
                                          'comp_id',
+                                         'comp_chain',
                                          'nb_obs',
                                          'nb_lec_wins',
                                          'nb_comp_wins',
@@ -171,3 +173,22 @@ print u'\nCheck replication of qlmc comparisons:'
 df_delta = df_delta[df_delta['pct_compa'] >= 0]
 df_delta['delta'] = df_delta['qlmc_pct_compa'] - df_delta['pct_compa']
 print df_delta['delta'].describe()
+
+# Summary by chain
+ls_su_chains = ['AUC', 'CAR', 'GEA', 'ITM', 'USM']
+ls_se_chain_desc = [df_repro_compa[df_repro_compa['comp_chain']\
+                                     == chain]['pct_compa'].describe()\
+                      for chain in ls_su_chains]
+df_su_chains = pd.concat(ls_se_chain_desc,
+                         axis = 1,
+                         keys = ls_su_chains)
+pd.set_option('float_format', '{:,.1f}'.format)
+print df_su_chains.to_string()
+
+# Summary by chain: rr
+ls_se_chain_rr = [df_repro_compa[df_repro_compa['comp_chain']\
+                                     == chain]['rr'].describe()\
+                        for chain in ls_su_chains]
+df_chain_rr = pd.concat(ls_se_chain_rr,
+                        axis = 1,
+                        keys = ls_su_chains)

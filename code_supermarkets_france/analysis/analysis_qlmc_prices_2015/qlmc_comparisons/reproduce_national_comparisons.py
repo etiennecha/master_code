@@ -12,17 +12,17 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_csv = os.path.join(path_data,
-                        'data_supermarkets',
-                        'data_built',
-                        'data_qlmc_2015',
-                        'data_csv_201503')
+path_built_csv = os.path.join(path_data,
+                              'data_supermarkets',
+                              'data_built',
+                              'data_qlmc_2015',
+                              'data_csv_201503')
 
-df_qlmc_comparisons = pd.read_csv(os.path.join(path_csv,
+df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
                                                'df_qlmc_competitors.csv'),
                                   encoding = 'utf-8')
 
-df_prices = pd.read_csv(os.path.join(path_csv,
+df_prices = pd.read_csv(os.path.join(path_built_csv,
                                      'df_prices.csv'),
                         encoding = 'utf-8')
 

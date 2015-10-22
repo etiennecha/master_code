@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
 
 path_built = os.path.join(path_data,
                          'data_supermarkets',
@@ -72,7 +73,11 @@ ls_lsa_comp_cols = ['ac_nb_stores',
                     'ac_group_share',
                     'ac_hhi',
                     'dist_cl_comp',
-                    'dist_cl_groupe']
+                    'dist_cl_groupe',
+                    'hhi',
+                    'store_share',
+                    'group_share',
+                    'Reg'] # should not need to add it here
 
 df_qlmc = pd.merge(df_qlmc,
                    df_comp[['Ident'] +\
@@ -99,7 +104,7 @@ df_qlmc['Dpt'] = df_qlmc['INSEE_Code'].str.slice(stop = 2)
 # ############
 
 df_qlmc = df_qlmc[(df_qlmc['Period'] == 1) &\
-                  (df_qlmc['Enseigne_Alt'] == 'CENTRE E.LECLERC')]
+                  (df_qlmc['Enseigne_Alt'] == 'AUCHAN')]
 
 se_prod = df_qlmc.groupby(['Family', 'Subfamily', 'Product']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
@@ -111,14 +116,14 @@ df_qlmc_prod = df_qlmc[(df_qlmc['Family'] == rayon) &\
                        (df_qlmc['Product'] == produit)].copy()
 
 print u'\nRegression of price of {:s}'.format(produit)
-reg = smf.ols('Price ~ C(Period) + Surface + Enseigne_Alt + ac_hhi',
-              data = df_qlmc_prod[df_qlmc_prod['Type_Alt'] == 'H'],
+reg = smf.ols('Price ~ Surface + ac_hhi + C(Reg)',
+              data = df_qlmc_prod,
               missing = 'drop').fit()
 print reg.summary()
 
 print u'\nRegression of log price of {:s}'.format(produit)
-reg = smf.ols('ln_Price ~ C(Period) + Surface + Enseigne_Alt + ac_hhi',
-              data = df_qlmc_prod[df_qlmc_prod['Type_Alt'] == 'H'],
+reg = smf.ols('ln_Price ~ Surface + ac_hhi + C(Reg)',
+              data = df_qlmc_prod,
               missing = 'drop').fit()
 print reg.summary()
 
@@ -131,13 +136,13 @@ ls_top_prod = [x[-1] for x in se_prod.index[0:200]]
 df_qlmc_prods = df_qlmc[df_qlmc['Product'].isin(ls_top_prod)].copy()
 
 print u'\nRegression of price of top 20 products (avail in data)'
-reg = smf.ols('Price ~ C(Product) + Surface + ac_hhi',
+reg = smf.ols('Price ~ C(Product) + Surface + hhi + C(Reg)',
               data = df_qlmc_prods,
               missing = 'drop').fit()
 print reg.summary()
 
 print u'\nRegression of log price of top 20 products (avail in data)'
-reg = smf.ols('ln_Price ~ C(Product) + Surface + ac_hhi',
+reg = smf.ols('ln_Price ~ C(Product) + Surface + hhi + C(Reg)',
               data = df_qlmc_prods,
               missing = 'drop').fit()
 print reg.summary()
@@ -145,17 +150,22 @@ print reg.summary()
 print u'\nBuild market power variable (dummy so far)'
 print df_qlmc_prods[['ac_hhi', 'ac_group_share']].describe()
 df_qlmc_prods['dum_mp'] = 0
-df_qlmc_prods.loc[(df_qlmc['ac_hhi'] >= 0.21) &\
-                  (df_qlmc['ac_group_share'] >= 0.24), 'dum_mp'] = 1
+df_qlmc_prods.loc[(df_qlmc_prods['hhi'] >= df_qlmc_prods['hhi'].quantile(0.75)) &\
+                  (df_qlmc_prods['group_share'] >=\
+                     df_qlmc_prods['group_share'].quantile(0.75)),
+                  'dum_mp'] = 1
+
 # todo: endogenize
 print df_qlmc_prods['dum_mp'].describe()
 
-reg = smf.ols('ln_Price ~ C(Product) + Surface + dum_mp',
+reg = smf.ols('ln_Price ~ C(Product) + Surface + dum_mp + C(Reg)',
               data = df_qlmc_prods,
               missing = 'drop').fit()
 print reg.summary()
 
-# try: control by region or biggests UUs etc.
+## try: control by region or biggests UUs but few stores for most brands
+#df_qlmc[df_qlmc['Product'] == u'Coca Cola - Coca Cola IVP avec caf\xe9ine - 8x25cl']\
+#  .plot(kind = 'Scatter', x = 'Surface', y = 'Price')
 
 ## #############################################
 ## PRICE DISTRIBUTION PER CHAIN FOR TOP PRODUCTS

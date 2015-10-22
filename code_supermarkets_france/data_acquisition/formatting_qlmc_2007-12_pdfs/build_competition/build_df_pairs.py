@@ -47,7 +47,7 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
                      encoding = 'UTF-8')
 
 # MERGE
-df_stores = pd.merge(df_lsa[['Ident', 'Latitude', 'Longitude']],
+df_stores = pd.merge(df_lsa[['Ident', 'Latitude', 'Longitude', 'Enseigne_Alt', 'Groupe']],
                      df_stores,
                      left_on = 'Ident',
                      right_on = 'id_lsa',
@@ -100,38 +100,34 @@ for Period, ident, ident_close, dist in ls_close_pairs:
 # ADD Store AND Store_Chain IN DF
 # ################################
 
+# todo: take Enseigne_Alt / Groupe at the right period
 # suffix works only with redundant columns
 
-df_stores.rename(columns = {'id_lsa' : 'id_lsa_0',
-                            'Store' : 'Store_0',
-                            'Store_Chain': 'Store_Chain_0'},
-                 inplace = True)
+df_stores = df_stores[['Period', 'Store', 'Store_Chain', 'Store_Municipality',
+                       'id_lsa', 'Enseigne_Alt', 'Groupe']]
+df_stores.columns = ['{:s}_0'.format(x) if x != 'Period' else x for x in df_stores.columns]
 
 df_close_pairs = pd.merge(df_close_pairs,
-                          df_stores[['Period', 'id_lsa_0', 'Store_0', 'Store_Chain_0']],
+                          df_stores,
                           on = ['Period', 'id_lsa_0'],
                           how = 'left')
 
-df_stores.rename(columns = {'id_lsa_0' : 'id_lsa_1',
-                            'Store_0' : 'Store_1',
-                            'Store_Chain_0': 'Store_Chain_1'},
-                 inplace = True)
+df_stores.columns = [x.replace('0', '1') for x in df_stores.columns]
 
 df_close_pairs = pd.merge(df_close_pairs,
-                          df_stores[['Period', 'id_lsa_1', 'Store_1', 'Store_Chain_1']],
+                          df_stores,
                           on = ['Period', 'id_lsa_1'],
                           how = 'left')
-
 
 # #############################################
 # GET COMP STORE PAIRS & SAME CHAIN STORE PAIRS
 # #############################################
 
-df_comp_pairs = df_close_pairs[df_close_pairs['Store_Chain_0'] !=\
-                               df_close_pairs['Store_Chain_1']]
+df_comp_pairs = df_close_pairs[df_close_pairs['Groupe_0'] !=\
+                               df_close_pairs['Groupe_1']]
 
-df_same_pairs = df_close_pairs[df_close_pairs['Store_Chain_0'] ==\
-                               df_close_pairs['Store_Chain_1']]
+df_same_pairs = df_close_pairs[df_close_pairs['Groupe_0'] ==\
+                               df_close_pairs['Groupe_1']]
 
 # May wish to add Surface
 
