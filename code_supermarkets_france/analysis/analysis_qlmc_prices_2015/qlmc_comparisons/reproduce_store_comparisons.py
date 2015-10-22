@@ -183,6 +183,7 @@ df_su_chains = pd.concat(ls_se_chain_desc,
                          axis = 1,
                          keys = ls_su_chains)
 pd.set_option('float_format', '{:,.1f}'.format)
+print u'\nSummary by chain: comparison results:'
 print df_su_chains.to_string()
 
 # Summary by chain: rr
@@ -192,3 +193,5 @@ ls_se_chain_rr = [df_repro_compa[df_repro_compa['comp_chain']\
 df_chain_rr = pd.concat(ls_se_chain_rr,
                         axis = 1,
                         keys = ls_su_chains)
+print u'\nSummary by chain: rank reversal results:'
+print df_chain_rr.to_string()

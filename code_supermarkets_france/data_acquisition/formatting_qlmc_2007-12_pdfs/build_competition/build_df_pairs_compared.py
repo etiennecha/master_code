@@ -36,7 +36,7 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
 #Period = 5
 ls_df_repro_compa = []
 ls_ls_prod_draws = []
-for Period in range(9):
+for Period in range(9)[0:3]:
   df_comp_pairs_per = df_comp_pairs[df_comp_pairs['Period'] == Period]
   df_prices_per = df_prices[df_prices['Period'] == Period]
   ls_rows_compa = []
@@ -62,6 +62,14 @@ for Period in range(9):
                        on = ['Family', 'Subfamily', 'Product'],
                        suffixes = ['_0', '_1'])
     mean_diff = (df_duel['Price_0'] - df_duel['Price_1']).mean()
+    # mean saving
+    if len(df_duel[df_duel['Price_0'] < df_duel['Price_1']]) >\
+         len(df_duel[df_duel['Price_0'] > df_duel['Price_1']]):
+       df_rr = df_duel[df_duel['Price_1'] < df_duel['Price_0']]
+       mean_rr_saving = (df_rr['Price_0'] - df_rr['Price_1']).mean()
+    else:
+       df_rr = df_duel[df_duel['Price_0'] < df_duel['Price_1']]
+       mean_rr_saving = (df_rr['Price_1'] - df_rr['Price_0']).mean()
     # df_duel['Price_0_ctld'] = df_duel['Price_0'] - mean_diff
     ls_rows_compa.append((Period,
                           store_0,
@@ -76,7 +84,8 @@ for Period in range(9):
                           np.abs((df_duel[['Price_0', 'Price_1']].sum().min() /\
                                     df_duel[['Price_0', 'Price_1']].sum().max() - 1)* 100),
                           mean_diff,
-                          (df_duel['Price_0'] - df_duel['Price_1']).abs().mean()))
+                          (df_duel['Price_0'] - df_duel['Price_1']).abs().mean(),
+                          mean_rr_saving))
 
     # Save product names when equal prices
     ls_prod_draws += list(df_duel[df_duel['Price_0'] == df_duel['Price_1']]['Product'].values)
@@ -95,7 +104,8 @@ for Period in range(9):
                                            'Winner_value',
                                            'Winner_value_pct',
                                            'Mean_diff',
-                                           'Mean_gfs'])
+                                           'Mean_abs_gfs',
+                                           'Mean_rr_saving'])
   ls_df_repro_compa.append(df_repro_compa)
   ls_ls_prod_draws.append(ls_prod_draws)
 
@@ -118,18 +128,22 @@ df_compa_all_periods.loc[df_compa_all_periods['Nb_1_wins'] >\
 df_compa_all_periods.loc[df_compa_all_periods['Nb_obs'] == 0,
                          'Rank_rev'] = np.nan
 
-df_compa_all_periods.to_csv(os.path.join(path_built_csv,
-                                         'df_compa_all_periods.csv'),
-                            encoding = 'utf-8')
-
-enc_json(ls_ls_prod_draws, os.path.join(path_built_json,
-                                        'ls_ls_prod_draws.json'))
+#df_compa_all_periods.to_csv(os.path.join(path_built_csv,
+#                                         'df_compa_all_periods.csv'),
+#                            encoding = 'utf-8')
+#
+#enc_json(ls_ls_prod_draws, os.path.join(path_built_json,
+#                                        'ls_ls_prod_draws.json'))
 
 # #############
 # STATS DES
 # #############
 
+pd.set_option('float_format', '{:,.3f}'.format)
+
 ls_pctiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
+
+print u'\nOverview of winner value pct:'
 print df_repro_compa['Winner_value_pct'].describe(percentiles = ls_pctiles)
 
 df_repro_compa['Rank_rev'] = df_repro_compa['Nb_1_wins'] /\
@@ -140,7 +154,8 @@ df_repro_compa.loc[df_repro_compa['Nb_1_wins'] >\
                    'Rank_rev'] = df_repro_compa['Nb_0_wins'] /\
                                    df_repro_compa['Nb_obs'] * 100
 
-print df_repro_compa['Rank_rev'].describe()
+print u'\nGeneral overview'
+print df_repro_compa.describe().to_string()
 
 import matplotlib.pyplot as plt
 df_repro_compa.plot(kind = 'scatter', x = 'Winner_value_pct', y = 'Rank_rev')

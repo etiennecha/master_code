@@ -151,6 +151,23 @@ plt.show()
 #ax.legend()
 #plt.show()
 
+# PRICE DISPERSION (DYNAMIC)
+
+# todo: identify products which are present across 0-8 periods
+prod = u'Coca Cola - Coca Cola avec caféine - 2L'
+for i in range(9):
+	se_prod_prices = df_qlmc[(df_qlmc['Product'] == prod) &\
+                           (df_qlmc['Period'] == i)]['Price']
+	print u'{:d}, Nb: {:d}, Mean: {:.2f}, CV: {:.2f}, iq_range: {:.2f}, id_range: {:.2f}'\
+          .format(i,
+                  len(se_prod_prices),
+                  se_prod_prices.mean(),
+                  PD.cv(se_prod_prices),
+                  PD.iq_range(se_prod_prices),
+                  PD.id_range(se_prod_prices))
+# Can draw all iq_range or id_range Coca products followed
+# Regressions on CV (neutralize product values) for trend
+
 # #################
 # STATS DES: PRICES
 # #################
