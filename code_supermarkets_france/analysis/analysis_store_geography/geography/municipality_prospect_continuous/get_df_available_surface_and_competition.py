@@ -6,6 +6,7 @@ from add_to_path import path_data
 from functions_generic_qlmc import *
 from functions_geocoding import *
 from functions_string import *
+from functions_maps import *
 import os, sys
 import re
 import numpy as np
@@ -35,29 +36,36 @@ path_built_csv = os.path.join(path_built,
 path_insee = os.path.join(path_data, 'data_insee')
 path_insee_extracts = os.path.join(path_insee, 'data_extracts')
 
+path_maps = os.path.join(path_data,
+                         'data_maps')
+path_geo_dpt = os.path.join(path_maps, 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
+path_geo_com = os.path.join(path_maps, 'GEOFLA_COM_WGS84', 'COMMUNE')
+
 pd.set_option('float_format', '{:10,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 # ##############
-# READ CSV FILES
+# LOAD DATA
 # ##############
 
+# LOAD LSA STORE DATA
 df_lsa = pd.read_csv(os.path.join(path_built_csv,
-                                  'df_lsa_active.csv'),
-                     dtype = {u'C_INSEE' : str,
-                              u'C_INSEE_Ardt' : str,
-                              u'C_Postal' : str,
-                              u'SIREN' : str,
-                              u'NIC' : str,
-                              u'SIRET' : str},
-                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
-                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'UTF-8')
 
-df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
-                (~pd.isnull(df_lsa['Longitude']))].copy()
+df_lsa = df_lsa[(~pd.isnull(df_lsa['latitude'])) &\
+                (~pd.isnull(df_lsa['longitude']))].copy()
 
+# LOAD INSEE MUNICIPALITY DATA
 df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
                                         'df_communes.csv'),
                            dtype = {'DEP': str,
@@ -66,310 +74,211 @@ df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
 
 df_com_insee.set_index('CODGEO', inplace = True)
 
-# #############
-# FRANCE MAP
-# #############
+# LOAD GEO FRANCE
+geo_france = GeoFrance(path_dpt = path_geo_dpt,
+                       path_com = path_geo_com)
+df_com = geo_france.df_com
 
-# excludes Corsica
-x1 = -5.
-x2 = 9.
-y1 = 42
-y2 = 52.
-
-# Lambert conformal for France (as suggested by IGN... check WGS84 though?)
-m_fra = Basemap(resolution='i',
-                projection='lcc',
-                ellps = 'WGS84',
-                lat_1 = 44.,
-                lat_2 = 49.,
-                lat_0 = 46.5,
-                lon_0 = 3,
-                llcrnrlat=y1,
-                urcrnrlat=y2,
-                llcrnrlon=x1,
-                urcrnrlon=x2)
-
-path_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
-path_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
-
-m_fra.readshapefile(path_dpt, 'departements_fr', color = 'none', zorder=2)
-m_fra.readshapefile(path_com, 'communes_fr', color = 'none', zorder=2)
-
-#path_dir_120 = os.path.join(path_data, 'data_maps', 'ROUTE120_WGS84')
-#path_120_rte = os.path.join(path_dir_120, 'TRONCON_ROUTE')
-#path_120_nod = os.path.join(path_dir_120, 'NOEUD_ROUTIER')
-#
-#m_fra.readshapefile(path_120_rte, 'routes_fr', color = 'none', zorder=2)
-#m_fra.readshapefile(path_120_nod, 'noeuds_fr', color = 'none', zorder=2)
-
-#df_dpt = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.departements_fr],
-#                       'dpt_name' : [d['NOM_DEPT'] for d in m_fra.departements_fr_info],
-#                       'dpt_code' : [d['CODE_DEPT'] for d in m_fra.departements_fr_info],
-#                       'region_name' : [d['NOM_REGION'] for d in m_fra.departements_fr_info],
-#                       'region_code' : [d['CODE_REG'] for d in m_fra.departements_fr_info]})
-
-#df_dpt['patches'] = df_dpt['poly'].map(lambda x: PolygonPatch(x,
-#                                                              facecolor='#FFFFFF', # '#555555'
-#                                                              edgecolor='#555555', # '#787878'
-#                                                              lw=.25, alpha=.3, zorder=1))
-
-df_com = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.communes_fr],
-                       'x_center' : [d['X_CENTROID'] for d in m_fra.communes_fr_info],
-                       'y_center' : [d['Y_CENTROID'] for d in m_fra.communes_fr_info],
-                       'x_cl' : [d['X_CHF_LIEU'] for d in m_fra.communes_fr_info],
-                       'y_cl' : [d['Y_CHF_LIEU'] for d in m_fra.communes_fr_info],
-                       'code_insee' : [d['INSEE_COM'] for d in m_fra.communes_fr_info],
-                       'commune' : [d['NOM_COMM'] for d in m_fra.communes_fr_info]})
-# keep only one line per commune (several polygons for some)
+# KEEP ONLY ONE LINE PER MUNICIPALITY (several polygons for some)
 df_com['poly_area'] = df_com['poly'].apply(lambda x: x.area)
-df_com.sort(columns = ['code_insee', 'poly_area'],
+# keep largest area (todo: sum)
+df_com.sort(columns = ['c_insee', 'poly_area'],
             ascending = False,
             inplace = True)
+df_com.drop_duplicates(['c_insee'], inplace = True, take_last = False)
 
-if pd.__version__ in ['0.13.0', '0.13.1']:
-  df_com.drop_duplicates(cols = ['code_insee'], inplace = True)
-else:
-  df_com.drop_duplicates(subset = 'code_insee', inplace = True)
+# GET GPS COORD OF MUNICIPALITY CENTER
 
-#df_lsa['point'] = df_lsa[['Longitude', 'Latitude']].apply(\
-#                        lambda x: Point(m_fra(x[0], x[1])), axis = 1)
-
-def convert_to_ign(x, y):
-  x_l_93_ign = (m_fra(x, y)[0] + 700000 - m_fra(3, 46.5)[0])/100.0
-  y_l_93_ign = (m_fra(x, y)[1] + 6600000 - m_fra(3, 46.5)[1])/100.0
-  return x_l_93_ign, y_l_93_ign
-
-def convert_from_ign(x_l_93_ign, y_l_93_ign):
-  x = x_l_93_ign * 100 - 700000 + m_fra(3, 46.5)[0] 
-  y = y_l_93_ign * 100 - 6600000 + m_fra(3, 46.5)[1]
-  x, y = m_fra(x, y, inverse = True)
-  return x, y
-
-# todo: move to functions...
-
+# two centers available: centroid of polygon and town hall
 print u'\nTest with commune', df_com['commune'].iloc[0]
-x_test, y_test = df_com['x_center'].iloc[0], df_com['y_center'].iloc[0]
-print convert_from_ign(x_test, y_test)
+x_test, y_test = df_com['x_ct'].iloc[0], df_com['y_ct'].iloc[0]
+print geo_france.convert_ign_to_gps(x_test, y_test)
 
-df_com[['lng_ct', 'lat_ct']] = df_com[['x_center', 'y_center']].apply(\
-                                 lambda x: convert_from_ign(x['x_center'],\
-                                                            x['y_center']),\
+df_com[['lng_ct', 'lat_ct']] = df_com[['x_ct', 'y_ct']].apply(\
+                                 lambda x: geo_france.convert_ign_to_gps(x['x_ct'],\
+                                                                         x['y_ct']),\
                                  axis = 1)
 
 df_com[['lng_cl', 'lat_cl']] = df_com[['x_cl', 'y_cl']].apply(\
-                                 lambda x: convert_from_ign(x['x_cl'],\
-                                                            x['y_cl']),\
+                                 lambda x: geo_france.convert_ign_to_gps(x['x_cl'],\
+                                                                         x['y_cl']),\
                                  axis = 1)
-
-df_com['dpt'] = df_com['code_insee'].str.slice(stop=-3)
-df_com = df_com[~df_com['dpt'].isin(['2A', '2B'])]
 
 # Round gps coord
 for col in ['lng_ct', 'lat_ct', 'lng_cl', 'lat_cl']:
   df_com[col] = np.round(df_com[col], 3)
 
-# #####
-# TESTS
-# #####
+# #######################################
+# GET COMP VARIABLES OF ONE MUNICIPALITY
+# #######################################
 
-# COMPUTE SURFACE AVAILABLE TO MUNICIPALITY
 df_lsa['lat_com'] = df_com['lat_cl'].iloc[0]
 df_lsa['lng_com'] = df_com['lng_cl'].iloc[0]
-df_lsa['dist'] = compute_distance_ar(df_lsa['Latitude'],
-                                     df_lsa['Longitude'],
+df_lsa['dist'] = compute_distance_ar(df_lsa['latitude'],
+                                     df_lsa['longitude'],
                                      df_lsa['lat_com'],
                                      df_lsa['lng_com'])
-ls_disp_a = ['Enseigne', 'Adresse1', 'Ville',
-                'Latitude', 'Longitude', 'dist']
-ls_disp_b = ls_disp_a + ['Surface' , 'wgt_surf']
-print df_lsa[ls_disp_a][df_lsa['dist'] < 10].to_string()
-# Compute surface weighted by distance
-df_lsa['wgt_surf'] = np.exp(-df_lsa['dist']/10) * df_lsa['Surface']
-print df_lsa[ls_disp_b][df_lsa['dist'] < 10].to_string()
-store_avail_surface = df_lsa['wgt_surf'].sum()
+lsd_ex = ['enseigne', 'adresse1', 'ville',
+          'latitude', 'longitude', 'dist',
+          'surface' , 'wgtd_surface']
 
-# AVAILABLE MARKET SHARE OF STORE
-df_rgps = df_lsa[['Groupe', 'wgt_surf']].groupby('Groupe').agg([sum])['wgt_surf']
+print u'\nCompetition vars for one municipality (test):'
+# Compute surface weighted by distance and sum to get available surface
+df_lsa['wgtd_surface'] = np.exp(-df_lsa['dist']/10) * df_lsa['surface']
+print df_lsa[lsd_ex][df_lsa['dist'] <= 10].to_string()
+available_surface = df_lsa['wgtd_surface'].sum()
+# Market share of each group and hhi
+df_rgps = df_lsa[['groupe', 'wgtd_surface']].groupby('groupe').agg([sum])['wgtd_surface']
 df_rgps['market_share'] = df_rgps['sum'] / df_rgps['sum'].sum()
 hhi = (df_rgps['market_share']**2).sum()
-
-# COMMUNE CENTERED: DISTANCE TO ALL STORES AND AVAIL. SURFACE
 
 # ##########
 # EXECUTION
 # ##########
 
-## SURFACE AVAILABLE TO EACH COMMUNE
-#
-#df_com['avail_surf'] = np.nan
-#df_com['hhi'] = np.nan
-#df_com['CR1'] = np.nan
-#df_com['CR2'] = np.nan
-#df_com['CR3'] = np.nan
-#for store_type in ['H', 'X', 'S']:
-#  df_com['%s_ens' %store_type] = None
-#  df_com['%s_dist' %store_type] = np.nan
-#
-#for i, row in df_com.iterrows():
-#  df_lsa['lat_com'] = row['lat_cl']
-#  df_lsa['lng_com'] = row['lng_cl']
-#  df_lsa['dist'] = compute_distance_ar(df_lsa['Latitude'],
-#                                       df_lsa['Longitude'],
-#                                       df_lsa['lat_com'],
-#                                       df_lsa['lng_com'])
-#  df_lsa['wgt_surf'] = np.exp(-df_lsa['dist']/10) * df_lsa['Surf Vente']
-#  df_com['avail_surf'].ix[i] = df_lsa['wgt_surf'].sum()
-#
-#  df_rgps = df_lsa[['Groupe', 'wgt_surf']].groupby('Groupe').agg([sum])['wgt_surf']
-#  df_rgps['market_share'] = df_rgps['sum'] / df_rgps['sum'].sum()
-#  df_com['hhi'].ix[i] = (df_rgps['market_share']**2).sum()
-#  
-#  df_rgps.sort('sum', ascending = False, inplace = True)
-#  df_com['CR1'].ix[i] = df_rgps['sum'][0:1].sum() / df_rgps['sum'].sum()
-#  df_com['CR2'].ix[i] = df_rgps['sum'][0:2].sum() / df_rgps['sum'].sum()
-#  df_com['CR3'].ix[i] = df_rgps['sum'][0:3].sum() / df_rgps['sum'].sum()
-#
-#  for store_type in ['H', 'X', 'S']:
-#    store_ind = df_lsa['dist'][df_lsa['Type_alt'] == '%s' %store_type].argmin()
-#    df_com['%s_ens' %store_type].ix[i] = df_lsa['Enseigne'].loc[store_ind]
-#    df_com['%s_dist' %store_type].ix[i] = df_lsa['dist'].loc[store_ind]
-#
-#df_com['All_dist'] = df_com[['H_dist', 'S_dist', 'X_dist']].min(axis = 1)
-#
-### output
-#ls_disp_com_comp = ['code_insee', 'avail_surf',
-#                    'hhi', 'CR1', 'CR2', 'CR3',
-#                    'All_dist', 'H_dist', 'S_dist', 'X_dist',
-#                    'H_ens', 'S_ens', 'X_ens']
-#df_com[ls_disp_com_comp].to_csv(os.path.join(path_dir_built_csv,
-#                                             '201407_competition',
-#                                             'df_com_comp.csv'),
-#                                 index = False,
-#                                 encoding = 'utf-8',
-#                                 float_format='%.3f')
+ls_rows_comp = []
+for row_i, row in df_com.iterrows():
+  df_lsa['lat_com'] = row['lat_cl']
+  df_lsa['lng_com'] = row['lng_cl']
+  df_lsa['dist'] = compute_distance_ar(df_lsa['latitude'],
+                                       df_lsa['longitude'],
+                                       df_lsa['lat_com'],
+                                       df_lsa['lng_com'])
+  df_lsa['wgtd_surface'] = np.exp(-df_lsa['dist']/10) * df_lsa['surface']
 
-# READ STORED df_com_comp and MERGE BACK
-df_com_comp = pd.read_csv(os.path.join(path_built_csv,
-                                       '201407_competition',
-                                       'df_com_comp.csv'))
-df_com_comp['code_insee'] = df_com_comp['code_insee'].apply(\
-                              lambda x: "{:05d}".format(x)\
-                                if (type(x) == np.int64 or type(x) == long) else x)
-df_com = pd.merge(df_com, df_com_comp,
-                  left_on = 'code_insee', right_on = 'code_insee')
+  df_rgps = df_lsa[['groupe', 'wgtd_surface']].groupby('groupe').agg([sum])['wgtd_surface']
+  df_rgps['market_share'] = df_rgps['sum'] / df_rgps['sum'].sum()
+  
+  df_rgps.sort('sum', ascending = False, inplace = True)
+  ls_temp_ens, ls_temp_dist = [], []
+  for store_type in ['H', 'S', 'X']:
+    store_ind = df_lsa['dist'][df_lsa['type_alt'] == '%s' %store_type].argmin()
+    ls_temp_ens.append(df_lsa['enseigne'].ix[store_ind])
+    ls_temp_dist.append(df_lsa['dist'].ix[store_ind])
+
+  ls_rows_comp.append([row['c_insee'],
+                       df_lsa['wgtd_surface'].sum(),
+                       (df_rgps['market_share']**2).sum(),
+                       df_rgps['sum'][0:1].sum() / df_rgps['sum'].sum(),
+                       df_rgps['sum'][0:2].sum() / df_rgps['sum'].sum(),
+                       df_rgps['sum'][0:3].sum() / df_rgps['sum'].sum()] +\
+                       ls_temp_dist + ls_temp_ens)
+
+ls_comp_cols = ['c_insee', 'available_surface', 'hhi',
+                'cr1', 'cr2', 'cr3',
+                'dist_h', 'dist_s', 'dist_x',
+                'ens_h', 'ens_s', 'ens_x']
+
+df_comp = pd.DataFrame(ls_rows_comp, columns = ls_comp_cols)
+df_comp['dist_any'] = df_comp[['dist_h', 'dist_s', 'dist_x']].min(axis = 1)
 
 # Add nb of stores and surf. by municipality
+se_nb_stores = df_lsa['c_insee'].value_counts()
+se_surf_stores = df_lsa[['surface', 'c_insee']].groupby('c_insee').agg(sum)['surface']
 
-se_nb_stores = df_lsa['C_INSEE'].value_counts()
-se_surf_stores = df_lsa[['Surface', 'C_INSEE']].groupby('C_INSEE').agg(sum)['Surface']
-
-df_com.set_index('code_insee', inplace = True)
-df_com['nb_stores'] = se_nb_stores
-df_com['surf'] = se_surf_stores
-df_com['nb_stores'].fillna(0, inplace = True) #necessary?
-df_com['surf'].fillna(0, inplace = True) #necessary?
+df_comp.set_index('c_insee', inplace = True)
+df_comp['nb_stores'] = se_nb_stores
+df_comp['surface'] = se_surf_stores
+df_comp['nb_stores'].fillna(0, inplace = True) #necessary?
+df_comp['surface'].fillna(0, inplace = True) #necessary?
 
 # Avail surf by pop
-df_com['nb_households'] = df_com_insee['P10_MEN']
-df_com[df_com['nb_households'] == 0] = np.nan
-df_com['avail_surf_by_h'] = df_com['avail_surf'] / df_com['nb_households']
-df_com['nb_h_by_stores'] = df_com['nb_households'] / df_com['nb_stores']
-df_com['surf_by_h'] = df_com['surf'] / df_com['nb_households']
-df_com.replace([np.inf, -np.inf], np.nan, inplace = True)
+df_comp['nb_households'] = df_com_insee['P10_MEN']
+df_comp[df_comp['nb_households'] == 0] = np.nan
+df_comp['available_surface_by_h'] = df_comp['available_surface'] / df_comp['nb_households']
+df_comp['nb_h_by_stores'] = df_comp['nb_households'] / df_comp['nb_stores']
+df_comp['surf_by_h'] = df_comp['surface'] / df_comp['nb_households']
+df_comp.replace([np.inf, -np.inf], np.nan, inplace = True)
 
-# Summary Table (include Gini?)
+print u'\nOverview competition:'
 dict_formatters = {'hhi' : format_float_float,
-                   'avail_surf' : format_float_int}
+                   'available_surface' : format_float_int}
 ls_percentiles = [0.25, 0.75]
-# percentiles option only available in newest python
+print df_comp[ls_comp_cols[1:]].describe(percentiles=ls_percentiles)\
+                               .T.to_string(formatters=dict_formatters)
 
-if pd.__version__ in ['0.13.0', '0.13.1']:
-  print df_com[['nb_stores', 'surf', 'avail_surf', 'hhi', 'CR1', 'CR2', 'CR3',
-                'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe().\
-          T.to_string(formatters=dict_formatters)
-else:
-  print df_com[['nb_stores', 'surf', 'avail_surf', 'avail_surf_by_h',
-                'hhi', 'CR1', 'CR2', 'CR3',
-                'All_dist', 'H_dist', 'S_dist', 'X_dist']].describe(\
-        percentiles=ls_percentiles).T.to_string(formatters=dict_formatters)
+# ########
+# OUTPUT
+# ########
 
-# Entropy
-for field in ['nb_stores', 'surf', 'avail_surf', 'avail_surf_by_h']:
-  df_com['norm_%s' %field] = df_com[field]/df_com[field].mean()
-  ent = (df_com['norm_%s' %field]*np.log(df_com['norm_%s' %field])).sum()
-  print u'Entropy of field %s: ' %field, ent
+df_comp.to_csv(os.path.join(path_built_csv,
+                            '201407_competition',
+                            'df_mun_prospect_comp.csv'),
+                    index_label = 'c_insee',
+                    encoding = 'utf-8',
+                    float_format='%.3f')
 
-# Entropy decomposition
-
-# add region to df_com (5 com left out)
-#df_com.set_index('code_insee', inplace = True)
-df_com['reg'] = df_com_insee['REG']
-df_com.reset_index()
-
-df_com = df_com[~pd.isnull(df_com['reg']) &\
-                ~pd.isnull(df_com['avail_surf'])]
-
-# get s_k
-df_reg_s = df_com[['reg', 'avail_surf']].groupby('reg').agg([len,
-                                                           np.mean])['avail_surf']
-df_reg_s['s_k'] = (df_reg_s['len'] * df_reg_s['mean']) /\
-                  (len(df_com) * df_com['avail_surf'].mean())
-
-# get T1_k
-def get_T1_k(se_inc):
-  se_norm_inc = se_inc / se_inc.mean()
-  return (se_norm_inc * np.log(se_norm_inc)).sum() / len(se_inc)
-df_reg_t = df_com[['reg', 'avail_surf']].groupby('reg').agg([len,
-                                                       get_T1_k])['avail_surf']
-df_reg_t['T1_k'] = df_reg_t['get_T1_k']
-
-# merge and final
-df_reg = df_reg_s[['mean', 's_k']].copy()
-df_reg['T1_k'] = df_reg_t['T1_k']
-
-T1 = (df_reg['s_k'] * df_reg['T1_k']).sum()  +\
-     (df_reg['s_k'] * np.log(df_reg['mean'] / df_com['avail_surf'].mean())).sum()
-
-T1_simple = (df_com['norm_avail_surf'] * np.log(df_com['norm_avail_surf'])).sum() /\
-            len(df_com)
-# Close enough! (Same as get_T1)
-
-# Gini (draw normalized empirical distrib?)
-
-def get_Gini(df_interest, field):
-  df_gini = df_interest.copy()
-  df_gini.sort(field, ascending = True, inplace = True)
-  df_gini.reset_index(drop = True, inplace = True)
-  df_gini['i'] = df_gini.index + 1
-  G = 2*(df_gini[field]*df_gini['i']).sum()/\
-      (df_gini['i'].max()*df_gini[field].sum()) -\
-      (df_gini['i'].max() + 1)/float(df_gini['i'].max())
-  return np.round(G, 2), df_gini
-
-for field in ['avail_surf', 'hhi', 'CR1', 'CR2', 'CR3']:
-  G, df_gini = get_Gini(df_com, field)
-  print field, G
-
-df_com.sort('avail_surf', ascending = True, inplace = True)
-df_com.reset_index(inplace = True)
-df_com['i'] = df_com.index + 1
-G = 2*(df_com['avail_surf']*df_com['i']).sum()/\
-    (df_com['i'].max()*df_com['avail_surf'].sum()) -\
-    (df_com['i'].max() + 1)/float(df_com['i'].max())
-
-
-# POP AVAIL TO EACH STORE
-
-#df_com = pd.merge(df_com_insee, df_com, how='right', left_on = 'CODGEO', right_on = 'code_insee')
-##df_com[['code_insee', 'commune']][pd.isnull(df_com['P10_POP'])]
+## ######################
+## ENTROPY DECOMPOSITION
+## ######################
 #
-#df_lsa['avail_pop'] = np.nan
-#for i, row in df_lsa.iterrows():
-#  df_com['Latitude'] = row['Latitude']
-#  df_com['Longitude'] = row['Longitude']
-#  df_com['dist'] = compute_distance_ar(df_com['Latitude'],
-#                                       df_com['Longitude'],
-#                                       df_com['lat_cl'],
-#                                       df_com['lng_cl'])
-#  df_com['wgt_pop'] = np.exp(-df_com['dist']/10) * df_com['P10_POP']
-#  df_lsa['avail_pop'].ix[i] = df_com['wgt_pop'].sum()
+## Move to analysis?
+#
+## ENTROPY
+#
+#print u'\nEntropy analysis:'
+#for field in ['nb_stores', 'surface', 'available_surface', 'available_surface_by_h']:
+#  df_comp['norm_%s' %field] = df_comp[field]/df_comp[field].mean()
+#  ent = (df_comp['norm_%s' %field]*np.log(df_comp['norm_%s' %field])).sum()
+#  print u'Entropy of field %s: ' %field, ent
+#
+## ENTROPY DECOMPOSITION FOR AVAIL. SURFACE
+#
+## add region to df_comp (5 com left out)
+#df_comp['region'] = df_com_insee['REG']
+## df_comp.reset_index()
+#
+#df_comp = df_comp[~pd.isnull(df_comp['region']) &\
+#                  ~pd.isnull(df_comp['available_surface'])]
+#
+## get s_k
+#df_reg_s = df_comp[['region', 'available_surface']]\
+#             .groupby('region').agg([len,
+#                                     np.mean])['available_surface']
+#df_reg_s['s_k'] = (df_reg_s['len'] * df_reg_s['mean']) /\
+#                  (len(df_comp) * df_comp['available_surface'].mean())
+#
+## get t1_k
+#def get_t1_k(se_inc):
+#  se_norm_inc = se_inc / se_inc.mean()
+#  return (se_norm_inc * np.log(se_norm_inc)).sum() / len(se_inc)
+#df_reg_t = df_comp[['region', 'available_surface']]\
+#             .groupby('region').agg([len,
+#                                     get_t1_k])['available_surface']
+#df_reg_t['t1_k'] = df_reg_t['get_t1_k']
+#
+## merge and final
+#df_reg = df_reg_s[['mean', 's_k']].copy()
+#df_reg['t1_k'] = df_reg_t['t1_k']
+#
+#T1 = (df_reg['s_k'] * df_reg['t1_k']).sum()  +\
+#     (df_reg['s_k'] * np.log(df_reg['mean'] / df_comp['available_surface'].mean())).sum()
+#
+#T1_simple = (df_comp['norm_available_surface'] *\
+#               np.log(df_comp['norm_available_surface'])).sum() /\
+#            len(df_comp)
+## Close enough! (Same as get_T1)
+#
+## Gini (draw normalized empirical distrib?)
+#
+#def get_Gini(df_interest, field):
+#  df_gini = df_interest.copy()
+#  df_gini.sort(field, ascending = True, inplace = True)
+#  df_gini.reset_index(drop = True, inplace = True)
+#  df_gini['i'] = df_gini.index + 1
+#  G = 2*(df_gini[field]*df_gini['i']).sum()/\
+#      (df_gini['i'].max()*df_gini[field].sum()) -\
+#      (df_gini['i'].max() + 1)/float(df_gini['i'].max())
+#  return np.round(G, 2), df_gini
+#
+#print u'\nGini coefficients:'
+#for field in ['available_surface', 'hhi', 'cr1', 'cr2', 'cr3']:
+#  G, df_gini = get_Gini(df_comp, field)
+#  print field, G
+#
+#df_comp.sort('available_surface', ascending = True, inplace = True)
+#df_comp.reset_index(inplace = True)
+#df_comp['i'] = df_comp.index + 1
+#G = 2*(df_comp['available_surface']*df_comp['i']).sum()/\
+#    (df_comp['i'].max()*df_comp['available_surface'].sum()) -\
+#    (df_comp['i'].max() + 1)/float(df_comp['i'].max())

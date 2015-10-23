@@ -7,10 +7,72 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from mpl_toolkits.basemap import Basemap
+from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 import math
 import urllib2
 import StringIO
 from PIL import Image
+
+class GeoFrance:
+  def __init__(self, path_com = None, path_dpt = None, corse = False):
+    """
+    @param file_name: path to a csv file containing citys names, zips, dpts, and insee codes
+    @type file_name: C{str}
+    """
+    x1 = -5.
+    x2 = 9.
+    y1 = 42.
+    y2 = 51.5
+    
+    # Lambert conformal for France (as suggested by IGN... check WGS84 though?)
+    self.m_fra = Basemap(resolution='i',
+                         projection='lcc',
+                         ellps = 'WGS84',
+                         lat_1 = 44.,
+                         lat_2 = 49.,
+                         lat_0 = 46.5,
+                         lon_0 = 3,
+                         llcrnrlat=y1,
+                         urcrnrlat=y2,
+                         llcrnrlon=x1,
+                         urcrnrlon=x2)
+    
+    # Departments: one departement can be several lines (??) (several polygons)
+    if path_dpt:
+      self.m_fra.readshapefile(path_dpt, 'dpt', color = 'none', zorder=2)
+    self.df_dpt = pd.DataFrame({'poly'          : [Polygon(xy) for xy in self.m_fra.dpt],
+                                'departement'   : [d['NOM_DEPT'] for d in self.m_fra.dpt_info],
+                                'c_departement' : [d['CODE_DEPT'] for d in self.m_fra.dpt_info],
+                                'region'        : [d['NOM_REGION'] for d in self.m_fra.dpt_info],
+                                'c_region'      : [d['CODE_REG'] for d in self.m_fra.dpt_info]})
+    if not corse:
+      self.df_dpt = self.df_dpt[self.df_dpt['region'] != 'CORSE']
+    
+    # Communes: one commune can be several lines (several polygons)
+    self.m_fra.readshapefile(path_com, 'com', color = 'none', zorder=2)
+    self.df_com = pd.DataFrame({'poly'         : [Polygon(xy) for xy in self.m_fra.com],
+                                'c_insee'      : [d['INSEE_COM'] for d in self.m_fra.com_info],
+                                'commune'      : [d['NOM_COMM'] for d in self.m_fra.com_info],
+                                'departement'  : [d['NOM_DEPT'] for d in self.m_fra.com_info],
+                                'region'       : [d['NOM_REGION'] for d in self.m_fra.com_info],
+                                'com_pop'      : [d['POPULATION'] for d in self.m_fra.com_info],
+                                'com_surf'     : [d['SUPERFICIE'] for d in self.m_fra.com_info],
+                                'x_ct'         : [d['X_CENTROID'] for d in self.m_fra.com_info],
+                                'y_ct'         : [d['Y_CENTROID'] for d in self.m_fra.com_info],
+                                'x_cl'         : [d['X_CHF_LIEU'] for d in self.m_fra.com_info],
+                                'y_cl'         : [d['Y_CHF_LIEU'] for d in self.m_fra.com_info]})
+    self.df_com = self.df_com[self.df_com['region'] != 'CORSE']
+
+  def convert_gps_to_ign(self, x, y):
+    x_l_93_ign = (self.m_fra(x, y)[0] + 700000 - self.m_fra(3, 46.5)[0])/100.0
+    y_l_93_ign = (self.m_fra(x, y)[1] + 6600000 - self.m_fra(3, 46.5)[1])/100.0
+    return x_l_93_ign, y_l_93_ign
+  
+  def convert_ign_to_gps(self, x_l_93_ign, y_l_93_ign):
+    x = x_l_93_ign * 100 - 700000 + self.m_fra(3, 46.5)[0] 
+    y = y_l_93_ign * 100 - 6600000 + self.m_fra(3, 46.5)[1]
+    x, y = self.m_fra(x, y, inverse = True)
+    return x, y
 
 def colorbar_index(ncolors, cmap, labels=None, **kwargs):
   """

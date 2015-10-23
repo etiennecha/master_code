@@ -15,20 +15,20 @@ import matplotlib.pyplot as plt
 import pprint
 #from mpl_toolkits.basemap import Basemap
 
-path_dir_source = os.path.join(path_data,
-                               'data_supermarkets',
-                               'data_source',
-                               'data_lsa')
+path_source = os.path.join(path_data,
+                           'data_supermarkets',
+                           'data_source',
+                           'data_lsa')
 
-path_dir_insee = os.path.join(path_data,
-                              'data_insee')
+path_insee = os.path.join(path_data,
+                          'data_insee')
 
 # ###################
 # READ LSA EXCEL FILE
 # ###################
 
 # need to work with _no1900 at CREST for now (older versions of numpy/pandas/xlrd...?)
-df_lsa = pd.read_excel(os.path.join(path_dir_source,
+df_lsa = pd.read_excel(os.path.join(path_source,
                                     '2014-07-30-export_CNRS_no1900.xlsx'),
                        sheetname = 'Feuil1')
 
@@ -209,7 +209,7 @@ for field in ['Surf Vente', 'Nbr de caisses', 'Nbr parking', 'Pompes']:
   df_surf.reset_index(inplace = True)
   df_surf['Type'] = df_surf['Type'].apply(lambda x: dict_type_out[x])
   df_surf.set_index('Type', inplace = True)
-  print df_surf[ls_surf_disp].to_latex(index_names = False)
+  print df_surf[ls_surf_disp].to_string(index_names = False)
 
 # todo: inspect suspect values
 pd.set_option('display.max_columns', 50)
@@ -252,7 +252,7 @@ df_rgps.rename(columns = {'len' : '#Tot',
                           'MP': '#MP'}, inplace = True)
 ls_rgps_disp = ['#Tot', '#Hyp', '#Sup', '#Dis', '#MP',
                 'Avg S.', 'Med S.', 'Min S.', 'Max S.', 'Cum S.']
-print df_rgps[ls_rgps_disp].to_latex()
+print df_rgps[ls_rgps_disp].to_string()
 
 # Stats desc by enseigne (and by group)
 print '\nStats des per retail group'
@@ -287,7 +287,7 @@ for retail_group in dict_groupes.keys():
                            'MP': '#MP'}, inplace = True)
   ls_rgp_disp = ['#Tot', '#Hyp', '#Sup', '#Dis', '#MP',
                  'Avg S.', 'Med S.', 'Min S.', 'Max S.', 'Cum S.']
-  print df_rgp[ls_rgp_disp].to_latex()
+  print df_rgp[ls_rgp_disp].to_string()
 
 #print u'\nNb stores (dead or alive) with valid gps:'
 #print len(df_lsa[(~pd.isnull(df_lsa['Longitude'])) &\
@@ -296,7 +296,7 @@ for retail_group in dict_groupes.keys():
 
 # STATS ON NB OF STORES BY GROUP AND REGION
 
-dict_dpts_regions = dec_json(os.path.join(path_dir_insee,
+dict_dpts_regions = dec_json(os.path.join(path_insee,
                                           'dpts_regions',
                                           'dict_dpts_regions.json'))
 df_lsa_active['Dpt'] = df_lsa_active['Code INSEE'].str.slice(stop=-3)
@@ -323,10 +323,10 @@ df_reg.rename(columns = {'CARREFOUR' : 'CARR.',
                          'AUTRE' : 'OTH.'}, inplace = True)
 ls_reg_disp = ['CARR.', 'CASI.', 'MOUSQ.', 'LIDL', 'SYS.U', 'ALDI',
                'LECL.', 'AUCH.', 'L.D.', 'DIAP.', 'COLR.', 'OTH.', 'TOT.']
-print df_reg[ls_reg_disp].to_latex()
-# row: TOT
-print 'TOTAL &', ' & '.join(map(lambda x: '{:4.0f}'.format(x),
-                            df_reg[ls_reg_disp].sum(axis = 0).values)), '\\\\'
+print df_reg[ls_reg_disp].to_string()
+## row: TOT
+#print 'TOTAL &', ' & '.join(map(lambda x: '{:4.0f}'.format(x),
+#                            df_reg[ls_reg_disp].sum(axis = 0).values)), '\\\\'
 
 # INSPECT ACT ANNEXES / DRIVE
 ls_drive_temp = df_lsa_active['Act Annexes'][~pd.isnull(df_lsa_active['Act Annexes'])].values

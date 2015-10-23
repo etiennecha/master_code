@@ -13,31 +13,30 @@ import datetime as datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import pprint
-#from mpl_toolkits.basemap import Basemap
 
-path_dir_source = os.path.join(path_data,
-                               'data_supermarkets',
-                               'data_source',
-                               'data_lsa')
+path_source = os.path.join(path_data,
+                           'data_supermarkets',
+                           'data_source',
+                           'data_lsa')
 
-path_dir_built = os.path.join(path_data,
-                               'data_supermarkets',
-                               'data_built',
-                               'data_lsa')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
 
-path_dir_csv = os.path.join(path_dir_built,
+path_built_csv = os.path.join(path_built,
                             'data_csv')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+path_insee = os.path.join(path_data, 'data_insee')
+path_insee_match = os.path.join(path_insee, 'match_insee_codes')
+path_insee_extracts = os.path.join(path_insee, 'data_extracts')
 
 # ###################
 # READ LSA EXCEL FILE
 # ###################
 
 # Need to work with _no1900 at CREST for now (older versions of numpy/pandas/xlrd...?)
-df_lsa = pd.read_excel(os.path.join(path_dir_source,
+df_lsa = pd.read_excel(os.path.join(path_source,
                                     '2014-07-30-export_CNRS_no1900.xlsx'),
                        sheetname = 'Feuil1')
 
@@ -65,7 +64,7 @@ df_lsa[u'Code SIREN'] = df_lsa[u'N°Siren'].apply(\
 df_lsa[u'Code NIC'] = df_lsa[u'N°Siret'].apply(\
                         lambda x: u'{:05d}'.format(int(x)) if not pd.isnull(x)\
                                                            else None)
-df_lsa[u'Code_SIRET'] = df_lsa[u'Code SIREN'] + df_lsa[u'Code NIC']
+df_lsa[u'Code SIRET'] = df_lsa[u'Code SIREN'] + df_lsa[u'Code NIC']
 df_lsa.drop([u'N°Siren', u'N°Siret'], axis = 1, inplace = True)
 
 # ##########################
@@ -100,7 +99,7 @@ df_lsa.loc[df_lsa['Code INSEE'].isin(ls_insee_bc), 'Code INSEE ardt'] =\
 # CREATE DPT AND REG VARIABLES
 # ############################
 
-dict_dpts_regions = dec_json(os.path.join(path_dir_insee,
+dict_dpts_regions = dec_json(os.path.join(path_insee,
                                           'dpts_regions',
                                           'dict_dpts_regions.json'))
 df_lsa['c_departement'] = df_lsa['Code INSEE'].str.slice(stop=-3)
@@ -277,7 +276,8 @@ df_lsa.drop(['Surf alim/couverte', 'Surf non alim/non couverte'],
             axis = 1,
             inplace = True)
 
-df_lsa.rename(columns = {u'Centrale/Siege' : u'centrale_siege',
+df_lsa.rename(columns = {u'Ident' : 'id_lsa',
+                         u'Centrale/Siege' : u'centrale_siege',
                          u'Etb affiliation' : u'etb_affiliation',
                          u"Nom de l'établissement" : u'nom',
                          u'Sté exploit': u'ste_exploitante',
@@ -358,28 +358,28 @@ print u'Stores HSX: {0:5d}'.format(len(df_lsa_hsx))
 # ###############
 
 # ALL
-df_lsa.to_csv(os.path.join(path_dir_csv,
+df_lsa.to_csv(os.path.join(path_built_csv,
                            'df_lsa.csv'),
               encoding = 'UTF-8',
               float_format ='%.3f',
               index = False)
 
 # ACTIVE STORES
-df_lsa_active.to_csv(os.path.join(path_dir_csv,
+df_lsa_active.to_csv(os.path.join(path_built_csv,
                                   'df_lsa_active.csv'),
                      encoding = 'UTF-8',
                      float_format = '%.3f',
                      index = False)
 
 # ACTIVE STORES H/S/X
-df_lsa_active_hsx.to_csv(os.path.join(path_dir_csv,
+df_lsa_active_hsx.to_csv(os.path.join(path_built_csv,
                                       'df_lsa_active_hsx.csv'),
                          encoding = 'UTF-8',
                          float_format='%.3f',
                          index = False)
 
 # H/S/X
-df_lsa_hsx.to_csv(os.path.join(path_dir_csv,
+df_lsa_hsx.to_csv(os.path.join(path_built_csv,
                                'df_lsa_hsx.csv'),
                   encoding = 'UTF-8',
                   float_format='%.3f',
@@ -397,6 +397,6 @@ df_lsa_hsx.to_csv(os.path.join(path_dir_csv,
 #                                        if type(x) is pd.tslib.Timestamp\
 #                                        else pd.tslib.NaT)
 #
-#writer = pd.ExcelWriter(os.path.join(path_dir_csv, 'LSA_enriched.xlsx'))
+#writer = pd.ExcelWriter(os.path.join(path_built_csv, 'LSA_enriched.xlsx'))
 #df_lsa.to_excel(writer, index = False)
 #writer.close()
