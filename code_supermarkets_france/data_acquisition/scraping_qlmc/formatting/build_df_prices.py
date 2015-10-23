@@ -84,8 +84,8 @@ for region in ls_fra_regions:
                                   ls_prod[1][1])
     
     df_pair_products = pd.DataFrame(ls_rows_products,
-                               columns = ['family',
-                                          'subfamily',
+                               columns = ['section',
+                                          'family',
                                           'product',
                                           'date',
                                           'chain',
@@ -103,8 +103,8 @@ for region in ls_fra_regions:
                            u'familyId_12' : u'Animalerie',
                            u'familyId_13' : u'Bazar et textile'}
     
-    df_pair_products['family'] =\
-       df_pair_products['family'].apply(lambda x: dict_replace_family[x])
+    df_pair_products['section'] =\
+       df_pair_products['section'].apply(lambda x: dict_replace_family[x])
     
     df_pair_products['price'] =\
       df_pair_products['price'].apply(lambda x: x.replace(u'\xa0\u20ac', u'')).astype(float)
@@ -129,10 +129,10 @@ for region in ls_fra_regions:
     ls_df_pair_products.append(df_pair_products)
   
   df_region = pd.concat(ls_df_pair_products)
-  df_region.sort(['store_id', 'family', 'subfamily', 'product'], inplace = True)
+  df_region.sort(['store_id', 'section', 'family', 'product'], inplace = True)
   
   # drop duplicate at this stage but must do also with global df
-  df_region.drop_duplicates(['store_id', 'family', 'subfamily', 'product'], inplace = True)
+  df_region.drop_duplicates(['store_id', 'section', 'family', 'product'], inplace = True)
   
   #df_region.to_csv(os.path.join(path_csv,
   #                              'df_region_{:s}.csv'.format(region)),
@@ -142,8 +142,8 @@ for region in ls_fra_regions:
   ls_df_regions.append(df_region)
 
 df_prices = pd.concat(ls_df_regions)
-df_prices.sort(['store_id', 'family', 'subfamily', 'product'], inplace = True)
-df_prices.drop_duplicates(['store_id', 'family', 'subfamily', 'product'], inplace = True)
+df_prices.sort(['store_id', 'section', 'family', 'product'], inplace = True)
+df_prices.drop_duplicates(['store_id', 'section', 'family', 'product'], inplace = True)
 
 df_prices.to_csv(os.path.join(path_csv,
                               'df_prices.csv'),

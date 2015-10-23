@@ -59,13 +59,13 @@ for field in [u'DATE ouv', u'DATE ferm', u'DATE réouv',
 # FORMAT SIRET & SIREN
 # ####################
 
-df_lsa[u'SIREN'] = df_lsa[u'N°Siren'].apply(\
-                       lambda x: u'{:09d}'.format(int(x)) if not pd.isnull(x)\
-                                                          else None)
-df_lsa[u'NIC'] = df_lsa[u'N°Siret'].apply(\
-                       lambda x: u'{:05d}'.format(int(x)) if not pd.isnull(x)\
-                                                          else None)
-df_lsa[u'SIRET'] = df_lsa[u'N°Siren'] + df_lsa[u'N°Siret']
+df_lsa[u'Code SIREN'] = df_lsa[u'N°Siren'].apply(\
+                          lambda x: u'{:09d}'.format(int(x)) if not pd.isnull(x)\
+                                                             else None)
+df_lsa[u'Code NIC'] = df_lsa[u'N°Siret'].apply(\
+                        lambda x: u'{:05d}'.format(int(x)) if not pd.isnull(x)\
+                                                           else None)
+df_lsa[u'Code_SIRET'] = df_lsa[u'Code SIREN'] + df_lsa[u'Code NIC']
 df_lsa.drop([u'N°Siren', u'N°Siret'], axis = 1, inplace = True)
 
 # ##########################
@@ -103,9 +103,9 @@ df_lsa.loc[df_lsa['Code INSEE'].isin(ls_insee_bc), 'Code INSEE ardt'] =\
 dict_dpts_regions = dec_json(os.path.join(path_dir_insee,
                                           'dpts_regions',
                                           'dict_dpts_regions.json'))
-df_lsa['Dpt'] = df_lsa['Code INSEE'].str.slice(stop=-3)
-df_lsa['Reg'] = df_lsa['Dpt'].apply(\
-                  lambda x: dict_dpts_regions.get(x, 'DOMTOM'))
+df_lsa['c_departement'] = df_lsa['Code INSEE'].str.slice(stop=-3)
+df_lsa['region'] = df_lsa['c_departement'].apply(\
+                     lambda x: dict_dpts_regions.get(x, 'DOMTOM'))
 
 # ###############################
 # CREATE RETAIL GROUP VARIABLE
@@ -277,42 +277,47 @@ df_lsa.drop(['Surf alim/couverte', 'Surf non alim/non couverte'],
             axis = 1,
             inplace = True)
 
-df_lsa.rename(columns = {u'Centrale/Siege' : u'Centrale_Siege',
-                         u'Etb affiliation' : u'Etb_Affiliation',
-                         u"Nom de l'établissement" : u'Nom',
-                         u'Sté exploit': u'Ste_Exploitante',
-                         u'ADRESSE1' : u'Adresse1',
-                         u'ADRESSE2' : u'Adresse2',
-                         u'ADRESSE3' : u'Adresse3',
-                         u'Surf Vente' : u'Surface',
-                         u'Anc Surf Vente' : u'Ex_Surface',
-                         u'Nbr de caisses' : u'Nb_Caisses',
-                         u'Nbr emp' : u'Nb_Emplois',
-                         u'Nbr parking' : u'Nb_Parking',
-                         u'Pompes' : u'Nb_Pompes',
-                         u'Code postal' : u'C_Postal',
-                         u'Code INSEE' : u'C_INSEE',
-                         u'Code INSEE ardt' : u'C_INSEE_Ardt',
-                         u'Intégré / Indépendant' : u'Int_Ind',
-                         u'DRIVE' : u'Drive',
-                         u'DATE ouv' : u'Date_Ouv',
-                         u'DATE ferm' : u'Date_Fer',
-                         u'DATE réouv' : u'Date_Reouv',
-                         u'DATE chg enseigne' : u'Date_Chg_Enseigne',
-                         u'DATE chgt surf' : u'Date_Chg_Surface',
-                         u'Ex enseigne' : u'Ex_Enseigne',
-                         u'Ex enseigne alt' : u'Ex_Enseigne_Alt',
-                         u'Enseigne alt' : u'Enseigne_Alt'},
+df_lsa.rename(columns = {u'Centrale/Siege' : u'centrale_siege',
+                         u'Etb affiliation' : u'etb_affiliation',
+                         u"Nom de l'établissement" : u'nom',
+                         u'Sté exploit': u'ste_exploitante',
+                         u'ADRESSE1' : u'adresse1',
+                         u'ADRESSE2' : u'adresse2',
+                         u'ADRESSE3' : u'adresse3',
+                         u'Surf Vente' : u'surface',
+                         u'Anc Surf Vente' : u'ex_surface',
+                         u'Nbr de caisses' : u'nb_caisses',
+                         u'Nbr emp' : u'nb_emplois',
+                         u'Nbr parking' : u'nb_parking',
+                         u'Pompes' : u'nb_pompes',
+                         u'Code postal' : u'c_postal',
+                         u'Code INSEE' : u'c_insee',
+                         u'Code INSEE ardt' : u'c_insee_ardt',
+                         u'Code SIREN' : u'c_siren',
+                         u'Code NIC' : u'c_nic',
+                         u'Code SIRET': u'c_siret',
+                         u'Intégré / Indépendant' : u'int_ind',
+                         u'DRIVE' : u'drive',
+                         u'DATE ouv' : u'date_ouv',
+                         u'DATE ferm' : u'date_fer',
+                         u'DATE réouv' : u'date_reouv',
+                         u'DATE chg enseigne' : u'date_chg_enseigne',
+                         u'DATE chgt surf' : u'date_chg_surface',
+                         u'Ex enseigne' : u'ex_enseigne',
+                         u'Ex enseigne alt' : u'ex_enseigne_alt',
+                         u'Enseigne alt' : u'enseigne_alt',
+                         u'Type Alt': 'type_alt',
+                         u'Verif' : 'gps_verif'},
               inplace = True)
 
-df_lsa.columns = [x.replace(u' ', u'_') for x in df_lsa.columns]
+df_lsa.columns = [x.replace(u' ', u'_').lower() for x in df_lsa.columns]
 
 print u'Overview columns of df_lsa:'
 print df_lsa.info()
 
 print u'\nDescribe variables in df_lsa:'
 print u'\n', u'-'*120
-for field in ['Statut', 'Type_Alt', 'Enseigne_Alt', 'Ex_Enseigne', 'Groupe']:
+for field in ['statut', 'type_alt', 'enseigne_alt', 'ex_enseigne', 'groupe']:
   print u'\nValue counts for:', field
   print df_lsa[field].value_counts()
   print u'-'*30
@@ -323,28 +328,28 @@ for field in ['Statut', 'Type_Alt', 'Enseigne_Alt', 'Ex_Enseigne', 'Groupe']:
 
 print u'\nStores in data: {0:5d}'.format(len(df_lsa)) 
 print u'Stores in Dom-Tom dropped from now on'
-df_lsa = df_lsa[df_lsa['Reg'] != 'DOMTOM']
+df_lsa = df_lsa[df_lsa['region'] != 'DOMTOM']
 print u'Stores in data without Dom-Tom: {0:5d}'.format(len(df_lsa)) 
 
 # Stores no more operating
-df_lsa_inactive = df_lsa[(~pd.isnull(df_lsa[u'Date_Fer'])) &\
-                         (pd.isnull(df_lsa[u'Date_Reouv']))].copy()
+df_lsa_inactive = df_lsa[(~pd.isnull(df_lsa[u'date_fer'])) &\
+                         (pd.isnull(df_lsa[u'date_reouv']))].copy()
 print u'Stores no more operating: {0:5d}'.format(len(df_lsa_inactive))
 
 # Stores still operating (add for any date e.g. 01/01/2014)
-df_lsa_active = df_lsa[(pd.isnull(df_lsa[u'Date_Fer'])) |\
-                       ((~pd.isnull(df_lsa[u'Date_Fer'])) &\
-                        (~pd.isnull(df_lsa[u'Date_Reouv'])))].copy()
+df_lsa_active = df_lsa[(pd.isnull(df_lsa[u'date_fer'])) |\
+                       ((~pd.isnull(df_lsa[u'date_fer'])) &\
+                        (~pd.isnull(df_lsa[u'date_reouv'])))].copy()
 print u'Stores still operating: {0:5d}'.format(len(df_lsa_active))
 
 # Stores HSX active
-df_lsa_active_hsx = df_lsa_active[(df_lsa_active['Type_Alt'] != 'DRIN') &\
-                                  (df_lsa_active['Type_Alt'] != 'DRIVE')]
+df_lsa_active_hsx = df_lsa_active[(df_lsa_active['type_alt'] != 'DRIN') &\
+                                  (df_lsa_active['type_alt'] != 'DRIVE')]
 print u'Stores HSX active: {0:5d}'.format(len(df_lsa_active_hsx))
 
 # Stores HSX
-df_lsa_hsx = df_lsa[(df_lsa['Type_Alt'] != 'DRIN') &\
-                    (df_lsa['Type_Alt'] != 'DRIVE')]
+df_lsa_hsx = df_lsa[(df_lsa['type_alt'] != 'DRIN') &\
+                    (df_lsa['type_alt'] != 'DRIVE')]
 
 print u'Stores HSX: {0:5d}'.format(len(df_lsa_hsx))
 
@@ -385,8 +390,8 @@ df_lsa_hsx.to_csv(os.path.join(path_dir_csv,
 # ###############
 
 ## todo check if valid
-#for field in [u'DATE_Ouv', u'DATE_Fer', u'DATE_Reouv',
-#              u'DATE_Chg_Enseigne', u'DATE_Chg_Surface']:
+#for field in [u'date_ouv', u'date_fer', u'date_reouv',
+#              u'date_chg_enseigne', u'DATE_chg_surface']:
 #  df_lsa[field][df_lsa[field] < '1900'] = pd.tslib.NaT
 #  df_lsa[field] = df_lsa[field].apply(lambda x: x.date()\
 #                                        if type(x) is pd.tslib.Timestamp\

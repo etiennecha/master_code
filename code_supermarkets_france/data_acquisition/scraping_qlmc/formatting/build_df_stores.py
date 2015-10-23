@@ -46,11 +46,11 @@ ls_rows_stores = []
 for leclerc_id, ls_stores in dict_leclerc_comp.items():
   for store in ls_stores:
     ls_rows_stores.append([store['slug'],
-                         store['city'],
-                         store['title'],
-                         store['signCode'],
-                         store['latitude'],
-                         store['longitude']])
+                           store['city'],
+                           store['title'],
+                           store['signCode'],
+                           store['latitude'],
+                           store['longitude']])
 
 df_stores = pd.DataFrame(ls_rows_stores,
                          columns = ['store_id',
