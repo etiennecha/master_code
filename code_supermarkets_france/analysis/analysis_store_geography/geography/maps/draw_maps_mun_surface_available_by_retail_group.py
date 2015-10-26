@@ -26,18 +26,20 @@ from pysal.esda.mapclassify import Natural_Breaks as nb
 from matplotlib import colors
 import time
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_json = os.path.join(path_dir_qlmc, 'data_built' , 'data_json_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-path_dir_built_png = os.path.join(path_dir_qlmc, 'data_built' , 'data_png')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
 
-path_dir_source_lsa = os.path.join(path_dir_qlmc, 'data_source', 'data_lsa_xls')
+path_built_csv = os.path.join(path_built, 'data_csv')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+path_insee = os.path.join(path_data, 'data_insee')
+path_insee_extracts = os.path.join(path_insee, 'data_extracts')
 
-path_dir_built_hdf5 = os.path.join(path_dir_qlmc, 'data_built', 'data_hdf5')
+path_maps = os.path.join(path_data,
+                         'data_maps')
+path_geo_dpt = os.path.join(path_maps, 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
+path_geo_com = os.path.join(path_maps, 'GEOFLA_COM_WGS84', 'COMMUNE')
 
 pd.set_option('float_format', '{:10,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -60,101 +62,41 @@ ls_rgs = [u'CARREFOUR',
           u'COLRUYT']
 
 df_com_rgs = pd.read_csv(os.path.join(path_dir_built_csv,
-                                     'df_com_avail_surf_rgs.csv'),
+                                     'df_mun_prospect_surface_available_by_group.csv'),
                          dtype = {'code_insee' : str},
                          encoding = 'utf-8')
-df_com_rgs.set_index('code_insee', inplace = True)
+df_com_rgs.set_index('c_insee', inplace = True)
 
-#df_lsa = pd.read_csv(os.path.join(path_dir_built_csv,
-#                                  'df_lsa_active_fm_hsx.csv'),
-#                     dtype = {'Code INSEE' : str},
-#                     encoding = 'UTF-8')
-#df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
-#                (~pd.isnull(df_lsa['Longitude']))].copy()
-#
-#df_com_insee = pd.read_csv(os.path.join(path_dir_insee_extracts,
+#df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
 #                                        'df_communes.csv'),
 #                           dtype = {'DEP': str,
 #                                    'CODGEO' : str},
 #                           encoding = 'UTF-8')
 #df_com_insee.set_index('CODGEO', inplace = True)
 
-# #############
-# FRANCE MAP
-# #############
-
-# excludes Corsica
-x1 = -5.
-x2 = 9.
-y1 = 42
-y2 = 52.
-
-# Lambert conformal for France (as suggested by IGN... check WGS84 though?)
-m_fra = Basemap(resolution='i',
-                projection='lcc',
-                ellps = 'WGS84',
-                lat_1 = 44.,
-                lat_2 = 49.,
-                lat_0 = 46.5,
-                lon_0 = 3,
-                llcrnrlat=y1,
-                urcrnrlat=y2,
-                llcrnrlon=x1,
-                urcrnrlon=x2)
-
-path_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
-path_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
-
-m_fra.readshapefile(path_dpt, 'departements_fr', color = 'none', zorder=2)
-m_fra.readshapefile(path_com, 'communes_fr', color = 'none', zorder=2)
-
-df_dpt = pd.DataFrame({'poly'     : [Polygon(xy) for xy in m_fra.departements_fr],
-                       'dpt_name' : [d['NOM_DEPT'] for d in m_fra.departements_fr_info],
-                       'dpt_code' : [d['CODE_DEPT'] for d in m_fra.departements_fr_info],
-                       'reg_name' : [d['NOM_REGION'] for d in m_fra.departements_fr_info],
-                       'reg_code' : [d['CODE_REG'] for d in m_fra.departements_fr_info]})
-
-df_dpt = df_dpt[df_dpt['reg_name'] != 'CORSE']
-
-df_com = pd.DataFrame({'poly'       : [Polygon(xy) for xy in m_fra.communes_fr],
-                       'insee_code' : [d['INSEE_COM'] for d in m_fra.communes_fr_info],
-                       'com_name'   : [d['NOM_COMM'] for d in m_fra.communes_fr_info],
-                       'dpt_name'   : [d['NOM_DEPT'] for d in m_fra.communes_fr_info],
-                       'reg_name'   : [d['NOM_REGION'] for d in m_fra.communes_fr_info],
-                       'pop'        : [d['POPULATION'] for d in m_fra.communes_fr_info],
-                       'surf'       : [d['SUPERFICIE'] for d in m_fra.communes_fr_info],
-                       'x_cl'       : [d['X_CHF_LIEU'] for d in m_fra.communes_fr_info],
-                       'y_cl'       : [d['Y_CHF_LIEU'] for d in m_fra.communes_fr_info]})
-
-df_com = df_com[df_com['reg_name'] != 'CORSE']
-
-df_com['poly_area'] = df_com['poly'].apply(lambda x: x.area)
-
-## keep only one line per commune (several polygons for some)
-#df_com.sort(columns = ['insee_code', 'poly_area'],
-#            ascending = False,
-#            inplace = True)
-#df_com.drop_duplicates(subset = 'code_insee', inplace = True)
 
 # #############
 # MERGE DFS
 # #############
 
-df_com.set_index('insee_code', inplace = True)
+df_com.set_index('c_insee', inplace = True)
 
-df_com = pd.merge(df_com_rgs, df_com,
-                       left_index = True, right_index = True, how = 'right')
+df_com = pd.merge(df_com_rgs,
+                  df_com,
+                  left_index = True,
+                  right_index = True,
+                  how = 'right')
 # not fully satisfactory... loss of polygons
 
-ls_disp_com_rg = ['avail_surf_%s' %rg for rg in ls_rgs] +\
-                 ['surf_%s' %rg for rg in ls_rgs]
+ls_disp_com_rg = ['available_surface_%s' %rg for rg in ls_rgs] +\
+                 ['surface_%s' %rg for rg in ls_rgs]
 
 # ###################
 # DRAW AVAIL SURFACE
 # ###################
 
 for retail_group in ls_rgs:
-  field = 'avail_surf_%s' %retail_group
+  field = 'available_surface_%s' %retail_group
   
   breaks = nb(df_com[df_com[field].notnull()][field].values,
               initial=20,
@@ -238,7 +180,7 @@ for retail_group in ls_rgs:
 # ###################
 
 for retail_group in ls_rgs:
-  field = 'surf_%s' %retail_group
+  field = 'surface_%s' %retail_group
   
   breaks = nb(df_com[df_com[field].notnull()][field].values,
               initial=20,

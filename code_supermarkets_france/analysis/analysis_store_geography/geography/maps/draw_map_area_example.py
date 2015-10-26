@@ -17,12 +17,9 @@ path_built = os.path.join(path_data,
                           'data_built',
                           'data_lsa')
 
-path_built_csv = os.path.join(path_built,
-                              'data_csv')
-path_built_json = os.path.join(path_built,
-                               'data_json')
-path_built_graphs = os.path.join(path_built,
-                                 'data_graphs')
+path_built_csv = os.path.join(path_built, 'data_csv')
+path_built_csv_comp = os.path.join(path_built_csv, '201407_competition')
+path_built_graphs = os.path.join(path_built, 'data_graphs')
 
 path_insee = os.path.join(path_data, 'data_insee')
 path_insee_extracts = os.path.join(path_insee, 'data_extracts')
@@ -35,25 +32,26 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # LOAD LSA data
 # ##############
 
+# LOAD LSA STORE DATA
 df_lsa = pd.read_csv(os.path.join(path_built_csv,
-                                  'df_lsa_active.csv'),
-                     dtype = {u'C_INSEE' : str,
-                              u'C_INSEE_Ardt' : str,
-                              u'C_Postal' : str,
-                              u'SIREN' : str,
-                              u'NIC' : str,
-                              u'SIRET' : str},
-                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
-                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
-                     encoding = 'UTF-8')
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
 
-df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
-                (~pd.isnull(df_lsa['Longitude']))].copy()
+df_lsa = df_lsa[(~pd.isnull(df_lsa['latitude'])) &\
+                (~pd.isnull(df_lsa['longitude']))].copy()
 
-lsd0 = [u'Enseigne',
-        u'Adresse1',
-        u'C_Postal',
-        u'Ville'] #, u'Latitude', u'Longitude']
+lsd0 = [u'enseigne',
+        u'adresse1',
+        u'c_postal',
+        u'ville'] #, u'Latitude', u'Longitude']
 
 # ###############
 # LOAD SUBSET LSA
@@ -71,6 +69,11 @@ df_comp = pd.read_csv(os.path.join(path_built_csv,
                       parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv',
                                      u'DATE chg enseigne', u'DATE chgt surf'],
                       encoding = 'latin-1')
+
+# temp
+df_comp.rename(columns = {'Latitude' : 'latitude',
+                          'Longitude' : 'longitude'},
+               inplace = True)
 
 # #####################
 # LOAD SUBSET COMMUNES
@@ -94,31 +97,31 @@ print df_comp[['dist', 'dist_osrm', 'time_osrm']].describe()
 # MAP
 
 # subsets of stores
-df_lsa_ot = df_lsa[df_lsa['Ident'] != 49]
-df_lsa_ot_H = df_lsa_ot[df_lsa_ot['Type'] == 'H']
-df_lsa_ot_nH = df_lsa_ot[df_lsa_ot['Type'] != 'H']
+df_lsa_ot = df_lsa[df_lsa['id_lsa'] != 49]
+df_lsa_ot_H = df_lsa_ot[df_lsa_ot['type'] == 'H']
+df_lsa_ot_nH = df_lsa_ot[df_lsa_ot['type'] != 'H']
 
-df_lsa_ot_H_sg = df_lsa_ot[(df_lsa_ot['Type_Alt'] == 'H') & (df_lsa_ot['Groupe'] == 'CARREFOUR')]
-df_lsa_ot_X_sg = df_lsa_ot[(df_lsa['Type_Alt'] == 'X') & (df_lsa_ot['Groupe'] == 'CARREFOUR')]
-df_lsa_ot_S_sg = df_lsa_ot[(df_lsa['Type_Alt'] == 'S') & (df_lsa_ot['Groupe'] == 'CARREFOUR')]
+df_lsa_ot_H_sg = df_lsa_ot[(df_lsa_ot['type_alt'] == 'H') & (df_lsa_ot['groupe'] == 'CARREFOUR')]
+df_lsa_ot_X_sg = df_lsa_ot[(df_lsa['type_alt'] == 'X') & (df_lsa_ot['groupe'] == 'CARREFOUR')]
+df_lsa_ot_S_sg = df_lsa_ot[(df_lsa['type_alt'] == 'S') & (df_lsa_ot['groupe'] == 'CARREFOUR')]
 
-df_lsa_ot_H_og = df_lsa_ot[(df_lsa_ot['Type_Alt'] == 'H') & (df_lsa_ot['Groupe'] != 'CARREFOUR')]
-df_lsa_ot_X_og = df_lsa_ot[(df_lsa_ot['Type_Alt'] == 'X') & (df_lsa_ot['Groupe'] != 'CARREFOUR')]
-df_lsa_ot_S_og = df_lsa_ot[(df_lsa_ot['Type_Alt'] == 'S') & (df_lsa_ot['Groupe'] != 'CARREFOUR')]
+df_lsa_ot_H_og = df_lsa_ot[(df_lsa_ot['type_alt'] == 'H') & (df_lsa_ot['groupe'] != 'CARREFOUR')]
+df_lsa_ot_X_og = df_lsa_ot[(df_lsa_ot['type_alt'] == 'X') & (df_lsa_ot['groupe'] != 'CARREFOUR')]
+df_lsa_ot_S_og = df_lsa_ot[(df_lsa_ot['type_alt'] == 'S') & (df_lsa_ot['groupe'] != 'CARREFOUR')]
 
 # http://www.autoritedelaconcurrence.fr/doc/fiche1_concentration_dec10.pdf
 # hyper: 30 mins by car
 print u'\nNb comp within 30 mn:', len(df_comp[df_comp['time_osrm'] <= 30])
 print df_comp[['dist', 'dist_osrm', 'time_osrm']][df_comp['time_osrm'] <= 30].describe()
 
-lat_ref = df_lsa[df_lsa['Ident'] == 49]['Latitude'].values[0]
-lng_ref = df_lsa[df_lsa['Ident'] == 49]['Longitude'].values[0]
+lat_ref = df_lsa[df_lsa['id_lsa'] == 49]['latitude'].values[0]
+lng_ref = df_lsa[df_lsa['id_lsa'] == 49]['longitude'].values[0]
 
 df_comp_close = df_comp[df_comp['time_osrm'] <= 30].copy()
-delta_lat = max(np.abs(df_comp['Latitude'].max() - lat_ref),
-                np.abs(df_comp['Latitude'].min() - lat_ref))
-delta_lng = max(np.abs(df_comp['Longitude'].max() - lng_ref),
-                np.abs(df_comp['Longitude'].min() - lng_ref))
+delta_lat = max(np.abs(df_comp['latitude'].max() - lat_ref),
+                np.abs(df_comp['latitude'].min() - lat_ref))
+delta_lng = max(np.abs(df_comp['longitude'].max() - lng_ref),
+                np.abs(df_comp['longitude'].min() - lng_ref))
 
 zoom = 10
 
@@ -172,7 +175,7 @@ ls_groups = [[df_lsa_ot_H_sg, 'b', 'H'],
 from matplotlib.font_manager import FontProperties
 
 for df_temp, marker_c, marker_l in ls_groups:
-  ls_points = [m(row['Longitude'], row['Latitude']) for row_ind, row\
+  ls_points = [m(row['longitude'], row['latitude']) for row_ind, row\
                  in df_temp.iterrows()]
   ax.scatter([point[0] for point in ls_points],
              [point[1] for point in ls_points],

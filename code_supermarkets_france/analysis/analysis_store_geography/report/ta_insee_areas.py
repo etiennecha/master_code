@@ -14,39 +14,52 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pprint
 
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
+
+path_built_csv = os.path.join(path_built,
+                              'data_csv')
+
+path_insee = os.path.join(path_data, 'data_insee')
+path_insee_extracts = os.path.join(path_insee, 'data_extracts')
+
 # Default float format: no digit after decimal point
 pd.set_option('float_format', '{:10.0f}'.format)
 # Float print functions for display
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-# Stores H/S/X active in Metropolitan France
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
-                    encoding = 'UTF-8')
-# Fix insee code (necessary?)
-df_lsa['Code INSEE'] = df_lsa['Code INSEE'].apply(\
-                         lambda x: "{:05d}".format(x)\
-                           if (type(x) == np.int64 or type(x) == long) else x)
-# todo: get ARDT for big cities
+# ################
+# LOAD DATA
+# ################
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_match = os.path.join(path_dir_insee, 'match_insee_codes')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
+df_lsa = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
 
-df_insee_areas = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_insee_areas.csv'),
+df_insee_areas = pd.read_csv(os.path.join(path_insee_extracts, 'df_insee_areas.csv'),
                              encoding = 'UTF-8')
-df_au_agg = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_au_agg_final.csv'),
+df_au_agg = pd.read_csv(os.path.join(path_insee_extracts, 'df_au_agg_final.csv'),
                         encoding = 'UTF-8')
-df_uu_agg = pd.read_csv(os.path.join(path_dir_insee_extracts, 'df_uu_agg_final.csv'),
+df_uu_agg = pd.read_csv(os.path.join(path_insee_extracts, 'df_uu_agg_final.csv'),
                         encoding = 'UTF-8')
-df_com = pd.read_csv(os.path.join(path_dir_insee_extracts, 'data_insee_extract.csv'),
-                     encoding = 'UTF-8', dtype = {'DEP': str, 'CODGEO' : str})
+df_com = pd.read_csv(os.path.join(path_insee_extracts, 'data_insee_extract.csv'),
+                     dtype = {'DEP': str,
+                              'CODGEO' : str},
+                     encoding = 'UTF-8')
 
 # GET RID OF DOMTOM AND CORSICA
 df_com = df_com[~(df_com['DEP'].isin(['2A', '2B', '971', '972', '973', '974']))]
-
 df_com['CODGEO'] = df_com['CODGEO'].apply(\
                          lambda x: "{:05d}".format(x)\
                            if (type(x) == np.int64 or type(x) == long) else x)
@@ -55,7 +68,7 @@ df_com['CODGEO'] = df_com['CODGEO'].apply(\
 df_lsa = pd.merge(df_insee_areas,
                   df_lsa,
                   left_on = 'CODGEO',
-                  right_on = 'Code INSEE',
+                  right_on = 'c_insee',
                   how = 'right')
 
 # ##########################
@@ -72,7 +85,7 @@ print u"\nNb of communes in Metro France: " +\
 print u"\nPop in Metro France (2010): " +\
       u"{:12,.0f}".format(df_com['P10_POP'].sum())
 
-se_com_vc = df_lsa['Code INSEE'].value_counts()
+se_com_vc = df_lsa['c_insee'].value_counts()
 df_com.set_index('CODGEO', inplace = True)
 df_com['Nb GS'] = se_com_vc
 print u"\nNb of communes with a store: " +\
@@ -85,19 +98,16 @@ print u'\nPercentage of French citizens (2010) with no store on "Commune": ' +\
 
 df_com.sort('P10_POP', ascending=False, inplace=True)
 
-format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
-
 # Pop and Pop by Grocery Store
 df_com['P10_POP'] = df_com['P10_POP'] / 1000.0
 df_com['Pop by GS'] = df_com['P10_POP'] / df_com['Nb GS']
 
 # Surface and Pop by m2
-df_com['Surf'] = df_lsa[['Code INSEE', 'Surf Vente']].\
-                    groupby('Code INSEE')['Surf Vente'].sum()
-df_com['Surf'] = df_com['Surf'] / 1000.0
+df_com['Surface'] = df_lsa[['c_insee', 'surface']].\
+                    groupby('c_insee')['surface'].sum()
+df_com['Surface'] = df_com['Surface'] / 1000.0
 
-df_com['Pop by surf'] = df_com['P10_POP'] / df_com['Surf']
+df_com['Pop by Surf'] = df_com['P10_POP'] / df_com['Surface']
 
 df_com.rename(columns = {'P10_POP' : 'Pop',
                          'LIBGEO':   'Area',
@@ -113,7 +123,7 @@ dict_formatters = {'Pop' : format_float_int,
 print u'\nTop 20 Communes in terms of inhabitants'
 
 ls_disp_com = ['Area', 'Pop', 'Size', 'Pop density',
-               'Nb GS', 'Pop by GS', 'Surf', 'Pop by surf']
+               'Nb GS', 'Pop by GS', 'Surface', 'Pop by Surf']
 print df_com[ls_disp_com]\
         [~pd.isnull(df_com['Pop'])][0:20].to_latex(index = False,
                                                    index_names = False,
@@ -146,11 +156,11 @@ df_au_agg['P10_POP'] = df_au_agg['P10_POP'] / 1000.0
 df_au_agg['Pop by GS'] = df_au_agg['P10_POP'] / df_au_agg['Nb GS']
 
 # Surface and Pop by m2
-df_au_agg['Surf'] = df_lsa[['AU2010', 'Surf Vente']].\
-                    groupby('AU2010')['Surf Vente'].sum()
-df_au_agg['Surf'] = df_au_agg['Surf'] / 1000.0
+df_au_agg['Surface'] = df_lsa[['AU2010', 'surface']].\
+                         groupby('AU2010')['surface'].sum()
+df_au_agg['Surface'] = df_au_agg['Surface'] / 1000.0
 
-df_au_agg['Pop by surf'] = df_au_agg['P10_POP'] / df_au_agg['Surf']
+df_au_agg['Pop by Surf'] = df_au_agg['P10_POP'] / df_au_agg['Surface']
 
 df_au_agg['QUAR2UC10'] = df_au_agg['QUAR2UC10'] / 1000
 
@@ -161,7 +171,7 @@ df_au_agg.rename(columns = {'P10_POP' : 'Pop',
                             'QUAR2UC10' : 'Med rev'}, inplace = True)
 
 ls_disp_au = ['Area', 'Pop', 'Size', 'Pop density', 'Med rev',
-              'Nb GS', 'Pop by GS', 'Surf', 'Pop by surf']
+              'Nb GS', 'Pop by GS', 'Surface', 'Pop by Surf']
 
 dict_formatters.update({'Med rev' : format_float_float})
 
@@ -204,11 +214,11 @@ df_uu_agg['P10_POP'] = df_uu_agg['P10_POP'] / 1000.0
 df_uu_agg['Pop by GS'] = df_uu_agg['P10_POP'] / df_uu_agg['Nb GS']
 
 # Surface and Pop by m2
-df_uu_agg['Surf'] = df_lsa[['UU2010', 'Surf Vente']].\
-                    groupby('UU2010')['Surf Vente'].sum()
-df_uu_agg['Surf'] = df_uu_agg['Surf'] / 1000.0
+df_uu_agg['Surface'] = df_lsa[['UU2010', 'surface']].\
+                         groupby('UU2010')['surface'].sum()
+df_uu_agg['Surface'] = df_uu_agg['Surface'] / 1000.0
 
-df_uu_agg['Pop by surf'] = df_uu_agg['P10_POP'] / df_uu_agg['Surf']
+df_uu_agg['Pop by Surf'] = df_uu_agg['P10_POP'] / df_uu_agg['Surface']
 
 df_uu_agg['QUAR2UC10'] = df_uu_agg['QUAR2UC10'] / 1000
 
@@ -219,7 +229,7 @@ df_uu_agg.rename(columns = {'P10_POP' : 'Pop',
                             'QUAR2UC10' : 'Med rev'}, inplace = True)
 
 ls_disp_au = ['Area', 'Pop', 'Size', 'Pop density', 'Med rev',
-              'Nb GS', 'Pop by GS', 'Surf', 'Pop by surf']
+              'Nb GS', 'Pop by GS', 'Surface', 'Pop by Surf']
 
 dict_formatters.update({'Med rev' : format_float_float})
 

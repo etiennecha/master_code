@@ -21,7 +21,7 @@ path_built = os.path.join(path_data,
                           'data_lsa')
 
 path_built_csv = os.path.join(path_built,
-                        'data_csv')
+                              'data_csv')
 
 path_insee_extracts = os.path.join(path_data,
                                    'data_insee',
@@ -35,16 +35,16 @@ path_insee_extracts = os.path.join(path_data,
 # (could be stores at any period)
 
 df_lsa = pd.read_csv(os.path.join(path_built_csv,
-                                  'df_lsa_active.csv'),
-                     dtype = {u'C_INSEE' : str,
-                              u'C_INSEE_Ardt' : str,
-                              u'C_Postal' : str,
-                              u'SIREN' : str,
-                              u'NIC' : str,
-                              u'SIRET' : str},
-                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
-                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
-                     encoding = 'UTF-8')
+                                  'df_lsa.csv'),
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
 
 # ###################### 
 # STATS BY TYPE OF STORE 
@@ -94,28 +94,28 @@ ls_surf_disp = [str_total, str_avail,
 ls_loc_hsx = ['Hypermarkets', 'Supermarkets', 'Hard discount']
 ls_loc_drive = ['Drive in', 'Drive']
 
-for field in ['Surface', 'Nb_Emplois', 'Nb_Caisses', 'Nb_Parking', 'Nb_Pompes']:
+for field in ['surface', 'nb_emplois', 'nb_caisses', 'nb_parking', 'nb_pompes']:
   print u'\n', u'-'*80
   print field
-  gbt = df_lsa[['Type_Alt', field]].groupby('Type_Alt',
+  gbt = df_lsa[['type_alt', field]].groupby('type_alt',
                                                       as_index = False)
   df_surf = gbt.agg([len, np.mean, pdmin, quant_05,
                      np.median, quant_95, pdmax, np.sum])[field]
   df_surf.sort('len', ascending = False, inplace = True)
-  se_null_vc = df_lsa['Type_Alt'][~pd.isnull(df_lsa[field])].value_counts()
+  se_null_vc = df_lsa['type_alt'][~pd.isnull(df_lsa[field])].value_counts()
   df_surf[str_avail] = se_null_vc.apply(lambda x: float(x)) # float format...
   df_surf.rename(columns = dict_rename_columns, inplace = True)
   df_surf.reset_index(inplace = True)
-  df_surf['Type_Alt'] = df_surf['Type_Alt'].apply(lambda x: dict_type_out[x])
-  df_surf.set_index('Type_Alt', inplace = True)
+  df_surf['type_alt'] = df_surf['type_alt'].apply(lambda x: dict_type_out[x])
+  df_surf.set_index('type_alt', inplace = True)
   # Bottom line to be improved (fake groupy for now...)
   for ls_loc_disp, ls_store_types in zip([ls_loc_hsx, ls_loc_drive],
                                          [['H', 'X', 'S'], ['DRIVE', 'DRIN']]):
-    df_surf_hxs = df_lsa[df_lsa['Type_Alt'].isin(ls_store_types)]\
-                    [['Statut', field]].groupby('Statut', as_index = False).\
+    df_surf_hxs = df_lsa[df_lsa['type_alt'].isin(ls_store_types)]\
+                    [['statut', field]].groupby('statut', as_index = False).\
                       agg([len, pdmin, quant_05, np.median,
                            np.mean, quant_95, pdmax, np.sum])[field]
-    df_surf_hxs[str_avail] = len(df_lsa[(df_lsa['Type_Alt']\
+    df_surf_hxs[str_avail] = len(df_lsa[(df_lsa['type_alt']\
                                                      .isin(ls_store_types)) &\
                                                   (~pd.isnull(df_lsa[field]))])
     df_surf_hxs.rename(columns = dict_rename_columns,
@@ -133,9 +133,9 @@ for field in ['Surface', 'Nb_Emplois', 'Nb_Caisses', 'Nb_Parking', 'Nb_Pompes']:
 # todo: inspect suspect values
 pd.set_option('display.max_columns', 50)
 #print df_lsa[df_lsa['Nbr de caisses'] > 100]
-#print df_lsa[(df_lsa['Type_Alt'] == 'X') &\
+#print df_lsa[(df_lsa['type_alt'] == 'X') &\
 #                    (df_lsa['Nbr de caisses'] > 20)]
-#print df_lsa[(df_lsa['Type_Alt'] == 'DRIVE') &\
+#print df_lsa[(df_lsa['type_alt'] == 'DRIVE') &\
 #                    (df_lsa['Nbr de caisses'] > 20)]
 #df_lsa[df_lsa['Nbr parking']<10]
 
@@ -146,20 +146,20 @@ pd.set_option('display.max_columns', 50)
 print u'\n', u'-'*120
 print '\nStats des per retail group\n'
 
-gbg = df_lsa[['Groupe_Alt', 'Surface']].groupby('Groupe_Alt',
+gbg = df_lsa[['groupe_alt', 'surface']].groupby('groupe_alt',
                                                    as_index = False)
-df_surf_rgs = gbg.agg([len, np.mean, np.median, min, max, np.sum])['Surface']
+df_surf_rgs = gbg.agg([len, np.mean, np.median, min, max, np.sum])['surface']
 df_surf_rgs.sort('len', ascending = False, inplace = True)
 # Bottom line
-df_surf_rgs_b = df_lsa[df_lsa['Type_Alt'].isin(['H', 'S', 'X'])]\
-                  [['Statut', 'Surface']].groupby('Statut', as_index = False).\
-                    agg([len, np.mean, np.median, min, max, np.sum])['Surface']
+df_surf_rgs_b = df_lsa[df_lsa['type_alt'].isin(['H', 'S', 'X'])]\
+                  [['statut', 'surface']].groupby('statut', as_index = False).\
+                    agg([len, np.mean, np.median, min, max, np.sum])['surface']
 df_surf_rgs = pd.concat([df_surf_rgs, df_surf_rgs_b])
 df_surf_rgs.rename(index = {'M' : 'ALL'}, inplace = True)
 # print df_surf_rgs.to_string()
 df_types_rgs = pd.DataFrame(columns = ['H', 'S', 'X']).T
-for groupe in df_lsa['Groupe_Alt'].unique():
-  se_types_vc = df_lsa['Type_Alt'][df_lsa['Groupe_Alt'] ==\
+for groupe in df_lsa['groupe_alt'].unique():
+  se_types_vc = df_lsa['type_alt'][df_lsa['groupe_alt'] ==\
                                             groupe].value_counts()
   df_types_rgs[groupe] = se_types_vc
 df_types_rgs.fillna(0, inplace = True)
@@ -225,15 +225,15 @@ for retail_group in ls_main_retail_groups:
   print '\n', retail_group
   
   # All group stores
-  df_lsa_rg = df_lsa[df_lsa['Groupe_Alt'] == retail_group]
-  gbg = df_lsa_rg[['Enseigne_Alt', 'Surface']].groupby('Enseigne_Alt',
+  df_lsa_rg = df_lsa[df_lsa['groupe_alt'] == retail_group]
+  gbg = df_lsa_rg[['enseigne_alt', 'surface']].groupby('enseigne_alt',
                                                        as_index = False)
-  df_surf_rg = gbg.agg([len, np.mean, np.median, min, max, np.sum])['Surface']
+  df_surf_rg = gbg.agg([len, np.mean, np.median, min, max, np.sum])['surface']
   df_surf_rg.sort('len', ascending = False, inplace = True)
   # print df_surf_rg.to_string()
   df_types_rg = pd.DataFrame(columns = ['H', 'S', 'X']).T
-  for Enseigne in df_lsa_rg['Enseigne_Alt'].unique():
-    se_types_vc = df_lsa_rg['Type_Alt'][df_lsa_rg['Enseigne_Alt'] ==\
+  for Enseigne in df_lsa_rg['enseigne_alt'].unique():
+    se_types_vc = df_lsa_rg['type_alt'][df_lsa_rg['enseigne_alt'] ==\
                                           Enseigne].value_counts()
     df_types_rg[Enseigne] = se_types_vc
   df_types_rg.fillna(0, inplace = True)
@@ -247,17 +247,17 @@ for retail_group in ls_main_retail_groups:
   print df_rg[ls_rg_disp].to_string(formatters = dict_formatters)
   
   # Independent stores
-  df_lsa_rg_ind = df_lsa[(df_lsa['Groupe_Alt'] == retail_group) &
-                             (df_lsa[u'Int_Ind'] == 'independant')]
+  df_lsa_rg_ind = df_lsa[(df_lsa['groupe_alt'] == retail_group) &
+                             (df_lsa[u'int_ind'] == 'independant')]
   if len(df_lsa_rg_ind) != 0:
-    gbg = df_lsa_rg_ind[['Enseigne_Alt', 'Surface']].groupby('Enseigne_Alt',
+    gbg = df_lsa_rg_ind[['enseigne_alt', 'surface']].groupby('enseigne_alt',
                                                              as_index = False)
-    df_surf_rg_ind = gbg.agg([len, np.mean, np.median, min, max, np.sum])['Surface']
+    df_surf_rg_ind = gbg.agg([len, np.mean, np.median, min, max, np.sum])['surface']
     df_surf_rg_ind.sort('len', ascending = False, inplace = True)
     # print df_surf_rg_ind.to_string()
     df_types_rg_ind = pd.DataFrame(columns = ['H', 'S', 'X']).T
-    for Enseigne in df_lsa_rg_ind['Enseigne_Alt'].unique():
-      se_types_vc = df_lsa_rg_ind['Type_Alt'][df_lsa_rg_ind['Enseigne_Alt'] ==\
+    for Enseigne in df_lsa_rg_ind['enseigne_alt'].unique():
+      se_types_vc = df_lsa_rg_ind['type_alt'][df_lsa_rg_ind['enseigne_alt'] ==\
                                                 Enseigne].value_counts()
       df_types_rg_ind[Enseigne] = se_types_vc
     df_types_rg_ind.fillna(0, inplace = True)
@@ -276,11 +276,11 @@ for retail_group in ls_main_retail_groups:
 # STATS ON NB OF STORES BY GROUP AND REGION
 # #########################################
 
-df_reg = pd.DataFrame(columns = df_lsa['Reg'].unique()).T
-for groupe in df_lsa['Groupe_Alt'].unique():
-  se_reg_vc = df_lsa['Reg'][(df_lsa['Groupe_Alt'] == groupe) &
-                                (df_lsa['Type_Alt'] != 'DRIN') &\
-                                (df_lsa['Type_Alt'] != 'DRIVE')].value_counts()
+df_reg = pd.DataFrame(columns = df_lsa['region'].unique()).T
+for groupe in df_lsa['groupe_alt'].unique():
+  se_reg_vc = df_lsa['region'][(df_lsa['groupe_alt'] == groupe) &
+                                (df_lsa['type_alt'] != 'DRIN') &\
+                                (df_lsa['type_alt'] != 'DRIVE')].value_counts()
   df_reg[groupe] = se_reg_vc
 df_reg.fillna(0, inplace = True)
 df_reg['TOT.'] = df_reg.sum(axis = 1)
@@ -312,7 +312,7 @@ print df_reg[ls_reg_disp].to_latex()
 # Share of each region by group
 df_reg_2 = df_reg_2.T
 df_reg_2['TOT.'] = df_reg_2.sum(axis = 1)
-for region in list(df_lsa['Reg'].unique()) + ['TOT.']:
+for region in list(df_lsa['region'].unique()) + ['TOT.']:
   df_reg_2[region] = df_reg_2[region] / df_reg_2['TOT.'] * 100
 df_reg_2 = df_reg_2.T
 df_reg_2.rename(index = {u"Provence-Alpes-Cote-d'Azur" : 'PACA'}, inplace = True)
@@ -322,15 +322,15 @@ print df_reg_2[ls_reg_disp].to_latex()
 # SURFACE BY GROUP AND REGION
 # #########################################
 
-df_lsa_gps = df_lsa[~pd.isnull(df_lsa['Latitude'])]
+df_lsa_gps = df_lsa[~pd.isnull(df_lsa['latitude'])]
 
-df_reg_surf = pd.DataFrame(index = df_lsa_gps['Reg'].unique())
-for groupe in df_lsa_gps['Groupe_Alt'].unique():
-  df_groupe = df_lsa_gps[df_lsa_gps['Groupe_Alt'] == groupe] 
-  df_groupe_rs = df_groupe[['Reg', 'Surface']].\
-                   groupby('Reg', as_index = False).sum()
-  df_groupe_rs.set_index('Reg', inplace = True)
-  df_reg_surf[groupe] = df_groupe_rs['Surface']
+df_reg_surf = pd.DataFrame(index = df_lsa_gps['region'].unique())
+for groupe in df_lsa_gps['groupe_alt'].unique():
+  df_groupe = df_lsa_gps[df_lsa_gps['groupe_alt'] == groupe] 
+  df_groupe_rs = df_groupe[['region', 'surface']].\
+                   groupby('region', as_index = False).sum()
+  df_groupe_rs.set_index('region', inplace = True)
+  df_reg_surf[groupe] = df_groupe_rs['surface']
 
 df_reg_surf.fillna(0, inplace = True)
 df_reg_surf['TOT.'] = df_reg_surf.sum(axis = 1)
@@ -362,7 +362,7 @@ print df_reg_surf[ls_reg_disp].to_latex()
 # Share of each region by group
 df_reg_surf_2 = df_reg_surf_2.T
 df_reg_surf_2['TOT.'] = df_reg_surf_2.sum(axis = 1)
-for region in list(df_lsa_gps['Reg'].unique()) + ['TOT.']:
+for region in list(df_lsa_gps['region'].unique()) + ['TOT.']:
   df_reg_surf_2[region] = df_reg_surf_2[region] / df_reg_surf_2['TOT.'] * 100
 df_reg_surf_2 = df_reg_surf_2.T
 df_reg_surf_2.rename(index = {u"Provence-Alpes-Cote-d'Azur" : 'PACA'}, inplace = True)

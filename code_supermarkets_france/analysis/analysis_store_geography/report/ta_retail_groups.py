@@ -14,17 +14,38 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pprint
 
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
+
+path_built_csv = os.path.join(path_built,
+                              'data_csv')
+
+path_insee = os.path.join(path_data, 'data_insee')
+path_insee_extracts = os.path.join(path_insee, 'data_extracts')
+
 # Default float format: no digit after decimal point
 pd.set_option('float_format', '{:10.0f}'.format)
 # Float print functions for display
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-# Stores H/S/X active in Metropolitan France
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm_hsx.csv'),
-                     encoding = 'UTF-8')
+# ####################
+# LOAD DATA
+# ####################
+
+df_lsa = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
 
 # ################################
 # OVERVIEW OF RETAIL GROUP STORES
@@ -35,27 +56,27 @@ ls_store_types = ['H', 'S', 'X']
 ls_columns = [''.join((y,x)) for x in ls_store_types for y in ls_stats]
 # Main loop
 ls_rows_rg = []
-for retail_group in df_lsa['Groupe_alt'].unique():
-  df_lsa_rg = df_lsa[df_lsa['Groupe_alt'] == retail_group]
+for retail_group in df_lsa['groupe_alt'].unique():
+  df_lsa_rg = df_lsa[df_lsa['groupe_alt'] == retail_group]
   row = []
   for st_type in ls_store_types:
-    nb_stores = float(len(df_lsa_rg[df_lsa_rg['Type_alt'] == st_type]))
-    cum_surf = df_lsa_rg['Surf Vente'][df_lsa_rg['Type_alt'] == st_type].sum() / 1000000
-    avg_surf = df_lsa_rg['Surf Vente'][df_lsa_rg['Type_alt'] == st_type].mean()
+    nb_stores = float(len(df_lsa_rg[df_lsa_rg['type_alt'] == st_type]))
+    cum_surf = df_lsa_rg['surface'][df_lsa_rg['type_alt'] == st_type].sum() / 1000000
+    avg_surf = df_lsa_rg['surface'][df_lsa_rg['type_alt'] == st_type].mean()
     row += [nb_stores, cum_surf, avg_surf]
   ls_rows_rg.append(row)
 # Bottom row
 row = []
 for st_type in ls_store_types:
-  nb_stores = float(len(df_lsa[df_lsa['Type_alt'] == st_type]))
-  cum_surf = df_lsa['Surf Vente'][df_lsa['Type_alt'] == st_type].sum() / 1000000
-  avg_surf = df_lsa['Surf Vente'][df_lsa['Type_alt'] == st_type].mean()
+  nb_stores = float(len(df_lsa[df_lsa['type_alt'] == st_type]))
+  cum_surf = df_lsa['surface'][df_lsa['type_alt'] == st_type].sum() / 1000000
+  avg_surf = df_lsa['surface'][df_lsa['type_alt'] == st_type].mean()
   row += [nb_stores, cum_surf, avg_surf]
 ls_rows_rg.append(row)
 
 df_rgs_2 = pd.DataFrame(ls_rows_rg,
                         columns = ls_columns,
-                        index = list(df_lsa['Groupe_alt'].unique()) + ['ALL'])
+                        index = list(df_lsa['groupe_alt'].unique()) + ['ALL'])
 
 # Add Nb total and Cum surf
 df_rgs_2['Nb_All'] = df_rgs_2[['Nb_H', 'Nb_S', 'Nb_X']].sum(axis = 1)
@@ -125,20 +146,20 @@ ls_rg_disp = ['#Tot', '#Hyp', '#Sup', '#Dis',
 
 dict_formatters = {'Cum S.' : format_float_float}
 
-ls_retail_groups = [x for x in df_lsa['Groupe_alt'].unique() if x != 'AUTRE']
+ls_retail_groups = [x for x in df_lsa['groupe_alt'].unique() if x != 'AUTRE']
 for retail_group in ls_retail_groups:
   print '\n', retail_group
   
   # All group stores
-  df_lsa_rg = df_lsa[df_lsa['Groupe_alt'] == retail_group]
-  gbg = df_lsa_rg[['Enseigne_alt', 'Surf Vente']].groupby('Enseigne_alt',
+  df_lsa_rg = df_lsa[df_lsa['groupe_alt'] == retail_group]
+  gbg = df_lsa_rg[['enseigne_alt', 'surface']].groupby('enseigne_alt',
                                                        as_index = False)
-  df_surf_rg = gbg.agg([len, np.mean, np.median, min, max, np.sum])['Surf Vente']
+  df_surf_rg = gbg.agg([len, np.mean, np.median, min, max, np.sum])['surface']
   df_surf_rg.sort('len', ascending = False, inplace = True)
   # print df_surf_rg.to_string()
   df_types_rg = pd.DataFrame(columns = ['H', 'S', 'X']).T
-  for enseigne in df_lsa_rg['Enseigne_alt'].unique():
-    se_types_vc = df_lsa_rg['Type_alt'][df_lsa_rg['Enseigne_alt'] ==\
+  for enseigne in df_lsa_rg['enseigne_alt'].unique():
+    se_types_vc = df_lsa_rg['type_alt'][df_lsa_rg['enseigne_alt'] ==\
                                           enseigne].value_counts()
     df_types_rg[enseigne] = se_types_vc
   df_types_rg.fillna(0, inplace = True)
@@ -151,17 +172,17 @@ for retail_group in ls_retail_groups:
   print df_rg[ls_rg_disp].to_latex(formatters = dict_formatters)
   
   # Independent stores
-  df_lsa_rg_ind = df_lsa[(df_lsa['Groupe_alt'] == retail_group) &
-                             (df_lsa[u'Intégré / Indépendant'] == 'independant')]
+  df_lsa_rg_ind = df_lsa[(df_lsa['groupe_alt'] == retail_group) &
+                             (df_lsa[u'int_ind'] == 'independant')]
   if len(df_lsa_rg_ind) != 0:
-    gbg = df_lsa_rg_ind[['Enseigne_alt', 'Surf Vente']].groupby('Enseigne_alt',
+    gbg = df_lsa_rg_ind[['enseigne_alt', 'surface']].groupby('enseigne_alt',
                                                              as_index = False)
-    df_surf_rg_ind = gbg.agg([len, np.mean, np.median, min, max, np.sum])['Surf Vente']
+    df_surf_rg_ind = gbg.agg([len, np.mean, np.median, min, max, np.sum])['surface']
     df_surf_rg_ind.sort('len', ascending = False, inplace = True)
     # print df_surf_rg_ind.to_string()
     df_types_rg_ind = pd.DataFrame(columns = ['H', 'S', 'X']).T
-    for enseigne in df_lsa_rg_ind['Enseigne_alt'].unique():
-      se_types_vc = df_lsa_rg_ind['Type_alt'][df_lsa_rg_ind['Enseigne_alt'] ==\
+    for enseigne in df_lsa_rg_ind['enseigne_alt'].unique():
+      se_types_vc = df_lsa_rg_ind['type_alt'][df_lsa_rg_ind['enseigne_alt'] ==\
                                                 enseigne].value_counts()
       df_types_rg_ind[enseigne] = se_types_vc
     df_types_rg_ind.fillna(0, inplace = True)

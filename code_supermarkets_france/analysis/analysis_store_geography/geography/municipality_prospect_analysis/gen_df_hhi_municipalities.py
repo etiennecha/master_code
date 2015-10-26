@@ -152,12 +152,17 @@ df_com['hhi'] = df_com['hhi'] * 10000
 df_com['ac_hhi'] = df_com['ac_hhi'] * 10000
 
 # Add DEP and REG... five are not in insee data: nouvelles communes...
-df_com['reg'] = df_com_insee['REG'].astype(str)
-df_com['dpt'] = df_com_insee['DEP'].astype(str)
+df_com['c_region'] = df_com_insee['REG'].astype(str)
+df_com['c_departement'] = df_com_insee['DEP'].astype(str)
+df_com['population'] = df_com_insee['P10_POP']
 for code_insee in  ['52465', '52278', '52266', '52124', '52033']:
-  df_com.loc[code_insee, ['reg', 'dpt']] = ['21', '52']
+  df_com.loc[code_insee, ['c_region', 'c_departement']] = ['21', '52']
 
-ls_keep_com = ['commune', 'pop', 'com_surf', 'reg', 'dpt'] + ls_columns[1:]
+ls_keep_com = ['commune',
+               'population',
+               'com_surf',
+               'c_region',
+               'c_departement'] + ls_columns[1:]
 
 print df_com[ls_keep_com][0:10].to_string()
 
@@ -166,7 +171,7 @@ df_com[ls_keep_com].to_csv(os.path.join(path_built_csv_comp,
                            encoding = 'utf-8',
                            float_format = '%.3f',
                            date_format = '%Y%m%d',
-                           index_label = 'code_insee')
+                           index_label = 'c_insee')
 
 # Check ability to output HHi quantiles weighted by pop (compare with STATA output)
 

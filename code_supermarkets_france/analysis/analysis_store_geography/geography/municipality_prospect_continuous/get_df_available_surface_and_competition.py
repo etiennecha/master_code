@@ -17,12 +17,10 @@ import pprint
 import matplotlib.cm as cm
 from matplotlib.collections import PatchCollection
 import matplotlib.font_manager as fm
-#import shapefile
 from mpl_toolkits.basemap import Basemap
 from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 from shapely.prepared import prep
 from descartes import PolygonPatch
-#from pysal.esda.mapclassify import Natural_Breaks as nb
 from matplotlib import colors
 
 path_built = os.path.join(path_data,
@@ -30,8 +28,7 @@ path_built = os.path.join(path_data,
                           'data_built',
                           'data_lsa')
 
-path_built_csv = os.path.join(path_built,
-                        'data_csv')
+path_built_csv = os.path.join(path_built, 'data_csv')
 
 path_insee = os.path.join(path_data, 'data_insee')
 path_insee_extracts = os.path.join(path_insee, 'data_extracts')

@@ -14,18 +14,42 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pprint
 
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
+
+path_built_csv = os.path.join(path_built,
+                              'data_csv')
+
+path_insee = os.path.join(path_data, 'data_insee')
+path_insee_extracts = os.path.join(path_insee, 'data_extracts')
+
 # Default float format: no digit after decimal point
-pd.set_option('float_format', '{:10,.0f}'.format)
+pd.set_option('float_format', '{:10.0f}'.format)
 # Float print functions for display
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_dir_qlmc = os.path.join(path_data, 'data_qlmc')
-path_dir_built_csv = os.path.join(path_dir_qlmc, 'data_built' , 'data_csv')
-# Stores active in Metropolitan France, includes  H/S/X and Drive
-# (only this file, others include only H/S/X so far)
-df_lsa = pd.read_csv(os.path.join(path_dir_built_csv, 'df_lsa_active_fm.csv'),
-                     encoding = 'UTF-8')
+# ####################
+# LOAD DATA
+# ####################
+
+df_lsa = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_lsa_active.csv'),
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
+
+# #############
+# STATS DES
+# #############
 
 def pdmin(x):
   return x.min(skipna = True)
@@ -64,28 +88,28 @@ ls_surf_disp = [str_avail, 'Avg',  'Std',
 ls_loc_hsx = ['Hypermarkets', 'Supermarkets', 'Hard discount']
 ls_loc_drive = ['Drive in', 'Drive']
 
-for field in ['Surf Vente', 'Nbr emp', 'Nbr de caisses', 'Nbr parking', 'Pompes']:
+for field in ['surface', 'nb_emplois', 'nb_caisses', 'nb_parking', 'nb_pompes']:
   print u'\n', u'-'*30
   print field
-  gbt = df_lsa[['Type_alt', field]].groupby('Type_alt',
-                                                      as_index = False)
+  gbt = df_lsa[['type_alt', field]].groupby('type_alt',
+                                            as_index = False)
   df_surf = gbt.agg([len, np.mean, np.std, pdmin, quant_05,
                      np.median, quant_95, pdmax, np.sum])[field]
   df_surf.sort('len', ascending = False, inplace = True)
-  se_null_vc = df_lsa['Type_alt'][~pd.isnull(df_lsa[field])].value_counts()
+  se_null_vc = df_lsa['type_alt'][~pd.isnull(df_lsa[field])].value_counts()
   df_surf[str_avail] = se_null_vc.apply(lambda x: float(x)) # float format...
   df_surf.rename(columns = dict_rename_columns, inplace = True)
   df_surf.reset_index(inplace = True)
-  df_surf['Type_alt'] = df_surf['Type_alt'].apply(lambda x: dict_type_out[x])
-  df_surf.set_index('Type_alt', inplace = True)
+  df_surf['type_alt'] = df_surf['type_alt'].apply(lambda x: dict_type_out[x])
+  df_surf.set_index('type_alt', inplace = True)
   # Bottom line to be improved (fake groupy for now...)
   for ls_loc_disp, ls_store_types in zip([ls_loc_hsx, ls_loc_drive],
-                                         [['H', 'X', 'S'], ['DRIVE', 'DRIN']]):
-    df_surf_hxs = df_lsa[df_lsa['Type_alt'].isin(ls_store_types)]\
-                    [['Statut', field]].groupby('Statut', as_index = False).\
+                                         [['H', 'X', 'S'], ['drive', 'DRIN']]):
+    df_surf_hxs = df_lsa[df_lsa['type_alt'].isin(ls_store_types)]\
+                    [['statut', field]].groupby('statut', as_index = False).\
                       agg([len, np.mean, np.std, pdmin, quant_05,
                            np.median, quant_95, pdmax, np.sum])[field]
-    df_surf_hxs[str_avail] = len(df_lsa[(df_lsa['Type_alt'].isin(ls_store_types)) &\
+    df_surf_hxs[str_avail] = len(df_lsa[(df_lsa['type_alt'].isin(ls_store_types)) &\
                                              (~pd.isnull(df_lsa[field]))])
     df_surf_hxs.rename(columns = dict_rename_columns,
                        index = {'M' : 'All'},
@@ -96,4 +120,4 @@ for field in ['Surf Vente', 'Nbr emp', 'Nbr de caisses', 'Nbr parking', 'Pompes'
                   to_latex(index_names = False)
 
 # Drive with store
-df_lsa[['DRIVE', 'Type_alt']][df_lsa['DRIVE'] == 'OUI'].groupby('Type_alt').agg(len)
+df_lsa[['drive', 'type_alt']][df_lsa['drive'] == 'OUI'].groupby('type_alt').agg(len)
