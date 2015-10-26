@@ -60,7 +60,7 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv,
                               u'c_siret' : str},
                      parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
                                     u'date_chg_enseigne', u'date_chg_surface'],
-                     encoding = 'UTF-8')
+                     encoding = 'utf-8')
 
 df_lsa = df_lsa[(~pd.isnull(df_lsa['latitude'])) &\
                 (~pd.isnull(df_lsa['longitude']))].copy()
@@ -70,7 +70,7 @@ df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
                                         'df_communes.csv'),
                            dtype = {'DEP': str,
                                     'CODGEO' : str},
-                           encoding = 'UTF-8')
+                           encoding = 'utf-8')
 
 df_com_insee.set_index('CODGEO', inplace = True)
 
@@ -203,7 +203,7 @@ print df_comp[ls_comp_cols[1:]].describe(percentiles=ls_percentiles)\
 
 df_comp.to_csv(os.path.join(path_built_csv,
                             '201407_competition',
-                            'df_mun_prospect_comp.csv'),
+                            'df_mun_prospect_competition.csv'),
                     index_label = 'c_insee',
                     encoding = 'utf-8',
                     float_format='%.3f')

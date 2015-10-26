@@ -5,6 +5,7 @@ import add_to_path
 from add_to_path import path_data
 from functions_generic_qlmc import *
 from functions_geocoding import *
+from functions_maps import *
 from mpl_toolkits.basemap import Basemap
 from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
 from shapely.prepared import prep
@@ -17,132 +18,92 @@ path_built = os.path.join(path_data,
 
 path_built_csv = os.path.join(path_built,
                         'data_csv')
-path_built_json = os.path.join(path_built,
-                               'data_json')
 
-path_insee_extracts = os.path.join(path_data,
-                                   'data_insee',
-                                   'data_extracts')
+path_insee = os.path.join(path_data, 'data_insee')
+path_insee_extracts = os.path.join(path_insee, 'data_extracts')
+
+path_maps = os.path.join(path_data,
+                         'data_maps')
+path_geo_dpt = os.path.join(path_maps, 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
+path_geo_com = os.path.join(path_maps, 'GEOFLA_COM_WGS84', 'COMMUNE')
 
 pd.set_option('float_format', '{:10,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-def convert_to_ign(x, y):
-  x_l_93_ign = (m_fra(x, y)[0] + 700000 - m_fra(3, 46.5)[0])/100.0
-  y_l_93_ign = (m_fra(x, y)[1] + 6600000 - m_fra(3, 46.5)[1])/100.0
-  return x_l_93_ign, y_l_93_ign
-
-def convert_from_ign(x_l_93_ign, y_l_93_ign):
-  x = x_l_93_ign * 100 - 700000 + m_fra(3, 46.5)[0] 
-  y = y_l_93_ign * 100 - 6600000 + m_fra(3, 46.5)[1]
-  x, y = m_fra(x, y, inverse = True)
-  return x, y
-
 # ##############
-# LOAD LSA data
+# LOAD DATA
 # ##############
 
+# LOAD LSA STORE DATA
 df_lsa = pd.read_csv(os.path.join(path_built_csv,
-                                  'df_lsa_active.csv'),
-                     dtype = {u'C_INSEE' : str,
-                              u'C_INSEE_Ardt' : str,
-                              u'C_Postal' : str,
-                              u'SIREN' : str,
-                              u'NIC' : str,
-                              u'SIRET' : str},
-                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
-                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
-                     encoding = 'UTF-8')
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
 
-df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
-                (~pd.isnull(df_lsa['Longitude']))].copy()
-
-lsd0 = [u'Enseigne',
-        u'Adresse1',
-        u'C_Postal',
-        u'Ville'] #, u'Latitude', u'Longitude']
-
-# ###############
-# LOAD COMMUNES
-# ###############
+df_lsa = df_lsa[(~pd.isnull(df_lsa['latitude'])) &\
+                (~pd.isnull(df_lsa['longitude']))].copy()
 
 df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
                                         'df_communes.csv'),
                            dtype = {'DEP': str,
                                     'CODGEO' : str},
-                           encoding = 'UTF-8')
+                           encoding = 'utf-8')
+
 df_com_insee.set_index('CODGEO', inplace = True)
 
-# excludes Corsica
-x1 = -5.
-x2 = 9.
-y1 = 42
-y2 = 52.
+# LOAD GEO FRANCE
+geo_france = GeoFrance(path_dpt = path_geo_dpt,
+                       path_com = path_geo_com)
+df_com = geo_france.df_com
 
-# Lambert conformal for France (as suggested by IGN... check WGS84 though?)
-m_fra = Basemap(resolution='i',
-                projection='lcc',
-                ellps = 'WGS84',
-                lat_1 = 44.,
-                lat_2 = 49.,
-                lat_0 = 46.5,
-                lon_0 = 3,
-                llcrnrlat=y1,
-                urcrnrlat=y2,
-                llcrnrlon=x1,
-                urcrnrlon=x2)
-
-path_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
-path_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
-
-m_fra.readshapefile(path_dpt, 'departements_fr', color = 'none', zorder=2)
-m_fra.readshapefile(path_com, 'communes_fr', color = 'none', zorder=2)
-
-df_com = pd.DataFrame({'poly' : [Polygon(xy) for xy in m_fra.communes_fr],
-                       'x_center' : [d['X_CENTROID'] for d in m_fra.communes_fr_info],
-                       'y_center' : [d['Y_CENTROID'] for d in m_fra.communes_fr_info],
-                       'x_cl' : [d['X_CHF_LIEU'] for d in m_fra.communes_fr_info],
-                       'y_cl' : [d['Y_CHF_LIEU'] for d in m_fra.communes_fr_info],
-                       'code_insee' : [d['INSEE_COM'] for d in m_fra.communes_fr_info],
-                       'commune' : [d['NOM_COMM'] for d in m_fra.communes_fr_info]})
-
-# Drop Corsica (make sure dropped in LSA as well?)
-df_com['dpt'] = df_com['code_insee'].str.slice(stop=-3)
-df_com = df_com[~df_com['dpt'].isin(['2A', '2B'])]
-
-# Keep only one line per commune (several polygons for some)
+# KEEP ONLY ONE LINE PER MUNICIPALITY (several polygons for some)
 df_com['poly_area'] = df_com['poly'].apply(lambda x: x.area)
-df_com.sort(columns = ['code_insee', 'poly_area'],
+# keep largest area (todo: sum)
+df_com.sort(columns = ['c_insee', 'poly_area'],
             ascending = False,
             inplace = True)
+df_com.drop_duplicates(['c_insee'], inplace = True, take_last = False)
 
-df_com.drop_duplicates(subset = 'code_insee', inplace = True)
+# GET GPS COORD OF MUNICIPALITY CENTER
 
-#print u'\nTest with commune', df_com['commune'].iloc[0]
-#x_test, y_test = df_com['x_center'].iloc[0], df_com['y_center'].iloc[0]
-#print convert_from_ign(x_test, y_test)
+# two centers available: centroid of polygon and town hall
+print u'\nTest with commune', df_com['commune'].iloc[0]
+x_test, y_test = df_com['x_ct'].iloc[0], df_com['y_ct'].iloc[0]
+print geo_france.convert_ign_to_gps(x_test, y_test)
 
-df_com[['lng_ct', 'lat_ct']] = df_com[['x_center', 'y_center']].apply(\
-                                 lambda x: convert_from_ign(x['x_center'],\
-                                                            x['y_center']),\
+df_com[['lng_ct', 'lat_ct']] = df_com[['x_ct', 'y_ct']].apply(\
+                                 lambda x: geo_france.convert_ign_to_gps(x['x_ct'],\
+                                                                         x['y_ct']),\
                                  axis = 1)
 
 df_com[['lng_cl', 'lat_cl']] = df_com[['x_cl', 'y_cl']].apply(\
-                                 lambda x: convert_from_ign(x['x_cl'],\
-                                                            x['y_cl']),\
+                                 lambda x: geo_france.convert_ign_to_gps(x['x_cl'],\
+                                                                         x['y_cl']),\
                                  axis = 1)
 
 # Round gps coord
 for col in ['lng_ct', 'lat_ct', 'lng_cl', 'lat_cl']:
   df_com[col] = np.round(df_com[col], 3)
 
+lsd0 = [u'enseigne',
+        u'adresse1',
+        u'c_postal',
+        u'ville'] #, u'Latitude', u'Longitude']
+
 # Check correspondence between INSEE and IGN
 df_com_insee_fm = df_com_insee[~df_com_insee['DEP'].isin(['2A', '2B', '97'])].copy()
-print df_com[~df_com['code_insee'].isin(df_com_insee_fm.index)].to_string()
+print df_com[~df_com['c_insee'].isin(df_com_insee_fm.index)].to_string()
 
 # Add population to IGN data
-df_com.set_index('code_insee', inplace = True)
+df_com.set_index('c_insee', inplace = True)
 df_com['pop'] = df_com_insee['P10_POP']
 
 # Type restriction
@@ -150,7 +111,7 @@ ls_h_and_s_demand = [['H', 25],
                      ['S', 10]]
 
 for type_store, dist_demand in ls_h_and_s_demand:
-  df_lsa_type = df_lsa[df_lsa['Type_Alt'] == type_store].copy()
+  df_lsa_type = df_lsa[df_lsa['type_alt'] == type_store].copy()
   
   # Population available for one store
   
@@ -159,8 +120,8 @@ for type_store, dist_demand in ls_h_and_s_demand:
     ## could actually keep reference store since using groupe surface only
     #df_lsa_sub_temp = df_lsa_sub[df_lsa_sub.index != row_ind].copy()
     df_com_temp = df_com.copy()
-    df_com_temp['lat_store'] = row['Latitude']
-    df_com_temp['lng_store'] = row['Longitude']
+    df_com_temp['lat_store'] = row['latitude']
+    df_com_temp['lng_store'] = row['longitude']
     df_com_temp['dist'] = compute_distance_ar(df_com_temp['lat_store'],
                                               df_com_temp['lng_store'],
                                               df_com_temp['lat_cl'],
@@ -169,9 +130,9 @@ for type_store, dist_demand in ls_h_and_s_demand:
     ac_pop = df_com_temp['pop'][df_com_temp['dist'] <= dist_demand].sum()
     
     # CONTINUOUS
-    df_com_temp['Wgt pop'] = np.exp(-df_com_temp['dist']/10) *\
+    df_com_temp['wgtd_pop'] = np.exp(-df_com_temp['dist']/10) *\
                                           df_com_temp['pop']
-    pop = df_com_temp['Wgt pop'].sum()
+    pop = df_com_temp['wgtd_pop'].sum()
 
     ls_rows_demand.append((row_ind, ac_pop, pop))
 
@@ -185,7 +146,7 @@ for type_store, dist_demand in ls_h_and_s_demand:
                          left_index = True,
                          right_index = True)
   
-  df_lsa_type.sort(['C_INSEE_Ardt', 'Enseigne'], inplace = True)
+  df_lsa_type.sort(['c_insee_ardt', 'enseigne'], inplace = True)
   
   ls_disp_lsa_comp = lsd0 + ['ac_pop', 'pop']
 

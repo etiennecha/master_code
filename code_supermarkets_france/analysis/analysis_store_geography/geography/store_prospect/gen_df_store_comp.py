@@ -25,24 +25,24 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # ##############
 
 df_lsa = pd.read_csv(os.path.join(path_built_csv,
-                                  'df_lsa_active.csv'),
-                     dtype = {u'C_INSEE' : str,
-                              u'C_INSEE_Ardt' : str,
-                              u'C_Postal' : str,
-                              u'SIREN' : str,
-                              u'NIC' : str,
-                              u'SIRET' : str},
-                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
-                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
-                     encoding = 'UTF-8')
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
 
-df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
-                (~pd.isnull(df_lsa['Longitude']))].copy()
+df_lsa = df_lsa[(~pd.isnull(df_lsa['latitude'])) &\
+                (~pd.isnull(df_lsa['longitude']))].copy()
 
-lsd0 = [u'Enseigne',
-        u'Adresse1',
-        u'C_Postal',
-        u'Ville'] #, u'Latitude', u'Longitude']
+lsd0 = [u'enseigne',
+        u'adresse1',
+        u'c_postal',
+        u'ville'] #, u'latitude', u'longitude']
 
 # Type restriction
 ls_h_and_s = [['H', ['H'], 25, 'H_v_H'],
@@ -50,7 +50,7 @@ ls_h_and_s = [['H', ['H'], 25, 'H_v_H'],
               ['S', ['H', 'X', 'S'], 10, 'S_v_all']]
 
 for type_store, type_comp, dist_comp, title in ls_h_and_s:
-  df_lsa_type = df_lsa[(df_lsa['Type_Alt'] == type_store)].copy()
+  df_lsa_type = df_lsa[(df_lsa['type_alt'] == type_store)].copy()
   
   # Competitors for one store
   
@@ -58,19 +58,19 @@ for type_store, type_comp, dist_comp, title in ls_h_and_s:
   for row_ind, row in df_lsa_type.iterrows():
     ## could actually keep reference store since using groupe surface only
     #df_lsa_sub_temp = df_lsa_sub[df_lsa_sub.index != row_ind].copy()
-    df_lsa_sub_temp = df_lsa[df_lsa['Type_Alt'].isin(type_comp)].copy()
-    df_lsa_sub_temp['lat'] = row['Latitude']
-    df_lsa_sub_temp['lng'] = row['Longitude']
-    df_lsa_sub_temp['dist'] = compute_distance_ar(df_lsa_sub_temp['Latitude'],
-                                                  df_lsa_sub_temp['Longitude'],
+    df_lsa_sub_temp = df_lsa[df_lsa['type_alt'].isin(type_comp)].copy()
+    df_lsa_sub_temp['lat'] = row['latitude']
+    df_lsa_sub_temp['lng'] = row['longitude']
+    df_lsa_sub_temp['dist'] = compute_distance_ar(df_lsa_sub_temp['latitude'],
+                                                  df_lsa_sub_temp['longitude'],
                                                   df_lsa_sub_temp['lat'],
                                                   df_lsa_sub_temp['lng'])
     
     # CONTINUOUS
-    df_lsa_sub_temp['Wgt Surface'] = np.exp(-df_lsa_sub_temp['dist']/10) *\
-                                          df_lsa_sub_temp['Surface']
-    df_lsa_sub_temp_groupe = df_lsa_sub_temp[df_lsa_sub_temp['Groupe'] == row['Groupe']].copy()
-    df_lsa_sub_temp_comp = df_lsa_sub_temp[df_lsa_sub_temp['Groupe'] != row['Groupe']].copy()
+    df_lsa_sub_temp['wgtd_surface'] = np.exp(-df_lsa_sub_temp['dist']/10) *\
+                                          df_lsa_sub_temp['surface']
+    df_lsa_sub_temp_groupe = df_lsa_sub_temp[df_lsa_sub_temp['groupe'] == row['groupe']].copy()
+    df_lsa_sub_temp_comp = df_lsa_sub_temp[df_lsa_sub_temp['groupe'] != row['groupe']].copy()
     
     # distance to closest comp / closest same groupe
     dist_cl_groupe =\
@@ -78,29 +78,29 @@ for type_store, type_comp, dist_comp, title in ls_h_and_s:
     dist_cl_comp = df_lsa_sub_temp_comp['dist'].min()
 
     # HHI (see below: not working if None group)
-    store_share = row['Surface'] / df_lsa_sub_temp['Wgt Surface'].sum()
-    groupe_share = df_lsa_sub_temp_groupe['Wgt Surface'].sum() /\
-                      df_lsa_sub_temp['Wgt Surface'].sum()
-    df_hhi = df_lsa_sub_temp[['Groupe',
-                              'Wgt Surface']].groupby('Groupe').agg([sum])['Wgt Surface']
+    store_share = row['surface'] / df_lsa_sub_temp['wgtd_surface'].sum()
+    groupe_share = df_lsa_sub_temp_groupe['wgtd_surface'].sum() /\
+                      df_lsa_sub_temp['wgtd_surface'].sum()
+    df_hhi = df_lsa_sub_temp[['groupe',
+                              'wgtd_surface']].groupby('groupe').agg([sum])['wgtd_surface']
     df_hhi['market_share'] = df_hhi['sum'] / df_hhi['sum'].sum()
     hhi = (df_hhi['market_share']**2).sum()
   
     # WITHIN RADIUS
     df_lsa_market = df_lsa_sub_temp[df_lsa_sub_temp['dist'] <= dist_comp].copy()
-    df_lsa_market_groupe = df_lsa_market[df_lsa_market['Groupe'] == row['Groupe']].copy()
-    df_lsa_market_comp = df_lsa_market[df_lsa_market['Groupe'] != row['Groupe']].copy()
+    df_lsa_market_groupe = df_lsa_market[df_lsa_market['groupe'] == row['groupe']].copy()
+    df_lsa_market_comp = df_lsa_market[df_lsa_market['groupe'] != row['groupe']].copy()
     
     ac_nb_stores = len(df_lsa_market) - 1 # exclude reference store (even if no group)
-    ac_nb_chains = len(df_lsa_market['Groupe'].unique())
+    ac_nb_chains = len(df_lsa_market['groupe'].unique())
     ac_nb_comp = len(df_lsa_market_comp) # reference store already excluded (even if no group)
 
-    ac_store_share = row['Surface'] / df_lsa_market['Surface'].sum()
-    ac_groupe_share = df_lsa_market_groupe['Surface'].sum() /\
-                        df_lsa_market['Surface'].sum()
+    ac_store_share = row['surface'] / df_lsa_market['surface'].sum()
+    ac_groupe_share = df_lsa_market_groupe['surface'].sum() /\
+                        df_lsa_market['surface'].sum()
     # HHI (see below: not working if None group)
-    df_hhi = df_lsa_market[['Groupe',
-                            'Surface']].groupby('Groupe').agg([sum])['Surface']
+    df_hhi = df_lsa_market[['groupe',
+                            'surface']].groupby('groupe').agg([sum])['surface']
     df_hhi['market_share'] = df_hhi['sum'] / df_hhi['sum'].sum()
     ac_hhi = (df_hhi['market_share']**2).sum()
   
@@ -122,7 +122,7 @@ for type_store, type_comp, dist_comp, title in ls_h_and_s:
                          left_index = True,
                          right_index = True)
   
-  df_lsa_type.sort(['C_INSEE_Ardt', 'Enseigne'], inplace = True)
+  df_lsa_type.sort(['c_insee_ardt', 'enseigne'], inplace = True)
   
   ls_disp_lsa_comp = lsd0 + ['dist_cl_comp', 'dist_cl_groupe',
                              'ac_nb_stores', 'ac_nb_chains', 'ac_nb_comp',
