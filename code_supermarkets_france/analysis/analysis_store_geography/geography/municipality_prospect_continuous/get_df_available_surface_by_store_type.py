@@ -109,7 +109,7 @@ df_com.set_index('c_insee', inplace = True)
 
 # SURFACE AVAIL TO EACH COMMUNE (could just sum on types)
 ls_rows_res = []
-for i, row in df_com.iterrows():
+for row_i, row in df_com.iterrows():
   df_lsa['lat_com'] = row['lat_cl']
   df_lsa['lng_com'] = row['lng_cl']
   df_lsa['dist'] = compute_distance_ar(df_lsa['latitude'],
@@ -117,11 +117,11 @@ for i, row in df_com.iterrows():
                                        df_lsa['lat_com'],
                                        df_lsa['lng_com'])
   df_lsa['wgtd_surface'] = np.exp(-df_lsa['dist']/10) * df_lsa['surface']
-  row_res = [i, df_lsa['wgtd_surface'].sum()]
+  row_res = [row_i, df_lsa['wgtd_surface'].sum()]
   ls_rows_res.append(row_res)
 
-df_com_all = pd.DataFrame(ls_rows_res, columns = ['code_insee', 'available_surface'])
-df_com_all.set_index('code_insee', inplace = True)
+df_com_all = pd.DataFrame(ls_rows_res, columns = ['c_insee', 'available_surface'])
+df_com_all.set_index('c_insee', inplace = True)
 df_com['available_surface'] = df_com_all['available_surface']
 
 # SURFACE AVAIL TO EACH COMMUNE BY STORE TYPE
@@ -166,6 +166,6 @@ ls_disp_com_st = ['available_surface', 'surface'] +\
 df_com[ls_disp_com_st].to_csv(os.path.join(path_built_csv,
                                            '201407_competition',
                                            'df_mun_prospect_surface_avail_by_type.csv'),
-                              index_label = 'code_insee',
+                              index_label = 'c_insee',
                               encoding = 'utf-8',
                               float_format='%.3f')

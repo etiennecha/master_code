@@ -15,14 +15,13 @@ path_built = os.path.join(path_data,
                           'data_built',
                           'data_lsa')
 
-path_built_csv = os.path.join(path_built,
-                        'data_csv')
+path_built_csv = os.path.join(path_built, 'data_csv')
+path_built_csv_comp = os.path.join(path_built_csv, '201407_competition')
 
 path_insee = os.path.join(path_data, 'data_insee')
 path_insee_extracts = os.path.join(path_insee, 'data_extracts')
 
-path_maps = os.path.join(path_data,
-                         'data_maps')
+path_maps = os.path.join(path_data, 'data_maps')
 path_geo_dpt = os.path.join(path_maps, 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
 path_geo_com = os.path.join(path_maps, 'GEOFLA_COM_WGS84', 'COMMUNE')
 
@@ -143,31 +142,31 @@ ls_columns = ['c_insee', 'wgtd_surface', 'hhi',
 df_hhi = pd.DataFrame(ls_rows_hhi, columns = ls_columns)
 df_hhi.set_index('c_insee', inplace = True)
 
-#df_com = pd.merge(df_com,
-#                  df_hhi,
-#                  how = 'left',
-#                  right_index = True,
-#                  left_index = True)
-#
-#df_com['hhi'] = df_com['hhi'] * 10000
-#df_com['ac_hhi'] = df_com['ac_hhi'] * 10000
-#
-## Add DEP and REG... five are not in insee data: nouvelles communes...
-#df_com['reg'] = df_com_insee['REG'].astype(str)
-#df_com['dpt'] = df_com_insee['DEP'].astype(str)
-#for code_insee in  ['52465', '52278', '52266', '52124', '52033']:
-#  df_com.loc[code_insee, ['reg', 'dpt']] = ['21', '52']
-#
-#ls_keep_com = ['commune', 'pop', 'com_surf', 'reg', 'dpt'] + ls_columns[1:]
-#
-#print df_com[ls_keep_com][0:10].to_string()
+df_com = pd.merge(df_com,
+                  df_hhi,
+                  how = 'left',
+                  right_index = True,
+                  left_index = True)
 
-#df_com[ls_keep_com].to_csv(os.path.join(path_dir_built_csv,
-#                                        'df_municipality_hhi.csv'),
-#                           encoding = 'latin-1',
-#                           float_format = '%.3f',
-#                           date_format = '%Y%m%d',
-#                           index_label = 'code_insee')
+df_com['hhi'] = df_com['hhi'] * 10000
+df_com['ac_hhi'] = df_com['ac_hhi'] * 10000
+
+# Add DEP and REG... five are not in insee data: nouvelles communes...
+df_com['reg'] = df_com_insee['REG'].astype(str)
+df_com['dpt'] = df_com_insee['DEP'].astype(str)
+for code_insee in  ['52465', '52278', '52266', '52124', '52033']:
+  df_com.loc[code_insee, ['reg', 'dpt']] = ['21', '52']
+
+ls_keep_com = ['commune', 'pop', 'com_surf', 'reg', 'dpt'] + ls_columns[1:]
+
+print df_com[ls_keep_com][0:10].to_string()
+
+df_com[ls_keep_com].to_csv(os.path.join(path_built_csv_comp,
+                                        'df_municipality_hhi.csv'),
+                           encoding = 'utf-8',
+                           float_format = '%.3f',
+                           date_format = '%Y%m%d',
+                           index_label = 'code_insee')
 
 # Check ability to output HHi quantiles weighted by pop (compare with STATA output)
 
