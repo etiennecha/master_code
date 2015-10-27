@@ -13,7 +13,6 @@ import datetime as datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import pprint
-#from mpl_toolkits.basemap import Basemap
 
 path_built = os.path.join(path_data,
                           'data_supermarkets',
@@ -21,34 +20,37 @@ path_built = os.path.join(path_data,
                           'data_lsa')
 
 path_built_csv = os.path.join(path_built,
-                        'data_csv')
+                              'data_csv')
 
-path_insee = os.path.join(path_data, 'data_insee')
-path_insee_match = os.path.join(path_insee, 'match_insee_codes')
-path_insee_extracts = os.path.join(path_insee, 'data_extracts')
+path_built_graphs = os.path.join(path_built,
+                                 'data_graphs')
 
-# #############
-# READ CSV FILE
-# #############
+path_insee_extracts = os.path.join(path_data,
+                                   'data_insee',
+                                   'data_extracts')
 
-# Active stores only
-# (could be stores at any period)
+path_geo_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
+path_geo_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
+
+# ########################
+# LOAD DATA AND GEO FRANCE
+# ########################
+
+# LSA Data
 
 df_lsa = pd.read_csv(os.path.join(path_built_csv,
-                                  'df_lsa_active.csv'),
-                     dtype = {u'C_INSEE' : str,
-                              u'C_INSEE_Ardt' : str,
-                              u'C_Postal' : str,
-                              u'SIREN' : str,
-                              u'NIC' : str,
-                              u'SIRET' : str},
-                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
-                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
-                     encoding = 'UTF-8')
+                                  'df_lsa.csv'),
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
 
-# ################
 # LOAD INSEE DATA
-# ################
 
 # todo: fix pbms with num vs. string (CODEGEO in particular)
 
@@ -64,7 +66,8 @@ df_uu_agg = pd.read_csv(os.path.join(path_insee_extracts,
                                      u'df_uu_agg_final.csv'),
                         encoding = 'UTF-8')
 
-df_com = pd.read_csv(os.path.join(path_insee_extracts, 'data_insee_extract.csv'),
+df_com = pd.read_csv(os.path.join(path_insee_extracts,
+                                  'data_insee_extract.csv'),
                      encoding = 'UTF-8',
                      dtype = {u'DEP': str,
                               u'CODGEO' : str,
@@ -83,7 +86,7 @@ df_com['CODGEO'] = df_com['CODGEO'].apply(\
 df_lsa = pd.merge(df_insee_areas,
                   df_lsa,
                   left_on = 'CODGEO',
-                  right_on = 'C_INSEE',
+                  right_on = 'c_insee',
                   how = 'right')
 
 # ##########################
@@ -102,7 +105,7 @@ print u"\nNb of communes in Metro France: " +\
 print u"\nPop in Metro France (2010): " +\
       u"{:12,.0f}".format(df_com['P10_POP'].sum())
 
-se_com_vc = df_lsa['C_INSEE'].value_counts()
+se_com_vc = df_lsa['c_insee'].value_counts()
 df_com.set_index('CODGEO', inplace = True)
 df_com['Nb GS'] = se_com_vc
 print u"\nNb of communes with a store: " +\
@@ -123,9 +126,9 @@ df_com['P10_POP'] = df_com['P10_POP'] / 1000.0
 df_com['Pop by GS'] = df_com['P10_POP'] / df_com['Nb GS']
 
 # Surface and Pop by m2
-df_com['Surface'] = df_lsa[['C_INSEE', 'Surface']].\
-                      groupby('C_INSEE')['Surface'].sum()
-df_com['Surfce'] = df_com['Surface'] / 1000.0
+df_com['Surface'] = df_lsa[['c_insee', 'surface']].\
+                      groupby('c_insee')['surface'].sum()
+df_com['Surface'] = df_com['Surface'] / 1000.0
 
 df_com['Pop by surf'] = df_com['P10_POP'] / df_com['Surface']
 
@@ -153,6 +156,9 @@ print df_com[ls_disp_com]\
 # ANALYSIS AT AU LEVEL
 # ##########################
 
+# Get rid of non geo areas
+df_au_agg = df_au_agg[~df_au_agg['AU2010'].isin(['000', '997', '998'])]
+
 dict_rename_libau = {u'Marseille - Aix-en-Provence' : u'Marseille - Aix',
                      u'(partie française)' : u'(fr)',
                      u'Clermont-Ferrand' : u'Clermont-Fer.'}
@@ -177,8 +183,8 @@ df_au_agg['P10_POP'] = df_au_agg['P10_POP'] / 1000.0
 df_au_agg['Pop by GS'] = df_au_agg['P10_POP'] / df_au_agg['Nb GS']
 
 # Surface and Pop by m2
-df_au_agg['Surface'] = df_lsa[['AU2010', 'Surface']].\
-                         groupby('AU2010')['Surface'].sum()
+df_au_agg['Surface'] = df_lsa[['AU2010', 'surface']].\
+                         groupby('AU2010')['surface'].sum()
 df_au_agg['Surface'] = df_au_agg['Surface'] / 1000.0
 
 df_au_agg['Pop by surf'] = df_au_agg['P10_POP'] / df_au_agg['Surface']
@@ -235,8 +241,8 @@ df_uu_agg['P10_POP'] = df_uu_agg['P10_POP'] / 1000.0
 df_uu_agg['Pop by GS'] = df_uu_agg['P10_POP'] / df_uu_agg['Nb GS']
 
 # Surface and Pop by m2
-df_uu_agg['Surface'] = df_lsa[['UU2010', 'Surface']].\
-                    groupby('UU2010')['Surface'].sum()
+df_uu_agg['Surface'] = df_lsa[['UU2010', 'surface']].\
+                    groupby('UU2010')['surface'].sum()
 df_uu_agg['Surface'] = df_uu_agg['Surface'] / 1000.0
 
 df_uu_agg['Pop by surf'] = df_uu_agg['P10_POP'] / df_uu_agg['Surface']

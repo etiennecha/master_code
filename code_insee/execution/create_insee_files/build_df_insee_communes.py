@@ -117,19 +117,16 @@ df_communes = pd.merge(df_communes,
 ls_disp_revenus = ['MENFIS10', 'PMENFIS10', 'MENIMP10', 
                     'QUAR1UC10', 'QUAR2UC10', 'QUAR3UC10',
                     'RDUC10', 'PTSA10', 'PPEN10', 'PBEN10', 'PAUT10']
+
 df_communes = pd.merge(df_communes,
                        df_revenus[ls_disp_revenus],
                        left_index = True,
                        right_index = True)
 
 df_communes.reset_index(inplace = True)
-df_communes.to_csv(os.path.join(path_dir_insee_built, 'df_communes.csv'),
+
+df_communes.to_csv(os.path.join(path_dir_insee_built,
+                                'df_communes.csv'),
                    float_format='%.2f',
                    encoding='utf-8',
                    index=False)
-
-#df_communes.to_csv(os.path.join(path_dir_insee_built, 'df_communes.csv'),
-#                   float_format='%.2f',
-#                   encoding='utf-8',
-#                   index=True,
-#                   index_label=u'CODGEO')

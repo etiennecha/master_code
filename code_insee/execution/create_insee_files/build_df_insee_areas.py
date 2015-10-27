@@ -113,8 +113,11 @@ ls_disp = ['CODGEO', 'LIBGEO', 'TYPE_2010', 'STATUT_2010', 'POP_MUN_2007',
            'AU2010', 'UU2010', 'BV', 'AU2010_O', 'UU2010_O']
 
 df_insee_areas.reset_index(inplace=True)
-df_insee_areas[ls_disp].to_csv(os.path.join(path_dir_insee_built, 'df_insee_areas.csv'),
-                               float_format='%.2f', encoding='utf-8', index=False)
+df_insee_areas[ls_disp].to_csv(os.path.join(path_dir_insee_built,
+                                            'df_insee_areas.csv'),
+                               float_format='%.2f',
+                               encoding='utf-8',
+                               index=False)
 
 # add au/uu/bv libelles
 # caution: df with info must contain unique row per occurence
@@ -145,5 +148,8 @@ ls_disp_2 = ['CODGEO', 'LIBGEO', 'TYPE_2010', 'STATUT_2010', 'POP_MUN_2007',
              'AU2010_O', 'UU2010_O']
 # print df_insee_areas_2[ls_disp][0:500].to_string()
 
-df_insee_areas_2[ls_disp_2].to_csv(os.path.join(path_dir_insee_built, 'df_insee_areas_w_libs.csv'),
-                                   float_format='%.2f', encoding='utf-8', index=False)
+df_insee_areas_2[ls_disp_2].to_csv(os.path.join(path_dir_insee_built,
+                                                'df_insee_areas_w_libs.csv'),
+                                   float_format='%.2f',
+                                   encoding='utf-8',
+                                   index=False)
