@@ -55,11 +55,11 @@ df_stores_sub = df_stores[(df_stores['Period'] >= per_min) &\
 se_vc_id_lsa = df_stores_sub['id_lsa'].value_counts()
 # keep top 100? which criterion?
 df_stores_sub = df_stores_sub[df_stores_sub['id_lsa']\
-                  .isin(se_vc_id_lsa[se_vc_id_lsa >= 4].index)]
+                  .isin(se_vc_id_lsa[se_vc_id_lsa >= 3].index)]
 
 df_qlmc_sub = df_qlmc[(df_qlmc['Period'] >= per_min) &\
                       (df_qlmc['Period'] <= per_max) &\
-                      (df_qlmc['id_lsa'].isin(se_vc_id_lsa[se_vc_id_lsa >= 4].index))].copy()
+                      (df_qlmc['id_lsa'].isin(se_vc_id_lsa[se_vc_id_lsa >= 3].index))].copy()
 
 # Make one to one relation between id_lsa and Store (across periods)
 df_stores_id_lsa_sub = df_stores_sub[['id_lsa', 'Store']].drop_duplicates()
@@ -75,10 +75,13 @@ se_vc_products = df_qlmc_sub['Product'].value_counts()
 df_qlmc_sub = df_qlmc_sub[df_qlmc_sub['Product']\
                 .isin(se_vc_products[0:100].index)]
 
+# TODO: drop store-period with insufficient obs
+# check that then only nan?
+
 # #############
 # REGRESSION
 # #############
 
 # pbm: can be that store chges across time for now
-print smf.ols('Price ~ C(Product) + C(Store)*C(Period)',
+print smf.ols('Price ~ C(Product):C(Period) + C(Store):C(Period)',
               data  = df_qlmc_sub).fit().summary()
