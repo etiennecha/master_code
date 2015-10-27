@@ -75,13 +75,24 @@ se_vc_products = df_qlmc_sub['Product'].value_counts()
 df_qlmc_sub = df_qlmc_sub[df_qlmc_sub['Product']\
                 .isin(se_vc_products[0:100].index)]
 
-# TODO: drop store-period with insufficient obs
-# check that then only nan?
+# GET RID OF Store-Period WITH INSUFFICIENT OBS
+# todo
+se_store_period = pd.pivot_table(df_qlmc_sub[['Store', 'Period']],
+                                 index = ['Store', 'Period'],
+                                 aggfunc = len)
+se_pbms = se_store_period[se_store_period < 10]
 
 # #############
 # REGRESSION
 # #############
 
-# pbm: can be that store chges across time for now
-print smf.ols('Price ~ C(Product):C(Period) + C(Store):C(Period)',
+# Make sure reference store appears in all periods (else?)
+
+#print smf.ols("Price ~ C(Product):C(Period)' + C(Store):C(Period)",
+#              data  = df_qlmc_sub).fit().summary()
+
+print smf.ols("Price ~ C(Product):C(Period)" +\
+              "+ C(Store, Treatment(reference='CORA ARCUEIL')):C(Period)",
               data  = df_qlmc_sub).fit().summary()
+
+# for now: need to filter out unobserved store-period from output
