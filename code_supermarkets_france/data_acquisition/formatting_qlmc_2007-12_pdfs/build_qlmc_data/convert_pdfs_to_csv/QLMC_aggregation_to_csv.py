@@ -46,7 +46,7 @@ for json_file in ls_json_files:
   ls_ls_records.append(ls_records)
 
 print u'\nBuild df_qlmc'
-ls_columns = ['Period', 'Department', 'Family', 'Product', 'Store', 'Price', 'Date']
+ls_columns = ['period', 'section', 'family', 'product', 'store', 'price', 'date']
 ls_rows = [[i] + record for i, ls_records in enumerate(ls_ls_records)\
              for record in ls_records]
 df_qlmc = pd.DataFrame(ls_rows, columns = ls_columns)
@@ -58,14 +58,14 @@ df_qlmc.to_csv(os.path.join(path_source_csv,
                float_format='%.3f',
                index = False)
 
-df_stores = df_qlmc[['Period', 'Store']].drop_duplicates()
+df_stores = df_qlmc[['period', 'store']].drop_duplicates()
 print u'\nOutput df_stores_raw'
 df_stores.to_csv(os.path.join(path_source_csv,
                               'df_stores_raw.csv'),
                  encoding = 'utf-8',
                  index = False)
 
-df_products = df_qlmc[['Period', 'Department', 'Family', 'Product']].drop_duplicates()
+df_products = df_qlmc[['period', 'section', 'family', 'product']].drop_duplicates()
 print u'\nOutput df_products_raw'
 df_products.to_csv(os.path.join(path_source_csv,
                                 'df_products_raw.csv'),

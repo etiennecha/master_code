@@ -25,52 +25,58 @@ format_str = lambda x: u'{:}'.format(x[:20])
 print u'Loading df_qlmc'
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
+                      parse_dates = ['date'],
                       encoding = 'utf-8')
-# date parsing slow... better if specified format?
+
+# date parsing slow? specify format?
+
+#print u'\nParse dates'
+#df_qlmc['date_str'] = df_qlmc['date']
+#df_qlmc['date'] = pd.to_datetime(df_qlmc['date'], format = '%d/%m/%Y')
 
 # ##################
 # STATS DES: PRELIM
 # ##################
 
-ls_unique_prod_cols = ['Family',
-                       'Subfamily',
-                       'Product']
+ls_unique_prod_cols = ['section',
+                       'family',
+                       'product']
 
-ls_unique_store_cols = ['Store_Chain',
-                        'Store']
+ls_unique_store_cols = ['store_chain',
+                        'store']
 
 # PRODUCT DEPARTMENTS
 
-print u'\nProduct departments by period:'
-df_prod = df_qlmc[['Period'] + ls_unique_prod_cols].drop_duplicates()
-df_rayons = pd.pivot_table(data = df_prod[['Period', 'Family', 'Product']],
-                           index = 'Family',
-                           columns = 'Period',
+print u'\nproduct departments by period:'
+df_prod = df_qlmc[['period'] + ls_unique_prod_cols].drop_duplicates()
+df_rayons = pd.pivot_table(data = df_prod[['period', 'section', 'product']],
+                           index = 'section',
+                           columns = 'period',
                            aggfunc = len,
-                           fill_value = 0).astype(int)['Product']
+                           fill_value = 0).astype(int)['product']
 print df_rayons.to_string()
 # Obs: discontinuity after period 9
 
 # PRODUCT FAMILIES
 
-print u'\nProduct families by period:'
-df_familles = pd.pivot_table(data = df_prod[['Period', 'Family', 'Product']],
-                             index = 'Family',
-                             columns = 'Period',
+print u'\nproduct families by period:'
+df_familles = pd.pivot_table(data = df_prod[['period', 'section', 'product']],
+                             index = 'section',
+                             columns = 'period',
                              aggfunc = len,
-                             fill_value = 0).astype(int)['Product']
+                             fill_value = 0).astype(int)['product']
 print df_familles.to_string()
 # Obs: small discontinuity after period 6 and larger after period 9
 
 # STORE CHAINS (ORIGINAL)
 
-print u'\nStore chains (qlmc classification) by period:'
-df_store = df_qlmc[['Period'] + ls_unique_store_cols].drop_duplicates()
-df_chains = pd.pivot_table(data = df_store[['Period', 'Store_Chain', 'Store']],
-                           index = 'Store_Chain',
-                           columns = 'Period',
+print u'\nstore chains (qlmc classification) by period:'
+df_store = df_qlmc[['period'] + ls_unique_store_cols].drop_duplicates()
+df_chains = pd.pivot_table(data = df_store[['period', 'store_chain', 'store']],
+                           index = 'store_chain',
+                           columns = 'period',
                            aggfunc = len,
-                           fill_value = 0).astype(int)['Store']
+                           fill_value = 0).astype(int)['store']
 print df_chains.to_string()
 
 # Obs:
@@ -91,7 +97,7 @@ print df_chains.to_string()
 # can rename "SYSTEME U" to "SUPER U"
 # (but may include some "HYPER U" which are then distinguished
 
-# Fix Store_Chain for prelim stats des
+# Fix store_chain for prelim stats des
 ls_sc_drop = ['CARREFOUR CITY',
               'CARREFOUR CONTACT',
               'CARREFOUR PLANET',
@@ -101,7 +107,7 @@ ls_sc_drop = ['CARREFOUR CITY',
               'LECLERC EXPRESS',
               'MARCHE U',
               'U EXPRESS']
-df_qlmc = df_qlmc[~df_qlmc['Store_Chain'].isin(ls_sc_drop)]
+df_qlmc = df_qlmc[~df_qlmc['store_chain'].isin(ls_sc_drop)]
 ls_sc_replace = [('CENTRE E. LECLERC', 'LECLERC'),
                  ('CENTRE LECLERC', 'LECLERC'),
                  ('E. LECLERC', 'LECLERC'),
@@ -109,8 +115,8 @@ ls_sc_replace = [('CENTRE E. LECLERC', 'LECLERC'),
                  ('SYSTEME U', 'SUPER U'),
                  ('GEANT', 'GEANT CASINO')]
 for sc_old, sc_new in ls_sc_replace:
-  df_qlmc.loc[df_qlmc['Store_Chain'] == sc_old,
-              'Store_Chain'] = sc_new
+  df_qlmc.loc[df_qlmc['store_chain'] == sc_old,
+              'store_chain'] = sc_new
 
 # #############################
 # STATS DES: NB OBS AND PRICES
@@ -118,31 +124,34 @@ for sc_old, sc_new in ls_sc_replace:
 
 # NB OBS BY PRODUCT
 
-print u'\nProduct nb of obs by period'
-df_prod_per = pd.pivot_table(data = df_qlmc[['Period', 'Family', 'Product']],
-                             index = ['Family', 'Product'],
-                             columns = 'Period',
+print u'\nproduct nb of obs by period'
+df_prod_per = pd.pivot_table(data = df_qlmc[['period', 'section', 'product']],
+                             index = ['section', 'product'],
+                             columns = 'period',
                              aggfunc = len,
                              fill_value = 0).astype(int)
 # Want to describe but without 0 within each period
+# In fact: same res if fill_value = np.nan and then use describe
 ls_se_pp = []
 for i in range(13):
   ls_se_pp.append(df_prod_per[df_prod_per[i] != 0][i].describe())
 df_su_prod_per = pd.concat(ls_se_pp, axis= 1, keys = range(13))
 print df_su_prod_per.to_string()
 
+# todo: check those w/ few obs if fix them when possible
+
 ## NB OBS BY PRODUCT AND CHAIN
 #
-#print u'\nProduct nb of obs by period for each chain'
-#df_prod_chain_per = pd.pivot_table(data = df_qlmc[['Period',
-#                                                   'Store_Chain',
-#                                                   'Family',
-#                                                   'Product']],
-#                                   index = ['Store_Chain', 'Family', 'Product'],
-#                                   columns = 'Period',
+#print u'\nproduct nb of obs by period for each chain'
+#df_prod_chain_per = pd.pivot_table(data = df_qlmc[['period',
+#                                                   'store_chain',
+#                                                   'section',
+#                                                   'product']],
+#                                   index = ['store_chain', 'section', 'product'],
+#                                   columns = 'period',
 #                                   aggfunc = len,
 #                                   fill_value = 0).astype(int)
-#for chain in df_qlmc['Store_Chain'].unique():
+#for chain in df_qlmc['store_chain'].unique():
 #  ls_se_chain_pp = []
 #  for i in range(13):
 #    df_temp_chain_prod = df_prod_chain_per.loc[chain]
@@ -160,8 +169,8 @@ print df_su_prod_per.to_string()
 #import matplotlib.pyplot as plt
 ##str_some_prod = u'Philips - Cafetière filtre Cucina lilas 1000W 1.2L (15 tasses) - X1'
 #str_some_prod = u'Canard-Duchene - Champagne brut 12 degrés - 75cl'
-#df_some_prod = df_qlmc[(df_qlmc['Period'] == 0) &\
-#                       (df_qlmc['Product'] == str_some_prod)]
+#df_some_prod = df_qlmc[(df_qlmc['period'] == 0) &\
+#                       (df_qlmc['product'] == str_some_prod)]
 #df_some_prod['Price'].plot(kind = 'box')
 ## pbm... quite far away and other prices quite concentrated
 #plt.show()

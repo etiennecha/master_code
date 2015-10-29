@@ -29,35 +29,39 @@ path_match_insee = os.path.join(path_data,
                                 u'data_insee',
                                 u'match_insee_codes')
 
-# ###########
-# LOAD DATA
-# ###########
-
+## LOAD DATA STORES
 df_raw_stores = pd.read_csv(os.path.join(path_source_csv,
                                          'df_stores_raw.csv'),
                       encoding = 'UTF-8')
 
 #ls_ls_stores = dec_json(os.path.join(path_dir_built_json, 'ls_ls_stores.json'))
 
+# MATCH STORES WITH INSEE COMMUNE
 df_corr = pd.read_csv(os.path.join(path_match_insee,
                                    'df_corr_gas.csv'),
                       dtype = str)
 ls_corr = [list(x) for x in df_corr.to_records(index = False)]
 ls_corr = format_correspondence(ls_corr)
 
-# ###############################
-# MATCH STORES WITH INSEE CODE
-# ###############################
-
-# More complicated than usual: no zip nor dpt => only city name
-# of course... city name can be ambiguous hence need to check results
-# might need to load recently built class to use format_str_city_insee function
-# large part done manually => ls_city_match
+# Match store's city vs. all city names in correspondence (position 0)
+# NB: City names can be ambiguous (several cities with same name...)
+ls_str_insee_replace = [[u'\xc9', u'E'],
+                        [u'\xc8', u'E'],
+                        [u'\xca', u'E'],
+                        [u'\xd4', u'O'],
+                        [u'\xc2', u'A'],
+                        [u'\xce', u'I'],
+                        [u"''", u" "],
+                        [u"'", u" "]]
 
 ls_rows = []
 for i, row_store in df_raw_stores.iterrows():
     chain, city = get_split_chain_city(row_store['store'], ls_chain_brands)
     row = [row_store['period'], chain, city, []]
+    ## todo: refactor standardization
+    #city_standardized = re.sub(u'^SAINT(E\s|\s)', u'ST\\1', city.replace(u'-', u' '))
+    #for old, new in ls_str_insee_replace:
+    #  city_standardized = format_str_city_insee(city_standardized.replace(old, new))
     city_standardized = format_str_city_insee(city.replace(u"''", u" "))
     for corr_row in ls_corr:
       if city_standardized == corr_row[0]:
@@ -97,44 +101,117 @@ for row in ls_rows:
   else:
     row[3] = row[3][0]
 
-ls_rows_stores = [row[:3] + list(row[3]) for row in ls_rows]
+# CHECK INSEE CODES VS. GEOFLA
+
+# todo: Use basemap: either IGN Geo or Routes (?)
+# todo: Beware to display all stores when several in a town!
+
+# France
+x1, x2, y1, y2 = -5.0, 9.0, 42.0, 52.0
+
+# Lambert conformal for France (as suggested by IGN... check WGS84 though?)
+m_fra = Basemap(resolution='i',
+                projection='lcc',
+                ellps = 'WGS84',
+                lat_1 = 44.,
+                lat_2 = 49.,
+                lat_0 = 46.5,
+                lon_0 = 3,
+                llcrnrlat=y1,
+                urcrnrlat=y2,
+                llcrnrlon=x1,
+                urcrnrlon=x2)
+
+path_geofla = os.path.join(path_data,
+                               u'data_maps',
+                               u'GEOFLA_COM_WGS84')
+
+m_fra.readshapefile(os.path.join(path_geofla,
+                                 u'COMMUNE'),
+                    u'communes_fr',
+                    color = u'none',
+                    zorder=2)
+
+ls_shp_insee = [row[u'INSEE_COM'] for row in m_fra.communes_fr_info]
+ls_unmatched_general = [row for row in ls_corr if row[3] not in ls_shp_insee]
+# enc_json(ls_unmatched_general, os.path.join(path_data, u'temp_file_obs_and_drop'))
+
+# Specify Ardts for Paris/Marseille/Lyon + fix two cities
+# Got to be cautious not to write to correspondence (essentially ls_ls... points to corresp)
+
+# TODO: fix in a more robust way (avoid repetition also)
+
+#ls_ls_ls_store_insee[0][55]  = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13210'] # 13010
+#ls_ls_ls_store_insee[0][106] = ['PARIS', '75000', 'PARIS', u'75116'] # 75016
+#ls_ls_ls_store_insee[0][119] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13209'] # 13009
+#ls_ls_ls_store_insee[0][159] = ['LYON', '69000', 'RHONE', u'69387'] # 69007
+#ls_ls_ls_store_insee[0][177] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13208'] # 13008
+#ls_ls_ls_store_insee[0][184] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13212'] # 13012
+#ls_ls_ls_store_insee[0][339] = ['PARIS', '75000', 'PARIS', u'75113'] # 75013
+#
+#ls_ls_ls_store_insee[1][60]  = ['LYON', '69000', 'RHONE', u'69383'] # 69003
+#ls_ls_ls_store_insee[1][86]  = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13207'] # 13007
+#ls_ls_ls_store_insee[1][160] = ['PLAN DE CAMPAGNE', '13170', 'BOUCHES DU RHONE', u'13071'] # 13170
+#ls_ls_ls_store_insee[1][249] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13211'] # 13011
+#
+#ls_ls_ls_store_insee[2][77]  = ['PARIS', '75000', 'PARIS', u'75113'] # 75013
+#ls_ls_ls_store_insee[2][157] = ['BIHOREL', '76420', 'SEINE MARITIME', u'76108'] # 76230
+#
+#ls_ls_ls_store_insee[7][94] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13210'] # 13010 Auhan
+#
+#ls_ls_ls_store_insee[9][99] = ['LYON', '69000', 'RHONE', u'69383'] # 69003 Carrefour
+#ls_ls_ls_store_insee[9][111] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13210'] # 13010 Auchan
+#ls_ls_ls_store_insee[9][297] = ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13209'] # 13009 Leclerc
+
+ls_fix_insee = [[55      , ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13210']], # 13010
+                [106     , ['PARIS', '75000', 'PARIS', u'75116']], # 75016
+                [119     , ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13209']], # 13009
+                [159     , ['LYON', '69000', 'RHONE', u'69387']], # 69007
+                [177     , ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13208']], # 13008
+                [184     , ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13212']], # 13012
+                [339     , ['PARIS', '75000', 'PARIS', u'75113']], # 75013
+                [344+60  , ['LYON', '69000', 'RHONE', u'69383']], # 69003
+                [344+86  , ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13207']], # 13007
+                [344+160 , ['PLAN DE CAMPAGNE', '13170', 'BOUCHES DU RHONE', u'13071']], # 13170
+                [344+249 , ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13211']], # 13011
+                [679+77  , ['PARIS', '75000', 'PARIS', u'75113']], # 75013
+                [679+157 , ['BIHOREL', '76420', 'SEINE MARITIME', u'76108']], # 76230
+                [3409+94 , ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13210']], # 13010 Auhan
+                [4667+99 , ['LYON', '69000', 'RHONE', u'69383']], # 69003 Carrefour
+                [4667+111, ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13210']], # 13010 Auchan
+                [4667+297, ['MARSEILLE', '13000', 'BOUCHES DU RHONE', u'13209']]] # 13009 Leclerc
+
+for row_ind, insee_info in ls_fix_insee:
+  ls_rows[row_ind][3] = insee_info
+
+# insee code no more in use? => todo: update correspondence
+ls_unmatched_store_cities = [row for row in ls_rows\
+                               if row[3] and row[3][3] not in ls_shp_insee]
+# if not match for store just None (could drop it)
+ls_rows = [row[:3] + list(row[3]) if row[3] else row[:3] + [None, None, None, None]\
+             for row in ls_rows]
+#enc_stock_json(ls_rows, os.path.join(folder_built_qlmc_json, 'ls_ls_store_insee'))
+
+## DEPRECATED: get rid of ardts in large cities in LSA
+#dict_large_cities = {'13055' : ['%s' %elt for elt in range(13201, 13217)], # Marseille
+#                     '69123' : ['%s' %elt for elt in range(69381, 69390)], # Lyon
+#                     '75056' : ['%s' %elt for elt in range(75101, 75121)]} # Paris
+#dict_large_cities_alt = dict([(v, k) for k, ls_v in dict_large_cities.items()\
+#                                for v in ls_v])
+## not sure want to keep that one then?
+#df_qlmc_stores['c_insee'] = df_qlmc_stores['c_insee'].apply(\
+#                                 lambda x: dict_large_cities_alt[x]\
+#                                   if x in dict_large_cities_alt else x)
 
 # BUILD STORE DATAFRAME
 
 ls_columns = ['period', 'store_chain', 'store_municipality',
               'insee_municipality', 'c_insee_zip', 'insee_departement', 'c_insee']
-df_stores = pd.DataFrame(ls_rows_stores, columns = ls_columns)
-
-df_stores['store'] = df_stores['store_chain'] + ' ' + df_stores['store_municipality']
+df_stores = pd.DataFrame(ls_rows, columns = ls_columns)
 
 df_stores.drop(['insee_departement', 'c_insee_zip'],
                axis = 1,
                inplace = True)
-
-# Precise c_insee_ardt (could have two fields?)
-
-ls_insee_fix = [[[0, u'AUCHAN MARSEILLE'],             [u'marseille', u'13210']],
-                [[0, u'CHAMPION PARIS'],               [u'paris', u'75116']],
-                [[0, u'E.LECLERC MARSEILLE'],          [u'marseille', u'13209']],
-                [[0, u'SYSTEME U LYON'],               [u'lyon', u'69387']],
-                [[0, u'CHAMPION MARSEILLE'],           [u'marseille', u'13208']],
-                [[0, u'GEANT MARSEILLE'],              [u'marseille', u'13212']],
-                [[0, u'GEANT PARIS'],                  [u'paris', u'75113']],
-                [[1, u'CARREFOUR LYON'],               [u'lyon', u'69383']],
-                [[1, u'SUPER U MARSEILLE RUE TADDEI'], [u'marseille', u'13207']],
-                [[1, u'GEANT CASINO PLAN DE CAMPAGNE'],[u'plan de campagne', u'13071']],
-                [[1, u'GEANT CASINO MARSEILLE'],       [u'marseille', u'13211']],
-                [[2, u'CHAMPION PARIS 13 NATIONALE'],  [u'paris', u'75113']],
-                [[2, u'CHAMPION BIHOREL'],             [u'bihorel', u'76108']],
-                [[7, u'AUCHAN MARSEILLE'],             [u'marseille', u'13210']],
-                [[9, u'CARREFOUR LYON'],               [u'lyon', u'69383']],
-                [[9, u'AUCHAN MARSEILLE'],             [u'marseille', u'13210']],
-                [[9, u'LECLERC MARSEILLE'],            [u'marseille', u'13209']]]
-
-for [period, store], [insee_municipality, c_insee] in ls_insee_fix:
-	df_stores.loc[(df_stores['store'] == store) &\
-                 (df_stores['period'] == period),
-                ['insee_municipality', 'c_insee']] = insee_municipality, c_insee
 
 # CHECK SUPERMARKET NAMES
 
@@ -149,10 +226,9 @@ se_insee_vc = df_stores['c_insee'].value_counts()
 for insee_code in se_insee_vc[0:20].index:
 	print '\n\n', df_stores[df_stores['c_insee'] == insee_code].to_string()
 
-
-# ####################
 # LOAD QLMC STORE INFO
-# ####################
+
+df_stores['store'] = df_stores['store_chain'] + ' ' + df_stores['store_municipality']
 
 ls_ls_qlmc_store_info = dec_json(os.path.join(path_source_json,
                                               'ls_ls_qlmc_store_info.json'))
@@ -179,8 +255,7 @@ for i, ls_store_info_names in enumerate(ls_ls_store_info_names):
 # 5th file => Check that really not period 12?
 
 # Global matching
-set_store_info_names = set([store for ls_stores in ls_ls_store_info_names\
-                                  for store in ls_stores])
+set_store_info_names = set([store for ls_stores in ls_ls_store_info_names for store in ls_stores])
 set_store_names = set([store for ls_stores in ls_ls_store_names for store in ls_stores])
 # elements in info not in price files : 878
 set_uselessinfo = set_store_info_names.difference(set_store_names)
@@ -246,20 +321,8 @@ df_stores_all['period'] = df_stores_all['period'].apply(lambda x: int(x))
 # make sure dpt is consistent
 print df_stores_all[(~df_stores_all['c_qlmc_departement'].isnull()) &\
                      (df_stores_all['c_qlmc_departement'] !=\
-                        df_stores_all['c_insee'].str.slice(stop = 2))].to_string()
-
-ls_final_insee_fix = [[[9, u'CARREFOUR MARKET ROMILLY'], [u'romilly sur seine', '10323']],
-                      [[9, u'CARREFOUR MARKET ST OUEN'], [u'saint ouen', '41126']],
-                      [[9, u'LECLERC ROMILLY'],          [u'romilly sur seine', '10323']]]
-
-for [period, store], [insee_municipality, c_insee] in ls_final_insee_fix:
-	df_stores_all.loc[(df_stores_all['store'] == store) &\
-                    (df_stores_all['period'] == period),
-                    ['insee_municipality', 'c_insee']] = insee_municipality, c_insee
-
-df_stores_all.drop(['c_qlmc_departement'],
-                   axis = 1,
-                   inplace = True)
+                        df_stores_all['c_insee'].str.slice(stop = 2))]
+                       
 
 # #######
 # OUTPUT

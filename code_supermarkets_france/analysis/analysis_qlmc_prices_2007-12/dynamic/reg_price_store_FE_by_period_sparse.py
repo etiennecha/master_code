@@ -5,6 +5,7 @@ import add_to_path
 from add_to_path import path_data
 from functions_generic_qlmc import *
 import numpy as np
+import scipy
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
@@ -48,8 +49,8 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                         encoding = 'utf-8')
 
 # Period restriction
-per_min, per_max = 0, 4
-nb_per_min = 3
+per_min, per_max = 0, 8
+nb_per_min = 7
 
 # SUBSET STORES
 df_stores_sub = df_stores[(df_stores['Period'] >= per_min) &\
@@ -75,7 +76,7 @@ df_products = df_qlmc_sub[['Period', 'Product']].drop_duplicates()
 se_vc_products = df_qlmc_sub['Product'].value_counts()
 # top 100 for now
 df_qlmc_sub = df_qlmc_sub[df_qlmc_sub['Product']\
-                .isin(se_vc_products[0:100].index)]
+                .isin(se_vc_products[0:300].index)]
 
 # GET RID OF Store-Period WITH INSUFFICIENT OBS
 # todo
@@ -88,19 +89,34 @@ se_pbms = se_store_period[se_store_period < 10]
 # REGRESSION
 # #############
 
-# Make sure reference store appears in all periods (else?)
+#reg = smf.ols("Price ~ C(Product):C(Period)" +\
+#              "+ C(Store, Treatment(reference='CORA ARCUEIL')):C(Period)",
+#              data  = df_qlmc_sub).fit()
+#print reg.summary()
 
-#print smf.ols("Price ~ C(Product):C(Period)' + C(Store):C(Period)",
-#              data  = df_qlmc_sub).fit().summary()
+from patsy import dmatrix, dmatrices
+X = dmatrix("C(Product) + C(Period)" +\
+            "+ C(Store, Treatment(reference='CORA MONDELANGE')):C(Period)",
+            data = df_qlmc_sub,
+            return_type = "matrix")
 
-reg = smf.ols("Price ~ C(Product):C(Period)" +\
-              "+ C(Store, Treatment(reference='CORA ARCUEIL')):C(Period)",
-              data  = df_qlmc_sub).fit()
-print reg.summary()
+from scipy.sparse import csr_matrix
+A = csr_matrix(X)
 
-df_reg = pd.DataFrame(zip(reg.params.index,
-                          reg.params.values,
-                          reg.bse), columns = ['name', 'coeff', 'bse'])
+res = scipy.sparse.linalg.lsqr(A,
+                               df_qlmc_sub['Price'].values,
+                               iter_lim = 100,
+                               calc_var = True)
+# X.design_info
+param_names = X.design_info.column_names
+param_values = res[0]
+nb_freedom_degrees = len(df_qlmc_sub) - len(res[0])
+param_se = np.sqrt(res[3]**2/nb_freedom_degrees * res[9])
+
+# todo: check if can get same results as with smf.ols
+df_reg = pd.DataFrame(zip(param_names,
+                          param_values,
+                          param_se), columns = ['name', 'coeff', 'bse'])
 
 # for now: need to filter out unobserved store-period from output
 def get_store_period_fe(var_name):
@@ -120,4 +136,9 @@ df_test = df_fe.reindex(se_store_period.index)
 df_test.reset_index(drop = False, inplace = True)
 
 df_su_fe = df_test.pivot(index = 'Store', columns = 'Period', values = 'coeff')
+
+print u'\nEvo in store FE across periods:'
 print df_su_fe.to_string()
+
+# todo: confirm by comparing CORA ARCUEIL to CORA MASSY across periods
+# relatively close locations... size?
