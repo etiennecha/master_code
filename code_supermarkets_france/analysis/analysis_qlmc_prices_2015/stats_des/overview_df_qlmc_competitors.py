@@ -80,45 +80,24 @@ df_leclerc_comp = df_comp[['lec_name', 'dist']]\
 ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
 print df_leclerc_comp.describe(percentiles = ls_pctiles)
 
-## todo: check for each trigram if name starts with cor. dict entry
-#dict_chains = {'ITM' : 'INTERMARCHE SUPER',
-#               'USM' : 'SUPER U',
-#               'CAR' : 'CARREFOUR',
-#               'CRM' : 'CARREFOUR MARKET', # or MARKET
-#               'AUC' : 'AUCHAN',
-#               'GEA' : 'GEANT CASINO',
-#               'COR' : 'CORA',
-#               'SCA' : 'CASINO',
-#               'HSM' : 'HYPER U',
-#               'SIM' : 'SIMPLY MARKET',
-#               'MAT' : 'SUPERMARCHE MATCH',
-#               'HCA' : 'HYPER CASINO',
-#               'UEX' : 'U EXPRESS',
-#               'ATA' : 'ATAC',
-#               'CAS' : 'CASINO',
-#               'UHM' : 'HYPER U',
-#               'MIG' : 'MIGROS',
-#               'G20' : 'G 20',
-#               'REC' : 'RECORD',
-#               'HAU' : "LES HALLES D'AUCHAN"}
-
 # Latex display
 pd.set_option('float_format', '{:,.1f}'.format)
 df_leclerc_comp.reset_index(drop = False, inplace = True)
 
 df_leclerc_comp = pd.merge(df_leclerc_comp,
-                           df_stores[['store_name', 'ic']],
+                           df_stores[['store_name', 'c_insee']],
                            left_on = 'lec_name',
                            right_on = 'store_name',
                            how = 'left')
-df_leclerc_comp['dpt'] = df_leclerc_comp['ic'].str.slice(stop = -3)           
+df_leclerc_comp['c_departement'] = df_leclerc_comp['c_insee'].str.slice(stop = -3)           
 
 print u'\nDist (km) between Leclerc stores and competitors (France):'
 print df_leclerc_comp.describe().to_latex()
 
 print u'\nDist (km) between Leclerc stores and competitors (Ile-de-France):'
-print df_leclerc_comp[df_leclerc_comp['dpt'].isin(['75', '77', '78', '91',
-                                                   '92', '93', '94', '95'])].describe().to_latex()
+ls_idf_dpts = ['75', '77', '78', '91', '92', '93', '94', '95']
+print df_leclerc_comp[\
+        df_leclerc_comp['c_departement'].isin(ls_idf_dpts)].describe().to_latex()
 
 dict_rename = {'len' : 'Nb stores',
                'min': 'Closest',

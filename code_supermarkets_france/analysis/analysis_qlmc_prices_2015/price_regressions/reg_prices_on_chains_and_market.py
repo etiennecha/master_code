@@ -58,15 +58,15 @@ df_comp = pd.concat([df_comp_h, df_comp_s],
                     axis = 0,
                     ignore_index = True)
 
-ls_lsa_info_cols = [u'Surface',
-                    u'Nb_Caisses',
-                    u'Nb_Emplois',
-                    u'Nb_Parking',
-                    u'Int_Ind',
-                    u'Groupe',
-                    u'Groupe_Alt',
-                    u'Enseigne_Alt',
-                    u'Type_Alt']
+ls_lsa_info_cols = [u'surface',
+                    u'nb_caisses',
+                    u'nb_emplois',
+                    u'nb_parking',
+                    u'int_ind',
+                    u'groupe',
+                    u'groupe_alt',
+                    u'enseigne_alt',
+                    u'type_alt']
 
 ls_lsa_comp_cols = ['ac_nb_stores',
                     'ac_nb_comp',
@@ -78,8 +78,8 @@ ls_lsa_comp_cols = ['ac_nb_stores',
                     'hhi',
                     'store_share',
                     'group_share',
-                    'Dpt',
-                    'Reg'] # should not need to add it here
+                    'dpt',
+                    'reg'] # should not need to add it here
 
 df_stores = pd.merge(df_stores,
                      df_comp[['Ident'] +\
@@ -123,7 +123,7 @@ df_qlmc = pd.merge(df_prices,
 print len(df_qlmc)
 
 # Avoid error msg on condition number
-df_qlmc['Surface'] = df_qlmc['Surface'].apply(lambda x: x/1000.0)
+df_qlmc['surface'] = df_qlmc['surface'].apply(lambda x: x/1000.0)
 # df_qlmc_prod['ac_hhi'] = df_qlmc_prod['ac_hhi'] * 10000
 # Try with log of price (semi elasticity)
 df_qlmc['ln_price'] = np.log(df_qlmc['price'])
@@ -154,29 +154,36 @@ ls_keep_enseigne_alt = ['CENTRE E.LECLERC',
                         'CORA',
                         'CARREFOUR',
                         'GEANT CASINO']
-df_qlmc_sub = df_qlmc_sub[df_qlmc_sub['Enseigne_Alt'].isin(ls_keep_enseigne_alt)]
+df_qlmc_sub = df_qlmc_sub[df_qlmc_sub['enseigne_alt'].isin(ls_keep_enseigne_alt)]
 
-## todo: check representation of families
-print df_qlmc_sub[['family', 'product']].drop_duplicates().groupby('family').agg(len)['product']
+## todo: check representation of section
+print df_qlmc_sub[['section', 'product']]\
+                 .drop_duplicates().groupby('section').agg(len)['product']
 
 # representativeness of store sample
-se_ens_alt = df_qlmc_sub[['Enseigne_Alt', 'store_id']].drop_duplicates()\
-               .groupby('Enseigne_Alt').agg(len)['store_id']
-se_repr = se_ens_alt.div(df_comp['Enseigne_Alt'].value_counts().astype(float), axis = 'index')
+se_ens_alt = df_qlmc_sub[['enseigne_alt', 'store_id']]\
+                        .drop_duplicates()\
+                        .groupby('enseigne_alt').agg(len)['store_id']
+se_repr = se_ens_alt.div(df_comp['enseigne_alt'].value_counts().astype(float),
+                         axis = 'index')
 print se_repr[~pd.isnull(se_repr)]
 
 print u'\nNo control:'
-print smf.ols("ln_price ~ C(product) + C(Enseigne_Alt, Treatment(reference = 'CENTRE E.LECLERC'))",
+print smf.ols("ln_price ~ C(product) + " +\
+              "C(enseigne_alt, Treatment(reference = 'CENTRE E.LECLERC'))",
               data = df_qlmc_sub).fit().summary()
 
 print u'\nWith controls:'
-print smf.ols("ln_price ~ C(product) + C(Dpt) + Surface + hhi + pop" +\
-              "+ C(Enseigne_Alt, Treatment(reference = 'CENTRE E.LECLERC'))",
+print smf.ols("ln_price ~ C(product) + C(dpt) + surface + hhi + pop + " +\
+              "C(enseigne_alt, Treatment(reference = 'CENTRE E.LECLERC'))",
               data = df_qlmc_sub).fit().summary()
 
-## Check nb products by store (todo: move)
-#se_nb_prod_by_store = df_qlmc[['store_id', 'product']].groupby('store_id').agg(len)['product']
-#df_stores.set_index('store_id', inplace = True)
-#df_stores['nb_records'] = se_nb_prod_by_store
-#
-#df_stores[df_stores['Enseigne_Alt'] != 'CENTRE E.LECLERC'].plot(kind = 'scatter', x = 'Surface', y = 'nb_records')
+# Check nb products by store (todo: move)
+se_nb_prod_by_store = df_qlmc[['store_id', 'product']]\
+                             .groupby('store_id').agg(len)['product']
+df_stores.set_index('store_id', inplace = True)
+df_stores['nb_records'] = se_nb_prod_by_store
+
+df_stores[df_stores['enseigne_alt'] != 'CENTRE E.LECLERC'].plot(kind = 'scatter',
+                                                                x = 'Surface',
+                                                                y = 'nb_records')

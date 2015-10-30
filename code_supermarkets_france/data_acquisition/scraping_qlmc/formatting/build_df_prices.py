@@ -58,10 +58,33 @@ ls_fra_regions = [u'picardie',
                   u'provence-alpes-cote-d-azur',
                   u'limousin']
 
+dict_chains = {'LEC' : 'LECLERC',
+               'ITM' : 'INTERMARCHE',
+               'USM' : 'SUPER U',
+               'CAR' : 'CARREFOUR',
+               'CRM' : 'CARREFOUR MARKET', # or MARKET
+               'AUC' : 'AUCHAN',
+               'GEA' : 'GEANT CASINO',
+               'CAS' : 'CASINO',
+               'SCA' : 'CASINO',
+               'HSM' : 'HYPER U',
+               'UHM' : 'HYPER U',
+               'COR' : 'CORA',
+               'SIM' : 'SIMPLY MARKET',
+               'MAT' : 'SUPERMARCHE MATCH',
+               'HCA' : 'HYPER CASINO',
+               'UEX' : 'U EXPRESS',
+               'ATA' : 'ATAC',
+               'MIG' : 'MIGROS',
+               'G20' : 'G 20',
+               'REC' : 'RECORD',
+               'HAU' : "LES HALLES D'AUCHAN"}
+
 ls_df_regions = []
 for region in ls_fra_regions:
-  path_dict_reg_comparisons = os.path.join(path_qlmc_scraped,
-                                           'dict_reg_comparisons_{:s}.json'.format(region))
+  path_dict_reg_comparisons =\
+      os.path.join(path_qlmc_scraped,
+                   'dict_reg_comparisons_{:s}.json'.format(region))
   dict_reg_comparisons_json = dec_json(path_dict_reg_comparisons)
   # convert keys from string to tuple
   dict_reg_comparisons = {tuple(json.loads(k)):v\
@@ -77,18 +100,18 @@ for region in ls_fra_regions:
           ls_rows_products.append([family,
                                    sfamily,
                                    ls_prod[0]]+\
-                                  ls_prod[1][0])
+                                   ls_prod[1][0])
           ls_rows_products.append([family,
                                    sfamily,
                                    ls_prod[0]]+\
-                                  ls_prod[1][1])
+                                   ls_prod[1][1])
     
     df_pair_products = pd.DataFrame(ls_rows_products,
                                columns = ['section',
                                           'family',
                                           'product',
                                           'date',
-                                          'chain',
+                                          'store_chain',
                                           'price'])
     
     dict_replace_family = {u'familyId_2'  : u'Fruits et Légumes',
@@ -103,16 +126,25 @@ for region in ls_fra_regions:
                            u'familyId_12' : u'Animalerie',
                            u'familyId_13' : u'Bazar et textile'}
     
+    # extract store_chain trigram and replace by explicit store_chain
+    df_pair_products['store_chain'] =\
+      df_pair_products['store_chain'].apply(\
+        lambda x: dict_chains[\
+                    re.match(u'/bundles/qelmcsite/images/signs/header/(.*?)\.png',
+                              x).group(1)])
+    
+    # check robustness
+    df_pair_products['store_id'] = leclerc_id
+    df_pair_products.loc[df_pair_products['store_chain'] != 'LECLERC',
+                         'store_id'] = competitor_id
+    
     df_pair_products['section'] =\
        df_pair_products['section'].apply(lambda x: dict_replace_family[x])
     
     df_pair_products['price'] =\
-      df_pair_products['price'].apply(lambda x: x.replace(u'\xa0\u20ac', u'')).astype(float)
+      df_pair_products['price'].apply(lambda x: x.replace(u'\xa0\u20ac', u''))\
+                                                 .astype(float)
     
-    df_pair_products['chain'] =\
-      df_pair_products['chain'].apply(\
-        lambda x: re.match(u'/bundles/qelmcsite/images/signs/header/(.*?)\.png',
-                           x).group(1))
     
     df_pair_products['date'] =\
       df_pair_products['date'].apply(\
@@ -122,17 +154,14 @@ for region in ls_fra_regions:
     #df_pair_products['product'] =\
     #   df_pair_products['product'].apply(lambda x: x.encode('utf-8'))
     
-    # can do more robust?
-    df_pair_products['store_id'] = leclerc_id
-    df_pair_products.loc[df_pair_products['chain'] != 'LEC', 'store_id'] = competitor_id
-    
     ls_df_pair_products.append(df_pair_products)
   
   df_region = pd.concat(ls_df_pair_products)
   df_region.sort(['store_id', 'section', 'family', 'product'], inplace = True)
   
   # drop duplicate at this stage but must do also with global df
-  df_region.drop_duplicates(['store_id', 'section', 'family', 'product'], inplace = True)
+  df_region.drop_duplicates(['store_id', 'section', 'family', 'product'],
+                            inplace = True)
   
   #df_region.to_csv(os.path.join(path_csv,
   #                              'df_region_{:s}.csv'.format(region)),
@@ -141,9 +170,12 @@ for region in ls_fra_regions:
   #                   index = False)
   ls_df_regions.append(df_region)
 
+# Build price df
 df_prices = pd.concat(ls_df_regions)
-df_prices.sort(['store_id', 'section', 'family', 'product'], inplace = True)
-df_prices.drop_duplicates(['store_id', 'section', 'family', 'product'], inplace = True)
+df_prices.sort(['store_id', 'section', 'family', 'product'],
+               inplace = True)
+df_prices.drop_duplicates(['store_id', 'section', 'family', 'product'],
+                          inplace = True)
 
 df_prices.to_csv(os.path.join(path_csv,
                               'df_prices.csv'),

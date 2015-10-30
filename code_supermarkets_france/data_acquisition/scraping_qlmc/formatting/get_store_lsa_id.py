@@ -43,18 +43,19 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                         dtype = {'ic' : str})
 
 # drop lsa_id if already exists
-if 'lsa_id' in df_stores.columns:
-  df_stores.drop(labels = ['lsa_id'],
+if 'id_lsa' in df_stores.columns:
+  df_stores.drop(labels = ['id_lsa'],
                  axis = 1,
                  inplace = True)
 
 # todo: move to dedicated script
 df_stores.loc[df_stores['store_id'] == 'centre-e-leclerc-clichy',
-              'ic'] = '92024'
+              'c_insee'] = '92024'
 
 df_lsa = pd.read_csv(os.path.join(path_lsa_csv,
-                                  'df_lsa.csv'),
-                     dtype = {u'c_insee' : str,
+                                  'df_lsa_active.csv'),
+                     dtype = {u'id_lsa' : str,
+                              u'c_insee' : str,
                               u'c_insee_ardt' : str,
                               u'c_postal' : str,
                               u'c_siren' : str,
@@ -89,27 +90,25 @@ dict_lsa_stores_alt_brand = {u'INTERMARCHE SUPER': u'INTERMARCHE',
                              u'CENTRE E.LECLERC' : u'LECLERC',
                              u'LECLERC EXPRESS' : u'LECLERC'}
 
-ls_matching = [[u'LEC', u'LECLERC', u'LECLERC'],
-               [u'ITM', u'XXX', u'INTERMARCHE'], # give up direct matching (first period...)
-               [u'USM', 'SUPER U', 'SYSTEME U'],
-               [u'CAR', u'CARREFOUR', 'CARREFOUR'],
-               [u'CRM', u'CARREFOUR MARKET', u'CARREFOUR MARKET'],
-               [u'AUC', u'AUCHAN', u'AUCHAN'],
-               [u'GEA', u'GEANT', u'GEANT CASINO'], # GEANT vs. GEANT CASINO?
-               [u'COR', u'CORA', u'CORA'],
-               [u'SCA', u'CASINO', u'CASINO'], # check if CASINO only in LSA? (CASINO)
-               [u'HSM', u'HYPER U', 'SYSTEME U'],
-               [u'SIM', u'SIMPLY MARKET', u'SIMPLY MARKET'], # check if chain in LSA
-               [u'MAT', u'SUPERMARCHE MATCH', u'SUPERMARCHE MATCH'], # check if chain in LSA
-               [u'HCA', u'HYPER CASINO', u'GEANT CASINO'], # unsure (HYPER CASINO)
-               [u'UEX', u'U EXPRESS', u'SYSTEME U'],
-               [u'ATA', u'ATAC', u'ATAC'], # check if chain in LSA
-               [u'CAS', u'CASINO', u'CASINO'], # check if CASINO only in LSA (CASINO)
-               [u'UHM', u'HYPER U', u'SYSTEME U'],
-               [u'MIG', u'MIGROS', u'MIGROS'], # check if chain in LSA
+ls_matching = [[u'LECLERC', u'LECLERC', u'LECLERC'],
+               [u'INTERMARCHE', u'XXX', u'INTERMARCHE'], # give up direct matching (first period...)
+               [u'SUPER U', 'SUPER U', 'SYSTEME U'],
+               [u'CARREFOUR', u'CARREFOUR', 'CARREFOUR'],
+               [u'CARREFOUR MARKET', u'CARREFOUR MARKET', u'CARREFOUR MARKET'],
+               [u'AUCHAN', u'AUCHAN', u'AUCHAN'],
+               [u'GEANT CASINO', u'GEANT', u'GEANT CASINO'], # GEANT vs. GEANT CASINO? SKIP FIRST?
+               [u'CORA', u'CORA', u'CORA'],
+               [u'CASINO', u'CASINO', u'CASINO'], # check if CASINO only in LSA? (CASINO)
+               [u'HYPER U', u'HYPER U', 'SYSTEME U'],
+               [u'U EXPRESS', 'U EXPRESS', 'SYSTEME U'],
+               [u'SIMPLY MARKET', u'SIMPLY MARKET', u'SIMPLY MARKET'], # check if chain in LSA
+               [u'SUPERMARCHE MATCH', u'SUPERMARCHE MATCH', u'SUPERMARCHE MATCH'], # check if chain in LSA
+               [u'HYPER CASINO', u'HYPER CASINO', u'GEANT CASINO'], # unsure (HYPER CASINO)
+               [u'ATAC', u'ATAC', u'ATAC'], # check if chain in LSA
+               [u'MIGROS', u'MIGROS', u'MIGROS'], # check if chain in LSA
                [u'G20', u'G 20', u'G 20'], # check if chain in LSA
-               [u'REC', u'RECORD', u'RECORD'], # check if chain in LSA
-               [u'HAU', u'AUCHAN', u'AUCHAN']] # LES HALLES D AUCHAN?
+               [u'RECORD', u'RECORD', u'RECORD'], # check if chain in LSA
+               [u"LES HALLES D'AUCHAN", u'AUCHAN', u'AUCHAN']] # LES HALLES D AUCHAN?
 
 df_lsa['enseigne_matching'] = df_lsa['enseigne'].apply(\
                                 lambda x: dict_lsa_stores_alt_brand[x]\
@@ -121,11 +120,11 @@ df_lsa['enseigne_matching'] = df_lsa['enseigne'].apply(\
 ls_matched_stores = []
 for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
   for row_ind, row in df_stores[(df_stores['store_chain'] == enseigne_qlmc)].iterrows():
-    insee_code = row['ic']
+    insee_code = row['c_insee']
     df_city_stores = df_lsa[(df_lsa['c_insee_ardt'] == insee_code) &\
                             (df_lsa['enseigne'] == enseigne_fra)].copy()
-    tup_store_info = tuple(row[['store_chain', 'store_id', 'store_city',
-                                'ic_city', 'ic']].values)
+    tup_store_info = tuple(row[['store_chain', 'store_id', 'store_municipality',
+                                'insee_city', 'c_insee']].values)
     if len(df_city_stores) == 1:
       ls_matched_stores.append(tup_store_info +\
                                (df_city_stores.iloc[0]['id_lsa'],
@@ -188,9 +187,9 @@ for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
                                  (None, None, 'aucun'))
 
 df_matching = pd.DataFrame(ls_matched_stores,
-                          columns = ['store_chain', 'store_id', 'store_city',
-                                     'ic_city', 'ic',
-                                     'lsa_id', 'lsa_brand', 'Q'])
+                           columns = ['store_chain', 'store_id', 'store_city',
+                                      'insee_city', 'c_insee',
+                                      'id_lsa', 'lsa_brand', 'Q'])
 
 # checked by hand when matching ambiguous (use gps with Google Drive?)
 ls_fix_matching = [['super-u-rennes', '10914'],
@@ -273,12 +272,23 @@ ls_drive = [['casino-drive-lagny-sur-marne', '197888']] # drive
 ls_chain_chge = [['super-u-laguenne', '693'], # ex SIMPLY
                  ['casino-le-blanc-mesnil-25-27-av-henri-barbusse', '12349']] # ex MONOPRIX
 
-for qlmc_id, lsa_id in ls_fix_matching:
-  df_matching.loc[df_matching['store_id'] == qlmc_id, 'lsa_id'] = lsa_id
+# in fact arondissements...
+ls_fix_other = [['centre-e-leclerc-marseille', '151533'], # or c_insee 13009
+                ['centre-e-leclerc-lyon', '1122'], # 69389
+                ['super-u-lyon', '4360'], # 69387
+                ['carrefour-marseille-bonneveine', '443'], # 13208
+                ['carrefour-marseille-le-merlan', '319'],
+                ['carrefour-paris', '612'], # 75116
+                ['geant-casino-paris', '10'], # 75113
+                ['casino-paris', '47'], # 75116
+                ['hyper-casino-marseille-sainte-anne-michelet', '111']] # 13208
+
+for qlmc_id, lsa_id in ls_fix_matching + ls_fix_other:
+  df_matching.loc[df_matching['store_id'] == qlmc_id, 'id_lsa'] = lsa_id
   df_matching.loc[df_matching['store_id'] == qlmc_id, 'Q'] = 'amb_fixed'
 
-print len(df_matching[df_matching['lsa_id'].isnull()])
-print df_matching[df_matching['lsa_id'].isnull()].to_string()
+print len(df_matching[df_matching['id_lsa'].isnull()])
+print df_matching[df_matching['id_lsa'].isnull()].to_string()
 # todo: check for new stores (not in LSA?)
 # todo: check results for Casino and others? (pbm in chosing type? use gps dist)
 
@@ -288,7 +298,7 @@ print df_matching[df_matching['lsa_id'].isnull()].to_string()
 
 # Check matching by computing distance between lsa gps and qlmc gps
 df_stores_f = pd.merge(df_stores,
-                       df_matching[['store_id', 'lsa_id']],
+                       df_matching[['store_id', 'id_lsa', 'Q']],
                        on = 'store_id',
                        how = 'left')
 
@@ -305,7 +315,7 @@ ls_lsa_cols = ['id_lsa',
 
 df_stores_f = pd.merge(df_stores_f,
                        df_lsa[ls_lsa_cols],
-                       left_on = 'lsa_id',
+                       left_on = 'id_lsa',
                        right_on = 'id_lsa',
                        how = 'left')
 
@@ -319,7 +329,7 @@ df_stores_f['dist'] =\
 ls_di = ['store_id', 'store_lat', 'store_lng',
          'enseigne', 'adresse1', 'ville', 'latitude', 'longitude', 'gps_verif']
 
-print u'\n', df_stores_f[df_stores_f['dist'] > 5][ls_di + ['dist']].to_string()
+print u'\n', df_stores_f[df_stores_f['dist'] > 5][ls_di + ['dist', 'Q']].to_string()
 # todo: extend to 3
 # check that (when?) LSA should be preferred...
 
@@ -341,7 +351,7 @@ ls_final_gps = [['casino-prunelli-di-fiumorbo', 'qlmc'], # 4 and bad
 # Check if 4 means center of commune... if qlmc different then maybe best?
 # Anyway: only 7 have 4... and 122 have 3 => those should be inspected (use dist?)
 
-#print u'\n', df_stores_f[(df_stores_f['Verif'] == 1) &\
+#print u'\n', df_stores_f[(df_stores_f['verif'] == 1) &\
 #                         (df_stores_f['dist'] >= 1)][ls_di + ['dist']].to_string()
 
 # todo: output to excel csv format to allow visual check
@@ -351,7 +361,7 @@ ls_final_gps = [['casino-prunelli-di-fiumorbo', 'qlmc'], # 4 and bad
 # #########
 
 # Drop LSA variables before output
-df_stores_final = df_stores_f.drop(labels = ls_lsa_cols + ['dist'],
+df_stores_final = df_stores_f.drop(labels = ls_lsa_cols[1:] + ['dist', 'Q'],
                                    axis = 1)
 
 df_stores_final.to_csv(os.path.join(path_built_csv,

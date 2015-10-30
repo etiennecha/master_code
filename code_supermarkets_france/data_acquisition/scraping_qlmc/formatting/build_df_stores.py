@@ -54,11 +54,36 @@ for leclerc_id, ls_stores in dict_leclerc_comp.items():
 
 df_stores = pd.DataFrame(ls_rows_stores,
                          columns = ['store_id',
-                                    'store_city',
+                                    'store_municipality',
                                     'store_name',
                                     'store_chain',
                                     'store_lat',
                                     'store_lng'])
+
+## write explicit chain
+dict_chains = {'LEC' : 'LECLERC',
+               'ITM' : 'INTERMARCHE',
+               'USM' : 'SUPER U',
+               'CAR' : 'CARREFOUR',
+               'CRM' : 'CARREFOUR MARKET', # or MARKET
+               'AUC' : 'AUCHAN',
+               'GEA' : 'GEANT CASINO',
+               'CAS' : 'CASINO',
+               'SCA' : 'CASINO',
+               'HSM' : 'HYPER U',
+               'UHM' : 'HYPER U',
+               'COR' : 'CORA',
+               'SIM' : 'SIMPLY MARKET',
+               'MAT' : 'SUPERMARCHE MATCH',
+               'HCA' : 'HYPER CASINO',
+               'UEX' : 'U EXPRESS',
+               'ATA' : 'ATAC',
+               'MIG' : 'MIGROS',
+               'G20' : 'G 20',
+               'REC' : 'RECORD',
+               'HAU' : "LES HALLES D'AUCHAN"}
+df_stores['store_chain'] =\
+  df_stores['store_chain'].apply(lambda x: dict_chains[x])
 
 # unique stores listed
 df_stores.drop_duplicates('store_id', inplace = True)

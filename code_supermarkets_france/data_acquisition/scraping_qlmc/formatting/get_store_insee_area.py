@@ -102,24 +102,26 @@ def gps_to_locality(lat, lon, basemap_obj, df_polygons, field_int, poly='poly'):
   return None
 
 # NB: can be two rows with same com_code: communes in several parts (but same commune etc)
-df_stores['ic'] = df_stores.apply(\
-                    lambda row: gps_to_locality(row['store_lat'],
-                                                row['store_lng'],
-                                                m_fra,
-                                                df_com,
-                                                'com_code'),
-                                                axis = 1)
-df_stores['ic_city'] = df_stores['ic'].apply(\
-                         lambda x: df_com[df_com['com_code'] == x].iloc[0]['com_name']\
-                                     if x else None)
+df_stores['c_insee'] = df_stores.apply(\
+                         lambda row: gps_to_locality(row['store_lat'],
+                                                     row['store_lng'],
+                                                     m_fra,
+                                                     df_com,
+                                                     'com_code'),
+                                                     axis = 1)
+
+df_stores['insee_municipality'] =\
+  df_stores['c_insee'].apply(lambda x: df_com[df_com['com_code'] == x].iloc[0]['com_name']\
+                                         if x else None)
 
 # check matching (need to get rid of accents else a lot of false positive)
-df_stores['city_match'] = df_stores.apply(lambda row: 1 if str_low_noacc(row['ic_city']) in\
-                                                             str_low_noacc(row['store_name'])\
-                                                        else 0,
-                                          axis = 1)
-print len(df_stores[~df_stores['city_match']])
-print df_stores[df_stores['city_match'] == 0].to_string()
+df_stores['mun_match'] = df_stores.apply(\
+                           lambda row: 1 if str_low_noacc(row['insee_municipality']) in\
+                                              str_low_noacc(row['store_name'])\
+                                          else 0,
+                           axis = 1)
+print len(df_stores[~df_stores['mun_match']])
+print df_stores[df_stores['mun_match'] == 0].to_string()
 
 # Match city name with insee code 
 # uses insee code already found to have dpt (should not be too wrong!)
@@ -137,32 +139,41 @@ def apply_insee_matching(store_city, dpt_id):
     return None, None
 
 # Not way to fill two columns with one apply?
-df_stores.loc[df_stores['city_match'] == 0, 'insee_matching'] =\
-  df_stores[df_stores['city_match'] == 0].apply(\
-     lambda row: apply_insee_matching(row['store_city'],
-                                      row['ic'][0:2]),
+df_stores.loc[df_stores['mun_match'] == 0, 'insee_matching'] =\
+  df_stores[df_stores['mun_match'] == 0].apply(\
+     lambda row: apply_insee_matching(row['store_municipality'],
+                                      row['c_insee'][0:2]),
      axis = 1)
-df_stores['ic_alt'], df_stores['ic_city_alt'] = None, None
-df_stores['ic_alt'] = df_stores[~pd.isnull(df_stores['insee_matching'])].apply(\
+df_stores['c_insee_alt'], df_stores['insee_municipality_alt'] = None, None
+df_stores['c_insee_alt'] = df_stores[~pd.isnull(df_stores['insee_matching'])].apply(\
                         lambda row: row['insee_matching'][0], axis = 1)
-df_stores['ic_city_alt'] = df_stores[~pd.isnull(df_stores['insee_matching'])].apply(\
-                             lambda row: row['insee_matching'][1], axis = 1)
+df_stores['insee_municipality_alt'] =\
+  df_stores[~pd.isnull(df_stores['insee_matching'])].apply(\
+    lambda row: row['insee_matching'][1], axis = 1)
 
-print df_stores[df_stores['city_match'] == 0]\
-        [['store_city', 'ic_city', 'ic_city_alt', 'ic', 'ic_alt']].to_string()
+print df_stores[df_stores['mun_match'] == 0]\
+        [['store_municipality', 'insee_municipality', 'insee_municipality_alt',
+         'c_insee', 'c_insee_alt']].to_string()
 
-df_stores.loc[(~pd.isnull(df_stores['ic_alt'])) &\
-              (~df_stores['ic_city_alt'].isin(['paris', 'marseille', 'lyon'])),
-              'ic'] = df_stores['ic_alt']
+df_stores.loc[(~pd.isnull(df_stores['c_insee_alt'])) &\
+              (~df_stores['c_insee_alt'].isin(['paris', 'marseille', 'lyon'])),
+              'c_insee'] = df_stores['c_insee_alt']
 
-df_stores.loc[(~pd.isnull(df_stores['ic_alt'])) &\
-              (~df_stores['ic_city_alt'].isin(['paris', 'marseille', 'lyon'])),
-              'ic_city'] = df_stores['ic_city_alt']
+df_stores.loc[(~pd.isnull(df_stores['c_insee_alt'])) &\
+              (~df_stores['insee_municipality_alt'].isin(['paris', 'marseille', 'lyon'])),
+              'insee_municipality'] = df_stores['insee_municipality_alt']
 
-df_stores.drop(['insee_matching', 'ic_alt', 'ic_city_alt'],
+df_stores.drop(['insee_matching', 'c_insee_alt', 'insee_municipality_alt', 'mun_match'],
                axis = 1,
                inplace = 1)
 
+# fix some mistakes detected during lsa matching
+ls_fix_insee = [['centre-e-leclerc-joue-les-tours', '37122', 'JOUE-LES-TOURS']]
+for store_id, c_insee, insee_municipality in ls_fix_insee:
+  df_stores.loc[df_stores['store_id'] == store_id,
+                ['c_insee', 'insee_municipality']] = [c_insee, insee_municipality]
+
+# OUTPUT
 df_stores.to_csv(os.path.join(path_csv,
                               'df_stores_final.csv'),
                  encoding = 'utf-8',
