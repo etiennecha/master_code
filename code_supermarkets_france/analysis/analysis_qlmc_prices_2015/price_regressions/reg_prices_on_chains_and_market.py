@@ -78,15 +78,15 @@ ls_lsa_comp_cols = ['ac_nb_stores',
                     'hhi',
                     'store_share',
                     'group_share',
-                    'dpt',
-                    'reg'] # should not need to add it here
+                    'c_departement',
+                    'region']
 
 df_stores = pd.merge(df_stores,
-                     df_comp[['Ident'] +\
+                     df_comp[['id_lsa'] +\
                              ls_lsa_info_cols +\
                              ls_lsa_comp_cols],
-                     left_on = 'lsa_id',
-                     right_on = 'Ident',
+                     left_on = 'id_lsa',
+                     right_on = 'id_lsa',
                      how = 'left')
 
 # LOAD STORE DEMAND
@@ -106,9 +106,9 @@ df_demand = pd.concat([df_demand_h, df_demand_s],
                       ignore_index = True)
 
 df_stores = pd.merge(df_stores,
-                     df_demand[['Ident', 'pop', 'ac_pop']],
-                     left_on = 'lsa_id',
-                     right_on = 'Ident',
+                     df_demand[['id_lsa', 'pop', 'ac_pop']],
+                     left_on = 'id_lsa',
+                     right_on = 'id_lsa',
                      how = 'left')
 
 # Merge store chars and prices
@@ -157,10 +157,12 @@ ls_keep_enseigne_alt = ['CENTRE E.LECLERC',
 df_qlmc_sub = df_qlmc_sub[df_qlmc_sub['enseigne_alt'].isin(ls_keep_enseigne_alt)]
 
 ## todo: check representation of section
+print u'\nCheck section representation:'
 print df_qlmc_sub[['section', 'product']]\
                  .drop_duplicates().groupby('section').agg(len)['product']
 
 # representativeness of store sample
+print u'\nCheck retail chain representation:'
 se_ens_alt = df_qlmc_sub[['enseigne_alt', 'store_id']]\
                         .drop_duplicates()\
                         .groupby('enseigne_alt').agg(len)['store_id']
@@ -174,7 +176,7 @@ print smf.ols("ln_price ~ C(product) + " +\
               data = df_qlmc_sub).fit().summary()
 
 print u'\nWith controls:'
-print smf.ols("ln_price ~ C(product) + C(dpt) + surface + hhi + pop + " +\
+print smf.ols("ln_price ~ C(product) + C(c_departement) + surface + hhi + pop + " +\
               "C(enseigne_alt, Treatment(reference = 'CENTRE E.LECLERC'))",
               data = df_qlmc_sub).fit().summary()
 
@@ -185,5 +187,5 @@ df_stores.set_index('store_id', inplace = True)
 df_stores['nb_records'] = se_nb_prod_by_store
 
 df_stores[df_stores['enseigne_alt'] != 'CENTRE E.LECLERC'].plot(kind = 'scatter',
-                                                                x = 'Surface',
+                                                                x = 'surface',
                                                                 y = 'nb_records')

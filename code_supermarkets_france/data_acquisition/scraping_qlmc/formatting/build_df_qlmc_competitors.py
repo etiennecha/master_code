@@ -29,11 +29,11 @@ path_qlmc_scraped = os.path.join(path_data,
                                  'data_qlmc_2015',
                                  'data_scraped_201503')
 
-path_csv = os.path.join(path_data,
-                        'data_supermarkets',
-                        'data_built',
-                        'data_qlmc_2015',
-                        'data_csv_201503')
+path_built_csv = os.path.join(path_data,
+                              'data_supermarkets',
+                              'data_built',
+                              'data_qlmc_2015',
+                              'data_csv_201503')
 
 dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scraped,
                                          'dict_reg_leclerc_stores.json'))
@@ -180,11 +180,40 @@ df_qlmc_competitors = pd.merge(df_all,
                                on = ['lec_id', 'comp_id'],
                                how = 'left')
 
+# ############
+# STORE CHAINS
+# ############
+
+dict_chains = {'LEC' : 'LECLERC',
+               'ITM' : 'INTERMARCHE',
+               'USM' : 'SUPER U',
+               'CAR' : 'CARREFOUR',
+               'CRM' : 'CARREFOUR MARKET', # or MARKET
+               'AUC' : 'AUCHAN',
+               'GEA' : 'GEANT CASINO',
+               'CAS' : 'CASINO',
+               'SCA' : 'CASINO',
+               'HSM' : 'HYPER U',
+               'UHM' : 'HYPER U',
+               'COR' : 'CORA',
+               'SIM' : 'SIMPLY MARKET',
+               'MAT' : 'SUPERMARCHE MATCH',
+               'HCA' : 'HYPER CASINO',
+               'UEX' : 'U EXPRESS',
+               'ATA' : 'ATAC',
+               'MIG' : 'MIGROS',
+               'G20' : 'G 20',
+               'REC' : 'RECORD',
+               'HAU' : "LES HALLES D'AUCHAN"}
+
+df_qlmc_competitors['comp_chain'] =\
+  df_qlmc_competitors['comp_chain'].apply(lambda x: dict_chains[x])
+
 # #########
 # OUTPUT
 # #########
 
-df_qlmc_competitors.to_csv(os.path.join(path_csv,
+df_qlmc_competitors.to_csv(os.path.join(path_built_csv,
                                         'df_qlmc_competitors.csv'),
                            encoding = 'UTF-8',
                            float_format='%.3f',

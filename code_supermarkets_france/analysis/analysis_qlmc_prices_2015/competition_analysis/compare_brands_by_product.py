@@ -49,7 +49,7 @@ ref_product = u'DANONE YAOURT DANONE NATURE 4X125G' # se_prod_vc.index[0]
 df_product = df_prices[df_prices['product'] == ref_product]
 
 for chain in se_chain_vc.index[0:30]:
-  ls_df_desc.append(df_product[df_product['chain'] == chain]['price'].describe())
+  ls_df_desc.append(df_product[df_product['store_chain'] == chain]['price'].describe())
 df_desc = pd.concat(ls_df_desc, keys = se_chain_vc.index[0:30], axis = 1)
 df_desc = df_desc.T
 
@@ -61,29 +61,29 @@ df_desc['range_2'] = df_desc['75%'] - df_desc['25%']
 #print df_desc[['count', 'mean', 'std', 'cv', 'gfs', 'range', 'range_2']].to_string()
 print df_desc.to_string()
 
-## following filled with nan... must be better way
-#df_prod_prices = df_product.pivot(index='store_id',
-#                                  columns='store_chain',
-#                                  values='price')
-## improve boxplot display
-## http://matplotlib.org/examples/pylab_examples/boxplot_demo2.html
-## todo: update matplotlib http://stackoverflow.com/questions/21997897/ (ctd)
-## changing-what-the-ends-of-whiskers-represent-in-matplotlibs-boxplot-function
-#
-#ls_sb = ['INTERMARCHE',
-#         'SUPER U',
-#         'CARREFOUR',
-#         'LECLERC',
-#         'AUCHAN',
-#         'GEANT']
-#
-#ax = df_prod_prices[ls_sb].plot(kind = 'box') #, whis = [0.10, 0.90])
-#
-## ax.get_xticklabels()[0].get_text()
-## textwrap.fill(ax.get_xticklabels()[0].get_text(), width = 20)
-#ax.set_xticklabels([textwrap.fill(x.get_text(), 20) for x in ax.get_xticklabels()])
-#plt.show()
-#
-## todo: find most common prod within important categories and draw maps
-## todo: restrict to most common prod and run regressions (check robustness?)
-## moustache plot by product?
+# following filled with nan... must be better way
+df_prod_prices = df_product.pivot(index='store_id',
+                                  columns='store_chain',
+                                  values='price')
+# improve boxplot display
+# http://matplotlib.org/examples/pylab_examples/boxplot_demo2.html
+# todo: update matplotlib http://stackoverflow.com/questions/21997897/ (ctd)
+# changing-what-the-ends-of-whiskers-represent-in-matplotlibs-boxplot-function
+
+ls_sb = ['INTERMARCHE',
+         'SUPER U',
+         'CARREFOUR',
+         'LECLERC',
+         'AUCHAN',
+         'GEANT CASINO']
+
+ax = df_prod_prices[ls_sb].plot(kind = 'box') #, whis = [0.10, 0.90])
+
+# ax.get_xticklabels()[0].get_text()
+# textwrap.fill(ax.get_xticklabels()[0].get_text(), width = 20)
+ax.set_xticklabels([textwrap.fill(x.get_text(), 20) for x in ax.get_xticklabels()])
+plt.show()
+
+# todo: find most common prod within important categories and draw maps
+# todo: restrict to most common prod and run regressions (check robustness?)
+# moustache plot by product?

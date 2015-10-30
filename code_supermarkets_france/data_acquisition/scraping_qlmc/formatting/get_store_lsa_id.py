@@ -124,7 +124,7 @@ for enseigne_qlmc, enseigne_fra, enseigne_fra_alt in ls_matching:
     df_city_stores = df_lsa[(df_lsa['c_insee_ardt'] == insee_code) &\
                             (df_lsa['enseigne'] == enseigne_fra)].copy()
     tup_store_info = tuple(row[['store_chain', 'store_id', 'store_municipality',
-                                'insee_city', 'c_insee']].values)
+                                'insee_municipality', 'c_insee']].values)
     if len(df_city_stores) == 1:
       ls_matched_stores.append(tup_store_info +\
                                (df_city_stores.iloc[0]['id_lsa'],

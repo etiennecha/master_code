@@ -21,24 +21,18 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 path_csv = os.path.join(path_data,
                         'data_supermarkets',
-                        'data_qlmc_2015',
                         'data_built',
+                        'data_qlmc_2015',
                         'data_csv_201503')
 
+df_prices = pd.read_csv(os.path.join(path_csv,
+                                     'df_prices.csv'))
+
 df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'df_stores_final.csv'),
-                        encoding = 'utf-8')
-
-df_comp = pd.read_csv(os.path.join(path_csv,
-                                   'df_competitors.csv'),
-                      encoding = 'utf-8')
-
-df_france = pd.read_csv(os.path.join(path_csv,
-                                     'df_france.csv'),
-                        encoding = 'utf-8')
+                                     'df_stores_final.csv'))
 
 # Restrict to leclerc (could drop rest?)
-df_leclerc = df_france[df_france['chain'] == 'LEC'].copy()
+df_leclerc = df_prices[df_prices['store_chain'] == 'LECLERC'].copy()
 
 # Count stores present in data
 print u'\nNb Leclerc: {:d}'.format(len(df_leclerc['store_id'].unique()))
@@ -48,7 +42,8 @@ print u'\nNb Leclerc: {:d}'.format(len(df_leclerc['store_id'].unique()))
 print u'\nNb products: {:d}'.format(len(df_leclerc['product'].unique()))
 
 # Nb of products by leclerc
-se_nb_prod = df_leclerc[['store_id', 'product']].groupby('store_id').agg([len])['product']
+se_nb_prod = df_leclerc[['store_id', 'product']]\
+                       .groupby('store_id').agg([len])['product']
 print u'\nDescribe nb prod by store:'
 print se_nb_prod.describe()
 
@@ -115,15 +110,15 @@ df_stores['sum'] = se_store_sum
 
 df_stores_comp = df_stores[~df_stores['sum'].isnull()]
 
-df_stores_comp[['Nbr de caisses', 'Nbr emp', 'Surf Vente']].corr()
+df_stores_comp[['nb_caisses', 'nb_emplois', 'surface']].corr()
 
-plt.scatter(df_stores_comp['Surf Vente'].values, df_stores_comp['sum'].values)
+plt.scatter(df_stores_comp['surface'].values, df_stores_comp['sum'].values)
 plt.show()
 
-plt.scatter(df_stores_comp['Nbr de caisses'].values, df_stores_comp['sum'].values)
+plt.scatter(df_stores_comp['nb_caisses'].values, df_stores_comp['sum'].values)
 plt.show()
 
-plt.scatter(df_stores_comp['Nbr emp'].values, df_stores_comp['sum'].values)
+plt.scatter(df_stores_comp['nb_emplois'].values, df_stores_comp['sum'].values)
 plt.show()
 
 # check competition intensity proxies?

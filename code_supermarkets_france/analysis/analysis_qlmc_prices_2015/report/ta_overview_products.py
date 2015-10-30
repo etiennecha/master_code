@@ -20,74 +20,46 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_qlmc_scraped = os.path.join(path_data,
-                                  'data_qlmc',
-                                  'data_source',
-                                  'data_scraped')
+path_built_csv = os.path.join(path_data,
+                              'data_supermarkets',
+                              'data_built',
+                              'data_qlmc_2015',
+                              'data_csv_201503')
 
-path_csv = os.path.join(path_data,
-                        'data_qlmc',
-                        'data_built',
-                        'data_csv')
-
-df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'qlmc_scraped',
-                                     'df_stores.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv,
+                                     'df_prices.csv'),
                         encoding = 'utf-8')
 
-df_comp = pd.read_csv(os.path.join(path_csv,
-                                   'qlmc_scraped',
-                                   'df_competitors.csv'),
-                      encoding = 'utf-8')
-
-df_france = pd.read_csv(os.path.join(path_csv,
-                                     'qlmc_scraped',
-                                     'df_france.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv,
+                                     'df_stores_final.csv'),
                         encoding = 'utf-8')
+
+df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
+                                               'df_qlmc_competitors.csv'),
+                                  encoding = 'utf-8')
 
 ## Most common products
-se_prod_vc = df_france['product'].value_counts()
+se_prod_vc = df_prices['product'].value_counts()
 #print u'\nShow most common products'
 #print se_prod_vc[0:30].to_string()
 
 ## Most common chains
-se_chain_vc = df_france['chain'].value_counts()
+se_chain_vc = df_prices['store_chain'].value_counts()
 #print u'\nShow most common chains'
 #print se_chain_vc[0:30].to_string()
 
-## todo: check for each trigram if name starts with cor. dict entry
-#dict_chains = {'ITM' : 'INTERMARCHE SUPER',
-#               'USM' : 'SUPER U',
-#               'CAR' : 'CARREFOUR',
-#               'CRM' : 'CARREFOUR MARKET', # or MARKET
-#               'AUC' : 'AUCHAN',
-#               'GEA' : 'GEANT CASINO',
-#               'COR' : 'CORA',
-#               'SCA' : 'CASINO',
-#               'HSM' : 'HYPER U',
-#               'SIM' : 'SIMPLY MARKET',
-#               'MAT' : 'SUPERMARCHE MATCH',
-#               'HCA' : 'HYPER CASINO',
-#               'UEX' : 'U EXPRESS',
-#               'ATA' : 'ATAC',
-#               'CAS' : 'CASINO',
-#               'UHM' : 'HYPER U',
-#               'MIG' : 'MIGROS',
-#               'G20' : 'G 20',
-#               'REC' : 'RECORD',
-#               'HAU' : "LES HALLES D'AUCHAN"}
-
 # todo: transform in one line with groupby
-df_france.set_index('product', inplace = True)
-df_france['freq_prod'] = se_prod_vc
-df_france.reset_index(inplace = True)
+df_prices.set_index('product', inplace = True)
+df_prices['freq_prod'] = se_prod_vc
+df_prices.reset_index(inplace = True)
 
-df_u_prod = df_france.drop_duplicates('product')
+df_u_prod = df_prices.drop_duplicates('product')
 df_u_prod.sort('freq_prod', ascending = False, inplace = True)
-df_u_prod = df_u_prod[['family', 'subfamily', 'product', 'freq_prod']][0:50]
+df_u_prod = df_u_prod[['section', 'family', 'product', 'freq_prod']][0:50]
 
-df_u_prod.set_index(['family', 'subfamily', 'product'], inplace = True)
+df_u_prod.set_index(['section', 'family', 'product'], inplace = True)
 df_u_prod.sort_index(inplace = True)
+print u'\nTop 50 products by section family:'
 print df_u_prod.to_string()
 
 # ###################
@@ -99,17 +71,16 @@ print df_u_prod.to_string()
 # Build DataFrame with two (or more) store prices
 
 store_a, store_b = u'atac-autun', u'atac-auxerre'
-df_sub = df_france[df_france['store_id'].isin([store_a, store_b])]
+df_sub = df_prices[df_prices['store_id'].isin([store_a, store_b])]
 
 #df_comparison_prelim = df_sub[['product', 'store_id', 'price']].\
 #                         pivot('product', 'store_id', 'price')
 
 df_comparison =  pd.pivot_table(df_sub,
-                                index = ['family', 'subfamily', 'product'],
+                                index = ['section', 'family', 'product'],
                                 columns = ['store_id'],
                                 values = 'price',
                                 aggfunc = 'min')
-
 
 ## Slicing with Multi-Index DataFrame
 #print df_comparison.ix[(u'Aliments bébé et Diététique', u'Aliments Bébé')].to_string()
@@ -202,41 +173,43 @@ ls_func_2 = [nb_products,
              pct_rank_reversals,
              pct_draws]
 
-df_res_pre = df_comparison[['family', store_a, store_b]]\
-               .groupby('family').agg({store_a : ls_func_1})[store_a]
+df_res_pre = df_comparison[['section', store_a, store_b]]\
+               .groupby('section').agg({store_a : ls_func_1})[store_a]
 
 print u'\nFirst set of functions:'
 print df_res_pre.to_string()
 
-df_res = df_comparison[['family', store_a, store_b]]\
-           .groupby('family').agg({store_a : ls_func_2})[store_a]
+df_res = df_comparison[['section', store_a, store_b]]\
+           .groupby('section').agg({store_a : ls_func_2})[store_a]
 
 print u'\nSecond set of functions:'
 print df_res.to_string()
 
 print u'\nSecond set of functions w/ all products:'
-print df_comparison.groupby(lambda idx: 0).agg(ls_func_2)['family'].T.to_string()
+print df_comparison.groupby(lambda idx: 0).agg(ls_func_2)['section'].T.to_string()
 
 # todo: 
 # stack all competitor pairs and use groupby to make global stats
 # could keep rayons btw?
 # for this: loop over leclerc competitor pairs and index with pair
 
-print u'Nb stores by chain:'
-print df_france[['chain', 'store_id']]\
-        .drop_duplicates(['chain', 'store_id']).groupby('chain').agg('size')
+print u'\nNb stores by chain:'
+print df_prices[['store_chain', 'store_id']]\
+               .drop_duplicates(['store_chain', 'store_id'])\
+               .groupby('store_chain').agg('size')
 
 import itertools
-some_chain = 'ATA'
-df_chain = df_france[df_france['chain'] == some_chain]
+some_chain = 'ATAC'
+df_chain = df_prices[df_prices['store_chain'] == some_chain]
 ls_chain_stores = df_chain['store_id'].unique().tolist()
 ls_chain_pairs = [x for x in itertools.combinations(ls_chain_stores, 2)]
+# todo: keep closest... too many this way
 
 ls_df_comparison = []
-for store_a, store_b in ls_chain_pairs:
+for store_a, store_b in ls_chain_pairs[0:100]:
   df_sub = df_chain[df_chain['store_id'].isin([store_a, store_b])]
   df_comparison =  pd.pivot_table(df_sub,
-                                  index = ['family', 'subfamily', 'product'],
+                                  index = ['section', 'family', 'product'],
                                   columns = ['store_id'],
                                   values = 'price',
                                   aggfunc = 'min')

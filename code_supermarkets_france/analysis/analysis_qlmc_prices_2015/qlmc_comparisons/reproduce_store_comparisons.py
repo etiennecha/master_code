@@ -18,18 +18,19 @@ path_built_csv = os.path.join(path_data,
                               'data_qlmc_2015',
                               'data_csv_201503')
 
-df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
-                                               'df_qlmc_competitors.csv'),
-                                  encoding = 'utf-8')
-
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
-                        encoding = 'utf-8')
+                                     'df_prices.csv'))
+
+df_stores = pd.read_csv(os.path.join(path_built_csv,
+                                     'df_stores_final.csv'))
+
+df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
+                                               'df_qlmc_competitors.csv'))
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
-dict_chain_dfs = {chain: df_prices[df_prices['chain'] == chain]\
-                    for chain in df_prices['chain'].unique()}
+dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
+                    for chain in df_prices['store_chain'].unique()}
 
 # #########################
 # REPRODUCE QLMC COMPARISON
@@ -41,20 +42,23 @@ print df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()].iloc[0]
 
 # Replicate comparison
 
-lec_chain = 'LEC'
-lec_id, comp_id, comp_chain = df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()]\
-                                .iloc[0][['lec_id', 'comp_id', 'comp_chain']].values
+lec_chain = 'LECLERC'
+lec_id, comp_id, comp_chain =\
+   df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()]\
+                      .iloc[0][['lec_id', 'comp_id', 'comp_chain']].values
 
 start = timeit.default_timer()
-df_lec  = dict_chain_dfs[lec_chain][dict_chain_dfs[lec_chain]['store_id'] == lec_id].copy()
-df_comp = dict_chain_dfs[comp_chain][dict_chain_dfs[comp_chain]['store_id'] == comp_id].copy()
+df_lec  = dict_chain_dfs[lec_chain]\
+                        [dict_chain_dfs[lec_chain]['store_id'] == lec_id].copy()
+df_comp = dict_chain_dfs[comp_chain]\
+                        [dict_chain_dfs[comp_chain]['store_id'] == comp_id].copy()
 print u'Time to select', timeit.default_timer() - start
 
 start = timeit.default_timer()
 df_duel = pd.merge(df_lec,
                    df_comp,
                    how = 'inner',
-                   on = ['family', 'subfamily', 'product'],
+                   on = ['section', 'family', 'product'],
                    suffixes = ['_lec', '_comp'])
 # df_duel.drop(['chain_lec', 'chain_comp'], axis = 1, inplace = True)
 print u'Time to merge', timeit.default_timer() - start
@@ -84,7 +88,7 @@ print df_duel['pct_diff'].abs().describe(\
 
 start = timeit.default_timer()
 ls_rows_compa = []
-lec_chain = 'LEC'
+lec_chain = 'LECLERC'
 lec_id_save = None
 for lec_id, comp_id, comp_chain\
   in df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()]\
@@ -100,15 +104,17 @@ for lec_id, comp_id, comp_chain\
   
   # taking advantage of order requires caution on first loop
   if lec_id != lec_id_save:
-    df_lec  = dict_chain_dfs[lec_chain][dict_chain_dfs[lec_chain]['store_id'] == lec_id]
+    df_lec  = dict_chain_dfs[lec_chain]\
+                            [dict_chain_dfs[lec_chain]['store_id'] == lec_id]
     lec_id_save = df_lec['store_id'].iloc[0]
-  df_comp = dict_chain_dfs[comp_chain][dict_chain_dfs[comp_chain]['store_id'] == comp_id]
+  df_comp = dict_chain_dfs[comp_chain]\
+                          [dict_chain_dfs[comp_chain]['store_id'] == comp_id]
   
   # todo: see if need family and subfamily for matching (not much chge)
   df_duel = pd.merge(df_lec,
                      df_comp,
                      how = 'inner',
-                     on = ['family', 'subfamily', 'product'],
+                     on = ['section', 'family', 'product'],
                      suffixes = ['_lec', '_comp'])
   ls_rows_compa.append((lec_id,
                         comp_id,
@@ -175,7 +181,7 @@ df_delta['delta'] = df_delta['qlmc_pct_compa'] - df_delta['pct_compa']
 print df_delta['delta'].describe()
 
 # Summary by chain
-ls_su_chains = ['AUC', 'CAR', 'GEA', 'ITM', 'USM']
+ls_su_chains = ['AUCHAN', 'CARREFOUR', 'GEANT CASINO', 'INTERMARCHE', 'SUPER U']
 ls_se_chain_desc = [df_repro_compa[df_repro_compa['comp_chain']\
                                      == chain]['pct_compa'].describe()\
                       for chain in ls_su_chains]

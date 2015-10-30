@@ -17,27 +17,24 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_csv = os.path.join(path_data,
-                        'data_supermarkets',
-                        'data_built',
-                        'data_qlmc_2015',
-                        'data_csv_201503')
+path_built_csv = os.path.join(path_data,
+                              'data_supermarkets',
+                              'data_built',
+                              'data_qlmc_2015',
+                              'data_csv_201503')
 
-df_prices = pd.read_csv(os.path.join(path_csv,
+df_prices = pd.read_csv(os.path.join(path_built_csv,
                                      'df_prices.csv'))
 
-df_stores = pd.read_csv(os.path.join(path_csv,
+df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'))
 
-df_comp = pd.read_csv(os.path.join(path_csv,
+df_comp = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc_competitors.csv'))
-
-
-# Based on group of ids... build df with stores as columns (inner join to start with)
 
 # CORSE
 
-# TEMP: define market (INSEE and LSA matching not performed so far)
+# TEMP: define market
 ls_corse_ids = ['centre-e-leclerc-corbara',
                 'centre-e-leclerc-ajaccio-rte-d-alata',
                 'centre-e-leclerc-ajaccio-prince-imperial',

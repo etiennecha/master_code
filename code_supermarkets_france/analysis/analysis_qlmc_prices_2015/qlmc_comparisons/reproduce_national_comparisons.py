@@ -18,32 +18,40 @@ path_built_csv = os.path.join(path_data,
                               'data_qlmc_2015',
                               'data_csv_201503')
 
-df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
-                                               'df_qlmc_competitors.csv'),
-                                  encoding = 'utf-8')
-
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
-                        encoding = 'utf-8')
+                                     'df_prices.csv'))
+
+df_stores = pd.read_csv(os.path.join(path_built_csv,
+                                     'df_stores_final.csv'))
+
+df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
+                                               'df_qlmc_competitors.csv'))
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
-dict_chain_dfs = {chain: df_prices[df_prices['chain'] == chain]\
-                    for chain in df_prices['chain'].unique()}
+dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
+                    for chain in df_prices['store_chain'].unique()}
 
 # #########################
 # REPRODUCE QLMC COMPARISON
 # #########################
 
 # Average price by product / chain
-ls_col_gb = ['chain', 'family', 'subfamily', 'product', 'price']
+ls_col_gb = ['store_chain', 'section', 'family', 'product', 'price']
 df_chain_prod_prices = df_prices.groupby(ls_col_gb[:-1]).agg([len, np.mean])['price']
 
 # Compare two chains
-ls_some_chains = ['ITM', 'USM', 'CRM', 'AUC', 'HSM', 'COR', 'CAR', 'GEA']
-ls_compare_chains = [['LEC', chain] for chain in ls_some_chains]
+ls_some_chains = ['INTERMARCHE',
+                  'SUPER U',
+                  'CARREFOUR MARKET',
+                  'AUCHAN',
+                  'HYPER U',
+                  'CORA',
+                  'CARREFOUR',
+                  'GEANT CASINO']
+ls_compare_chains = [['LECLERC', chain] for chain in ls_some_chains]
 for chain_a, chain_b in ls_compare_chains:
-  # chain_a, chain_b = 'LEC', 'HSM'
+  # chain_a, chain_b = 'LECLERC', 'HYPER U'
   df_chain_a = df_chain_prod_prices.loc[(chain_a),:]
   df_chain_b = df_chain_prod_prices.loc[(chain_b),:]
   # print df_test.loc[(slice(None), u'CENTRE E.LECLERC'),:].to_string()
@@ -84,75 +92,10 @@ for chain_a, chain_b in ls_compare_chains:
 
 ##print df_duel[0:10].to_string()
 
-## ############
-## LOOP
-## ############
-#
-#start = timeit.default_timer()
-#ls_rows_compa = []
-#lec_chain = 'LEC'
-#lec_id_save = None
-#for lec_id, comp_id, comp_chain\
-#  in df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()]\
-#       [['lec_id', 'comp_id', 'comp_chain']].values:
-#  
-#  ##before split of df_prices       
-#  #df_lec  = df_prices[df_prices['store_id'] == lec_id].copy()
-#  #df_comp = df_prices[df_prices['store_id'] == comp_id].copy()
-#  
-#  ##before taking advantage of order
-#  #df_lec  = dict_chain_dfs[lec_chain][dict_chain_dfs[lec_chain]['store_id'] == lec_id]
-#  #df_comp = dict_chain_dfs[comp_chain][dict_chain_dfs[comp_chain]['store_id'] == comp_id]
-#  
-#  # taking advantage of order requires caution on first loop
-#  if lec_id != lec_id_save:
-#    df_lec  = dict_chain_dfs[lec_chain][dict_chain_dfs[lec_chain]['store_id'] == lec_id]
-#    lec_id_save = df_lec['store_id'].iloc[0]
-#  df_comp = dict_chain_dfs[comp_chain][dict_chain_dfs[comp_chain]['store_id'] == comp_id]
-#  
-#  # todo: see if need family and subfamily for matching (not much chge)
-#  df_duel = pd.merge(df_lec,
-#                     df_comp,
-#                     how = 'inner',
-#                     on = ['family', 'subfamily', 'product'],
-#                     suffixes = ['_lec', '_comp'])
-#  ls_rows_compa.append((lec_id,
-#                        comp_id,
-#                        len(df_duel),
-#                        len(df_duel[df_duel['price_lec'] < df_duel['price_comp']]),
-#                        len(df_duel[df_duel['price_lec'] > df_duel['price_comp']]),
-#                        len(df_duel[df_duel['price_lec'] == df_duel['price_comp']]),
-#                        (df_duel['price_comp'].sum() / df_duel['price_lec'].sum() - 1) * 100))
-#
-#df_repro_compa = pd.DataFrame(ls_rows_compa,
-#                              columns = ['lec_id',
-#                                         'comp_id',
-#                                         'nb_obs',
-#                                         'nb_lec_wins',
-#                                         'nb_comp_wins',
-#                                         'nb_draws',
-#                                         'pct_compa'])
-#print u'Time for loop', timeit.default_timer() - start
-#
-#ls_pctiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
-#print df_repro_compa['pct_compa'].describe(percentiles = ls_pctiles)
-#
-#df_repro_compa['rr'] = df_repro_compa['nb_comp_wins'] /\
-#                         df_repro_compa['nb_obs'] * 100
-#
-#df_repro_compa.loc[df_repro_compa['nb_comp_wins'] >\
-#                     df_repro_compa['nb_lec_wins'],
-#                   'rr'] = df_repro_compa['nb_lec_wins'] /\
-#                             df_repro_compa['nb_obs'] * 100
-#
-#import matplotlib.pyplot as plt
-#df_repro_compa.plot(kind = 'scatter', x = 'pct_compa', y = 'rr')
-#plt.show()
-#
-## todo:
-## add precision in price comparison: product family level rank reversals
-## enrich compara dataframe: distance, brands, competition/environement vars
-## try to account for dispersion
-## also investigate link between dispersion and price levels?
-## do same exercise with non leclerc pairs (control for differentiation)
-## would be nice to check if products on which leclerc is beaten are underpriced vs market
+# todo:
+# add precision in price comparison: product family level rank reversals
+# enrich compara dataframe: distance, brands, competition/environement vars
+# try to account for dispersion
+# also investigate link between dispersion and price levels?
+# do same exercise with non leclerc pairs (control for differentiation)
+# would be nice to check if products on which leclerc is beaten are underpriced vs market
