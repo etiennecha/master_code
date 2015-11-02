@@ -1,6 +1,6 @@
 ## QLMC Data 2007-2012
 
-This repository contains the code used to extract and clean price records from large pdf files made available by the supermarket price comparison website quiestlemoinscher.com. The period covered starts in May 2007 and ends in June 2012. Below are provided a description of the data and an overview of the scripts contained in this repository.
+This repository contains the code used to extract and clean supermarket price records from large pdf files made available by the comparison website quiestlemoinscher.com. Below are provided a description of the data and an overview of the scripts contained in this repository.
 
 --------------------
 
@@ -8,7 +8,7 @@ This repository contains the code used to extract and clean price records from l
 
 #### Overview of pdf file data
 
-The following table provides a brief overview of each pdf file, its structure (order of the price records) and price range. Price ranges reveal some data issues, which are discussed in a dedicated section below.
+The following table provides a brief overview of each pdf file, its structure (order of the product price records) and price range. Price ranges reveal some issues, on which a dedicated section below provides some more details.
 
 |P  | File name                 | Ordered by                    | Price range   |
 |---|:--------------------------|-------------------------------|---------------|
@@ -66,7 +66,6 @@ The following table provides an overview of extracted data in terms of number of
 | 11 |  30/01/2011 |  22/02/2011 |  464,604 |        617 |        1,657 |         753        | 
 | 12 |  12/05/2012 |  01/06/2012 |  607,185 |        605 |        1,805 |       1,004        | 
 
-
 #### Data issues and remedies
 
 Regarding prices:
@@ -83,5 +82,7 @@ Regarding products, product labels often exhibit slight wording differences acro
 -------------------
 
 ### Scripts
+
+This section provides a brief overview of the code used to extract and clean the data.
 
 todo
