@@ -7,25 +7,32 @@ import os
 from datetime import date, timedelta
 from functions_generic_drive import *
 
-path_auchan = os.path.join(path_data,
-                           u'data_drive_supermarkets',
+path_source = os.path.join(path_data,
+                           u'data_supermarkets',
+                           u'data_source',
+                           u'data_drive',
                            u'data_auchan')
 
-path_price_json_auchan = os.path.join(path_auchan,
-                                      u'data_source',
-                                      u'data_json_auchan')
+path_source_json = os.path.join(path_source,
+                                u'data_json')
 
+
+path_built = os.path.join(path_data,
+                          u'data_supermarkets',
+                          u'data_built',
+                          u'data_drive',
+                          u'data_auchan')
+
+path_built_csv = os.path.join(path_built,
+                              u'data_csv')
 # no need for intermediate csv
-path_price_built_csv = os.path.join(path_auchan,
-                                    u'data_built',
-                                    u'data_csv_auchan')
 
 # ################
 # CHECK ONE FILE
 # ################
 
 date_str = '20150506'
-path_file = os.path.join(path_price_json_auchan,
+path_file = os.path.join(path_source_json,
                          '{:s}_dict_auchan'.format(date_str))
 dict_period = dec_json(path_file)
 
@@ -54,7 +61,7 @@ end_date = date(2015,5,18)
 ls_dates = get_date_range(start_date, end_date)
 ls_df_products = []
 for date_str in ls_dates:
-  path_file = os.path.join(path_price_json_auchan,
+  path_file = os.path.join(path_source_json,
                            '{:s}_dict_auchan'.format(date_str))
   if os.path.exists(path_file):
     dict_period = dec_json(path_file)
@@ -160,12 +167,12 @@ print df_master['promo_vignette'].value_counts()
 # check product identification by img
 # a priori includes price hence not interesting
 
-df_master.rename(columns = {'dpt' : 'department',
-                            'sub_dpt' : 'sub_department',
+df_master.rename(columns = {'dpt' : 'section',
+                            'sub_dpt' : 'family',
                             'name' : 'title'},
                  inplace = True)
 
-ls_dup_id_cols = ['store', 'date', 'department', 'sub_department', 'title']
+ls_dup_id_cols = ['store', 'date', 'section', 'family', 'title']
 
 df_master_nodup =\
   df_master[~((df_master.duplicated(ls_dup_id_cols)) |\
@@ -179,7 +186,7 @@ ls_price_cols = ['store', 'date', 'title',
 
 df_prices = df_master_nodup[ls_price_cols].drop_duplicates(['date', 'store', 'title'])
 
-df_products = df_master_nodup[['department', 'sub_department', 'title']].drop_duplicates()
+df_products = df_master_nodup[['section', 'family', 'title']].drop_duplicates()
 
 # OUTPUT
 
@@ -188,7 +195,7 @@ dict_auchan_2015 = {'df_master_auchan_2015' : df_master,
                     'df_products_auchan_2015': df_products}
 
 for file_title, df_file in dict_auchan_2015.items():
-  df_file.to_csv(os.path.join(path_price_built_csv,
+  df_file.to_csv(os.path.join(path_built_csv,
                               '{:s}.csv'.format(file_title)),
                    encoding = 'utf-8',
                    float_format='%.2f',

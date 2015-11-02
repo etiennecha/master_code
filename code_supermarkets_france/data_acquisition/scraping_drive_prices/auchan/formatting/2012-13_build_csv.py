@@ -7,31 +7,30 @@ import os
 from datetime import date, timedelta
 from functions_generic_drive import *
 
-path_auchan = os.path.join(path_data,
-                           u'data_drive_supermarkets',
+path_source = os.path.join(path_data,
+                           u'data_supermarkets',
+                           u'data_source',
+                           u'data_drive',
                            u'data_auchan')
 
-path_price_json_velizy = os.path.join(path_auchan,
-                                      u'data_source',
-                                      u'data_json_auchan_velizy')
+path_source_json_velizy = os.path.join(path_source,
+                                       u'data_json_velizy')
 
-path_price_json_velizy_duplicates = os.path.join(path_price_json_velizy,
-                                                 u'bu_duplicates')
+path_source_json_velizy_dup = os.path.join(path_source_json_velizy,
+                                           u'bu_duplicates')
 
-path_price_json_plaisir = os.path.join(path_auchan,
-                                        u'data_source',
-                                        u'data_json_auchan_plaisir')
+path_source_json_plaisir = os.path.join(path_source,
+                                        u'data_json_plaisir')
 
-path_price_source_csv = os.path.join(path_auchan,
-                                     u'data_source',
-                                     u'data_csv_auchan')
+path_source_csv = os.path.join(path_source,
+                               u'data_csv')
 
 ## ###########################
 ## CHECK ONE FILE WITH PANDAS
 ## ###########################
 #
 #date_str = '20121122'
-#path_file = os.path.join(path_price_json_velizy_duplicates,
+#path_file = os.path.join(path_source_json_velizy_duplicates,
 #                         '{:s}_auchan_velizy'.format(date_str))
 #period_file = dec_json(path_file)
 #
@@ -47,9 +46,9 @@ path_price_source_csv = os.path.join(path_auchan,
 # BUILD DF MASTER
 # ###################
 
-ls_loop = [[path_price_json_velizy_duplicates, 'velizy', date(2012,11,22), date(2013,4,11)],
-           [path_price_json_velizy, 'velizy', date(2013,4,11), date(2013,8,8)],
-           [path_price_json_plaisir, 'plaisir', date(2013,6,27), date(2013,8,8)]]
+ls_loop = [[path_source_json_velizy_dup, 'velizy', date(2012,11,22), date(2013,4,11)],
+           [path_source_json_velizy, 'velizy', date(2013,4,11), date(2013,8,8)],
+           [path_source_json_plaisir, 'plaisir', date(2013,6,27), date(2013,8,8)]]
 
 ls_df_master = []
 
@@ -82,7 +81,7 @@ for path_temp, store_extension, start_date, end_date in ls_loop:
       ls_df_products.append(df_products)
   
       ## Output dataframe
-      #df_products.to_csv(os.path.join(path_price_source_csv,
+      #df_products.to_csv(os.path.join(path_source_csv,
       #                                '{:s}_auchan_velizy'.format(date_str)),
       #                   index = False,
       #                   encoding = 'utf-8')
@@ -91,6 +90,11 @@ for path_temp, store_extension, start_date, end_date in ls_loop:
   
   df_master.columns = [col.replace('product_', '') for col in df_master.columns]
   
+  # RENAME RAYON/FAMILLE
+  df_master.rename(columns = {'department' : 'section',
+                              'sub_department' : 'family'},
+                   inplace = True)
+
   # FORMAT UNIT PRICE
   def fix_unit_price(x):
     x = re.sub('&euro;$', '', x)\
@@ -161,7 +165,7 @@ for path_temp, store_extension, start_date, end_date in ls_loop:
                   field] = None
 
   # FORMAT TEXT FIELDS
-  for field in ['title', 'department', 'sub_department']:
+  for field in ['title', 'section', 'family']:
     df_master[field] =\
       df_master[field].apply(lambda x: x.strip()\
                                         .replace(u'&amp;', u'&')\
@@ -177,26 +181,26 @@ for path_temp, store_extension, start_date, end_date in ls_loop:
                       u'Lessive' : u'Lessives',
                       u'Shampoings' : u'Shampooings'}
   for old, new in dict_repl_subdpt.items():
-    df_master.loc[df_master['sub_department'] == old,
-                  'sub_department'] = new
+    df_master.loc[df_master['family'] == old,
+                  'family'] = new
   
-  ls_di = ['department', 'sub_department', 'title',
+  ls_di = ['section', 'family', 'title',
            'total_price', 'unit_price', 'unit',
            'available', 'promo', 'promo_vignette']
   
   # INSPECT RESULTS
   print u'\nInspect dpt and subdpts:'
-  print df_master[['department', 'sub_department']].drop_duplicates().to_string()
+  print df_master[['section', 'family']].drop_duplicates().to_string()
   
-  print u'\nNo sub_department (top 20):'
-  print df_master[ls_di][df_master['sub_department'].isnull()][0:20].to_string()
+  print u'\nNo family (top 20):'
+  print df_master[ls_di][df_master['family'].isnull()][0:20].to_string()
   
-  print u'\nFilled sub_department (top 20):'
-  print df_master[ls_di][~df_master['sub_department'].isnull()][0:20].to_string()
+  print u'\nFilled family (top 20):'
+  print df_master[ls_di][~df_master['family'].isnull()][0:20].to_string()
   
   ls_df_master.append(df_master)
 
-  df_master.to_csv(os.path.join(path_price_source_csv,
+  df_master.to_csv(os.path.join(path_source_csv,
                                 'df_auchan_{:s}_{:s}_{:s}.csv'\
                                    .format(store_extension, ls_dates[0], ls_dates[-1])),
                    encoding = 'utf-8',
@@ -209,40 +213,40 @@ for path_temp, store_extension, start_date, end_date in ls_loop:
 #
 #df_period = df_master[df_master['date'] == ls_dates[0]].copy()
 #
-#print u'\nNb duplicates based on dpt, sub_dpt, prod_title:'
-#print len(df_period[df_period.duplicated(['department',
-#                                          'sub_department',
+#print u'\nNb duplicates based on section, family, prod_title:'
+#print len(df_period[df_period.duplicated(['section',
+#                                          'family',
 #                                          'title'])])
 #
 #print u'\nNb duplicates based on prod_title:'
 #print len(df_period[df_period.duplicated(['title'])])
 #
 #print u'\nNb with no dpt or sub_dpt'
-#print len(df_period[(df_period['department'].isnull()) |\
-#                    (df_period['sub_department'].isnull())])
+#print len(df_period[(df_period['section'].isnull()) |\
+#                    (df_period['family'].isnull())])
 #
 #print u'\nNb with no sub_dpt:'
-#print len(df_period[df_period['sub_department'].isnull()])
+#print len(df_period[df_period['family'].isnull()])
 #
 ## VISUAL INSPECTION
-#print u'\n', df_period[df_period.duplicated(['department',
-#                                             'sub_department',
+#print u'\n', df_period[df_period.duplicated(['section',
+#                                             'family',
 #                                             'title'])].to_string()
 #
 #print u'\n', df_period[df_period['title'] == 'carottes sachet 1kg'].to_string()
 #
-#print u'\'n', len(df_period[df_period.duplicated(['department',
+#print u'\'n', len(df_period[df_period.duplicated(['section',
 #                                                  'title'])])
 #
-#print u'\n', len(df_period[df_period.duplicated(['department',
-#                                                 'sub_department',
+#print u'\n', len(df_period[df_period.duplicated(['section',
+#                                                 'family',
 #                                                 'title'])])
 #
 ## Duplicates due to one line for regular price and one for promo price
 ## Note sure if all duplicates are legit (carottes sachet in épicerie?)
 #
 ## Check if no subdpt (None) are always duplicates?
-#ls_prod_nosd = df_period['title'][df_period['sub_department'].isnull()]\
+#ls_prod_nosd = df_period['title'][df_period['family'].isnull()]\
 #                 .unique().tolist()
 #print u'\nNb of prod with no sub_dpt: {:d}'.format(len(ls_prod_nosd))
 #
@@ -277,9 +281,9 @@ for path_temp, store_extension, start_date, end_date in ls_loop:
 ## Get all (unique) legit (product, dpt, subdpt)
 ## Too slow if want to run with df_master
 #ls_legit_pds = []
-#for x in df_period[['title', 'department', 'sub_department']].values:
+#for x in df_period[['title', 'section', 'family']].values:
 #  if tuple(x) not in ls_legit_pds:
 #    ls_legit_pds.append(tuple(x))
 #
-#df_pds = df_master[['title', 'department', 'sub_department']].drop_duplicates()
-#df_pds.sort(['title', 'department', 'sub_department'], inplace = True)
+#df_pds = df_master[['title', 'section', 'family']].drop_duplicates()
+#df_pds.sort(['title', 'section', 'family'], inplace = True)

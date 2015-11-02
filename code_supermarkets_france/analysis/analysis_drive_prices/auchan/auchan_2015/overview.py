@@ -7,14 +7,14 @@ import os
 from datetime import date, timedelta
 from functions_generic_drive import *
 
-path_auchan = os.path.join(path_data,
+path_built = os.path.join(path_data,
                            u'data_supermarkets',
+                           u'data_built',
                            u'data_drive',
                            u'data_auchan')
 
-path_price_built_csv = os.path.join(path_auchan,
-                                    u'data_built',
-                                    u'data_csv_auchan')
+path_built_csv = os.path.join(path_built,
+                              u'data_csv')
 
 ls_df_auchan_2015 = ['df_master_auchan_2015',
                      'df_prices_auchan_2015',
@@ -23,7 +23,7 @@ ls_df_auchan_2015 = ['df_master_auchan_2015',
 dict_df = {}
 for df_file_title in ls_df_auchan_2015:
   dict_df[df_file_title] =\
-    pd.read_csv(os.path.join(path_price_built_csv,
+    pd.read_csv(os.path.join(path_built_csv,
                              '{:s}.csv'.format(df_file_title)),
                 dtype = {'date' : str},
                 encoding = 'utf-8')
@@ -80,8 +80,8 @@ df_dup_0 = df_master[df_master.duplicated(ls_dup_cols_0, take_last = False) |\
                      df_master.duplicated(ls_dup_cols_0, take_last = True)].copy()
 df_dup_0.sort(ls_dup_cols_0, inplace = True)
 
-# by department/sub_department/title?
-ls_dup_cols_1 = ['date', 'store', 'department', 'sub_department', 'title']
+# by section/family/title?
+ls_dup_cols_1 = ['date', 'store', 'section', 'family', 'title']
 df_dup_1 = df_master[df_master.duplicated(ls_dup_cols_1, take_last = False) |\
                      df_master.duplicated(ls_dup_cols_1, take_last = True)].copy()
 df_dup_1.sort(ls_dup_cols_1, inplace = True)
@@ -94,12 +94,12 @@ print u'\nPct of rows involving duplicates (simple): {:.2f}'.format(\
 #                        df_master.duplicated(ls_dup_cols_1, take_last = True))]
 #
 #df_prices = df_master[['store', 'date',
-#                       'department', 'sub_department', 'title',
+#                       'section', 'family', 'title',
 #                       'dum_available', 'dum_promo', 'dum_loyalty',
 #                       'promo_vignette', 'promo',
 #                       'total_price', 'unit_price', 'unit']].copy()
 #
-#df_products = df_master[['department', 'sub_department', 'title']].drop_duplicates()
+#df_products = df_master[['section', 'family', 'title']].drop_duplicates()
 
 # make sure same price/promo for all products with same title
 ls_dup_cols_a = ['date', 'store', 'title']
@@ -132,7 +132,7 @@ df_prices = df_master[['store', 'date',
                        'total_price', 'unit_price', 'unit']]\
               .drop_duplicates(['store', 'date', 'title'])
 
-df_products = df_master[['department', 'sub_department', 'title']].drop_duplicates()
+df_products = df_master[['section', 'family', 'title']].drop_duplicates()
 
 # ###########
 # FILTER DATA

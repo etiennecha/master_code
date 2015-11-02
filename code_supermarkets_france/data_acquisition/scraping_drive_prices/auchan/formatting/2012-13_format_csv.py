@@ -8,17 +8,23 @@ from datetime import date, timedelta
 from functions_generic_drive import *
 import matplotlib.pyplot as plt
 
-path_auchan = os.path.join(path_data,
-                           u'data_drive_supermarkets',
+path_source = os.path.join(path_data,
+                           u'data_supermarkets',
+                           u'data_source',
+                           u'data_drive',
                            u'data_auchan')
 
-path_price_source_csv = os.path.join(path_auchan,
-                                     u'data_source',
-                                     u'data_csv_auchan')
+path_source_csv = os.path.join(path_source,
+                               u'data_csv')
 
-path_price_built_csv = os.path.join(path_auchan,
-                                    u'data_built',
-                                    u'data_csv_auchan')
+path_built = os.path.join(path_data,
+                          u'data_supermarkets',
+                          u'data_built',
+                          u'data_drive',
+                          u'data_auchan')
+
+path_built_csv = os.path.join(path_built,
+                              u'data_csv')
 
 dict_files = {'velizy_0' : 'df_auchan_velizy_20121122_20130411.csv',
               'velizy_1' : 'df_auchan_velizy_20130411_20130808.csv',
@@ -27,7 +33,7 @@ dict_files = {'velizy_0' : 'df_auchan_velizy_20121122_20130411.csv',
 dict_dfs = {}
 for file_title, file_name in dict_files.items():
   dict_dfs[file_title] =\
-      pd.read_csv(os.path.join(path_price_source_csv, file_name),
+      pd.read_csv(os.path.join(path_source_csv, file_name),
                                parse_dates = ['date'],
                                dtype = {'available' : str,
                                         'pictos' : str,
@@ -39,20 +45,20 @@ for file_title, file_name in dict_files.items():
 # GENERIC FIX
 # ############
 
-ls_prod_id_cols = ['date', 'department', 'sub_department', 'title']
+ls_prod_id_cols = ['date', 'section', 'family', 'title']
 dict_nodup_dfs = {}
 for file_title in ['velizy_0', 'velizy_1', 'plaisir_1']:
   df_master = dict_dfs[file_title].copy()
   
   print u'\nProcessing {:s}'.format(file_title)
 
-  # get rid of null sub_departments
-  print u'Nb obs with null sub_department: {:d} (dropped)'.format(\
-            len(df_master[df_master['sub_department'].isnull()]))
-  df_master = df_master[~df_master['sub_department'].isnull()]
+  # get rid of null familys
+  print u'Nb obs with null family: {:d} (dropped)'.format(\
+            len(df_master[df_master['family'].isnull()]))
+  df_master = df_master[~df_master['family'].isnull()]
   
   # sort: ascending and nan as last by default
-  df_master.sort(['date', 'title', 'department', 'sub_department', 'total_price'],
+  df_master.sort(['date', 'title', 'section', 'family', 'total_price'],
                    inplace = True)
 
   # store result back
@@ -70,7 +76,7 @@ for file_title in ['velizy_0', 'velizy_1', 'plaisir_1']:
 # OUPUT DATA AUCHAN (VELIZY + PLAISIR) 2013
 # ##########################################
 
-ls_dup_id_cols = ['store', 'date', 'department', 'sub_department', 'title']
+ls_dup_id_cols = ['store', 'date', 'section', 'family', 'title']
 
 df_velizy_1 = dict_dfs['velizy_1'].copy()
 df_velizy_1['store'] = 'velizy' # changes original anyway?
@@ -112,7 +118,7 @@ dict_auchan_2013['df_products_auchan_2013'] =\
 # OUTPUT
 
 for file_title, df_file in dict_auchan_2013.items():
-  df_file.to_csv(os.path.join(path_price_built_csv,
+  df_file.to_csv(os.path.join(path_built_csv,
                               '{:s}.csv'.format(file_title)),
                    encoding = 'utf-8',
                    float_format='%.2f',
@@ -138,8 +144,8 @@ df_velizy_0_nodup_sub =\
   df_velizy_0_nodup[~df_velizy_0_nodup['title'].isin(ls_u_title_01)].copy()
 
 df_products_sub_0 = df_velizy_0_nodup_sub[['title',
-                                           'department',
-                                           'sub_department']].drop_duplicates()
+                                           'section',
+                                           'family']].drop_duplicates()
 
 print u'\nOverview of some products not in df_master_2 with several s_dpts:'
 ls_ps0_dup = df_products_sub_0['title']\
@@ -217,23 +223,23 @@ ls_fix_dsd = [[u'Label 5 whisky flask 40° -20cl',
                   u'Soins femme']]]
 # to be continued (in a more efficient way?)
 
-for title, ls_sub_departments in ls_fix_dsd:
+for title, ls_familys in ls_fix_dsd:
   df_products_sub_0 = df_products_sub_0[(df_products_sub_0['title'] != title) |\
                               ((df_products_sub_0['title'] == title) &\
-                               (df_products_sub_0['sub_department'].isin(ls_sub_departments)))]
+                               (df_products_sub_0['family'].isin(ls_familys)))]
 
 # CONCATENATE BOTH PERIODS
 
 df_prices_0 = df_velizy_0_nodup[ls_price_cols[1:]].drop_duplicates(['date', 'title'])
 
 #df_products_0 = df_master_1[['title',
-#                             'department',
-#                             'sub_department']].drop_duplicates()
+#                             'section',
+#                             'family']].drop_duplicates()
 
 df_prices_1 = df_velizy_1_nodup[ls_price_cols[1:]].drop_duplicates(['date', 'title'])
 df_products_1 = df_velizy_1_nodup[['title',
-                                   'department',
-                                   'sub_department']].drop_duplicates()
+                                   'section',
+                                   'family']].drop_duplicates()
 
 df_products_velizy = pd.concat([df_products_sub_0,
                                 df_products_1],
@@ -256,7 +262,7 @@ dict_velizy_201213 = {'df_master_auchan_velizy_2012-13' : df_master_velizy,
                       'df_products_auchan_velizy_2012-13': df_products_velizy}
 
 for file_title, df_file in dict_velizy_201213.items():
-  df_file.to_csv(os.path.join(path_price_built_csv,
+  df_file.to_csv(os.path.join(path_built_csv,
                               '{:s}.csv'.format(file_title)),
                    encoding = 'utf-8',
                    float_format='%.2f',
@@ -273,9 +279,9 @@ for file_title, df_file in dict_velizy_201213.items():
 #len(df_master_2[df_master_2.duplicated(['date', 'title', 'total_price'])])
 
 #l1 = df_master_2[df_master_2['date'] == '2013-06-11']\
-#       [['title', 'department', 'sub_department']].values.tolist()
+#       [['title', 'section', 'family']].values.tolist()
 #l2 = df_master[df_master['date'] == '2013-06-11']\
-#       [['title', 'department', 'sub_department']].values.tolist()
+#       [['title', 'section', 'family']].values.tolist()
 #l_audit = list(set([tuple(x) for x in l2]).difference(set([tuple(y) for y in l1])))
 
 ## ##########
@@ -341,12 +347,12 @@ for file_title, df_file in dict_velizy_201213.items():
 #plt.show()
 #
 #print u'\nOverview dpt and subdpts'
-#df_dsd = df_prod_dsd[['department', 'sub_department']].drop_duplicates()
-#df_dsd.sort(['department', 'sub_department'], inplace = True)
+#df_dsd = df_prod_dsd[['section', 'family']].drop_duplicates()
+#df_dsd.sort(['section', 'family'], inplace = True)
 #
 ### Extract vins
-##len(df_prod_dsd[df_prod_dsd['sub_department'] == 'Vins'])
-##ls_title_vins = df_prod_dsd['title'][df_prod_dsd['sub_department'] == 'Vins'].unique().tolist()
+##len(df_prod_dsd[df_prod_dsd['family'] == 'Vins'])
+##ls_title_vins = df_prod_dsd['title'][df_prod_dsd['family'] == 'Vins'].unique().tolist()
 ##df_prices_vins = df_prod_prices[df_prod_prices['title'].isin(ls_title_vins)]
 #
 ### EXAMPLE: COCA
