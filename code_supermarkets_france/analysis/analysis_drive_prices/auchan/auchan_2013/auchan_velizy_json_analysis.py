@@ -13,13 +13,14 @@ import itertools
 import pandas as pd
 import matplotlib.pyplot as plt
 
-path_auchan = os.path.join(path_data,
-                           u'data_drive_supermarkets',
-                           u'data_auchan')
+path_built = os.path.join(path_data,
+                          u'data_supermarkets',
+                          u'data_built',
+                          u'data_drive',
+                          u'data_auchan')
 
-path_price_built = os.path.join(path_auchan,
-                                'data_built',
-                                'data_json_auchan_velizy')
+path_built_json = os.path.join(path_built,
+                               'data_json_velizy')
 
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
@@ -105,8 +106,8 @@ def analyse_price_series(list_price_series, master_price):
     ls_ls_dilettante.append(ls_bad_reporting)
   return (ls_start_end, ls_none, ls_ls_dilettante)
 
-master = dec_json(os.path.join(path_price_built, 'master'))
-dict_dpt_subdpts = dec_json(os.path.join(path_price_built, 'dict_dpt_subdpts'))
+master = dec_json(os.path.join(path_built_json, 'master'))
+dict_dpt_subdpts = dec_json(os.path.join(path_built_json, 'dict_dpt_subdpts'))
 
 # 1/ Question: products entered under 2 different names
 # Analysis of price series: 5182 are present at beginning and end out of 10177...

@@ -7,24 +7,24 @@ import os
 from datetime import date, timedelta
 from functions_generic_drive import *
 
-path_carrefour = os.path.join(path_data,
-                           u'data_drive_supermarkets',
-                           u'data_carrefour')
+path_source = os.path.join(path_data,
+                              u'data_supermarkets',
+                              u'data_source',
+                              u'data_drive',
+                              u'data_carrefour')
 
-path_price_source = os.path.join(path_carrefour,
-                                 u'data_source',
-                                 u'data_json_carrefour_voisins')
+path_source_json = os.path.join(path_source,
+                                u'data_json_voisins')
 
-path_price_source_csv = os.path.join(path_carrefour,
-                                     u'data_source',
-                                     u'data_csv_carrefour')
+path_source_csv = os.path.join(path_source,
+                               u'data_csv')
 
 # ###########################
 # CHECK ONE FILE WITH PANDAS
 # ###########################
 
 date_str = '20150503'
-path_file = os.path.join(path_price_source,
+path_file = os.path.join(path_source_json,
                          '{:s}_carrefour_voisins'.format(date_str))
 period_file = dec_json(path_file)
 
@@ -41,7 +41,7 @@ for k,v in dict_fields.items():
 # BUILD DF MASTER
 # ###################
 
-ls_loop = [[path_price_source, date(2015,5,3), date(2015,5,3)]]
+ls_loop = [[path_source_json, date(2015,5,3), date(2015,5,3)]]
 ls_df_master = []
 for path_temp, start_date, end_date in ls_loop:
   ls_dates = get_date_range(start_date, end_date)
@@ -78,6 +78,10 @@ for path_temp, start_date, end_date in ls_loop:
 #df_master.drop(['ls_unit_price', 'ls_reduction'],
 #               axis = 1,
 #               inplace = True)
+
+df_master.rename(columns = {'department' : 'section',
+                            'sub_department': 'family'},
+                 inplace = True)
 
 # ###################
 # CLEAN DF MASTER
@@ -143,7 +147,7 @@ df_price = pd.DataFrame(ls_price_rows,
 
 df_master_bu = df_master.copy()
 
-df_master = pd.concat([df_master[['date', 'department', 'sub_department',
+df_master = pd.concat([df_master[['date', 'section', 'family',
                                     'ls_product_title', 'img_name']],
                       df_price],
                       axis = 1)
@@ -154,7 +158,7 @@ del(df_price)
 
 # FORMAT SIMPLE TEXT FIELDS
 
-for field in ['department', 'sub_department', 'ls_product_title', 'img_name']:
+for field in ['section', 'family', 'ls_product_title', 'img_name']:
   df_master[field] =\
      df_master[field].apply(lambda x: x.replace(u'\n', ' ')\
                                          .replace(u'&amp;', u'&').strip())
@@ -226,7 +230,7 @@ df_master.drop(labels = ['title_with_brand'], axis = 1, inplace = True)
 #print u'\nProduct total and unit price overview:'
 #print df_master[['total_price', 'unit_price']].describe()
 
-df_master.to_csv(os.path.join(path_price_source_csv,
+df_master.to_csv(os.path.join(path_source_csv,
                               'df_carrefour_voisins_2015_ref.csv'),
                    encoding = 'utf-8',
                    index = False)
@@ -234,7 +238,7 @@ df_master.to_csv(os.path.join(path_price_source_csv,
 ## ######
 ## BACKUP
 ## ######
-#  for field in ['product_title', 'department', 'sub_department']:
+#  for field in ['product_title', 'section', 'family']:
 #    df_master[field] =\
 #      df_master[field].apply(lambda x: x.strip()\
 #                                          .replace(u'&amp;', u'&')\
@@ -255,26 +259,26 @@ df_period = df_master_int[df_master_int['date'] == date_ex].copy()
 ## Check w/ title (short) vs. title, label, brand
 
 print u'\nNb duplicates based on dpt, sub_dpt, title (short):'
-print len(df_period[df_period.duplicated(['department',
-                                          'sub_department',
+print len(df_period[df_period.duplicated(['section',
+                                          'family',
                                           'title'])])
 
 print u'\nNb duplicates based on dpt, sub_dpt, title, label:'
-print len(df_period[df_period.duplicated(['department',
-                                          'sub_department',
+print len(df_period[df_period.duplicated(['section',
+                                          'family',
                                           'title',
                                           'label'])])
 
 print u'\nNb duplicates based on dpt, sub_dpt, title, label, brand:'
-print len(df_period[df_period.duplicated(['department',
-                                          'sub_department',
+print len(df_period[df_period.duplicated(['section',
+                                          'family',
                                           'title',
                                           'label',
                                           'brand'])])
 
 # Restriction to non ambiguous rows
 
-ls_fordup = ['department', 'sub_department', 'title', 'label', 'brand']
+ls_fordup = ['section', 'family', 'title', 'label', 'brand']
 
 print u'\nNb of ambiguous rows:'
 print len(df_period[(df_period.duplicated(ls_fordup)) |\

@@ -8,17 +8,23 @@ from datetime import date, timedelta
 from functions_generic_drive import *
 import matplotlib.pyplot as plt
 
-path_carrefour = os.path.join(path_data,
-                           u'data_drive_supermarkets',
-                           u'data_carrefour')
+path_source = os.path.join(path_data,
+                              u'data_supermarkets',
+                              u'data_source',
+                              u'data_drive',
+                              u'data_carrefour')
 
-path_price_source_csv = os.path.join(path_carrefour,
-                                     u'data_source',
-                                     u'data_csv_carrefour')
+path_source_csv = os.path.join(path_source,
+                               u'data_csv')
 
-path_price_built_csv = os.path.join(path_carrefour,
-                                    u'data_built',
-                                    u'data_csv_carrefour')
+path_built = os.path.join(path_data,
+                          u'data_supermarkets',
+                          u'data_built',
+                          u'data_drive',
+                          u'data_carrefour')
+
+path_built_csv = os.path.join(path_built,
+                              u'data_csv')
 
 ls_file_names = ['df_carrefour_voisins_20130418_20131128.csv',
                  'df_carrefour_voisins_20131129_20141205.csv',
@@ -26,7 +32,7 @@ ls_file_names = ['df_carrefour_voisins_20130418_20131128.csv',
 
 ls_df_master = []
 for file_name in ls_file_names:
-  ls_df_master.append(pd.read_csv(os.path.join(path_price_source_csv,
+  ls_df_master.append(pd.read_csv(os.path.join(path_source_csv,
                                                file_name),
                       encoding = 'utf-8'))
 
@@ -47,7 +53,7 @@ df_master_2013.loc[df_master_2013['promo'] == u'Prix Promo',
 
 ### UNIQUE PRODUCTS IN 2013-2014
 
-ls_prod_id_cols = ['date', 'department', 'sub_department', 'title', 'label']
+ls_prod_id_cols = ['date', 'section', 'family', 'title', 'label']
 df_dup_2013 = df_master_2013[(df_master_2013.duplicated(ls_prod_id_cols)) |\
                              (df_master_2013.duplicated(ls_prod_id_cols,
                                                         take_last = True))].copy()
@@ -66,7 +72,7 @@ df_dsd_2013 = df_unique_2013[ls_dsd_cols]\
 
 ### UNIQUE PRODUCTS IN 2015
 
-ls_prod_id_cols_2 = ['date', 'department', 'sub_department', 'title', 'label', 'brand']
+ls_prod_id_cols_2 = ['date', 'section', 'family', 'title', 'label', 'brand']
 df_dup_2015 = df_master_2015[(df_master_2015.duplicated(ls_prod_id_cols_2)) |\
                              (df_master_2015.duplicated(ls_prod_id_cols_2,
                                                         take_last = True))].copy()
@@ -130,17 +136,17 @@ print u'\nNb products with at least one promo: {:d}'\
 # OUTPUT FINAL DATA
 # ##################
 
-df_master_2013.to_csv(os.path.join(path_price_built_csv,
+df_master_2013.to_csv(os.path.join(path_built_csv,
                                  'df_master_voisins_2013_2014.csv'),
                       encoding = 'utf-8',
                       index = False)
 
-df_dsd_2013.to_csv(os.path.join(path_price_built_csv,
+df_dsd_2013.to_csv(os.path.join(path_built_csv,
                                 'df_products_voisins_2013_2014.csv'),
                    encoding = 'utf-8',
                    index = False)
 
-df_unique_2013.to_csv(os.path.join(path_price_built_csv,
+df_unique_2013.to_csv(os.path.join(path_built_csv,
                                    'df_prices_voisins_2013_2014.csv'),
                       encoding = 'utf-8',
                       index = False)
@@ -216,7 +222,7 @@ df_brand_promo.sort('nb_prods', ascending = False, inplace = True)
 # Nb products
 df_dpt_nb_prod = df_master_2013.pivot_table(values='total_price',
                                             index='date',
-                                            columns='department',
+                                            columns='section',
                                             aggfunc='count')
 df_dpt_nb_prod.index = pd.to_datetime(df_dpt_nb_prod.index, format = '%Y%m%d')
 df_dpt_nb_prod = df_dpt_nb_prod.reindex(index_overview, fill_value = np.nan)
@@ -227,7 +233,7 @@ df_dpt_nb_prod = df_dpt_nb_prod.reindex(index_overview, fill_value = np.nan)
 df_dpt_nb_promo = df_master_2013[~df_master_2013['promo'].isnull()]\
                     .pivot_table(values='total_price',
                                  index='date',
-                                 columns='department',
+                                 columns='section',
                                  aggfunc='count')
 df_dpt_nb_promo.index = pd.to_datetime(df_dpt_nb_promo.index, format = '%Y%m%d')
 df_dpt_nb_promo = df_dpt_nb_promo.reindex(index_overview, fill_value = np.nan)
@@ -258,7 +264,7 @@ plt.show()
 # Nb products
 df_subdpt_nb_prod = df_master_2013.pivot_table(values='total_price',
                                           index='date',
-                                          columns=['department', 'sub_department'],
+                                          columns=['section', 'family'],
                                           aggfunc='count')
 df_subdpt_nb_prod.index = pd.to_datetime(df_subdpt_nb_prod.index, format = '%Y%m%d')
 df_subdpt_nb_prod = df_subdpt_nb_prod.reindex(index_overview, fill_value = np.nan)
@@ -282,10 +288,10 @@ print u"\nNb of subdpts with 100 products Q75% days: {:d} among {:d}"\
                   len(df_subdpt_desc))
 
 # Nb products: focus on one departement (drop?) 
-df_sdpt_nb_prod = df_master_2013[df_master_2013['department'] == u'Maison & Entretien']\
+df_sdpt_nb_prod = df_master_2013[df_master_2013['section'] == u'Maison & Entretien']\
                   .pivot_table(values='total_price',
                                index='date',
-                               columns='sub_department',
+                               columns='family',
                                aggfunc='count')
 df_sdpt_nb_prod.index = pd.to_datetime(df_sdpt_nb_prod.index, format = '%Y%m%d')
 df_sdpt_nb_prod = df_sdpt_nb_prod.reindex(index_overview, fill_value = np.nan)
@@ -296,7 +302,7 @@ df_sdpt_nb_prod = df_sdpt_nb_prod.reindex(index_overview, fill_value = np.nan)
 df_subdpt_nb_promo = df_master_2013[~df_master_2013['promo'].isnull()]\
                        .pivot_table(values='total_price',
                                     index='date',
-                                    columns=['department', 'sub_department'],
+                                    columns=['section', 'family'],
                                     aggfunc='count')
 df_subdpt_nb_promo.index = pd.to_datetime(df_subdpt_nb_promo.index, format = '%Y%m%d')
 df_subdpt_nb_promo = df_subdpt_nb_promo.reindex(index_overview, fill_value = np.nan)

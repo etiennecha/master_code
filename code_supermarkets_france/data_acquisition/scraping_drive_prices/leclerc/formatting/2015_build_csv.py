@@ -7,25 +7,30 @@ import os
 from datetime import date, timedelta
 from functions_generic_drive import *
 
-path_leclerc = os.path.join(path_data,
-                            u'data_supermarkets',
-                            u'data_drive',
-                            u'data_leclerc')
+path_source = os.path.join(path_data,
+                           u'data_supermarkets',
+                           u'data_source',
+                           u'data_drive',
+                           u'data_leclerc')
 
-path_price_source = os.path.join(path_leclerc,
-                                 u'data_source',
-                                 u'data_json_leclerc')
+path_source_json = os.path.join(path_source,
+                               u'data_json')
 
-path_price_built_csv = os.path.join(path_leclerc,
-                                    u'data_built',
-                                    u'data_csv_leclerc')
+path_built = os.path.join(path_data,
+                          u'data_supermarkets',
+                          u'data_built',
+                          u'data_drive',
+                          u'data_leclerc')
+
+path_built_csv = os.path.join(path_built,
+                              u'data_csv')
 
 # ###########################
 # CHECK ONE FILE WITH PANDAS
 # ###########################
 
 date_str = '20150508'
-path_file = os.path.join(path_price_source,
+path_file = os.path.join(path_source_json,
                          '{:s}_dict_leclerc'.format(date_str))
 dict_period = dec_json(path_file)
 
@@ -46,7 +51,7 @@ ls_fields = dict_fields.keys()
 # BUILD DF MASTER
 # ###################
 
-path_temp = path_price_source
+path_temp = path_source_json
 start_date, end_date = date(2015,5,7), date(2015,6,28)
 ls_dates = get_date_range(start_date, end_date)
 ls_df_products = []
@@ -192,11 +197,11 @@ df_master['promo'] =\
 # OUTPUT
 # ############
 
-df_master.rename(columns = {u'dpt': u'department',
-                            u'sub_dpt': u'sub_department'},
+df_master.rename(columns = {u'dpt': u'section',
+                            u'sub_dpt': u'family'},
                  inplace = True)
 
-ls_dup_id_cols = ['store', 'date', 'department', 'sub_department', 'idProduit']
+ls_dup_id_cols = ['store', 'date', 'section', 'family', 'idProduit']
 
 df_master_nodup =\
   df_master[~((df_master.duplicated(ls_dup_id_cols)) |\
@@ -211,7 +216,7 @@ ls_price_cols = ['store', 'date',
 
 df_prices = df_master_nodup[ls_price_cols].drop_duplicates(ls_price_cols[:3])
 
-ls_product_cols = ['department', 'sub_department',
+ls_product_cols = ['section', 'family',
                    'idProduit', 'title', 'brand', 'label',
                    'idRayon', 'idFamille', 'idSousFamille']
 

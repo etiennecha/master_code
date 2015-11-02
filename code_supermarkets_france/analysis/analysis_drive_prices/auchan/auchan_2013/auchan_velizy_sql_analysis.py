@@ -14,13 +14,14 @@ import matplotlib.pyplot as plt
 import pprint
 from collections import Counter
 
-path_auchan = os.path.join(path_data,
-                           u'data_drive_supermarkets',
-                           u'data_auchan')
+path_built = os.path.join(path_data,
+                          u'data_supermarkets',
+                          u'data_built',
+                          u'data_drive',
+                          u'data_auchan')
 
-path_built_sql = os.path.join(path_auchan,
-                              u'data_built',
-                              u'data_sql_auchan_velizy')
+path_built_sql = os.path.join(path_built,
+                              'data_sql_velizy')
 
 def dec_json(file_path):
   """Reads a json file."""
@@ -91,7 +92,12 @@ print 'Nb of records in table:', cursor.fetchall()[0][0]
 # ###############
 # PRICE ANALYSIS
 # ###############
-
+list_periods = [row[0] for row\
+                   in cursor.execute("SELECT DISTINCT period \
+                                        FROM auchan_velizy")]
+list_periods.sort()
+dict_periods = {int_date : i for i, int_date in enumerate(list_periods)}
+                   
 list_sub_departments = [row[0] for row\
                           in cursor.execute("SELECT DISTINCT sub_department \
                                                FROM auchan_velizy")]
@@ -138,10 +144,9 @@ for sub_department in list_sub_departments[0:1]:
   # TODO : try to improve performance
   list_price_series = []
   for list_product_prices in list_list_prices_cond:
-    dico_period_prices = {}
+    price_series = [np.nan for i in range(len(list_periods))]
     for (price, period) in list_product_prices:
-      dico_period_prices[period] = price
-    price_series = [dico_period_prices.get(i, np.nan) for i in range(104)] # must give nb of periods
+      price_series[dict_periods[period]] = price
     list_price_series.append(price_series)
   # 3/ compute price stats
   dict_price_stats = {'ls_means':[],
@@ -151,15 +156,17 @@ for sub_department in list_sub_departments[0:1]:
   for price_series in list_price_series:
     # TODO: exclude price_series where too many values are missing
     price_changes_series = np.array(price_series[1:]) - np.array(price_series[:-1])
-    price_changes_series_abs = np.abs(price_changes_series)
-    price_series = ma.masked_invalid(price_series)
-    price_changes_series_abs = ma.masked_invalid(ma.masked_invalid(price_changes_series_abs))
-    dict_price_stats['ls_means'].append(np.mean(price_series))
-    dict_price_stats['ls_ranges'].append(np.max(price_series)-np.min(price_series))
-    dict_price_stats['ls_nb_changes'].append(\
-        len(price_changes_series_abs[price_changes_series_abs>0]))
-    dict_price_stats['ls_mean_change_abs'].append(\
-        np.mean(price_changes_series_abs[price_changes_series_abs>0]))
+    price_changes_series_abs = np.abs(price_changes_series[~np.isnan(price_changes_series)])
+    dict_price_stats['ls_means'].append(np.nanmean(price_series))
+    dict_price_stats['ls_ranges'].append(np.nanmax(price_series)-np.nanmin(price_series))
+    if len(price_changes_series_abs[price_changes_series_abs>0]) != 0:
+      dict_price_stats['ls_nb_changes'].append(\
+          len(price_changes_series_abs[price_changes_series_abs > 1e-05]))
+      dict_price_stats['ls_mean_change_abs'].append(\
+          np.nanmean(price_changes_series_abs[price_changes_series_abs > 1e-05]))
+    else:
+      dict_price_stats['ls_nb_changes'].append(np.nan)
+      dict_price_stats['ls_mean_change_abs'].append(np.nan)
   dict_stats_des[sub_department] = dict_price_stats
   # print sub_department
   # pprint.pprint(get_relative_frequency(dict(Counter(dict_price_stats['list_nb_changes']))))

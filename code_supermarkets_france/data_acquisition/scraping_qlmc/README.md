@@ -4,7 +4,7 @@ This repository contains the code used to collect price data from the comparison
 The website offers the possibility to compare prices between a given Leclerc store and one of its competitors (within a selection made by comparison website). An overall result is displayed as a percentage, which takes into account prices of all products available at both store in the website's data  (no weighting). The website also offers the possibility to create and compare bundles of goods.
 Data obtained through the scraping of the website include a sample of prices at c. 1,800 supermarkets and hypermarkets across France in March 2015.
 
-The first section provides a brief description of available data. The Scraping and Formatting section gives an overview of scripts contained in this repository.
+The first section provides a brief description of available data. The Scripts section gives an overview of the code contained in this repository.
 
 ----------
 
