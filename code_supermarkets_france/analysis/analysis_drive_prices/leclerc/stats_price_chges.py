@@ -27,7 +27,13 @@ for df_file_title in ls_df_leclerc_2015:
   dict_df[df_file_title] =\
     pd.read_csv(os.path.join(path_built_csv,
                              '{:s}.csv'.format(df_file_title)),
-                dtype = {'date' : str},
+                dtype = {'date' : str,
+                         'lib_0' : str,
+                         'lib_1' : str,
+                         'loyalty': str,
+                         'promo_per_unit' : str,
+                         'lib_promo' : str,
+                         'dum_promo' : bool},
                 encoding = 'utf-8')
 
 df_master = dict_df['df_master_leclerc_2015']
@@ -126,6 +132,10 @@ df_prices_sc = df_prices_s.pivot(index = 'date',
                                  values = 'total_price')
 df_prices_sc.index= pd.to_datetime(df_prices_sc.index,
                                    format = '%Y%m%d')
+index_dr = pd.date_range(df_prices_sc.index[0],
+                         df_prices_sc.index[-1],
+                         freq = 'D')
+df_prices_sc = df_prices_sc.reindex(index_dr)
 
 # Build df with product prices incl promo in columns
 # Some promo have promo == 0 (e.g. buy 4 products to get discount)
@@ -138,8 +148,10 @@ df_prices_spc = df_prices_sp.pivot(index = 'date',
                                    values = 'total_price')
 df_prices_spc.index= pd.to_datetime(df_prices_spc.index,
                                     format = '%Y%m%d')
-
-
+index_dr = pd.date_range(df_prices_spc.index[0],
+                         df_prices_spc.index[-1],
+                         freq = 'D')
+df_prices_spc = df_prices_spc.reindex(index_dr)
 
 # todo:
 # - can fill backward to count chges in prices
@@ -177,4 +189,8 @@ print df_prod_chges.describe().to_string()
 print df_prod_chges[df_prod_chges['nb_chges_promo'] < 0].to_string()
 
 # Interesting (non captured) promo and price vars
-# print df_prices_s[df_prices_s['idProduit'] == 2588].to_string()
+
+lsd_pp = ['date', 'idProduit', 'brand', 'title', 'label',
+          'total_price', 'promo', 'lib_promo', 'dum_promo',
+          'unit', 'promo_per_unit', 'family', 'section']
+print df_prices_s[lsd_pp][df_prices_s['idProduit'] == 2588].to_string(index=False)
