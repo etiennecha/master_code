@@ -7,14 +7,14 @@ import os
 from datetime import date, timedelta
 from functions_generic_drive import *
 
-path_leclerc = os.path.join(path_data,
-                            u'data_supermarkets',
-                            u'data_drive',
-                            u'data_leclerc')
+path_built = os.path.join(path_data,
+                          u'data_supermarkets',
+                          u'data_built',
+                          u'data_drive',
+                          u'data_leclerc')
 
-path_price_built_csv = os.path.join(path_leclerc,
-                                    u'data_built',
-                                    u'data_csv_leclerc')
+path_built_csv = os.path.join(path_built,
+                              u'data_csv')
 
 ls_df_leclerc_2015 = ['df_master_leclerc_2015',
                       'df_prices_leclerc_2015',
@@ -25,7 +25,7 @@ ls_disp_prod = ['idProduit', 'title', 'label']
 dict_df = {}
 for df_file_title in ls_df_leclerc_2015:
   dict_df[df_file_title] =\
-    pd.read_csv(os.path.join(path_price_built_csv,
+    pd.read_csv(os.path.join(path_built_csv,
                              '{:s}.csv'.format(df_file_title)),
                 dtype = {'date' : str},
                 encoding = 'utf-8')
@@ -34,9 +34,11 @@ df_master = dict_df['df_master_leclerc_2015']
 df_prices = dict_df['df_prices_leclerc_2015']
 df_products = dict_df['df_products_leclerc_2015']
 
-# ######
-# TEMP
-# ######
+# #########################
+# CHECK NAN AND DUPLICATES
+# #########################
+
+# todo: move to formatting?
 
 print u'\nNb rows with nan a. everywhere {:d}'.format(\
        len(df_master[pd.isnull(df_master['label']) &\
@@ -45,11 +47,13 @@ print u'\nNb rows with nan a. everywhere {:d}'.format(\
 df_master = df_master[~(pd.isnull(df_master['label']) &\
                         pd.isnull(df_master['total_price']))]
 
+# Can one idProduit be in several families? YES
 ls_dup_cols_0 = ['store', 'date', 'idProduit']
 df_dup_0 = df_master[df_master.duplicated(ls_dup_cols_0, take_last = False) |
                      df_master.duplicated(ls_dup_cols_0, take_last = True)].copy()
 df_dup_0.sort(ls_dup_cols_0, inplace = True)
 
+# Do duplicate idProduit (several families) have the same price? YES
 ls_dup_cols_1 = ['store', 'date', 'idProduit', 'unit_price']
 df_dup_1 = df_master[df_master.duplicated(ls_dup_cols_1, take_last = False) |
                      df_master.duplicated(ls_dup_cols_1, take_last = True)].copy()
@@ -58,15 +62,24 @@ ls_dup_pbms = list(set(df_dup_0.index).difference(set(df_dup_1.index)))
 ls_id_prod_pbms = df_master.ix[ls_dup_pbms]['idProduit'].unique().tolist()
 df_pbms = df_master[df_master['idProduit'].isin(ls_id_prod_pbms)].copy()
 df_pbms.sort(['store', 'date', 'idProduit'], inplace = True)
-# print df_pbms[0:100].to_string() # many with nan almost everywhere in row
+#print df_pbms[0:10].to_string()
 
-# Pbm : label is not one-to-one with idProduit
-df_u_idP = df_master.drop_duplicates(['idProduit'])
-df_amb_prod = df_u_idP[df_u_idP.duplicated(['brand', 'title', 'label'], take_last = True) |\
-                       df_u_idP.duplicated(['brand', 'title', 'label'], take_last = False)].copy()
+# todo:
+# keep info about families products are listed in
+# drop duplicate product lines
+
+# Check if idProduit 1-to-1 with (brand, title, label) => NO => use idProduit
+df_u_idP = df_master[['idProduit', 'brand', 'title', 'label']]\
+                    .drop_duplicates(['idProduit'])
+ls_dup_idP = ['brand', 'title', 'label']
+df_amb_prod = df_u_idP[df_u_idP.duplicated(ls_dup_idP, take_last = True) |\
+                       df_u_idP.duplicated(ls_dup_idP, take_last = False)].copy()
 df_amb_prod.sort(['brand', 'title', 'label'], inplace = True)
+print u'\nOverview diff idProduit for same (brand, title, label):'
 print df_amb_prod[0:10].to_string()
-
+#print df_master[(df_master['idProduit'].isin([8025, 8024])) &\
+#                (df_master['store'] == 'Clermont Ferrand')].to_string()
+# Drop them for now
 ls_drop_idP = df_amb_prod['idProduit'].unique().tolist()
 df_master = df_master[~df_master['idProduit'].isin(ls_drop_idP)]
 
@@ -78,7 +91,7 @@ df_prices = df_master[['date', 'store', 'idProduit',
                        'dum_promo', 'lib_0', 'loyalty']]\
               .drop_duplicates(['store', 'date', 'idProduit'])
 
-df_products = df_master[['department', 'sub_department',
+df_products = df_master[['section', 'family',
                          'brand', 'title', 'label',
                          'idProduit',
                          'idRayon', 'idFamille', 'idSousFamille']]\
@@ -127,7 +140,8 @@ print df_nb_loyalty.to_string()
 # GENERAL OVERVIEW: DYNAMIC
 # #########################
 
-df_temp = df_prices[~df_prices['loyalty'].isnull()] # df_prices[df_prices['dum_promo'] == True]
+df_temp = df_prices[~df_prices['loyalty'].isnull()]
+# df_prices[df_prices['dum_promo'] == True]
 df_nb_temp = df_nb_loyalty # df_nb_promo
 
 # todo: nb new/old products, promo etc.
@@ -246,7 +260,7 @@ ls_se_dpts = []
 for ind in df_dstock.index:
   ls_ids = list(df_dstock.ix[ind][df_dstock.ix[ind] > 0].index)
   ls_se_dpts.append(df_products[df_products['idProduit'].isin(ls_ids)]\
-                      ['department'].value_counts())
+                      ['section'].value_counts())
 print pd.concat(ls_se_dpts,
                 axis = 1,
                 keys = df_dstock.index).fillna(0).T.to_string()
@@ -262,7 +276,8 @@ df_total_price = df_store_prices.pivot(index = 'date',
                                        values = 'total_price')
 df_dtotal_price = df_total_price - df_total_price.shift(1)
 
-df_dtotal_price.index = pd.to_datetime(df_dtotal_price.index, format = '%Y%m%d')
+df_dtotal_price.index = pd.to_datetime(df_dtotal_price.index,
+                                       format = '%Y%m%d')
 
 print u'\nNb price chges per period:'
 se_pos_vars = df_dtotal_price.apply(lambda x: (x>0).sum(), axis = 1)
@@ -288,7 +303,8 @@ df_prod_temp.sort('nb_price_vars', ascending = False, inplace = True)
 print df_prod_temp[0:100].to_string()
 
 # Exemple (todo: fill index + put stock on right axis)
-df_store_prices['date'] = pd.to_datetime(df_store_prices['date'], format = '%Y%m%d')
+df_store_prices['date'] = pd.to_datetime(df_store_prices['date'],
+                                         format = '%Y%m%d')
 df_product = df_store_prices[['total_price', 'promo', 'stock', 'date']]\
                [df_store_prices['idProduit'] == 34305] # 40204
 df_product.set_index('date', inplace = True)

@@ -7,14 +7,14 @@ import os
 from datetime import date, timedelta
 from functions_generic_drive import *
 
-path_leclerc = os.path.join(path_data,
-                            u'data_supermarkets',
-                            u'data_drive',
-                            u'data_leclerc')
+path_built = os.path.join(path_data,
+                          u'data_supermarkets',
+                          u'data_built',
+                          u'data_drive',
+                          u'data_leclerc')
 
-path_price_built_csv = os.path.join(path_leclerc,
-                                    u'data_built',
-                                    u'data_csv_leclerc')
+path_built_csv = os.path.join(path_built,
+                              u'data_csv')
 
 ls_df_leclerc_2015 = ['df_master_leclerc_2015',
                       'df_prices_leclerc_2015',
@@ -25,7 +25,7 @@ ls_disp_prod = ['idProduit', 'title', 'label']
 dict_df = {}
 for df_file_title in ls_df_leclerc_2015:
   dict_df[df_file_title] =\
-    pd.read_csv(os.path.join(path_price_built_csv,
+    pd.read_csv(os.path.join(path_built_csv,
                              '{:s}.csv'.format(df_file_title)),
                 dtype = {'date' : str},
                 encoding = 'utf-8')
@@ -62,8 +62,9 @@ df_pbms.sort(['store', 'date', 'idProduit'], inplace = True)
 
 # Pbm : label is not one-to-one with idProduit
 df_u_idP = df_master.drop_duplicates(['idProduit'])
-df_amb_prod = df_u_idP[df_u_idP.duplicated(['brand', 'title', 'label'], take_last = True) |\
-                       df_u_idP.duplicated(['brand', 'title', 'label'], take_last = False)].copy()
+ls_dup_idP = ['brand', 'title', 'label']
+df_amb_prod = df_u_idP[df_u_idP.duplicated(ls_dup_idP, take_last = True) |\
+                       df_u_idP.duplicated(ls_dup_idP, take_last = False)].copy()
 df_amb_prod.sort(['brand', 'title', 'label'], inplace = True)
 print df_amb_prod[0:10].to_string()
 
@@ -78,7 +79,7 @@ df_prices = df_master[['date', 'store', 'idProduit',
                        'dum_promo', 'lib_0', 'loyalty']]\
               .drop_duplicates(['store', 'date', 'idProduit'])
 
-df_products = df_master[['department', 'sub_department',
+df_products = df_master[['section', 'family',
                          'brand', 'title', 'label',
                          'idProduit',
                          'idRayon', 'idFamille', 'idSousFamille']]\

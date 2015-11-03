@@ -227,7 +227,7 @@ dict_leclerc_2015 = {'df_master_leclerc_2015' : df_master,
                      'df_products_leclerc_2015': df_products}
 
 for file_title, df_file in dict_leclerc_2015.items():
-  df_file.to_csv(os.path.join(path_price_built_csv,
+  df_file.to_csv(os.path.join(path_built_csv,
                               '{:s}.csv'.format(file_title)),
                    encoding = 'utf-8',
                    float_format='%.2f',
