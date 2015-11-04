@@ -165,13 +165,13 @@ df_prices_spc = df_prices_spc.reindex(index_dr)
 # caution: inspect when both promo chges and non promo chges
 
 df_prices_scf = df_prices_sc.fillna(method = 'bfill',
-                                    axis = 'columns')
+                                    axis = 'index')
 df_prices_scfd = df_prices_scf - df_prices_scf.shift(1)
 se_scfd_nb_chges = df_prices_scfd.apply(lambda x: (x.abs()>0).sum(),
                                         axis = 0)
 
 df_prices_spcf = df_prices_spc.fillna(method = 'bfill',
-                                      axis = 'columns')
+                                      axis = 'index')
 df_prices_spcfd = df_prices_spcf - df_prices_spcf.shift(1)
 se_spcfd_nb_chges = df_prices_spcfd.apply(lambda x: (x.abs()>0).sum(),
                                           axis = 0)
