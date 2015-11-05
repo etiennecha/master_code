@@ -209,6 +209,11 @@ df_prod_promo.sort(['nb_stores', 'date', 'brand', 'title', 'label'],
 print df_prod_promo[0:20].to_string()
 # print df_prod_promo[df_prod_promo['nb_stores'] == 10].to_string()
 
+# todo: nb shared promos by pairs (a bit like a corr table)
+# for one store: nb promos unique or shared w/ one other, two etc.
+# brands of promo products?
+# no need for too much dynamic analysis => check other data
+
 # ################
 # STORE PRICE VARS
 # ################
@@ -227,7 +232,8 @@ df_master['product'] = df_master['brand'] + ' _ ' +\
                          df_master['title'] + ' _ '+\
                            df_master['label']
 
-df_master_s = df_master[df_master['store'] == '91 - LES ULIS']
+# df_master_s = df_master[df_master['store'] == '91 - LES ULIS']
+df_master_s = df_master[df_master['store'] == '78 - VOISINS LE BRETONNEUX']
 
 # Build df store products (idProduit not unique: several families)
 lsd_prod = ['product', 'brand', 'title', 'label', 'family', 'section']
