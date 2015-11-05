@@ -8,6 +8,8 @@ from datetime import date, timedelta
 from functions_generic_drive import *
 import matplotlib.pyplot as plt
 
+pd.set_option('display.float_format', '{:,.2f}'.format)
+
 path_built = os.path.join(path_data,
                            u'data_supermarkets',
                            u'data_built',
@@ -33,8 +35,6 @@ for df_file_title in ls_df_voisins_2013_2014:
 df_master   = dict_df['df_master_voisins_2013-14']
 df_prices   = dict_df['df_prices_voisins_2013-14']
 df_products = dict_df['df_products_voisins_2013-14']
-
-pd.set_option('display.float_format', '{:,.2f}'.format)
 
 # ##################
 # FIX PROMO (MOVE?)
@@ -191,50 +191,52 @@ print df_section_promo.corr().to_string()
 ##df_dpt_nb_promo[se_avg_dpt_nb_prod.index[0:2]][200:500].plot()
 ##plt.show()
 
-#### SUBDEPARTMENTS: NB PRODUCTS AND PROMO
-#
-## Nb products
-#df_subdpt_nb_prod = df_master_2013.pivot_table(values='total_price',
-#                                          index='date',
-#                                          columns=['section', 'family'],
-#                                          aggfunc='count')
-#df_subdpt_nb_prod.index = pd.to_datetime(df_subdpt_nb_prod.index, format = '%Y%m%d')
-#df_subdpt_nb_prod = df_subdpt_nb_prod.reindex(index_overview, fill_value = np.nan)
-#
-#se_subdpt_max = df_subdpt_nb_prod.max()
-#df_subdpt_desc = df_subdpt_nb_prod.describe().T
-#
-##print df_subdpt_desc.to_string()
-#
-## looks like never more than 100
-## did not go beyond first page for each subdpt
-## check with other dpts
-## then only got a sample of products... compare with more recent data then
-#
-#print u"\nNb of subdpts with 100 products at least once: {:d} among {:d}"\
-#          .format(len(df_subdpt_desc[df_subdpt_desc['max'] == 100]),
-#                  len(df_subdpt_desc))
-#
-#print u"\nNb of subdpts with 100 products Q75% days: {:d} among {:d}"\
-#          .format(len(df_subdpt_desc[df_subdpt_desc['75%'] == 100]),
-#                  len(df_subdpt_desc))
-#
-## Nb products: focus on one departement (drop?) 
-#df_sdpt_nb_prod = df_master_2013[df_master_2013['section'] == u'Maison & Entretien']\
-#                  .pivot_table(values='total_price',
-#                               index='date',
-#                               columns='family',
-#                               aggfunc='count')
-#df_sdpt_nb_prod.index = pd.to_datetime(df_sdpt_nb_prod.index, format = '%Y%m%d')
-#df_sdpt_nb_prod = df_sdpt_nb_prod.reindex(index_overview, fill_value = np.nan)
-##df_sdpt_nb_prod.plot(ylim = (0,150))
-##plt.show()
-#
-## Nb promo
-#df_subdpt_nb_promo = df_master_2013[~df_master_2013['promo'].isnull()]\
-#                       .pivot_table(values='total_price',
-#                                    index='date',
-#                                    columns=['section', 'family'],
-#                                    aggfunc='count')
-#df_subdpt_nb_promo.index = pd.to_datetime(df_subdpt_nb_promo.index, format = '%Y%m%d')
-#df_subdpt_nb_promo = df_subdpt_nb_promo.reindex(index_overview, fill_value = np.nan)
+# #####################################
+# SUBDEPARTMENTS: NB PRODUCTS AND PROMO
+# #####################################
+
+# Nb products
+df_subdpt_nb_prod = df_master.pivot_table(values='total_price',
+                                          index='date',
+                                          columns=['section', 'family'],
+                                          aggfunc='count')
+df_subdpt_nb_prod.index = pd.to_datetime(df_subdpt_nb_prod.index, format = '%Y%m%d')
+df_subdpt_nb_prod = df_subdpt_nb_prod.reindex(ind_overview, fill_value = np.nan)
+
+se_subdpt_max = df_subdpt_nb_prod.max()
+df_subdpt_desc = df_subdpt_nb_prod.describe().T
+
+#print df_subdpt_desc.to_string()
+
+# looks like never more than 100
+# did not go beyond first page for each subdpt
+# check with other dpts
+# then only got a sample of products... compare with more recent data then
+
+print u"\nNb of subdpts with 100 products at least once: {:d} among {:d}"\
+          .format(len(df_subdpt_desc[df_subdpt_desc['max'] == 100]),
+                  len(df_subdpt_desc))
+
+print u"\nNb of subdpts with 100 products Q75% days: {:d} among {:d}"\
+          .format(len(df_subdpt_desc[df_subdpt_desc['75%'] == 100]),
+                  len(df_subdpt_desc))
+
+# Nb products: focus on one departement (drop?) 
+df_sdpt_nb_prod = df_master[df_master['section'] == u'Maison & Entretien']\
+                  .pivot_table(values='total_price',
+                               index='date',
+                               columns='family',
+                               aggfunc='count')
+df_sdpt_nb_prod.index = pd.to_datetime(df_sdpt_nb_prod.index, format = '%Y%m%d')
+df_sdpt_nb_prod = df_sdpt_nb_prod.reindex(ind_overview, fill_value = np.nan)
+#df_sdpt_nb_prod.plot(ylim = (0,150))
+#plt.show()
+
+# Nb promo
+df_subdpt_nb_promo = df_master[~df_master['promo'].isnull()]\
+                       .pivot_table(values='total_price',
+                                    index='date',
+                                    columns=['section', 'family'],
+                                    aggfunc='count')
+df_subdpt_nb_promo.index = pd.to_datetime(df_subdpt_nb_promo.index, format = '%Y%m%d')
+df_subdpt_nb_promo = df_subdpt_nb_promo.reindex(ind_overview, fill_value = np.nan)
