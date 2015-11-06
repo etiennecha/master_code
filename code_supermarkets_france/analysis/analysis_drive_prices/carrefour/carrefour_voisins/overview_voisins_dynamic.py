@@ -104,12 +104,16 @@ df_prices_scfd = df_prices_scf - df_prices_scf.shift(1)
 se_scfd_nb_chges = df_prices_scfd.apply(lambda x: (x.abs()>0).sum(),
                                         axis = 0)
 
+# Count days by products in df_master_s
+se_prod_days = df_prices_s['product'].value_counts()
+
 # Count promo days by product in df_master_s
 se_prod_promo_days = df_prices_s[df_prices_s['dum_promo']]\
                        ['product'].value_counts()
 
 # Caution: one line per ('section', 'family', 'product'):
 df_products_s.set_index('product', inplace = True)
+df_products_s['nb_days'] = se_prod_days
 df_products_s['nb_chges'] = se_scfd_nb_chges
 df_products_s['nb_promo_days'] = se_prod_promo_days
 
@@ -139,5 +143,27 @@ ax = df_prices_sc[u"1664 _ " +\
                   u"les 12 bouteilles de 25cl"].plot()
 plt.show()
 
+# ###################
+# PRODUCT PROMOTIONS
+# ###################
+
 # todo: apply promotion detections: inverse price movements
 # todo: use promo info (if any?)
+
+#se_prod_nb_promo_days = df_prices_s[['product', 'promo']].groupby('product').agg('count')
+se_prod_nb_promo_types = df_prices_s[['product', 'promo']]\
+                                    .drop_duplicates(['product', 'promo'])\
+                                    .groupby('product').agg('count')['promo']
+
+df_products_s['nb_promo_types'] = se_prod_nb_promo_types
+
+df_u_products_s = df_products_s.drop_duplicates(['brand', 'title', 'label'])
+
+print u'Describe (unique) products:'
+print df_u_products_s.describe().to_string()
+
+print u'\nNb products always in promo:',\
+        len(df_u_products_s[df_u_products_s['nb_days'] == df_u_products_s['nb_promo_days']])
+
+# todo: inspect products which don't last long
+print df_u_products_s[df_u_products_s['nb_days'] <= 20][0:100].to_string(index=False)
