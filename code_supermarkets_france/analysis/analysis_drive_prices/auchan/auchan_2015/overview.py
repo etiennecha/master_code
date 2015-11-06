@@ -32,45 +32,53 @@ df_master   = dict_df['df_master_auchan_2015']
 df_prices   = dict_df['df_prices_auchan_2015']
 df_products = dict_df['df_products_auchan_2015']
 
-# #####
-# TEMP
-# ######
 
-# todo: move to data production
+# ##################
+# FIX PROMO/LOYALTY
+# ##################
 
-# #############
-# FIX dum_promo
+# For now: promo vignette takes 3 values (if not null):
+# - "op op-promo-long"
+# - "op op-promo"
+# - "op op-waaoh"
 
-# Create Boolean
+# promo: contains all info about promo or loyalty
+
 for df_temp in [df_master, df_prices]:
-  df_temp.loc[df_temp['dum_promo'] == 'yes', 'dum_promo'] = True
-  df_temp.loc[df_temp['dum_promo'] == 'no', 'dum_promo'] = False
-
-# Check if dum_promo trustworthy
-print u'\nNb true dum_promo and empty promo_vignette: {:d}'.format(\
-        len(df_master[(df_master['dum_promo']) &\
-                      (pd.isnull(df_master['promo_vignette']))]))
-
-print u'\nNb false dum_promo and non empty promo_vignette: {:d}'.format(\
-        len(df_master[(~df_master['dum_promo']) &\
-                      (~pd.isnull(df_master['promo_vignette']))]))
-
-# Set dum_promo to True if promo_vignette not empty
-df_master.loc[(~df_master['dum_promo']) &\
-              (~pd.isnull(df_master['promo_vignette'])),
-              'dum_promo'] = True
-
-# Separate loyalty and promo (how?)
-df_master['dum_loyalty'] = False
-df_master.loc[(df_master['promo_vignette'] == 'op op-waaoh'),
+  # create loyalty dummy
+  df_temp['dum_loyalty'] = False
+  df_temp.loc[(df_temp['promo_vignette'] == u'op op-waaoh') |\
+              (df_temp['promo'].str.contains(u'waaoh',
+                                                      case = False,
+                                                      na = False)) |\
+              (df_temp['promo'].str.contains(u'cagnott',
+                                                      case = False,
+                                                      na = False)) |\
+              (df_temp['promo'].str.contains(u'fidélité',
+                                                      case = False,
+                                                      na = False)),
               'dum_loyalty'] = True
-df_master.loc[df_master['promo_vignette'] == 'op op-waaoh',
-              'dum_promo'] = False
+  # create promo dummy
+  df_temp['dum_promo'] = False
+  df_temp.loc[((~df_temp['promo_vignette'].isnull()) |\
+               (~df_temp['promo'].isnull())) &\
+              (~df_temp['dum_loyalty']),
+              'dum_promo'] = True
+  # create loyalty field, fill if must be and then erase promo
+  df_temp['loyalty'] = None
+  df_temp.loc[df_temp['dum_loyalty'],
+              'loyalty'] = df_temp['promo']
+  df_temp.loc[df_temp['dum_loyalty'],
+              'promo'] = None
 
-# TODO: separate loyalty and promo in vignette, promo, img
+## Check consistency (looks ok)
+#print df_master['dum_promo'].value_counts()
+#print df_master['dum_loyalty'].value_counts()
+#print df_master['promo_vignette'].value_counts()
 
 # #######################
 # FIX PRODUCT DUPLICATES
+# #######################
 
 # Need to uniquely identify products within date/store
 
@@ -106,7 +114,7 @@ ls_dup_cols_a = ['date', 'store', 'title']
 df_dup_a = df_master[df_master.duplicated(ls_dup_cols_a, take_last = False) |\
                      df_master.duplicated(ls_dup_cols_a, take_last = True)].copy()
 
-ls_dup_cols_b = ['date', 'store', 'title', 'total_price', 'unit_price', 'promo_vignette']
+ls_dup_cols_b = ['date', 'store', 'title', 'total_price', 'unit_price', 'promo']
 df_dup_b = df_master[df_master.duplicated(ls_dup_cols_b, take_last = False) |\
                      df_master.duplicated(ls_dup_cols_b, take_last = True)].copy()
 
