@@ -5,10 +5,14 @@ import add_to_path
 from add_to_path import path_data
 from functions_generic_qlmc import *
 
+path_dir_insee_extracts = os.path.join(path_data,
+                                       'data_insee',
+                                       'data_extracts')
+
 path_built = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_lsa')
+                          'data_supermarkets',
+                          'data_built',
+                          'data_lsa')
 
 path_built_csv = os.path.join(path_built,
                               'data_csv')
@@ -16,9 +20,11 @@ path_built_csv = os.path.join(path_built,
 path_built_json = os.path.join(path_built,
                                'data_json')
 
-path_dir_insee_extracts = os.path.join(path_data,
-                                       'data_insee',
-                                       'data_extracts')
+path_built_comp_csv = os.path.join(path_built_csv,
+                                   '201407_competition')
+
+path_built_comp_json = os.path.join(path_built_json,
+                                    '201407_competition')
 
 # ###############
 # LOAD DATA
@@ -50,10 +56,12 @@ df_lsa.set_index('id_lsa', inplace = True)
 
 # LOAD JSON CLOSE
 
-dict_ls_close = dec_json(os.path.join(path_built_json,
-                                      'dict_ls_close.json'))
-ls_close_pairs = dec_json(os.path.join(path_built_json,
-                                      'ls_close_pairs.json'))
+lsa_types = 'hsx' # hsx
+
+dict_ls_close = dec_json(os.path.join(path_built_comp_json,
+                                      'dict_ls_close_{:s}.json'.format(lsa_types)))
+ls_close_pairs = dec_json(os.path.join(path_built_comp_json,
+                                       'ls_close_pairs_{:s}.json'.format(lsa_types)))
 
 # ################################
 # GET COMPETITORS FROM NEIGHBOURS
@@ -68,11 +76,13 @@ for id_lsa, ls_close in dict_ls_close.items():
                if df_lsa.ix[id_close]['groupe'] != df_lsa.ix[id_lsa]['groupe']]
   dict_ls_comp[id_lsa] = ls_comp
 
-enc_json(ls_comp_pairs, os.path.join(path_dir_built_json,
-                                      'ls_comp_pairs.json'))
+enc_json(ls_comp_pairs,
+         os.path.join(path_built_comp_json,
+                      'ls_comp_pairs_{:s}.json'.format(lsa_types)))
 
-enc_json(dict_ls_comp, os.path.join(path_dir_built_json,
-                                     'dict_ls_comp.json'))
+enc_json(dict_ls_comp,
+         os.path.join(path_built_comp_json,
+                      'dict_ls_comp_{:s}.json'.format(lsa_types)))
 
 print u'\nFound and saved {:d} pairs of competitors'.format(len(ls_comp_pairs))
 print u'\nFound and saved competitors for {:d} stations'.format(len(dict_ls_comp))
@@ -81,12 +91,12 @@ print u'\nFound and saved competitors for {:d} stations'.format(len(dict_ls_comp
 # MARKETS AROUND STATIONS
 # ########################
 
-# todo: integrate possibility to drop stations
+# todo: distinguish types H/S/X
 
 # NB COMP BASED ON RADIUS
 
-dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
-                                     'dict_ls_comp.json'))
+#dict_ls_comp = dec_json(os.path.join(path_built_json,
+#                                     'dict_ls_comp.json'))
 # dict_ls_comp = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_comp.items()}
 
 ls_max_dist = [5, 4, 3, 2, 1]
@@ -124,10 +134,11 @@ df_insee_areas = pd.read_csv(os.path.join(path_dir_insee_extracts,
                              encoding = 'utf-8')
 
 df_lsa = df_lsa.reset_index().merge(df_insee_areas[['CODGEO', 'AU2010', 'UU2010', 'BV']],
-                                      left_on = 'ci_1', right_on = 'CODGEO',
+                                      left_on = 'c_insee',
+                                      right_on = 'CODGEO',
                                       how = 'left').set_index('id_lsa')
 
-ls_areas = ['ci_1', 'AU2010', 'UU2010', 'BV']
+ls_areas = ['c_insee', 'AU2010', 'UU2010', 'BV']
 df_area_nb = df_lsa[ls_areas].copy()
 df_area_nb.reset_index(inplace = True) # index used to add data by area
 for area in ls_areas:
@@ -138,7 +149,7 @@ df_area_nb.set_index('id_lsa', inplace = True)
 
 # NB SAME GROUP IN INSEE AREAS
 
-ls_areas = ['ci_1', 'AU2010', 'UU2010', 'BV']
+ls_areas = ['c_insee', 'AU2010', 'UU2010', 'BV']
 df_area_same = df_lsa[['groupe'] + ls_areas].copy()
 ls_groups = df_lsa['groupe'][~(df_lsa['groupe'].isnull())].unique()
 for group_name in ls_groups:
@@ -152,10 +163,10 @@ for group_name in ls_groups:
 df_area_same.set_index('id_lsa', inplace = True)
 df_area_same = df_area_same[['nb_s_%s' %area for area in ls_areas]]
 
-# CLOSEST COMP, CLOSEST SUPERMARKET (move to get distances?)
+# CLOSEST COMP, CLOSEST HYPERMARKET (move to get distances?)
 
-df_distances = pd.read_csv(os.path.join(path_dir_built_csv,
-                                        'df_distances.csv'),
+df_distances = pd.read_csv(os.path.join(path_built_comp_csv,
+                                        'df_distances_{:s}.csv'.format(lsa_types)),
                            dtype = {'id_lsa' : str},
                            encoding = 'utf-8')
 df_distances.set_index('id_lsa', inplace = True)
@@ -167,8 +178,8 @@ dict_rgp_ids = {rgp: list(df_lsa.index[df_lsa['groupe'] == rgp])\
 dict_diff_rgp_ids = {rgp: list(df_lsa.index[df_lsa['groupe'] != rgp])\
                        for rgp in df_lsa['groupe'].unique()}
 
-dict_diff_rgp_sup_ids = {rgp: list(df_lsa.index[(df_lsa['groupe'] != rgp) &\
-                                                 (df_lsa['group_type'] == 'SUP')])\
+dict_diff_rgp_hyp_ids = {rgp: list(df_lsa.index[(df_lsa['groupe'] != rgp) &\
+                                                (df_lsa['type_alt'] == 'H')])\
                            for rgp in df_lsa['groupe'].unique()}
 
 ls_rows_clc = []
@@ -179,12 +190,12 @@ for id_lsa in df_lsa.index:
                          df_distances.ix[id_lsa][~pd.isnull(df_distances.ix[id_lsa])]])
     ls_rows_clc.append([se_dist[dict_rgp_ids[group_station]].min(),
                         se_dist[dict_diff_rgp_ids[group_station]].min(),
-                        se_dist[dict_diff_rgp_sup_ids[group_station]].min()])
+                        se_dist[dict_diff_rgp_hyp_ids[group_station]].min()])
   else:
     ls_rows_clc.append([np.nan, np.nan, np.nan])
 df_clc = pd.DataFrame(ls_rows_clc,
                       index = df_lsa.index,
-                      columns = ['dist_s', 'dist_c', 'dist_c_sup'])
+                      columns = ['dist_s', 'dist_c', 'dist_c_hyp'])
 
 # MERGE AND OUTPUT
 
@@ -192,16 +203,15 @@ df_comp = pd.merge(df_nb_comp, df_area_nb, left_index = True, right_index = True
 df_comp = pd.merge(df_comp, df_area_same, left_index = True, right_index = True)
 df_comp = pd.merge(df_comp, df_clc, left_index = True, right_index = True)
 
-# fix stations with no group
-# counted in nb_AU2010 (e.g.) but not in nb_c
-len(df_comp[(~df_comp['nb_UU2010'].isnull()) & (df_comp['nb_s_UU2010'].isnull())])
-for area in ['ci_1', 'AU2010', 'UU2010', 'BV']:
+len(df_comp[(~df_comp['nb_UU2010'].isnull()) &
+            (df_comp['nb_s_UU2010'].isnull())])
+for area in ['c_insee', 'AU2010', 'UU2010', 'BV']:
   df_comp.loc[(df_comp['nb_s_%s' %area].isnull()) &\
               (~df_comp['nb_%s' %area].isnull()),
               'nb_s_%s' %area] = 1
 
-df_comp.to_csv(os.path.join(path_dir_built_csv,
-                            'df_comp.csv'),
+df_comp.to_csv(os.path.join(path_built_comp_csv,
+                            'df_comp_{:s}.csv'.format(lsa_types)),
                encoding = 'utf-8',
                index_label = 'id_lsa',
                float_format= '%.2f')
@@ -242,7 +252,7 @@ df_comp.to_csv(os.path.join(path_dir_built_csv,
 #
 #enc_json(ls_dict_markets,
 #         os.path.join(path_dir_built_json,
-#                      'ls_dict_stable_markets.json'))
+#                      'ls_dict_stable_markets_2014_{:s}.json'.format(lsa_types)))
 #
 ## MOST ROBUST MARKETS
 #
@@ -262,7 +272,7 @@ df_comp.to_csv(os.path.join(path_dir_built_csv,
 #
 #enc_json(ls_robust_markets,
 #         os.path.join(path_dir_built_json,
-#                      'ls_robust_stable_markets.json'))
+#                      'ls_robust_stable_markets_2014_{:s}.json'.format(lsa_types)))
 #
 ## STATS DES
 #
