@@ -120,6 +120,9 @@ print df_leclerc_comp.describe(percentiles = ls_pctiles)
 # ANALYSE LSA COMPETITORS
 # #######################
 
+df_lsa.loc[df_lsa['enseigne'] == 'MARKET',
+           'enseigne'] = 'CARREFOUR MARKET'
+
 ls_enseignes_compa = ['INTERMARCHE SUPER',
                       'SUPER U',
                       'CARREFOUR',
@@ -158,10 +161,12 @@ print df_lsa.ix[[x[0] for x in dict_ls_comp[lec_lsa_id_ex]]][lsd0].to_string()
 # - if missing: look if there is already a store of enseigne (/group) brand closer
 
 dict_lec_missing_comp = {}
+dict_lec_missing_big_comp = {}
 for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
-  ls_missing = []
+  ls_missing, ls_missing_big = [], []
   ls_lec_comp = sorted(ls_lec_comp, key = lambda x: x[1])
   qlmc_max_dist = ls_lec_comp[-1][1]
+  lec_surface = df_lsa.ix[lec_lsa_id]['surface']
   
   ls_qlmc_comp_lsa_ids = [x[0] for x in ls_lec_comp]
   ls_qlmc_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])\
@@ -183,20 +188,39 @@ for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
     elif (groupe not in ls_groupes) &\
          (surface >= 1500):
       ls_missing.append(id_lsa)
+      ls_groupes.append(groupe)
+      if surface >= lec_surface:
+        ls_missing_big.append(id_lsa)
   dict_lec_missing_comp[lec_lsa_id] = ls_missing
+  dict_lec_missing_big_comp[lec_lsa_id] = ls_missing_big
 
 # could use enseigne
-# could check later if store of same enseigne/groupe further but bigger
-
+# Check if missing in big_comp are covered in qlmc
 ls_check = []
-for k, x in dict_lec_missing_comp.items():
-  if x:
-    ls_check.append(k)
+dict_missing_refined = {}
+for lec_lsa_id, ls_missing in dict_lec_missing_big_comp.items():
+  if ls_missing:
+    ls_check.append(lec_lsa_id)
+    for comp_lsa_id in ls_missing:
+      if comp_lsa_id not in df_stores['id_lsa'].values:
+        dict_missing_refined.setdefault(lec_lsa_id, []).append(comp_lsa_id)
+
+# Could check later if store of same enseigne/groupe further but bigger
+ls_check_refined = [lec_lsa_id for lec_lsa_id, ls_missing in dict_missing_refined.items()\
+                      if ls_missing]
 
 # Example
-lec_lsa_id_ex = ls_check[0]
-print u'\nCompetitors picked by Leclerc:'
-print df_lsa.ix[[x[0] for x in dict_lec_comp[lec_lsa_id_ex]]][lsd0].to_string()
+lec_lsa_id_ex = ls_check_refined[0]
 
-print u'\nCompetitors missing?'
-print df_lsa.ix[dict_lec_missing_comp[lec_lsa_id_ex]][lsd0].to_string()
+for lec_lsa_id_ex in ls_check_refined[0:20]:
+  print u'\n' + '-'*20
+  print df_lsa.ix[lec_lsa_id_ex][lsd0 + ['c_postal']].T.to_string()
+
+  print u'\nCompetitors picked by Leclerc:'
+  print df_lsa.ix[[x[0] for x in dict_lec_comp[lec_lsa_id_ex]]][lsd0].to_string()
+  
+  print u'\nLarge(r) competitors missing?'
+  print df_lsa.ix[dict_lec_missing_big_comp[lec_lsa_id_ex]][lsd0].to_string()
+
+  print u'\nLarge(r) competitors missing and not in data?'
+  print df_lsa.ix[dict_missing_refined[lec_lsa_id_ex]][lsd0].to_string()
