@@ -162,8 +162,9 @@ print df_lsa.ix[[x[0] for x in dict_ls_comp[lec_lsa_id_ex]]][lsd0].to_string()
 
 dict_lec_missing_comp = {}
 dict_lec_missing_big_comp = {}
+dict_lec_missing_big_comp_2 = {}
 for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
-  ls_missing, ls_missing_big = [], []
+  ls_missing, ls_missing_big, ls_missing_big_2 = [], [], []
   ls_lec_comp = sorted(ls_lec_comp, key = lambda x: x[1])
   qlmc_max_dist = ls_lec_comp[-1][1]
   lec_surface = df_lsa.ix[lec_lsa_id]['surface']
@@ -191,23 +192,16 @@ for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
       ls_groupes.append(groupe)
       if surface >= lec_surface:
         ls_missing_big.append(id_lsa)
+        if id_lsa not in df_stores['id_lsa'].values:
+          ls_missing_big_2.append(id_lsa)
   dict_lec_missing_comp[lec_lsa_id] = ls_missing
   dict_lec_missing_big_comp[lec_lsa_id] = ls_missing_big
-
-# could use enseigne
-# Check if missing in big_comp are covered in qlmc
-ls_check = []
-dict_missing_refined = {}
-for lec_lsa_id, ls_missing in dict_lec_missing_big_comp.items():
-  if ls_missing:
-    ls_check.append(lec_lsa_id)
-    for comp_lsa_id in ls_missing:
-      if comp_lsa_id not in df_stores['id_lsa'].values:
-        dict_missing_refined.setdefault(lec_lsa_id, []).append(comp_lsa_id)
+  dict_lec_missing_big_comp_2[lec_lsa_id] = ls_missing_big_2
 
 # Could check later if store of same enseigne/groupe further but bigger
-ls_check_refined = [lec_lsa_id for lec_lsa_id, ls_missing in dict_missing_refined.items()\
-                      if ls_missing]
+ls_check_refined = [lec_lsa_id for lec_lsa_id, ls_missing\
+                      in dict_lec_missing_big_comp_2.items()\
+                        if ls_missing]
 
 # Example
 lec_lsa_id_ex = ls_check_refined[0]
