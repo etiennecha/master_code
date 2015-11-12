@@ -160,11 +160,11 @@ print df_lsa.ix[[x[0] for x in dict_ls_comp[lec_lsa_id_ex]]][lsd0].to_string()
 # - look if missing store of 1000m2 or more within radius by leclerc
 # - if missing: look if there is already a store of enseigne (/group) brand closer
 
-dict_lec_missing_comp = {}
-dict_lec_missing_big_comp = {}
-dict_lec_missing_big_comp_2 = {}
+dict_lec_comp_2 = {}
+dict_dict_missing = {'missing_comp' : {},
+                     'missing_store' : {},
+                     'missing_store_larger' : {}}
 for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
-  ls_missing, ls_missing_big, ls_missing_big_2 = [], [], []
   ls_lec_comp = sorted(ls_lec_comp, key = lambda x: x[1])
   qlmc_max_dist = ls_lec_comp[-1][1]
   lec_surface = df_lsa.ix[lec_lsa_id]['surface']
@@ -178,35 +178,39 @@ for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
                                if x[1] <= qlmc_max_dist]
   ls_lsa_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])\
                    for x in ls_lsa_comp_lsa_ids_dist]
-  
-  # keep store if group not yet found and size above some threshold
-  ls_missing, ls_enseignes, ls_groupes = [], [], []
+  dict_lec_comp_2[lec_lsa_id] = 
+  # loop with groupe and sizer criteria
+  ls_missing, ls_missing_2, ls_missing_2_larger = [], [], []
+  ls_enseignes, ls_groupes = [], []
   for id_lsa, enseigne, groupe, surface in ls_lsa_temp:
     if id_lsa in ls_qlmc_comp_lsa_ids:
       # could add size criterion by enseigne/groupe
       ls_enseignes.append(enseigne)
       ls_groupes.append(groupe)
-    elif (groupe not in ls_groupes) &\
-         (surface >= 1500):
+    elif (groupe not in ls_groupes):
       ls_missing.append(id_lsa)
       ls_groupes.append(groupe)
-      if surface >= lec_surface:
-        ls_missing_big.append(id_lsa)
-        if id_lsa not in df_stores['id_lsa'].values:
-          ls_missing_big_2.append(id_lsa)
-  dict_lec_missing_comp[lec_lsa_id] = ls_missing
-  dict_lec_missing_big_comp[lec_lsa_id] = ls_missing_big
-  dict_lec_missing_big_comp_2[lec_lsa_id] = ls_missing_big_2
+      if id_lsa not in df_stores['id_lsa'].values:
+        ls_missing_2.append(id_lsa)
+        if surface >= lec_surface * 2/3.0:
+          ls_missing_2_larger.append(id_lsa)
+  dict_dict_missing['missing_comp'][lec_lsa_id] = ls_missing
+  dict_dict_missing['missing_store'][lec_lsa_id] = ls_missing_2
+  dict_dict_missing['missing_store_larger'][lec_lsa_id] = ls_missing_2_larger
 
 # Could check later if store of same enseigne/groupe further but bigger
-ls_check_refined = [lec_lsa_id for lec_lsa_id, ls_missing\
-                      in dict_lec_missing_big_comp_2.items()\
-                        if ls_missing]
+print u'\nCheck nb Leclerc store with missing stores:'
+
+for x in ['missing_comp', 'missing_store', 'missing_store_larger']:
+  ls_concerned = [lec_lsa_id for lec_lsa_id, ls_missing\
+                     in dict_dict_missing[x].items()\
+                       if ls_missing]
+  print u'Nb lec w/ {:s}: {:d}'.format(x, len(ls_check_missing))
 
 # Example
-lec_lsa_id_ex = ls_check_refined[0]
+lec_lsa_id_ex = ls_check_missing[0]
 
-for lec_lsa_id_ex in ls_check_refined[0:20]:
+for lec_lsa_id_ex in ls_concerned[0:50]:
   print u'\n' + '-'*20
   print df_lsa.ix[lec_lsa_id_ex][lsd0 + ['c_postal']].T.to_string()
 
@@ -214,7 +218,7 @@ for lec_lsa_id_ex in ls_check_refined[0:20]:
   print df_lsa.ix[[x[0] for x in dict_lec_comp[lec_lsa_id_ex]]][lsd0].to_string()
   
   print u'\nLarge(r) competitors missing?'
-  print df_lsa.ix[dict_lec_missing_big_comp[lec_lsa_id_ex]][lsd0].to_string()
+  print df_lsa.ix[dict_dict_missing['missing_store'][lec_lsa_id_ex]][lsd0].to_string()
 
   print u'\nLarge(r) competitors missing and not in data?'
-  print df_lsa.ix[dict_missing_refined[lec_lsa_id_ex]][lsd0].to_string()
+  print df_lsa.ix[dict_dict_missing['missing_store_larger'][lec_lsa_id_ex]][lsd0].to_string()
