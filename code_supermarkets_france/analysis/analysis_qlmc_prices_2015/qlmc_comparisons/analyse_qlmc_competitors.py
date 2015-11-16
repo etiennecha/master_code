@@ -78,7 +78,8 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
                      parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'UTF-8')
-
+## drop hard discount
+#df_lsa = df_lsa[df_lsa['type_alt'].isin(['H', 'S'])]
 
 dict_ls_comp = dec_json(os.path.join(path_built_comp_json_lsa,
                                      'dict_ls_comp_hs.json'))
@@ -178,7 +179,7 @@ for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
                                if x[1] <= qlmc_max_dist]
   ls_lsa_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])\
                    for x in ls_lsa_comp_lsa_ids_dist]
-  dict_lec_comp_2[lec_lsa_id] = 
+  dict_lec_comp_2[lec_lsa_id] = ls_lsa_temp
   # loop with groupe and sizer criteria
   ls_missing, ls_missing_2, ls_missing_2_larger = [], [], []
   ls_enseignes, ls_groupes = [], []
@@ -192,7 +193,7 @@ for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
       ls_groupes.append(groupe)
       if id_lsa not in df_stores['id_lsa'].values:
         ls_missing_2.append(id_lsa)
-        if surface >= lec_surface * 2/3.0:
+        if surface >= lec_surface * 0.75:
           ls_missing_2_larger.append(id_lsa)
   dict_dict_missing['missing_comp'][lec_lsa_id] = ls_missing
   dict_dict_missing['missing_store'][lec_lsa_id] = ls_missing_2
@@ -205,10 +206,10 @@ for x in ['missing_comp', 'missing_store', 'missing_store_larger']:
   ls_concerned = [lec_lsa_id for lec_lsa_id, ls_missing\
                      in dict_dict_missing[x].items()\
                        if ls_missing]
-  print u'Nb lec w/ {:s}: {:d}'.format(x, len(ls_check_missing))
+  print u'Nb lec w/ {:s}: {:d}'.format(x, len(ls_concerned))
 
 # Example
-lec_lsa_id_ex = ls_check_missing[0]
+lec_lsa_id_ex = ls_concerned[0]
 
 for lec_lsa_id_ex in ls_concerned[0:50]:
   print u'\n' + '-'*20
@@ -222,3 +223,52 @@ for lec_lsa_id_ex in ls_concerned[0:50]:
 
   print u'\nLarge(r) competitors missing and not in data?'
   print df_lsa.ix[dict_dict_missing['missing_store_larger'][lec_lsa_id_ex]][lsd0].to_string()
+
+# ############################
+# REPRESENTATION OF EACH CHAIN
+# ############################
+
+df_stores.reset_index(drop = False, inplace = True)
+df_stores.set_index('id_lsa', inplace = True)
+df_stores = pd.merge(df_stores,
+                     df_lsa[['enseigne', 'enseigne_alt', 'groupe', 'surface']],
+                     left_index = True,
+                     right_index = True,
+                     how = 'left')
+
+se_qlmc_chains = df_stores['enseigne'].value_counts()
+# Exclude small nbs which correspond to small stores or small chains
+se_qlmc_chains = se_qlmc_chains[se_qlmc_chains > 12]
+se_lsa_chains = df_lsa[df_lsa['enseigne'].isin(se_qlmc_chains.index)]['enseigne'].value_counts()
+print se_qlmc_chains / se_lsa_chains * 100
+
+# Check Leclerc not included
+lsd_lsa = ['enseigne', 'adresse1', 'ville', 'c_postal',
+           'surface', 'date_ouv', 'date_fer', 'date_reouv', 'ex_enseigne']
+print df_lsa[(df_lsa['enseigne'] == 'CENTRE E.LECLERC') &\
+             (~df_lsa.index.isin(df_stores.index))][lsd_lsa].to_string()
+
+# todo: check if not in my data or not on website at the time...
+# not very important anyway
+
+# #############################
+# REPRESENTATION OF EACH REGION
+# #############################
+
+# todo: df w/ pop, nb stores, total surf, pop by store, pop by surface
+
+# nb stores
+se_qlmc_reg = df_lsa[df_lsa.index.isin(df_stores.index)]['region'].value_counts()
+se_lsa_reg = df_lsa['region'].value_counts()
+print u'\nRepresentation by region (nb stores):'
+print se_qlmc_reg / se_lsa_reg * 100
+
+# surface
+se_qlmc_reg = df_lsa[df_lsa.index.isin(df_stores.index)][['region', 'surface']]\
+                .groupby('region').agg(sum)
+se_lsa_reg = df_lsa[['region', 'surface']].groupby('region').agg(sum)
+print u'\nRepresentation by region (surface):'
+print se_qlmc_reg / se_lsa_reg * 100
+
+# could refine by adding: 
+# Rural / City center / Suburb / Isolated city
