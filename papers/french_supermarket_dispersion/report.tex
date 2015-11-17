@@ -97,9 +97,21 @@ where $i$ refers to all products in the baskets, $P_{iC}$ and $P_{iL}$ respectiv
 
 \section{Data and replication}
 
-Price records of the 2007-2012 period were made available by Qlmc in pdf files. They were thus downloaded and processed to build a database.
+This section provides an overview of the data collected from the website in 2015 and of the replication of its results. Potential biases in terms of store and product selection are discussed, and the robustness of results is checked with 2007-2012 data.
 
-\subsection{Overview of 2007-2012 data}
+\subsection{Overview of 2015 data}
+
+In March 2015, the website was explored with a view to find the best way to extract price data. The only feasible solution appeared to successively crawl comparisons between Leclerc stores and each of their competitors. This implies that thereby obtained data are bound to be significantly less exhaustive than the full price database used by Qlmc to establish chain level comparisons.
+
+A total number of of 575 Leclerc stores were found to be listed, but comparison data were found to be missing for 14 of them. The remaining 561 were found to be compared with XXX unique stores (XXX comparisons since a store can be listed as a competitor for several Leclerc stores). The script used to crawl data was designed to minimize the number of queries needed to cover available stores listed on the website hence the number of comparisons actually crawled was 1,803.
+
+\subsection{Leclerc competitors}
+
+\subsection{Products}
+
+\subsection{Robustness checks with 2007-2012 data}
+
+Price records of the 2007-2012 period were made available by Qlmc in pdf files. They were thus downloaded and processed to build a database (footnote: pdf files exist for price records of May 2014 but are not used in the current version of the paper).
 
 \begin{table}[H]
 \renewcommand{\arraystretch}{0.7}% Tighter
@@ -128,10 +140,6 @@ Price records of the 2007-2012 period were made available by Qlmc in pdf files. 
 \bottomrule
 \end{tabular}
 \end{table}
-
-\subsection{Overview of 2015 data}
-
-Since 2013, the website does not make data easily available (Footnote: Pdf files exist for price records of May 2014 but are not used in the current version of the paper). In March 2015, each store comparison available on the website was thus crawled to build a price database, which is therefore bound to be significantly smaller than original one. Indeed, only stores which compete with a Leclerc outlet are included, and for each pair of stores, prices are provided only for goods available at both store.
 
 \bibliography{references}
 \bibliographystyle{chicago}

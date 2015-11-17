@@ -223,3 +223,52 @@ for lec_lsa_id_ex in ls_concerned[0:50]:
 
   print u'\nLarge(r) competitors missing and not in data?'
   print df_lsa.ix[dict_dict_missing['missing_store_larger'][lec_lsa_id_ex]][lsd0].to_string()
+
+# ############################
+# REPRESENTATION OF EACH CHAIN
+# ############################
+
+df_stores.reset_index(drop = False, inplace = True)
+df_stores.set_index('id_lsa', inplace = True)
+df_stores = pd.merge(df_stores,
+                     df_lsa[['enseigne', 'enseigne_alt', 'groupe', 'surface']],
+                     left_index = True,
+                     right_index = True,
+                     how = 'left')
+
+se_qlmc_chains = df_stores['enseigne'].value_counts()
+# Exclude small nbs which correspond to small stores or small chains
+se_qlmc_chains = se_qlmc_chains[se_qlmc_chains > 12]
+se_lsa_chains = df_lsa[df_lsa['enseigne'].isin(se_qlmc_chains.index)]['enseigne'].value_counts()
+print se_qlmc_chains / se_lsa_chains * 100
+
+# Check Leclerc not included
+lsd_lsa = ['enseigne', 'adresse1', 'ville', 'c_postal',
+           'surface', 'date_ouv', 'date_fer', 'date_reouv', 'ex_enseigne']
+print df_lsa[(df_lsa['enseigne'] == 'CENTRE E.LECLERC') &\
+             (~df_lsa.index.isin(df_stores.index))][lsd_lsa].to_string()
+
+# todo: check if not in my data or not on website at the time...
+# not very important anyway
+
+# #############################
+# REPRESENTATION OF EACH REGION
+# #############################
+
+# todo: df w/ pop, nb stores, total surf, pop by store, pop by surface
+
+# nb stores
+se_qlmc_reg = df_lsa[df_lsa.index.isin(df_stores.index)]['region'].value_counts()
+se_lsa_reg = df_lsa['region'].value_counts()
+print u'\nRepresentation by region (nb stores):'
+print se_qlmc_reg / se_lsa_reg * 100
+
+# surface
+se_qlmc_reg = df_lsa[df_lsa.index.isin(df_stores.index)][['region', 'surface']]\
+                .groupby('region').agg(sum)
+se_lsa_reg = df_lsa[['region', 'surface']].groupby('region').agg(sum)
+print u'\nRepresentation by region (surface):'
+print se_qlmc_reg / se_lsa_reg * 100
+
+# could refine by adding: 
+# Rural / City center / Suburb / Isolated city
