@@ -43,26 +43,12 @@ path_built_comp_json_lsa = os.path.join(path_built_json_lsa, '201407_competition
 
 df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'),
-                        dtype = {'id_lsa' : str})
+                        dtype = {'id_lsa' : str},
+                        encoding = 'utf-8')
 
 df_comp = pd.read_csv(os.path.join(path_built_csv,
-                                   'df_qlmc_competitors.csv'))
-
-# Fix gps problems (move later?)
-ls_fix_gps = [['intermarche-super-le-portel',       (50.7093, 1.5789)], # too far
-              ['casino-l-ile-rousse',               (42.6327, 8.9383)],
-              ['centre-e-leclerc-lassigny',         (49.5898, 2.8531)],
-              ['carrefour-market-chateau-gontier',  (47.8236, -0.7064)],
-              ['casino-san-nicolao',                (42.3742, 9.5299)], # too close
-              ['centre-e-leclerc-san-giuliano',     (42.2625, 9.5480)]]
-
-for store_id, (store_lat, store_lng) in ls_fix_gps:
-  df_comp.loc[df_comp['comp_id'] == store_id,
-              ['comp_lat', 'comp_lng']] = [store_lat, store_lng]
-  df_comp.loc[df_comp['lec_id'] == store_id,
-              ['lec_lat', 'lec_lng']] = [store_lat, store_lng]
-  df_stores.loc[df_stores['store_id'] == store_id,
-                ['store_lat', 'store_lng']] = [store_lat, store_lng]
+                                   'df_qlmc_competitors.csv'),
+                      encoding = 'utf-8')
 
 # LSA DATA
 
@@ -84,23 +70,14 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
 dict_ls_comp = dec_json(os.path.join(path_built_comp_json_lsa,
                                      'dict_ls_comp_hs.json'))
 
-# #################
-# GET LSA DISTANCES
-# #################
-
-df_comp['dist'] = compute_distance_ar(df_comp['lec_lat'].values,
-                                      df_comp['lec_lng'].values,
-                                      df_comp['comp_lat'].values,
-                                      df_comp['comp_lng'].values)
+# ###################
+# OVERVIEW DISTANCES
+# ###################
 
 ls_disp_dist = ['lec_id', 'comp_id',
                 'lec_lat', 'lec_lng',
                 'comp_lat', 'comp_lng',
                 'dist']
-
-## Check high distances to find obvious location mistakes
-#print df_comp[df_comp['dist'] > 30][ls_disp_dist].to_string()
-#print df_comp[df_comp['dist'] <= 0.1][ls_disp_dist].to_string()
 
 # Overview of pair distance distribution
 print u'\nOverview pair dist (km):'

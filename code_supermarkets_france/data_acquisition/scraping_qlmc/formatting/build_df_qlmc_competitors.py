@@ -4,12 +4,10 @@
 import add_to_path
 from add_to_path import *
 import os, sys
-import httplib
-import urllib, urllib2
-from bs4 import BeautifulSoup
 import re
 import json
 import pandas as pd
+from functions_generic_qlmc import *
 
 def enc_json(data, path_file):
   with open(path_file, 'w') as f:
@@ -40,7 +38,6 @@ dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scraped,
 
 dict_leclerc_comp = dec_json(os.path.join(path_qlmc_scraped,
                                           'dict_leclerc_comp.json'))
-
 
 # ##############################
 # BUILD DF ALL COMPETITOR PAIRS
@@ -209,9 +206,53 @@ dict_chains = {'LEC' : 'LECLERC',
 df_qlmc_competitors['comp_chain'] =\
   df_qlmc_competitors['comp_chain'].apply(lambda x: dict_chains[x])
 
+# ##############
+# DISTANCE
+# ##############
+
+ls_fix_gps = [['intermarche-super-le-portel',       (50.7093, 1.5789)], # too far
+              ['casino-l-ile-rousse',               (42.6327, 8.9383)],
+              ['centre-e-leclerc-lassigny',         (49.5898, 2.8531)],
+              ['carrefour-market-chateau-gontier',  (47.8236, -0.7064)],
+              ['casino-san-nicolao',                (42.3742, 9.5299)], # too close
+              ['centre-e-leclerc-san-giuliano',     (42.2625, 9.5480)]]
+
+for store_id, (store_lat, store_lng) in ls_fix_gps:
+  df_qlmc_competitors.loc[df_qlmc_competitors['comp_id'] == store_id,
+              ['comp_lat', 'comp_lng']] = [store_lat, store_lng]
+  df_qlmc_competitors.loc[df_qlmc_competitors['lec_id'] == store_id,
+              ['lec_lat', 'lec_lng']] = [store_lat, store_lng]
+
+df_qlmc_competitors['dist'] = compute_distance_ar(df_qlmc_competitors['lec_lat'].values,
+                                      df_qlmc_competitors['lec_lng'].values,
+                                      df_qlmc_competitors['comp_lat'].values,
+                                      df_qlmc_competitors['comp_lng'].values)
+
+## Check large/small distances to find obvious location mistakes
+
+ls_disp_dist = ['lec_id', 'comp_id',
+                'lec_lat', 'lec_lng',
+                'comp_lat', 'comp_lng',
+                'dist']
+
+df_large_dist = df_qlmc_competitors[df_qlmc_competitors['dist'] > 30]
+print u'\nNb pairs w/ distance above 30 km:', len(df_large_dist)
+print df_large_dist[ls_disp_dist].to_string()
+
+print u'\nNb leclerc involved in large dist:',\
+         len(df_large_dist['lec_id'].unique())
+
+df_small_dist = df_qlmc_competitors[df_qlmc_competitors['dist'] <= 0.1]
+print u'\nNb pairs w/ distance below 0.1 km:', len(df_small_dist)
+print df_small_dist[ls_disp_dist].to_string()
+
 # #########
 # OUTPUT
 # #########
+
+df_qlmc_competitors.drop(['region'],
+                         axis = 1,
+                         inplace = True)
 
 df_qlmc_competitors.to_csv(os.path.join(path_built_csv,
                                         'df_qlmc_competitors.csv'),
