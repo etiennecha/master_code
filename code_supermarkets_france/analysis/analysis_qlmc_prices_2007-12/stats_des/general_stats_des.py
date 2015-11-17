@@ -107,6 +107,7 @@ ls_sc_drop = ['CARREFOUR CITY',
               'LECLERC EXPRESS',
               'MARCHE U',
               'U EXPRESS']
+
 df_qlmc = df_qlmc[~df_qlmc['store_chain'].isin(ls_sc_drop)]
 ls_sc_replace = [('CENTRE E. LECLERC', 'LECLERC'),
                  ('CENTRE LECLERC', 'LECLERC'),

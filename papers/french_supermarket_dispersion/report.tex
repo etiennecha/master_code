@@ -54,14 +54,14 @@ The French supermarket chain Leclerc operates a price comparison website which a
 
 \strut
 
-\textbf{JEL Classification Numbers:} XXX
+\textbf{JEL Classification Numbers:} D83, L81, M31
 
 \pagebreak%
 \doublespacing
 
 \section{Introduction}
 
-Since the seminal paper of \cite{STI61}, a large literature on the topic of consumer search and price dispersion has developed. Regarding theory, a paradigm emerged following \cite{VAR80} in which price dispersion results from the absence of pure pricing strategies in equilibrium. Empirically, evidence has remained rather scarce due to difficulty of collecting data really fit for hypothesis testing. Recent examples are \cite{TAP11} and \cite{CHA15} which work with retail gasoline data and investigate changes in positions occupied by stations in local market price distributions. A current active field of research related to search and price dispersion is the understanding of competition between supermarkets. 
+Since the seminal paper of \cite{STI61}, a large literature on the topic of consumer search and price dispersion has developed. Regarding theory, a paradigm emerged following \cite{VAR80} in which price dispersion results from the absence of pure pricing strategies in equilibrium. Empirically, evidence has remained rather scarce due to difficulty of collecting data really fit for hypothesis testing. Recent examples are \cite{TAP11} and \cite{CHA15} which work with retail gasoline data and investigate changes in positions occupied by stations in local market price distributions. A current active field of research related to search and price dispersion is the understanding of competition between supermarkets.
 
 The first part of this paper reviews the methodology used by the website quiestlemoinscher.com to compare French supermarkets. Store comparisons are shown to be actually often highly sensitive to the basket of goods considered, suggesting that it is very costly for consumers to purchase at the lowest price(s). TODO: comment relation between information and price "`dispersion"' + comment regressions on price levels (and dispersion?) on local market characteristics, in particular proxies for competition intensity.
 
@@ -79,7 +79,9 @@ A major merit of the legal action undertaken by Carrefour is its consequence for
 
 Before 2013, the website only offered comparisons at the chain level. For each chain, according to Qlmc, prices were collected a sample of store expected to be representative of the store population. Broad constraints were thus imposed on store location and size, while exact store choice was claimed to be random.
 
-From 2013 on, the development of the "drive" concept in France has allowed the comparison website to cover far more stores, and thus to start displaying store level comparison. The concept of "drive" implies that consumers are offered the opportunity to shop online from a physical store (at the same prices) and collect their purchases whenever it suits them. The collection of prices can then be achieved efficiently on the internet, as opposed to traditional store visits. As of March 2015, Qlmc claimed to cover 60\% of the stores of the 10 supermarket chains compared (44\% in August 2013). Regarding store level comparisons, Qlmc  methodology states that each Leclerc is compared with a selection of its most relevant competitors, based on Leclerc managers' expertise.
+From 2013 on, the development of the "drive" concept in France has allowed the comparison website to cover far more stores, and thus to start displaying store level comparison. The concept of "drive" implies that consumers are offered the opportunity to shop online from a physical store (at the same prices) and collect their purchases whenever it suits them. The collection of prices can then be achieved efficiently on the internet, as opposed to traditional store visits. As of March 2015, Qlmc claimed to cover 60\% of the stores of the 10 supermarket chains compared (44\% in August 2013).
+
+Regarding store level comparisons, Qlmc  methodology states that each Leclerc is compared with a selection of its most relevant competitors within 30 km, based on Leclerc managers' expertise. The website also indicates that stores whose surface is smaller than 1,000 $m^2$ are excluded, as well as stores belonging to chains which are deemed to be too differentiated (e.g. discounters). Finally, Leclerc stores are not included among potential competitors.
 
 \subsection{Products}
 
@@ -92,7 +94,7 @@ The comparison of Leclerc with a competing chain can be described in a few simpl
 The comparison result displayed by Leclerc is then the percentage difference between the price of the basket for the competing chain and for Leclerc:
 \begin{align*}
 \frac{\sum\limits_{i} P_{iC} - \sum\limits_{i} P_{iL}}{\sum\limits_{i} P_{iL}}
-\end{align*}s 
+\end{align*}s
 where $i$ refers to all products in the baskets, $P_{iC}$ and $P_{iL}$ respectively stand for the average price of product $i$ for the competing chain ($C$) and for Leclerc ($L$). The comparison between two stores is very similar except that it uses store prices instead of average chain prices.
 
 \section{Data and replication}
@@ -103,11 +105,39 @@ This section provides an overview of the data collected from the website in 2015
 
 In March 2015, the website was explored with a view to find the best way to extract price data. The only feasible solution appeared to successively crawl comparisons between Leclerc stores and each of their competitors. This implies that thereby obtained data are bound to be significantly less exhaustive than the full price database used by Qlmc to establish chain level comparisons.
 
-A total number of of 575 Leclerc stores were found to be listed, but comparison data were found to be missing for 14 of them. The remaining 561 were found to be compared with XXX unique stores (XXX comparisons since a store can be listed as a competitor for several Leclerc stores). The script used to crawl data was designed to minimize the number of queries needed to cover available stores listed on the website hence the number of comparisons actually crawled was 1,803.
-
 \subsection{Leclerc competitors}
 
+A total number of of 575 Leclerc stores were found to be listed on the website. The comparison of each store with its respective selection of competitors yielded 2,390 pairs of stores, involving 1,815 unique Leclerc competitors (the number of pairs is larger since a store can be listed as a competitor of several Leclerc stores). Data were missing for 14 Leclerc stores and 51 Leclerc competitors. This implies that among competitors of the 561 Leclerc stores for which price data have been collected, 36 out of 1811 are missing ($\le 2 \%$).
+
+Table~\ref{tab:qlmc_comp} provides an overview of competition according to qlmc comparisons, even though it must be reminded that the website does not claim to be comprehensive. On average, a Leclerc store is compared with 5 competitors, and over 50\% over the stores have a competitor listed within 2 km. The furthest competitor is generally within 30 km (15 km for almost half of them), except for 28 stores. Also, 14 Leclerc stores have no competitor listed within 10 km. If one store met these two criteria (or variations), it would be reasonable to suspect that the lack of nearby competitors led to include competitors beyond reasonable distance but it is not the case. For instance, the Leclerc outlet which has the furthest competitor in the data (67 km) is listed with 7 competitors, of which 5 are located within 30 km.
+
+\begin{table}[H]
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Overview of competition around the 575 Leclerc stores in Qlmc}\label{tab:qlmc_comp}
+\small
+\begin{tabular}{lr|rrrr}
+\toprule
+\toprule
+{}         & Nb          &    \multicolumn{4}{c}{Distance (km) to} \\
+{}         & competitors &    closest & furthest & mean & median \\
+\midrule
+Mean  &   5.0 &   2.4 &  15.9 &   8.8 &     8.5 \\
+Std   &   1.6 &   2.5 &   9.7 &   5.1 &     6.0 \\
+Min   &   1.0 &   0.1 &   0.9 &   0.8 &     0.5 \\
+Q10   &   3.0 &   0.7 &   4.6 &   3.0 &     2.5 \\
+Q25   &   4.0 &   1.1 &   8.4 &   4.8 &     3.7 \\
+Q50   &   5.0 &   1.8 &  15.3 &   7.8 &     6.5 \\
+Q75   &   6.0 &   2.7 &  21.5 &  12.3 &    12.5 \\
+Q90   &   7.0 &   4.7 &  26.3 &  15.7 &    18.0 \\
+Max   &  12.0 &  21.1 &  67.0 &  28.6 &    28.5 \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Products}
+
+
 
 \subsection{Robustness checks with 2007-2012 data}
 

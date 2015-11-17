@@ -93,6 +93,34 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
 #print len(df_prices[df_prices['date'] < '2015-03-01']) / float(len(df_prices))
 ## only 17% records before 2015-03-01
 
+# ###########################
+# STORES LISTED VS. COLLECTED
+# ###########################
+
+## Check that df_stores contains all stores in df_comp (i.e. from website): ok
+#ls_stores_in_comp = list(df_comp['lec_id'].unique()) +\
+#                      list(df_comp['comp_id'].unique())
+ls_got_leclerc_ids = list(df_prices[df_prices['store_chain'] == 'LECLERC']['store_id'].unique())
+ls_got_comp_ids = list(df_prices[df_prices['store_chain'] != 'LECLERC']['store_id'].unique())
+ls_got_stores = ls_got_leclerc_ids + ls_got_comp_ids
+
+ls_leclerc_ids = list(df_stores[df_stores['store_chain'] == 'LECLERC']['store_id'])
+ls_comp_ids = list(df_stores[df_stores['store_chain'] != 'LECLERC']['store_id'])
+ls_stores = ls_leclerc_ids + ls_comp_ids
+
+# Check if missing comp_ids are competitors of missing leclerc_ids
+ls_missing_leclerc_ids = list(set(ls_leclerc_ids).difference(set(ls_got_leclerc_ids)))
+ls_missing_comp_ids = list(set(ls_comp_ids).difference(set(ls_got_comp_ids)))
+# 51: missing
+
+ls_missing_lec_comp_ids = df_comp[df_comp['lec_id'].isin(ls_missing_leclerc_ids)]['comp_id'].unique()
+# 52: some of them I still have because of other stores
+
+ls_really_comp = df_comp[df_comp['lec_id'].isin(ls_got_leclerc_ids)]['comp_id'].unique()
+# 1,811 competitors for the 561 Leclerc for which I have price data
+ls_really_missing = list(set(ls_missing_comp_ids).difference(set(ls_missing_lec_comp_ids)))
+# 36 out of 1,811: not in price data
+
 # ############################
 # REPRESENTATION OF EACH CHAIN
 # ############################
@@ -231,8 +259,14 @@ print df_compa_prods.fillna(0).astype(int).to_string()
 
 # check few obs store within large nb obs store
 lsdcomp = ['lec_name', 'comp_name', 'qlmc_nb_obs', 'qlmc_pct_compa', 'qlmc_winner']
+
+print u'\nOverview comp hyper u w/ few products:'
 print df_comp[(df_comp['comp_chain'] == 'HYPER U') &\
               (df_comp['qlmc_nb_obs'] <= 1000)][lsdcomp].to_string()
+
+# High diff w/ Carrefour
+print df_comp[(df_comp['comp_chain'] == 'CARREFOUR') &\
+              (df_comp['qlmc_pct_compa'] >= 30)][lsdcomp].to_string()
 
 df_comp[(df_comp['comp_chain'] == 'GEANT CASINO')].plot(kind = 'scatter',
                                                         x = 'qlmc_nb_obs',

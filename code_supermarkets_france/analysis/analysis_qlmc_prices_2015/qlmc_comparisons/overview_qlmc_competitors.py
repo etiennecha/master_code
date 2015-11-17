@@ -64,8 +64,8 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
                      parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'UTF-8')
-## drop hard discount
-#df_lsa = df_lsa[df_lsa['type_alt'].isin(['H', 'S'])]
+# drop hard discount
+df_lsa = df_lsa[df_lsa['type_alt'].isin(['H', 'S'])]
 
 dict_ls_comp = dec_json(os.path.join(path_built_comp_json_lsa,
                                      'dict_ls_comp_hs.json'))
@@ -94,9 +94,45 @@ df_leclerc_comp = df_comp[['lec_name', 'dist']]\
 ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
 print df_leclerc_comp.describe(percentiles = ls_pctiles)
 
-# #######################
-# ANALYSE LSA COMPETITORS
-# #######################
+## Latex output
+#pd.set_option('float_format', '{:,.1f}'.format)
+#print df_leclerc_comp.describe(percentiles = ls_pctiles).to_latex()
+## print len(df_leclerc_comp[df_leclerc_comp['max'] > 30])
+## print len(df_leclerc_comp[df_leclerc_comp['mmin'] > 30])
+## print df_comp[df_comp['lec_name'] == u'CENTRE E.LECLERC LOUDÉAC'].to_string()
+
+# ############################
+# ANALYSE COMPETITORS VS. LSA
+# ############################
+
+# todo: count all within 30 km, more than 1000m2, and discard differentiated
+
+## check enseigne to discard
+#print df_lsa['enseigne'][df_lsa['surface'] >= 1000].value_counts().to_string()
+ls_discard_enseigne = [u'ALDI',
+                       u'LEADER PRICE',
+                       u'DIA %',
+                       u'FRANPRIX',
+                       u'LIDL',
+                       u'NETTO',
+                       u'NORMA',
+                       u'LE MUTANT', # Discount/small offer of national brands
+                       u'G 20',
+                       u'SIMPLY GALERIES GOURMANDES',
+                       u"LE MARCHE D'A COTE",
+                       u"EASY MARCHE",
+                       u"LAFAYETTE GOURMET",
+                       u"PRIXBAS",
+                       u"MONOP STORE",
+                       u"MAXI",
+                       u"O' MARCHE FRAIS U",
+                       u"GALERIES GOURMANDES",
+                       u"COCCINELLE EXPRESS",
+                       u"MONOP'",
+                       u"SPAR",
+                       u"EUROPRIX"]
+
+df_lsa = df_lsa[~df_lsa['enseigne'].isin(ls_discard_enseigne)]
 
 df_lsa.loc[df_lsa['enseigne'] == 'MARKET',
            'enseigne'] = 'CARREFOUR MARKET'
@@ -155,7 +191,8 @@ for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
   ls_lsa_comp_lsa_ids_dist = [x[0] for x in dict_ls_comp[lec_lsa_id]\
                                if x[1] <= qlmc_max_dist]
   ls_lsa_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])\
-                   for x in ls_lsa_comp_lsa_ids_dist]
+                   for x in ls_lsa_comp_lsa_ids_dist if x in df_lsa.index]
+  # need to add check that stores still here when restricting df_lsa
   dict_lec_comp_2[lec_lsa_id] = ls_lsa_temp
   # loop with groupe and sizer criteria
   ls_missing, ls_missing_2, ls_missing_2_larger = [], [], []
