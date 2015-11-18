@@ -57,6 +57,15 @@ df_products = df_prices[['section', 'family', 'product']].drop_duplicates()
 # STATS DES PRODUCTS
 # ##################
 
+## Check record dates (move)
+#df_prices['date'] = pd.to_datetime(df_prices['date'], format = '%d/%m/%Y')
+#print df_prices['date'].describe()
+## From 2015-02-05 to 2015-03-17
+#print len(df_prices[df_prices['date'] < '2015-02-17']) / float(len(df_prices))
+## less than 2% obs lost to have only 1 month
+#print len(df_prices[df_prices['date'] < '2015-03-01']) / float(len(df_prices))
+## only 17% records before 2015-03-01
+
 se_prod_vc = df_prices['product'].value_counts()
 df_products.set_index('product', inplace = True)
 df_products['nb_obs'] = se_prod_vc

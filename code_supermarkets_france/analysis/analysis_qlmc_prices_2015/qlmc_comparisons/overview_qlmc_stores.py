@@ -72,18 +72,43 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'UTF-8')
 
-## Check record dates (move)
-#df_prices['date'] = pd.to_datetime(df_prices['date'], format = '%d/%m/%Y')
-#print df_prices['date'].describe()
-## From 2015-02-05 to 2015-03-17
-#print len(df_prices[df_prices['date'] < '2015-02-17']) / float(len(df_prices))
-## less than 2% obs lost to have only 1 month
-#print len(df_prices[df_prices['date'] < '2015-03-01']) / float(len(df_prices))
-## only 17% records before 2015-03-01
+df_lsa = df_lsa[df_lsa['type_alt'].isin(['H', 'S'])]
 
-# ###########################
-# STORES LISTED VS. COLLECTED
-# ###########################
+# Create enseigne_qlmc (national chains) in df_lsa
+
+ls_keep_enseigne_lsa_to_qlmc = ['AUCHAN',
+                                'CARREFOUR',
+                                'CARREFOUR MARKET',
+                                'CASINO',
+                                'CORA',
+                                'SIMPLY MARKET']
+
+ls_ls_enseigne_lsa_to_qlmc = [[['CENTRE E.LECLERC'], 'LECLERC'],
+                              [['GEANT CASINO'], 'GEANT'],
+                              [['HYPER CASINO'], 'CASINO'],
+                              [['INTERMARCHE SUPER',
+                                'INTERMARCHE HYPER',
+                                'INTERMARCHE CONTACT'], 'INTERMARCHE'],
+                              [['HYPER U',
+                                'SUPER U',
+                                'U EXPRESS'], 'SYSTEME U'],
+                              [['MARKET'], 'CARREFOUR MARKET'],
+                              [["LES HALLES D'AUCHAN"], 'AUCHAN']]
+
+df_lsa['enseigne_qlmc'] = None
+df_lsa.loc[df_lsa['enseigne'].isin(ls_keep_enseigne_lsa_to_qlmc),
+           'enseigne_qlmc'] = df_lsa['enseigne']
+for ls_enseigne_lsa_to_qlmc in ls_ls_enseigne_lsa_to_qlmc:
+  df_lsa.loc[df_lsa['enseigne'].isin(ls_enseigne_lsa_to_qlmc[0]),
+             'enseigne_qlmc'] = ls_enseigne_lsa_to_qlmc[1]
+
+## Check numbers vs. numbers in Methodology to ensure consistency
+#print u'\nNb stores of QLMC national chains:'
+#print df_lsa['enseigne_qlmc'].value_counts().sort_index()
+
+# ######################################
+# LECLERC AND COMP LISTED VS. COLLECTED
+# ######################################
 
 ## Check that df_stores contains all stores in df_comp (i.e. from website): ok
 #ls_stores_in_comp = list(df_comp['lec_id'].unique()) +\
@@ -113,33 +138,41 @@ ls_really_missing = list(set(ls_missing_comp_ids).difference(set(ls_missing_lec_
 # REPRESENTATION OF EACH CHAIN
 # ############################
 
+chain_field = 'enseigne_qlmc'
+
+## add enseigne_qlmc to df_stores (todo: check correspondence w/ store_chain)
+## looks ok
+#for x in df_stores['enseigne_qlmc'].unique():
+#  print u'\n', x
+#  print df_stores[df_stores['enseigne_qlmc'] == x]['store_chain'].value_counts()
+#print df_stores[df_stores['enseigne_qlmc'].isnull()].to_string()
+
 df_lsa.set_index('id_lsa', inplace = True)
 df_stores.set_index('id_lsa', inplace = True)
 df_stores = pd.merge(df_stores,
-                     df_lsa[['enseigne', 'enseigne_alt', 'groupe', 'surface']],
+                     df_lsa[['enseigne', 'enseigne_qlmc', 'groupe', 'surface']],
                      left_index = True,
                      right_index = True,
                      how = 'left')
 
-se_qlmc_chains = df_stores['enseigne'].value_counts()
+se_qlmc_chains = df_stores['enseigne_qlmc'].value_counts()
 # Exclude small nbs which correspond to small stores or small chains
 se_qlmc_chains = se_qlmc_chains[se_qlmc_chains > 12]
-se_lsa_chains = df_lsa[df_lsa['enseigne'].isin(se_qlmc_chains.index)]\
-                      ['enseigne'].value_counts()
+se_lsa_chains = df_lsa[df_lsa['enseigne_qlmc'].isin(se_qlmc_chains.index)]\
+                      ['enseigne_qlmc'].value_counts()
+se_coverage_chains = se_qlmc_chains / se_lsa_chains * 100
 
 print u'\nRepresentation of chains (source: LSA):'
-print se_qlmc_chains / se_lsa_chains * 100
+df_rep_chains = pd.concat([se_lsa_chains,
+                           se_qlmc_chains,
+                           se_coverage_chains],
+                          axis = 1,
+                          keys = ['Nb stores LSA',
+                                  'Nb stores QLMC',
+                                  'Coverage (%)'])
+print df_rep_chains.to_string(float_format = format_float_int)
 
-# Check Leclerc not included
-lsd_lsa = ['enseigne', 'adresse1', 'ville', 'c_postal',
-           'surface', 'date_ouv', 'date_fer', 'date_reouv', 'ex_enseigne']
-
-print u'\nLeclerc not covered in QLMC:'
-print df_lsa[(df_lsa['enseigne'] == 'CENTRE E.LECLERC') &\
-             (~df_lsa.index.isin(df_stores.index))][lsd_lsa].to_string()
-
-# todo: check if not in my data or not on website at the time...
-# not very important anyway
+# print df_rep_chains.to_latex(float_format = format_float_int)
 
 # #############################
 # REPRESENTATION OF EACH REGION
@@ -148,35 +181,64 @@ print df_lsa[(df_lsa['enseigne'] == 'CENTRE E.LECLERC') &\
 # todo: df w/ pop, nb stores, total surf, pop by store, pop by surface
 
 # nb stores
-se_qlmc_reg = df_lsa[df_lsa.index.isin(df_stores.index)]['region'].value_counts()
-se_lsa_reg = df_lsa['region'].value_counts()
-print u'\nRepresentation by region (nb stores):'
-print se_qlmc_reg / se_lsa_reg * 100
-
+se_qlmc_reg_nb = df_lsa[df_lsa.index.isin(df_stores.index)]['region'].value_counts()
+se_lsa_reg_nb = df_lsa['region'].value_counts()
+se_coverage_reg_nb = se_qlmc_reg_nb / se_lsa_reg_nb * 100
 # surface
-se_qlmc_reg = df_lsa[df_lsa.index.isin(df_stores.index)][['region', 'surface']]\
-                .groupby('region').agg(sum)
-se_lsa_reg = df_lsa[['region', 'surface']].groupby('region').agg(sum)
-print u'\nRepresentation by region (surface):'
-print se_qlmc_reg / se_lsa_reg * 100
+se_qlmc_reg_surface = df_lsa[df_lsa.index.isin(df_stores.index)][['region', 'surface']]\
+                .groupby('region').agg(sum)['surface']
+se_lsa_reg_surface = df_lsa[['region', 'surface']].groupby('region').agg(sum)['surface']
+se_coverage_reg_surface = se_qlmc_reg_surface / se_lsa_reg_surface * 100
+
+print u'\nRepresentation by region:'
+df_rep_reg = pd.concat([se_qlmc_reg_nb,
+                        se_lsa_reg_nb,
+                        se_coverage_reg_nb,
+                        se_qlmc_reg_surface / 1000.0,
+                        se_lsa_reg_surface / 1000.0,
+                        se_coverage_reg_surface],
+                       axis = 1,
+                       keys = ['Nb stores LSA',
+                               'Nb stores QLMC',
+                               'Nb coverage (%)',
+                               'Cum surface LSA (th m2)',
+                               'Cum surface QLMC (th m2)',
+                               'Cum surf coverage (%)'])
+print df_rep_reg.to_string(float_format = format_float_int)
 
 # could refine by adding: 
 # Rural / City center / Suburb / Isolated city
 
-# #######################
-# OVERVIEW MISSING STORES
-# #######################
+# ##########################
+# LECLERC NOT IN QLMC
+# ##########################
 
-ls_missing_stores = list(set(df_stores['store_id'])\
+# LECLERC EXPRESS not covered on website (generally smaller)
+
+lsd_lsa = ['enseigne', 'adresse1', 'ville', 'c_postal',
+           'surface', 'date_ouv', 'date_fer', 'date_reouv', 'ex_enseigne']
+
+print u'\nLeclerc not covered in QLMC:'
+print df_lsa[(df_lsa['enseigne'] == 'CENTRE E.LECLERC') &\
+             (~df_lsa.index.isin(df_stores.index))][lsd_lsa].to_string()
+
+# Some are not present in my data but are now listed on website
+# What about then? check in methodo's list of stores
+
+# #############################
+# OVERVIEW STORES NOT COLLECTED
+# #############################
+
+ls_not_collected_ids = list(set(df_stores['store_id'])\
                           .difference(set(df_prices['store_id'].unique())))
-print u'\nNb missing stores:', len(ls_missing_stores)
+print u'\nNb stores on website but not collected:', len(ls_not_collected_ids)
 
-print u'\nNb missing stores by chain:'
-print df_stores[df_stores['store_id'].isin(ls_missing_stores)]\
+print u'\nNb stores on website but not collected by chain:'
+print df_stores[df_stores['store_id'].isin(ls_not_collected_ids)]\
                ['enseigne'].value_counts()
 
-print u'\nOverview of missing Leclerc:'
-print df_stores[(df_stores['store_id'].isin(ls_missing_stores)) &\
+print u'\nOverview of Leclerc on website but not collected:'
+print df_stores[(df_stores['store_id'].isin(ls_not_collected_ids)) &\
                 (df_stores['enseigne'] == 'CENTRE E.LECLERC')]\
                 [['store_id', 'store_name']].to_string()
 
@@ -193,30 +255,21 @@ df_stores['nb_obs'] = df_prices['store_id'].value_counts()
 print u'\nOverview nb obs (products) by store:'
 print df_stores['nb_obs'][df_stores['nb_obs'] != 0].describe()
 
-print u'\nOverview stores with few obs:'
+print u'\nOverview stores with few obs (<= 400):'
 print df_stores[(df_stores['nb_obs'] < 400) &\
                 (df_stores['nb_obs'] != 0)]\
-               [['store_chain', 'nb_obs']].to_string()
+               [['enseigne_qlmc', 'nb_obs']].to_string()
 
 print u'\nOverview nb obs (products) by store / chain:'
-chain_field = 'enseigne'
-ls_chains = list(df_stores[chain_field].unique())
+chain_field = 'enseigne_qlmc'
+ls_chains = list(df_stores[chain_field][~df_stores[chain_field].isnull()].unique())
 ls_se_chain = []
 for chain in ls_chains:
   se_chain_desc = df_stores[df_stores[chain_field] == chain]['nb_obs'].describe()
-  # hide small chains
-  if se_chain_desc.ix['count'] >= 5:
-    ls_se_chain.append(se_chain_desc)
+  ls_se_chain.append(se_chain_desc)
 df_chain_prods = pd.concat(ls_se_chain,
                            axis = 1,
                            keys = ls_chains)
-
-#df_chain_prods.drop([u"LES HALLES D'AUCHAN",
-#                     u"MIGROS",
-#                     u"RECORD"],
-#                    axis = 1,
-#                    inplace = True)
-
 df_chain_prods = df_chain_prods.T
 df_chain_prods.sort('count', ascending = False, inplace = True)
 print df_chain_prods.fillna(0).astype(int).to_string()
@@ -225,11 +278,19 @@ print df_chain_prods.fillna(0).astype(int).to_string()
 # NB PRODUCTS BY QLMC COMPA
 # #########################
 
+# Create qlmc_chain in df_comp
+df_comp['qlmc_comp_chain'] = df_comp['comp_chain']
+for ls_enseigne_lsa_to_qlmc in ls_ls_enseigne_lsa_to_qlmc:
+  df_comp.loc[df_comp['comp_chain'].isin(ls_enseigne_lsa_to_qlmc[0]),
+              'qlmc_comp_chain'] = ls_enseigne_lsa_to_qlmc[1]
+
+# todo: standardize chains
+
 # size and drive may explain variations in product count
 # todo (when building): add lsa_id, size and drive (for both, also distance?)
 
 print u'\nOverview nb obs (products) by qlmc comparison / chain:'
-chain_field = 'comp_chain'
+chain_field = 'qlmc_comp_chain'
 ls_chains = list(df_comp[chain_field].unique())
 ls_se_chain = []
 for chain in ls_chains:
