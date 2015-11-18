@@ -172,10 +172,27 @@ for region in ls_fra_regions:
 
 # Build price df
 df_prices = pd.concat(ls_df_regions)
+
+# Drop duplicates
 df_prices.sort(['store_id', 'section', 'family', 'product'],
                inplace = True)
 df_prices.drop_duplicates(['store_id', 'section', 'family', 'product'],
                           inplace = True)
+
+## Products lister under several family/sections?
+#print u'\nOverview nb obs by product:'
+#df_products = df_prices[['section', 'family', 'product']].drop_duplicates()
+#se_prod_vc = df_prices['product'].value_counts()
+#df_products.set_index('product', inplace = True)
+#df_products['nb_obs'] = se_prod_vc
+#df_products.sort('nb_obs', ascending = False, inplace = True)
+#print df_products['nb_obs'].describe()
+
+## Drop unique instance of product listed under two family/sections
+df_prices = df_prices[~((df_prices['family'] == u'Traiteur') &\
+                        (df_prices['product'] == u"DANIEL DESSAINT CRÊPES " +\
+                                                 u"MOELLEUSE SUCRÉES X8 400G " +\
+                                                 u"DANIEL DESSAINT"))]
 
 df_prices.to_csv(os.path.join(path_csv,
                               'df_prices.csv'),

@@ -101,14 +101,40 @@ print df_leclerc_comp.describe(percentiles = ls_pctiles)
 ## print len(df_leclerc_comp[df_leclerc_comp['mmin'] > 30])
 ## print df_comp[df_comp['lec_name'] == u'CENTRE E.LECLERC LOUDÉAC'].to_string()
 
-# ############################
-# ANALYSE COMPETITORS VS. LSA
-# ############################
+# ###################################
+# OVERVIEW LECLERC STORE COMPETITORS
+# ###################################
+
+df_stores.set_index('store_id', inplace = True)
+df_lsa.set_index('id_lsa', inplace = True)
+
+dict_lec_comp = {}
+for row_i, row in df_comp.iterrows():
+  lec_lsa_id = df_stores.ix[row['lec_id']]['id_lsa']
+  comp_lsa_id = df_stores.ix[row['comp_id']]['id_lsa']
+  if not pd.isnull(lec_lsa_id) and not pd.isnull(comp_lsa_id):
+    dict_lec_comp.setdefault(lec_lsa_id, []).append((comp_lsa_id, row['dist']))
+
+# Example:
+lsd0 = ['enseigne', 'adresse1', 'ville', 'surface']
+
+lec_lsa_id_ex = dict_lec_comp.keys()[0]
+
+print u'\nCompetitors picked by Leclerc:'
+print df_lsa.ix[[x[0] for x in dict_lec_comp[lec_lsa_id_ex]]][lsd0].to_string()
+
+print u'\nAll competitors (25 km) LSA:'
+print df_lsa.ix[[x[0] for x in dict_ls_comp[lec_lsa_id_ex]]][lsd0].to_string()
+
+# #################################
+# STATS DES: LSA COMP VS. QLMC COMP
+# #################################
 
 # todo: count all within 30 km, more than 1000m2, and discard differentiated
 
 ## check enseigne to discard
 #print df_lsa['enseigne'][df_lsa['surface'] >= 1000].value_counts().to_string()
+
 ls_discard_enseigne = [u'ALDI',
                        u'LEADER PRICE',
                        u'DIA %',
@@ -132,7 +158,36 @@ ls_discard_enseigne = [u'ALDI',
                        u"SPAR",
                        u"EUROPRIX"]
 
-df_lsa = df_lsa[~df_lsa['enseigne'].isin(ls_discard_enseigne)]
+ls_keep_ids = list(df_stores['id_lsa'])
+
+df_lsa = df_lsa[(~df_lsa['enseigne'].isin(ls_discard_enseigne)) &\
+                (~((df_lsa['surface'] <= 1000) &\
+                   (df_lsa['groupe'] != 'LECLERC') &\
+                   (~df_lsa.index.isin(ls_keep_ids))))]
+
+ls_lsa_comp_ids_d25, ls_lsa_comp_ids_dqlmc = [], []
+for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
+  ls_lec_comp = sorted(ls_lec_comp, key = lambda x: x[1])
+  qlmc_max_dist = ls_lec_comp[-1][1]
+  lec_surface = df_lsa.ix[lec_lsa_id]['surface']
+  
+  ls_qlmc_comp_lsa_ids = [x[0] for x in ls_lec_comp]
+  ls_qlmc_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])\
+                    for x in ls_qlmc_comp_lsa_ids]
+  
+  ls_lsa_comp_lsa_ids = [x[0] for x in dict_ls_comp[lec_lsa_id] if x[0] in df_lsa.index]
+  ls_lsa_comp_lsa_ids_dist = [x[0] for x in dict_ls_comp[lec_lsa_id]\
+                               if (x[1] <= qlmc_max_dist) and (x[0] in df_lsa.index)]
+  #ls_lsa_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])\
+  #                 for x in ls_lsa_comp_lsa_ids_dist if x in df_lsa.index]
+  ls_lsa_comp_ids_d25 += ls_lsa_comp_lsa_ids # todo: add check df_lsa.index
+  ls_lsa_comp_ids_dqlmc += ls_lsa_comp_lsa_ids_dist
+ls_lsa_comp_ids_d25 = list(set(ls_lsa_comp_ids_d25))
+ls_lsa_comp_ids_dqlmc = list(set(ls_lsa_comp_ids_dqlmc))
+
+# #################
+# ANALYSE QLMC COMP
+# #################
 
 df_lsa.loc[df_lsa['enseigne'] == 'MARKET',
            'enseigne'] = 'CARREFOUR MARKET'
@@ -148,27 +203,6 @@ ls_enseignes_compa = ['INTERMARCHE SUPER',
                       'HYPER U',
                       'SIMPLY MARKET',
                       'HYPER U']
-
-df_stores.set_index('store_id', inplace = True)
-df_lsa.set_index('id_lsa', inplace = True)
-
-dict_lec_comp = {}
-for row_i, row in df_comp.iterrows():
-  lec_lsa_id = df_stores.ix[row['lec_id']]['id_lsa']
-  comp_lsa_id = df_stores.ix[row['comp_id']]['id_lsa']
-  if not pd.isnull(lec_lsa_id) and not pd.isnull(comp_lsa_id):
-    dict_lec_comp.setdefault(lec_lsa_id, []).append((comp_lsa_id, row['dist']))
-
-# Example:
-lsd0 = ['enseigne', 'adresse1', 'ville', 'surface']
-
-lec_lsa_id_ex = dict_lec_comp.keys()[0]
-
-print u'\nCompetitors picked by Leclerc:'
-print df_lsa.ix[[x[0] for x in dict_lec_comp[lec_lsa_id_ex]]][lsd0].to_string()
-
-print u'\nAll competitors (25 km) LSA:'
-print df_lsa.ix[[x[0] for x in dict_ls_comp[lec_lsa_id_ex]]][lsd0].to_string()
 
 # Loop: for each leclerc:
 # - look if missing store of 1000m2 or more within radius by leclerc

@@ -19,13 +19,18 @@ path_built_csv = os.path.join(path_data,
                               'data_csv_201503')
 
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'))
+                                     'df_prices.csv'),
+                        encoding = 'utf-8')
 
 df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'))
+                                     'df_stores_final.csv'),
+                        dtype = {'id_lsa' : str,
+                                 'c_insee' : str},
+                        encoding = 'utf-8')
 
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
-                                               'df_qlmc_competitors.csv'))
+                                               'df_qlmc_competitors.csv'),
+                                  encoding = 'utf-8')
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
@@ -116,6 +121,12 @@ for lec_id, comp_id, comp_chain\
                      how = 'inner',
                      on = ['section', 'family', 'product'],
                      suffixes = ['_lec', '_comp'])
+  
+  # manipulation
+  df_duel['diff'] = df_duel['price_comp'] - df_duel['price_lec']
+  df_duel.sort('diff', ascending = False, inplace = True)
+  df_duel = df_duel[int(len(df_duel)*0.2):]
+  
   ls_rows_compa.append((lec_id,
                         comp_id,
                         comp_chain,
@@ -182,8 +193,9 @@ print df_delta['delta'].describe()
 
 # Summary by chain
 ls_su_chains = ['AUCHAN', 'CARREFOUR', 'GEANT CASINO', 'INTERMARCHE', 'SUPER U']
-ls_se_chain_desc = [df_repro_compa[df_repro_compa['comp_chain']\
-                                     == chain]['pct_compa'].describe()\
+ls_se_chain_desc =\
+  [df_repro_compa[(df_repro_compa['comp_chain'] == chain) &\
+                  (df_repro_compa['nb_obs'] >= 400)]['pct_compa'].describe()\
                       for chain in ls_su_chains]
 df_su_chains = pd.concat(ls_se_chain_desc,
                          axis = 1,
