@@ -210,30 +210,30 @@ df_prices_ht.to_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
                     float_format= '%.3f',
                     encoding = 'utf-8')
 
-## Add in long form (long to write)
-#df_prices_ht_long = df_prices_ht.unstack()
-#df_prices_ht_long = df_prices_ht_long.reset_index()
-#df_prices_ht_long.rename(columns = {'level_0' : 'id_station',
-#                                    0: 'price'},
-#                         inplace = True)
-#
-#df_prices_ht_long.to_csv(os.path.join(path_dir_built_csv,
-#                                      'df_prices_ht_final_long.csv'),
-#                         index = False,
-#                         float_format= '%.3f',
-#                         encoding = 'utf-8')
-#
-#df_prices_ttc_long = df_prices_ttc.unstack()
-#df_prices_ttc_long = df_prices_ttc_long.reset_index()
-#df_prices_ttc_long.rename(columns = {'level_0' : 'id_station',
-#                                    0: 'price'},
-#                          inplace = True)
-#
-#df_prices_ttc_long.to_csv(os.path.join(path_dir_built_csv,
-#                                      'df_prices_ttc_final_long.csv'),
-#                         index = False,
-#                         float_format= '%.3f',
-#                         encoding = 'utf-8')
+# Add in long form (long to write)
+df_prices_ht_long = df_prices_ht.unstack()
+df_prices_ht_long = df_prices_ht_long.reset_index()
+df_prices_ht_long.rename(columns = {'level_0' : 'id_station',
+                                    0: 'price'},
+                         inplace = True)
+
+df_prices_ht_long.to_csv(os.path.join(path_dir_built_csv,
+                                      'df_prices_ht_final_long.csv'),
+                         index = False,
+                         float_format= '%.3f',
+                         encoding = 'utf-8')
+
+df_prices_ttc_long = df_prices_ttc.unstack()
+df_prices_ttc_long = df_prices_ttc_long.reset_index()
+df_prices_ttc_long.rename(columns = {'level_0' : 'id_station',
+                                    0: 'price'},
+                          inplace = True)
+
+df_prices_ttc_long.to_csv(os.path.join(path_dir_built_csv,
+                                      'df_prices_ttc_final_long.csv'),
+                         index = False,
+                         float_format= '%.3f',
+                         encoding = 'utf-8')
 
 ## #############
 ## STATS DES
