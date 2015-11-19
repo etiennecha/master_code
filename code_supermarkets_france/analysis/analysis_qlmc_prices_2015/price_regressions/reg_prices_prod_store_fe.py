@@ -44,9 +44,9 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'),
                         encoding = 'utf-8')
 
-# ##############
-# REG
-# ##############
+# ###############################
+# RESTRICTIONS ON PRODUCTS/STORES
+# ###############################
 
 # keep only if products observed w/in at least 1000 stores
 df_prices['nb_prod_obs'] =\
@@ -64,20 +64,41 @@ df_prices['nb_prod_obs'] =\
 
 print df_prices[['nb_prod_obs', 'nb_store_obs']].describe()
 
+# ##############
+# REGRESSION
+# ##############
+
+ref_var = 'store_id' # default to product
+
+df_prices['ln_price'] = np.log(df_prices['price'])
+
 pd_as_dicts = [dict(r.iteritems())\
                  for _, r in df_prices[['store_id', 'product']].iterrows()]
-pd_as_dicts_2 = [dict_temp if dict_temp['product'] != pd_as_dicts[0]['product']\
-                 else {'store_id': dict_temp['store_id']} for dict_temp in pd_as_dicts]
+#pd_as_dicts_2 = [dict(dict_temp.items() + [('intercept', 'intercept')])\
+#                   for dict_temp in pd_as_dicts]
+
+if ref_var == 'store_id':
+  pd_as_dicts_2 = [dict_temp if dict_temp['store_id'] != pd_as_dicts[0]['store_id']\
+                   else {'product': dict_temp['product']} for dict_temp in pd_as_dicts]
+else:
+  pd_as_dicts_2 = [dict_temp if dict_temp['product'] != pd_as_dicts[0]['product']\
+                   else {'store_id': dict_temp['store_id']} for dict_temp in pd_as_dicts]
+
 sparse_mat_prod_store = DictVectorizer(sparse=True).fit_transform(pd_as_dicts_2)
 res_01 = scipy.sparse.linalg.lsqr(sparse_mat_prod_store,
-                                  df_prices['price'].values,
+                                  df_prices['ln_price'].values,
                                   iter_lim = 100,
                                   calc_var = True)
 nb_fd_01 = len(df_prices) - len(res_01[0])
 ar_std_01 = np.sqrt(res_01[3]**2/nb_fd_01 * res_01[9])
 ls_stores = sorted(df_prices['store_id'].copy().drop_duplicates().values)
 ls_products = sorted(df_prices['product'].copy().drop_duplicates().values)
-ls_products.remove(pd_as_dicts[0]['product'])
+
+if ref_var == 'store_id':
+  ls_stores.remove(pd_as_dicts[0]['store_id'])
+else:
+  ls_products.remove(pd_as_dicts[0]['product'])
+
 # Caution: so happens that products are returned before stores (dict keys..?)
 ls_rows_01 = zip(ls_products + ls_stores, res_01[0], ar_std_01)
 df_res_01 = pd.DataFrame(ls_rows_01, columns = ['Name', 'Coeff', 'Std'])
@@ -99,3 +120,30 @@ print df_res_01.iloc[0:5].to_string()
 print u'\nMean prices for 5 first products'
 print df_prices[df_prices['product'].isin(df_res_01['Name'][0:5].values)]\
         [['product', 'price']].groupby('product').mean()
+
+# ##################
+# ANALYSE STORE FEs
+# ##################
+
+df_stores.set_index('store_id', inplace = True)
+df_stores_fe.set_index('Name', inplace = True)
+df_stores = pd.merge(df_stores,
+                     df_stores_fe,
+                     left_index = True,
+                     right_index = True,
+                     how = 'left')
+
+## center Coeff data
+#df_stores['Coeff'] = df_stores['Coeff'] - df_stores['Coeff'].mean()
+
+# check syntax update in pandas 0.17
+df_chains_su = df_stores.groupby('store_chain')['Coeff']\
+                        .agg('describe').reset_index()\
+                        .pivot(index='store_chain',
+                               values=0,
+                               columns='level_1')
+df_chains_su = df_chains_su[df_chains_su['count'] >= 10]
+lsddesc = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']
+print df_chains_su[lsddesc].to_string()
+
+# todo: log analysis? no need to center?
