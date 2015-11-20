@@ -10,8 +10,12 @@ import timeit
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
+import scipy
+from patsy import dmatrix, dmatrices
+from scipy.sparse import csr_matrix
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.3f}'.format)
+
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
@@ -41,6 +45,24 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
 df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'),
                         encoding = 'utf-8')
+
+# Add qlmc_chain
+ls_ls_enseigne_lsa_to_qlmc = [[['CENTRE E.LECLERC'], 'LECLERC'],
+                              [['GEANT CASINO'], 'GEANT'],
+                              [['HYPER CASINO'], 'CASINO'],
+                              [['INTERMARCHE SUPER',
+                                'INTERMARCHE HYPER',
+                                'INTERMARCHE CONTACT'], 'INTERMARCHE'],
+                              [['HYPER U',
+                                'SUPER U',
+                                'U EXPRESS'], 'SYSTEME U'],
+                              [['MARKET'], 'CARREFOUR MARKET'],
+                              [["LES HALLES D'AUCHAN"], 'AUCHAN']]
+
+df_stores['qlmc_chain'] = df_stores['store_chain']
+for ls_enseigne_lsa_to_qlmc in ls_ls_enseigne_lsa_to_qlmc:
+  df_stores.loc[df_stores['store_chain'].isin(ls_enseigne_lsa_to_qlmc[0]),
+              'qlmc_chain'] = ls_enseigne_lsa_to_qlmc[1]
 
 # LOAD STORE COMPETITION (todo: aggregate elsewhere)
 
@@ -115,6 +137,8 @@ df_stores = pd.merge(df_stores,
 
 print len(df_prices)
 
+# drop redundant columns
+df_prices.drop(['store_chain'], axis = 1, inplace = True)
 df_qlmc = pd.merge(df_prices,
                    df_stores,
                    how = 'left',
@@ -128,64 +152,105 @@ df_qlmc['surface'] = df_qlmc['surface'].apply(lambda x: x/1000.0)
 # Try with log of price (semi elasticity)
 df_qlmc['ln_price'] = np.log(df_qlmc['price'])
 
-# ###############
-# REGRESSIONS
-# ###############
+# ###############################
+# RESTRICTIONS ON PRODUCTS/STORES
+# ###############################
 
-# Regression:
-# - Keep 100 most common products (and check by family)
-# - Enseigne (as they are or LSA)
-# - LSA vars + comp vars => in built file
-# - INSEE vars => via IC/AU/UU/BV : try the 4 (hence need to add codes)
+# drop chain(s) with too few stores
+df_qlmc = df_qlmc[~(df_qlmc['qlmc_chain'] == 'SUPERMARCHE MATCH')]
 
-# Keep only top 100 products
-se_vc_prod = df_qlmc['product'].value_counts()
-ls_keep_prod = list(se_vc_prod[0:200].index)
-df_qlmc_sub = df_qlmc[df_qlmc['product'].isin(ls_keep_prod)]
+# keep only if products observed w/in at least 1000 stores (or more: memory..)
+df_qlmc['nb_prod_obs'] =\
+  df_qlmc.groupby('product')['product'].transform(len).astype(int)
+df_qlmc = df_qlmc[df_qlmc['nb_prod_obs'] >= 1200]
 
-# Keep only largest store groups
-ls_keep_enseigne_alt = ['CENTRE E.LECLERC',
-                        'SUPER U',
-                        'INTERMARCHE SUPER',
-                        'CARREFOUR MARKET',
-                        'AUCHAN',
-                        'HYPER U',
-                        'INTERMARCHE HYPER',
-                        'CORA',
-                        'CARREFOUR',
-                        'GEANT CASINO']
-df_qlmc_sub = df_qlmc_sub[df_qlmc_sub['enseigne_alt'].isin(ls_keep_enseigne_alt)]
+# keep only stores w/ at least 400 products
+df_qlmc['nb_store_obs'] =\
+ df_qlmc.groupby('store_id')['store_id'].transform(len).astype(int)
+df_qlmc = df_qlmc[df_qlmc['nb_store_obs'] >= 400]
 
-## todo: check representation of section
-print u'\nCheck section representation:'
-print df_qlmc_sub[['section', 'product']]\
-                 .drop_duplicates().groupby('section').agg(len)['product']
+# count product obs again
+df_qlmc['nb_prod_obs'] =\
+  df_qlmc.groupby('product')['product'].transform(len).astype(int)
 
-# representativeness of store sample
-print u'\nCheck retail chain representation:'
-se_ens_alt = df_qlmc_sub[['enseigne_alt', 'store_id']]\
-                        .drop_duplicates()\
-                        .groupby('enseigne_alt').agg(len)['store_id']
-se_repr = se_ens_alt.div(df_comp['enseigne_alt'].value_counts().astype(float),
-                         axis = 'index')
-print se_repr[~pd.isnull(se_repr)]
+print df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe()
 
-print u'\nNo control:'
-print smf.ols("ln_price ~ C(product) + " +\
-              "C(enseigne_alt, Treatment(reference = 'CENTRE E.LECLERC'))",
-              data = df_qlmc_sub).fit().summary()
+# ############
+# REGRESSION
+# ############
 
-print u'\nWith controls:'
-print smf.ols("ln_price ~ C(product) + C(c_departement) + surface + hhi + pop + " +\
-              "C(enseigne_alt, Treatment(reference = 'CENTRE E.LECLERC'))",
-              data = df_qlmc_sub).fit().summary()
+# check pop variable... 0 for Leclerc in Porto Vecchio
+# todo: should cluster standard errors on stores
 
-# Check nb products by store (todo: move)
-se_nb_prod_by_store = df_qlmc[['store_id', 'product']]\
-                             .groupby('store_id').agg(len)['product']
-df_stores.set_index('store_id', inplace = True)
-df_stores['nb_records'] = se_nb_prod_by_store
+#str_exo = "C(qlmc_chain) + C(product)"
+#X = dmatrix(str_exo, data = df_qlmc, return_type = "matrix")
+#y = df_qlmc['price'].values
 
-df_stores[df_stores['enseigne_alt'] != 'CENTRE E.LECLERC'].plot(kind = 'scatter',
-                                                                x = 'surface',
-                                                                y = 'nb_records')
+str_exo = "price ~ C(qlmc_chain) + C(product)"
+#str_exo = "price ~ C(qlmc_chain) + surface + C(region) + C(product) + ac_hhi + ac_nb_stores"
+y, X = dmatrices(str_exo,
+                 data = df_qlmc,
+                 return_type = "matrix")
+
+A = csr_matrix(X)
+
+res = scipy.sparse.linalg.lsqr(A,
+                               y,
+                               iter_lim = 100,
+                               calc_var = True)
+# X.design_info
+param_names = X.design_info.column_names
+param_values = res[0]
+nb_freedom_degrees = len(df_qlmc) - len(res[0])
+param_se = np.sqrt(res[3]**2/nb_freedom_degrees * res[9])
+
+# todo: check if can get same results as with smf.ols
+df_reg = pd.DataFrame(zip(param_names,
+                          param_values,
+                          param_se), columns = ['name', 'coeff', 'bse'])
+
+print u'\nReg result (omitting prod and region FEs):'
+print df_reg[(~df_reg['name'].str.contains(u'C\(product\)')) &\
+             (~df_reg['name'].str.contains(u'C\(region\)'))].to_string()
+
+# try to create result instance to use statsmodels post estimation functions
+# https://github.com/statsmodels/statsmodels/blob/master/statsmodels/stats/sandwich_covariance.py
+# http://statsmodels.sourceforge.net/ipdirective/_modules/scikits/statsmodels/regression/linear_model.html
+class Results: pass
+results = Results()
+results.model = Results()
+# pinv_wexog: pseudo inverse of n*p matrix... can be a bottleneck
+# see if can use res[9] i.e. (A'A)^{-1}
+# get rid of Patsy design matrices => numpy arrays
+results.model.pinv_wexog = np.linalg.pinv(np.array(X))
+results.resid = np.array(y.flatten()) - np.dot(np.array(X), res[0])
+results.nobs = len(df_qlmc)
+results.df_resid = len(df_qlmc) - len(res[0]) # nb obs - nb parameters
+# hc2 requires:
+results.model.exog = np.array(X)
+results.normalized_cov_params = np.dot(results.model.pinv_wexog,
+                                       np.transpose(results.model.pinv_wexog))
+print sm.stats.sandwich_covariance.cov_hc0(results)
+
+## #################
+## REGRESSIONS (OLD
+## #################
+#
+### representativeness of store sample
+##print u'\nCheck retail chain representation:'
+##se_ens_alt = df_qlmc[['enseigne_alt', 'store_id']]\
+##                    .drop_duplicates()\
+##                    .groupby('enseigne_alt').agg(len)['store_id']
+##se_repr = se_ens_alt.div(df_comp['enseigne_alt'].value_counts().astype(float),
+##                         axis = 'index')
+##print se_repr[~pd.isnull(se_repr)]
+#
+#print u'\nNo control:'
+#res_a = smf.ols("price ~ C(qlmc_chain) + C(product)",
+#                data = df_qlmc).fit()
+#rob_cov_a = sm.stats.sandwich_covariance.cov_hc0(res_a)
+#
+##print u'\nWith controls:'
+##res_b = smf.ols("price ~ C(product) + C(c_departement) + surface + ac_hhi + " +\
+##                "C(qlmc_chain, Treatment(reference = 'CENTRE E.LECLERC'))",
+##                data = df_qlmc).fit()

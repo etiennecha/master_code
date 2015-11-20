@@ -14,7 +14,8 @@ from functions_generic_qlmc import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.3f}'.format)
+
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
