@@ -264,12 +264,19 @@ print df_reg[(~df_reg['name'].str.contains(u'C\(product\)')) &\
 xtx = A.T.dot(A).toarray()
 xtxi = np.linalg.inv(xtx)
 resid = np.array(y.flatten()) - A.dot(res[0]) # need to use A (sparse)
+df_resid = len(df_qlmc) - len(res[0])
 nobs = len(df_qlmc)
 xu = A.T.dot(scipy.sparse.dia_matrix((resid, 0), shape=(nobs, nobs))).T
 assert scipy.sparse.issparse(xu)
 S = xu.T.dot(xu).toarray()
 cov_p = xtxi.dot(S).dot(xtxi)
 bse = np.sqrt(np.diag(cov_p))
+
+# check computation of various het_scale
+hc0_het_scale = resid**2
+hc1_het_scale = nobs/(df_resid)*(resid**2)
+#hc2_h = np.diag(np.dot(A, np.dot(xtxi, A.T)))
+#hc2_het_scale = resid**2/(1-hc2_h)
 
 #### #################
 #### NON SPARSE REG 
