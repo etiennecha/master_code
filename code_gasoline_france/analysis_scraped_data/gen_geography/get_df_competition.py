@@ -188,17 +188,16 @@ df_clc = pd.DataFrame(ls_rows_clc,
                       columns = ['dist_s', 'dist_c', 'dist_c_sup'])
 
 # CLOSEST TOTAL ACCESS
+# Caution: want it also for other Total stations => use dict_ls_close
 ls_ta_ids = df_info[(df_info['brand_last'] == 'TOTAL_ACCESS')].index.tolist()
 ls_rows_close_ta = []
 max_nb_ta = 0
-for id_station, ls_comp in dict_ls_comp.items():
-  # keep info even for Total SA group stations
-  #if df_info.ix[id_station]['brand_0'] not in ['ELF', 'TOTAL', 'TOTAL_ACCESS', 'ELAN']:
-  ls_ta_comp = [(comp_id, distance) for comp_id, distance in ls_comp\
-                                    if comp_id in ls_ta_ids]
-  ls_ta_comp_flat = [x for ls_x in ls_ta_comp for x in ls_x]
-  max_nb_ta = max(max_nb_ta, len(ls_ta_comp))
-  ls_rows_close_ta.append([id_station] + ls_ta_comp_flat)
+for id_station, ls_close in dict_ls_close.items():
+  ls_ta_close = [(close_id, distance) for close_id, distance in ls_close\
+                                      if close_id in ls_ta_ids]
+  ls_ta_close_flat = [x for ls_x in ls_ta_close for x in ls_x]
+  max_nb_ta = max(max_nb_ta, len(ls_ta_close))
+  ls_rows_close_ta.append([id_station] + ls_ta_close_flat)
 ls_close_ta_cols = ['id_station'] + [x for ls_x in [['id_ta_%s' %i, 'dist_ta_%s' %i]\
                                        for i in range(max_nb_ta)] for x in ls_x]
 df_close_ta = pd.DataFrame(ls_rows_close_ta, columns = ls_close_ta_cols)
