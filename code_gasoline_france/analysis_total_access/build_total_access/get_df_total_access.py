@@ -28,6 +28,8 @@ path_dir_built_ta_csv = os.path.join(path_dir_built_ta,
 path_dir_built_graphs = os.path.join(path_dir_built_ta,
                                      'data_graphs')
 
+dist_comp_ta = 1
+
 # #########
 # LOAD DATA
 # #########
@@ -219,8 +221,10 @@ for row_i, row in df_comp.iterrows():
   elif ls_ta_temp[0][1] > 5:
     ls_control_ids.append(row_i)
   # ta and elf treatment
-  ls_ta_pp_chge_temp = [x for x in ls_ta_temp if x[1] <= 5 and x[0] in dict_ta_pp_chge]
-  ls_ta_elf_temp = [x for x in ls_ta_temp if x[1] <= 5 and x[0] in dict_ta_elf]
+  ls_ta_pp_chge_temp = [x for x in ls_ta_temp if (x[1] <= dist_comp_ta) and\
+                                                 (x[0] in dict_ta_pp_chge)]
+  ls_ta_elf_temp = [x for x in ls_ta_temp if (x[1] <= dist_comp_ta) and\
+                                             (x[0] in dict_ta_elf)]
   if ls_ta_pp_chge_temp:
     ls_ta_pp_chge_temp = [tuple(x + dict_ta_pp_chge[x[0]]) for x in ls_ta_pp_chge_temp]
     ls_ta_pp_chge_temp = sorted(ls_ta_pp_chge_temp, key = lambda x: x[2])
@@ -356,5 +360,5 @@ for row_i, row in df_ta_elf.iterrows():
 # #######
 
 df_info.to_csv(os.path.join(path_dir_built_ta_csv,
-                            'df_total_access.csv'),
+                            'df_total_access_{:d}km.csv'.format(dist_comp_ta)),
                encoding = 'utf-8')
