@@ -65,7 +65,8 @@ df_info_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
                                   'ci_ardt_2' : str,
                                   'dpt' : str},
                          parse_dates = [u'day_%s' %i for i in range(4)] +\
-                                       ['pp_chge_date', 'ta_gov_date', 'ta_tot_date'])
+                                       ['pp_chge_date', 'ta_gov_date', 'ta_tot_date'] +\
+                                       ['date_beg', 'date_end'])
 df_info_ta.set_index('id_station', inplace = True)
 
 # LOAD COMPETITION
@@ -88,6 +89,15 @@ df_price_stats = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
                                dtype = {'id_station' : str},
                                encoding = 'utf-8')
 df_price_stats.set_index('id_station', inplace = True)
+
+# LOAD DF PRICES
+
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
+                                        'df_prices_ttc_final.csv'),
+                           parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
+
+df_prices = df_prices_ttc
 
 # #################
 # EXCLUDED STATIONS
@@ -354,6 +364,33 @@ for row_i, row in df_ta_elf.iterrows():
                'ta_date_end']] = [1,
                                row['date_beg'],
                                row['date_end']]
+
+# #####################################
+# CHECK ENOUGH PRICE DATA BEFORE AFTER
+# #####################################
+
+ls_pair_dates = [['ta_date_beg', 'ta_date_end'],
+                 ['date_min_total_ta', 'date_max_total_ta'],
+                 ['date_min_elf_ta', 'date_max_elf_ta']]
+cond_ba_days = 30
+ls_ids, ls_dum_before_after = [], []
+for id_station, row in df_info.iterrows():
+  dum_before_after = 1
+  for col_date_beg, col_date_end in ls_pair_dates:
+    if not pd.isnull(row[col_date_beg]):
+      date_beg, date_end = row[[col_date_beg, col_date_end]].values
+      df_station = df_prices[[id_station]].copy()
+      if (df_prices[id_station][df_prices.index <= date_beg].count() >= cond_ba_days) &\
+         (df_prices[id_station][df_prices.index >= date_end].count() >= cond_ba_days):
+        dum_before_after = 1
+      else:
+        dum_before_after = 0
+      break
+  ls_dum_before_after.append(dum_before_after)
+  ls_ids.append(id_station)
+se_ba = pd.Series(ls_dum_before_after, index = ls_ids)
+
+df_info['dum_ba'] = se_ba
 
 # #######
 # OUTPUT

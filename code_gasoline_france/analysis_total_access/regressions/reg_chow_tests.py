@@ -170,9 +170,10 @@ ls_ids_nores = []
 ls_ids_nodata = []
 ls_rows_res = []
 for id_station, row in df_ta[(df_ta['treatment_0'] == 1) &\
-                             (df_ta['group_last'] != 'TOTAL')].iterrows():
+                             (df_ta['group_last'] == 'TOTAL')].iterrows():
   try:
     date_beg, date_end = row[['date_min_total_ta', 'date_max_total_ta']].values
+    #date_beg, date_end = row[['date_min_elf_ta', 'date_max_elf_ta']].values
     df_station = df_prices[[id_station]].copy()
     df_station.rename(columns = {id_station : 'price'},
                    inplace = True)
@@ -288,3 +289,7 @@ print df_res[(df_res['brand_last'] == 'LECLERC') &\
              (df_res['p_treatment'] <= 0.05)]['c_treatment'].describe()
 
 print df_res[(df_res['brand_last'] == 'LECLERC')]['c_treatment'].describe()
+
+# TOTAL STATIONS
+print df_res[(df_res['p_treatment'] <= 0.05) &\
+             (df_res['c_treatment'] >= 0.01)].to_string()
