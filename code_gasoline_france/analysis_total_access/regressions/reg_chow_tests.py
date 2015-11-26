@@ -78,7 +78,7 @@ df_comp.set_index('id_station', inplace = True)
 # DF TOTAL ACCESS
 
 df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
-                                           'df_total_access_5km_dist_order.csv'),
+                                           'df_total_access_5km.csv'),
                               dtype = {'id_station' : str,
                                        'id_total_ta' : str},
                               encoding = 'utf-8',

@@ -402,6 +402,12 @@ print df_ta_no_pp_chge[pd.isnull(df_ta_no_pp_chge['gov_vs_tot'])]\
 df_ta_no_pp_chge['date_beg'] = df_ta_no_pp_chge['ta_tot_date'] - pd.Timedelta(days = 15)
 df_ta_no_pp_chge['date_end'] = df_ta_no_pp_chge['ta_tot_date']
 
+# Remaining: same with gov date
+df_ta_no_pp_chge.loc[df_ta_no_pp_chge['date_beg'].isnull(),
+                     'date_beg'] = df_ta_no_pp_chge['ta_gov_date'] - pd.Timedelta(days = 15)
+df_ta_no_pp_chge.loc[df_ta_no_pp_chge['date_end'].isnull(),
+                     'date_end'] = df_ta_no_pp_chge['ta_gov_date']
+
 # ###################
 # GRAPHS: TA PP CHGE
 # ###################
