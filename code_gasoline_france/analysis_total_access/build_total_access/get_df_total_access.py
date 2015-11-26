@@ -28,7 +28,7 @@ path_dir_built_ta_csv = os.path.join(path_dir_built_ta,
 path_dir_built_graphs = os.path.join(path_dir_built_ta,
                                      'data_graphs')
 
-dist_comp_ta = 1
+dist_comp_ta = 5
 
 # #########
 # LOAD DATA
