@@ -53,6 +53,22 @@ df_info = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
 df_info.set_index('id_station', inplace = True)
 df_info = df_info[df_info['highway'] != 1]
 
+# DF TOTAL ACCESS
+
+df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
+                                           'df_total_access_5km_dist_order.csv'),
+                              dtype = {'id_station' : str,
+                                       'id_total_ta' : str},
+                              encoding = 'utf-8',
+                              parse_dates = ['start', 'end',
+                                             'ta_date_beg',
+                                             'ta_date_end',
+                                             'date_min_total_ta',
+                                             'date_max_total_ta',
+                                             'date_min_elf_ta',
+                                             'date_max_elf_ta'])
+df_ta.set_index('id_station', inplace = True)
+
 # DF PRICES
 
 df_prices_ht = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
@@ -67,29 +83,8 @@ df_prices_ttc.set_index('date', inplace = True)
 
 df_prices = df_prices_ht
 
-# DF COMP
-
-df_comp = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
-                                   'df_comp.csv'),
-                      dtype = {'id_station' : str},
-                      encoding = 'utf-8')
-df_comp.set_index('id_station', inplace = True)
-
-# DF TOTAL ACCESS
-
-df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
-                                           'df_total_access_5km.csv'),
-                              dtype = {'id_station' : str,
-                                       'id_total_ta' : str},
-                              encoding = 'utf-8',
-                              parse_dates = ['start', 'end',
-                                             'ta_date_beg',
-                                             'ta_date_end',
-                                             'date_min_total_ta',
-                                             'date_max_total_ta',
-                                             'date_min_elf_ta',
-                                             'date_max_elf_ta'])
-df_ta.set_index('id_station', inplace = True)
+# GET RID OF PROBLEMATIC STATIONS
+df_ta = df_ta[df_ta['filter'] > 5]
 
 # DEFINE PRICE CONTROL SERIES
 ls_ids_control = df_ta[df_ta['treatment_0'] == 3].index
@@ -130,9 +125,9 @@ df_test['l1_resid'] = df_test['resid'].shift(1)
 df_test['l1_resid_bt'] = df_test['resid'].shift(1) * (1 - df_test['treatment'])
 df_test['l1_resid_at'] = df_test['resid'].shift(1) * df_test['treatment']
 
-# keep only one price per week
-df_test['dow'] = df_test.index.weekday
-df_test = df_test[df_test['dow'] == 3]
+## keep only one price per week
+#df_test['dow'] = df_test.index.weekday
+#df_test = df_test[df_test['dow'] == 3]
 
 rest0 = smf.ols('price ~ ref_price + treatment',
                data = df_test).fit(cov_type='HAC',
@@ -174,7 +169,7 @@ ls_ids_nores = []
 ls_ids_nodata = []
 ls_rows_res = []
 for id_station, row in df_ta[(df_ta['treatment_0'] == 1) &\
-                             (df_ta['group_last'] == 'TOTAL')].iterrows():
+                             (df_ta['group_last'] != 'TOTAL')].iterrows():
   try:
     date_beg, date_end = row[['date_min_total_ta', 'date_max_total_ta']].values
     #date_beg, date_end = row[['date_min_elf_ta', 'date_max_elf_ta']].values
@@ -194,9 +189,9 @@ for id_station, row in df_ta[(df_ta['treatment_0'] == 1) &\
                   'treatment'] = 1
       df_station['resid_2'] = df_station['resid'] * df_station['treatment']
       df_station['ref_price_2'] = df_station['ref_price'] * df_station['treatment']
-      # keep only one price per week
-      df_station['dow'] = df_station.index.weekday
-      df_station = df_station[df_station['dow'] == 3]
+      ## keep only one price per week
+      #df_station['dow'] = df_station.index.weekday
+      #df_station = df_station[df_station['dow'] == 3]
       res0 = smf.ols('price ~ ref_price + treatment',
                      data = df_station).fit(cov_type='HAC',
                                             cov_kwds={'maxlags':14})
@@ -297,6 +292,6 @@ df_res = pd.merge(df_res,
 #
 #print df_res[(df_res['brand_last'] == 'LECLERC')]['c_treatment'].describe()
 
-# TOTAL STATIONS
-print df_res[(df_res['p_treatment'] <= 0.05) &\
-             (df_res['c_treatment'] >= 0.01)].to_string()
+## TOTAL STATIONS
+#print df_res[(df_res['p_treatment'] <= 0.05) &\
+#             (df_res['c_treatment'] >= 0.01)].to_string()
