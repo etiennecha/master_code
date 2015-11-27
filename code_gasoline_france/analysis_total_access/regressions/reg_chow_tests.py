@@ -65,7 +65,7 @@ df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
-df_prices = df_prices_ttc
+df_prices = df_prices_ht
 
 # DF COMP
 
@@ -130,6 +130,10 @@ df_test['l1_resid'] = df_test['resid'].shift(1)
 df_test['l1_resid_bt'] = df_test['resid'].shift(1) * (1 - df_test['treatment'])
 df_test['l1_resid_at'] = df_test['resid'].shift(1) * df_test['treatment']
 
+# keep only one price per week
+df_test['dow'] = df_test.index.weekday
+df_test = df_test[df_test['dow'] == 3]
+
 rest0 = smf.ols('price ~ ref_price + treatment',
                data = df_test).fit(cov_type='HAC',
                                    cov_kwds={'maxlags':7})
@@ -190,6 +194,9 @@ for id_station, row in df_ta[(df_ta['treatment_0'] == 1) &\
                   'treatment'] = 1
       df_station['resid_2'] = df_station['resid'] * df_station['treatment']
       df_station['ref_price_2'] = df_station['ref_price'] * df_station['treatment']
+      # keep only one price per week
+      df_station['dow'] = df_station.index.weekday
+      df_station = df_station[df_station['dow'] == 3]
       res0 = smf.ols('price ~ ref_price + treatment',
                      data = df_station).fit(cov_type='HAC',
                                             cov_kwds={'maxlags':14})
@@ -285,10 +292,10 @@ df_res = pd.merge(df_res,
 #             (df_res['p_treatment'] <= 0.05) &\
 #             (df_res['c_treatment'] <= -0.1)].to_string()
 
-print df_res[(df_res['brand_last'] == 'LECLERC') &\
-             (df_res['p_treatment'] <= 0.05)]['c_treatment'].describe()
-
-print df_res[(df_res['brand_last'] == 'LECLERC')]['c_treatment'].describe()
+#print df_res[(df_res['brand_last'] == 'LECLERC') &\
+#             (df_res['p_treatment'] <= 0.05)]['c_treatment'].describe()
+#
+#print df_res[(df_res['brand_last'] == 'LECLERC')]['c_treatment'].describe()
 
 # TOTAL STATIONS
 print df_res[(df_res['p_treatment'] <= 0.05) &\
