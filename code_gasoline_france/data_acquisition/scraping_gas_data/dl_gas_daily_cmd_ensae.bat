@@ -1,0 +1,1 @@
+\\ulysse\users\echamayou\Etienne\Python\Ppython\App\python.exe \\ulysse\users\echamayou\Bureau\Etienne_work\Code\code_gasoline\scraping\dl_gas_daily.py >> \\ulysse\users\echamayou\Bureau\Etienne_work\Data\data_gasoline\data_source\data_prices\current_prices\log.txt
