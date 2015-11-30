@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
@@ -56,7 +57,7 @@ df_info = df_info[df_info['highway'] != 1]
 # DF TOTAL ACCESS
 
 df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
-                                           'df_total_access_5km_dist_order.csv'),
+                                           'df_total_access_3km_dist_order.csv'),
                               dtype = {'id_station' : str,
                                        'id_total_ta' : str},
                               encoding = 'utf-8',
@@ -83,102 +84,54 @@ df_prices_ttc.set_index('date', inplace = True)
 
 df_prices = df_prices_ht
 
-# GET RID OF PROBLEMATIC STATIONS
-df_ta = df_ta[df_ta['filter'] > 5]
+# ##########################
+# DEFINE CONTROL AND TREATED
+# ##########################
 
-# DEFINE PRICE CONTROL SERIES
-ls_ids_control = df_ta[df_ta['treatment_0'] == 3].index
-se_mean_prices = df_prices[ls_ids_control].mean(1)
+# filter stations with insufficient data
+df_ta_sub = df_ta[(df_ta['filter'] > 4) &\
+                  (df_ta['dum_ba'] != 0)]
 
-## demean within station to avoid composition effect
-#df_prices_cl = df_prices - df_prices.mean(0)
-#se_mean_prices = df_prices_cl[ls_ids_control].mean(1)
+dict_df_treated = {}
+dict_df_treated['tta'] = df_ta_sub[(df_ta_sub['treatment_0'] == 5)]
+dict_df_treated['eta'] = df_ta_sub[(df_ta_sub['treatment_0'] == 6)]
+dict_df_treated['tta_comp'] = df_ta_sub[(df_ta_sub['treatment_0'] == 1) &\
+                                        (df_ta_sub['filter'].isin([11, 12]))]
+dict_df_treated['eta_comp'] = df_ta_sub[(df_ta_sub['treatment_0'] == 2) &\
+                                        (df_ta_sub['filter'].isin([11,12]))]
+dict_df_treated['tta_tot'] = df_ta_sub[(df_ta_sub['treatment_0'] == 1) &\
+                                       (df_ta_sub['filter'] > 5) &\
+                                       (df_ta_sub['group'] == 'TOTAL')]
 
-# #########
-# CHOW TEST
-# #########
+df_control = df_ta_sub[(df_ta_sub['treatment_0'] == 3) &\
+                       (df_ta_sub['filter'] != 5)]
 
-#id_station = '10600008'
-#date_beg, date_end = df_ta.ix[id_station]\
-#                      [['ta_date_beg', 'ta_date_end']].values
+str_treated = 'tta_comp'
+df_treated = dict_df_treated[str_treated]
 
-# todo: add check enough days before and after treatment
-
-id_station = '5100004' # '11000014'
-date_beg, date_end = df_ta.ix[id_station]\
-                      [['date_min_total_ta', 'date_max_total_ta']].values
-
-df_test = df_prices[[id_station]].copy()
-df_test.rename(columns = {id_station : 'price'},
-               inplace = True)
-df_test['ref_price'] = se_mean_prices
-df_test['resid'] = df_test['ref_price'] - df_test['price']
-df_test['treatment'] = 0
-df_test.loc[(df_test.index >= date_beg) &\
-            (df_test.index <= date_end),
-            'treatment'] = np.nan
-df_test.loc[(df_test.index >= date_end),
-            'treatment'] = 1
-df_test['resid_2'] = df_test['resid'] * df_test['treatment']
-df_test['ref_price_2'] = df_test['ref_price'] * df_test['treatment']
-df_test['l1_resid'] = df_test['resid'].shift(1)
-df_test['l1_resid_bt'] = df_test['resid'].shift(1) * (1 - df_test['treatment'])
-df_test['l1_resid_at'] = df_test['resid'].shift(1) * df_test['treatment']
-
-## keep only one price per week
-#df_test['dow'] = df_test.index.weekday
-#df_test = df_test[df_test['dow'] == 3]
-
-rest0 = smf.ols('price ~ ref_price + treatment',
-               data = df_test).fit(cov_type='HAC',
-                                   cov_kwds={'maxlags':7})
-print rest0.summary()
-#rob_cov_hact0 = sm.stats.sandwich_covariance.cov_hac(rest0, nlags = 7)
-#rob_bset0 = np.sqrt(np.diag(rob_cov_hact0))
-
-rest1 = smf.ols('price ~ ref_price + ref_price_2 + treatment',
-              data = df_test).fit(cov_type='HAC',
-                                  cov_kwds={'maxlags':7})
-print rest1.summary()
-
-hyp = '(ref_price_2 = 0), (treatment =0)'
-#rob_cov_hact1 = sm.stats.sandwich_covariance.cov_hac(rest1, nlags = 7)
-#f_test = rest1.f_test(hyp, cov_p = rob_cov_hact1)
-f_test = rest1.f_test(hyp)
-print f_test
-
-## identification of ref_price_2 vs. treatment? => require both
-## todo: nice graphs
-#df_test.plot(kind = 'scatter', x = 'price', y = 'ref_price')
-
-# loop on treatment_0 == 1
-# store treatment / treatment & ref_price_2 (param & bse, R2?)
-# check how many significant pos / negs? (compare w/ OLS DDs)
-
-# pbm: high autocorr of residuals
-print u'Autocorr of residuals (1):', rest1.resid.autocorr()
-# cannot include l1_resid: captures treatment when there is one
-
-# #########
-# LOOP TEST
-# #########
-
-# todo: split by dpt and use dpt mean without total access as ref
+# ################
+# LOOP ON STATIONS
+# ################
 
 ls_ids_nores = []
 ls_ids_nodata = []
 ls_rows_res = []
-for id_station, row in df_ta[(df_ta['treatment_0'] == 1) &\
-                             (df_ta['group_last'] != 'TOTAL')].iterrows():
+for id_station, row in df_treated.iterrows():
   try:
-    date_beg, date_end = row[['date_min_total_ta', 'date_max_total_ta']].values
-    #date_beg, date_end = row[['date_min_elf_ta', 'date_max_elf_ta']].values
+    if str_treated in ['tta', 'eta']:
+      date_beg, date_end = row[['ta_date_beg', 'ta_date_end']].values
+    elif str_treated in ['tta_comp', 'tta_tot']:
+      date_beg, date_end = row[['date_min_total_ta', 'date_max_total_ta']].values
+    elif str_treated == ['eta_comp']:
+      date_beg, date_end = row[['date_min_elf_ta', 'date_max_elf_ta']].values
+    else:
+      date_beg, date_end = None, None
     df_station = df_prices[[id_station]].copy()
     df_station.rename(columns = {id_station : 'price'},
                    inplace = True)
     if (df_station['price'][df_station.index <= date_beg].count() >= 30) &\
        (df_station['price'][df_station.index >= date_end].count() >= 30):
-      df_station['ref_price'] = se_mean_prices
+      df_station['ref_price'] = df_prices[df_control.index].mean(1)
       df_station['resid'] = df_station['ref_price'] - df_station['price']
       df_station['l1_resid'] = df_station['resid'].shift(1)
       df_station['treatment'] = 0
@@ -238,32 +191,41 @@ df_res = pd.DataFrame(ls_rows_res,
                                  'p_chow'])
 df_res.set_index('id_station', inplace = True)
 
-print u'Nb w/ problematic R2 (excluded):',\
-       len(df_res[(~np.isfinite(df_res['r2'])) |
-                  (df_res['r2'] < 0)])
-df_res = df_res[(np.isfinite(df_res['r2'])) &\
-                (df_res['r2'] >= 0)]
+# #########
+# OVERVIEW
+# #########
 
-print df_res.describe().to_string()
+#print(u'Nb w/ problematic R2 (excluded):',
+#      len(df_res[(~np.isfinite(df_res['r2'])) |
+#                  (df_res['r2'] < 0)]))
+#df_res = df_res[(np.isfinite(df_res['r2'])) &\
+#                (df_res['r2'] >= 0)]
 
+print()
+print(u'Overview of regression results:')
+print(df_res.describe().to_string())
+
+# Inspect significant treatments
 df_res_sig = df_res[df_res['p_treatment'] <= 0.05]
-
-print u'\nOverview significant treatment:'
-print df_res_sig['c_treatment'].describe()
-print u'Nb above 1c:', len(df_res_sig[df_res_sig['c_treatment'] >= 0.01])
-print u'Nb below -1c:', len(df_res_sig[df_res_sig['c_treatment'] <= -0.01])
+print()
+print(u'Nb sig treatments:', len(df_res_sig))
+print(u'Nb sig above 1c:', len(df_res_sig[df_res_sig['c_treatment'] >= 0.01]))
+print(u'Nb sig below -1c:', len(df_res_sig[df_res_sig['c_treatment'] <= -0.01]))
 
 # Check: one not always capture due to date (need closest competitor)
-print df_res[df_res.index.isin(['95100025',  '91000006', '5100004'])].to_string()
+print()
+print(df_res[df_res.index.isin(['95100025',  '91000006', '5100004'])].to_string())
 
+
+# Inspect increases and decreases by station group
 ls_ids_inc = df_res_sig[df_res_sig['c_treatment'] >= 0.01].index
 ls_ids_dec = df_res_sig[df_res_sig['c_treatment'] <= -0.01].index
-
-print u'\nInspect increases in price:'
-print df_info.ix[ls_ids_inc]['group_last'].value_counts()
-
-print u'\nInspect decreases in price:'
-print df_info.ix[ls_ids_dec]['group_last'].value_counts()
+print()
+print(u'Inspect increases in price:')
+print(df_info.ix[ls_ids_inc]['group_last'].value_counts())
+print()
+print(u'Inspect decreases in price:')
+print(df_info.ix[ls_ids_dec]['group_last'].value_counts())
 
 # Enrich
 df_res = pd.merge(df_res,
@@ -282,16 +244,16 @@ df_res = pd.merge(df_res,
 
 ## temp: get rid of high treatment (pbm with data)
 #df_res = df_res[df_res['c_treatment'].abs() <= 0.1]
-
-#print df_res[(df_res['brand_last'] == 'BP') &\
-#             (df_res['p_treatment'] <= 0.05) &\
-#             (df_res['c_treatment'] <= -0.1)].to_string()
-
-#print df_res[(df_res['brand_last'] == 'LECLERC') &\
-#             (df_res['p_treatment'] <= 0.05)]['c_treatment'].describe()
 #
-#print df_res[(df_res['brand_last'] == 'LECLERC')]['c_treatment'].describe()
-
+#print(df_res[(df_res['brand_last'] == 'BP') &\
+#             (df_res['p_treatment'] <= 0.05) &\
+#             (df_res['c_treatment'] <= -0.1)].to_string())
+#
+#print(df_res[(df_res['brand_last'] == 'LECLERC') &\
+#             (df_res['p_treatment'] <= 0.05)]['c_treatment'].describe())
+#
+#print(df_res[(df_res['brand_last'] == 'LECLERC')]['c_treatment'].describe())
+#
 ## TOTAL STATIONS
-#print df_res[(df_res['p_treatment'] <= 0.05) &\
-#             (df_res['c_treatment'] >= 0.01)].to_string()
+#print(df_res[(df_res['p_treatment'] <= 0.05) &\
+#             (df_res['c_treatment'] >= 0.01)].to_string())

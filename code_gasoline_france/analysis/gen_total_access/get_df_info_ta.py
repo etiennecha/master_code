@@ -6,25 +6,23 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 
-path_dir_built_scraped = os.path.join(path_data,
-                                      u'data_gasoline',
-                                      u'data_built',
-                                      u'data_scraped_2011_2014')
-
-path_dir_built_scraped_csv = os.path.join(path_dir_built_scraped,
-                                          u'data_csv')
+path_dir_built = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_scraped_2011_2014')
+path_dir_built_csv = os.path.join(path_dir_built,
+                                  u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built,
+                                   u'data_json')
 
 path_dir_built_ta = os.path.join(path_data,
                                  u'data_gasoline',
                                  u'data_built',
                                  u'data_total_access')
-
 path_dir_built_ta_json = os.path.join(path_dir_built_ta, 
                                       'data_json')
-
 path_dir_built_ta_csv = os.path.join(path_dir_built_ta, 
                                      'data_csv')
-
 path_dir_built_ta_graphs = os.path.join(path_dir_built_ta, 
                                         'data_graphs')
 
@@ -39,7 +37,7 @@ path_dir_source_other = os.path.join(path_data,
 
 # DF STATION INFO
 
-df_info = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
+df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
                       encoding = 'utf-8',
                       dtype = {'id_station' : str,
@@ -56,12 +54,12 @@ df_info = df_info[df_info['highway'] != 1]
 
 # DF PRICES
 
-df_prices_ht = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_prices_ht_final.csv'),
                            parse_dates = ['date'])
 df_prices_ht.set_index('date', inplace = True)
 
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_prices_ttc_final.csv'),
                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
@@ -75,7 +73,7 @@ se_mean_prices = df_prices.mean(1)
 
 # DF MARGIN CHGE
 
-df_margin_chge = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
+df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
                                           'df_margin_chge.csv'),
                              encoding = 'utf-8',
                              dtype = {'id_station' : str},

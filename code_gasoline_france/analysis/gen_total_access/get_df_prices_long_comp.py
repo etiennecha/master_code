@@ -9,23 +9,35 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
 path_dir_built = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_built',
-                                    u'data_scraped_2011_2014')
-
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_scraped_2011_2014')
 path_dir_built_csv = os.path.join(path_dir_built,
                                   u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built,
+                                   u'data_json')
+
+path_dir_built_ta = os.path.join(path_data,
+                                 u'data_gasoline',
+                                 u'data_built',
+                                 u'data_total_access')
+path_dir_built_ta_json = os.path.join(path_dir_built_ta, 
+                                      'data_json')
+path_dir_built_ta_csv = os.path.join(path_dir_built_ta, 
+                                     'data_csv')
+path_dir_built_ta_graphs = os.path.join(path_dir_built_ta, 
+                                        'data_graphs')
 
 pd.set_option('float_format', '{:,.3f}'.format)
-#format_float_int = lambda x: '{:10,.0f}'.format(x)
-#format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_int = lambda x: '{:10,.0f}'.format(x)
+format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 # #############
 # LOAD DATA
 # #############
 
 df_info_ta = pd.read_csv(os.path.join(path_dir_built_csv,
-                                      'df_info_ta_fixed.csv'),
+                                      'df_info_ta.csv'),
                          encoding = 'utf-8',
                          dtype = {'id_station' : str,
                                   'adr_zip' : str,
@@ -141,10 +153,11 @@ for id_station, ls_ta_comp in dict_ls_ta_comp.items()[:5000]:
 
 df_lg_ttac = pd.concat(ls_df_lg_ttac, ignore_index = True)
 df_lg_ttac['time'] = df_lg_ttac['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
-df_lg_ttac.to_csv(os.path.join(path_dir_built_csv,
-                              'df_long_ttac.csv'),
-                 encoding = 'latin-1',
-                 index = False)
+
+#df_lg_ttac.to_csv(os.path.join(path_dir_built_ta_csv,
+#                              'df_long_ttac.csv'),
+#                 encoding = 'latin-1',
+#                 index = False)
 
 # ########################################
 # LONG PANEL: COMP OF ELF => TOTAL ACCESS
@@ -184,10 +197,11 @@ for id_station, ls_comp in dict_ls_comp.items():
 
 df_lg_elfc = pd.concat(ls_df_lg_elfc, ignore_index = True)
 df_lg_elfc['time'] = df_lg_elfc['time'].apply(lambda x: x.strftime('%Y-%m-%d'))
-df_lg_elfc.to_csv(os.path.join(path_dir_built_csv,
-                              'df_long_elfc.csv'),
-                 encoding = 'latin-1',
-                 index = False)
+
+#df_lg_elfc.to_csv(os.path.join(path_dir_built_ta_csv,
+#                              'df_long_elfc.csv'),
+#                 encoding = 'latin-1',
+#                 index = False)
 
 # todo: need to define dates...
 # todo: need to make sure no Total-Total Access around

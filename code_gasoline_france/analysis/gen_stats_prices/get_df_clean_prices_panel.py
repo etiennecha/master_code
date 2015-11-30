@@ -11,12 +11,14 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from sklearn.feature_extraction import DictVectorizer
 
-path_dir_built_paper = os.path.join(path_data,
-                                    'data_gasoline',
-                                    'data_built',
-                                    'data_paper_total_access')
-
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+path_dir_built = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_scraped_2011_2014')
+path_dir_built_csv = os.path.join(path_dir_built,
+                                  u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built,
+                                   u'data_json')
 
 # ###############
 # LOAD DATA

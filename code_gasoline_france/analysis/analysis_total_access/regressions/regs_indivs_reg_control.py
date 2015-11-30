@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
@@ -56,7 +57,7 @@ df_info = df_info[df_info['highway'] != 1]
 # DF TOTAL ACCESS
 
 df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
-                                           'df_total_access_5km_dist_order.csv'),
+                                           'df_total_access_3km_dist_order.csv'),
                               dtype = {'id_station' : str,
                                        'id_total_ta' : str},
                               encoding = 'utf-8',
@@ -83,8 +84,33 @@ df_prices_ttc.set_index('date', inplace = True)
 
 df_prices = df_prices_ttc
 
-# GET RID OF PROBLEMATIC STATIONS IN df_ta
-df_ta = df_ta[df_ta['filter'] > 5]
+# ##########################
+# DEFINE CONTROL AND TREATED
+# ##########################
+
+# filter stations with insufficient data
+df_ta_sub = df_ta[(df_ta['filter'] > 4) &\
+                  (df_ta['dum_ba'] != 0)]
+
+dict_df_treated = {}
+dict_df_treated['tta'] = df_ta_sub[(df_ta_sub['treatment_0'] == 5)]
+dict_df_treated['eta'] = df_ta_sub[(df_ta_sub['treatment_0'] == 6)]
+dict_df_treated['tta_comp'] = df_ta_sub[(df_ta_sub['treatment_0'] == 1) &\
+                                        (df_ta_sub['filter'].isin([11, 12]))]
+dict_df_treated['eta_comp'] = df_ta_sub[(df_ta_sub['treatment_0'] == 2) &\
+                                        (df_ta_sub['filter'].isin([11,12]))]
+dict_df_treated['tta_tot'] = df_ta_sub[(df_ta_sub['treatment_0'] == 1) &\
+                                       (df_ta_sub['filter'] > 5) &\
+                                       (df_ta_sub['group'] == 'TOTAL')]
+
+df_control = df_ta_sub[(df_ta_sub['treatment_0'] == 3) &\
+                       (df_ta_sub['filter'] != 5)]
+
+str_treated = 'tta_comp'
+df_treated = dict_df_treated[str_treated]
+
+## check if exclude group chge
+#df_treated = df_treated[df_treated['group'] == df_treated['group_last']]
 
 # ##############
 # SPLIT REGIONS
@@ -96,14 +122,12 @@ df_ta = df_ta[df_ta['filter'] > 5]
 dict_region_dfs = {}
 ls_regions, ls_se_region_treated_ts, ls_se_region_control_ts = [], [], []
 for region in df_ta['reg'].unique():
-  df_ta_region = df_ta[df_ta['reg'] == region]
-  df_control_region = df_ta_region[(df_ta_region['treatment_0'] == 3)]
-  df_treated_region = df_ta_region[(df_ta_region['treatment_0'] == 1) &\
-                                   (df_ta_region['group_last'] != 'TOTAL')]
-  if len(df_treated_region) != 0:
-    print u'{:35s}: {:3d} treated, {:3d} controls'.format(region,
-                                                        len(df_treated_region),
-                                                        len(df_control_region))
+  df_control_region = df_control[(df_control['reg'] == region)]
+  df_treated_region = df_treated[(df_treated['reg'] == region)]
+  if (len(df_treated_region) != 0) & (len(df_control_region) != 0):
+    print(u'{:35s}: {:3d} treated, {:3d} controls'.format(region,
+                                                          len(df_treated_region),
+                                                          len(df_control_region)))
     dict_region_dfs[region] = [df_control_region, df_treated_region]
     ls_regions.append(region)
     ls_se_region_control_ts.append(df_prices[df_control_region.index].mean(1))
@@ -117,20 +141,20 @@ df_region_treated_ts = pd.concat(ls_se_region_treated_ts,
                                  axis = 1,
                                  keys = ls_regions)
 
-# ######################
-# GRAPHS REGION CONTROLS
-# ######################
+## GRAPH REGION CONTROLS
+#ls_few_controls = [u'Champagne-Ardenne',
+#                   u'Midi-Pyrenees',
+#                   u'Limousin',
+#                   u'Picardie',
+#                   u'Alsace']
+#ls_few_controls = [x for x in ls_few_controls\
+#                     if x in df_region_control_ts.columns]
+#df_region_control_ts[ls_few_controls].plot()
+#plt.show()
 
-ls_few_controls = [u'Champagne-Ardenne',
-                   u'Midi-Pyrenees',
-                   u'Limousin',
-                   u'Picardie',
-                   u'Alsace']
-df_region_control_ts[ls_few_controls].plot()
-
-# #######################
-# LOOP REGIONS / STATIONS
-# #######################
+# ###########################
+# LOOP ON REGIONS / STATIONS
+# ###########################
 
 ls_ids_nores = []
 ls_ids_nodata = []
@@ -139,8 +163,14 @@ for region, (df_control_region, df_treated_region) in dict_region_dfs.items():
   se_control = df_prices[df_control_region.index].mean(1)
   for id_station, row in df_treated_region.iterrows():
     try:
-      date_beg, date_end = row[['date_min_total_ta', 'date_max_total_ta']].values
-      #date_beg, date_end = row[['date_min_elf_ta', 'date_max_elf_ta']].values
+      if str_treated in ['tta', 'eta']:
+        date_beg, date_end = row[['ta_date_beg', 'ta_date_end']].values
+      elif str_treated in ['tta_comp', 'tta_tot']:
+        date_beg, date_end = row[['date_min_total_ta', 'date_max_total_ta']].values
+      elif str_treated == ['eta_comp']:
+        date_beg, date_end = row[['date_min_elf_ta', 'date_max_elf_ta']].values
+      else:
+        date_beg, date_end = None, None
       df_station = df_prices[[id_station]].copy()
       df_station.rename(columns = {id_station : 'price'},
                         inplace = True)
@@ -206,36 +236,23 @@ df_res = pd.DataFrame(ls_rows_res,
                                  'p_chow'])
 df_res.set_index('id_station', inplace = True)
 
-print u'Nb w/ problematic R2 (excluded):',\
-       len(df_res[(~np.isfinite(df_res['r2'])) |
-                  (df_res['r2'] < 0)])
-df_res = df_res[(np.isfinite(df_res['r2'])) &\
-                (df_res['r2'] >= 0)]
+# #########
+# OVERVIEW
+# #########
 
-print df_res.describe().to_string()
+#print(u'Nb w/ problematic R2 (excluded):',
+#      len(df_res[(~np.isfinite(df_res['r2'])) |
+#                  (df_res['r2'] < 0)]))
+#df_res = df_res[(np.isfinite(df_res['r2'])) &\
+#                (df_res['r2'] >= 0)]
 
-df_res_sig = df_res[df_res['p_treatment'] <= 0.05]
+print()
+print(u'Overview of regression results:')
+print(df_res.describe().to_string())
 
-print u'\nOverview significant treatment:'
-print df_res_sig['c_treatment'].describe()
-print u'Nb above 1c:', len(df_res_sig[df_res_sig['c_treatment'] >= 0.01])
-print u'Nb below -1c:', len(df_res_sig[df_res_sig['c_treatment'] <= -0.01])
-
-# Check: one not always capture due to date (need closest competitor)
-print df_res[df_res.index.isin(['95100025',  '91000006', '5100004'])].to_string()
-
-ls_ids_inc = df_res_sig[df_res_sig['c_treatment'] >= 0.01].index
-ls_ids_dec = df_res_sig[df_res_sig['c_treatment'] <= -0.01].index
-
-print u'\nInspect increases in price:'
-print df_info.ix[ls_ids_inc]['group_last'].value_counts()
-
-print u'\nInspect decreases in price:'
-print df_info.ix[ls_ids_dec]['group_last'].value_counts()
-
-# Enrich
+# Enrich with last brand and group type
 df_res = pd.merge(df_res,
-                  df_info[['brand_last']],
+                  df_info[['brand_last', 'group_type_last']],
                   left_index = True,
                   right_index = True,
                   how = 'left')
@@ -248,18 +265,45 @@ df_res = pd.merge(df_res,
                   right_index = True,
                   how = 'left')
 
+# Inspect significant treatments
+df_res_sig = df_res[df_res['p_treatment'] <= 0.05]
+print()
+print(u'Nb sig treatments:', len(df_res_sig))
+print(u'Nb sig above 1c:', len(df_res_sig[df_res_sig['c_treatment'] >= 0.01]))
+print(u'Nb sig below -1c:', len(df_res_sig[df_res_sig['c_treatment'] <= -0.01]))
+
+# Check: one not always capture due to date (need closest competitor)
+print()
+print(df_res[df_res.index.isin(['95100025',  '91000006', '5100004'])].to_string())
+
+# Inspect increases and decreases by station group
+ls_ids_inc = df_res_sig[df_res_sig['c_treatment'] >= 0.01].index
+ls_ids_dec = df_res_sig[df_res_sig['c_treatment'] <= -0.01].index
+print()
+print(u'Inspect increases in price (groups):')
+print(df_info.ix[ls_ids_inc]['group_last'].value_counts())
+print()
+print(u'Inspect decreases in price (groups):')
+print(df_info.ix[ls_ids_dec]['group_last'].value_counts())
+print()
+print(u'Inspect increases in price (types):')
+print(df_info.ix[ls_ids_inc]['group_type_last'].value_counts(normalize = True))
+print()
+print(u'Inspect decreases in price (types):')
+print(df_info.ix[ls_ids_dec]['group_type_last'].value_counts(normalize = True))
+
 ## temp: get rid of high treatment (pbm with data)
 #df_res = df_res[df_res['c_treatment'].abs() <= 0.1]
-
-#print df_res[(df_res['brand_last'] == 'BP') &\
-#             (df_res['p_treatment'] <= 0.05) &\
-#             (df_res['c_treatment'] <= -0.1)].to_string()
-
-#print df_res[(df_res['brand_last'] == 'LECLERC') &\
-#             (df_res['p_treatment'] <= 0.05)]['c_treatment'].describe()
 #
-#print df_res[(df_res['brand_last'] == 'LECLERC')]['c_treatment'].describe()
-
+#print(df_res[(df_res['brand_last'] == 'BP') &\
+#             (df_res['p_treatment'] <= 0.05) &\
+#             (df_res['c_treatment'] <= -0.1)].to_string())
+#
+#print(df_res[(df_res['brand_last'] == 'LECLERC') &\
+#             (df_res['p_treatment'] <= 0.05)]['c_treatment'].describe())
+#
+#print(df_res[(df_res['brand_last'] == 'LECLERC')]['c_treatment'].describe())
+#
 ## TOTAL STATIONS
-#print df_res[(df_res['p_treatment'] <= 0.05) &\
-#             (df_res['c_treatment'] >= 0.01)].to_string()
+#print(df_res[(df_res['p_treatment'] <= 0.05) &\
+#             (df_res['c_treatment'] >= 0.01)].to_string())

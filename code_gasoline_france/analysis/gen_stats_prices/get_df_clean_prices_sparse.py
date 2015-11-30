@@ -11,12 +11,14 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from sklearn.feature_extraction import DictVectorizer
 
-path_dir_built_scraped = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_built',
-                                    u'data_scraped_2011_2014')
-
-path_dir_built_csv = os.path.join(path_dir_built_scraped, 'data_csv')
+path_dir_built = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_scraped_2011_2014')
+path_dir_built_csv = os.path.join(path_dir_built,
+                                  u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built,
+                                   u'data_json')
 
 # ###############
 # LOAD DATA
@@ -41,21 +43,23 @@ df_info = df_info[df_info['highway'] != 1]
 
 # LOAD DF PRICES
 
-df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
-                        parse_dates = ['date'])
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ht_final.csv'),
+                           parse_dates = ['date'])
 df_prices_ht.set_index('date', inplace = True)
 
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
-                        parse_dates = ['date'])
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
+                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
-## LOAD DF PRICE STATS
-#
-#df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
-#                                            'df_station_stats.csv'),
-#                               dtype = {'id_station' : str},
-#                               encoding = 'utf-8')
-#df_station_stats.set_index('id_station', inplace = True)
+# LOAD DF PRICE STATS
+
+df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
+                                            'df_station_stats.csv'),
+                               dtype = {'id_station' : str},
+                               encoding = 'utf-8')
+df_station_stats.set_index('id_station', inplace = True)
 
 # LOAD DF MARGIN CHGE
 

@@ -11,12 +11,14 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from sklearn.feature_extraction import DictVectorizer
 
-path_dir_built_paper = os.path.join(path_data,
-                                    'data_gasoline',
-                                    'data_built',
-                                    'data_paper_dispersion')
-
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+path_dir_built = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_scraped_2011_2014')
+path_dir_built_csv = os.path.join(path_dir_built,
+                                  u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built,
+                                   u'data_json')
 
 # ###############
 # LOAD DATA
@@ -41,12 +43,14 @@ df_info = df_info[df_info['highway'] != 1]
 
 # LOAD DF PRICES
 
-df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ht_final.csv'),
-                        parse_dates = ['date'])
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ht_final.csv'),
+                           parse_dates = ['date'])
 df_prices_ht.set_index('date', inplace = True)
 
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv, 'df_prices_ttc_final.csv'),
-                        parse_dates = ['date'])
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
+                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
 # Restrict DF PRICES to stations present in info (and kept e.g. not highway)
@@ -73,7 +77,7 @@ df_prices_ttc = df_prices_ttc[[x for x in df_prices_ttc.columns if x in df_info.
 ## CLEAN PRICES
 ## ############
 
-# BUILDF DF IDS
+# BUILD DF IDS
 
 # create one id by station and brand
 # todo: take into account brand change dates based on price variations
@@ -93,7 +97,7 @@ for id_station in df_prices_ht.columns:
 
 df_ids = pd.concat(ls_se_ids, axis = 1, keys = df_info.index)
 
-# build DF FINAL for cleaning
+# BUILD DF FINAL
 
 ls_all_ids = [x for id_station in df_prices_ht.columns for x in df_ids[id_station].values]
 ls_all_prices = [x for id_station in df_prices_ht.columns for x in df_prices_ht[id_station].values]
@@ -105,8 +109,9 @@ df_final = pd.DataFrame(zip(ls_all_ids,
                         columns = ['id', 'date', 'price'])
 df_final = df_final[~pd.isnull(df_final['price'])]
 
-## OUTPUT FOR EXTERNAL PRICE CLEANING
-#df_final.to_csv(os.path.join(path_dir_built_csv, 'price_panel_data_light.csv'),
+## OUTPUT
+#df_final.to_csv(os.path.join(path_dir_built_csv,
+#                             'price_panel_data_light.csv'),
 #                float_format='%.4f',
 #                encoding='utf-8')
 
@@ -114,12 +119,14 @@ df_final = df_final[~pd.isnull(df_final['price'])]
 ## READ CLEANED PRICES R
 ## #####################
 #
-#path_csv_price_cl_R = os.path.join(path_dir_built_csv, 'price_cleaned_light_R.csv')
-#df_prices_cl_R = pd.read_csv(path_csv_price_cl_R,
+#df_prices_cl_R = pd.read_csv(os.path.join(path_dir_built_csv,
+#                                          'price_cleaned_light_R.csv'),
+#                             encoding = 'utf-8',
 #                             dtype = {'id' : str,
 #                                      'date' : str,
 #                                      'price': np.float64,
 #                                      'price.cl' : np.float64})
+#
 #df_prices_cl_R['id'] = df_prices_cl_R['id'].str.slice(stop = -1) # set id back!
 #df_prices_cl_R  = df_prices_cl_R.pivot(index='date', columns='id', values='price.cl')
 #df_prices_cl_R.index = [pd.to_datetime(x) for x in df_prices_cl_R.index]
@@ -130,12 +137,15 @@ df_final = df_final[~pd.isnull(df_final['price'])]
 ## READ CLEANED PRICES STATA
 ## ##########################
 #
-#path_csv_price_cl_stata = os.path.join(path_dir_built_csv, 'price_cleaned_stata.csv')
-#df_prices_cl_stata = pd.read_csv(path_csv_price_cl_stata,
+#path_csv_price_cl_stata = 
+#df_prices_cl_stata = pd.read_csv(os.path.join(path_dir_built_csv,
+#                                              'price_cleaned_stata.csv'),
+#                                 encoding = 'utf-8',
 #                                 dtype = {'id' : str,
 #                                          'date' : str,
 #                                          'price': np.float64,
 #                                          'price_cl' : np.float64})
+#
 #df_prices_cl_stata['id'] = df_prices_cl_stata['id'].str.slice(stop = -1) # set id back!
 #df_prices_cl_stata  = df_prices_cl_stata.pivot(index='date', columns='id', values='price_cl')
 #df_prices_cl_stata.index = [pd.to_datetime(x) for x in df_prices_cl_stata.index]
