@@ -10,13 +10,13 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_dir_built_scraped = os.path.join(path_data,
-                                      u'data_gasoline',
-                                      u'data_built',
-                                      u'data_scraped_2011_2014')
+path_dir_built = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_scraped_2011_2014')
 
-path_dir_built_scraped_csv = os.path.join(path_dir_built_scraped,
-                                          u'data_csv')
+path_dir_built_csv = os.path.join(path_dir_built,
+                                  u'data_csv')
 
 path_dir_built_ta = os.path.join(path_data,
                                  u'data_gasoline',
@@ -39,7 +39,7 @@ format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 # DF STATION INFO
 
-df_info = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
+df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
                       encoding = 'utf-8',
                       dtype = {'id_station' : str,
@@ -54,10 +54,26 @@ df_info = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
 df_info.set_index('id_station', inplace = True)
 df_info = df_info[df_info['highway'] != 1]
 
+# DF PRICES
+
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ht_final.csv'),
+                           parse_dates = ['date'])
+df_prices_ht.set_index('date', inplace = True)
+
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ttc_final.csv'),
+                           parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
+
+df_prices = df_prices_ttc
+
 # DF TOTAL ACCESS
 
+str_ta_ext = '_5km_dist_order'
+
 df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
-                                           'df_total_access_3km_dist_order.csv'),
+                                 'df_total_access{:s}.csv'.format(str_ta_ext)),
                               dtype = {'id_station' : str,
                                        'id_total_ta' : str},
                               encoding = 'utf-8',
@@ -69,20 +85,6 @@ df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
                                              'date_min_elf_ta',
                                              'date_max_elf_ta'])
 df_ta.set_index('id_station', inplace = True)
-
-# DF PRICES
-
-df_prices_ht = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
-                                        'df_prices_ht_final.csv'),
-                           parse_dates = ['date'])
-df_prices_ht.set_index('date', inplace = True)
-
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
-                                        'df_prices_ttc_final.csv'),
-                           parse_dates = ['date'])
-df_prices_ttc.set_index('date', inplace = True)
-
-df_prices = df_prices_ttc
 
 # ##########################
 # DEFINE CONTROL AND TREATED
@@ -109,7 +111,7 @@ df_control = df_ta_sub[(df_ta_sub['treatment_0'] == 3) &\
 str_treated = 'tta_comp'
 df_treated = dict_df_treated[str_treated]
 
-## check if exclude group chge
+### check if exclude group chge
 #df_treated = df_treated[df_treated['group'] == df_treated['group_last']]
 
 # ##############
@@ -167,7 +169,7 @@ for region, (df_control_region, df_treated_region) in dict_region_dfs.items():
         date_beg, date_end = row[['ta_date_beg', 'ta_date_end']].values
       elif str_treated in ['tta_comp', 'tta_tot']:
         date_beg, date_end = row[['date_min_total_ta', 'date_max_total_ta']].values
-      elif str_treated == ['eta_comp']:
+      elif str_treated in ['eta_comp']:
         date_beg, date_end = row[['date_min_elf_ta', 'date_max_elf_ta']].values
       else:
         date_beg, date_end = None, None
@@ -187,9 +189,11 @@ for region, (df_control_region, df_treated_region) in dict_region_dfs.items():
                     'treatment'] = 1
         df_station['resid_2'] = df_station['resid'] * df_station['treatment']
         df_station['ref_price_2'] = df_station['ref_price'] * df_station['treatment']
-        # keep only one price per week
-        df_station['dow'] = df_station.index.weekday
-        df_station = df_station[df_station['dow'] == 3]
+        ## keep only one price per week
+        #df_station['dow'] = df_station.index.weekday
+        #df_station = df_station[df_station['dow'] == 3]
+        ## week average (todo: fix treatment => 0 or 1)
+        #df_station = df_station.resample('W', how = 'mean')
         res0 = smf.ols('price ~ ref_price + treatment',
                        data = df_station).fit(cov_type='HAC',
                                               cov_kwds={'maxlags':14})
@@ -250,35 +254,28 @@ print()
 print(u'Overview of regression results:')
 print(df_res.describe().to_string())
 
-# Enrich with last brand and group type
-df_res = pd.merge(df_res,
-                  df_info[['brand_last', 'group_type_last']],
-                  left_index = True,
-                  right_index = True,
-                  how = 'left')
-df_res = pd.merge(df_res,
-                  df_ta[['id_total_ta',
-                         'dist_total_ta',
-                         'date_min_total_ta',
-                         'date_max_total_ta']],
-                  left_index = True,
-                  right_index = True,
-                  how = 'left')
-
 # Inspect significant treatments
 df_res_sig = df_res[df_res['p_treatment'] <= 0.05]
 print()
 print(u'Nb sig treatments:', len(df_res_sig))
-print(u'Nb sig above 1c:', len(df_res_sig[df_res_sig['c_treatment'] >= 0.01]))
-print(u'Nb sig below -1c:', len(df_res_sig[df_res_sig['c_treatment'] <= -0.01]))
+print(u'Nb positive/negative reactions above threshold:')
+ls_val = [i/100.0 for i in range(1, 10)]
+ls_nb_inc = [len(df_res_sig[df_res_sig['c_treatment'] >= val])\
+               for val in ls_val]
+ls_nb_dec = [len(df_res_sig[df_res_sig['c_treatment'] <= -val])\
+               for val in ls_val]
+df_su_sig_reacs = pd.DataFrame([ls_nb_inc, ls_nb_dec],
+                                columns = ls_val,
+                                index = ['Nb pos', 'Nb neg'])
+print(df_su_sig_reacs.to_string())
 
 # Check: one not always capture due to date (need closest competitor)
 print()
 print(df_res[df_res.index.isin(['95100025',  '91000006', '5100004'])].to_string())
 
 # Inspect increases and decreases by station group
-ls_ids_inc = df_res_sig[df_res_sig['c_treatment'] >= 0.01].index
-ls_ids_dec = df_res_sig[df_res_sig['c_treatment'] <= -0.01].index
+ls_ids_inc = df_res_sig[df_res_sig['c_treatment'] >= 0.02].index
+ls_ids_dec = df_res_sig[df_res_sig['c_treatment'] <= -0.02].index
 print()
 print(u'Inspect increases in price (groups):')
 print(df_info.ix[ls_ids_inc]['group_last'].value_counts())
@@ -292,6 +289,34 @@ print()
 print(u'Inspect decreases in price (types):')
 print(df_info.ix[ls_ids_dec]['group_type_last'].value_counts(normalize = True))
 
+# #######
+# OUTPUT
+# #######
+
+df_res.to_csv(os.path.join(path_dir_built_ta_csv,
+                           'df_res_{:s}_{:s}.csv'.format(str_treated,
+                                                         str_ta_ext)),
+              encoding = 'utf-8')
+
+## #########
+## ANALYSIS
+## #########
+#
+## Enrich with last brand and group type
+#df_res = pd.merge(df_res,
+#                  df_info[['brand_last', 'group_type_last']],
+#                  left_index = True,
+#                  right_index = True,
+#                  how = 'left')
+#df_res = pd.merge(df_res,
+#                  df_ta[['id_total_ta',
+#                         'dist_total_ta',
+#                         'date_min_total_ta',
+#                         'date_max_total_ta']],
+#                  left_index = True,
+#                  right_index = True,
+#                  how = 'left')
+#
 ## temp: get rid of high treatment (pbm with data)
 #df_res = df_res[df_res['c_treatment'].abs() <= 0.1]
 #

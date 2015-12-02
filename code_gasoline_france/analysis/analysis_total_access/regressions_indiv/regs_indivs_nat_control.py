@@ -10,13 +10,13 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_dir_built_scraped = os.path.join(path_data,
+path_dir_built = os.path.join(path_data,
                                       u'data_gasoline',
                                       u'data_built',
                                       u'data_scraped_2011_2014')
 
-path_dir_built_scraped_csv = os.path.join(path_dir_built_scraped,
-                                          u'data_csv')
+path_dir_built_csv = os.path.join(path_dir_built,
+                                  u'data_csv')
 
 path_dir_built_ta = os.path.join(path_data,
                                  u'data_gasoline',
@@ -39,7 +39,7 @@ format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 # DF STATION INFO
 
-df_info = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
+df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
                       encoding = 'utf-8',
                       dtype = {'id_station' : str,
@@ -54,10 +54,24 @@ df_info = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
 df_info.set_index('id_station', inplace = True)
 df_info = df_info[df_info['highway'] != 1]
 
+# DF PRICES
+
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ht_final.csv'),
+                           parse_dates = ['date'])
+df_prices_ht.set_index('date', inplace = True)
+
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ttc_final.csv'),
+                           parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
+
+df_prices = df_prices_ht
+
 # DF TOTAL ACCESS
 
 df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
-                                           'df_total_access_3km_dist_order.csv'),
+                                           'df_total_access_3km.csv'),
                               dtype = {'id_station' : str,
                                        'id_total_ta' : str},
                               encoding = 'utf-8',
@@ -69,20 +83,6 @@ df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
                                              'date_min_elf_ta',
                                              'date_max_elf_ta'])
 df_ta.set_index('id_station', inplace = True)
-
-# DF PRICES
-
-df_prices_ht = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
-                                        'df_prices_ht_final.csv'),
-                           parse_dates = ['date'])
-df_prices_ht.set_index('date', inplace = True)
-
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
-                                        'df_prices_ttc_final.csv'),
-                           parse_dates = ['date'])
-df_prices_ttc.set_index('date', inplace = True)
-
-df_prices = df_prices_ht
 
 # ##########################
 # DEFINE CONTROL AND TREATED
@@ -122,7 +122,7 @@ for id_station, row in df_treated.iterrows():
       date_beg, date_end = row[['ta_date_beg', 'ta_date_end']].values
     elif str_treated in ['tta_comp', 'tta_tot']:
       date_beg, date_end = row[['date_min_total_ta', 'date_max_total_ta']].values
-    elif str_treated == ['eta_comp']:
+    elif str_treated in ['eta_comp']:
       date_beg, date_end = row[['date_min_elf_ta', 'date_max_elf_ta']].values
     else:
       date_beg, date_end = None, None

@@ -9,13 +9,13 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_dir_built_scraped = os.path.join(path_data,
-                                      u'data_gasoline',
-                                      u'data_built',
-                                      u'data_scraped_2011_2014')
+path_dir_built = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_scraped_2011_2014')
 
-path_dir_built_scraped_csv = os.path.join(path_dir_built_scraped,
-                                          u'data_csv')
+path_dir_built_csv = os.path.join(path_dir_built_csv,
+                                  u'data_csv')
 
 path_dir_built_ta = os.path.join(path_data,
                                  u'data_gasoline',
@@ -38,7 +38,7 @@ format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 # DF STATION INFO
 
-df_info = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
+df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
                       encoding = 'utf-8',
                       dtype = {'id_station' : str,
@@ -71,12 +71,12 @@ df_ta.set_index('id_station', inplace = True)
 
 # DF PRICES
 
-df_prices_ht = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_prices_ht_final.csv'),
                            parse_dates = ['date'])
 df_prices_ht.set_index('date', inplace = True)
 
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_scraped_csv,
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_prices_ttc_final.csv'),
                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
