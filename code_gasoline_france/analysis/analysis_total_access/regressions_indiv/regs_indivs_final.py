@@ -221,5 +221,5 @@ for str_treated, df_treated in dict_df_treated.items():
 df_all_res = pd.concat(ls_df_res)
 
 df_all_res.to_csv(os.path.join(path_dir_built_ta_csv,
-                               'df_res_indiv{:s}.csv'.format(str_ta_ext),
+                               'df_res_indiv{:s}.csv'.format(str_ta_ext)),
                   encoding = 'utf-8')

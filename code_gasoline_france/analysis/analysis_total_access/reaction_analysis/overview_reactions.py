@@ -98,6 +98,31 @@ df_res = pd.read_csv(os.path.join(path_dir_built_ta_csv,
                      dtype = {'id_station' : str})
 df_res.set_index('id_station', inplace = True)
 
+# HARMONIZE TA ID, DISTANCE, DATES (move...)
+
+df_res['tr_id'] = None
+df_res['tr_dist'] = None
+df_res['tr_date_min'] = pd.NaT
+df_res['tr_date_max'] = pd.NaT
+for str_treated in ['tta_comp', 'tta_tot']:
+  df_res.loc[df_res['treated'] == str_treated,
+             'tr_id'] = df_res['id_total_ta']
+  df_res.loc[df_res['treated'] == str_treated,
+             'tr_dist'] = df_res['dist_total_ta']
+  df_res.loc[df_res['treated'] == str_treated,
+             'tr_date_min'] = df_res['date_min_total_ta']
+  df_res.loc[df_res['treated'] == str_treated,
+             'tr_date_max'] = df_res['date_max_total_ta']
+for str_treated in ['eta_comp']:
+  df_res.loc[df_res['treated'] == str_treated,
+             'tr_id'] = df_res['id_elf_ta']
+  df_res.loc[df_res['treated'] == str_treated,
+             'tr_dist'] = df_res['dist_elf_ta']
+  df_res.loc[df_res['treated'] == str_treated,
+             'tr_date_min'] = df_res['date_min_elf_ta']
+  df_res.loc[df_res['treated'] == str_treated,
+             'tr_date_max'] = df_res['date_max_elf_ta']
+
 # ##########
 # OVERVIEW
 # ##########
@@ -114,10 +139,10 @@ df_res = pd.merge(df_res,
                          'brand_last',
                          'group_last',
                          'group_type_last',
-                         'id_total_ta',
-                         'dist_total_ta',
-                         'id_elf_ta',
-                         'dist_elf_ta']],
+                         'tr_id',
+                         'tr_dist',
+                         'tr_min_date',
+                         'tr_max_date']],
                   left_index = True,
                   right_index = True,
                   how = 'left')
@@ -126,3 +151,27 @@ df_res = pd.merge(df_res,
 # todo: check share supermarkets vs. oil/indep
 # todo: check reaction vs. station fe (todo elsewhere)
 # todo: check closest competitor(s) of total access systematically? (based on pair price stats)
+
+str_treated = 'tta_comp'
+df_res_sub = df_res[df_res['treated'] == str_treated]
+
+print()
+print(u'Overview of regression results for {:s}'.format(str_treated))
+print(df_res_sub.describe().to_string())
+
+# Inspect significant treatments
+df_res_sub_sig = df_res_sub[df_res_sub['p_treatment'] <= 0.05]
+print()
+print(u'Nb sig treatments:', len(df_res_sub_sig))
+print(u'Nb positive/negative reactions above threshold:')
+ls_val = [i/100.0 for i in range(1, 10)]
+ls_nb_inc = [len(df_res_sub_sig[df_res_sub_sig['c_treatment'] >= val])\
+               for val in ls_val]
+ls_nb_dec = [len(df_res_sub_sig[df_res_sub_sig['c_treatment'] <= -val])\
+               for val in ls_val]
+df_su_sig_reacs = pd.DataFrame([ls_nb_inc, ls_nb_dec],
+                                columns = ls_val,
+                                index = ['Nb pos', 'Nb neg'])
+print(df_su_sig_reacs.to_string())
+
+# Graphs of significant treatments
