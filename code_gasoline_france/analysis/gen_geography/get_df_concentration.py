@@ -6,16 +6,20 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 
-path_dir_built_scraped = os.path.join(path_data,
-                                    'data_gasoline',
-                                    'data_built',
-                                    'data_scraped_2011_2014')
+path_dir_built = os.path.join(path_data,
+                              'data_gasoline',
+                              'data_built',
+                              'data_scraped_2011_2014')
+path_dir_built_json = os.path.join(path_dir_built, 'data_json')
+path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
 
-path_dir_built_json = os.path.join(path_dir_built_scraped, 'data_json')
-path_dir_built_csv = os.path.join(path_dir_built_scraped, u'data_csv')
+path_dir_source = os.path.join(path_data,
+                               'data_gasoline',
+                               'data_source')
 
-path_dir_source = os.path.join(path_data, 'data_gasoline', 'data_source')
-path_dir_insee_extracts = os.path.join(path_data, 'data_insee', 'data_extracts')
+path_dir_insee_extracts = os.path.join(path_data,
+                                       'data_insee',
+                                       'data_extracts')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 
@@ -79,7 +83,8 @@ for id_station, ls_close in dict_ls_close.items():
   se_group_ms = se_group_nb.astype(float) * 100 / se_group_nb.sum()
   ls_rows.append((id_station, se_group_nb, se_group_ms))
 
-df_ms = pd.concat([row[2] for row in ls_rows], keys = [row[0] for row in ls_rows], axis = 1).T
+df_ms = pd.concat([row[2] for row in ls_rows],
+                  keys = [row[0] for row in ls_rows], axis = 1).T
 df_ms.fillna(0, inplace = True)
 df_ms['HHI'] = df_ms.apply(lambda x: (x**2).sum(), axis = 1)
 
@@ -87,7 +92,8 @@ df_ms['HHI'] = df_ms.apply(lambda x: (x**2).sum(), axis = 1)
 # build df with nb of stores of each brand
 # treat independent column specifically
 
-df_nb = pd.concat([row[1] for row in ls_rows], keys = [row[0] for row in ls_rows], axis = 1).T
+df_nb = pd.concat([row[1] for row in ls_rows],
+                  keys = [row[0] for row in ls_rows], axis = 1).T
 df_nb.fillna(0, inplace = True)
 
 ls_chains = list(df_nb.columns)

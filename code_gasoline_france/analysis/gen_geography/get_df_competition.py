@@ -6,15 +6,16 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 
-path_dir_built_scraped = os.path.join(path_data,
-                                      'data_gasoline',
-                                      'data_built',
-                                      'data_scraped_2011_2014')
+path_dir_built = os.path.join(path_data,
+                              'data_gasoline',
+                              'data_built',
+                              'data_scraped_2011_2014')
+path_dir_built_json = os.path.join(path_dir_built, 'data_json')
+path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
 
-path_dir_built_json = os.path.join(path_dir_built_scraped, 'data_json')
-path_dir_built_csv = os.path.join(path_dir_built_scraped, u'data_csv')
-
-path_dir_insee_extracts = os.path.join(path_data, 'data_insee', 'data_extracts')
+path_dir_insee_extracts = os.path.join(path_data,
+                                       'data_insee',
+                                       'data_extracts')
 
 # ###############
 # LOAD DATA
