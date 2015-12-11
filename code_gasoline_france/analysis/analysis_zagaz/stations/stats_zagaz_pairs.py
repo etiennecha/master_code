@@ -6,6 +6,7 @@ import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
+from generic_competition import *
 import collections
 
 path_dir_built = os.path.join(path_data,
@@ -92,6 +93,10 @@ df_zagaz_info = pd.read_csv(os.path.join(path_dir_built_zagaz_csv,
                                      'ci_1' : str,
                                      'ci_ardt_1' : str})
 df_zagaz_info.set_index('id_zagaz', inplace = True)
+## temp for gps coord (todo: move)
+#df_zagaz_info = df_zagaz_info[df_zagaz_info['lat'] != 'INDEPENDANT']
+#df_zagaz_info['lat'] = df_zagaz_info['lat'].str.replace('-', '').astype(float)
+#df_zagaz_info['lng'] = df_zagaz_info['lng'].str.replace('-', '').astype(float)
 
 # ZAGAZ USER DATA
 
@@ -118,9 +123,9 @@ df_info = pd.merge(df_info,
 
 df_info = df_info[df_info['highway'] != 1]
 
-# ############
-# STATS DES
-# ############
+# #####################################
+# GET STATION PAIRS FROM USER REPORTS
+# ####################################
 
 # Build dict: key = id_zagaz, content = list of stations w/ which station associated
 # Frequency of reports per user not taken into account
@@ -147,19 +152,102 @@ for zagaz_id, dict_relations in dict_station_relations.items():
       dict_pairs.setdefault(nb_users, []).append((zagaz_id, zagaz_id_2))
   temp_set_covered.add(zagaz_id)
 
-# Overview of pairs
-for k, ls_pairs in dict_pairs.items():
-  if k >= 25:
-    for id_zagaz_1, id_zagaz_2 in ls_pairs:
-      print()
-      print(id_zagaz_1, id_zagaz_2)
-      print(df_info[df_info['zag_id'].isin([id_zagaz_1, id_zagaz_2])]\
-                   [lsdzm[:-2]].to_string())
+# #################
+# BUILD DF PAIRS
+# #################
 
-## Inspect missing (some are highway)
+# todo: distance? same brand? in gov data (some are highways)
 #print df_zagaz_info.ix[['13372', '7255']].T.to_string()
 #print df_matching_zagaz[df_matching_zagaz['zag_id'].isin(['13372', '7255'])].T.to_string()
 
 # todo: loop and check those which involve a Total Access
 # stats on price? would be better to use pre-existing pair stats
 # those should take into account total access (in gen_dispersion?)
+
+# Overview of pairs
+ls_rows_pairs = []
+for k, ls_pairs in dict_pairs.items():
+  if k >= 2:
+    for id_zagaz_1, id_zagaz_2 in ls_pairs:
+      ls_rows_pairs.append((id_zagaz_1, id_zagaz_2, k))
+
+df_pairs = pd.DataFrame(ls_rows_pairs,
+                        columns = ['id_zag_1',
+                                   'id_zag_2',
+                                   'nb_users'])
+
+ls_temp_cols = ['group_2012', 'group_2013',
+                'street', 'municipality', 'ci',
+                'lat', 'lng', 'highway']
+for extension in [1, 2]:
+  df_temp = df_zagaz_info[ls_temp_cols].copy()
+  df_temp.columns = ['{:s}_{:d}'.format(x, extension) for x in df_temp.columns]
+  df_pairs = pd.merge(df_pairs,
+                      df_temp,
+                      left_on = 'id_zag_{:d}'.format(extension),
+                      right_index = True,
+                      how = 'left')
+
+# get rid of pairs involving highway
+df_pairs = df_pairs[(df_pairs['highway_1'].isnull()) &\
+                    (df_pairs['highway_2'].isnull())]
+df_pairs.drop(['highway_1', 'highway_2'], axis = 1, inplace = True)
+
+df_pairs['dist'] = compute_distance_ar(df_pairs['lat_1'],
+                                       df_pairs['lng_1'],
+                                       df_pairs['lat_2'],
+                                       df_pairs['lng_2'])
+
+
+print()
+print(u'Overview pair distances:')
+print(df_pairs['dist'].describe())
+
+print()
+print(u'Overview nb_users when dist > 30')
+print(df_pairs[df_pairs['dist'] > 30]['nb_users'].value_counts())
+#print()
+#print(df_pairs[(df_pairs['dist'] > 30) &  (df_pairs['nb_users'] >= 10)].to_string())
+
+# comp if not comp in 2012 nor in 2013
+df_comp = df_pairs[~((df_pairs['group_2012_1'] == df_pairs['group_2012_2']) |
+                     (df_pairs['group_2013_1'] == df_pairs['group_2013_2']))]
+# same if same group in 2012 and 2013
+df_same = df_pairs[(df_pairs['group_2012_1'] == df_pairs['group_2012_2']) &
+                   (df_pairs['group_2013_1'] == df_pairs['group_2013_2'])]
+# todo: check rest
+
+# ##############
+# STATS DES
+# ##############
+
+print()
+print(u'Overview of pair distances:')
+df_comp_temp = df_comp[df_comp['nb_users'] >= 5]
+
+min_dist, max_dist = 5, 10
+print('Less than {:d}: {:.0f}%'.format(\
+         min_dist,
+         len(df_comp_temp[df_comp_temp['dist'] <= min_dist]) /\
+         float(len(df_comp_temp)) * 100))
+
+print('Between {:d} and {:d}: {:.0f}%'.format(\
+         min_dist,
+         max_dist,
+         len(df_comp_temp[(df_comp_temp['dist'] > min_dist) &\
+                          (df_comp_temp['dist'] <= max_dist)]) /\
+         float(len(df_comp_temp))* 100))
+
+print('Above {:d}: {:.0f}%'.format(\
+         max_dist,
+         len(df_comp_temp[df_comp_temp['dist'] > max_dist]) /\
+         float(len(df_comp_temp)) * 100))
+
+# Play with networkx
+import networkx as nx
+g = nx.Graph()
+g.add_edges_from(df_comp[['id_zag_1', 'id_zag_2']].values.tolist())
+# find (connected) subgraphs
+d = nx.connected_component_subgraphs(g)
+for sg in d[0:10]:
+  print(len(sg.nodes()))

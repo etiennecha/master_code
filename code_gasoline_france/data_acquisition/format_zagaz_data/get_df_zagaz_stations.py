@@ -1,15 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 from matching_insee import *
 from functions_string import *
-from BeautifulSoup import BeautifulSoup
-import collections
-import copy
+#import collections
+#import copy
 
 def str_zagaz_corrections(word):
   word = word.lower()
@@ -41,15 +41,14 @@ path_dir_built_zagaz = os.path.join(path_data,
                                     u'data_built',
                                     u'data_zagaz')
 
-
 # #####################
 # LOAD ZAGAZ DATA
 # #####################
 
 dict_dict_stations = {}
-dict_dict_stations['2012'] =  dec_json(os.path.join(path_dir_zagaz,
-                                                    'data_json',
-                                                    '2012_dict_zagaz_stations.json'))
+dict_dict_stations['2012'] = dec_json(os.path.join(path_dir_zagaz,
+                                                   'data_json',
+                                                   '2012_dict_zagaz_stations.json'))
 dict_dict_stations['2013'] = dec_json(os.path.join(path_dir_zagaz,
                                                  'data_json',
                                                  '2013_dict_zagaz_stations.json'))
@@ -68,8 +67,8 @@ for year, dict_stations in dict_dict_stations.items():
     str_standardized_brand = str_low_noacc(str_correct_html(v[1])).upper()
     if str_standardized_brand not in dict_brands.keys():
       dict_missing_brands.setdefault(str_standardized_brand, []).append(k)
-print u'\nBrands missing in dict_brands:'
-print dict_missing_brands.keys()
+print(u'Brands missing in dict_brands:')
+print(dict_missing_brands.keys())
 # u'SPAR' = u'SPAR STATION' or u'SUPERMARCHES SPAR' check if real difference
 # u'8 A HUIT' => u'8  A HUIT'
 # u'ENI' => u'AGIP' check
@@ -106,7 +105,7 @@ for year, dict_stations in dict_dict_stations.items():
   for k,v in dict_stations.items():
     if year == '2013':
       v[4] = v[4][0]
-    ls_rows_stations.append(v[0:7] + v[7])
+    ls_rows_stations.append(v[0:7] + v[7] + [v[8]])
   df_stations = pd.DataFrame(ls_rows_stations, columns = ['id_zagaz',
                                                           'brand',
                                                           'name',
@@ -116,7 +115,8 @@ for year, dict_stations in dict_dict_stations.items():
                                                           'municipality',
                                                           'lat',
                                                           'lng',
-                                                          'Q'])
+                                                          'Q',
+                                                          'highway'])
   dict_df_stations[year] = df_stations
 
 # ###############################################
@@ -163,7 +163,8 @@ for year, df_stations in dict_df_stations.items():
     df_stations.loc[(df_stations['municipality'] == muni_old) &\
                     (df_stations['zip'] == zip_code),
                     'municipality'] = muni_new
-  df_stations['street'] = df_stations['street'].apply(lambda x: x.replace(u'\u017d', u"'"))
+  df_stations['street'] = df_stations['street'].apply(lambda x: x.replace(u'\u017d',
+                                                                          u"'"))
 
 # GPS
 
@@ -188,33 +189,7 @@ df_com = pd.read_csv(os.path.join(path_dir_insee_extracts,
                      dtype = str)
 ls_active_cis = df_com['CODGEO'].values
 
-## Check: works ok, then do within dataframes
-## could merge both df_stations first
-#dict_ls_match_res = {}
-#for year, df_stations in dict_df_stations.items():
-#  ls_match_res = []
-#  for row_ind, row in df_stations.iterrows():
-#    match_res = matching_insee.match_city(row['municipality'],
-#                                          row['zip'][:-3],
-#                                          row['zip'])
-#    if match_res[1] == 'no_match':
-#      print u'\nNo match ({:s}):'.format(year), row_ind, row['zip'], row['municipality']
-#    ls_match_res.append((row_ind, match_res))
-#  dict_ls_match_res[year] = ls_match_res
-#
-## Check insee code still in use + disambiguate
-##set_active_cis = set(df_com['CODGEO'].values)
-##ls_2012_cis = [x[1][0][0][2] for x in dict_ls_match_res['2012']]
-##ls_2012_pbms = set(ls_2012_cis).difference(set_active_cis)
-#ls_active_cis = df_com['CODGEO'].values
-#dict_ls_final_match = {}
-#for year, ls_match_res in dict_ls_match_res.items():
-#  ls_final_match = [refine_insee_code(ls_active_cis, res[1][0][0][2])\
-#                      for res in ls_match_res]
-#  dict_ls_final_match[year] = ls_final_match
-#  print u'\nNb stations ({:s}):'.format(year), len(ls_final_match)
-#  print u'Nb matched ({:s}):'.format(year), len([x for x in ls_final_match if x[0]])
-
+dict_refine_ic = get_dict_refine_insee_code(ls_active_cis)
 for year, df_stations in dict_df_stations.items():
   df_stations['ci'] =\
     df_stations.apply(lambda x: matching_insee.match_city(x['municipality'],
@@ -222,8 +197,7 @@ for year, df_stations in dict_df_stations.items():
                                                           x['zip'])[0][0][2],
                       axis = 1)
   df_stations['ci'], df_stations['ci_ardt'] =\
-      zip(*df_stations['ci'].apply(lambda x: refine_insee_code(ls_active_cis,
-                                                               x)))
+      zip(*df_stations['ci'].apply(lambda x: dict_refine_ic.get(x, (None, None))))
 
 ## Ok: same 4 which are located in Monaco hence no insee code
 #print dict_df_stations['2012'][dict_df_stations['2012']['ci_ardt'].isnull()].to_string()
@@ -245,26 +219,46 @@ df_2012.set_index('id_zagaz', inplace = True)
 df_stations['brand'] = df_2012['brand']
 df_stations.rename(columns = {'brand' : 'brand_2012'}, inplace = True)
 
-
 for year in ['2012', '2013']:
   df_stations['brand_{:s}'.format(year)] =\
-      df_stations['brand_{:s}'.format(year)].apply(lambda x: str_low_noacc(str_correct_html(x)).upper()\
-                                                             if not pd.isnull(x) else None)
+      df_stations['brand_{:s}'.format(year)].apply(\
+        lambda x: str_low_noacc(str_correct_html(x)).upper()\
+                  if not pd.isnull(x) else None)
   df_stations['brand_std_{:s}'.format(year)], df_stations['group_{:s}'.format(year)] =\
       zip(*df_stations['brand_{:s}'.format(year)].apply(\
              lambda x: (dict_brands[x][0],
                         dict_brands[x][1]) if not pd.isnull(x) else (None, None)))
 
-#print u'\nNb not in 2012:', len(df_stations[df_stations['brand_2012'].isnull()])
-#print u'Nb not in 2013:', len(df_stations[df_stations['brand_2013'].isnull()])
-#print u'Nb Total Access in 2013:', len(df_stations[(df_stations['brand_2013'] ==\
-#                                         'TOTAL ACCESS')])
-#ls_di_0 = ['brand_2012', 'brand_2013', 'name', 'municipality', 'street', 'zip', 'ci', 'ci_ardt']
-#print u'\nChanges:'
-#print df_stations[(df_stations['brand_2013'] !=\
-#                     df_stations['brand_2012'])][ls_di_0].to_string()
-## Not much change between the two... probably too close
-## Recollect now to study closing
+# ###################
+# INSPECT & FIX DATA
+# ###################
+
+print()
+print(u'Nb stations not in 2012:', len(df_stations[df_stations['brand_2012'].isnull()]))
+print(u'Nb stations not in 2013:', len(df_stations[df_stations['brand_2013'].isnull()]))
+print(u'Nb Total Access in 2013:', len(df_stations[(df_stations['brand_2013'] ==\
+                                         'TOTAL ACCESS')]))
+
+print(u'\nOverview brand changes:')
+lsd0 = ['brand_2012', 'brand_2013',
+        'name', 'municipality', 'street',
+        'ci', 'ci_ardt']
+print(df_stations[(df_stations['brand_2013'] !=\
+        df_stations['brand_2012'])][lsd0][0:10].to_string())
+# Not much change between the two... probably too close
+# Recollect now to study closing
+
+print()
+print(u'Nb highway', len(df_stations[~df_stations['highway'].isnull()]))
+
+# NUMERIC GPS COORD
+df_stations['lat'] = df_stations['lat'].str.replace('-', '').astype(float)
+df_stations['lng'] = df_stations['lng'].str.replace('-', '').astype(float)
+
+# GET RID OF PBS IN COMMENTS (FOR CSV)
+df_stations['comment'] = df_stations['comment'].str.replace(u'\r\n', u' ')
+df_stations['comment'] = df_stations['comment'].str.replace(u'\r', u'')
+df_stations['comment'] = df_stations['comment'].str.replace(u'\n', u' ')
 
 # ##############
 # OUTPUT
