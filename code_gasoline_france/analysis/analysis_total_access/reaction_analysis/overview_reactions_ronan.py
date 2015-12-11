@@ -173,106 +173,145 @@ df_res.drop(['id_total_ta', 'dist_total_ta',
             axis = 1,
             inplace = True)
 
-# ##########
-# OVERVIEW
-# ##########
+# DF RES RONAN
+df_res_ronan = pd.read_csv(os.path.join(path_dir_built_ta_csv,
+                                        'df_res_indiv_ronan.csv'),
+                            encoding = 'utf-8',
+                            dtype = {'id_station' : str})
+df_res_ronan.set_index('id_station', inplace = True)
 
-# todo: graphs of reactions above 0.03 or 0.04 cents
-# todo: check share supermarkets vs. oil/indep
-# todo: check reaction vs. station fe (todo elsewhere)
-# todo: check closest competitor(s) of total access systematically? (based on pair price stats)
+df_res = pd.merge(df_res,
+                  df_res_ronan[['Price5', 'Price5reg', 'Price5Ind']],
+                  left_index = True,
+                  right_index = True,
+                  how = 'left')
 
-# treatment value thresholds for display
-ls_val = [i/100.0 for i in range(1, 10)]
-
-# cent display
-pd.set_option('float_format', '{:,.2f}'.format)
 df_res['c_treatment'] = df_res['c_treatment'] * 100
-ls_val = [i for i in range(1, 10)]
 
-ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
+print(u"Inspect Ronan's estimates:")
+print(df_res[(df_res['treated'] == 'tta_comp')]\
+            [['Price5', 'Price5reg', 'c_treatment', 'p_treatment']][0:10].to_string())
 
-for str_treated in ['tta', 'tta_tot', 'tta_comp', 'eta', 'eta_comp']:
-  str_treated = 'tta_comp'
-  df_res_sub = df_res[df_res['treated'] == str_treated]
-  
-  print()
-  print(u'Overview of regression results for {:s}'.format(str_treated))
-  print(df_res_sub.describe(percentiles = ls_pctiles).to_string())
-  
-  # Inspect significant treatments
-  df_res_sub_sig = df_res_sub[df_res_sub['p_treatment'] <= 0.05]
-  print()
-  print(u'Nb sig treatments:', len(df_res_sub_sig))
-  print(u'Nb positive/negative reactions above threshold:')
-  
-  ls_nb_inc = [len(df_res_sub_sig[df_res_sub_sig['c_treatment'] >= val])\
-                 for val in ls_val]
-  ls_nb_dec = [len(df_res_sub_sig[df_res_sub_sig['c_treatment'] <= -val])\
-                 for val in ls_val]
-  df_su_sig_reacs = pd.DataFrame([ls_nb_inc, ls_nb_dec],
-                                  columns = ls_val,
-                                  index = ['Nb pos', 'Nb neg'])
-  print(df_su_sig_reacs.to_string())
+df_res['diff'] = df_res['c_treatment'] - df_res['Price5reg']
+df_res.sort('diff', ascending = False, inplace = True)
 
-# treatment distributions by station type for tta_comp
 print()
-print(u'Overview of indiv effects by group type for tta_comp:')
-df_res_sub = df_res[df_res['treated'] == 'tta_comp']
-ls_se_gp_ies = []
-ls_temp_loop = [('Sup', df_res_sub[df_res_sub['group_type_last'] == 'SUP']),
-                ('Esso Exp.', df_res_sub[df_res_sub['brand_last'] == 'ESSO_EXPRESS']),
-                ('Esso', df_res_sub[df_res_sub['brand_last'] == 'ESSO']),
-                ('NSup', df_res_sub[df_res_sub['group_type_last'] != 'SUP']),
-                ('NSup NEExp',
-                    df_res_sub[(df_res_sub['group_type_last'] != 'SUP') &\
-                               (df_res_sub['brand_last'] != 'ESSO_EXPRESS')])]
-for str_temp, df_temp in ls_temp_loop:
-  ls_se_gp_ies.append(df_temp['c_treatment'].describe())
-df_su_gp_ies = pd.concat(ls_se_gp_ies,
-                         axis = 1,
-                         keys = [x[0] for x in ls_temp_loop])
-print(df_su_gp_ies.to_string())
+print(u"Inspect extreme diffs:")
+print(df_res[(df_res['treated'] == 'tta_comp')]\
+             [['Price5', 'Price5reg', 'c_treatment', 'p_treatment', 'diff']][0:10].to_string())
+print(df_res[(df_res['treated'] == 'tta_comp')]\
+             [['Price5', 'Price5reg', 'c_treatment', 'p_treatment', 'diff']][-10:].to_string())
 
-## ########
-## GRAPHS
-## ########
+# diff by region
+print()
+print(u"Inspect avg diff by region:")
+for reg in df_res['reg'].unique():
+  #df_res_reg = df_res[df_res['reg'] == reg]
+  df_res_reg = df_res[(df_res['reg'] == reg) &\
+                      (df_res['treated'] == 'tta_comp') & 
+                      (df_res['p_treatment'] <= 0.05)]
+  print(u"{:s} {:.2f}".format(reg, (df_res_reg['Price5Ind'] - df_res_reg['Price5reg']).mean()))
+
+## ##########
+## OVERVIEW
+## ##########
 #
-## Move?
+## todo: graphs of reactions above 0.03 or 0.04 cents
+## todo: check share supermarkets vs. oil/indep
+## todo: check reaction vs. station fe (todo elsewhere)
+## todo: check closest competitor(s) of total access systematically? (based on pair price stats)
 #
-## Graphs of competitors or group Total stations affected
-#df_res_check = df_res[(df_res['treated'].isin(['tta_tot',
-#                                               'tta_comp',
-#                                               'eta_comp'])) &\
-#                      (df_res['p_treatment'] <= 0.05) &\
-#                      (df_res['c_treatment'].abs() >= 3)] # 0.04 if not using cent
+## treatment value thresholds for display
+#ls_val = [i/100.0 for i in range(1, 10)]
 #
-#for id_station, row in df_res_check.iterrows():
-#  fig = plt.figure(figsize=(16,6))
-#  ax1 = fig.add_subplot(111)
-#  l2 = ax1.plot(df_prices_ttc.index, df_prices_ttc[row['tr_id']].values,
-#                c = 'b', label = 'Station {:s}'.format(df_info.ix[row['tr_id']]['brand_0']))
-#  l3 = ax1.plot(df_prices_ttc.index, df_prices_ttc.mean(1).values,
-#                c = 'r', label = 'Moyenne nationale')
-#  l1 = ax1.plot(df_prices_ttc.index, df_prices_ttc[id_station].values,
-#                c = 'g', label = 'Station {:s}'.format(df_info.ix[id_station]['brand_0']))
-#  lns = l1 + l2 + l3
-#  labs = [l.get_label() for l in lns]
-#  ax1.legend(lns, labs, loc=0)
-#  ax1.axvline(x = row['tr_date_min'], color = 'b', ls = '--', alpha = 1.0, lw = 1.5)
-#  ax1.axvline(x = row['tr_date_max'], color = 'b', ls = '--', alpha = 1.0, lw = 1.5)
-#  ax1.grid()
-#  plt.tight_layout()
-#  #plt.show()
-#  reac_sign = 'pos'
-#  if row['c_treatment'] < 0:
-#    reac_sign = 'neg'
-#  plt.savefig(os.path.join(path_dir_built_ta_graphs,
-#                           'price_series_treated',
-#                           '{:s}_{:s}_{:.2f}_{:s}.png'.format(row['treated'],
-#                                                              reac_sign,
-#                                                              np.abs(row['c_treatment']),
-#                                                              id_station)),
-#              dpi = 200,
-#              bbox_inches='tight')
-#  plt.close()
+## cent display
+#pd.set_option('float_format', '{:,.2f}'.format)
+#df_res['c_treatment'] = df_res['c_treatment'] * 100
+#ls_val = [i for i in range(1, 10)]
+#
+#ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
+#
+#for str_treated in ['tta', 'tta_tot', 'tta_comp', 'eta', 'eta_comp']:
+#  str_treated = 'tta_comp'
+#  df_res_sub = df_res[df_res['treated'] == str_treated]
+#  
+#  print()
+#  print(u'Overview of regression results for {:s}'.format(str_treated))
+#  print(df_res_sub.describe(percentiles = ls_pctiles).to_string())
+#  
+#  # Inspect significant treatments
+#  df_res_sub_sig = df_res_sub[df_res_sub['p_treatment'] <= 0.05]
+#  print()
+#  print(u'Nb sig treatments:', len(df_res_sub_sig))
+#  print(u'Nb positive/negative reactions above threshold:')
+#  
+#  ls_nb_inc = [len(df_res_sub_sig[df_res_sub_sig['c_treatment'] >= val])\
+#                 for val in ls_val]
+#  ls_nb_dec = [len(df_res_sub_sig[df_res_sub_sig['c_treatment'] <= -val])\
+#                 for val in ls_val]
+#  df_su_sig_reacs = pd.DataFrame([ls_nb_inc, ls_nb_dec],
+#                                  columns = ls_val,
+#                                  index = ['Nb pos', 'Nb neg'])
+#  print(df_su_sig_reacs.to_string())
+#
+## treatment distributions by station type for tta_comp
+#print()
+#print(u'Overview of indiv effects by group type for tta_comp:')
+#df_res_sub = df_res[df_res['treated'] == 'tta_comp']
+#ls_se_gp_ies = []
+#ls_temp_loop = [('Sup', df_res_sub[df_res_sub['group_type_last'] == 'SUP']),
+#                ('Esso Exp.', df_res_sub[df_res_sub['brand_last'] == 'ESSO_EXPRESS']),
+#                ('Esso', df_res_sub[df_res_sub['brand_last'] == 'ESSO']),
+#                ('NSup', df_res_sub[df_res_sub['group_type_last'] != 'SUP']),
+#                ('NSup NEExp',
+#                    df_res_sub[(df_res_sub['group_type_last'] != 'SUP') &\
+#                               (df_res_sub['brand_last'] != 'ESSO_EXPRESS')])]
+#for str_temp, df_temp in ls_temp_loop:
+#  ls_se_gp_ies.append(df_temp['c_treatment'].describe())
+#df_su_gp_ies = pd.concat(ls_se_gp_ies,
+#                         axis = 1,
+#                         keys = [x[0] for x in ls_temp_loop])
+#print(df_su_gp_ies.to_string())
+#
+### ########
+### GRAPHS
+### ########
+##
+### Move?
+##
+### Graphs of competitors or group Total stations affected
+##df_res_check = df_res[(df_res['treated'].isin(['tta_tot',
+##                                               'tta_comp',
+##                                               'eta_comp'])) &\
+##                      (df_res['p_treatment'] <= 0.05) &\
+##                      (df_res['c_treatment'].abs() >= 3)] # 0.04 if not using cent
+##
+##for id_station, row in df_res_check.iterrows():
+##  fig = plt.figure(figsize=(16,6))
+##  ax1 = fig.add_subplot(111)
+##  l2 = ax1.plot(df_prices_ttc.index, df_prices_ttc[row['tr_id']].values,
+##                c = 'b', label = 'Station {:s}'.format(df_info.ix[row['tr_id']]['brand_0']))
+##  l3 = ax1.plot(df_prices_ttc.index, df_prices_ttc.mean(1).values,
+##                c = 'r', label = 'Moyenne nationale')
+##  l1 = ax1.plot(df_prices_ttc.index, df_prices_ttc[id_station].values,
+##                c = 'g', label = 'Station {:s}'.format(df_info.ix[id_station]['brand_0']))
+##  lns = l1 + l2 + l3
+##  labs = [l.get_label() for l in lns]
+##  ax1.legend(lns, labs, loc=0)
+##  ax1.axvline(x = row['tr_date_min'], color = 'b', ls = '--', alpha = 1.0, lw = 1.5)
+##  ax1.axvline(x = row['tr_date_max'], color = 'b', ls = '--', alpha = 1.0, lw = 1.5)
+##  ax1.grid()
+##  plt.tight_layout()
+##  #plt.show()
+##  reac_sign = 'pos'
+##  if row['c_treatment'] < 0:
+##    reac_sign = 'neg'
+##  plt.savefig(os.path.join(path_dir_built_ta_graphs,
+##                           'price_series_treated',
+##                           '{:s}_{:s}_{:.2f}_{:s}.png'.format(row['treated'],
+##                                                              reac_sign,
+##                                                              np.abs(row['c_treatment']),
+##                                                              id_station)),
+##              dpi = 200,
+##              bbox_inches='tight')
+##  plt.close()

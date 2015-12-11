@@ -71,6 +71,7 @@ df_prices = df_prices_ttc
 # DF TOTAL ACCESS
 
 str_ta_ext = '_5km_dist_order'
+#str_ta_ext = '_3km_dist_order'
 
 df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
                                  'df_total_access{:s}.csv'.format(str_ta_ext)),
@@ -171,16 +172,16 @@ for str_treated, df_treated in dict_df_treated.items():
           df_station['resid_2'] = df_station['resid'] * df_station['treatment']
           df_station['ref_price_2'] = df_station['ref_price'] * df_station['treatment']
           ## keep only one price per week
-          #df_station['dow'] = df_station.index.weekday
-          #df_station = df_station[df_station['dow'] == 3]
+          df_station['dow'] = df_station.index.weekday
+          df_station = df_station[df_station['dow'] == 4]
           ## week average (todo: fix treatment => 0 or 1)
           #df_station = df_station.resample('W', how = 'mean')
           res0 = smf.ols('price ~ ref_price + treatment',
                          data = df_station).fit(cov_type='HAC',
-                                                cov_kwds={'maxlags':14})
+                                                cov_kwds={'maxlags':4})
           res1 = smf.ols('price ~ ref_price + ref_price_2 + treatment',
                         data = df_station).fit(cov_type='HAC',
-                                                cov_kwds={'maxlags':14})
+                                                cov_kwds={'maxlags':4})
           hyp = '(ref_price_2 = 0), (treatment =0)'
           f_test = res1.f_test(hyp)
           ls_rows_res.append([id_station,

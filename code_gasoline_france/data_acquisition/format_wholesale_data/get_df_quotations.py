@@ -8,31 +8,33 @@ from generic_master_info import *
 import datetime, time
 from BeautifulSoup import BeautifulSoup
 
-path_dir_rotterdam = os.path.join(path_data,
+path_dir_wholesale = os.path.join(path_data,
                                   'data_gasoline',
                                   'data_source',
-                                  'data_rotterdam')
+                                  'data_wholesale')
 
-path_xls_reuters_diesel = os.path.join(path_dir_rotterdam,
-                                       'data_reuters',
-                                       'diesel_data_to_import.xls')
+path_xls_wholesale_diesel = os.path.join(path_dir_wholesale,
+                                         'data_reuters',
+                                         'diesel_data_to_import.xls')
 
-path_xls_eia = os.path.join(path_dir_rotterdam,
+path_xls_eia = os.path.join(path_dir_wholesale,
                             'PET_PRI_SPT_S1_D.xls')
 
 # path_xlsx_ufip = os.path.join(path_dir_rotterdam,
 #                               'ufip-valeurs_2006-01-01_au_2013-12-31.xlsx')
-path_xlsx_ufip = os.path.join(path_dir_rotterdam,
+path_xlsx_ufip = os.path.join(path_dir_wholesale,
                               'ufip-valeurs_2006-01-01_au_2015-06-30.xlsx')
 
-path_xml_ecb = os.path.join(path_dir_rotterdam, 'usd.xml')
+path_xml_ecb = os.path.join(path_dir_wholesale, 'usd.xml')
 
 path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
-                              u'data_built')
+                              u'data_built',
+                              u'data_other')
+path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
 
 # REUTERS FILE
-reuters_diesel_excel_file = pd.ExcelFile(path_xls_reuters_diesel)
+reuters_diesel_excel_file = pd.ExcelFile(path_xls_wholesale_diesel)
 print 'Reuters excel file sheets:', reuters_diesel_excel_file.sheet_names
 df_reuters_diesel = reuters_diesel_excel_file.parse('Feuil1',
                                                     header = 1,
@@ -199,17 +201,7 @@ ls_output_columns = ['UFIP RT Diesel R5 EL',
                      'ULSD 10 CIF NWE R5 S1 EL',
                      'UFIP_diff']
 
-df_all[ls_output_columns].to_csv(os.path.join(path_dir_built,
-                                              'data_paper_dispersion',
-                                              'data_csv',
-                                              'df_quotations.csv'),
-                                 index_label = 'date',
-                                 float_format= '%.3f',
-                                 encoding = 'utf-8')
-
-df_all[ls_output_columns].to_csv(os.path.join(path_dir_built,
-                                              'data_paper_total_access',
-                                              'data_csv',
+df_all[ls_output_columns].to_csv(os.path.join(path_dir_built_csv,
                                               'df_quotations.csv'),
                                  index_label = 'date',
                                  float_format= '%.3f',

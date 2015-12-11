@@ -24,7 +24,7 @@ path_dir_built_json = os.path.join(path_dir_built,
 # LOAD DATA
 # ###############
 
-# LOAD DF INFO
+# DF INFO
 
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
@@ -41,7 +41,7 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
 df_info.set_index('id_station', inplace = True)
 df_info = df_info[df_info['highway'] != 1]
 
-# LOAD DF PRICES
+# DF PRICES
 
 df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_prices_ht_final.csv'),
@@ -53,7 +53,7 @@ df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
                             parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
-# LOAD DF PRICE STATS
+# DF PRICE STATS
 
 df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                             'df_station_stats.csv'),
@@ -61,7 +61,7 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                encoding = 'utf-8')
 df_station_stats.set_index('id_station', inplace = True)
 
-# LOAD DF MARGIN CHGE
+# DF MARGIN CHGE
 
 df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
                                           'df_margin_chge.csv'),

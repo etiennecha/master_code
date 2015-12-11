@@ -9,19 +9,25 @@ import datetime, time
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_dir_built_paper = os.path.join(path_data,
+path_dir_built_other = os.path.join(path_data,
                                     u'data_gasoline',
                                     u'data_built',
-                                    u'data_paper_dispersion')
+                                    u'data_other')
+path_dir_built_other_csv = os.path.join(path_dir_built_other,
+                                        'data_csv')
 
-path_dir_built_csv = os.path.join(path_dir_built_paper, u'data_csv')
+path_dir_built = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_scraped_2011_2014')
+path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
 
 # ########################
 # LOAD DF PRICES AND COSTS
 # ########################
 
 # LOAD DF COST
-df_cost = pd.read_csv(os.path.join(path_dir_built_csv,
+df_cost = pd.read_csv(os.path.join(path_dir_built_other_csv,
                                    'df_quotations.csv'),
                                  encoding = 'utf-8',
                                  parse_dates = ['date'])

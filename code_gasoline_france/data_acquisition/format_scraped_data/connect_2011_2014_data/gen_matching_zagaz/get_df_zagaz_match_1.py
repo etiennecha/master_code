@@ -368,7 +368,8 @@ print df_duplicates[ls_ma_di_1][0:30].to_string()
 
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
                               'df_zagaz_stations_match_1.csv'),
-                 encoding = 'UTF-8')
+                 index = False,
+                 encoding = 'utf-8')
 
 ls_di_oexcel = ['gov_id', 'zag_id', 'gov_br_0', 'gov_br_1', 'zag_br',
                 'gov_street', 'zag_street', 'gov_city', 'zag_city',

@@ -13,20 +13,14 @@ path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
                               u'data_built',
                               u'data_scraped_2011_2014')
-
-path_dir_built_csv = os.path.join(path_dir_built_csv,
-                                  u'data_csv')
+path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
 
 path_dir_built_ta = os.path.join(path_data,
                                  u'data_gasoline',
                                  u'data_built',
                                  u'data_total_access')
-
-path_dir_built_ta_json = os.path.join(path_dir_built_ta, 
-                                      'data_json')
-
-path_dir_built_ta_csv = os.path.join(path_dir_built_ta, 
-                                     'data_csv')
+path_dir_built_ta_json = os.path.join(path_dir_built_ta, 'data_json')
+path_dir_built_ta_csv = os.path.join(path_dir_built_ta, 'data_csv')
 
 pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -56,7 +50,7 @@ df_info = df_info[df_info['highway'] != 1]
 # DF TOTAL ACCESS
 
 df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
-                                           'df_total_access_5km_dist_order.csv'),
+                                 'df_total_access_5km.csv'),
                               dtype = {'id_station' : str,
                                        'id_total_ta' : str},
                               encoding = 'utf-8',
@@ -81,7 +75,7 @@ df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
-df_prices = df_prices_ht
+df_prices = df_prices_ttc
 
 # GET RID OF PROBLEMATIC STATIONS
 df_ta = df_ta[df_ta['filter'] > 5]
@@ -104,7 +98,7 @@ se_mean_prices = df_prices[ls_ids_control].mean(1)
 
 # todo: add check enough days before and after treatment
 
-id_station = '5100004' # '11000014'
+id_station = '63000019' # '5100004' # '11000014'
 date_beg, date_end = df_ta.ix[id_station]\
                        [['date_min_total_ta', 'date_max_total_ta']].values
 
@@ -125,20 +119,20 @@ df_test['l1_resid'] = df_test['resid'].shift(1)
 df_test['l1_resid_bt'] = df_test['resid'].shift(1) * (1 - df_test['treatment'])
 df_test['l1_resid_at'] = df_test['resid'].shift(1) * df_test['treatment']
 
-## keep only one price per week
-#df_test['dow'] = df_test.index.weekday
-#df_test = df_test[df_test['dow'] == 3]
+# keep only one price per week
+df_test['dow'] = df_test.index.weekday
+df_test = df_test[df_test['dow'] == 4]
 
 rest0 = smf.ols('price ~ ref_price + treatment',
                data = df_test).fit(cov_type='HAC',
-                                   cov_kwds={'maxlags':7})
+                                   cov_kwds={'maxlags':2})
 print rest0.summary()
 #rob_cov_hact0 = sm.stats.sandwich_covariance.cov_hac(rest0, nlags = 7)
 #rob_bset0 = np.sqrt(np.diag(rob_cov_hact0))
 
 rest1 = smf.ols('price ~ ref_price + ref_price_2 + treatment',
               data = df_test).fit(cov_type='HAC',
-                                  cov_kwds={'maxlags':7})
+                                  cov_kwds={'maxlags': 2})
 print rest1.summary()
 
 hyp = '(ref_price_2 = 0), (treatment =0)'

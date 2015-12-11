@@ -70,7 +70,8 @@ df_prices = df_prices_ttc
 
 # DF TOTAL ACCESS
 
-str_ta_ext = '_5km_dist_order'
+#str_ta_ext = '_3km_dist_order'
+str_ta_ext = '_5km'
 
 df_ta = pd.read_csv(os.path.join(path_dir_built_ta_csv,
                                  'df_total_access{:s}.csv'.format(str_ta_ext)),
@@ -190,19 +191,19 @@ for region, (df_control_region, df_treated_region) in dict_region_dfs.items():
         df_station['resid_2'] = df_station['resid'] * df_station['treatment']
         df_station['ref_price_2'] = df_station['ref_price'] * df_station['treatment']
         ## keep only one price per week
-        #df_station['dow'] = df_station.index.weekday
-        #df_station = df_station[df_station['dow'] == 3]
+        df_station['dow'] = df_station.index.weekday
+        df_station = df_station[df_station['dow'] == 4] # friday
         ## week average (todo: fix treatment => 0 or 1)
         #df_station = df_station.resample('W', how = 'mean')
         res0 = smf.ols('price ~ ref_price + treatment',
                        data = df_station).fit(cov_type='HAC',
-                                              cov_kwds={'maxlags':14})
+                                              cov_kwds={'maxlags':6})
         #rob_cov_hact0 = sm.stats.sandwich_covariance.cov_hac(rest0, nlags = 7)
         #rob_bse0 = np.sqrt(np.diag(rob_cov_hact0))
         #print res0.summary()
         res1 = smf.ols('price ~ ref_price + ref_price_2 + treatment',
                       data = df_station).fit(cov_type='HAC',
-                                              cov_kwds={'maxlags':14})
+                                             cov_kwds={'maxlags':6})
         #print res1.summary()
         # pbm: how to run with robust standard errors?
         hyp = '(ref_price_2 = 0), (treatment =0)'
@@ -289,14 +290,14 @@ print()
 print(u'Inspect decreases in price (types):')
 print(df_info.ix[ls_ids_dec]['group_type_last'].value_counts(normalize = True))
 
-# #######
-# OUTPUT
-# #######
-
-df_res.to_csv(os.path.join(path_dir_built_ta_csv,
-                           'df_res_{:s}_{:s}.csv'.format(str_treated,
-                                                         str_ta_ext)),
-              encoding = 'utf-8')
+## #######
+## OUTPUT
+## #######
+#
+#df_res.to_csv(os.path.join(path_dir_built_ta_csv,
+#                           'df_res_{:s}_{:s}.csv'.format(str_treated,
+#                                                         str_ta_ext)),
+#              encoding = 'utf-8')
 
 ## #########
 ## ANALYSIS

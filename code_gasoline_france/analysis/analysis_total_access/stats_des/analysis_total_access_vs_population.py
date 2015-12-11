@@ -48,7 +48,7 @@ df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
 df_prices_ht.set_index('date', inplace = True)
 
 df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
-                                        'df_prices_httc_final.csv'),
+                                        'df_prices_ttc_final.csv'),
                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 

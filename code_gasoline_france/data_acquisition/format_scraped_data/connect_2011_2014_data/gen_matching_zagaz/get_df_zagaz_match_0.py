@@ -25,12 +25,8 @@ path_dir_scraped = os.path.join(path_data,
                                 u'data_gasoline',
                                 u'data_built',
                                 u'data_scraped_2011_2014')
-
-path_dir_scraped_csv = os.path.join(path_dir_scraped,
-                                    'data_csv')
-
-path_dir_scraped_json = os.path.join(path_dir_scraped,
-                                     'data_json')
+path_dir_scraped_csv = os.path.join(path_dir_scraped, 'data_csv')
+path_dir_scraped_json = os.path.join(path_dir_scraped, 'data_json')
 
 path_dir_zagaz = os.path.join(path_data,
                               u'data_gasoline',
@@ -306,7 +302,8 @@ df_output = df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
 
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
                               'df_zagaz_stations_match_0.csv'),
-                 encoding = 'UTF-8')
+                 index = False,
+                 encoding = 'utf-8')
 
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
                               'csv_excel',
