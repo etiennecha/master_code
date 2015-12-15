@@ -161,7 +161,7 @@ ls_big_brands = list(set([v[1] for k,v in dict_brands.items()]))
 
 dict_replace_rg = {'AUTRE_DIS' : None,
                    'AUTRE_GMS' : None,
-                   'INDEPENDEANT' : None,
+                   'INDEPENDANT' : None,
                    'TOTAL_ACCESS' : 'TOTAL',
                    'ELF': 'TOTAL',
                    'ELAN' : 'TOTAL'}

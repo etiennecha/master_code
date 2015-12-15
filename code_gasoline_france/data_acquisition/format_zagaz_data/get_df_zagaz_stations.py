@@ -260,6 +260,18 @@ df_stations['comment'] = df_stations['comment'].str.replace(u'\r\n', u' ')
 df_stations['comment'] = df_stations['comment'].str.replace(u'\r', u'')
 df_stations['comment'] = df_stations['comment'].str.replace(u'\n', u' ')
 
+# FIX GROUPS
+dict_replace_rg = {'AUTRE_DIS' : None,
+                   'AUTRE_GMS' : None,
+                   'INDEPENDANT' : None,
+                   'TOTAL_ACCESS' : 'TOTAL',
+                   'ELF': 'TOTAL',
+                   'ELAN' : 'TOTAL'}
+for rg in ['group_2012', 'group_2013']:
+  df_stations[rg] = df_stations[rg].apply(\
+                      lambda x: dict_replace_rg[x]\
+                        if x in dict_replace_rg else x)
+
 # ##############
 # OUTPUT
 # ##############

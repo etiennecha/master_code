@@ -211,13 +211,17 @@ print(df_pairs[df_pairs['dist'] > 30]['nb_users'].value_counts())
 
 # comp if not comp in 2012 nor in 2013
 df_comp = df_pairs[~((df_pairs['group_2012_1'] == df_pairs['group_2012_2']) |
-                     (df_pairs['group_2013_1'] == df_pairs['group_2013_2']))]
+                     (df_pairs['group_2013_1'] == df_pairs['group_2013_2']))].copy()
 # same if same group in 2012 and 2013
 df_same = df_pairs[(df_pairs['group_2012_1'] == df_pairs['group_2012_2']) &
-                   (df_pairs['group_2013_1'] == df_pairs['group_2013_2'])]
-# todo: check rest
-
-# ##############
+                   (df_pairs['group_2013_1'] == df_pairs['group_2013_2'])].copy()
+# rest (check?)
+df_rest = df_pairs[((df_pairs['group_2012_1'] == df_pairs['group_2012_2']) |
+                    (df_pairs['group_2013_1'] == df_pairs['group_2013_2'])) &
+                   (~((df_pairs['group_2012_1'] == df_pairs['group_2012_2']) &
+                     (df_pairs['group_2013_1'] == df_pairs['group_2013_2'])))].copy()
+                   
+# ##############     
 # STATS DES
 # ##############
 
