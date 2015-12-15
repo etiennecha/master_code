@@ -252,13 +252,18 @@ print()
 print(u'Nb highway', len(df_stations[~df_stations['highway'].isnull()]))
 
 # NUMERIC GPS COORD
-df_stations['lat'] = df_stations['lat'].str.replace('-', '').astype(float)
-df_stations['lng'] = df_stations['lng'].str.replace('-', '').astype(float)
+for col in ['lat', 'lng']:
+  df_stations.loc[df_stations[col] == '-',
+                  col] = None
+  df_stations[col] = df_stations[col].astype(float)
+#df_stations['lat'] = df_stations['lat'].str.replace('-', '').astype(float)
+#df_stations['lng'] = df_stations['lng'].str.replace('-', '').astype(float)
 
 # GET RID OF PBS IN COMMENTS (FOR CSV)
-df_stations['comment'] = df_stations['comment'].str.replace(u'\r\n', u' ')
-df_stations['comment'] = df_stations['comment'].str.replace(u'\r', u'')
-df_stations['comment'] = df_stations['comment'].str.replace(u'\n', u' ')
+for col in ['comment', 'street']:
+  df_stations[col] = df_stations[col].str.replace(u'\r\n', u' ')
+  df_stations[col] = df_stations[col].str.replace(u'\r', u'')
+  df_stations[col] = df_stations[col].str.replace(u'\n', u' ')
 
 # FIX GROUPS
 dict_replace_rg = {'AUTRE_DIS' : None,
