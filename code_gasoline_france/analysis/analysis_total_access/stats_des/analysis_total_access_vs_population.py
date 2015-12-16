@@ -38,7 +38,7 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'dpt' : str},
                       parse_dates = [u'day_%s' %i for i in range(4)]) # fix
 df_info.set_index('id_station', inplace = True)
-df_info = df_info[df_info['highway'] != 1]
+#df_info = df_info[df_info['highway'] != 1]
 
 # DF PRICES
 
@@ -52,7 +52,7 @@ df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
-ls_keep_ids = [id_station for id_station in df_prices.columns if\
+ls_keep_ids = [id_station for id_station in df_prices_ttc.columns if\
                 id_station in df_info.index]
 
 df_prices = df_prices_ht[ls_keep_ids]
@@ -67,10 +67,6 @@ df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
                              dtype = {'id_station' : str},
                              parse_dates = ['date'])
 df_margin_chge.set_index('id_station', inplace = True)
-
-# DICT TOTAL SA DATES
-
-dict_ta_dates_str = dec_json(os.path.join(path_dir_built_ta_json))
 
 ## ##############################
 ## TOTAL ACCESS WITHIN INSEE AREA

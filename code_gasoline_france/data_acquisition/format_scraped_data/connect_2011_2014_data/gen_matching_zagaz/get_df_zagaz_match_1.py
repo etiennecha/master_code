@@ -194,6 +194,70 @@ for k, v in dict_no_match.items():
 # BUILD DF RESULTS
 # ################
 
+# Build df results (slight pbm... not gov address from master_address but df_info)
+# todo: overwrite if manual matching conflicting
+ls_rows_matches = []
+for quality, ls_matches in dict_matching_quality.items():
+  for gov_id, zag_id in ls_matches:
+    ls_rows_matches.append([quality,
+                            gov_id,
+                            zag_id] +\
+                           list(df_info.ix[gov_id][['adr_street',
+                                                    'adr_city',
+                                                    'brand_0',
+                                                    'brand_1',
+                                                    'lat',
+                                                    'lng',
+                                                    'ci_1']]) +\
+                           list(df_zagaz.ix[zag_id][['street',
+                                                     'municipality',
+                                                     'brand_std_last',
+                                                     'lat',
+                                                     'lng']]))
+
+ls_columns = ['quality', 'gov_id', 'zag_id',
+              'gov_street', 'gov_city',
+              'gov_br_0', 'gov_br_1', 'gov_lat', 'gov_lng', 'ci',
+              'zag_street', 'zag_city',
+              'zag_br', 'zag_lat', 'zag_lng']
+df_matches = pd.DataFrame(ls_rows_matches,
+                          columns = ls_columns)
+
+df_matches['dist'] = df_matches.apply(\
+                           lambda x: compute_distance(\
+                                            (x['gov_lat'], x['gov_lng']),
+                                            (x['zag_lat'], x['zag_lng'])), axis = 1)
+
+ls_ma_di_0 = ['gov_id', 'zag_id',
+              'gov_street', 'zag_street',
+              'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
+
+ls_ma_di_1 = ['gov_id', 'zag_id', 'gov_city', 'zag_city',
+              'gov_street', 'zag_street',
+              'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
+
+# may not want to keep one result but diff brand?
+print '\nOne match in ci, different brands:'
+print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_u_dbr'].to_string()
+# todo: drop this from final matching and keep only handpicked selection
+
+print '\nOne match in ci, same brands:'
+print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_u_ebr'][0:30].to_string()
+
+print '\nMult match in ci, only one w/ same brand:'
+print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_m_ebr'][0:30].to_string()
+
+# ###################
+# MERGE W/ PREVIOUS
+# ###################
+
+df_output = pd.concat([df_zagaz_match_0,
+                       df_matches[df_matches['quality'] != 'zag_ci_u_dbr']])
+
+# ###################
+# MANUAL MATCHING
+# ###################
+
 ls_hand_matching = [('10210001', '15803'),
                     ('10270003',   '679'), # Total => Carrefour
                     ('11390001', '15657'),
@@ -288,73 +352,85 @@ ls_hand_matching = [('10210001', '15803'),
                     ('62250006',  '8225'),
                     ('62770001',  '8058')] # check, end of 100:200
 
-# Build df results (slight pbm... not gov address from master_address but df_info)
-ls_rows_matches = []
-for quality, ls_matches in dict_matching_quality.items():
+# comes from zagaz highway matching
+ls_highway_matching = [('80200010', '10791'), # A1
+                       ('80200005', '13343'),
+                       ('62128008', '8227' ),
+                       ('62119001', '13296'),
+                       ('91100003', '13042'), # A6
+                       ('91100006', '12987'),
+                       ('77116001', '14194'),
+                       ('77760003', '10413'),
+                       ('89290006', '14197'), # mistake in gvt name (A41...)
+                       ('21320003', '2152' ),
+                       ('21320005', '2193' ),
+                       ('21190005', '2177' ),
+                       ('21190003', '2178' ),
+                       ('69380001', '9164' ),
+                       ('69380002', '9163' ),
+                       ('91640001', '13188'), # A10
+                       ('45520002', '5892' ),
+                       ('86130003', '11643'),
+                       ('86130007', '11644'),
+                       ('17350001', '1615' ),
+                       ('17350002', '13539'),
+                       ('17800001', '1714' ),
+                       ('17800002', '1715' ),
+                       ('33240002', '4082' )]
+
+dict_matching_manual = {}
+dict_matching_manual['manual'] = ls_hand_matching
+dict_matching_manual['manual_hw'] = ls_highway_matching
+
+ls_rows_manual = []
+for quality, ls_matches in dict_matching_manual.items():
   for gov_id, zag_id in ls_matches:
-    ls_rows_matches.append([quality,
-                            gov_id,
-                            zag_id] +\
-                           list(df_info.ix[gov_id][['adr_street',
-                                                    'adr_city',
-                                                    'brand_0',
-                                                    'brand_1',
-                                                    'lat',
-                                                    'lng',
-                                                    'ci_1']]) +\
-                           list(df_zagaz.ix[zag_id][['street',
-                                                     'municipality',
-                                                     'brand_std_last',
-                                                     'lat',
-                                                     'lng']]))
+    try:
+      ls_rows_manual.append([quality,
+                              gov_id,
+                              zag_id] +\
+                             list(df_info.ix[gov_id][['adr_street',
+                                                      'adr_city',
+                                                      'brand_0',
+                                                      'brand_1',
+                                                      'lat',
+                                                      'lng',
+                                                      'ci_1']]) +\
+                             list(df_zagaz.ix[zag_id][['street',
+                                                       'municipality',
+                                                       'brand_std_last',
+                                                       'lat',
+                                                       'lng']]))
+    except:
+      print gov_id, zag_id, ': gov_id no more in data? (dup?)'
 
-ls_columns = ['quality', 'gov_id', 'zag_id',
-              'gov_street', 'gov_city',
-              'gov_br_0', 'gov_br_1', 'gov_lat', 'gov_lng', 'ci',
-              'zag_street', 'zag_city',
-              'zag_br', 'zag_lat', 'zag_lng']
-df_matches = pd.DataFrame(ls_rows_matches,
-                          columns = ls_columns)
+df_manual = pd.DataFrame(ls_rows_manual,
+                         columns = ls_columns)
 
-df_matches['dist'] = df_matches.apply(\
+df_manual['dist'] = df_manual.apply(\
                            lambda x: compute_distance(\
                                             (x['gov_lat'], x['gov_lng']),
                                             (x['zag_lat'], x['zag_lng'])), axis = 1)
 
-ls_ma_di_0 = ['gov_id', 'zag_id',
-              'gov_street', 'zag_street',
-              'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
+# drop match previously found if existed
+ls_drop_id_zagaz = df_manual['zag_id'].values.tolist()
+df_output = df_output[~(df_output['zag_id'].isin(ls_drop_id_zagaz))]
 
-ls_ma_di_1 = ['gov_id', 'zag_id', 'gov_city', 'zag_city',
-              'gov_street', 'zag_street',
-              'gov_br_0', 'gov_br_1', 'zag_br', 'dist']
+df_output = pd.concat([df_output, df_manual],
+                     axis = 0)
 
-# may not want to keep one result but diff brand?
-print '\nOne match in ci, different brands:'
-print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_u_dbr'].to_string()
-# todo: drop this from final matching and keep only handpicked selection
+# #######
+# OUTPUT
+# #######
 
-print '\nOne match in ci, same brands:'
-print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_u_ebr'][0:30].to_string()
-
-print '\nMult match in ci, only one w/ same brande:'
-print df_matches[ls_ma_di_0][df_matches['quality'] == 'zag_ci_m_ebr'][0:30].to_string()
-
-# ############################
-# DF OUTPUT (DF ZAGAZ MATCH 1)
-# ############################
-
-# todo:
-# add matches manually detected
-
-df_output = pd.concat([df_zagaz_match_0,
-                       df_matches[df_matches['quality'] != 'zag_ci_u_dbr']])
 print u'\nOverview output:'
 print df_output[ls_ma_di_1][0:30].to_string()
 
 # Inspect duplicates (can be only in zagaz)
 se_zag_id_vc = df_output['zag_id'].value_counts()
 se_zag_id_dup = se_zag_id_vc[se_zag_id_vc > 1]
+
+# TODO: check why '83000002', '83000003' are highway?
 
 df_duplicates = df_output.copy()
 df_duplicates.set_index('zag_id', inplace = True)

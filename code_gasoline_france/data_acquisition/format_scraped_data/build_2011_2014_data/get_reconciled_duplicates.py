@@ -78,7 +78,13 @@ for id_station in df_info.index[pd.isnull(df_info['start'])]:
 df_info = df_info[~pd.isnull(df_info['start'])]
 
 # drop ad hoc
-for id_station in ['95500009']:
+ls_drop_ids = ['95500009', '62128009',
+               '76170004', '41000015',
+               '45190008',
+               '85210005', '85210006',
+               '87160005', '87160006',
+               '99999001', '99999002'] # seem like tests
+for id_station in ls_drop_ids:
   if id_station in df_prices_ttc.columns:
     df_prices_ttc.drop(id_station, 1, inplace = True)
     df_prices_ht.drop(id_station, 1, inplace = True)
