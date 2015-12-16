@@ -256,8 +256,6 @@ for col in ['lat', 'lng']:
   df_stations.loc[df_stations[col] == '-',
                   col] = None
   df_stations[col] = df_stations[col].astype(float)
-#df_stations['lat'] = df_stations['lat'].str.replace('-', '').astype(float)
-#df_stations['lng'] = df_stations['lng'].str.replace('-', '').astype(float)
 
 # GET RID OF PBS IN COMMENTS (FOR CSV)
 for col in ['comment', 'street']:
