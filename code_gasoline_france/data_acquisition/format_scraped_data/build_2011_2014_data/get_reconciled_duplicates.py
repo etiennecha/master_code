@@ -83,6 +83,8 @@ ls_drop_ids = ['95500009', '62128009',
                '45190008',
                '85210005', '85210006',
                '87160005', '87160006',
+               '34400014', '44370007',
+               '38080005',
                '99999001', '99999002'] # seem like tests
 for id_station in ls_drop_ids:
   if id_station in df_prices_ttc.columns:
