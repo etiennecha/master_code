@@ -350,7 +350,22 @@ ls_hand_matching = [('10210001', '15803'),
                     ('60300006', '15321'), # check just with ids
                     ('60350001',  '7864'),
                     ('62250006',  '8225'),
-                    ('62770001',  '8058')] # check, end of 100:200
+                    ('62770001',  '8058'), # check, end of 100:200
+                    ('83000007', '11280'),
+                    ('83000003', '11279'),
+                    ('83000002', '11276'), # pby chge in brand (small volumes..)
+                    ('20137005',  '2064'),
+                    ('14520003',  '1382'), # weird... check 14220001, 14520004
+                    ('13123001', '14972'),
+                    ('13200013', '20032'),
+                    ('93200005', '12395'),
+                    ('93210002', '13276'),
+                    ('84200007', '20081'), # close since then
+                    ('84200008', '20358'),
+                    ('89100005', '13273'),
+                    ('20620002',  '2010'),
+                    ('20620004', '19174'),
+                    ('56170003',  '7219')]
 
 # comes from zagaz highway matching
 ls_highway_matching = [('80200010', '10791'), # A1
@@ -421,7 +436,19 @@ ls_highway_matching = [('80200010', '10791'), # A1
                        ('38480005', '4936' ),
                        ('73390008', '9773' ),
                        ('73390007', '9772' ),
-                       ('6250003',  '12788')] # A8
+                       ('6250003',  '12788'), # A8
+                       ('87280002', '13272'), # A20
+                       ('62860004',  '8065'), # A26
+                       ('2690001' ,   '234'),
+                       ('62860005',  '8221'),
+                       ('10150003', '16712')]
+
+ls_missing_zagaz = ['62100010', # added since then: '20742
+                    '56850002',
+                    '6250007', # twin stations, this one stopped
+                    '39700005'] # twin stations, one occurence in zagaz
+
+# todo: drop '56000007' (temp dup of '56000005')
 
 dict_matching_manual = {}
 dict_matching_manual['manual'] = ls_hand_matching
@@ -458,11 +485,14 @@ df_manual['dist'] = df_manual.apply(\
                                             (x['zag_lat'], x['zag_lng'])), axis = 1)
 
 # drop match previously found if existed
-ls_drop_id_zagaz = df_manual['zag_id'].values.tolist()
-df_output = df_output[~(df_output['zag_id'].isin(ls_drop_id_zagaz))]
+ls_drop_id_zagaz = df_manual['gov_id'].values.tolist()
+df_output = df_output[~(df_output['gov_id'].isin(ls_drop_id_zagaz))]
 
 df_output = pd.concat([df_output, df_manual],
                      axis = 0)
+
+# drop matches for stations not in zagaz (verified)
+df_output = df_output[~(df_output['gov_id'].isin(ls_missing_zagaz))]
 
 # #######
 # OUTPUT

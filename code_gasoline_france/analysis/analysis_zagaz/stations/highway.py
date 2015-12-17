@@ -75,12 +75,15 @@ df_zagaz_info = pd.read_csv(os.path.join(path_dir_built_zagaz_csv,
                                      'ci_ardt_1' : str})
 df_zagaz_info.set_index('id_zagaz', inplace = True)
 
+# todo: drop dup in zagaz
+df_zagaz_info = df_zagaz_info[df_zagaz_info.index != '19674']
+
 # #################
 # DF HIGHWAY GOV
 # #################
 
-# A1, A4, A6, A7, A8, A9, A10, A31, A43 done
-str_hw = '11'
+# A1, A4, A6, A7, A8, A9, A10, A26, A31, A43 done
+str_hw = '63'
 
 df_hw_gov = df_info[df_info['highway'] == 1].copy()
 
@@ -139,8 +142,8 @@ lsdhw = ['hw_id', 'hw_dir', 'hw_km', 'name', 'gov_name', 'gov_street',
          'zag_id', 'gov_id', 'brand_2013', 'gov_br_0', 'gov_br_1']
 
 print()
-print(u'Top 10 highways in terms of station count')
-print(df_hw_zag['hw_id'].value_counts()[0:10])
+print(u'Top 20 highways in terms of station count')
+print(df_hw_zag['hw_id'].value_counts()[0:20])
 
 print()
 print(u'Inspect duplicates')
@@ -221,7 +224,16 @@ ls_match = [('80200010', '10791'), # A1
             ('38480005', '4936' ),
             ('73390008', '9773' ),
             ('73390007', '9772' ),
-            ('6250003',  '12788')] # A8
+            ('6250003' , '12788'), # A8
+            ('87280002', '13272'), # A20
+            ('62860004',  '8065'), # A26
+            ('2690001' ,   '234'),
+            ('62860005',  '8221'),
+            ('10150003', '16712'),
+            ('64210002',  '8476'), # A 63
+            ('64210001',  '8477'),
+            ('40530001',  '5150'),
+            ('40530002',  '5151')]
 
 # todo (if not done yet):
 # drop '62128009' (temp dup of '62128004')

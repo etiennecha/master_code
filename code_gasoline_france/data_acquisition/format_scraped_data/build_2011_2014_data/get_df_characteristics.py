@@ -105,7 +105,8 @@ for indiv_id, ls_addresses in master_addresses.items():
        any([x == 1 for x in master_info[indiv_id]['highway']]) or\
        indiv_id in ls_gouv_highway_ids:
       set_highway_ids.add(indiv_id)
-ls_mistakes_highway = ['93130007', '75017016', '56190007', '68127001', '7580002']
+ls_mistakes_highway = ['93130007', '75017016', '56190007',
+                       '68127001', '7580002', '83000002', '83000003']
 ls_highway_ids = [indiv_id for indiv_id in list(set_highway_ids)\
                           if indiv_id not in ls_mistakes_highway]
 # # excluded: 93130007 (address incl. 'chasse a 3'), 75017016 ('6 a 8'),  56190007 (dummy 1), 

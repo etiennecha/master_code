@@ -81,7 +81,9 @@ df_info = df_info[~pd.isnull(df_info['start'])]
 ls_drop_ids = ['95500009', '62128009',
                '76170004', '41000015',
                '45190008',
-               '85210005', '85210006',
+               '56000007',             # from zagaz matching
+               '78000017',             # todo: use these prices to fix 78000018
+               '85210005', '85210006', # from zagaz highway matching (?)
                '87160005', '87160006',
                '34400014', '44370007',
                '38080005',

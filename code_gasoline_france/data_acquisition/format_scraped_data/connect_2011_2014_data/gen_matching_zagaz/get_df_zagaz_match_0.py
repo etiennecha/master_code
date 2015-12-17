@@ -47,7 +47,7 @@ path_dir_insee_extracts = os.path.join(path_data,
 # LOAD DF GOUV
 # ################
 
-# duplicates within master_info... (hence might match dropped ids)
+# duplicates within master_info => ok, loop on df_info
 master_info = dec_json(os.path.join(path_dir_scraped_json,
                                     'master_info_fixed.json'))
 
