@@ -305,6 +305,11 @@ df_output.to_csv(os.path.join(path_dir_zagaz_csv,
                  index = False,
                  encoding = 'utf-8')
 
+# Excel output: need to get rid of potential \r and \n
+for col in ['gov_street']:
+  df_output[col] = df_output[col].str.replace(u'\r\n', u' ')\
+                                 .str.replace(u'\r', u'')\
+                                 .str.replace(u'\n', u' ')
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
                               'csv_excel',
                               'df_zagaz_stations_match_0_excel.csv'),
@@ -312,7 +317,7 @@ df_output.to_csv(os.path.join(path_dir_zagaz_csv,
                  encoding = 'latin-1',
                  sep = ';',
                  escapechar = '\\',
-                 quoting = 3) 
+                 quoting = 1) 
 
 ## ###########
 ## DEPRECATED?

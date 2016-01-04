@@ -259,9 +259,10 @@ for col in ['lat', 'lng']:
 
 # GET RID OF PBS IN COMMENTS (FOR CSV)
 for col in ['comment', 'street']:
-  df_stations[col] = df_stations[col].str.replace(u'\r\n', u' ')
-  df_stations[col] = df_stations[col].str.replace(u'\r', u'')
-  df_stations[col] = df_stations[col].str.replace(u'\n', u' ')
+  df_stations[col] = df_stations[col].str.replace(u'\r\n', u' ')\
+                                     .str.replace(u'\r', u'')\
+                                     .str.replace(u'\n', u' ')\
+                                     .str.replace(u'&#8594;', 'dir.')
 
 # FIX GROUPS
 dict_replace_rg = {'AUTRE_DIS' : None,
