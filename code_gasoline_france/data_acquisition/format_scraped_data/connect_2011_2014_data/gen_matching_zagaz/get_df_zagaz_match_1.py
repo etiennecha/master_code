@@ -370,7 +370,26 @@ ls_hand_matching = [('10210001', '15803'),
                     ('20200001',  '2091'),
                     ('18100002',  '1858'),
                     ('18100003',  '1859'),
-                    ('49300012',  '6283')]
+                    ('49300012',  '6283'),
+                    ('47300004', '15783'),
+                    ('47000001', '15781'),
+                    ('25210002', '14610'),
+                    ('25210003',  '2693'),
+                    ('49000006', '17486'),
+                    ('49000008',  '6236'),
+                    ('53061001',  '6819'),
+                    ('53940001',  '6860'),
+                    ('12400004', '14739'),
+                    ('12400005', '20967'), # may be missing?
+                    ('13210001',  '1203'),
+                    ('13210003',  '1205'),
+                    ('14700001', '15007'),
+                    ('14700006',  '1307'),
+                    ('20290009', '15387'),
+                    ('20290008', '15385'),
+                    ('20290002', '15386'),
+                    ('20290006',  '2051'),
+                    ('57000003',  '7348')]
 
 # comes from zagaz highway matching
 ls_highway_matching = [('80200010', '10791'), # A1
@@ -554,7 +573,7 @@ ls_missing_zagaz = ['62100010', # added since then: '20742
                     '39700005'] # twin stations, one occurence in zagaz
 
 # todo: drop '56000007' (temp dup of '56000005')
-# todo: drop '29910001'
+# todo (NEW): drop '29910001'
 
 dict_matching_manual = {}
 dict_matching_manual['manual'] = ls_hand_matching
@@ -590,14 +609,15 @@ df_manual['dist'] = df_manual.apply(\
                                             (x['gov_lat'], x['gov_lng']),
                                             (x['zag_lat'], x['zag_lng'])), axis = 1)
 
-# drop match previously found if existed
-ls_drop_id_zagaz = df_manual['gov_id'].values.tolist()
-df_output = df_output[~(df_output['gov_id'].isin(ls_drop_id_zagaz))]
-
+# drop match previously found if existed (both gov and zag)
+ls_drop_id_gov = df_manual['gov_id'].values.tolist()
+df_output = df_output[~(df_output['gov_id'].isin(ls_drop_id_gov))]
+ls_drop_id_zag = df_manual['zag_id'].values.tolist()
+df_output = df_output[~(df_output['zag_id'].isin(ls_drop_id_zag))]
 df_output = pd.concat([df_output, df_manual],
                      axis = 0)
 
-# drop matches for stations not in zagaz (verified)
+# drop gov id not in zagaz (manual input)
 df_output = df_output[~(df_output['gov_id'].isin(ls_missing_zagaz))]
 
 # #######
@@ -621,7 +641,7 @@ df_duplicates.reset_index(inplace = True)
 # might have want to be more careful before
 pd.set_option('display.max_colwidth', 30)
 print u'\nOverview duplicates:'
-print df_duplicates[ls_ma_di_1][0:30].to_string()
+print df_duplicates[ls_ma_di_1 + ['ci']][0:30].to_string()
 
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
                               'df_zagaz_stations_match_1.csv'),

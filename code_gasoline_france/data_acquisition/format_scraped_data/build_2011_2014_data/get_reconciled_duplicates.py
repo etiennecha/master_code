@@ -89,7 +89,12 @@ ls_drop_ids = ['95500009', '62128009',
                '87160005', '87160006',
                '34400014', '44370007',
                '38080005',
-               '99999001', '99999002'] # seem like tests
+               '14130004', # temp dup of 14130003
+               '31290007', # temp dup of 31290001 (both still active)
+               '20290007', # temp dup of 20290002
+               '93420005', # past id reused very brielfy: small info loss (93420006)
+               '64200005', # likely replaced by 64200006 (no info loss)
+               '99999001', '99999002'] # seem like test
 for id_station in ls_drop_ids:
   if id_station in df_prices_ttc.columns:
     df_prices_ttc.drop(id_station, 1, inplace = True)
