@@ -168,9 +168,32 @@ for str_hw in ls_str_hw:
 #print(df_hw_gov[df_hw_gov['ci_1'] == '89438'][lsdhwgov].to_string())
 #print(df_hw_gov[df_hw_gov['dpt'] == '89'][lsdhwgov].to_string())
 
-# #################
-# MANUAL MATCHING
-# #################
+# #############
+# NOT MATCHED
+# #############
+
+# Remaining non matched (zagaz)
+print()
+print(u'Not matched (zagaz)')
+print(df_hw_zag[df_hw_zag['gov_id'].isnull()][lsdhw].to_string(index=False))
+
+# Remaining non matched (gouv)
+print()
+print(u'Not matched (gouv)')
+ls_found = df_hw_zag['gov_id'].unique().tolist()
+print(df_hw_gov[~df_hw_gov.index.isin(ls_found)][lsdhwgov].to_string())
+
+# todo: 
+# reconcile duplicates in gouv
+# set highway to null if mistake (in get_df_characteristics)
+              
+# 19340003 legit, created in 2014, not in captured zagaz data
+
+# merge dup 59260004, 59260006 ?
+
+# ####################
+# MANUAL MATCHING (BU)
+# ####################
 
 # len(df_hw_zag[df_hw_zag['gov_id'].isnull()])
 # Only 22 left in zag, check from gov side
@@ -328,7 +351,27 @@ ls_match = [('80200010', '10791'), # A1
             ('1390004' , '13279'), # Lyon Est A 46
             ('1390006' , '13280'),
             ('69360005',  '9110'),
-            ('69360004',  '9109')]
+            ('69360004',  '9109'), 
+            ('94150003', '12509'), # remainder
+            ('52160006', '15641'), # todo: check twin
+            ('74570005',  '9924'),
+            ('74570002',  '9922'),
+            ('69700004',  '9263'),
+            ('69700008', '15128'),
+            ('38690002', '17384'),
+            ('26730004',  '2794'),
+            ('13011004', '13351'),
+            ('13320005',   '983'), # not listed as hw (gov)
+            ('13180001', '13596'),
+            ('77550001', '10572'),
+            ('77550002', '10573'), # not listed as hw (gov)
+            ('81600004', '14300'),
+            ('41600003',  '5263'),
+            ('42600008',  '5414'),
+            ('42600005',  '5413'),
+            ('77410008', '14085'),
+            ('31300003', '14054'), # not listed as hw (gov)
+            ('31300004', '14826')] # not listed as hw (gov)
 
 # not found in gouv '983', '15160'
                             
