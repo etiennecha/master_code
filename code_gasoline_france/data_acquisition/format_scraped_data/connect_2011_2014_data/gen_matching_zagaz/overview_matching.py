@@ -128,11 +128,11 @@ df_info = pd.merge(df_info,
                    right_index = True,
                    how = 'left')
 
-# Inspect => pbm: clearly large cities... do some by hand in csv
-print df_info[['name', 'adr_street', 'adr_city', 'brand_0']]\
-             [df_info['zag_id'].isnull()][0:100].to_string()
-print df_info['ci_1'][df_info['zag_id'].isnull()].value_counts()[0:10]
-print df_info['ci_1'][df_info['zag_id'].isnull()].value_counts()[0:20]
+## Inspect => pbm: clearly large cities... do some by hand in csv
+#print df_info[['name', 'adr_street', 'adr_city', 'brand_0']]\
+#             [df_info['zag_id'].isnull()][0:100].to_string()
+#print df_info['ci_1'][df_info['zag_id'].isnull()].value_counts()[0:10]
+#print df_info['ci_1'][df_info['zag_id'].isnull()].value_counts()[0:20]
 
 df_nomatch = df_info[df_info['zag_id'].isnull()].copy()
 ## Temp: check why here (fully empty: can drop?)
@@ -140,12 +140,45 @@ df_nomatch = df_info[df_info['zag_id'].isnull()].copy()
 df_nomatch['nb_ci'] = df_nomatch.groupby('ci_1')['ci_1'].transform(len)
 df_nomatch.sort(['nb_ci', 'brand_0'], ascending = False, inplace = True)
 
-lsdn = ['name', 'adr_street', 'adr_city', 'adr_zip',
-        'ci_1', 'brand_0', 'brand_1', 'nb_ci']
 
-#df_nomatch[lsdn].to_csv(os.path.join(path_dir_zagaz_csv,
+df_fix = pd.read_csv(os.path.join(path_dir_zagaz_csv,
+                                  'fix_matching.csv'),
+                               sep = ';',
+                               dtype = {'id_station' : str,
+                                        'fixed_zag_id' : str},
+                               encoding = 'latin-1')
+
+# print len(df_fix[~df_fix['fixed_zag_id'].isnull()])
+
+# check for conflicts with current match file
+ls_conflicts = []
+for zag_id in df_fix['fixed_zag_id'].values:
+  if zag_id in df_info['zag_id'].values:
+    ls_conflicts.append(zag_id)
+
+lsdm = ['name', 'adr_street', 'adr_city', 'adr_zip',
+        'ci_1', 'brand_0', 'brand_1', 'zag_id']
+
+print u'\nConflicts: from original matching:'
+print df_info[lsdm][df_info['zag_id'].isin(ls_conflicts)].to_string()
+
+print u'\nConflicts: matching by hand:'
+print df_fix[lsdm[:-1] + ['fixed_zag_id']]\
+            [df_fix['fixed_zag_id'].isin(ls_conflicts)].to_string()
+
+print u'\nConflicts: zagaz:'
+print df_zagaz.ix[ls_conflicts]\
+                 [['name', 'street', 'zip', 'municipality',
+                   'ci', 'brand_2012', 'brand_2013']].to_string()
+
+
+## todo: update so previous info is saved
+#
+#lsdnm = ['name', 'adr_street', 'adr_city', 'adr_zip',
+#        'ci_1', 'brand_0', 'brand_1', 'nb_ci']
+#df_nomatch[lsdnm].to_csv(os.path.join(path_dir_zagaz_csv,
 #                                     'fix_matching.csv'),
-#                                     index_label = 'id_station',
-#                                     encoding = 'latin-1',
-#                                     sep = ';',
-#                                     quoting = 1) # no impact, cannot have trailing 0s
+#                         index_label = 'id_station',
+#                         encoding = 'latin-1',
+#                         sep = ';',
+#                         quoting = 1) # no impact, cannot have trailing 0s
