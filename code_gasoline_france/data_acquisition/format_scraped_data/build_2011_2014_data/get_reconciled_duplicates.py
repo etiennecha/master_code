@@ -102,6 +102,11 @@ ls_drop_ids = ['95500009', '62128009',
                '6500006',  # temp dup of 6500007 (small info loss)
                '16320004', # temp dup of 16320003 (no info loss)
                '1360001',  # likely replaced by 1360002 (no info loss)
+               '39700002', # likely replaced by 39700011 (no info loss)
+               '39700004', # likely replaced by 39700010 (no info loss)
+               '63190008', # temp dup of 63190010 (no info loss)
+               '40530004', '40530005' # temp dups (highway)
+               '87280007', # temp dup (highway small info loss)
                '99999001', '99999002'] # seem like test
 for id_station in ls_drop_ids:
   if id_station in df_prices_ttc.columns:

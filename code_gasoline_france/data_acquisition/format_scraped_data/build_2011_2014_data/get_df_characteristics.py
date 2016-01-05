@@ -121,7 +121,8 @@ ls_mistakes_highway = ['93130007', '75017016', '56190007',
                        '85120003', '86100010', '88200013',
                        '90000012', '90160001', '91400006',
                        '91570003', '92140010', '93420005',
-                       '94120007']
+                       '94120007',
+                       '35370001', '35500002'] # equiv highway Bretagne
 ls_highway_ids = [indiv_id for indiv_id in list(set_highway_ids)\
                           if indiv_id not in ls_mistakes_highway]
 # # excluded: 93130007 (address incl. 'chasse a 3'), 75017016 ('6 a 8'),  56190007 (dummy 1), 
