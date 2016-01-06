@@ -147,6 +147,7 @@ df_fix = pd.read_csv(os.path.join(path_dir_zagaz_csv,
                                dtype = {'id_station' : str,
                                         'fixed_zag_id' : str},
                                encoding = 'latin-1')
+df_fix.set_index('id_station', inplace = True)
 
 # print len(df_fix[~df_fix['fixed_zag_id'].isnull()])
 
