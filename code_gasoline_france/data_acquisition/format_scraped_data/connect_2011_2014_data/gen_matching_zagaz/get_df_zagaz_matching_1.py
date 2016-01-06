@@ -134,7 +134,7 @@ for field_brand in ['brand_0', 'brand_1',  'brand_2']:
 # #############
 
 df_zagaz_match_0 = pd.read_csv(os.path.join(path_dir_zagaz_csv,
-                                            'df_zagaz_stations_match_0.csv'),
+                                            'df_zagaz_matching_0.csv'),
                                dtype = {'zag_id' : str,
                                         'gov_id' : str,
                                         'ci' : 'str'},
@@ -400,7 +400,6 @@ ls_hand_matching = [('10210001', '15803'),
                     ('12260002', '19868'),
                     ('69007005',  '9215'),
                     ('20000002',  '1990'), # todo: check AJACCIO
-                    ('20090001',  '1989'),
                     ('76000001', '16873'),
                     ('76000011', '13771'),
                     ('81000004', '10902'),
@@ -418,9 +417,23 @@ ls_hand_matching = [('10210001', '15803'),
                     ('40100005',  '5137'),
                     ('40180003',  '5247'),
                     ('13170010', '13846'),
-                    ('13170008', '19274')]
-
-# not yet in zagaz: ('12400005', '20967'), # may be missing?
+                    ('13170008', '19274'), # following: errors found by obs
+                    ('20090001',  '1989'), # not 100% sure between this and next
+                    ('20090011',  '1981'),
+                    ('20200002',  '2007'), # wrong address on gouv? ided by name
+                    ('22100005',  '1997'),
+                    ('95490004', '12693'),
+                    ('76600013', '10315'),
+                    ('76600002', '10306'),
+                    ('66000009',  '8737'),
+                    ('39700001', '20884'),
+                    ('39700005',  '5091'),
+                    ('73000003',  '9767'),
+                    ('73000011',  '9794'),
+                    ('95450003', '17460'),
+                    ('95450005', '17459'),
+                    ('66000016', '20721'), # not yet in zagaz data
+                    ('12400005', '20967')] # not yet in zagaz data
 
 # comes from zagaz highway matching
 ls_highway_matching = [('80200010', '10791'), # A1
@@ -599,8 +612,7 @@ ls_highway_matching = [('80200010', '10791'), # A1
 
 ls_missing_zagaz = ['62100010', # added since then: '20742
                     '56850002',
-                    '6250007', # twin stations, this one stopped
-                    '39700005'] # twin stations, one occurence in zagaz
+                    '6250007'] # twin stations, this one stopped
 
 # todo: drop '56000007' (temp dup of '56000005')
 # todo (NEW): drop '29910001'
@@ -675,7 +687,7 @@ if len(df_duplicates) != 0:
   print df_duplicates[ls_ma_di_1 + ['ci']][0:30].to_string()
 
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
-                              'df_zagaz_stations_match_1.csv'),
+                              'df_zagaz_matching_1.csv'),
                  index = False,
                  encoding = 'utf-8')
 
@@ -689,7 +701,7 @@ ls_di_oexcel = ['gov_id', 'zag_id', 'gov_br_0', 'gov_br_1', 'zag_br',
                 'ci', 'quality', 'dist']
 df_output[ls_di_oexcel].to_csv(os.path.join(path_dir_zagaz_csv,
                                             'csv_excel',
-                                            'df_zagaz_stations_match_1_excel.csv'),
+                                            'df_zagaz_matching_1_excel.csv'),
                                index = False,
                                encoding = 'latin-1',
                                sep = ';',

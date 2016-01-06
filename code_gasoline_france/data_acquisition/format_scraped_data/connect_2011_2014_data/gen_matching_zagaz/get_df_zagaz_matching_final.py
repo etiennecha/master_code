@@ -38,8 +38,10 @@ path_dir_insee_extracts = os.path.join(path_data,
                                        u'data_extracts')
 
 # ################
-# LOAD DF ZAGAZ
+# LOAD DATA
 # ################
+
+# DF ZAGAZ
 
 df_zagaz = pd.read_csv(os.path.join(path_dir_zagaz_csv,
                                     'df_zagaz_stations.csv'),
@@ -56,7 +58,7 @@ dict_brands = dec_json(os.path.join(path_data,
                                     'data_other',
                                     'dict_brands.json'))
 
-# update with zagaz
+# update dict_brands with zagaz (move?)
 dict_brands_update = {'OIL' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'TEXACO' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'ENI' : [u'AGIP', u'AGIP', u'OIL'],
@@ -71,7 +73,7 @@ dict_brands_update = {'OIL' : [u'INDEPENDANT', u'INDEPENDANT', u'IND'],
                       'PRIMAGAZ' : [u'INDEPENDANT', u'INDEPENDANT', u'IND']}
 dict_brands.update(dict_brands_update)
 
-# NORMALIZATION FOR MATCHING
+# normalization for matching (move?)
 dict_brands_std = {v[0]: v[1:] for k,v in dict_brands.items()}
 dict_brands_norm = {u'SHOPI': [u'CARREFOUR', u'GMS'],
                     u'CARREFOUR_CONTACT': [u'CARREFOUR', u'GMS'],
@@ -88,9 +90,7 @@ df_zagaz.loc[df_zagaz['brand_std_last'].isnull(),
 df_zagaz['brand_std_last'] = df_zagaz['brand_std_last'].apply(\
                                lambda x: dict_brands_std.get(x, [None, None])[0])
 
-# ################
-# LOAD DF GOUV
-# ################
+# DF GOUV
 
 df_info = pd.read_csv(os.path.join(path_dir_scraped_csv,
                                    'df_station_info_final.csv'),
@@ -109,12 +109,36 @@ for field_brand in ['brand_0', 'brand_1',  'brand_2']:
   df_info[field_brand] = df_info[field_brand].apply(\
                               lambda x: dict_brands_std.get(x, [None, None])[0])
 
+# GOUV DATA BEFORE DUPLICATE RECONCILIATIONS
+
+df_info_old = pd.read_csv(os.path.join(path_dir_scraped_csv,
+                                       'df_station_info.csv'),
+                          encoding = 'utf-8',
+                          dtype = {'id_station' : str,
+                                   'adr_zip' : str,
+                                   'adr_dpt' : str,
+                                   'ci_1' : str,
+                                   'ci_ardt_1' :str,
+                                   'ci_2' : str,
+                                   'ci_ardt_2' : str,
+                                   'dpt' : str},
+                          parse_dates = ['start', 'end', 'day_0', 'day_1', 'day_2'])
+df_info_old.set_index('id_station', inplace = True)
+
+lsd0 = ['name', 'adr_street', 'adr_city', 'ci_ardt_1']
+lsd1 = lsd0 + ['start', 'end', 'brand_0', 'brand_1', 'brand_2']
+
+df_prices_old = pd.read_csv(os.path.join(path_dir_scraped_csv,
+                                         'df_prices_ttc.csv'),
+                            parse_dates = ['date'])
+df_prices_old.set_index('date', inplace = True)
+
 # #############
 # LOAD MATCH
 # #############
 
 df_zagaz_match = pd.read_csv(os.path.join(path_dir_zagaz_csv,
-                                          'df_zagaz_stations_match_1.csv'),
+                                          'df_zagaz_matching_1.csv'),
                              dtype = {'zag_id' : str,
                                       'gov_id' : str,
                                       'ci' : 'str'},
@@ -140,7 +164,7 @@ df_nomatch = df_info[df_info['zag_id'].isnull()].copy()
 df_nomatch['nb_ci'] = df_nomatch.groupby('ci_1')['ci_1'].transform(len)
 df_nomatch.sort(['nb_ci', 'brand_0'], ascending = False, inplace = True)
 
-
+# Assumes already exists: could generate empty df otherwise
 df_fix = pd.read_csv(os.path.join(path_dir_zagaz_csv,
                                   'fix_matching.csv'),
                                sep = ';',
@@ -172,14 +196,45 @@ print df_zagaz.ix[ls_conflicts]\
                  [['name', 'street', 'zip', 'municipality',
                    'ci', 'brand_2012', 'brand_2013']].to_string()
 
+# ########################################
+# UPDATE DF NOMATCH WITH INFO FROM DF FIX
+# ########################################
 
-## todo: update so previous info is saved
-#
-#lsdnm = ['name', 'adr_street', 'adr_city', 'adr_zip',
-#        'ci_1', 'brand_0', 'brand_1', 'nb_ci']
-#df_nomatch[lsdnm].to_csv(os.path.join(path_dir_zagaz_csv,
-#                                     'fix_matching.csv'),
-#                         index_label = 'id_station',
-#                         encoding = 'latin-1',
-#                         sep = ';',
-#                         quoting = 1) # no impact, cannot have trailing 0s
+df_fix = df_fix[df_fix.index.isin(df_nomatch.index)]
+for row_i, row in df_fix.iterrows():
+  # keep only if really no match (overwrite in get_df_zagaz_match_1)
+  if (row_i in df_nomatch.index) and\
+     (pd.isnull(df_nomatch.ix[row_i]['zag_id'])):
+    df_nomatch.loc[row_i, 'zag_id'] = row['fixed_zag_id']
+
+df_nomatch.rename(columns = {'zag_id' : 'fixed_zag_id'}, inplace = True)
+
+lsdnm = ['name', 'adr_street', 'adr_city', 'adr_zip',
+        'ci_1', 'brand_0', 'brand_1', 'nb_ci', 'fixed_zag_id']
+
+df_nomatch[lsdnm].to_csv(os.path.join(path_dir_zagaz_csv,
+                                     'fix_matching.csv'),
+                         index_label = 'id_station',
+                         encoding = 'latin-1',
+                         sep = ';',
+                         quoting = 1) # no impact, cannot have trailing 0s
+
+# #####################
+# OUTPUT FINAL MATCH
+# #####################
+
+df_zagaz_match_final = df_zagaz_match[['zag_id', 'quality']].copy()
+
+df_nomatch_final = df_nomatch[['fixed_zag_id']].copy()
+df_nomatch_final.rename(columns = {'fixed_zag_id' : 'zag_id'},
+                        inplace = True)
+df_nomatch_final.loc[~df_nomatch_final['zag_id'].isnull(),
+                     'quality'] = 'manual_2'
+
+df_match_final = pd.concat([df_zagaz_match_final,
+                            df_nomatch_final])
+
+df_match_final.to_csv(os.path.join(path_dir_zagaz_csv,
+                                   'df_zagaz_matching_final.csv'),
+                      index_label = 'id_station',
+                      encoding = 'utf-8')

@@ -301,7 +301,7 @@ df_output = df_matches[((df_matches['quality'] == 'ci_u_lev_top') |\
                         (df_matches['zag_br'] == df_matches['gov_br_1']))].copy()
 
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
-                              'df_zagaz_stations_match_0.csv'),
+                              'df_zagaz_matching_0.csv'),
                  index = False,
                  encoding = 'utf-8')
 
@@ -312,7 +312,7 @@ for col in ['gov_street']:
                                  .str.replace(u'\n', u' ')
 df_output.to_csv(os.path.join(path_dir_zagaz_csv,
                               'csv_excel',
-                              'df_zagaz_stations_match_0_excel.csv'),
+                              'df_zagaz_matching_0_excel.csv'),
                  index = False,
                  encoding = 'latin-1',
                  sep = ';',
