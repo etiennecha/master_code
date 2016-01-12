@@ -71,10 +71,13 @@ df_station_stats.set_index('id_station', inplace = True)
 # exclude stations with insufficient (quality) price data
 df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
                                (df_station_stats['nb_valid'] < 90))]
-df_prices_ht = df_prices_ht[df_filter.index]
-df_prices_ttc = df_prices_ttc[df_filter.index]
-df_info = df_info.ix[df_filter.index]
-df_station_stats = df_station_stats.ix[df_filter.index]
+ls_keep_ids = list(set(df_filter.index).intersection(\
+                     set(df_info[(df_info['highway'] != 1) &\
+                                 (df_info['reg'] != 'Corse')].index)))
+df_prices_ht = df_prices_ht[ls_keep_ids]
+df_prices_ttc = df_prices_ttc[ls_keep_ids]
+df_info = df_info.ix[ls_keep_ids]
+df_station_stats = df_station_stats.ix[ls_keep_ids]
 
 # DF COST (WHOLESALE GAS PRICES)
 df_cost = pd.read_csv(os.path.join(path_dir_built_other_csv,
@@ -91,6 +94,8 @@ df_dyna = pd.DataFrame(df_prices_ht.mean(1),
                        index = df_prices_ht.index,
                        columns = ['Retail diesel before tax (France)'])
 df_dyna['Wholesale diesel (Rotterdam)'] = df_cost['UFIP RT Diesel R5 EL']
+df_dyna['Brent (Rotterdam)'] = df_cost['UFIP Brent R5 EB'] / 158.987295
+#df_dyna['Brent (Rotterdam)'] = df_cost['Europe Brent FOB EL']
 
 from pylab import *
 rcParams['figure.figsize'] = 16, 6
