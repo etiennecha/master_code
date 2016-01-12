@@ -112,6 +112,8 @@ ls_drop_ids = ['95500009', '62128009',
                '63000021', # temp dup of 63000013 ? (no info loss)
                '76600019', # avitaillement => boats, related: 76600013
                '83000003', # likely replaced by 83000008
+               '38690002', # likely replaced by 38690004 (hw small info loss)
+               '40530005', # temp dup of 40530001, or 40530002 (hw no info loss)
                '99999001', '99999002'] # seem like test
 for id_station in ls_drop_ids:
   if id_station in df_prices_ttc.columns:

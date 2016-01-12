@@ -51,14 +51,14 @@ df_info.set_index('id_station', inplace = True)
 # MATCHING ZAGAZ
 
 df_matching_0 = pd.read_csv(os.path.join(path_dir_built_zagaz_csv,
-                                         'df_zagaz_stations_match_0.csv'),
+                                         'df_zagaz_matching_0.csv'),
                             dtype = {'zag_id' : str,
                                      'gov_id' : str,
                                      'ci' : str},
                             encoding = 'utf-8')
 
 df_matching_1 = pd.read_csv(os.path.join(path_dir_built_zagaz_csv,
-                                         'df_zagaz_stations_match_1.csv'),
+                                         'df_zagaz_matching_1.csv'),
                             dtype = {'zag_id' : str,
                                      'gov_id' : str,
                                      'ci' : str},
@@ -190,6 +190,14 @@ print(df_hw_gov[~df_hw_gov.index.isin(ls_found)][lsdhwgov].to_string())
 # 19340003 legit, created in 2014, not in captured zagaz data
 
 # merge dup 59260004, 59260006 ?
+
+# todo: set highway dummy to 1 in gouv data
+ls_check = [x for x in df_hw_zag['gov_id'].values if x not in df_hw_gov.index]
+ls_check = [x for x in ls_check if not pd.isnull(x)]
+print()
+print(u'Set highway dummy to 1 ?')
+lsdhw2 = ['hw_id', 'name', 'gov_name', 'gov_street', 'zag_id', 'gov_id']
+print(df_hw_zag[df_hw_zag['gov_id'].isin(ls_check)][lsdhw2].to_string(index=False))
 
 # ####################
 # MANUAL MATCHING (BU)

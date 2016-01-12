@@ -121,10 +121,15 @@ ls_mistakes_highway = ['93130007', '75017016', '56190007',
                        '85120003', '86100010', '88200013',
                        '90000012', '90160001', '91400006',
                        '91570003', '92140010', '93420005',
-                       '94120007',
+                       '94120007', '80700002',
                        '35370001', '35500002'] # equiv highway Bretagne
+ls_missing_highway = ['93130007', '13320005', '83260005',
+                      '77550002', '40260002', '33830004',
+                       '6250006', '94150002', '94150001',
+                      '33700008', '33310002', '31300003',
+                      '31300004']
 ls_highway_ids = [indiv_id for indiv_id in list(set_highway_ids)\
-                          if indiv_id not in ls_mistakes_highway]
+                          if indiv_id not in ls_mistakes_highway] + ls_missing_highway
 # # excluded: 93130007 (address incl. 'chasse a 3'), 75017016 ('6 a 8'),  56190007 (dummy 1), 
 # # excluded: 68127001 ('pres sortie...'), 7580002 (dummy 1, RN)
 ls_index = master_info.keys()
