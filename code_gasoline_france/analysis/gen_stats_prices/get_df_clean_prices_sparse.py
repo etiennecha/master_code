@@ -69,7 +69,7 @@ df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
                              encoding = 'utf-8')
 df_margin_chge.set_index('id_station', inplace = True)
 
-# Restrict DF PRICES to stations present in info (and kept e.g. not highway)
+# Restrict DF PRICES to stations present in info (not highway)
 set_keep_ids = set(df_prices_ttc.columns).intersection(set(df_info.index))
 df_prices_ht = df_prices_ht[list(set_keep_ids)]
 df_prices_ttc = df_prices_ttc[list(set_keep_ids)]
@@ -122,7 +122,7 @@ df_prices = df_prices_ttc
 #df_ids = pd.concat(ls_se_ids, axis = 1, keys = df_prices_ht)
 
 # BUILD DF IDS BASED ON PRICING CHANGES
-lim_var = 0.02
+lim_var = 0.03
 ls_se_ids = []
 for id_station in df_prices.columns:
   se_temp = pd.Series(id_station + '_0', index = df_prices.index)
@@ -171,7 +171,7 @@ df_final['id'] = df_final['id'].str.slice(stop = -2) # set id back!
 df_clean = df_final.set_index(['id', 'date'])
 df_prices_cl = df_clean['price_cl'].unstack('id')
 df_prices_cl.index = [pd.to_datetime(date) for date in df_prices_cl.index]
-idx = pd.date_range('2011-09-04', '2013-06-04')
+idx = pd.date_range(df_prices.index[0], df_prices.index[-1])
 df_prices_cl = df_prices_cl.reindex(idx, fill_value = np.nan)
 
 # OUTPUT FOR DISPERSION ANALYSIS

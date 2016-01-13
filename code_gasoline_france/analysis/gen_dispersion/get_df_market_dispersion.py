@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
@@ -98,7 +99,9 @@ ls_keep_ids = list(set(df_filter.index).intersection(\
 ls_drop_ids = list(set(df_prices_ttc.columns).difference(set(ls_keep_ids)))
 df_prices_ttc[ls_drop_ids] = np.nan
 df_prices_ht[ls_drop_ids] = np.nan
-df_prices_cl[ls_drop_ids] = np.nan
+# highway stations may not be in df_prices_cl (no pbm here)
+ls_drop_ids_nhw = list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
+df_prices_cl[ls_drop_ids_nhw] = np.nan
 
 # #########################
 # GET DF MARKET DISPERSION
@@ -106,75 +109,105 @@ df_prices_cl[ls_drop_ids] = np.nan
 
 # PARAMETERS
 
-df_prices = df_prices_ttc
+df_prices = df_prices_cl
 km_bound = 5
 
-## temp (stations with too few/rigid prices absent in df_prices_cl)
-#for id_station in df_info.index:
-#  if id_station not in df_prices.columns:
-#    df_prices[id_station] = np.nan
+#ls_markets = get_ls_ls_market_ids(dict_ls_comp, km_bound)
+#ls_markets_st = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound)
+#ls_markets_st_rd = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
 
 # GET MARKETS
+dict_markets = {}
+for km_bound in [3, 5]:
+  dict_markets['All_{:d}km'.format(km_bound)] =\
+      get_ls_ls_market_ids(dict_ls_comp, km_bound)
+  dict_markets['Restricted_{:d}km'.format(km_bound)] =\
+      get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound)
+  dict_markets['Restricted_{:d}km_random'.format(km_bound)] =\
+      get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
 
-ls_markets = get_ls_ls_market_ids(dict_ls_comp, km_bound)
-ls_markets_st = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound)
-ls_markets_st_rd = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
-# todo: add stable markets
+ls_loop_markets = [('3 km - Raw prices', df_prices_ttc, dict_markets['All_3km']),
+                   ('3 km - Redisual prices', df_prices_cl, dict_markets['All_3km']),
+                   ('5 km - Residual prices', df_prices_cl, dict_markets['All_5km']),
+                   ('3 km - Residual prices', df_prices_cl, dict_markets['Restricted_3km']),
+                   ('Isolated markets - Residual prices', df_prices_cl, ls_stable_markets)]
 
-# GET MARKET DISPERSION
+# for each market:
+# market desc: (max) nb firms, mean nb firms observed,
+# dispersion: mean- range / gfs / std / gfs
+# finally: display mean and std over all markets
+# alternatively: Tappata approach : mean over all market-days, not markets
 
-ls_markets_temp = ls_robust_stable_markets # Market definition chosen here (loop?)
-ls_df_market_dispersion = [get_market_price_dispersion(market_ids, df_prices)\
-                             for market_ids in ls_markets_temp]
-se_mean_price = df_prices.mean(1)
+ls_df_market_stats, ls_se_dispersion = [], []
+for title, df_prices, ls_markets_temp in ls_loop_markets:
+  
+  # GET MARKET DISPERSION
+  
+  # ls_markets_temp = ls_markets_st # Market definition chosen here (loop?)
+  ls_df_market_dispersion = [get_market_price_dispersion(market_ids, df_prices)\
+                               for market_ids in ls_markets_temp]
+  se_mean_price = df_prices.mean(1)
+  
+  # Can loop to add mean price or add date column and then merge df mean price w/ concatd on date
+  # Pbm: cv is false (pbmatic division?)
+  ls_stats = ['range', 'gfs', 'std', 'cv', 'nb_comp', 'nb_comp_t']
+  ls_ls_market_stats = []
+  ls_market_ref_ids = []
+  for ls_market_ids, df_market_dispersion in zip(ls_markets_temp, ls_df_market_dispersion):
+    df_md = df_market_dispersion[(df_market_dispersion['nb_comp'] >= 3) &\
+                                 (df_market_dispersion['nb_comp_t']/\
+                                  df_market_dispersion['nb_comp'].astype(float)\
+                                    >= 2.0/3)].copy()
+    ## if margin change detected: keep only period before
+    #ls_mc_dates = [df_margin_chge['date'].ix[id_station] for id_station in ls_market_ids\
+    #                 if id_station in df_margin_chge.index]
+    #if ls_mc_dates:
+    #  ls_mc_dates.sort()
+    #  df_md = df_md[:ls_mc_dates[0]]
+    if len(df_md) > 50:
+      df_md['id'] = ls_market_ids[0]
+      df_md['price'] = se_mean_price
+      df_md['date'] = df_md.index
+      ls_ls_market_stats.append([df_md[field].mean()\
+                                  for field in ls_stats] +\
+                                [df_md[field].std()\
+                                  for field in ls_stats])
+      ls_market_ref_ids.append(ls_market_ids[0])
+  # Market stats draft
+  ls_columns = ['avg_%s' %field for field in ls_stats]+\
+               ['std_%s' %field for field in ls_stats]
+  df_market_stats = pd.DataFrame(ls_ls_market_stats, ls_market_ref_ids, ls_columns)
+  ls_df_market_stats.append(df_market_stats)
+  
+  #print()
+  #print(title)
+  # print(df_market_stats.describe())
+  
+  #print u'\nStats des: restriction on nb of sellers:'
+  #nb_comp_lim = df_market_stats['avg_nb_comp'].quantile(0.75)
+  #print u'\n', df_market_stats[df_market_stats['avg_nb_comp'] <= nb_comp_lim].describe()
+  
+  # print df_market_stats[['avg_range', 'avg_gfs', 'avg_std', 'avg_nb_comp']].describe().to_latex()
+  
+  #df_dispersion = pd.concat(ls_df_market_dispersion, ignore_index = True)
+  #df_dispersion = df_dispersion[(df_dispersion['nb_comp_t'] >= 3) &\
+  #                              (df_dispersion['nb_comp_t']/\
+  #                               df_dispersion['nb_comp'].astype(float) >= 2.0/3)]
 
-# Can loop to add mean price or add date column and then merge df mean price w/ concatd on date
-# Pbm: cv is false (pbmatic division?)
-ls_stats = ['range', 'gfs', 'std', 'cv', 'nb_comp']
-ls_ls_market_stats = []
-ls_market_ref_ids = []
-for ls_market_ids, df_market_dispersion in zip(ls_markets_temp, ls_df_market_dispersion):
-  df_md = df_market_dispersion[(df_market_dispersion['nb_comp'] >= 3) &\
-                               (df_market_dispersion['nb_comp_t']/\
-                                df_market_dispersion['nb_comp'].astype(float)\
-                                  >= 2.0/3)].copy()
-  ## if margin change detected: keep only period before
-  #ls_mc_dates = [df_margin_chge['date'].ix[id_station] for id_station in ls_market_ids\
-  #                 if id_station in df_margin_chge.index]
-  #if ls_mc_dates:
-  #  ls_mc_dates.sort()
-  #  df_md = df_md[:ls_mc_dates[0]]
-  if len(df_md) > 50:
-    df_md['id'] = ls_market_ids[0]
-    df_md['price'] = se_mean_price
-    df_md['date'] = df_md.index
-    ls_ls_market_stats.append([df_md[field].mean()\
-                                for field in ls_stats] +\
-                              [df_md[field].std()\
-                                for field in ls_stats])
-    ls_market_ref_ids.append(ls_market_ids[0])
-ls_columns = ['avg_%s' %field for field in ls_stats]+\
-             ['std_%s' %field for field in ls_stats]
-df_market_stats = pd.DataFrame(ls_ls_market_stats, ls_market_ref_ids, ls_columns)
+  ls_se_dispersion.append(pd.concat([df_market_stats[['avg_nb_comp',
+                                                     'avg_nb_comp_t',
+                                                     'avg_range',
+                                                     'avg_std',
+                                                     'avg_gfs']].mean(),
+                                     df_market_stats[['avg_nb_comp',
+                                                      'avg_nb_comp_t',
+                                                      'avg_range',
+                                                      'avg_std',
+                                                      'avg_gfs']].std()]))
 
-print u'\nStats desc: all:'
-print u'\n', df_market_stats.describe()
-
-print u'\nStats des: restriction on nb of sellers:'
-nb_comp_lim = df_market_stats['avg_nb_comp'].quantile(0.75)
-print u'\n', df_market_stats[df_market_stats['avg_nb_comp'] <= nb_comp_lim].describe()
-
-# print df_market_stats[['avg_range', 'avg_gfs', 'avg_std', 'avg_nb_comp']].describe().to_latex()
-
-#df_dispersion = pd.concat(ls_df_market_dispersion, ignore_index = True)
-#df_dispersion = df_dispersion[(df_dispersion['nb_comp_t'] >= 3) &\
-#                              (df_dispersion['nb_comp_t']/\
-#                               df_dispersion['nb_comp'].astype(float) >= 2.0/3)]
-
-# ##############
-# STATS DES
-# ##############
-
+df_dispersion = pd.concat(ls_se_dispersion,
+                          axis = 1,
+                          keys = [x[0] for x in ls_loop_markets])
 
 # #########
 # OUPUT
