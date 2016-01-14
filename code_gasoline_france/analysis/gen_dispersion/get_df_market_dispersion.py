@@ -127,10 +127,10 @@ for km_bound in [3, 5]:
       get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
 
 ls_loop_markets = [('3 km - Raw prices', df_prices_ttc, dict_markets['All_3km']),
-                   ('3 km - Redisual prices', df_prices_cl, dict_markets['All_3km']),
-                   ('5 km - Residual prices', df_prices_cl, dict_markets['All_5km']),
-                   ('3 km - Residual prices', df_prices_cl, dict_markets['Restricted_3km']),
-                   ('Isolated markets - Residual prices', df_prices_cl, ls_stable_markets)]
+                   ('3 km - Redisuals', df_prices_cl, dict_markets['All_3km']),
+                   ('5 km - Residuals', df_prices_cl, dict_markets['All_5km']),
+                   ('3 km restr - Residuals', df_prices_cl, dict_markets['Restricted_3km']),
+                   ('Isolated markets - Residuals', df_prices_cl, ls_stable_markets)]
 
 # for each market:
 # market desc: (max) nb firms, mean nb firms observed,
@@ -138,7 +138,7 @@ ls_loop_markets = [('3 km - Raw prices', df_prices_ttc, dict_markets['All_3km'])
 # finally: display mean and std over all markets
 # alternatively: Tappata approach : mean over all market-days, not markets
 
-ls_df_market_stats, ls_se_dispersion = [], []
+ls_df_market_stats, ls_se_disp_mean, ls_se_disp_std = [], [], []
 for title, df_prices, ls_markets_temp in ls_loop_markets:
   
   # GET MARKET DISPERSION
@@ -158,13 +158,7 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
                                  (df_market_dispersion['nb_comp_t']/\
                                   df_market_dispersion['nb_comp'].astype(float)\
                                     >= 2.0/3)].copy()
-    ## if margin change detected: keep only period before
-    #ls_mc_dates = [df_margin_chge['date'].ix[id_station] for id_station in ls_market_ids\
-    #                 if id_station in df_margin_chge.index]
-    #if ls_mc_dates:
-    #  ls_mc_dates.sort()
-    #  df_md = df_md[:ls_mc_dates[0]]
-    if len(df_md) > 50:
+    if len(df_md) > 90:
       df_md['id'] = ls_market_ids[0]
       df_md['price'] = se_mean_price
       df_md['date'] = df_md.index
@@ -182,32 +176,50 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
   #print()
   #print(title)
   # print(df_market_stats.describe())
-  
+  #
   #print u'\nStats des: restriction on nb of sellers:'
   #nb_comp_lim = df_market_stats['avg_nb_comp'].quantile(0.75)
   #print u'\n', df_market_stats[df_market_stats['avg_nb_comp'] <= nb_comp_lim].describe()
-  
-  # print df_market_stats[['avg_range', 'avg_gfs', 'avg_std', 'avg_nb_comp']].describe().to_latex()
-  
+  #
   #df_dispersion = pd.concat(ls_df_market_dispersion, ignore_index = True)
   #df_dispersion = df_dispersion[(df_dispersion['nb_comp_t'] >= 3) &\
   #                              (df_dispersion['nb_comp_t']/\
   #                               df_dispersion['nb_comp'].astype(float) >= 2.0/3)]
 
-  ls_se_dispersion.append(pd.concat([df_market_stats[['avg_nb_comp',
-                                                     'avg_nb_comp_t',
-                                                     'avg_range',
-                                                     'avg_std',
-                                                     'avg_gfs']].mean(),
-                                     df_market_stats[['avg_nb_comp',
-                                                      'avg_nb_comp_t',
-                                                      'avg_range',
-                                                      'avg_std',
-                                                      'avg_gfs']].std()]))
+  ls_se_disp_mean.append(df_market_stats[['avg_nb_comp',
+                                          'avg_nb_comp_t',
+                                          'avg_range',
+                                          'avg_std',
+                                          'avg_gfs']].mean())
+  ls_se_disp_std.append(df_market_stats[['avg_nb_comp',
+                                         'avg_nb_comp_t',
+                                         'avg_range',
+                                         'avg_std',
+                                         'avg_gfs']].std())
+ 
+# todo: solve issue with variable names (std => two distinct tables?)
 
-df_dispersion = pd.concat(ls_se_dispersion,
-                          axis = 1,
-                          keys = [x[0] for x in ls_loop_markets])
+dict_df_disp = {}
+for title, ls_se_disp_temp in [('Mean', ls_se_disp_mean),
+                               ('Std',  ls_se_disp_std)]:
+  df_disp_temp = pd.concat(ls_se_disp_temp,
+                           axis = 1,
+                           keys = [x[0] for x in ls_loop_markets])
+  df_disp_temp.rename(index = {'avg_nb_comp' : 'Nb sellers (total)',
+                               'avg_nb_comp_t' : 'Nb sellers (observed)',
+                               'avg_range' : 'Range',
+                               'avg_std' : 'Std',
+                               'avg_gfs' : 'Gain from search'},
+                      inplace = True)
+  df_disp_temp.ix['Nb markets'] =\
+    [len(df_market_stats) for df_market_stats in ls_df_market_stats]
+  # todo: add total nb obs? need to save it in market stats
+
+  dict_df_disp[title] = df_disp_temp
+  
+  print()
+  print(title)
+  print(df_disp_temp.to_string())
 
 # #########
 # OUPUT
