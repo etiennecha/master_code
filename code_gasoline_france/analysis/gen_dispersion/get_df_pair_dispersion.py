@@ -24,37 +24,13 @@ path_dir_built_dis = os.path.join(path_data,
 path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
 path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.3f}'.format(x)
+format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-# #########
+# ################
 # LOAD DATA
-# #########
-
-# CLOSE PAIRS
-ls_pairs = dec_json(os.path.join(path_dir_built_json,
-                                 'ls_close_pairs.json'))
-
-# DF PRICES
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
-                                         'df_prices_ttc_final.csv'),
-                        parse_dates = ['date'])
-df_prices_ttc.set_index('date', inplace = True)
-
-df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
-                                        'df_cleaned_prices.csv'),
-                          parse_dates = True)
-df_prices_cl.set_index('date', inplace = True)
-
-# DF MARGIN CHANGE
-df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
-                                          'df_margin_chge.csv'),
-                             dtype = {'id_station' : str},
-                             encoding = 'utf-8')
-df_margin_chge.set_index('id_station', inplace = True)
-
-df_margin_chge = df_margin_chge[df_margin_chge['value'].abs() >= 0.03]
+# ################
 
 # DF INFO
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
@@ -72,25 +48,86 @@ df_info.set_index('id_station', inplace = True)
 
 # DF STATION STATS
 df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
-                                   'df_station_stats.csv'),
+                                            'df_station_stats.csv'),
                                encoding = 'utf-8',
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
+
+# DF MARGIN CHGE
+df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
+                                          'df_margin_chge.csv'),
+                               encoding = 'utf-8',
+                               dtype = {'id_station' : str})
+df_margin_chge.set_index('id_station', inplace = True)
+
+# CLOSE PAIRS
+ls_close_pairs = dec_json(os.path.join(path_dir_built_json,
+                                       'ls_close_pairs.json'))
+
+# COMPETITORS
+dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
+                                     'dict_ls_comp.json'))
+
+# STABLE MARKETS
+ls_dict_stable_markets = dec_json(os.path.join(path_dir_built_json,
+                                               'ls_dict_stable_markets.json'))
+ls_robust_stable_markets = dec_json(os.path.join(path_dir_built_json,
+                                                 'ls_robust_stable_markets.json'))
+# 0 is 3km, 1 is 4km, 2 is 5km
+ls_stable_markets = [stable_market for nb_sellers, stable_markets\
+                       in ls_dict_stable_markets[2].items()\
+                          for stable_market in stable_markets]
+
+# DF PRICES
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
+
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ht_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ht.set_index('date', inplace = True)
+
+df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_cleaned_prices.csv'),
+                          parse_dates = True)
+df_prices_cl.set_index('date', inplace = True)
+
+# FILTER DATA
+# exclude stations with insufficient (quality) price data
+df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
+                               (df_station_stats['nb_valid'] < 90))]
+ls_keep_ids = list(set(df_filter.index).intersection(\
+                     set(df_info[(df_info['highway'] != 1) &\
+                                 (df_info['reg'] != 'Corse')].index)))
+#df_info = df_info.ix[ls_keep_ids]
+#df_station_stats = df_station_stats.ix[ls_keep_ids]
+#df_prices_ttc = df_prices_ttc[ls_keep_ids]
+#df_prices_ht = df_prices_ht[ls_keep_ids]
+#df_prices_cl = df_prices_cl[ls_keep_ids]
+
+ls_drop_ids = list(set(df_prices_ttc.columns).difference(set(ls_keep_ids)))
+df_prices_ttc[ls_drop_ids] = np.nan
+df_prices_ht[ls_drop_ids] = np.nan
+# highway stations may not be in df_prices_cl (no pbm here)
+ls_drop_ids_nhw =\
+  list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
+df_prices_cl[ls_drop_ids_nhw] = np.nan
 
 # ######################
 # GET DF PAIR DISPERSION
 # ######################
 
-# can accomodate both ttc prices (raw prices) or cleaned prices
-df_prices = df_prices_ttc
-km_bound = 5
-diff_bound = 0.02
+# Loop w/ max distance 5 km (extend to 10 if not too slow?)
+# raw prices
+# raw prices before / after margin chge (require 90 days before after)
+# cleaned prices
+# Post processing: competitor vs same brand and pair distance
 
-ls_keep_info = list(df_info[df_info['highway'] != 1].index)
-ls_keep_stats = list(df_station_stats[(df_station_stats['nb_chge'] >= 5) &\
-                                      (df_station_stats['pct_chge'] >= 0.03)].index)
-ls_keep_ids = list(set(ls_keep_info).intersection(set(ls_keep_stats)))
-ls_keep_ids = list(set(df_prices.columns).intersection(set(ls_keep_ids)))
+df_prices = df_prices_ttc
+ls_pairs = ls_close_pairs
+km_bound = 5
 
 ls_keep_pairs = [(indiv_id, other_id, distance)\
                    for (indiv_id, other_id, distance) in ls_pairs if\
@@ -147,27 +184,27 @@ df_rr = pd.DataFrame(ls_ar_rrs,
 # could use tuple index but not very convenient to read csv
 # store dates in column to make csv convenient to read
 
-# #########
-# OUPUT
-# #########
-
-# CSV
-
-df_ppd.to_csv(os.path.join(path_dir_built_dis_csv,
-                           'df_pair_price_dispersion.csv'),
-              encoding = 'utf-8',
-              index = False)
-
-df_rr.to_csv(os.path.join(path_dir_built_dis_csv,
-                           'df_rank_reversals.csv'),
-              float_format= '%.3f',
-              encoding = 'utf-8')
-
-# JSON
-
-enc_json(dict_rr_lengths, os.path.join(path_dir_built_dis_json,
-                                       'dict_rr_lengths.json'))
-
+## #########
+## OUPUT
+## #########
+#
+## CSV
+#
+#df_ppd.to_csv(os.path.join(path_dir_built_dis_csv,
+#                           'df_pair_price_dispersion.csv'),
+#              encoding = 'utf-8',
+#              index = False)
+#
+#df_rr.to_csv(os.path.join(path_dir_built_dis_csv,
+#                           'df_rank_reversals.csv'),
+#              float_format= '%.3f',
+#              encoding = 'utf-8')
+#
+## JSON
+#
+#enc_json(dict_rr_lengths, os.path.join(path_dir_built_dis_json,
+#                                       'dict_rr_lengths.json'))
+#
 ## ###############
 ## STATS DES: PPD
 ## ###############

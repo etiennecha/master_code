@@ -186,74 +186,120 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
                ['nb_obs']
   df_market_stats = pd.DataFrame(ls_ls_market_stats, ls_market_ref_ids, ls_columns)
   ls_df_market_stats.append(df_market_stats)
-  
-  #print()
-  #print(title)
-  # print(df_market_stats.describe())
-  #
-  #print u'\nStats des: restriction on nb of sellers:'
-  #nb_comp_lim = df_market_stats['avg_nb_comp'].quantile(0.75)
-  #print u'\n', df_market_stats[df_market_stats['avg_nb_comp'] <= nb_comp_lim].describe()
-  #
-  #df_dispersion = pd.concat(ls_df_market_dispersion, ignore_index = True)
-  #df_dispersion = df_dispersion[(df_dispersion['nb_comp_t'] >= 3) &\
-  #                              (df_dispersion['nb_comp_t']/\
-  #                               df_dispersion['nb_comp'].astype(float) >= 2.0/3)]
 
-  ls_se_disp_mean.append(df_market_stats[['avg_nb_comp',
-                                          'avg_nb_comp_t',
-                                          'avg_range',
-                                          'avg_std',
-                                          'avg_gfs']].median())
-  ls_se_disp_std.append(df_market_stats[['avg_nb_comp',
-                                         'avg_nb_comp_t',
-                                         'avg_range',
-                                         'avg_std',
-                                         'avg_gfs']].std())
- 
-dict_df_disp = {}
-for title, ls_se_disp_temp in [('Mean', ls_se_disp_mean),
-                               ('Std',  ls_se_disp_std)]:
-  df_disp_temp = pd.concat(ls_se_disp_temp,
-                           axis = 1,
-                           keys = [x[0] for x in ls_loop_markets])
-  df_disp_temp.rename(index = {'avg_nb_comp' : 'Nb sellers (total)',
-                               'avg_nb_comp_t' : 'Nb sellers (observed)',
-                               'avg_range' : 'Range',
-                               'avg_std' : 'Std',
-                               'avg_gfs' : 'Gain from search'},
-                      inplace = True)
-  df_disp_temp.ix['Nb markets'] =\
-    [len(df_market_stats) for df_market_stats in ls_df_market_stats]
-  df_disp_temp.ix['Nb obs'] =\
-    [df_market_stats['nb_obs'].sum() for df_market_stats in ls_df_market_stats]
+# ##############
+# STATS DES
+# ##############
 
-  # todo: add total nb obs? need to save it in market stats
+# PLOT ECDF OF CLEANED PRICES
 
-  dict_df_disp[title] = df_disp_temp
-  
-  print()
-  print(title)
-  print(df_disp_temp.to_string())
+# Not necessarily at market level
 
-# #########
-# OUPUT
-# #########
+from statsmodels.distributions.empirical_distribution import ECDF
 
-## CSV
-#
-#df_ppd.to_csv(os.path.join(path_dir_built_csv,
-#                           'df_pair_raw_price_dispersion.csv'),
-#              encoding = 'utf-8',
-#              index = False)
-#
-#df_rr.to_csv(os.path.join(path_dir_built_csv,
-#                           'df_rank_reversals.csv'),
-#              float_format= '%.3f',
-#              encoding = 'utf-8',
-#              index = 'pair_index')
-#
-## JSON
-#
-#enc_json(dict_rr_lengths, os.path.join(path_dir_built_json,
-#                                       'dict_rr_lengths.json'))
+ls_market_ids = ls_markets_temp[0]
+
+# All prices
+x = np.linspace(np.nanmin(df_prices_cl[ls_market_ids]),\
+                np.nanmax(df_prices_cl[ls_market_ids]), num=100)
+ax = plt.subplot()
+for indiv_id in ls_market_ids:
+  ecdf = ECDF(df_prices_cl[indiv_id])
+  y = ecdf(x)
+  ax.step(x, y, label = indiv_id)
+plt.legend()
+plt.title('Cleaned prices CDFs')
+plt.show()
+
+# Excluding extreme values
+x = np.linspace(df_prices_cl[ls_market_ids].quantile(0.95).max(),\
+                df_prices_cl[ls_market_ids].quantile(0.05).min(), num=200)
+f, ax = plt.subplots()
+for indiv_id in ls_market_ids:
+  min_quant = df_prices_cl[indiv_id].quantile(0.05)
+  max_quant = df_prices_cl[indiv_id].quantile(0.95)
+  se_prices = df_prices_cl[indiv_id][(df_prices_cl[indiv_id] >= min_quant) &\
+                                    (df_prices_cl[indiv_id] <= max_quant)]
+  print(indiv_id, len(df_prices_cl[indiv_id]), len(se_prices))
+  ecdf = ECDF(se_prices)
+  y = ecdf(x)
+  ax.step(x, y, label = indiv_id)
+plt.legend()
+plt.title('Cleaned prices CDFs')
+plt.show()
+
+# CASE STUDY FOR SPECIFIC MARKET
+
+# todo: generalize? robust vs. global analysis
+
+for x in ls_markets_temp:
+  if len(x) == 5:
+    ls_market_ids = x
+    break
+
+# typically: pbm with a change in price policy
+df_prices_ttc[ls_market_ids].plot()
+plt.show()
+
+#ls_market.remove('9200003')
+
+ls_df_market_stats = []
+for df_pr in [df_prices_ttc, df_prices_cl]:
+  df_mkt_prices = df_pr[ls_market_ids].copy()
+  df_md = pd.concat([df_mkt_prices.max(1),
+                     df_mkt_prices.min(1),
+                     df_mkt_prices.mean(1),
+                     df_mkt_prices.std(1, ddof = 0)],
+                    keys = ['max', 'min', 'mean', 'std'],
+                    axis = 1)
+  df_md['range'] = df_md['max'] - df_md['min']
+  df_md['cv'] = df_md['std'] / df_md['mean']
+  ls_mc_dates = [df_margin_chge['date'].ix[id_station] for id_station in ls_market_ids\
+                   if id_station in df_margin_chge.index]
+  if ls_mc_dates:
+    ls_mc_dates.sort()
+    df_md = df_md[:ls_mc_dates[0]]
+  ls_df_market_stats.append(df_md)
+
+df_market_stats = ls_df_market_stats[0]
+
+print(smf.ols('range ~ mean', missing = 'drop', data = df_market_stats).fit().summary())
+df_market_stats['mean_price_var'] = df_market_stats['mean'] - df_market_stats['mean'].shift(1)
+df_market_stats['mean_price_var_abs'] = np.abs(df_market_stats['mean_price_var'])
+
+print(smf.ols('range ~ mean_price_var',
+              missing = 'drop',
+              data = df_market_stats).fit().summary())
+
+df_market_stats['mean_price_var_pos'] = 0
+df_market_stats.loc[df_market_stats['mean_price_var'] > 1e-10,
+                    'mean_price_var_pos'] = df_market_stats['mean_price_var']
+df_market_stats['mean_price_var_neg'] = 0
+df_market_stats.loc[df_market_stats['mean_price_var'] < -1e-10,
+                    'mean_price_var_neg'] = df_market_stats['mean_price_var']
+
+print(smf.ols('range ~ mean + mean_price_var_neg + mean_price_var_pos',
+              missing = 'drop',
+              data = df_market_stats).fit().summary())
+
+# todo: control for outliers...
+# promo Intermarche: decrease in average price with increase in dispersion...
+print(smf.ols('range ~ mean + mean_price_var_neg + mean_price_var_pos',
+              missing = 'drop',
+              data = df_market_stats[df_market_stats['range'] <=\
+                       df_market_stats['range'].quantile(0.95)]).fit().summary())
+
+# Range when excluding extreme values
+# (interpolation only on graph... should get rid of values for graph)
+df_market_stats[df_market_stats['range'] <=\
+                       df_market_stats['range'].quantile(0.9)]['range'].plot()
+plt.show()
+
+# IDEA TO DEAL WITH DIFFERENTIATION
+
+# todo: look at avg/median spread between pairs to detect submarkets if can do
+# example: need to restrict to before
+df_market_before = df_prices_ttc[ls_market_ids][150:300].copy()
+df_market_after = df_prices_ttc[ls_market_ids][-150:].copy()
+
+#(df_market_before['9200003'] - df_market_before[u'9190001']).value_counts()
