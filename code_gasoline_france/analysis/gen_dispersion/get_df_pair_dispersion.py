@@ -119,10 +119,18 @@ df_prices_cl[ls_drop_ids_nhw] = np.nan
 # GET DF PAIR DISPERSION
 # ######################
 
-# Loop w/ max distance 5 km (extend to 10 if not too slow?)
-# raw prices
-# raw prices before / after margin chge (require 90 days before after)
-# cleaned prices
+# Need to consider both raw prices and residuals
+km_bound = 5 # extend to 10 for robustness checks?
+margin_chge_bound = 0.03
+ls_pairs = ls_close_pairs
+
+# Scenarios:
+# Residuals
+# Raw prices no mc
+# Raw prices before mc
+# Raw prices after mc
+# Raw prices all
+
 # Post processing: competitor vs same brand and pair distance
 
 df_prices = df_prices_ttc
@@ -139,35 +147,80 @@ ls_keep_pairs = [(indiv_id, other_id, distance)\
 ls_ids_margin_chge =\
   df_margin_chge[df_margin_chge['value'].abs() >= margin_chge_bound].index
 
-# LOOP TO GENERATE PRICE DISPERSION STATS
-
-start = time.clock()
-ls_rows_ppd = []
-ls_pair_index = []
-ls_ar_rrs = []
-dict_rr_lengths = {}
+ls_loop_pairs = []
 for (indiv_id, other_id, distance) in ls_keep_pairs:
-  mc_date = None # base case: no limit date
-  # change in margin/pricing policy
   ls_mc_dates = [df_margin_chge['date'].ix[id_station]\
                    for id_station in [indiv_id, other_id]\
                      if id_station in ls_ids_margin_chge]
+  ls_mc_dates.sort()
+  ls_loop_pairs.append((indiv_id, other_id, distance, ls_mc_dates))
+
+def get_ls_dispersion_res(res):
+  return res[0] + get_ls_standardized_frequency(res[3][0])
+
+start = time.clock()
+ls_categories = ['residuals', 'before_mc', 'after_mc', 'no_mc', 'all']
+dict_pairs_rr = {k : [] for k in ls_categories}
+dict_ls_ar_rrs = {k : [] for k in ls_categories}
+dict_dict_rr_lengths = {k : {} for k in ls_categories}
+for (indiv_id, other_id, distance, ls_mc_dates) in ls_loop_pairs:
+  base_res = [indiv_id, other_id, distance]
+  # Residuals
+  se_prices_1_cl = df_prices_cl[indiv_id]
+  se_prices_2_cl = df_prices_cl[other_id]
+  res_cl = get_pair_price_dispersion(se_prices_1_cl, se_prices_2_cl, light = False)
+  dict_pairs_rr['residuals'].append(base_res + res_cl)
+  dict_ls_ar_rrs['residuals'].append(res_cl[2][1])
+  dict_dict_rr_lengths['residuals']['{:s}-{:s}'.format(indiv_id, other_id)] =\
+      res_cl[3][0]
+  # Raw prices
+  se_prices_1 = df_prices_ttc[indiv_id]
+  se_prices_2 = df_prices_ttc[other_id]
   if ls_mc_dates:
-    ls_mc_dates.sort()
-    mc_date = ls_mc_dates[0]
-  ls_comp_pd = get_pair_price_dispersion(df_prices[indiv_id][:mc_date].values,
-                                         df_prices[other_id][:mc_date].values,
-                                         light = False)
-  ls_rows_ppd.append([indiv_id, other_id, distance] +\
-                     ls_comp_pd[0] +\
-                     get_ls_standardized_frequency(ls_comp_pd[3][0]))
-  pair_index = '-'.join([indiv_id, other_id])
-  ls_pair_index.append(pair_index)
-  ls_ar_rrs.append(ls_comp_pd[2][1])
-  dict_rr_lengths[pair_index] = ls_comp_pd[3][0]
+    # before changes
+    se_prices_1_b = se_prices_1.copy()
+    se_prices_1_b.ix[ls_mc_dates[0]:] = np.nan
+    se_prices_2_b = se_prices_2.copy()
+    se_prices_2_b.ix[ls_mc_dates[0]:] = np.nan
+    res_b = get_pair_price_dispersion(se_prices_1_b, se_prices_2_b, light = False)
+    dict_pairs_rr['before_mc'].append(base_res + get_ls_dispersion_res(res_b))
+    dict_ls_ar_rrs['before_mc'].append(res_b[2][1])
+    dict_dict_rr_lengths['before_mc']['{:s}-{:s}'.format(indiv_id, other_id)] =\
+        res_b[3][0]
+    # after changes
+    se_prices_1_a = se_prices_1.copy()
+    se_prices_1_a.ix[:ls_mc_dates[-1]] = np.nan
+    se_prices_2_a = se_prices_2.copy()
+    se_prices_2_a.ix[:ls_mc_dates[-1]] = np.nan
+    res_a = get_pair_price_dispersion(se_prices_1_a, se_prices_2_a, light = False)
+    dict_pairs_rr['after_mc'].append(base_res + get_ls_dispersion_res(res_a))
+    dict_ls_ar_rrs['after_mc'].append(res_a[2][1])
+    dict_dict_rr_lengths['after_mc']['{:s}-{:s}'.format(indiv_id, other_id)] =\
+        res_a[3][0]
+    # disregarding changes
+    res = get_pair_price_dispersion(se_prices_1, se_prices_2, light = False)
+    dict_pairs_rr['all'].append(base_res + get_ls_dispersion_res(res))
+    dict_ls_ar_rrs['all'].append(res[2][1])
+    dict_dict_rr_lengths['all']['{:s}-{:s}'.format(indiv_id, other_id)] =\
+        res[3][0]
+  else:
+    res = get_pair_price_dispersion(se_prices_1, se_prices_2, light = False)
+    dict_pairs_rr['no_mc'].append(base_res + get_ls_dispersion_res(res))
+    dict_ls_ar_rrs['no_mc'].append(res[2][1])
+    dict_dict_rr_lengths['no_mc']['{:s}-{:s}'.format(indiv_id, other_id)] =\
+        res[3][0]
+    dict_pairs_rr['all'].append(base_res + get_ls_dispersion_res(res))
+    dict_ls_ar_rrs['all'].append(res[2][1])
+    dict_dict_rr_lengths['all']['{:s}-{:s}'.format(indiv_id, other_id)] =\
+        res[3][0]
 print('Loop: rank reversals',  time.clock() - start)
 
-# BUILD DF PAIR PRICE DISPERSION (PPD)
+# BUILD DF PAIR RANK REVERSALS
+
+ls_rows_pairs_rr = []
+for title_temp, ls_ls_pairs_rr_temp in dict_pairs_rr.items():
+  ls_rows_temp = [[title_temp] + row for row in ls_ls_pairs_rr_temp]
+  ls_rows_pairs_rr += ls_rows_temp
 
 ls_scalar_cols  = ['nb_spread', 'nb_same_price', 'nb_1_cheaper', 'nb_2_cheaper', 
                    'nb_rr', 'pct_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr',
@@ -175,41 +228,46 @@ ls_scalar_cols  = ['nb_spread', 'nb_same_price', 'nb_1_cheaper', 'nb_2_cheaper',
 
 ls_freq_std_cols = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 
-ls_columns  = ['id_1', 'id_2', 'distance'] +\
+ls_columns  = ['cat', 'id_1', 'id_2', 'distance'] +\
               ls_scalar_cols + ls_freq_std_cols
 
-df_ppd = pd.DataFrame(ls_rows_ppd, columns = ls_columns)
+df_pairs_rr = pd.DataFrame(ls_rows_pairs_rr, columns = ls_columns)
 
 # BUILD DF RANK REVERSALS
 
-ls_index = ['-'.join(ppd[:2]) for ppd in ls_rows_ppd]
-df_rr = pd.DataFrame(ls_ar_rrs,
-                     index = ls_index,
-                     columns = df_prices_ttc.index).T
+dict_df_rr = {}
+for cat, ls_ar_rrs in dict_ls_ar_rrs.items():
+  ls_index = ['-'.join(ppd[:2]) for ppd in dict_pairs_rr[cat]]
+  df_rr = pd.DataFrame(dict_ls_ar_rrs[cat],
+                       index = ls_index,
+                       columns = df_prices_ttc.index).T
+  dict_df_rr[cat] = df_rr
+
 # could use tuple index but not very convenient to read csv
 # store dates in column to make csv convenient to read
 
-## #########
-## OUPUT
-## #########
-#
-## CSV
-#
-#df_ppd.to_csv(os.path.join(path_dir_built_dis_csv,
-#                           'df_pair_price_dispersion.csv'),
-#              encoding = 'utf-8',
-#              index = False)
-#
-#df_rr.to_csv(os.path.join(path_dir_built_dis_csv,
-#                           'df_rank_reversals.csv'),
-#              float_format= '%.3f',
-#              encoding = 'utf-8')
-#
-## JSON
-#
-#enc_json(dict_rr_lengths, os.path.join(path_dir_built_dis_json,
-#                                       'dict_rr_lengths.json'))
-#
+# #########
+# OUPUT
+# #########
+
+# CSV
+
+df_pairs_rr.to_csv(os.path.join(path_dir_built_dis_csv,
+                                'df_pairs_dispersion.csv'),
+                   encoding = 'utf-8',
+                   index = False)
+
+for cat, df_rr_cat in dict_df_rr.items():
+  df_rr.to_csv(os.path.join(path_dir_built_dis_csv,
+                            'df_rank_reversals_{:s}.csv'.format(cat)),
+                                        float_format= '%.3f',
+                                        encoding = 'utf-8')
+
+# JSON
+
+enc_json(dict_dict_rr_lengths, os.path.join(path_dir_built_dis_json,
+                                            'dict_dict_rr_lengths.json'))
+
 ## ###############
 ## STATS DES: PPD
 ## ###############
@@ -217,60 +275,60 @@ df_rr = pd.DataFrame(ls_ar_rrs,
 ## CREATE SAME CORNER VARIABLE
 #
 #for dist in [500, 750, 1000]:
-#  df_ppd['sc_{:d}'.format(dist)] = 0
-#  df_ppd.loc[df_ppd['distance'] <= dist/1000.0, 'sc_{:d}'.format(dist)] = 1
+#  df_pairs_rr['sc_{:d}'.format(dist)] = 0
+#  df_pairs_rr.loc[df_pairs_rr['distance'] <= dist/1000.0, 'sc_{:d}'.format(dist)] = 1
 #
 ## ADD BRANDS AND CODE INSEE (MOVE)
 #
 #df_info_sub = df_info[['ci_ardt_1', 'brand_0', 'brand_1', 'brand_2']].copy()
 #df_info_sub['id_a'] = df_info_sub.index
-#df_ppd = pd.merge(df_info_sub, df_ppd, on='id_a', how = 'right')
+#df_pairs_rr = pd.merge(df_info_sub, df_pairs_rr, on='id_a', how = 'right')
 #df_info_sub.rename(columns={'id_a': 'id_b'}, inplace = True)
 #
-#df_ppd = pd.merge(df_info_sub,
-#                  df_ppd,
+#df_pairs_rr = pd.merge(df_info_sub,
+#                  df_pairs_rr,
 #                  on='id_b',
 #                  how = 'right',
 #                  suffixes=('_b', '_a'))
 #
 ## Drop if insufficient observations
-#df_ppd = df_ppd[df_ppd['nb_spread'] >= 30]
+#df_pairs_rr = df_pairs_rr[df_pairs_rr['nb_spread'] >= 30]
 #
 #ls_disp_ppd = ['id_a', 'id_b', 'distance'] +\
 #              ls_scalar_cols +\
 #              ['abs_avg_spread_ttc']
 #
-#print u'\nOverview df_ppd:'
-#print df_ppd[ls_disp_ppd][0:10].to_string()
+#print u'\nOverview df_pairs_rr:'
+#print df_pairs_rr[ls_disp_ppd][0:10].to_string()
 #
 #ls_disp_rr = ['pct_rr', 'nb_rr', 'rr_1', 'rr_2', '5<rr<=20', 'rr>20']
 #
 #print u'\nOverview rank reversals (all):'
-#print df_ppd[ls_disp_rr].describe()
+#print df_pairs_rr[ls_disp_rr].describe()
 #
 #print u'\nOverview high differentiation but high rank reversals'
-#print df_ppd[['id_a', 'id_b', 'distance', 'nb_spread', 'abs_avg_spread_ttc', 'pct_rr']]\
-#        [(df_ppd['abs_avg_spread_ttc'] >= 0.05) & (df_ppd['pct_rr'] >= 0.3)]
+#print df_pairs_rr[['id_a', 'id_b', 'distance', 'nb_spread', 'abs_avg_spread_ttc', 'pct_rr']]\
+#        [(df_pairs_rr['abs_avg_spread_ttc'] >= 0.05) & (df_pairs_rr['pct_rr'] >= 0.3)]
 #
 #print u'\nOverview low differentiation and low rank reversals:'
-#print len(df_ppd[(df_ppd['abs_avg_spread_ttc'] == 0) & (df_ppd['pct_rr'] == 0)])
-##print df_ppd[['id_a', 'id_b', 'distance', 'nb_spread']]\
-##        [(df_ppd['abs_avg_spread_ttc'] == 0) & (df_ppd['pct_rr'] == 0)]
+#print len(df_pairs_rr[(df_pairs_rr['abs_avg_spread_ttc'] == 0) & (df_pairs_rr['pct_rr'] == 0)])
+##print df_pairs_rr[['id_a', 'id_b', 'distance', 'nb_spread']]\
+##        [(df_pairs_rr['abs_avg_spread_ttc'] == 0) & (df_pairs_rr['pct_rr'] == 0)]
 ### actually not competitors: same name "SA CHIRAULT" so drop it
-##print len(df_ppd[(df_ppd['abs_avg_spread_ttc'] <= 0.01) & (df_ppd['pct_rr'] < 0.01)])
-##print df_ppd[['id_a', 'id_b', 'distance', 'nb_spread', 'abs_avg_spread_ttc', 'pct_rr']]\
-##        [(df_ppd['abs_avg_spread_ttc'] <= 0.01) & (df_ppd['pct_rr'] < 0.01)]
+##print len(df_pairs_rr[(df_pairs_rr['abs_avg_spread_ttc'] <= 0.01) & (df_pairs_rr['pct_rr'] < 0.01)])
+##print df_pairs_rr[['id_a', 'id_b', 'distance', 'nb_spread', 'abs_avg_spread_ttc', 'pct_rr']]\
+##        [(df_pairs_rr['abs_avg_spread_ttc'] <= 0.01) & (df_pairs_rr['pct_rr'] < 0.01)]
 #
 #print u'\nOverview rank reversals (low differentiation):'
-#print df_ppd[ls_disp_rr][df_ppd['abs_avg_spread_ttc'] <= 0.02].describe()
+#print df_pairs_rr[ls_disp_rr][df_pairs_rr['abs_avg_spread_ttc'] <= 0.02].describe()
 #
 #print u'\nPairs with a least one rank reversal per month: {:.0f}'.format(\
-#      len(df_ppd[(df_ppd['nb_rr'] >= df_ppd['nb_spread'] / 30.0 )]))
+#      len(df_pairs_rr[(df_pairs_rr['nb_rr'] >= df_pairs_rr['nb_spread'] / 30.0 )]))
 #
-#df_ppd_hrr = df_ppd[(df_ppd['nb_rr'] >= df_ppd['nb_spread'] / 30.0 )].copy()
+#df_pairs_rr_hrr = df_pairs_rr[(df_pairs_rr['nb_rr'] >= df_pairs_rr['nb_spread'] / 30.0 )].copy()
 #
-#print u'\n', df_ppd_hrr[ls_disp_rr].describe()
+#print u'\n', df_pairs_rr_hrr[ls_disp_rr].describe()
 #
 ## Inspect those with rr of high length
-#df_ppd_hrr.sort('rr>20', ascending = False, inplace = True)
-#print df_ppd_hrr[['id_a', 'id_b', 'distance'] + ls_disp_rr][0:10].to_string()
+#df_pairs_rr_hrr.sort('rr>20', ascending = False, inplace = True)
+#print df_pairs_rr_hrr[['id_a', 'id_b', 'distance'] + ls_disp_rr][0:10].to_string()

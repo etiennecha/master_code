@@ -120,7 +120,7 @@ df_prices_cl[ls_drop_ids_nhw] = np.nan
 # ##########################
 
 # Pair stats make sense only with raw prices (price change dates etc.)
-km_bound = 5
+km_bound = 5 # extend to 10 for robustness checks?
 margin_chge_bound = 0.03
 ls_pairs = ls_close_pairs
 df_prices = df_prices_ttc
@@ -158,7 +158,6 @@ def get_stats_two_firms(se_prices_1, se_prices_2):
   ls_matched_prices = get_stats_two_firm_same_prices(ar_prices_1, ar_prices_2)
   return [ls_spread, ls_followed_chges, ls_matched_prices]
 
-# LOOP: FOLLOWED CHANGES AND PRICE MATCHING
 start_loop = time.clock()
 ls_ls_pairs_no_mc = []
 ls_ls_pairs_before_mc = []
@@ -193,8 +192,16 @@ for (indiv_id, other_id, distance, ls_mc_dates) in ls_loop_pairs:
 
 print('Loop time:',  time.clock() - start_loop)
 
-# BUILD DATAFRAME
-ls_rows_pairs = [row[0] + row[1] + row[2][0] + row[3][0] for row in ls_ls_pairs_all]
+ls_loop_ls_ls_pairs = [('all', ls_ls_pairs_all),
+                       ('no_mc', ls_ls_pairs_no_mc),
+                       ('before_mc', ls_ls_pairs_before_mc),
+                       ('after_mc', ls_ls_pairs_after_mc)]
+
+ls_rows_pair_stats = []
+for title_temp, ls_ls_pairs_temp in ls_loop_ls_ls_pairs:
+  ls_rows_temp = [[title_temp] + row[0] + row[1] + row[2][0] + row[3][0]\
+                    for row in ls_ls_pairs_temp]
+  ls_rows_pair_stats += ls_rows_temp
 
 ls_spread_cols = ['nb_spread', 'mean_spread', 'mean_abs_spread',
                   'std_spread', 'std_abs_spread',
@@ -209,10 +216,11 @@ ls_followed_chges_cols = ['nb_ctd_1', 'nb_ctd_2', 'nb_ctd_both',
 ls_matched_prices_cols = ['nb_spread_alt', 'nb_same', 'nb_chge_to_same',
                           'nb_1_lead', 'nb_2_lead']
 
-df_pairs = pd.DataFrame(ls_rows_pairs, columns = ['id_1', 'id_2', 'distance'] +\
-                                                 ls_spread_cols +\
-                                                 ls_followed_chges_cols +\
-                                                 ls_matched_prices_cols)
+df_pairs = pd.DataFrame(ls_rows_pair_stats,
+                        columns = ['mc_info', 'id_1', 'id_2', 'distance'] +\
+                                  ls_spread_cols +\
+                                  ls_followed_chges_cols +\
+                                  ls_matched_prices_cols)
 df_pairs_bu = df_pairs.copy()
 
 # ENRICH DATAFRAME: FOLLOWED PRICE CHANGES
