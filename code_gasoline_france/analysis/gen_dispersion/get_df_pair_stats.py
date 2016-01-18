@@ -217,7 +217,7 @@ ls_matched_prices_cols = ['nb_spread_alt', 'nb_same', 'nb_chge_to_same',
                           'nb_1_lead', 'nb_2_lead']
 
 df_pairs = pd.DataFrame(ls_rows_pair_stats,
-                        columns = ['mc_info', 'id_1', 'id_2', 'distance'] +\
+                        columns = ['cat', 'id_1', 'id_2', 'distance'] +\
                                   ls_spread_cols +\
                                   ls_followed_chges_cols +\
                                   ls_matched_prices_cols)
