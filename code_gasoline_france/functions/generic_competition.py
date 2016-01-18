@@ -206,10 +206,10 @@ def get_stats_two_firm_same_prices(ar_price_1, ar_price_2):
         else:
           ls_chge_to_same += 1
       # same today, same yesterday (with change)
-      elif (ns.abs(spread) < zero) and\
-           (np.abs(ar_spread[i-1] < zero) and\
-           (price_1 != ar_price_1[-1]):
-          ls_chge_to_same += 1
+      elif (np.abs(spread) < zero) and\
+           (np.abs(ar_spread[i-1]) < zero) and\
+           (price_1 != ar_price_1[i-1]):
+        ls_chge_to_same += 1
       # same today (no change, continued)
       elif (np.abs(spread) < zero) and (ctd > 0):
         ctd += 1
@@ -220,7 +220,7 @@ def get_stats_two_firm_same_prices(ar_price_1, ar_price_2):
           ls_ctd_2.append(ctd)
           # print 'length', ctd, i
         ctd, ctd_1 = 0, False
-    # save and reset ctd
+    # save ctd if series in progress on last day
     if ctd != 0:
       if ctd_1:
         ls_ctd_1.append(ctd)

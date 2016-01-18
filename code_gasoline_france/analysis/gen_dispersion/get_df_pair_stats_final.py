@@ -144,7 +144,7 @@ ls_loop_pairs = []
 for (indiv_id, other_id, distance) in ls_keep_pairs:
   ls_mc_dates = [df_margin_chge['date'].ix[id_station]\
                    for id_station in [indiv_id, other_id]\
-                     if id_station in df_margin_chge.index]
+                     if id_station in ls_ids_margin_chge]
   ls_mc_dates.sort()
   ls_loop_pairs.append((indiv_id, other_id, distance, ls_mc_dates))
 
