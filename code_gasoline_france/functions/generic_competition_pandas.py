@@ -99,32 +99,32 @@ def get_stats_price_chges(ar_prices, light = True):
     ls_results = ls_scalars + [ar_neg_chges, ar_pos_chges]
   return ls_results
 
-def get_stats_two_firm_price_spread(ar_prices_1, ar_prices_2, par_round):
-  ar_spread = ar_prices_1 - ar_prices_2
-  nb_spread = len(ar_spread[~np.isnan(ar_spread)])
+def get_stats_two_firm_price_spread(se_prices_1, se_prices_2, par_round):
+  se_spread = se_prices_1 - se_prices_2
+  nb_spread = se_spread.count()
   if nb_spread != 0:
-    mean_spread = scipy.stats.nanmean(ar_spread)
-    mean_abs_spread = scipy.stats.nanmean(np.abs(ar_spread))
-    std_spread = scipy.stats.nanstd(ar_spread)
-    std_abs_spread = scipy.stats.nanstd(np.abs(ar_spread))
+    mean_spread = se_spread.mean()
+    mean_abs_spread = se_spread.abs().mean()
+    std_spread = se_spread.std()
+    std_abs_spread = se_spread.abs().mean()
     # Two Most common spread
-    ar_spread_nodec = (np.around(ar_spread, par_round) * np.power(10, par_round))
-    dict_spread_vc = Counter(ar_spread_nodec[~pd.isnull(ar_spread_nodec)])
+    se_spread_nodec = (np.around(se_spread, par_round) * np.power(10, par_round))
+    dict_spread_vc = Counter(se_spread_nodec[~se_spread_nodec.isnull()].values)
     ls_tup_spread_vc = sorted(dict_spread_vc.items(),
                               key = lambda tup: tup[1],
                               reverse = True)
     mc_spread = ls_tup_spread_vc[0][0] / np.power(10, par_round)
-    freq_mc_spread = ls_tup_spread_vc[0][1] * 100 / float((~np.isnan(ar_spread)).sum())
+    freq_mc_spread = ls_tup_spread_vc[0][1] * 100 / float(nb_spread)
     # Second most commun spread
     smc_spread, freq_smc_spread = np.nan, np.nan
     if len(ls_tup_spread_vc) >= 2:
       smc_spread = ls_tup_spread_vc[1][0] / np.power(10, par_round)
-      freq_smc_spread = ls_tup_spread_vc[1][1] * 100 / float((~np.isnan(ar_spread)).sum())
+      freq_smc_spread = ls_tup_spread_vc[1][1] * 100 / float(nb_spread)
     # Median spread 
-    med_spread = np.median(ar_spread[~np.isnan(ar_spread)])
+    med_spread = se_spread.median()
     freq_med_spread =  dict_spread_vc[np.round(med_spread, par_round) *\
-                                        np.power(10, par_round)] /\
-                         float((~np.isnan(ar_spread)).sum()) * 100
+                                        np.power(10, par_round)]* 100 /\
+                         float(nb_spread)
     ls_results = [nb_spread, 
                   mean_spread, mean_abs_spread,
                   std_spread, std_abs_spread,
@@ -135,7 +135,7 @@ def get_stats_two_firm_price_spread(ar_prices_1, ar_prices_2, par_round):
     ls_results = [nb_spread] + [np.nan for i in range(10)]
   return ls_results
 
-def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
+def get_stats_two_firm_price_chges(se_prices_1, se_prices_2):
   """
   Counts simulatenous changes: A and B had changed before or none had changed
   Counts followed changes: A changes, B follows (checks B changes after)
@@ -147,87 +147,70 @@ def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):
   -----------
   ar_prices_1, ar_prices_2: two numpy arrays of float and np.nan
   """
-  zero = np.float64(1e-10)
-  ar_chges_1 = ar_prices_1[1:] - ar_prices_1[:-1]
-  ar_chges_2 = ar_prices_2[1:] - ar_prices_2[:-1]
-  nb_ctd_1 = (~np.isnan(ar_chges_1)).sum()
-  nb_ctd_2 = (~np.isnan(ar_chges_2)).sum()
+  zero = 1e-10
+  se_chges_1 = se_prices_1 - se_prices_1.shift(1)
+  se_chges_2 = se_prices_2 - se_prices_2.shift(1)
+  nb_ctd_1 = se_chges_1.count()
+  nb_ctd_2 = se_chges_2.count()
   # Count successive days observed for both individuals
-  nb_ctd_both = ((~np.isnan(ar_chges_1)) * (~np.isnan(ar_chges_2))).sum()
-  nb_chges_1 = (np.abs(ar_chges_1) > zero).sum() 
-  nb_chges_2 = (np.abs(ar_chges_2) > zero).sum() 
-  # Count simulatenous changes (following no chge at all or another sim chge)
-  ar_dum_chges_1 = (np.abs(ar_chges_1) > zero)*1
-  ar_dum_chges_2 = (np.abs(ar_chges_2) > zero)*1
-  ar_sum_dum_chges = ar_dum_chges_1 + ar_dum_chges_2
-  nb_sim_chges = 0 
-  for i, sum_chge in enumerate(ar_sum_dum_chges[1:], start = 1):
-    if sum_chge == 2 and (ar_sum_dum_chges[i-1] == 2 or\
-                          ar_sum_dum_chges[i-1] == 0):
-      nb_sim_chges +=1
-  # Count followed changes:
-  ls_day_ind_1_follows, ls_day_ind_2_follows = [], []
-  for i, (dum_chge_1, dum_chge_2) in enumerate(zip(ar_dum_chges_1, ar_dum_chges_2)[1:],
-                                               start= 1):
-    if (dum_chge_1 == 1) and (ar_dum_chges_1[i-1] == 0) and (ar_dum_chges_2[i-1] == 1):
-      ls_day_ind_1_follows.append(i)
-    if (dum_chge_2 == 1) and (ar_dum_chges_2[i-1] == 0) and (ar_dum_chges_1[i-1] == 1):
-      ls_day_ind_2_follows.append(i)
+  nb_ctd_both = (se_chges_1 - se_chges_2).count()
+  nb_chges_1 = (se_chges_1.abs() > zero).sum()
+  nb_chges_2 = (se_chges_2.abs() > zero).sum() 
+  # Build df of change dummies (retain null)
+  #df_dum_chges = pd.concat([se_chges_1, se_chges_2], axis = 1)
+  df_dum_chges = pd.DataFrame(zip(se_chges_1.values,
+                                  se_chges_2.values))
+  df_dum_chges[df_dum_chges.abs() > zero] = 1
+  df_dum_chges['sum'] = df_dum_chges.sum(1, skipna = False)
+  df_dum_chges['l1_sum'] = df_dum_chges['sum'].shift(1)
+  nb_sim_chges = (df_dum_chges['sum'] == 2).sum()
+  # Strict: if none or both chged before
+  nb_sim_chges_st = ((df_dum_chges['sum'] == 2) &\
+                     ((df_dum_chges['l1_sum'] == 2) |\
+                      (df_dum_chges['l1_sum'] == 0))).sum()
+  # Count followed changes (not requiring no simultaneous chge)
+  name_1, name_2 = df_dum_chges.columns[0], df_dum_chges.columns[1]
+  ind_1_follows = df_dum_chges[(df_dum_chges[name_1] == 1) &\
+                               (df_dum_chges[name_1].shift(1) == 0) &\
+                               (df_dum_chges[name_2].shift(1) == 1)].index
+  ind_2_follows = df_dum_chges[(df_dum_chges[name_2] == 1) &\
+                               (df_dum_chges[name_2].shift(1) == 0) &\
+                               (df_dum_chges[name_1].shift(1) == 1)].index
   return [[nb_ctd_1, nb_ctd_2, nb_ctd_both,
-           nb_chges_1, nb_chges_2, nb_sim_chges,
-           len(ls_day_ind_1_follows), len(ls_day_ind_2_follows)],
-          [ls_day_ind_1_follows, ls_day_ind_2_follows]]
+           nb_chges_1, nb_chges_2, nb_sim_chges, nb_sim_chges_st,
+           len(ind_1_follows), len(ind_2_follows)],
+          [list(ind_1_follows), list(ind_2_follows)]]
 
-def get_stats_two_firm_same_prices(ar_price_1, ar_price_2):
+def get_stats_two_firm_same_prices(se_prices_1, se_prices_2):
   """
   Compare price series: rather for non differentiated sellers (same price level)
   """
   zero = np.float64(1e-10)
-  ar_spread = ar_price_1 - ar_price_2
-  len_spread = len(ar_spread[~np.isnan(ar_spread)])
-  len_same = len(ar_spread[np.abs(ar_spread) < zero])
-  ls_chge_to_same = 0
-  ls_1_lead, ls_2_lead = [], []
-  ctd, ctd_1, ls_ctd_1, ls_ctd_2 = 0, False, [], []
-  if len_spread and len_same:
-    for i, (price_1, price_2, spread) in enumerate(zip(ar_price_1,
-                                                       ar_price_2,
-                                                       ar_spread)[1:], start = 1):
-      # same today, not same yesterday (with change)
-      if (np.abs(spread) < zero) and (np.abs(ar_spread[i-1]) > zero):
-        if price_1 == ar_price_1[i-1]:
-          ls_1_lead.append(i)
-          ctd_1 = True
-          ctd = 1
-        elif price_2 == ar_price_2[i-1]:
-          ls_2_lead.append(i)
-          # print 'day', i
-          ctd = 1
-        else:
-          ls_chge_to_same += 1
-      # same today, same yesterday (with change)
-      elif (ns.abs(spread) < zero) and\
-           (np.abs(ar_spread[i-1] < zero) and\
-           (price_1 != ar_price_1[-1]):
-          ls_chge_to_same += 1
-      # same today (no change, continued)
-      elif (np.abs(spread) < zero) and (ctd > 0):
-        ctd += 1
-      elif (ctd > 0): #not np.isnan(np.abs(spread)) => cuts if nan
-        if ctd_1:
-          ls_ctd_1.append(ctd)
-        else:
-          ls_ctd_2.append(ctd)
-          # print 'length', ctd, i
-        ctd, ctd_1 = 0, False
-    # save and reset ctd
-    if ctd != 0:
-      if ctd_1:
-        ls_ctd_1.append(ctd)
-      else:
-        ls_ctd_2.append(ctd)
-  return [[len_spread, len_same, ls_chge_to_same, len(ls_1_lead), len(ls_2_lead)],
-          [ls_1_lead, ls_2_lead, ls_ctd_1, ls_ctd_2]]
+  se_spread = se_prices_1 - se_prices_2
+  nb_spread = se_spread.count()
+  nb_same = (se_spread.abs() < zero).sum()
+  ls_ind_1_lead, ls_ind_2_lead, ls_ind_sim_chge = [], [], []
+  if nb_spread != 0 and nb_same !=0:
+    df_same = pd.concat([se_prices_1, se_prices_2],
+                         axis = 1)
+    name_1, name_2 = df_same.columns[0], df_same.columns[1]
+    df_same['spread'] = df_same[name_1] - df_same[name_2]
+    ind_2_lead = df_same[(df_same['spread'].abs() < zero) &\
+                         (df_same['spread'].shift(1).abs() > zero) &\
+                         (df_same[name_1] == df_same[name_1].shift(1))].index
+    ind_1_lead = df_same[(df_same['spread'].abs() < zero) &\
+                         (df_same['spread'].shift(1).abs() > zero) &\
+                         (df_same[name_2] == df_same[name_2].shift(1))].index
+    ind_sim_chge = df_same[(df_same['spread'].abs() < zero) &\
+                           (~df_same['spread'].shift(1).isnull()) &\
+                           (df_same[name_1] != df_same[name_1].shift(1)) &\
+                           (df_same[name_2] != df_same[name_2].shift(1))].index
+    ls_ind_1_lead = list(ind_1_lead)
+    ls_ind_2_lead = list(ind_2_lead)
+    ls_ind_sim_chge = list(ind_sim_chge)
+  return [[nb_spread, nb_same,
+           len(ls_ind_sim_chge), len(ls_ind_1_lead), len(ls_ind_2_lead)],
+          [ls_ind_sim_chge, ls_ind_1_lead, ls_ind_2_lead]]
 
 # ANALYSIS OF PAIR PRICE DISPERSION
 

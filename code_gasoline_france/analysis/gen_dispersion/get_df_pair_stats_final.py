@@ -6,7 +6,7 @@ import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
-from generic_competition import *
+from generic_competition_pandas import *
 import time
 
 path_dir_built = os.path.join(path_data,
@@ -24,37 +24,13 @@ path_dir_built_dis = os.path.join(path_data,
 path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
 path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.3f}'.format(x)
+format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-# ##############
+# ################
 # LOAD DATA
-# ##############
-
-# CLOSE PAIRS
-ls_pairs = dec_json(os.path.join(path_dir_built_json,
-                                 'ls_close_pairs.json'))
-
-# DF PRICES
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
-                                         'df_prices_ttc_final.csv'),
-                        parse_dates = ['date'])
-df_prices_ttc.set_index('date', inplace = True)
-
-df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
-                                        'df_cleaned_prices.csv'),
-                          parse_dates = True)
-df_prices_cl.set_index('date', inplace = True)
-
-# DF MARGIN CHANGE
-df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
-                                          'df_margin_chge.csv'),
-                             dtype = {'id_station' : str},
-                             encoding = 'utf-8')
-df_margin_chge.set_index('id_station', inplace = True)
-
-df_margin_chge = df_margin_chge[df_margin_chge['value'].abs() >= 0.03]
+# ################
 
 # DF INFO
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
@@ -77,61 +53,136 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
+# DF MARGIN CHGE
+df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
+                                          'df_margin_chge.csv'),
+                               encoding = 'utf-8',
+                               dtype = {'id_station' : str})
+df_margin_chge.set_index('id_station', inplace = True)
+
+# CLOSE PAIRS
+ls_close_pairs = dec_json(os.path.join(path_dir_built_json,
+                                       'ls_close_pairs.json'))
+
+# COMPETITORS
+dict_ls_comp = dec_json(os.path.join(path_dir_built_json,
+                                     'dict_ls_comp.json'))
+
+# STABLE MARKETS
+ls_dict_stable_markets = dec_json(os.path.join(path_dir_built_json,
+                                               'ls_dict_stable_markets.json'))
+ls_robust_stable_markets = dec_json(os.path.join(path_dir_built_json,
+                                                 'ls_robust_stable_markets.json'))
+# 0 is 3km, 1 is 4km, 2 is 5km
+ls_stable_markets = [stable_market for nb_sellers, stable_markets\
+                       in ls_dict_stable_markets[2].items()\
+                          for stable_market in stable_markets]
+
+# DF PRICES
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
+
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ht_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ht.set_index('date', inplace = True)
+
+df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_cleaned_prices.csv'),
+                          parse_dates = True)
+df_prices_cl.set_index('date', inplace = True)
+
+# FILTER DATA
+# exclude stations with insufficient (quality) price data
+df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
+                               (df_station_stats['nb_valid'] < 90))]
+ls_keep_ids = list(set(df_filter.index).intersection(\
+                     set(df_info[(df_info['highway'] != 1) &\
+                                 (df_info['reg'] != 'Corse')].index)))
+#df_info = df_info.ix[ls_keep_ids]
+#df_station_stats = df_station_stats.ix[ls_keep_ids]
+#df_prices_ttc = df_prices_ttc[ls_keep_ids]
+#df_prices_ht = df_prices_ht[ls_keep_ids]
+#df_prices_cl = df_prices_cl[ls_keep_ids]
+
+ls_drop_ids = list(set(df_prices_ttc.columns).difference(set(ls_keep_ids)))
+df_prices_ttc[ls_drop_ids] = np.nan
+df_prices_ht[ls_drop_ids] = np.nan
+# highway stations may not be in df_prices_cl (no pbm here)
+ls_drop_ids_nhw =\
+  list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
+df_prices_cl[ls_drop_ids_nhw] = np.nan
+
 # ##########################
 # GET DF PAIR PRICE CHANGES
 # ##########################
 
-# can accomodate both ttc prices (raw prices) or cleaned prices
-df_prices = df_prices_ttc
-ls_df_price_ids = df_prices.columns
+# Pair stats make sense only with raw prices (price change dates etc.)
 km_bound = 5
-diff_bound = 0.02
-
-ls_keep_info = list(df_info[df_info['highway'] != 1].index)
-ls_keep_stats = list(df_station_stats[(df_station_stats['nb_chge'] >= 5) &\
-                                      (df_station_stats['pct_chge'] >= 0.03)].index)
-ls_keep_ids = list(set(ls_keep_info).intersection(set(ls_keep_stats)))
-ls_keep_ids = list(set(df_prices.columns).intersection(set(ls_keep_ids)))
+margin_chge_bound = 0.03
+ls_pairs = ls_close_pairs
+df_prices = df_prices_ttc
 
 ls_keep_pairs = [(indiv_id, other_id, distance)\
                    for (indiv_id, other_id, distance) in ls_pairs if\
-                     (indiv_id in ls_keep_ids) and (other_id in ls_keep_ids)]
+                     (distance <= km_bound) and\
+                     (indiv_id in ls_keep_ids) and\
+                     (other_id in ls_keep_ids)]
+
+ls_ids_margin_chge =\
+  df_margin_chge[df_margin_chge['value'].abs() >= margin_chge_bound].index
+
+# Scenarios:
+# - Pairs not affected by a margin change
+# - Pairs with a margin change (or two) : before
+# - Paris with a marginal change (or two) : after
+# - All pairs (margin change not taken into account)
+
+ls_loop_pairs = []
+for (indiv_id, other_id, distance) in ls_keep_pairs:
+  ls_mc_dates = [df_margin_chge['date'].ix[id_station]\
+                   for id_station in [indiv_id, other_id]\
+                     if id_station in df_margin_chge.index]
+  ls_mc_dates.sort()
+  ls_loop_pairs.append((indiv_id, other_id, distance, ls_mc_dates))
 
 # LOOP: FOLLOWED CHANGES AND PRICE MATCHING
 start_loop = time.clock()
 ls_ls_pair_stats = []
-for (indiv_id, other_id, distance) in ls_keep_pairs[0:10]:
-  if distance <= km_bound:
-    mc_date = None # base case: no limit date
-    # change in margin/pricing policy
-    ls_mc_dates = [df_margin_chge['date'].ix[id_station]\
-                     for id_station in [indiv_id, other_id]\
-                       if id_station in df_margin_chge.index]
-    if ls_mc_dates:
-      ls_mc_dates.sort()
-      mc_date = ls_mc_dates[0]
-    se_prices_1 = df_prices[indiv_id][:mc_date].values
-    se_prices_2 = df_prices[other_id][:mc_date].values
-    
-    print()
-    start_f = time.clock()
-    ls_spread = get_stats_two_firm_price_spread(se_prices_1,
-                                                se_prices_2, 3)
-    print('f:',  time.clock() - start_f)
-    # A changes then B changes (A changes did not follow a change by B?)
-    start_f = time.clock()
-    ls_followed_chges = get_stats_two_firm_price_chges(se_prices_1,
-                                                       se_prices_2)
-    print('f:',  time.clock() - start_f)
-    # A sets a price which is then matched by B (biased if promotions btw)
-    start_f = time.clock()
-    ls_matched_prices = get_stats_two_firm_same_prices(se_prices_1,
-                                                       se_prices_2)
-    print('f:',  time.clock() - start_f)
-    ls_ls_pair_stats.append([[indiv_id, other_id, distance],
-                             ls_spread,
-                             ls_followed_chges,
-                             list(ls_matched_prices)])
+for (indiv_id, other_id, distance, ls_mc_dates) in ls_loop_pairs[0:10]:
+  
+  se_prices_1 = df_prices[indiv_id]
+  se_prices_2 = df_prices[other_id]
+  
+  print()
+  start_f = time.clock()
+  ls_spread = get_stats_two_firm_price_spread(se_prices_1, se_prices_2, 3)
+  print('f:',  time.clock() - start_f)
+  
+  # A changes then B changes (A changes did not follow a change by B?)
+  start_f = time.clock()
+  ls_followed = get_stats_two_firm_price_chges(se_prices_1, se_prices_2)
+  print('f:',  time.clock() - start_f)
+
+  # A sets a price which is then matched by B (biased if promotions btw)
+  start_f = time.clock()
+  ls_matched = get_stats_two_firm_same_prices(se_prices_1, se_prices_2)
+  print('f:',  time.clock() - start_f)
+  
+  
+  if ls_mc_dates:
+    ## before
+    #se_prices_1 = df_prices[indiv_id]
+    #se_prices_1.ix[:ls_mc_dates[0]] = np.nan
+    #se_prices_2 = df_prices[other_id]
+    #se_prices_2.ix[:ls_mc_dates[0]] = np.nan
+    pass
+  ls_ls_pair_stats.append([[indiv_id, other_id, distance],
+                           ls_spread,
+                           ls_followed,
+                           ls_matched[0]])
 print('Loop time:',  time.clock() - start_loop)
 
 # BUILD DATAFRAME

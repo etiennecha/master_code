@@ -128,10 +128,16 @@ df_prices_cl[ls_drop_ids_nhw] = np.nan
 df_prices = df_prices_ttc
 ls_pairs = ls_close_pairs
 km_bound = 5
+margin_chge_bound = 0.03
 
 ls_keep_pairs = [(indiv_id, other_id, distance)\
                    for (indiv_id, other_id, distance) in ls_pairs if\
-                     (indiv_id in ls_keep_ids) and (other_id in ls_keep_ids)]
+                     (distance <= km_bound) and\
+                     (indiv_id in ls_keep_ids) and\
+                     (other_id in ls_keep_ids)]
+
+ls_ids_margin_chge =\
+  df_margin_chge[df_margin_chge['value'].abs() >= margin_chge_bound].index
 
 # LOOP TO GENERATE PRICE DISPERSION STATS
 
@@ -141,25 +147,24 @@ ls_pair_index = []
 ls_ar_rrs = []
 dict_rr_lengths = {}
 for (indiv_id, other_id, distance) in ls_keep_pairs:
-  if distance <= km_bound:
-    mc_date = None # base case: no limit date
-    # change in margin/pricing policy
-    ls_mc_dates = [df_margin_chge['date'].ix[id_station]\
-                     for id_station in [indiv_id, other_id]\
-                       if id_station in df_margin_chge.index]
-    if ls_mc_dates:
-      ls_mc_dates.sort()
-      mc_date = ls_mc_dates[0]
-    ls_comp_pd = get_pair_price_dispersion(df_prices[indiv_id][:mc_date].values,
-                                           df_prices[other_id][:mc_date].values,
-                                           light = False)
-    ls_rows_ppd.append([indiv_id, other_id, distance] +\
-                       ls_comp_pd[0] +\
-                       get_ls_standardized_frequency(ls_comp_pd[3][0]))
-    pair_index = '-'.join([indiv_id, other_id])
-    ls_pair_index.append(pair_index)
-    ls_ar_rrs.append(ls_comp_pd[2][1])
-    dict_rr_lengths[pair_index] = ls_comp_pd[3][0]
+  mc_date = None # base case: no limit date
+  # change in margin/pricing policy
+  ls_mc_dates = [df_margin_chge['date'].ix[id_station]\
+                   for id_station in [indiv_id, other_id]\
+                     if id_station in ls_ids_margin_chge]
+  if ls_mc_dates:
+    ls_mc_dates.sort()
+    mc_date = ls_mc_dates[0]
+  ls_comp_pd = get_pair_price_dispersion(df_prices[indiv_id][:mc_date].values,
+                                         df_prices[other_id][:mc_date].values,
+                                         light = False)
+  ls_rows_ppd.append([indiv_id, other_id, distance] +\
+                     ls_comp_pd[0] +\
+                     get_ls_standardized_frequency(ls_comp_pd[3][0]))
+  pair_index = '-'.join([indiv_id, other_id])
+  ls_pair_index.append(pair_index)
+  ls_ar_rrs.append(ls_comp_pd[2][1])
+  dict_rr_lengths[pair_index] = ls_comp_pd[3][0]
 print('Loop: rank reversals',  time.clock() - start)
 
 # BUILD DF PAIR PRICE DISPERSION (PPD)
