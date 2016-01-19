@@ -6,34 +6,33 @@ import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
+from generic_competition import *
+import time
 
 path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
                               u'data_built',
                               u'data_scraped_2011_2014')
 path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built, u'data_json')
 path_dir_built_graphs = os.path.join(path_dir_built, u'data_graphs')
 
-path_dir_built_disp = os.path.join(path_data,
-                                   u'data_gasoline',
-                                   u'data_built',
-                                   u'data_scraped_2011_2014')
-path_dir_built_disp_csv = os.path.join(path_dir_built_disp, u'data_csv')
-path_dir_built_disp_graphs = os.path.join(path_dir_built_disp, u'data_graphs')
+path_dir_built_dis = os.path.join(path_data,
+                                  u'data_gasoline',
+                                  u'data_built',
+                                  u'data_dispersion')
+path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
+path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
 
-path_dir_insee = os.path.join(path_data, 'data_insee')
-path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
-
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_float = lambda x: '{:10,.3f}'.format(x)
 
-# ##############
+# ################
 # LOAD DATA
-# ##############
+# ################
 
 # DF INFO
-
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
                       encoding = 'utf-8',
@@ -44,258 +43,96 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'ci_ardt_1' :str,
                                'ci_2' : str,
                                'ci_ardt_2' : str,
-                               'dpt' : str},
-                      parse_dates = ['start', 'end', 'day_0', 'day_1', 'day_2'])
+                               'dpt' : str})
 df_info.set_index('id_station', inplace = True)
 
-# DF PRICES
+# DF STATION STATS
+df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
+                                            'df_station_stats.csv'),
+                               encoding = 'utf-8',
+                               dtype = {'id_station' : str})
+df_station_stats.set_index('id_station', inplace = True)
 
+# CLOSE STATIONS
+dict_ls_close = dec_json(os.path.join(path_dir_built_json,
+                                      'dict_ls_close.json'))
+
+# DF PRICES
 df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
                                          'df_prices_ttc_final.csv'),
                         parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
-# #########
-# STATS DES
-# #########
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ht_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ht.set_index('date', inplace = True)
 
-# Caution: some stations have null group / group_last (todo: update?)
-# Could avoid including INDEPENDANT (maintained for now)
+df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_cleaned_prices.csv'),
+                          parse_dates = True)
+df_prices_cl.set_index('date', inplace = True)
 
-# Build dict of group station ids on first and last days 
-dict_group_f_ids = {}
-for group_name in df_info['group'][~df_info['group'].isnull()].unique():
-  dict_group_f_ids[group_name] =\
-      list(df_info.index[df_info['group'] == group_name])
-dict_group_l_ids = {}
-for group_name in df_info['group_last'][~df_info['group_last'].isnull()].unique():
-  dict_group_l_ids[group_name] =\
-      list(df_info.index[df_info['group_last'] == group_name])
+# FILTER DATA
+# exclude stations with insufficient (quality) price data
+df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
+                               (df_station_stats['nb_valid'] < 90))]
+ls_keep_ids = list(set(df_filter.index).intersection(\
+                     set(df_info[(df_info['highway'] != 1) &\
+                                 (df_info['reg'] != 'Corse')].index)))
+#df_info = df_info.ix[ls_keep_ids]
+#df_station_stats = df_station_stats.ix[ls_keep_ids]
+#df_prices_ttc = df_prices_ttc[ls_keep_ids]
+#df_prices_ht = df_prices_ht[ls_keep_ids]
+#df_prices_cl = df_prices_cl[ls_keep_ids]
 
-# Overview of group price distributions on first & last days
-for day, dict_group_ids in [[df_prices_ttc.index[0], dict_group_f_ids],
-                            [df_prices_ttc.index[-1], dict_group_l_ids]]:
-  ls_group_names, ls_se_group_prices = [], []
-  for group_name, ls_group_ids in dict_group_ids.items():
-    ls_group_names.append(group_name)
-    ls_se_group_prices.append(df_prices_ttc[ls_group_ids].ix[day].describe())
-  df_group_prices = pd.concat(ls_se_group_prices, axis = 1, keys = ls_group_names)
-  df_group_prices = df_group_prices.T
-  df_group_prices.sort('count', ascending = False, inplace = True)
-  print()
-  print(u'Group price distributions on day', day)
-  print(df_group_prices.to_string())
+ls_drop_ids = list(set(df_prices_ttc.columns).difference(set(ls_keep_ids)))
+df_prices_ttc[ls_drop_ids] = np.nan
+df_prices_ht[ls_drop_ids] = np.nan
+# highway stations may not be in df_prices_cl (no pbm here)
+ls_drop_ids_nhw =\
+  list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
+df_prices_cl[ls_drop_ids_nhw] = np.nan
 
-# ################################
-# HISTOGRAM FIRST DAY VS LAST DAY
-# ################################
+# DF PAIRS
 
-bins = np.linspace(1.00, 1.60, 61)
-ls_days = [df_prices_ttc.index[0], df_prices_ttc.index[-1]]
-ls_colors = ['b', 'g']
-for day, color in zip(ls_days, ls_colors):
- plt.hist(df_prices_ttc.ix[day].values,
-          bins = bins,
-          alpha = 0.5,
-          label = day.strftime('%Y-%m-%d'),
-          color = color)
-plt.legend()
-plt.xlim(1.00, 1.60)
-plt.show()
+ls_dtype_temp = ['id', 'ci_ardt_1']
+dict_dtype = dict([('%s_1' %x, str) for x in ls_dtype_temp] +\
+                  [('%s_2' %x, str) for x in ls_dtype_temp])
+df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
+                                    'df_pair_final.csv'),
+              encoding = 'utf-8',
+              dtype = dict_dtype)
 
-# ###########################################################
-# HISTOGRAM GROUP TOTAL vs. GROUP MOUSQUETAIRES (FIRST DAY)
-# ###########################################################
+# RESTRICT CATEGORY
 
-bins = np.linspace(1.00, 1.60, 61)
-ls_brands = ['TOTAL', 'MOUSQUETAIRES']
-ls_colors = ['b', 'g']
-day = df_prices_ttc.index[0]
-for brand, color in zip(ls_brands, ls_colors):
- plt.hist(df_prices_ttc[df_info[df_info['group'] ==\
-                                  brand].index].ix[day].values,
-          label = brand,
-          bins = bins,
-          alpha = 0.5,
-          color = color)
-plt.legend()
-plt.xlim(1.20, 1.60)
-plt.show()
+df_pairs_all = df_pairs.copy()
+df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
 
-## ####################################################
-## HISTOGRAMS OF GROUP PRICE DISTRIBUTIONS ON FIRST DAY
-## ####################################################
-#
-##print df_prices_ttc.iloc[0].min()
-##print df_prices_ttc.iloc[0].max()
-#dict_group_ids = dict_group_f_ids
-#for group_name, ls_group_ids in dict_group_ids.items():
-#  if len(ls_group_ids) >= 100:
-#    bins = np.linspace(1.20, 1.60, 41)
-#    plt.hist(df_prices_ttc.iloc[0].values,
-#             bins, alpha=0.5, label='All', color = 'g')
-#    plt.hist(df_prices_ttc[dict_group_ids[group_name]].iloc[0].values,
-#             bins, alpha=0.5, label=group_name, color = 'b')
-#    plt.xlim(1.20, 1.60)
-#    plt.legend()
-#    plt.show()
+# COMPETITORS VS. SAME GROUP
 
-# Focus on groups with highest internal price dispersion
-# TOTAL, ESSO, AVIA, AGIP
-#
-## ############
-## GROUP TOTAL
-## ############
-#
-## Group Total stacked on first day
-#bins = np.linspace(1.10, 1.60, 51)
-#ls_brands = ['ELF', 'ELAN', 'TOTAL']
-#day = df_prices_ttc.index[0]
-#ls_ls_values = [df_prices_ttc[df_info[df_info['brand_0'] ==\
-#                                        brand].index].ix[day].values\
-#                  for brand in ls_brands]
-#ls_ls_values = [ar_prices[~np.isnan(ar_prices)] for ar_prices in ls_ls_values]
-#n, bins, patches = plt.hist(ls_ls_values,
-#                            bins = bins,
-#                            histtype = 'bar',
-#                            stacked = True,
-#                            label = ls_brands,
-#                            alpha = 0.5)
-#plt.legend()
-#plt.show()
-#
-## Group Total on first day w/ distinction for TOTAL => TOTAL ACCESS
-#bins = np.linspace(1.10, 1.60, 51)
-#ls_brands = ['TTA', 'ELF', 'ELAN', 'TOTAL']
-#day = df_prices_ttc.index[0]
-#ls_ls_values = [df_prices_ttc[df_info[(df_info['brand_0'] == 'TOTAL') &\
-#                                      (df_info['brand_last'] == 'TOTAL_ACCESS')]\
-#                                     .index].ix[day].values] +\
-#               [df_prices_ttc[df_info[df_info['brand_0'] ==\
-#                                        brand].index].ix[day].values\
-#                  for brand in ls_brands[1:3]] +\
-#               [df_prices_ttc[df_info[(df_info['brand_0'] == 'TOTAL') &\
-#                                      (df_info['brand_last'] != 'TOTAL_ACCESS')]\
-#                                     .index].ix[day].values]
-#n, bins, patches = plt.hist(ls_ls_values,
-#                            color = ['darkorange', 'b', 'g', 'r'],
-#                            bins = bins,
-#                            histtype = 'bar',
-#                            stacked = True,
-#                            label = ls_brands,
-#                            alpha = 0.5)
-#plt.legend()
-#plt.show()
-#
-## Group Total stacked on last day
-#bins = np.linspace(1.10, 1.60, 51)
-#ls_brands = ['TOTAL_ACCESS', 'ELAN', 'TOTAL']
-#day = df_prices_ttc.index[-1]
-#ls_ls_values = [df_prices_ttc[df_info[df_info['brand_last'] ==\
-#                                        brand].index].ix[day].values\
-#                  for brand in ls_brands]
-#ls_ls_values = [ar_prices[~np.isnan(ar_prices)] for ar_prices in ls_ls_values]
-#n, bins, patches = plt.hist(ls_ls_values,
-#                            color = ['darkorange', 'g', 'r'],
-#                            bins = bins,
-#                            histtype = 'bar',
-#                            stacked = True,
-#                            label = ls_brands,
-#                            alpha = 0.5)
-#plt.legend()
-#plt.show()
-#
-## ############
-## GROUP ESSO
-## ############
-#
-## Group Total stacked on first day
-#bins = np.linspace(1.10, 1.60, 51)
-#ls_brands = ['ESSO EXPRESS', 'ESSO']
-#day = df_prices_ttc.index[0]
-#ls_ls_values = [df_prices_ttc[df_info[df_info['brand_0'] ==\
-#                                        brand].index].ix[day].values\
-#                  for brand in ls_brands]
-#ls_ls_values = [ar_prices[~np.isnan(ar_prices)] for ar_prices in ls_ls_values]
-#n, bins, patches = plt.hist(ls_ls_values,
-#                            bins = bins,
-#                            histtype = 'bar',
-#                            stacked = True,
-#                            label = ls_brands,
-#                            alpha = 0.5)
-#plt.legend()
-#plt.show()
-#
-## Group Total on first day w/ distinction for TOTAL => TOTAL ACCESS
-#bins = np.linspace(1.10, 1.60, 51)
-#ls_brands = ['ESSO_EXPRESS', 'ESSO']
-#day = df_prices_ttc.index[0]
-#ls_ls_values = [df_prices_ttc[df_info[(df_info['brand_0'] == 'ESSO') &\
-#                                      (df_info['brand_last'] == 'ESSO_EXPRESS')]\
-#                                     .index].ix[day].values] +\
-#               [df_prices_ttc[df_info[(df_info['brand_0'] == 'ESSO') &\
-#                                      (df_info['brand_last'] != 'ESSO_EXPRESS')]\
-#                                     .index].ix[day].values]
-#n, bins, patches = plt.hist(ls_ls_values,
-#                            bins = bins,
-#                            histtype = 'bar',
-#                            stacked = True,
-#                            label = ls_brands,
-#                            alpha = 0.5)
-#plt.legend()
-#plt.show()
-#
-## Group Total stacked on last day
-#bins = np.linspace(1.10, 1.60, 51)
-#ls_brands = ['ESSO_EXPRESS', 'ESSO']
-#day = df_prices_ttc.index[-1]
-#ls_ls_values = [df_prices_ttc[df_info[df_info['brand_last'] ==\
-#                                        brand].index].ix[day].values\
-#                  for brand in ls_brands]
-#ls_ls_values = [ar_prices[~np.isnan(ar_prices)] for ar_prices in ls_ls_values]
-#n, bins, patches = plt.hist(ls_ls_values,
-#                            bins = bins,
-#                            histtype = 'bar',
-#                            stacked = True,
-#                            label = ls_brands,
-#                            alpha = 0.5)
-#plt.legend()
-#plt.show()
-#
-## ######
-## AVIA
-## ######
-#
-## first day
-#bins = np.linspace(1.10, 1.60, 51)
-#ls_brands = ['AGIP', 'AVIA']
-#day = df_prices_ttc.index[0]
-#ls_ls_values = [df_prices_ttc[df_info[df_info['brand_0'] ==\
-#                                        brand].index].ix[day].values\
-#                  for brand in ls_brands]
-#ls_ls_values = [ar_prices[~np.isnan(ar_prices)] for ar_prices in ls_ls_values]
-#n, bins, patches = plt.hist(ls_ls_values,
-#                            bins = bins,
-#                            histtype = 'bar',
-#                            stacked = False,
-#                            label = ls_brands,
-#                            alpha = 0.5)
-#plt.legend()
-#plt.show()
-#
-## last day
-#bins = np.linspace(1.10, 1.60, 51)
-#ls_brands = ['AGIP', 'AVIA']
-#day = df_prices_ttc.index[-1]
-#ls_ls_values = [df_prices_ttc[df_info[df_info['brand_last'] ==\
-#                                        brand].index].ix[day].values\
-#                  for brand in ls_brands]
-#ls_ls_values = [ar_prices[~np.isnan(ar_prices)] for ar_prices in ls_ls_values]
-#n, bins, patches = plt.hist(ls_ls_values,
-#                            bins = bins,
-#                            histtype = 'bar',
-#                            stacked = False,
-#                            label = ls_brands,
-#                            alpha = 0.5)
-#plt.legend()
-#plt.show()
+df_pair_same =\
+  df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
+           (df_pairs['group_last_1'] == df_pairs['group_last_2'])].copy()
+df_pair_comp =\
+  df_pairs[(df_pairs['group_1'] != df_pairs['group_2']) &\
+           (df_pairs['group_last_1'] != df_pairs['group_last_2'])].copy()
+
+# DIFFERENTIATED VS. NON DIFFERENTIATED
+
+diff_bound = 0.01
+df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
+df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
+df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
+df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
+
+# LISTS FOR DISPLAY
+
+lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
+lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
+
+# #######################
+# OVERVIEW PRICE PATTERNS
+# #######################
+
+

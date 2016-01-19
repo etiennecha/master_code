@@ -24,9 +24,9 @@ path_dir_built_dis = os.path.join(path_data,
 path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
 path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 # ################
 # LOAD DATA
@@ -121,14 +121,13 @@ df_pair_comp =\
 # DIFFERENTIATED VS. NON DIFFERENTIATED
 
 diff_bound = 0.01
-
 df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
 df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
-
 df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
 df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
 
 # LISTS FOR DISPLAY
+
 lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
 lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 
@@ -142,7 +141,7 @@ lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 # STILL SUSPECT (Small number of rank reversals but long...)
 ls_disp = ['id_1', 'id_2',
            'group_last_1', 'group_last_2',
-           'nb_chges_1','nb_chges_1',
+           'nb_chges_1','nb_chges_2',
            'pct_rr', 'mean_rr_len', 'nb_rr']
 
 df_pair_comp['rr<=5'] = df_pair_comp[lsd_rr[0:5]].sum(axis = 1)
