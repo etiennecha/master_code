@@ -156,7 +156,7 @@ ls_loop_merge = [['residuals', 'all'],
                  ['before_mc', 'before_mc'],
                  ['no_mc', 'no_mc']]
 
-dict_df_final = {}
+dict_df_pairs = {}
 for cat_dispersion, cat_stats in ls_loop_merge:
   df_dispersion = dict_df_pair_dispersion[cat_dispersion].copy()
   df_stats = dict_df_pair_stats[cat_stats].copy()
@@ -167,26 +167,28 @@ for cat_dispersion, cat_stats in ls_loop_merge:
                                'std_spread',
                                'std_abs_spread'], axis = 1, inplace = True)
   df_stats.drop(labels = ['cat'], axis = 1, inplace = True)
-  df_final = pd.merge(df_dispersion,
-                      df_stats,
-                      on = ['id_1', 'id_2'],
-                      how = 'left')
+  df_pair_temp = pd.merge(df_dispersion,
+                          df_stats,
+                          on = ['id_1', 'id_2'],
+                          how = 'left')
  # add some station info
   df_info_sub = df_info[['ci_ardt_1', 'dpt', 'reg',
                          'brand_0', 'group', 'group_type',
                          'brand_last', 'group_last', 'group_type_last']].copy()
   df_info_sub['id_1'] = df_info_sub.index
-  df_final = pd.merge(df_info_sub,
-                      df_final,
-                      on='id_1',
-                      how = 'right')
+  df_pair_temp = pd.merge(df_info_sub,
+                          df_pair_temp,
+                          on='id_1',
+                          how = 'right')
   df_info_sub.rename(columns={'id_1': 'id_2'}, inplace = True)
-  df_final = pd.merge(df_info_sub,
-                      df_final,
-                      on = 'id_2',
-                      how = 'right',
-                      suffixes=('_2', '_1'))
-  dict_df_final[cat_dispersion] = df_final
+  df_pair_temp = pd.merge(df_info_sub,
+                          df_pair_temp,
+                          on = 'id_2',
+                          how = 'right',
+                          suffixes=('_2', '_1'))
+  dict_df_pairs[cat_dispersion] = df_pair_temp
+
+df_pairs = pd.concat([v for k,v in dict_df_pairs.items()])
 
 # todo: stack dfs
 # todo: filter out rows with insufficient data?
@@ -194,63 +196,61 @@ for cat_dispersion, cat_stats in ls_loop_merge:
 # todo: see if leave same group vs. comp for later?
 # todo: output (move stats des?)
 
-## #################
-## STATS DES (MOVE)
-## #################
-#
-#df_pairs = dict_df_final['no_mc'].copy()
-#
-## DROP PAIRS WITH INSUFFICIENT DATA
-#print(u'\nNb observations filtered out for lack of data: {:.0f}'.format(\
-#      len(df_pairs[~((df_pairs['nb_spread'] < 90) &\
-#                     (df_pairs['nb_ctd_both'] < 90))])))
-#
+# #################
+# STATS DES (MOVE)
+# #################
+
+# DROP PAIRS WITH INSUFFICIENT DATA
+print(u'\nNb observations to be filtered out for lack of data: {:.0f}'.format(\
+      len(df_pairs[~((df_pairs['nb_spread'] < 90) &\
+                     (df_pairs['nb_ctd_both'] < 90))])))
+
 #df_pairs = df_pairs[(df_pairs['nb_spread'] >= 90) &\
 #                    (df_pairs['nb_ctd_both'] >= 90)]
-#
-## CREATE SAME CORNER VARIABLE
-#for dist in [500, 750, 1000]:
-#  df_pairs['sc_{:d}'.format(dist)] = 0
-#  df_pairs.loc[df_pairs['distance'] <= dist/1000.0, 'sc_{:d}'.format(dist)] = 1
-#
-## ADD ABS MEAN SPREAD (DIFFERENTIATION CRITERION => todo: move)
-#df_pairs['abs_mean_spread'] = df_pairs['mean_spread'].abs()
-#
-## ADD AVERAGE RANK REVERSAL LENGTH
-#df_pairs['mean_rr_len'] = (df_pairs['nb_spread'] * df_pairs['pct_rr']) / df_pairs['nb_rr']
-#df_pairs['mean_rr_len'] = df_pairs['mean_rr_len'].replace(np.inf, np.nan)
-#
-## ADD MEASURE OF PRICE CONVERGENCE
-#df_pairs['pct_price_cv'] = df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)/\
-#                             df_pairs[['nb_chges_1', 'nb_chges_2']].sum(1)
-#df_pairs['pct_price_cv_1'] = df_pairs[['nb_2_lead', 'nb_chge_to_same']].sum(1)/\
-#                               df_pairs[['nb_chges_1']].sum(1)
-#df_pairs['pct_price_cv_2'] = df_pairs[['nb_1_lead', 'nb_chge_to_same']].sum(1)/\
-#                               df_pairs[['nb_chges_2']].sum(1)
 
-## ######
-## OUPUT
-## ######
+# CREATE SAME CORNER VARIABLE
+for dist in [500, 750, 1000]:
+  df_pairs['sc_{:d}'.format(dist)] = 0
+  df_pairs.loc[df_pairs['distance'] <= dist/1000.0, 'sc_{:d}'.format(dist)] = 1
+
+# ADD ABS MEAN SPREAD (DIFFERENTIATION CRITERION => todo: move)
+df_pairs['abs_mean_spread'] = df_pairs['mean_spread'].abs()
+
+# ADD AVERAGE RANK REVERSAL LENGTH
+df_pairs['mean_rr_len'] = (df_pairs['nb_spread'] * df_pairs['pct_rr']) / df_pairs['nb_rr']
+df_pairs['mean_rr_len'] = df_pairs['mean_rr_len'].replace(np.inf, np.nan)
+
+# ADD MEASURE OF PRICE CONVERGENCE
+df_pairs['pct_price_cv'] = df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)/\
+                             df_pairs[['nb_chges_1', 'nb_chges_2']].sum(1)
+df_pairs['pct_price_cv_1'] = df_pairs[['nb_2_lead', 'nb_chge_to_same']].sum(1)/\
+                               df_pairs[['nb_chges_1']].sum(1)
+df_pairs['pct_price_cv_2'] = df_pairs[['nb_1_lead', 'nb_chge_to_same']].sum(1)/\
+                               df_pairs[['nb_chges_2']].sum(1)
+
+# ######
+# OUPUT
+# ######
+
+df_pairs.to_csv(os.path.join(path_dir_built_dis_csv,
+                             'df_pair_final.csv'),
+                encoding = 'utf-8',
+                index = False)
+
+## SEPARATE SAME GROUP vs. COMPETITORS
 #
-#df_pairs.to_csv(os.path.join(path_dir_built_dis_csv,
-#                             'df_pair_final.csv'),
-#                encoding = 'utf-8',
-#                index = False)
+#df_pairs_sg = df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
+#                       (df_pairs['group_last_1'] == df_pairs['group_last_2'])]
 #
-### SEPARATE SAME GROUP vs. COMPETITORS
-##
-##df_pairs_sg = df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
-##                       (df_pairs['group_last_1'] == df_pairs['group_last_2'])]
-##
-##df_pairs_cp = df_pairs[(df_pairs['group_1'] != df_pairs['group_2']) &\
-##                       (df_pairs['group_last_1'] != df_pairs['group_last_2'])]
-##
-##df_pairs_sg.to_csv(os.path.join(path_dir_built_csv,
-##                                'df_pairs_sg.csv'),
-##                   encoding = 'utf-8',
-##                   index = False)
-##
-##df_pairs_cp.to_csv(os.path.join(path_dir_built_csv,
-##                                'df_pairs_cp.csv'),
-##                   encoding = 'utf-8',
-##                   index = False)
+#df_pairs_cp = df_pairs[(df_pairs['group_1'] != df_pairs['group_2']) &\
+#                       (df_pairs['group_last_1'] != df_pairs['group_last_2'])]
+#
+#df_pairs_sg.to_csv(os.path.join(path_dir_built_csv,
+#                                'df_pairs_sg.csv'),
+#                   encoding = 'utf-8',
+#                   index = False)
+#
+#df_pairs_cp.to_csv(os.path.join(path_dir_built_csv,
+#                                'df_pairs_cp.csv'),
+#                   encoding = 'utf-8',
+#                   index = False)

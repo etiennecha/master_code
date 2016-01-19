@@ -7,8 +7,6 @@ from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
 from generic_competition import *
-from statsmodels.distributions.empirical_distribution import ECDF
-from scipy.stats import ks_2samp
 import time
 
 path_dir_built = os.path.join(path_data,
@@ -24,29 +22,17 @@ path_dir_built_dis = os.path.join(path_data,
                                   u'data_built',
                                   u'data_dispersion')
 path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
+path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.3f}'.format(x)
+format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-# ###################
+# ################
 # LOAD DATA
-# ###################
-
-# DF PRICES
-
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
-                                         'df_prices_ttc_final.csv'),
-                        parse_dates = ['date'])
-df_prices_ttc.set_index('date', inplace = True)
-
-df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
-                                        'df_cleaned_prices.csv'),
-                          parse_dates = ['date'])
-df_prices_cl.set_index('date', inplace = True)
+# ################
 
 # DF INFO
-
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
                       encoding = 'utf-8',
@@ -61,12 +47,52 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
 df_info.set_index('id_station', inplace = True)
 
 # DF STATION STATS
-
 df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                             'df_station_stats.csv'),
                                encoding = 'utf-8',
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
+
+# CLOSE STATIONS
+dict_ls_close = dec_json(os.path.join(path_dir_built_json,
+                                      'dict_ls_close.json'))
+
+# DF PRICES
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
+
+df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_prices_ht_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ht.set_index('date', inplace = True)
+
+df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
+                                        'df_cleaned_prices.csv'),
+                          parse_dates = True)
+df_prices_cl.set_index('date', inplace = True)
+
+# FILTER DATA
+# exclude stations with insufficient (quality) price data
+df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
+                               (df_station_stats['nb_valid'] < 90))]
+ls_keep_ids = list(set(df_filter.index).intersection(\
+                     set(df_info[(df_info['highway'] != 1) &\
+                                 (df_info['reg'] != 'Corse')].index)))
+#df_info = df_info.ix[ls_keep_ids]
+#df_station_stats = df_station_stats.ix[ls_keep_ids]
+#df_prices_ttc = df_prices_ttc[ls_keep_ids]
+#df_prices_ht = df_prices_ht[ls_keep_ids]
+#df_prices_cl = df_prices_cl[ls_keep_ids]
+
+ls_drop_ids = list(set(df_prices_ttc.columns).difference(set(ls_keep_ids)))
+df_prices_ttc[ls_drop_ids] = np.nan
+df_prices_ht[ls_drop_ids] = np.nan
+# highway stations may not be in df_prices_cl (no pbm here)
+ls_drop_ids_nhw =\
+  list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
+df_prices_cl[ls_drop_ids_nhw] = np.nan
 
 # DF PAIRS
 
@@ -77,6 +103,11 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
                                     'df_pair_final.csv'),
               encoding = 'utf-8',
               dtype = dict_dtype)
+
+# RESTRICT CATEGORY
+
+df_pairs_all = df_pairs.copy()
+df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
 
 # COMPETITORS VS. SAME GROUP
 
@@ -96,7 +127,6 @@ df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
 
 df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
 df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
-
 
 # LISTS FOR DISPLAY
 lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
