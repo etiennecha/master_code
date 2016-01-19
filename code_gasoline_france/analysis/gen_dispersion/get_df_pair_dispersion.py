@@ -258,10 +258,10 @@ df_pairs_rr.to_csv(os.path.join(path_dir_built_dis_csv,
                    index = False)
 
 for cat, df_rr_cat in dict_df_rr.items():
-  df_rr.to_csv(os.path.join(path_dir_built_dis_csv,
+  df_rr_cat.to_csv(os.path.join(path_dir_built_dis_csv,
                             'df_rank_reversals_{:s}.csv'.format(cat)),
-                                        float_format= '%.3f',
-                                        encoding = 'utf-8')
+                   float_format= '%.3f',
+                   encoding = 'utf-8')
 
 # JSON
 
