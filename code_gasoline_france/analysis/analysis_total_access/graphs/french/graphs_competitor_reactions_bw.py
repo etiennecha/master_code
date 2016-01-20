@@ -142,7 +142,7 @@ for situation, id_1, id_2 in ls_pair_display:
   ax1 = fig.add_subplot(111)
   l1 = ax1.plot(df_prices_ttc.index,
                 df_prices_ttc[id_1].values,
-                c = 'k', ls = ':', lw = 2,
+                c = 'k', ls = '', lw = 1, marker = '+', markevery=5,
                 label = 'Station %s' %(df_info.ix[id_1]['brand_0']))
   l2 = ax1.plot(df_prices_ttc.index, df_prices_ttc[id_2].values,
                 c = 'k', ls = '--',
