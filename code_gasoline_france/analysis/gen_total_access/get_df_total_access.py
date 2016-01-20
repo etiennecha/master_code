@@ -11,21 +11,16 @@ path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
                               u'data_built',
                               u'data_scraped_2011_2014')
-path_dir_built_csv = os.path.join(path_dir_built,
-                                  u'data_csv')
-path_dir_built_json = os.path.join(path_dir_built,
-                                   u'data_json')
+path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built, u'data_json')
 
 path_dir_built_ta = os.path.join(path_data,
                                  u'data_gasoline',
                                  u'data_built',
                                  u'data_total_access')
-path_dir_built_ta_json = os.path.join(path_dir_built_ta, 
-                                      'data_json')
-path_dir_built_ta_csv = os.path.join(path_dir_built_ta, 
-                                     'data_csv')
-path_dir_built_ta_graphs = os.path.join(path_dir_built_ta, 
-                                        'data_graphs')
+path_dir_built_ta_json = os.path.join(path_dir_built_ta, 'data_json')
+path_dir_built_ta_csv = os.path.join(path_dir_built_ta, 'data_csv')
+path_dir_built_ta_graphs = os.path.join(path_dir_built_ta, 'data_graphs')
 
 
 # #########

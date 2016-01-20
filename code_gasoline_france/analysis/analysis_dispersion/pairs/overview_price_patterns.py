@@ -53,6 +53,13 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
+# DF COMP
+df_comp = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_comp.csv'),
+                      encoding = 'utf-8',
+                      dtype = {'id_station' : str})
+df_comp.set_index('id_station', inplace = True)
+
 # CLOSE STATIONS
 dict_ls_close = dec_json(os.path.join(path_dir_built_json,
                                       'dict_ls_close.json'))
@@ -135,4 +142,29 @@ lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 # OVERVIEW PRICE PATTERNS
 # #######################
 
+## Spread stability
+#df_pair_comp['freq_mc_spread'].describe()
+#df_pair_comp_d['freq_mc_spread'].describe()
+#df_pair_comp_nd['freq_mc_spread'].describe()
 
+# Same price: "Betrand" (or collusion..) competition vs distance
+
+print()
+print(u'Distribution of pct_same among non differentiated')
+print(df_pair_comp_nd['pct_same'].describe())
+
+df_bertrand = df_pair_comp[df_pair_comp['pct_same'] >= 1/3.0]
+ls_bertrand_ids = list(set(df_bertrand[['id_1', 'id_2']].values.flatten()))
+
+print()
+print(u'Overview: distance separating pairs of "Bertrand" competitors')
+print(df_bertrand['distance'].describe())
+
+# Seems that not always the closest at all (due to differentiation?)
+print()
+print(u'Overview of group type of stations in pairs of "Bertrand" competitors')
+print(df_info.ix[ls_bertrand_ids]['group_type'].value_counts())
+
+print()
+print(u'Overview of competition of stations in pairs of "Bertrand" competitors')
+print(df_comp.ix[ls_bertrand_ids][['dist_c', 'dist_c_sup', 'nb_c_1km', 'nb_c_3km']].describe())

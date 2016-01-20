@@ -145,6 +145,7 @@ plt.hist(df_prices_ttc[ls_total].iloc[0].values,
          bins, alpha=0.5, label=u'"Total" (pas de conversion à venir)', color = 'g')
 plt.hist(df_prices_ttc[ls_total_ta].iloc[0].values,
          bins, alpha=0.5, label=u'"Total" prochainement "Total Access"', color = 'b')
+plt.xticks(np.linspace(1.20, 1.60, 9))
 plt.xlim(1.20, 1.60)
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_graphs,
@@ -160,6 +161,7 @@ plt.hist(df_prices_ttc[ls_total].iloc[-1].values,
          bins, alpha=0.5, label=u'"Total"', color = 'g')
 plt.hist(df_prices_ttc[ls_total_ta].iloc[-1].values,
          bins, alpha=0.5, label=u'"Total Access" anciennement "Total"', color = 'b')
+plt.xticks(np.linspace(1.00, 1.50, 11))
 plt.xlim(1.00, 1.50)
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_graphs,
@@ -217,6 +219,7 @@ plt.hist(df_prices_ttc[ls_nontreated_comp].iloc[0].values,
          bins, alpha=0.5, label=u'Stations qui ne seront pas affectées', color = 'g')
 plt.hist(df_prices_ttc[ls_treated_comp].iloc[0].values,
          bins, alpha=0.5, label=u'Stations prochainement affectées', color = 'b')
+plt.xticks(np.linspace(1.20, 1.60, 9))
 plt.xlim(1.20, 1.60)
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_graphs,
@@ -232,6 +235,7 @@ plt.hist(df_prices_ttc[ls_nontreated_comp].iloc[-1].values,
          bins, alpha=0.5, label=u'Stations non affectées', color = 'g')
 plt.hist(df_prices_ttc[ls_treated_comp].iloc[-1].values,
          bins, alpha=0.5, label=u'Stations ayant été affectées', color = 'b')
+plt.xticks(np.linspace(1.00, 1.50, 11))
 plt.xlim(1.00, 1.50)
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_graphs,
