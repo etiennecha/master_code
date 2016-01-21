@@ -38,7 +38,7 @@ rcParams['figure.figsize'] = 16, 6
 import locale
 locale.setlocale(locale.LC_ALL, 'fra_fra')
 
-dir_graphs = 'french_version'
+dir_graphs = 'french_version_bw'
 str_ylabel = 'Prix HT (euro/litre)'
 
 # #########
@@ -121,7 +121,23 @@ df_macro = df_macro[[u'Brent',
                      u'Prix moyen HT',
                      u'Prix moyen HT Supermarchés',
                      u'Prix moyen HT Autres']]
-ax = df_macro.plot()
+
+df_macro['Brent'] = df_macro['Brent'].fillna(method = 'bfill')
+
+fig = plt.figure()
+ax1 = fig.add_subplot(111)
+ls_l = []
+for col, ls, alpha in zip(df_macro.columns,
+                          ['-', '-', ':', '-.'],
+                          [0.4, 1, 1, 1]):
+  ls_l.append(ax1.plot(df_macro.index,
+                       df_macro[col].values,
+                       c = 'k', ls = ls, alpha = alpha,
+                       label = col))
+lns = ls_l[0] + ls_l[1] + ls_l[2] + ls_l[3]
+labs = [l.get_label() for l in lns]
+ax1.legend(lns, labs, loc=0)
+ax1.grid()
 plt.tight_layout()
 plt.xlabel('')
 plt.ylabel(str_ylabel)

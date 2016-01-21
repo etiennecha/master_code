@@ -33,6 +33,7 @@ import locale
 locale.setlocale(locale.LC_ALL, 'fra_fra')
 
 dir_graphs = 'french_version_bw'
+str_ylabel = 'Prix TTC (euro/litre)'
 
 # #########
 # LOAD DATA
@@ -102,6 +103,7 @@ df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
                            parse_dates = ['date'])
 df_prices_ttc.set_index('date', inplace = True)
 
+
 # ###############################
 # GRAPHS: COMPETITOR REACTIONS
 # ###############################
@@ -142,10 +144,10 @@ for situation, id_1, id_2 in ls_pair_display:
   ax1 = fig.add_subplot(111)
   l1 = ax1.plot(df_prices_ttc.index,
                 df_prices_ttc[id_1].values,
-                c = 'k', ls = '', lw = 1, marker = '+', markevery=5,
+                c = 'k', ls = '-', alpha = 0.5, # lw = 1, marker = '+', markevery=5,
                 label = 'Station %s' %(df_info.ix[id_1]['brand_0']))
   l2 = ax1.plot(df_prices_ttc.index, df_prices_ttc[id_2].values,
-                c = 'k', ls = '--',
+                c = 'k', ls = '--', alpha = 1,
                 label = 'Station %s' %(df_info.ix[id_2]['brand_0']))
   l3 = ax1.plot(df_prices_ttc.index, df_prices_ttc[ls_control_ids].mean(1).values,
                 c = 'k', ls = '-',
@@ -154,11 +156,12 @@ for situation, id_1, id_2 in ls_pair_display:
   labs = [l.get_label() for l in lns]
   ax1.legend(lns, labs, loc=0)
   ax1.grid()
+  plt.ylabel(str_ylabel)
   plt.tight_layout()
   #plt.show()
   plt.savefig(os.path.join(path_dir_built_ta_graphs,
                            dir_graphs,
-                           '{:s}.png'.format(situation)),
+                           'reaction_{:s}.png'.format(situation)),
               bbox_inches='tight')
   plt.close()
 
@@ -166,6 +169,19 @@ for situation, id_1, id_2 in ls_pair_display:
 #ax = df_prices_ht[['69005002', '69009005']].plot()
 #df_prices_ht[ls_control_ids].mean(1).plot(ax = ax)
 #plt.show()
+
+# OUTPUT TO CSV (FOR RONAN => EXCEL GRAPH)
+df_output = df_prices_ttc[['95100025', '95100016',
+                           '22500002', '22500003']].copy()
+df_output['Moyenne nationale'] = df_prices_ttc[ls_control_ids].mean(1)
+df_output.to_csv(os.path.join(path_dir_built_ta_graphs,
+                              dir_graphs,
+                              'df_comp_reactions.csv'),
+                 index_labe = 'date',
+                 encoding = 'latin-1',
+                 sep = ';',
+                 escapechar = '\\',
+                 quoting = 1) 
 
 # ###############################
 # GRAPHS: PRICING POLICY CHANGE
@@ -182,11 +198,13 @@ pp_chge_date = row['pp_chge_date']
 gov_chge_date = row['ta_gov_date']
 ta_chge_date = row['ta_tot_date']
 
-ax = df_prices_ttc[id_station].plot(label = 'Station Total convertie', ls = '--', c = 'k')
-se_mean_prices.plot(ax=ax, label = 'Moyenne Nationale', ls = '-', c = 'k')
+ax = df_prices_ttc[id_station].plot(label = 'Station Total convertie',
+                                    ls = '-', c = 'k', alpha = 0.4)
+se_mean_prices.plot(ax=ax, label = 'Moyenne Nationale',
+                    ls = '-', c = 'k')
 handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles, labels, loc = 1)
-ax.axvline(x = pp_chge_date, color = 'k', ls = '-.')
+ax.axvline(x = pp_chge_date, color = 'k', ls = '-')
 #ax.axvline(x = ta_chge_date, color = 'r', ls = 'dashed')
 #ax.axvline(x = gov_chge_date, color = 'b', ls = 'dotted')
 #plt.ylim(plt.ylim()[0]-0.5, plt.ylim()[1])
@@ -196,8 +214,9 @@ ax.axvline(x = pp_chge_date, color = 'k', ls = '-.')
 # plt.tight_layout()
 # plt.show()
 plt.xlabel('')
+plt.ylabel(str_ylabel)
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
                          dir_graphs,
-                         'fr_price_cut_detection.png'.format(id_station, pp_chge)),
+                         'margin_change_detection.png'.format(id_station, pp_chge)),
             bbox_inches='tight')
 plt.close()

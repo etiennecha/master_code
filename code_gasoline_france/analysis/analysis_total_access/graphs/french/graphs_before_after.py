@@ -25,6 +25,12 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
+dir_graphs = 'french_version'
+alpha_1 = 1
+alpha_2 = 1
+str_xlabel = u'Prix TTC (euro/litre)'
+str_ylabel = u'Nombre de stations'
+
 # #########
 # LOAD DATA
 # #########
@@ -89,12 +95,20 @@ ls_total_ta_ids = list(df_total_ta.index)
 
 # First day
 bins = np.linspace(1.20, 1.60, 41)
-plt.hist(df_prices_ttc[ls_total_nta_ids].iloc[0].values,
-         bins, alpha=0.5, label=u'"Total" (pas de conversion à venir)', color = 'g')
-plt.hist(df_prices_ttc[ls_total_ta_ids].iloc[0].values,
-         bins, alpha=0.5, label=u'"Total" prochainement "Total Access"', color = 'b')
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.hist(df_prices_ttc[ls_total_nta_ids].iloc[0].values,
+        bins, alpha=0.5, label=u'"Total" (pas de conversion à venir)', color = 'g')
+ax.hist(df_prices_ttc[ls_total_ta_ids].iloc[0].values,
+        bins, alpha=0.5, label=u'"Total" prochainement "Total Access"', color = 'b')
 plt.xticks(np.linspace(1.20, 1.60, 9))
 plt.xlim(1.20, 1.60)
+plt.ylim(0, 400)
+plt.xlabel(str_xlabel)
+plt.ylabel(str_ylabel)
+# Show ticks only on left and bottom axis
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
                          'french_version',
@@ -105,15 +119,22 @@ plt.close()
 
 # Last day
 bins = np.linspace(1.00, 1.50, 51)
-plt.hist(df_prices_ttc[ls_total_nta_ids].iloc[-1].values,
-         bins, alpha=0.5, label=u'"Total"', color = 'g')
-plt.hist(df_prices_ttc[ls_total_ta_ids].iloc[-1].values,
-         bins, alpha=0.5, label=u'"Total Access" anciennement "Total"', color = 'b')
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.hist(df_prices_ttc[ls_total_nta_ids].iloc[-1].values,
+        bins, alpha=0.5, label=u'"Total"', color = 'g')
+ax.hist(df_prices_ttc[ls_total_ta_ids].iloc[-1].values,
+        bins, alpha=0.5, label=u'"Total Access" anciennement "Total"', color = 'b')
 plt.xticks(np.linspace(1.00, 1.50, 11))
 plt.xlim(1.00, 1.50)
+plt.xlabel(str_xlabel)
+plt.ylabel(str_ylabel)
+# Show ticks only on left and bottom axis
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
-                         'french_version',
+                         dir_graphs,
                          'price_dist_total_after.png'),
             bbox_inches='tight')
 plt.close()
@@ -142,15 +163,22 @@ ls_nonaffected_ids = list(df_nonaffected.index)
 
 # First day
 bins = np.linspace(1.20, 1.60, 41)
-plt.hist(df_prices_ttc[ls_nonaffected_ids].iloc[0].values,
-         bins, alpha=0.5, label=u'Stations qui ne seront pas affectées', color = 'g')
-plt.hist(df_prices_ttc[ls_treated_comp_ids].iloc[0].values,
-         bins, alpha=0.5, label=u'Stations prochainement affectées', color = 'b')
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.hist(df_prices_ttc[ls_nonaffected_ids].iloc[0].values,
+        bins, alpha=0.5, label=u'Stations qui ne seront pas affectées', color = 'g')
+ax.hist(df_prices_ttc[ls_treated_comp_ids].iloc[0].values,
+        bins, alpha=0.5, label=u'Stations prochainement affectées', color = 'b')
 plt.xticks(np.linspace(1.20, 1.60, 9))
 plt.xlim(1.20, 1.60)
+plt.xlabel(str_xlabel)
+plt.ylabel(str_ylabel)
+# Show ticks only on left and bottom axis
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
-                         'french_version',
+                         dir_graphs,
                          'price_dist_treated_before.png'),
             bbox_inches='tight')
 plt.close()
@@ -158,15 +186,22 @@ plt.close()
 
 # Last day
 bins = np.linspace(1.00, 1.50, 51)
-plt.hist(df_prices_ttc[ls_nonaffected_ids].iloc[-1].values,
-         bins, alpha=0.5, label=u'Stations non affectées', color = 'g')
-plt.hist(df_prices_ttc[ls_treated_comp_ids].iloc[-1].values,
-         bins, alpha=0.5, label=u'Stations ayant été affectées', color = 'b')
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.hist(df_prices_ttc[ls_nonaffected_ids].iloc[-1].values,
+        bins, alpha=0.5, label=u'Stations non affectées', color = 'g')
+ax.hist(df_prices_ttc[ls_treated_comp_ids].iloc[-1].values,
+        bins, alpha=0.5, label=u'Stations ayant été affectées', color = 'b')
 plt.xticks(np.linspace(1.00, 1.50, 11))
 plt.xlim(1.00, 1.50)
+plt.xlabel(str_xlabel)
+plt.ylabel(str_ylabel)
+# Show ticks only on left and bottom axis
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
-                         'french_version',
+                         dir_graphs,
                          'price_dist_treated_after.png'),
             bbox_inches='tight')
 plt.close()

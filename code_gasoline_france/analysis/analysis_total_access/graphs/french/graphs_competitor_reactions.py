@@ -32,6 +32,9 @@ rcParams['figure.figsize'] = 16, 6
 import locale
 locale.setlocale(locale.LC_ALL, 'fra_fra')
 
+dir_graphs = 'french_version'
+str_ylabel = 'Prix TTC (euro/litre)'
+
 # #########
 # LOAD DATA
 # #########
@@ -128,14 +131,14 @@ ls_control_ids = ls_nontreated_comp_ids
 # Match TA price
 # 5100004 ... lost the line
 
-ls_pair_display = [['95100025', '95100016'],
-                   ['91000006', '91000003'],
-                   ['5100004', '5100007'],
-                   ['22500002', '22500003'],
-                   ['69005002', '69009005'],
-                   ['69110003', '69009005']]
+ls_pair_display = [['esso_matches_decrease', '95100025', '95100016'],
+                   ['avia_matches_and_gives_up', '91000006', '91000003'],
+                   ['carrefour_matches', '5100004', '5100007'],
+                   ['avia_increases', '22500002', '22500003'],
+                   ['agip_increases_big', '69005002', '69009005'],
+                   ['casino_increases', '69110003', '69009005']]
 
-for i, (id_1, id_2) in enumerate(ls_pair_display):
+for situation, id_1, id_2 in ls_pair_display:
   fig = plt.figure()
   ax1 = fig.add_subplot(111)
   l1 = ax1.plot(df_prices_ttc.index, df_prices_ttc[id_1].values,
@@ -148,11 +151,12 @@ for i, (id_1, id_2) in enumerate(ls_pair_display):
   labs = [l.get_label() for l in lns]
   ax1.legend(lns, labs, loc=0)
   ax1.grid()
+  plt.ylabel(str_ylabel)
   plt.tight_layout()
   #plt.show()
   plt.savefig(os.path.join(path_dir_built_ta_graphs,
-                           'french_version',
-                           'ex_%s.png' %i),
+                           dir_graphs,
+                           'reaction_{:s}.png'.format(situation)),
               bbox_inches='tight')
   plt.close()
 
@@ -165,7 +169,7 @@ for i, (id_1, id_2) in enumerate(ls_pair_display):
 # GRAPHS: PRICING POLICY CHANGE
 # ###############################
 
-plt.rcParams['figure.figsize'] = 16, 6
+#plt.rcParams['figure.figsize'] = 16, 6
 
 se_mean_prices = df_prices_ttc.mean(1)
 
@@ -189,8 +193,9 @@ ax.axvline(x = pp_chge_date, color = 'b', ls = 'dashed')
 # plt.tight_layout()
 # plt.show()
 plt.xlabel('')
+plt.ylabel(str_ylabel)
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
-                         'french_version',
+                         dir_graphs,
                          'fr_price_cut_detection.png'.format(id_station, pp_chge)),
             bbox_inches='tight')
 plt.close()
