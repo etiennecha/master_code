@@ -136,12 +136,12 @@ for km_bound in [1, 3, 5]:
 
 # GET MARKET DISPERSION
 
-ls_loop_markets = [('3 km - Raw prices', df_prices_ttc, dict_markets['All_3km']),
-                   ('3 km - Residuals', df_prices_cl, dict_markets['All_3km']),
-                   ('1 km - Residuals', df_prices_cl, dict_markets['All_1km']),
-                   ('5 km - Residuals', df_prices_cl, dict_markets['All_5km']),
-                   ('3 km Rest. - Residuals', df_prices_cl, dict_markets['Restricted_3km']),
-                   ('Isolated markets - Residuals', df_prices_cl, ls_stable_markets)]
+ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
+                   ('3km_Residuals', df_prices_cl, dict_markets['All_3km']),
+                   ('1km_Residuals', df_prices_cl, dict_markets['All_1km']),
+                   ('5km_Residuals', df_prices_cl, dict_markets['All_5km']),
+                   ('3km_Rest_Residuals', df_prices_cl, dict_markets['Restricted_3km']),
+                   ('Stable_Markets_Residuals', df_prices_cl, ls_stable_markets)]
 
 # for each market:
 # market desc: (max) nb firms, mean nb firms observed,
@@ -150,9 +150,10 @@ ls_loop_markets = [('3 km - Raw prices', df_prices_ttc, dict_markets['All_3km'])
 # alternatively: Tappata approach : mean over all market-days, not markets
 
 ls_df_market_stats, ls_se_disp_mean, ls_se_disp_std = [], [], []
+ls_df_mds = []
 for title, df_prices, ls_markets_temp in ls_loop_markets:
   
-  
+  ls_df_md = []
   # Euros to cent
   df_prices = df_prices * 100
 
@@ -174,19 +175,32 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
       df_md['id'] = ls_market_ids[0]
       df_md['price'] = se_mean_price
       df_md['date'] = df_md.index
+      ls_df_md.append(df_md)
+      # Save average/std for this local market
       ls_ls_market_stats.append([df_md[field].mean()\
                                   for field in ls_stats] +\
                                 [df_md[field].std()\
                                   for field in ls_stats] +\
                                 [len(df_md)])
       ls_market_ref_ids.append(ls_market_ids[0])
-  # Market stats draft
+  
+  # Summary table for each local market
   ls_columns = ['avg_%s' %field for field in ls_stats]+\
                ['std_%s' %field for field in ls_stats]+\
                ['nb_obs']
   df_market_stats = pd.DataFrame(ls_ls_market_stats, ls_market_ref_ids, ls_columns)
   ls_df_market_stats.append(df_market_stats)
-  
+
+  # Build dfs of local markets
+  df_mds = pd.concat(ls_df_md, ignore_index = True)
+  ls_df_mds.append(df_mds)
+  ## output (quite slow)
+  #df_mds.to_csv(os.path.join(path_dir_built_dis_csv,
+  #                           'df_market_dispersion_{:s}.csv'.format(title)),
+  #              encoding = 'utf-8',
+  #              float_format= '%.3f')
+
+  # Overview of summary table
   #print()
   #print(title)
   # print(df_market_stats.describe())
@@ -235,25 +249,3 @@ for title, ls_se_disp_temp in [('Mean', ls_se_disp_mean),
   print()
   print(title)
   print(df_disp_temp.to_string())
-
-# #########
-# OUPUT
-# #########
-
-## CSV
-#
-#df_ppd.to_csv(os.path.join(path_dir_built_csv,
-#                           'df_pair_raw_price_dispersion.csv'),
-#              encoding = 'utf-8',
-#              index = False)
-#
-#df_rr.to_csv(os.path.join(path_dir_built_csv,
-#                           'df_rank_reversals.csv'),
-#              float_format= '%.3f',
-#              encoding = 'utf-8',
-#              index = 'pair_index')
-#
-## JSON
-#
-#enc_json(dict_rr_lengths, os.path.join(path_dir_built_json,
-#                                       'dict_rr_lengths.json'))

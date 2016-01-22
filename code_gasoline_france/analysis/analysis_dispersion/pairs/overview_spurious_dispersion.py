@@ -109,6 +109,38 @@ df_pairs_nota = df_pairs[(df_pairs['brand_last_1'] != 'TOTAL_ACCESS') &\
 # need to separate since change in brand tends to inflate pct_rr artificially
 # todo: generalize to rule out significant chges in margin
 
+# Caution: long length rank reversals can be legit (deterministic?)
+# Can require a certain nb of rank reversals (how many?)
+
+## STILL SUSPECT (Small number of rank reversals but long...)
+#ls_disp = ['id_1', 'id_2',
+#           'group_last_1', 'group_last_2',
+#           'nb_chges_1','nb_chges_2',
+#           'pct_rr', 'mean_rr_len', 'nb_rr']
+#
+#df_pair_comp['rr<=5'] = df_pair_comp[lsd_rr[0:5]].sum(axis = 1)
+#
+#print(u'\nNb with long length rank reversals only:')
+#print(len(df_pair_comp[(df_pair_comp['rr>20'] > 0) &\
+#                   (df_pair_comp['nb_rr'] < 5)]))
+#
+#print(u'\nOverview of long length rank reversals only:')
+#print(df_pair_comp[ls_disp][(df_pair_comp['rr>20'] > 0) &\
+#                        (df_pair_comp['nb_rr'] < 5)][0:10].to_string())
+#df_pair_comp = df_pair_comp[~((df_pair_comp['rr>20'] > 0) &\
+#                              (df_pair_comp['nb_rr'] < 5))]
+#
+#print(u'\nNb with high average rank reversal length:')
+#print(len(df_pair_comp[(df_pair_comp['mean_rr_len'] >= 15)]))
+#
+#print(u'\nOverview of high average rank reversal length:')
+#print(df_pair_comp[ls_disp][(df_pair_comp['mean_rr_len'] >= 15)][0:10].to_string())
+#
+## Keep only if no rank reversal or rank reversal not too long?
+#df_pair_comp = df_pair_comp[(df_pair_comp['mean_rr_len'].isnull()) |\
+#                            (df_pair_comp['mean_rr_len'] <= 15)|
+#                            (df_pair_comp['nb_rr'] >= 5)]
+
 # ##########
 # STATS DESC
 # ##########
