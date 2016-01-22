@@ -154,8 +154,15 @@ for situation, id_1, id_2 in ls_pair_display:
                 label = 'Moyenne nationale')
   lns = l1 + l2 + l3
   labs = [l.get_label() for l in lns]
+  # id_2 is TA
+  ax1.axvline(x = df_info_ta.ix[id_2]['pp_chge_date'], color = 'k', ls = '-')
   ax1.legend(lns, labs, loc=0)
   ax1.grid()
+  # Show ticks only on left and bottom axis, out of graph
+  ax1.yaxis.set_ticks_position('left')
+  ax1.xaxis.set_ticks_position('bottom')
+  ax1.get_yaxis().set_tick_params(which='both', direction='out')
+  ax1.get_xaxis().set_tick_params(which='both', direction='out')
   plt.ylabel(str_ylabel)
   plt.tight_layout()
   #plt.show()
@@ -198,13 +205,20 @@ pp_chge_date = row['pp_chge_date']
 gov_chge_date = row['ta_gov_date']
 ta_chge_date = row['ta_tot_date']
 
-ax = df_prices_ttc[id_station].plot(label = 'Station Total convertie',
-                                    ls = '-', c = 'k', alpha = 0.4)
-se_mean_prices.plot(ax=ax, label = 'Moyenne Nationale',
-                    ls = '-', c = 'k')
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot(df_prices_ttc.index,
+        df_prices_ttc[id_station].values,
+        label = 'Station Total convertie',
+        ls = '-', c = 'k', alpha = 0.4)
+ax.plot(se_mean_prices.index,
+        se_mean_prices.values,
+        label = 'Moyenne Nationale',
+        ls = '-', c = 'k')
 handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles, labels, loc = 1)
 ax.axvline(x = pp_chge_date, color = 'k', ls = '-')
+
 #ax.axvline(x = ta_chge_date, color = 'r', ls = 'dashed')
 #ax.axvline(x = gov_chge_date, color = 'b', ls = 'dotted')
 #plt.ylim(plt.ylim()[0]-0.5, plt.ylim()[1])
@@ -213,8 +227,16 @@ ax.axvline(x = pp_chge_date, color = 'k', ls = '-')
 # plt.text(.02, .02, footnote_text)
 # plt.tight_layout()
 # plt.show()
+
+# Show ticks only on left and bottom axis, out of graph
+ax.yaxis.set_ticks_position('left')
+ax.xaxis.set_ticks_position('bottom')
+ax.get_yaxis().set_tick_params(which='both', direction='out')
+ax.get_xaxis().set_tick_params(which='both', direction='out')
 plt.xlabel('')
 plt.ylabel(str_ylabel)
+ax.grid()
+plt.tight_layout()
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
                          dir_graphs,
                          'margin_change_detection.png'.format(id_station, pp_chge)),

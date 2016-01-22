@@ -138,9 +138,14 @@ lns = ls_l[0] + ls_l[1] + ls_l[2] + ls_l[3]
 labs = [l.get_label() for l in lns]
 ax1.legend(lns, labs, loc=0)
 ax1.grid()
-plt.tight_layout()
+# Show ticks only on left and bottom axis, out of graph
+ax1.yaxis.set_ticks_position('left')
+ax1.xaxis.set_ticks_position('bottom')
+ax1.get_yaxis().set_tick_params(which='both', direction='out')
+ax1.get_xaxis().set_tick_params(which='both', direction='out')
 plt.xlabel('')
 plt.ylabel(str_ylabel)
+plt.tight_layout()
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
                          dir_graphs,
                          'macro_trends.png'),

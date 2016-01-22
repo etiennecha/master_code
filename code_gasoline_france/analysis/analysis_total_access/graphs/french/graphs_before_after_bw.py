@@ -107,9 +107,11 @@ plt.xlim(1.20, 1.60)
 plt.ylim(0, 400)
 plt.xlabel(str_xlabel)
 plt.ylabel(str_ylabel)
-# Show ticks only on left and bottom axis
+# Show ticks only on left and bottom axis, out of graph
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
+ax.get_yaxis().set_tick_params(which='both', direction='out')
+ax.get_xaxis().set_tick_params(which='both', direction='out')
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
                          dir_graphs,
@@ -130,9 +132,11 @@ plt.xticks(np.linspace(1.00, 1.50, 11))
 plt.xlim(1.00, 1.50)
 plt.xlabel(str_xlabel)
 plt.ylabel(str_ylabel)
-# Show ticks only on left and bottom axis
+# Show ticks only on left and bottom axis, out of graph
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
+ax.get_yaxis().set_tick_params(which='both', direction='out')
+ax.get_xaxis().set_tick_params(which='both', direction='out')
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
                          dir_graphs,
@@ -174,9 +178,11 @@ plt.xticks(np.linspace(1.20, 1.60, 9))
 plt.xlim(1.20, 1.60)
 plt.xlabel(str_xlabel)
 plt.ylabel(str_ylabel)
-# Show ticks only on left and bottom axis
+# Show ticks only on left and bottom axis, out of graph
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
+ax.get_yaxis().set_tick_params(which='both', direction='out')
+ax.get_xaxis().set_tick_params(which='both', direction='out')
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
                          dir_graphs,
@@ -197,9 +203,11 @@ plt.xticks(np.linspace(1.00, 1.50, 11))
 plt.xlim(1.00, 1.50)
 plt.xlabel(str_xlabel)
 plt.ylabel(str_ylabel)
-# Show ticks only on left and bottom axis
+# Show ticks only on left and bottom axis, out of graph
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
+ax.get_yaxis().set_tick_params(which='both', direction='out')
+ax.get_xaxis().set_tick_params(which='both', direction='out')
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_ta_graphs,
                          dir_graphs,
