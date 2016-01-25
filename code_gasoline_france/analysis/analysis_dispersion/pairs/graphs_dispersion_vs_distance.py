@@ -107,7 +107,7 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
 
 # RESTRICT CATEOGORY
 df_pairs_all = df_pairs.copy()
-df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
+df_pairs = df_pairs[df_pairs['cat'] == 'residuals'].copy()
 
 # COMP VS SAME GROUP
 df_pair_same =\
@@ -123,6 +123,15 @@ df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
 df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
 df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
 df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
+
+# COMP SUP VS. NON SUP
+
+df_pair_sup = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
+                           (df_pair_comp['group_type_2'] == 'SUP')]
+df_pair_nsup = df_pair_comp[(df_pair_comp['group_type_1'] != 'SUP') &\
+                            (df_pair_comp['group_type_2'] != 'SUP')]
+df_pair_sup_nd = df_pair_sup[(df_pair_sup['mean_spread'].abs() <= diff_bound)]
+df_pair_nsup_nd = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() <= diff_bound)]
 
 # ##########
 # STATS DES
@@ -195,7 +204,11 @@ heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['pct_same'].values,
                                          df_pair_comp_nd['pct_rr'].values,
                                          bins=30)
 extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-plt.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
+ax.set_xlabel('Pct same price')
+ax.set_ylabel('Pct rank reversals')
 plt.show()
 
 # HEATMAP: PCT RR VS MEAN SPREAD
@@ -203,5 +216,9 @@ heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['abs_mean_spread'].valu
                                          df_pair_comp_nd['pct_rr'].values,
                                          bins=30)
 extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-plt.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
+ax.set_xlabel('Mean spread')
+ax.set_ylabel('Pct rank reversals')
 plt.show()

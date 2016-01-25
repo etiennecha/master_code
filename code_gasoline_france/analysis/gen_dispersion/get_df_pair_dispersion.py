@@ -169,7 +169,7 @@ for (indiv_id, other_id, distance, ls_mc_dates) in ls_loop_pairs:
   se_prices_1_cl = df_prices_cl[indiv_id]
   se_prices_2_cl = df_prices_cl[other_id]
   res_cl = get_pair_price_dispersion(se_prices_1_cl, se_prices_2_cl, light = False)
-  dict_pairs_rr['residuals'].append(base_res + res_cl)
+  dict_pairs_rr['residuals'].append(base_res + get_ls_dispersion_res(res_cl))
   dict_ls_ar_rrs['residuals'].append(res_cl[2][1])
   dict_dict_rr_lengths['residuals']['{:s}-{:s}'.format(indiv_id, other_id)] =\
       res_cl[3][0]
