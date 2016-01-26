@@ -145,3 +145,7 @@ df_md = dict_df_mds['3km_Rest_Residuals']
 
 # are price residuals totally useless? see if can add nat avg
 # df_md[df_md['id'] == '75014005']['price'].plot()
+
+res = smf.ols('range ~ price + nb_comp',
+              data = df_md).fit()
+print(res.summary())

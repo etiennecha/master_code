@@ -121,6 +121,9 @@ df_prices_cl[ls_drop_ids_nhw] = np.nan
 #ls_markets_st = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound)
 #ls_markets_st_rd = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
 
+# MEAN NAT PRICE (RAW)
+se_mean_price = df_prices_ttc.mean(1) * 100
+
 # GET MARKETS
 dict_markets = {}
 for km_bound in [1, 3, 5]:
@@ -157,7 +160,6 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
   # ls_markets_temp = ls_markets_st # Market definition chosen here (loop?)
   ls_df_market_dispersion = [get_market_price_dispersion(market_ids, df_prices)\
                                for market_ids in ls_markets_temp]
-  se_mean_price = df_prices.mean(1)
   
   # cv useless when using residual prices (div by almost 0)
   ls_stats = ['range', 'gfs', 'std', 'cv', 'nb_comp', 'nb_comp_t']
@@ -191,11 +193,11 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
   # Build dfs of local markets
   df_mds = pd.concat(ls_df_md, ignore_index = True)
   ls_df_mds.append(df_mds)
-  ## output (quite slow)
-  #df_mds.to_csv(os.path.join(path_dir_built_dis_csv,
-  #                           'df_market_dispersion_{:s}.csv'.format(title)),
-  #              encoding = 'utf-8',
-  #              float_format= '%.3f')
+  # output (quite slow)
+  df_mds.to_csv(os.path.join(path_dir_built_dis_csv,
+                             'df_market_dispersion_{:s}.csv'.format(title)),
+                encoding = 'utf-8',
+                float_format= '%.3f')
 
   # Overview of summary table
   #print()

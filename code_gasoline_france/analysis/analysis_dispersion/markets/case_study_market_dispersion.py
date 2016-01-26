@@ -115,14 +115,14 @@ df_prices_cl[ls_drop_ids_nhw] = np.nan
 # GET DF MARKET DISPERSION
 # #########################
 
-# PARAMETERS
-
-df_prices = df_prices_cl
-km_bound = 5
-
+## PARAMETERS
+#km_bound = 5
 #ls_markets = get_ls_ls_market_ids(dict_ls_comp, km_bound)
 #ls_markets_st = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound)
 #ls_markets_st_rd = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
+
+# MEAN NAT PRICE (RAW)
+se_mean_price = df_prices_ttc.mean(1)
 
 # GET MARKETS
 dict_markets = {}
@@ -152,14 +152,12 @@ ls_loop_markets = [('3 km - Raw prices', df_prices_ttc, dict_markets['All_3km'])
 ls_df_market_stats, ls_se_disp_mean, ls_se_disp_std = [], [], []
 for title, df_prices, ls_markets_temp in ls_loop_markets:
   
-  
   # Euros to cent
   df_prices = df_prices * 100
 
   # ls_markets_temp = ls_markets_st # Market definition chosen here (loop?)
   ls_df_market_dispersion = [get_market_price_dispersion(market_ids, df_prices)\
                                for market_ids in ls_markets_temp]
-  se_mean_price = df_prices.mean(1)
   
   # cv useless when using residual prices (div by almost 0)
   ls_stats = ['range', 'gfs', 'std', 'cv', 'nb_comp', 'nb_comp_t']
