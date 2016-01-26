@@ -115,11 +115,8 @@ df_prices_cl[ls_drop_ids_nhw] = np.nan
 # GET DF MARKET DISPERSION
 # #########################
 
-# PARAMETERS
-
-df_prices = df_prices_cl
-km_bound = 5
-
+## PARAMETERS
+#km_bound = 5
 #ls_markets = get_ls_ls_market_ids(dict_ls_comp, km_bound)
 #ls_markets_st = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound)
 #ls_markets_st_rd = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
