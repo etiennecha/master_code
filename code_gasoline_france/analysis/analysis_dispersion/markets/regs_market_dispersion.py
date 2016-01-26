@@ -115,7 +115,8 @@ df_pairs.loc[df_pairs['distance'] <= 1, 'sc_1000'] = 1
 # RESTRICT CATEGORY
 
 df_pairs_all = df_pairs.copy()
-df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
+#df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
+df_pairs = df_pairs[df_pairs['cat'] == 'residuals'].copy()
 
 # COMPETITORS VS. SAME GROUP
 
@@ -158,10 +159,12 @@ ls_dist_ols_formulas = ['abs_mean_spread ~ distance',
                         'pct_rr ~ distance',
                         'std_spread ~ distance']
 
-ls_sc_ols_formulas = ['abs_mean_spread ~ sc_1000',
-                      'mean_abs_spread ~ sc_1000',
-                      'pct_rr ~ sc_1000',
-                      'std_spread ~ sc_1000']
+dist_reg = 500
+
+ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d}'.format(dist_reg),
+                      'mean_abs_spread ~ sc_{:d}'.format(dist_reg),
+                      'pct_rr ~ sc_{:d}'.format(dist_reg),
+                      'std_spread ~ sc_{:d}'.format(dist_reg)]
 
 # from statsmodels.regression.quantile_regression import QuantReg
 ls_quantiles = [0.25, 0.5, 0.75]
@@ -192,26 +195,31 @@ for df_ppd_reg in [df_pair_comp_nd, df_pair_comp_d]:
                        for str_formula in ls_dist_ols_formulas]
   ls_sc_ols_res   = [smf.ols(formula = str_formula, data = df_ppd_reg).fit()\
                        for str_formula in ls_sc_ols_formulas]
-  ls_rr_qreg_res  = [smf.quantreg('pct_rr~sc_1000', data = df_ppd_reg).fit(quantile)\
+  ls_rr_qreg_res  = [smf.quantreg('pct_rr~sc_{:d}'.format(dist_reg),
+                                  data = df_ppd_reg).fit(quantile)\
                        for quantile in ls_quantiles]
-  ls_std_qreg_res = [smf.quantreg('std_spread~sc_1000', data = df_ppd_reg).fit(quantile)\
+  ls_std_qreg_res = [smf.quantreg('std_spread~sc_{:d}'.format(dist_reg),
+                                  data = df_ppd_reg).fit(quantile)\
                        for quantile in ls_quantiles]
   ls_ls_reg_res = [ls_dist_ols_res, ls_sc_ols_res, ls_rr_qreg_res, ls_std_qreg_res]
-  ls_ls_index = [ls_dist_ols_formulas, ls_dist_ols_formulas, ls_quantiles, ls_quantiles]
+  ls_ls_index = [ls_dist_ols_formulas, ls_sc_ols_formulas, ls_quantiles, ls_quantiles]
   ls_df_reg_res.append([get_df_ols_res(ls_ols_res, ls_index)\
                           for ls_ols_res, ls_index in zip(ls_ls_reg_res, ls_ls_index)])
 
 print('Compare raw prices vs. prices not raw:')
 
-dist_reg = 1000
 lsd_ols_dist = ['distance_be', 'distance_t', 'R2', 'NObs']
 lsd_ols_corner = ['sc_{:d}_be'.format(dist_reg), 'sc_{:d}_t'.format(dist_reg), 'R2', 'NObs']
 lsd_qr_corner = ['sc_{:d}_be'.format(dist_reg), 'sc_{:d}_t'.format(dist_reg), 'R2', 'NObs']
 
-for i in [0,1]:
+for i, title in enumerate(['Non differentiated', 'Differentiated']):
   
   print()
-  print('\nOLS: Distance')
+  print(u'-'*20)
+  print(title)
+
+  print()
+  print('OLS: Distance')
   print(ls_df_reg_res[i][0][lsd_ols_dist].to_string())
   
   print()
