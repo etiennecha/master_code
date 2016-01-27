@@ -169,16 +169,16 @@ for (indiv_id, other_id, distance, ls_mc_dates) in ls_loop_pairs:
   base_res = [[indiv_id, other_id, distance]]
   if ls_mc_dates:
     # before changes
-    se_prices_1_b = se_prices_1
+    se_prices_1_b = se_prices_1.copy()
     se_prices_1_b.ix[ls_mc_dates[0]:] = np.nan
-    se_prices_2_b = se_prices_2
+    se_prices_2_b = se_prices_2.copy()
     se_prices_2_b.ix[ls_mc_dates[0]:] = np.nan
     ls_ls_pairs_before_mc.append(base_res +\
       get_stats_two_firms(se_prices_1_b, se_prices_2_b))
     # after changes
-    se_prices_1_a = se_prices_1
+    se_prices_1_a = se_prices_1.copy()
     se_prices_1_a.ix[:ls_mc_dates[-1]] = np.nan
-    se_prices_2_a = se_prices_2
+    se_prices_2_a = se_prices_2.copy()
     se_prices_2_a.ix[:ls_mc_dates[-1]] = np.nan
     ls_ls_pairs_after_mc.append(base_res +\
       get_stats_two_firms(se_prices_1_a, se_prices_2_a))
