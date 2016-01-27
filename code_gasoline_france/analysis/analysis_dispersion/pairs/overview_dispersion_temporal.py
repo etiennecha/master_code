@@ -72,7 +72,7 @@ df_prices_ht.set_index('date', inplace = True)
 
 df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_cleaned_prices.csv'),
-                          parse_dates = True)
+                          parse_dates = ['date'])
 df_prices_cl.set_index('date', inplace = True)
 
 # FILTER DATA
