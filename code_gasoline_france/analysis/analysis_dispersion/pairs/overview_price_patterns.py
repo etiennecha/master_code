@@ -141,10 +141,10 @@ lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 lsd_spread = ['id_1', 'id_2', 'distance',
               'mc_spread', 'smc_spread',
               'freq_mc_spread', 'freq_smc_spread',
-              'mean_abs_spread', 'pct_rr']
+              'abs_mean_spread', 'mean_abs_spread', 'pct_rr', 'pct_same']
 
 zero = 1e-10
-ls_pctiles = [0.5, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95]
+ls_pctiles = [0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95]
 
 # ########################
 # OVERVIEW DIFFERENTIATION
@@ -159,10 +159,18 @@ ls_pctiles = [0.5, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95]
 
 df_null_mc_spread = df_pair_comp[df_pair_comp['mc_spread'].abs() < zero]
 
+print()
+print('Overview most common spread 0 ({:d}):'.format(len(df_null_mc_spread)))
+print(df_null_mc_spread[lsd_spread].describe(percentiles=ls_pctiles).to_string())
+
 df_opp_spreads = df_pair_comp[((df_pair_comp['mc_spread'] > zero) &\
                                (df_pair_comp['smc_spread'] < -zero)) |
                               ((df_pair_comp['mc_spread'] <- zero) &\
                                (df_pair_comp['smc_spread'] > zero))]
+
+print()
+print('Overview opp sign spreads ({:d}):'.format(len(df_opp_spreads)))
+print(df_opp_spreads[lsd_spread].describe(percentiles=ls_pctiles).to_string())
 
 #print(df_null_opp_spreads[lsd_spread][0:20].to_string())
 
@@ -172,12 +180,10 @@ df_opp_spreads = df_pair_comp[((df_pair_comp['mc_spread'] > zero) &\
 df_low_diff_spreads= df_pair_comp[(df_pair_comp['mc_spread'].abs() < zero) |\
                                   (df_pair_comp['smc_spread'].abs() < zero)]
 
-print(df_low_diff_spreads['abs_mean_spread'].describe(percentiles = ls_pctiles))
-
+#print(df_low_diff_spreads['abs_mean_spread'].describe(percentiles = ls_pctiles))
 #print(df_low_diff_spreads[df_low_diff_spreads['abs_mean_spread'] > 0.057]\
 #                         [lsd_spread].to_string())
 ## Pricing of 93000009: pathological (check dup reconciliations?)
-
 
 # High(er) differentiation
 # - can require mc_spread and smc_spread to be of same sign
@@ -186,6 +192,10 @@ df_high_diff_spreads = df_pair_comp[((df_pair_comp['mc_spread'] > zero) &\
                                      (df_pair_comp['smc_spread'] > zero)) |
                                     ((df_pair_comp['mc_spread'] < -zero) &\
                                      (df_pair_comp['smc_spread'] < -zero))]
+
+print()
+print('Overview same sign spreads ({:d}):'.format(len(df_high_diff_spreads)))
+print(df_high_diff_spreads[lsd_spread].describe(percentiles=ls_pctiles).to_string())
 
 # #######################
 # OVERVIEW PRICE PATTERNS

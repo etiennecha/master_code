@@ -255,6 +255,7 @@ for cat, ls_ar_rrs in dict_ls_ar_rrs.items():
 df_pairs_rr.to_csv(os.path.join(path_dir_built_dis_csv,
                                 'df_pair_dispersion.csv'),
                    encoding = 'utf-8',
+                   float_format= '%.3f',
                    index = False)
 
 for cat, df_rr_cat in dict_df_rr.items():

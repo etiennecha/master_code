@@ -115,11 +115,16 @@ def get_stats_two_firm_price_spread(ar_prices_1, ar_prices_2, par_round):
                               reverse = True)
     mc_spread = ls_tup_spread_vc[0][0] / np.power(10, par_round)
     freq_mc_spread = ls_tup_spread_vc[0][1] * 100 / float((~np.isnan(ar_spread)).sum())
-    # Second most commun spread
+    # Second most common spread
     smc_spread, freq_smc_spread = np.nan, np.nan
     if len(ls_tup_spread_vc) >= 2:
       smc_spread = ls_tup_spread_vc[1][0] / np.power(10, par_round)
       freq_smc_spread = ls_tup_spread_vc[1][1] * 100 / float((~np.isnan(ar_spread)).sum())
+    # Third most common spread
+    tmc_spread, freq_tmc_spread = np.nan, np.nan
+    if len(ls_tup_spread_vc) >= 3:
+      tmc_spread = ls_tup_spread_vc[2][0] / np.power(10, par_round)
+      freq_tmc_spread = ls_tup_spread_vc[2][1] * 100 / float((~np.isnan(ar_spread)).sum())
     # Median spread 
     med_spread = np.median(ar_spread[~np.isnan(ar_spread)])
     freq_med_spread =  dict_spread_vc[np.round(med_spread, par_round) *\
@@ -130,6 +135,7 @@ def get_stats_two_firm_price_spread(ar_prices_1, ar_prices_2, par_round):
                   std_spread, std_abs_spread,
                   mc_spread, freq_mc_spread,
                   smc_spread, freq_smc_spread,
+                  tmc_spread, freq_tmc_spread,
                   med_spread, freq_med_spread]
   else:
     ls_results = [nb_spread] + [np.nan for i in range(10)]

@@ -235,6 +235,7 @@ df_pairs['pct_price_cv_2'] = df_pairs[['nb_1_lead', 'nb_chge_to_same']].sum(1)/\
 df_pairs.to_csv(os.path.join(path_dir_built_dis_csv,
                              'df_pair_final.csv'),
                 encoding = 'utf-8',
+                float_format= '%.3f',
                 index = False)
 
 ## SEPARATE SAME GROUP vs. COMPETITORS

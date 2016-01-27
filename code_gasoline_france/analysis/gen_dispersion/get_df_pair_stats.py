@@ -24,9 +24,9 @@ path_dir_built_dis = os.path.join(path_data,
 path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
 path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 # ################
 # LOAD DATA
@@ -207,6 +207,7 @@ ls_spread_cols = ['nb_spread', 'mean_spread', 'mean_abs_spread',
                   'std_spread', 'std_abs_spread',
                   'mc_spread', 'freq_mc_spread',
                   'smc_spread', 'freq_smc_spread',
+                  'tmc_spread', 'freq_tmc_spread',
                   'med_spread', 'freq_med_spread']
 
 ls_followed_chges_cols = ['nb_ctd_1', 'nb_ctd_2', 'nb_ctd_both',
@@ -287,6 +288,7 @@ df_pairs.replace([np.inf, -np.inf], np.nan, inplace = True)
 df_pairs.to_csv(os.path.join(path_dir_built_dis_csv,
                              'df_pair_stats.csv'),
                 encoding = 'utf-8',
+                float_format= '%.3f',
                 index = False)
 
 ## ################
