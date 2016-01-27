@@ -164,8 +164,8 @@ ls_ls_pairs_before_mc = []
 ls_ls_pairs_after_mc = []
 ls_ls_pairs_all = []
 for (indiv_id, other_id, distance, ls_mc_dates) in ls_loop_pairs:
-  se_prices_1 = df_prices[indiv_id]
-  se_prices_2 = df_prices[other_id]
+  se_prices_1 = df_prices[indiv_id].copy()
+  se_prices_2 = df_prices[other_id].copy()
   base_res = [[indiv_id, other_id, distance]]
   if ls_mc_dates:
     # before changes

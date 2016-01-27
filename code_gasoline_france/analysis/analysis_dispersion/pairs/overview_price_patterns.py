@@ -138,6 +138,55 @@ df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
 lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
 lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 
+lsd_spread = ['id_1', 'id_2', 'distance',
+              'mc_spread', 'smc_spread',
+              'freq_mc_spread', 'freq_smc_spread',
+              'mean_abs_spread', 'pct_rr']
+
+zero = 1e-10
+ls_pctiles = [0.5, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95]
+
+# ########################
+# OVERVIEW DIFFERENTIATION
+# ########################
+
+# Based on spread value and frequency:
+
+# No differentiation:
+# - mc_spread == 0 & freq_mc_spread high (high pct_same) : Betrand or Collusion
+# - mc_spread st positive and smc_spread std negative
+# - could add tmc_spread to capture cases w/ 3 prices
+
+df_null_mc_spread = df_pair_comp[df_pair_comp['mc_spread'].abs() < zero]
+
+df_opp_spreads = df_pair_comp[((df_pair_comp['mc_spread'] > zero) &\
+                               (df_pair_comp['smc_spread'] < -zero)) |
+                              ((df_pair_comp['mc_spread'] <- zero) &\
+                               (df_pair_comp['smc_spread'] > zero))]
+
+#print(df_null_opp_spreads[lsd_spread][0:20].to_string())
+
+# Low differentiation
+# - mc_spread or smc_spread == 0 and both high
+
+df_low_diff_spreads= df_pair_comp[(df_pair_comp['mc_spread'].abs() < zero) |\
+                                  (df_pair_comp['smc_spread'].abs() < zero)]
+
+print(df_low_diff_spreads['abs_mean_spread'].describe(percentiles = ls_pctiles))
+
+#print(df_low_diff_spreads[df_low_diff_spreads['abs_mean_spread'] > 0.057]\
+#                         [lsd_spread].to_string())
+## Pricing of 93000009: pathological (check dup reconciliations?)
+
+
+# High(er) differentiation
+# - can require mc_spread and smc_spread to be of same sign
+
+df_high_diff_spreads = df_pair_comp[((df_pair_comp['mc_spread'] > zero) &\
+                                     (df_pair_comp['smc_spread'] > zero)) |
+                                    ((df_pair_comp['mc_spread'] < -zero) &\
+                                     (df_pair_comp['smc_spread'] < -zero))]
+
 # #######################
 # OVERVIEW PRICE PATTERNS
 # #######################
