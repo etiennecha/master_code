@@ -87,7 +87,7 @@ df_prices_ht.set_index('date', inplace = True)
 
 df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_cleaned_prices.csv'),
-                          parse_dates = True)
+                          parse_dates = ['date'])
 df_prices_cl.set_index('date', inplace = True)
 
 # FILTER DATA
@@ -172,7 +172,7 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
                                     >= 2.0/3)].copy()
     if len(df_md) > 90:
       df_md['id'] = ls_market_ids[0]
-      df_md['price'] = se_mean_price
+      df_md['price'] = se_mean_price # index pbm?
       df_md['date'] = df_md.index
       ls_df_md.append(df_md)
       # Save average/std for this local market

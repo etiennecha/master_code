@@ -87,7 +87,7 @@ df_prices_ht.set_index('date', inplace = True)
 
 df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_cleaned_prices.csv'),
-                          parse_dates = True)
+                          parse_dates = ['date'])
 df_prices_cl.set_index('date', inplace = True)
 
 # FILTER DATA
@@ -135,13 +135,14 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
     pd.read_csv(os.path.join(path_dir_built_dis_csv,
                              'df_market_dispersion_{:s}.csv'.format(title)),
                 encoding = 'utf-8',
+                parse_dates = ['date'],
                 dtype = {'id' : str})
 
 # Final regression must use residual prices
 # Yet need price level (a priori not market: national level)
 # Two definitions of expected price?
 
-df_md = dict_df_mds['3km_Rest_Residuals']
+df_md = dict_df_mds['3km_Residuals']
 
 # are price residuals totally useless? see if can add nat avg
 # df_md[df_md['id'] == '75014005']['price'].plot()
@@ -149,3 +150,5 @@ df_md = dict_df_mds['3km_Rest_Residuals']
 res = smf.ols('range ~ price + nb_comp',
               data = df_md).fit()
 print(res.summary())
+
+# run with id clustering & id-date clustering
