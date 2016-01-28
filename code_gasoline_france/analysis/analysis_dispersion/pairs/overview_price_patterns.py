@@ -172,6 +172,18 @@ print()
 print('Overview opp sign spreads ({:d}):'.format(len(df_opp_spreads)))
 print(df_opp_spreads[lsd_spread].describe(percentiles=ls_pctiles).to_string())
 
+df_opp_spreads_alt =\
+  df_pair_comp[(((df_pair_comp['mc_spread']*df_pair_comp['smc_spread']) < -zero) &\
+                (df_pair_comp['tmc_spread'].abs() < zero)) |\
+               (((df_pair_comp['smc_spread']*df_pair_comp['tmc_spread']) <- zero) &\
+                (df_pair_comp['mc_spread'].abs() < zero)) |\
+               (((df_pair_comp['mc_spread']*df_pair_comp['tmc_spread']) <- zero) &\
+                (df_pair_comp['smc_spread'].abs() < zero))]
+
+print()
+print('Overview null and opp sign spreads ({:d}):'.format(len(df_opp_spreads_alt)))
+print(df_opp_spreads_alt[lsd_spread].describe(percentiles=ls_pctiles).to_string())
+
 #print(df_null_opp_spreads[lsd_spread][0:20].to_string())
 
 # Low differentiation
@@ -201,10 +213,9 @@ print(df_high_diff_spreads[lsd_spread].describe(percentiles=ls_pctiles).to_strin
 # OVERVIEW PRICE PATTERNS
 # #######################
 
-## Spread stability
-#df_pair_comp['freq_mc_spread'].describe()
-#df_pair_comp_d['freq_mc_spread'].describe()
-#df_pair_comp_nd['freq_mc_spread'].describe()
+### Spread stability
+#for df_pair_temp in [df_pair_comp, df_pair_comp_d, df_pair_comp_nd]:
+#  print(df_pair_temp['freq_mc_spread'].describe())
 
 # Same price: "Betrand" (or collusion..) competition vs distance
 
@@ -212,7 +223,7 @@ print()
 print(u'Distribution of pct_same among non differentiated')
 print(df_pair_comp_nd['pct_same'].describe())
 
-df_bertrand = df_pair_comp[df_pair_comp['pct_same'] >= 1/3.0]
+df_bertrand = df_pair_comp[df_pair_comp['pct_same'] >= 1/2.0]
 ls_bertrand_ids = list(set(df_bertrand[['id_1', 'id_2']].values.flatten()))
 
 print()
