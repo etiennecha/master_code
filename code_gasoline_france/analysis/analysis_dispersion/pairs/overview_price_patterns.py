@@ -151,6 +151,7 @@ ls_pctiles = [0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95]
 # ########################
 
 # Based on spread value and frequency:
+# Should use "ordered" abs spread values... (desc not very meaningfull this way)
 
 # No differentiation:
 # - mc_spread == 0 & freq_mc_spread high (high pct_same) : Betrand or Collusion
@@ -223,7 +224,7 @@ print()
 print(u'Distribution of pct_same among non differentiated')
 print(df_pair_comp_nd['pct_same'].describe())
 
-df_bertrand = df_pair_comp[df_pair_comp['pct_same'] >= 1/2.0]
+df_bertrand = df_pair_comp[df_pair_comp['pct_same'] >= 1/3.0]
 ls_bertrand_ids = list(set(df_bertrand[['id_1', 'id_2']].values.flatten()))
 
 print()
@@ -234,6 +235,11 @@ print(df_bertrand['distance'].describe())
 print()
 print(u'Overview of group type of stations in pairs of "Bertrand" competitors')
 print(df_info.ix[ls_bertrand_ids]['group_type'].value_counts())
+
+print()
+print(u'Overview of group type of stations in pairs of non differentiated competitors')
+ls_comp_nd_ids = list(set(df_pair_comp_nd[['id_1', 'id_2']].values.flatten()))
+print(df_info.ix[ls_comp_nd_ids]['group_type'].value_counts())
 
 print()
 print(u'Overview of competition of stations in pairs of "Bertrand" competitors')
