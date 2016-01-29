@@ -224,7 +224,7 @@ print()
 print(u'Distribution of pct_same among non differentiated')
 print(df_pair_comp_nd['pct_same'].describe())
 
-df_bertrand = df_pair_comp[df_pair_comp['pct_same'] >= 1/3.0]
+df_bertrand = df_pair_comp[df_pair_comp['pct_same'] >= 1/2.0]
 ls_bertrand_ids = list(set(df_bertrand[['id_1', 'id_2']].values.flatten()))
 
 print()
@@ -242,6 +242,11 @@ ls_comp_nd_ids = list(set(df_pair_comp_nd[['id_1', 'id_2']].values.flatten()))
 print(df_info.ix[ls_comp_nd_ids]['group_type'].value_counts())
 
 print()
+print(u'Overview of group type of stations in all competitor pairs')
+ls_comp_ids = list(set(df_pair_comp[['id_1', 'id_2']].values.flatten()))
+print(df_info.ix[ls_comp_ids]['group_type'].value_counts())
+
+print()
 print(u'Overview of competition of stations in pairs of "Bertrand" competitors')
 print(df_comp.ix[ls_bertrand_ids][['dist_c', 'dist_c_sup', 'nb_c_1km', 'nb_c_3km']].describe())
 
@@ -249,12 +254,15 @@ print(df_comp.ix[ls_bertrand_ids][['dist_c', 'dist_c_sup', 'nb_c_1km', 'nb_c_3km
 print(u'\nNb of high pct_same (above 20 pct):')
 print(len(df_pair_comp[df_pair_comp['pct_same'] >= 0.3]))
 
-df_pair_comp['pct_1_lead'] = df_pair_comp['nb_1_lead'].astype(float) /\
-                           df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
-df_pair_comp['pct_2_lead'] = df_pair_comp['nb_2_lead'].astype(float) /\
-                           df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
-df_pair_comp['pct_sim_same'] = df_pair_comp['nb_chge_to_same'].astype(float) /\
-                             df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+df_pair_comp['pct_1_lead'] =\
+  df_pair_comp['nb_1_lead'].astype(float) /\
+    df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+df_pair_comp['pct_2_lead'] =\
+  df_pair_comp['nb_2_lead'].astype(float) /\
+    df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+df_pair_comp['pct_sim_same'] =\
+  df_pair_comp['nb_chge_to_same'].astype(float) /\
+    df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
 df_pair_comp.replace([np.inf, -np.inf], np.nan, inplace = True)
 
 print(u'\nInspect pct_same above 30 pct:')
