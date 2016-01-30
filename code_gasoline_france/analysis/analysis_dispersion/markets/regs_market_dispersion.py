@@ -24,6 +24,12 @@ path_dir_built_dis = os.path.join(path_data,
 path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
 path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
 
+path_dir_built_other = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_other')
+path_dir_built_other_csv = os.path.join(path_dir_built_other, 'data_csv')
+
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
@@ -138,17 +144,40 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
                 parse_dates = ['date'],
                 dtype = {'id' : str})
 
+# DF COST (WHOLESALE GAS PRICES)
+df_cost = pd.read_csv(os.path.join(path_dir_built_other_csv,
+                                   'df_quotations.csv'),
+                                 encoding = 'utf-8',
+                                 parse_dates = ['date'])
+df_cost.set_index('date', inplace = True)
+
 # Final regression must use residual prices
 # Yet need price level (a priori not market: national level)
 # Two definitions of expected price?
 
-df_md = dict_df_mds['3km_Residuals']
+df_md = dict_df_mds[ls_loop_markets[4][0]]
+
+# Add cost data
+df_md.set_index('date', inplace = True)
+df_md['cost'] =  df_cost['UFIP RT Diesel R5 EL']
+df_md.reset_index(drop = False, inplace = True)
 
 # are price residuals totally useless? see if can add nat avg
 # df_md[df_md['id'] == '75014005']['price'].plot()
 
-res = smf.ols('range ~ price + nb_comp',
+# all periods
+res = smf.ols('range ~ cost + nb_comp',
               data = df_md).fit()
 print(res.summary())
 
-# run with id clustering & id-date clustering
+# before governement intervention (enough cost/price vars?)
+res = smf.ols('range ~ cost + nb_comp',
+              data = df_md[df_md['date'] <= '2012-07']).fit()
+print(res.summary())
+
+# after governement intervention (enough cost/price vars?)
+res = smf.ols('range ~ cost + nb_comp',
+              data = df_md[df_md['date'] >= '2013-02']).fit()
+print(res.summary())
+
+# todo: run with id clustering & id-date clustering
