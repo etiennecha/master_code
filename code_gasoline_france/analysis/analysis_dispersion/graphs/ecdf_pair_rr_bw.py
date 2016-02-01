@@ -107,7 +107,7 @@ df_pair_comp =\
 
 # DIFFERENTIATION
 
-for diff_bound in [0.02]: # , 0.02, 0.05]:
+for diff_bound in [0.01, 0.02, 0.05]: # , 0.02, 0.05]:
   df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
   df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
   df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
@@ -129,27 +129,83 @@ for diff_bound in [0.02]: # , 0.02, 0.05]:
   df_pairs_temp = df_pair_comp_nd
 
   df_all = df_pairs_temp[df_pairs_temp['distance'] <= 5]
-  ls_loop_dist = [(0, 1),
-                  (1, 3),
-                  (3, 5)]
+  ls_loop_dist = [(0, 1, 0.2),
+                  (1, 3, 0.5),
+                  (3, 5, 1.0)]
   ls_loop_df_dist = [(dist_min,
                       dist_max,
+                      alpha,
                       df_pairs_temp[(df_pairs_temp['distance'] >= dist_min) &\
                               (df_pairs_temp['distance'] < dist_max)]) for\
-                       dist_min, dist_max in ls_loop_dist]
-
+                       dist_min, dist_max, alpha in ls_loop_dist]
   fig = plt.figure()
   ax = fig.add_subplot(111)
   x = np.linspace(min(df_all['pct_rr']), max(df_all['pct_rr']), num=100)
   # ecdf = ECDF(df_all['pct_rr'])
-  for dist_min, dist_max, df_pairs_dist in ls_loop_df_dist:
+  for dist_min, dist_max, alpha, df_pairs_dist in ls_loop_df_dist:
     ecdf_dist = ECDF(df_pairs_dist['pct_rr'])
     y_dist = ecdf_dist(x)
     ax.step(x,
             y_dist,
             label = r'{:d}km '.format(dist_min) +\
                     r'$\leq d_{ij} <$' +\
-                    r' {:d}km'.format(dist_max))
-  plt.legend()
-  plt.tight_layout()
-  plt.show()
+                    r' {:d}km'.format(dist_max),
+            color = 'k',
+            alpha = alpha)
+  # Show ticks only on left and bottom axis, out of graph
+  ax.yaxis.set_ticks_position('left')
+  ax.xaxis.set_ticks_position('bottom')
+  ax.get_yaxis().set_tick_params(which='both', direction='out')
+  ax.get_xaxis().set_tick_params(which='both', direction='out')
+  plt.legend(loc = 4)
+  plt.savefig(os.path.join(path_dir_built_dis_graphs,
+                           dir_graphs,
+                           'ecdf_rank_reversals_le_{:.0f}c.png'.format(diff_bound*100)),
+              bbox_inches='tight')
+  plt.close()
+
+  # ############################################
+  # GRAPH ECDF RANK REVERSALS: SUPS / NON SUPS
+  # ############################################
+  
+  for title_temp, df_pairs_temp in [('sup', df_pair_sup_nd),
+                                    ('nsup', df_pair_nsup_nd)]:
+
+    df_all = df_pairs_temp[df_pairs_temp['distance'] <= 5]
+    ls_loop_dist = [(0, 1, 0.2),
+                    (1, 3, 0.5),
+                    (3, 5, 1.0)]
+    ls_loop_df_dist = [(dist_min,
+                        dist_max,
+                        alpha,
+                        df_pairs_temp[(df_pairs_temp['distance'] >= dist_min) &\
+                                (df_pairs_temp['distance'] < dist_max)]) for\
+                         dist_min, dist_max, alpha in ls_loop_dist]
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    x = np.linspace(min(df_all['pct_rr']), max(df_all['pct_rr']), num=100)
+    # ecdf = ECDF(df_all['pct_rr'])
+    for dist_min, dist_max, alpha, df_pairs_dist in ls_loop_df_dist:
+      ecdf_dist = ECDF(df_pairs_dist['pct_rr'])
+      y_dist = ecdf_dist(x)
+      ax.step(x,
+              y_dist,
+              label = r'{:d}km '.format(dist_min) +\
+                      r'$\leq d_{ij} <$' +\
+                      r' {:d}km'.format(dist_max),
+              color = 'k',
+              alpha = alpha)
+    # Show ticks only on left and bottom axis, out of graph
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+    ax.get_yaxis().set_tick_params(which='both', direction='out')
+    ax.get_xaxis().set_tick_params(which='both', direction='out')
+    plt.legend(loc = 4)
+    plt.savefig(os.path.join(path_dir_built_dis_graphs,
+                             dir_graphs,
+                             'ecdf_rank_reversals_{:s}_le_{:.0f}c.png'\
+                               .format(title_temp, diff_bound*100)),
+                bbox_inches='tight')
+    plt.close()
+    #plt.tight_layout()
+    #plt.show()
