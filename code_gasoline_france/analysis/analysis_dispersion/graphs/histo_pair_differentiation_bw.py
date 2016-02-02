@@ -110,7 +110,6 @@ df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
 df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
 
 # COMP SUP VS. NON SUP
-
 df_pair_sup = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
                            (df_pair_comp['group_type_2'] == 'SUP')]
 df_pair_nsup = df_pair_comp[(df_pair_comp['group_type_1'] != 'SUP') &\

@@ -9,27 +9,44 @@ from generic_competition import *
 import copy
 import collections
 
-path_dir_built_paper = os.path.join(path_data,
-                                    'data_gasoline',
-                                    'data_built',
-                                    'data_paper_dispersion')
+path_dir_built = os.path.join(path_data,
+                              u'data_gasoline',
+                              u'data_built',
+                              u'data_scraped_2011_2014')
+path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
 
-path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
+path_dir_built_zag = os.path.join(path_data,
+                                  'data_gasoline',
+                                  'data_built',
+                                  'data_zagaz')
+path_dir_built_zag_csv = os.path.join(path_dir_built_zag, 'data_csv')
+path_dir_built_zag_json = os.path.join(path_dir_built_zag, 'data_json')
+path_dir_built_zag_graphs = os.path.join(path_dir_built_zag, 'data_graphs')
 
-path_dir_source = os.path.join(path_data,
-                               'data_gasoline',
-                               'data_source')
+path_dir_source_zag = os.path.join(path_data,
+                                   'data_gasoline',
+                                   'data_source',
+                                   'data_zagaz_scraped')
+path_dir_source_zag_json = os.path.join(path_dir_source_zag, 'data_json')
 
-path_dir_zagaz = os.path.join(path_dir_source, 'data_stations', 'data_zagaz')
+path_dir_source_other = os.path.join(path_data,
+                                     u'data_gasoline',
+                                     u'data_source',
+                                     u'data_other')
+path_dir_built_other_visits = os.path.join(path_dir_source_other, 'data_web_visits')
 
-path_dir_web_visits = os.path.join(path_dir_source, 'data_web_visits')
+path_dir_built_other = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_other')
+path_dir_built_other_csv = os.path.join(path_dir_built_other, 'data_csv')
 
 # ############
 # LOAD FILES
 # ############
 
 # LOAD ZAGAZ USER FILES
-dict_zagaz_users = dec_json(os.path.join(path_dir_zagaz,
+dict_zagaz_users = dec_json(os.path.join(path_dir_source_zag_json,
                                          '20140408_dict_zagaz_user_info.json'))
 
 ls_registration_dates = [v[0][3][1] for k,v in dict_zagaz_users.items() if v and v[0]]
@@ -122,7 +139,6 @@ print smf.ols(formula = formula,
               missing = 'drop',
               data = df_visits).fit().summary()
 # seems: nb of changes has no impact
-
 
 # todo: check cointegration
 
