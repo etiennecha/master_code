@@ -23,9 +23,9 @@ path_dir_built_other_csv = os.path.join(path_dir_built_other, 'data_csv')
 path_dir_insee = os.path.join(path_data, 'data_insee')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 # ##############
 # LOAD DATA
@@ -67,6 +67,19 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
+df_station_stats = pd.merge(df_station_stats,
+                            df_info[['brand_last',
+                                     'group_last',
+                                     'group_type_last']],
+                            left_index = True,
+                            right_index = True,
+                            how = 'left')
+
+df_station_stats_sup =\
+  df_station_stats[df_station_stats['group_type_last'] == 'SUP']
+df_station_stats_nsup =\
+  df_station_stats[df_station_stats['group_type_last'] != 'SUP']
+
 # FILTER DATA
 # exclude stations with insufficient (quality) price data
 df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
@@ -86,39 +99,74 @@ df_cost = pd.read_csv(os.path.join(path_dir_built_other_csv,
                                  parse_dates = ['date'])
 df_cost.set_index('date', inplace = True)
 
-# ##############
-# GRAPH PRICE HT
-# ##############
+# ######################
+# SIMULATE STATION PRICE
+# ######################
 
-df_dyna = pd.DataFrame(df_prices_ht.mean(1),
-                       index = df_prices_ht.index,
-                       columns = ['Retail diesel before tax (France)'])
-df_dyna['Wholesale diesel (Rotterdam)'] = df_cost['UFIP RT Diesel R5 EL']
-df_dyna['Brent (Rotterdam)'] = df_cost['UFIP Brent R5 EB'] / 158.987295
-#df_dyna['Brent (Rotterdam)'] = df_cost['Europe Brent FOB EL']
+# assuming one change per week
 
-from pylab import *
-rcParams['figure.figsize'] = 16, 6
+zero = 1e-10
 
-ax = df_dyna.plot()
-ax.set_ylabel(r"Price (euros/l)")
-ax.set_xlabel('')
+print()
+print(u'Price changes based on simple simulation:')
+for day in range(0,5):
+  print()
+  print('Day:', day)
+  df_dyna = pd.DataFrame(df_prices_ht.mean(1),
+                         index = df_prices_ht.index,
+                         columns = ['Retail diesel before tax (France)'])
+  df_dyna['Wholesale diesel (Rotterdam)'] = df_cost['UFIP RT Diesel R5 EL']
+  df_dyna['Brent (Rotterdam)'] = df_cost['UFIP Brent R5 EB'] / 158.987295
+  
+  df_dyna['retail_star'] = (df_dyna['Wholesale diesel (Rotterdam)'] + 0.4419) * 1.196
+  
+  df_dyna['wd'] = df_dyna.index.weekday # friday is 4
+  df_dyna['retail_day'] = np.nan
+  df_dyna.loc[df_dyna['wd'] == day, 'retail_day'] = df_dyna['retail_star']
+  df_dyna['retail_day'] = df_dyna['retail_day'].fillna(method = 'ffill')
+  df_dyna['rd_chge'] =\
+    df_dyna['retail_day'] - df_dyna['retail_day'].shift(1)
+  
+  print(u'Positive chges')
+  print(u'Nb: {:d}'.format(len(df_dyna['rd_chge'][df_dyna['rd_chge'] > zero])))
+  print(u'Mean: {:.3f}'.format(df_dyna['rd_chge'][df_dyna['rd_chge'] > zero].mean()))
+  
+  print(u'Negative chges')
+  print(u'Nb: {:d}'.format(len(df_dyna['rd_chge'][df_dyna['rd_chge'] < -zero])))
+  print(u'Mean: {:.3f}'.format(df_dyna['rd_chge'][df_dyna['rd_chge'] < -zero].mean()))
 
-plt.tight_layout()
-plt.show()
+# consistant with actual stats
+print()
+print('Actual station price stats:')
+for title, df_stats in [['All', df_station_stats],
+                        ['Sup', df_station_stats_sup],
+                        ['Others', df_station_stats_nsup]]:
+  print()
+  print(u'-'*20)
+  print(title)
 
-# #################
-# GRAPH PRICE CHGES
-# #################
+  print()
+  print(df_stats[['nb_valid', 'nb_chge', 'pct_chge']].describe().to_string())
+  
+  print()
+  print(df_stats[['nb_pos_chge', 'nb_neg_chge',
+                  'avg_pos_chge', 'avg_neg_chge',
+                  'med_pos_chge', 'med_neg_chge']].describe().to_string())
 
-df_chges = df_prices_ttc - df_prices_ttc.shift(1)
-#df_chges = df_chges.ix['2012-01-01':'2012-12-31']
+  print()
+  print(df_stats['dow_max'].value_counts(normalize = 1))
+  
+  print()
+  print(u'Dummy 2 digits:')
+  print(df_stats['2d'].value_counts(normalize = 1))
 
-fig = plt.figure()
-se_neg_chges = df_chges[df_chges < - 1e-10].count(1)
-se_pos_chges = df_chges[df_chges >   1e-10].count(1)
+  # Todo: total percent of chges on each day of week
 
-ax = plt.subplot(111)
-ax.bar(se_neg_chges.index, (-se_neg_chges).values, lw=0, color='r')
-ax.bar(se_pos_chges.index, se_pos_chges.values, lw=0, color='b')
-plt.show()
+# Promo? Cuts etc. seems similar distrib in supermarkets and others
+ls_pctiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
+print()
+print(df_station_stats['nb_promo'].describe(percentiles = ls_pctiles).to_string())
+
+# inspect
+df_station_stats_nsup[df_station_stats_nsup['nb_promo'] > 30].index[0:10]
+df_station_stats_sup[df_station_stats_sup['nb_promo'] > 30].index[0:10]

@@ -207,8 +207,8 @@ plt.close()
 fig = plt.figure()
 ax = fig.add_subplot(111)
 # truncate: exclude those above 0.20
-bins = np.linspace(0, 0.02, 21)
-myarray = df_station_stats['avg_pos_chge'].values
+bins = np.linspace(0, 5, 11)
+myarray = df_station_stats['avg_pos_chge'].values * 100
 weights = np.ones_like(myarray)/float(len(myarray)) * 100
 n, bins, rectangles = ax.hist(myarray,
                               weights = weights,
@@ -217,7 +217,7 @@ n, bins, rectangles = ax.hist(myarray,
                               label = u'Positive chges',
                               color = 'k',
                               normed = 0)
-myarray = df_station_stats['avg_neg_chge'].abs().values
+myarray = df_station_stats['avg_neg_chge'].abs().values * 100
 weights = np.ones_like(myarray)/float(len(myarray)) * 100
 n, bins, rectangles = ax.hist(myarray,
                               weights = weights,
@@ -226,18 +226,17 @@ n, bins, rectangles = ax.hist(myarray,
                               label = u'Negative chges',
                               color = 'k',
                               normed = 0)
-ax.set_xticks(np.linspace(0, 0.02, 11))  
+ax.set_xticks(np.linspace(0, 5, 6))  
 # Show ticks only on left and bottom axis, out of graph
 ax.yaxis.set_ticks_position('left')
 ax.xaxis.set_ticks_position('bottom')
 ax.get_yaxis().set_tick_params(which='both', direction='out')
 ax.get_xaxis().set_tick_params(which='both', direction='out')
-plt.xlabel(u'Mean price change')
+plt.xlabel(u'Station mean price change (euro cents/litre)')
 plt.ylabel(u'% of obs')
 plt.legend()
 plt.savefig(os.path.join(path_dir_built_dis_graphs,
                          dir_graphs,
-                         'hist_station_mean_price_chge.png'\
-                              .format(diff_bound*100)),
+                         'hist_station_mean_price_chge.png'),
             bbox_inches='tight')
 plt.close()

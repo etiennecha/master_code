@@ -326,7 +326,7 @@ df_station_stats['nb_promo'] = df_promo['nb_promo']
 df_station_stats.to_csv(os.path.join(path_dir_built_csv,
                                      'df_station_stats.csv'),
                          index_label = 'id_station',
-                         float_format= '%.3f',
+                         float_format= '%.4f',
                          encoding = 'utf-8')
 
 # ###############
