@@ -115,8 +115,8 @@ df_pairs.loc[df_pairs['distance'] <= 1, 'sc_1000'] = 1
 # RESTRICT CATEGORY
 
 df_pairs_all = df_pairs.copy()
-#df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
-df_pairs = df_pairs[df_pairs['cat'] == 'residuals'].copy()
+df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
+#df_pairs = df_pairs[df_pairs['cat'] == 'residuals'].copy()
 
 # COMPETITORS VS. SAME GROUP
 

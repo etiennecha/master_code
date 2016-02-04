@@ -167,6 +167,18 @@ ls_pctiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
 print()
 print(df_station_stats['nb_promo'].describe(percentiles = ls_pctiles).to_string())
 
-# inspect
-df_station_stats_nsup[df_station_stats_nsup['nb_promo'] > 30].index[0:10]
-df_station_stats_sup[df_station_stats_sup['nb_promo'] > 30].index[0:10]
+# inspect : rather sups... (or different value for nsup)
+df_station_stats_nsup[df_station_stats_nsup['nb_promo'] > 40].index[0:10]
+df_station_stats_sup[df_station_stats_sup['nb_promo'] > 40].index[0:10]
+
+# Case study: dynamic discrimination? obfuscation?
+# Maybe focus on .ix['2013-11':'2014-06'] => period of price stability
+id_station = '22190001'  # '10410001'
+se_station = df_prices_ttc[id_station].ix['2013-12':'2014-05'].copy()
+ax = se_station.plot()
+for wd_date in se_station[se_station.index.weekday == 4].index: # 4 is friday
+  ax.axvline(wd_date)
+plt.show()
+# todo: check exact timing of price cut and increase?
+# '10410001' saturday is cheapest day?
+# '22190001' saturday may be ok but sunday/monday/tu.. not su much?
