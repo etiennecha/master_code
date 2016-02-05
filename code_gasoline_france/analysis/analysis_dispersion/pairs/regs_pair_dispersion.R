@@ -1,7 +1,7 @@
 library(quantreg)
 
-#setwd("C:\\Users\\etna\\Desktop\\Etienne_work\\Data)
-path.data <- '//ulysse/users/echamayou/Bureau/Etienne_work/Data'
+path.data <- 'C:/Users/etna/Desktop/Etienne_work/Data'
+#path.data <- '//ulysse/users/echamayou/Bureau/Etienne_work/Data'
 path.file <- file.path(path.data, 'data_gasoline/data_built/data_dispersion/data_csv/df_pair_final.csv')
 data <- read.csv(path.file)
 
@@ -39,3 +39,21 @@ summary(fit25)
 summary(fit50)
 summary(fit75)
 summary(fit90)
+
+# Kolmogorov Smirnov
+# https://stat.ethz.ch/R-manual/R-devel/library/stats/html/ks.test.html
+
+ks.test(ppd.nodiff[which(ppd.nodiff$distance <= 0.5), c('pct_rr')],
+        ppd.nodiff[which(ppd.nodiff$distance > 0.5 & ppd.nodiff$distance <= 3),
+                   c('pct_rr')])
+
+ks.test(ppd.nodiff[which(ppd.nodiff$distance <= 0.5), c('pct_rr')],
+        ppd.nodiff[which(ppd.nodiff$distance > 0.5 & ppd.nodiff$distance <= 3),
+                   c('pct_rr')],
+        alternative = c('greater'))
+
+ks.test(ppd.nodiff[which(ppd.nodiff$distance <= 0.5), c('pct_rr')],
+        ppd.nodiff[which(ppd.nodiff$distance > 0.5 & ppd.nodiff$distance <= 3),
+                   c('pct_rr')],
+        alternative = c('less'))
+
