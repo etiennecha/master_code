@@ -1,4 +1,4 @@
-\documentclass[11pt]{article}
+\documentclass[english]{article}
 \usepackage[T1]{fontenc}
 \usepackage[latin1]{inputenc}
 \usepackage{enumerate}
@@ -112,22 +112,11 @@ The second event is of political nature. On August 29, 2012, a decrease in price
 
 Descriptive statistics are provided for a period of 640 days starting September 9, 2011 and ending May 6, 2013. Four subperiods of data are yet missing for various technical reasons, thus reducing the number of observed days to 564\footnote{Respective day lengths of missing subperiods are 11 (2012/07/08-2012/07/18), 10 (2012/08/13-2012/08/22), 49 (2012/12/04-2013/01/21) and 6 (2013/04/04-2013/04/09).}. The end of the period studied has been determined arbitrarily to avoid including another missing subperiod and to keep the database to a reasonable size.
 
-\begin{figure}[!h]
-    \caption{Diesel prices and retail gross margin (09/2011-06/2013)}
-	\centering
-		\includegraphics[width=16cm]{graphs/diesel_price_margin.png}
-\end{figure}
+
 
 \subsubsection{Price ridigity}
 
 Data include prices at 9,932 gas stations in Mainland France, of which 421 are identified as highway gas stations and thus excluded from the analysis. Additionally, 381 stations are excluded due to apparent poor data quality (less than 10 prices observed or less than a price change per month). Overall, the number of prices retained in the analysis varies between 8,715 and 8,965 across days within the period studied. On average, c. 1,500 gas stations (c. 18\% of gas stations observed and retained) change prices within a day. The average gas station changes price a little less than every week.
-
-\begin{figure}[!h]
-    \caption{Daily number of price changes (09/2011-06/2012)}
-	\centering
-		\includegraphics[width=16cm]{graphs/diesel_nb_price_chges.png}
-    \floatfoot{The daily collection of prices has occasionally been delayed by a few hours resulting in some imprecision regarding the exact number of price changes occurring within one day}
-\end{figure}
 
 \subsubsection{Heterogeneity among gas stations}
 
@@ -147,23 +136,21 @@ A sensitive issue in the empirical analysis is the treatment of differentiation,
 
 Finally, French data raise the issue of the nature of rank reversals measured by the statistic previously described. Indeed, the transformation by the firm "Total" of a significant number of its gas stations to low cost gas stations generates rank reversals which are clearly unrelated to the use of randomized pricing (cf. appendix). In order to avoid including "spurious rank reversals" in the analysis, the frequency of changes in price ranking was also considered in the analysis. Conservatively, pairs of gas stations involving such a brand and price policy change have been excluded from the analysis. It has also been checked that price policies implemented by competitors of rebranded gas stations were not significantly affected.
 
-\begin{figure}[!h]
-    \caption{Percentage of rank reversals among pairs}
-	\centering
-		\includegraphics[width=16cm]{graphs/ecdf_rr_temporal.png}
-    \floatfoot{Series represent for each day the percentage of pairs observed where the usual price order is not respected (reversed rank). No differentiation implies that pairs exhibit an average price difference below 2c/l.}
-\end{figure}
+
 
 Figure 3 displays the percentage of pairs of gas stations whose price rank is reversed on each day of the period studied. It illustrates how a naive use of rank reversals may lead to overestimate price dispersion ("All pairs" vs. "All but Total Access"). Among pairs of gas stations built with a maximum distance of 3km, the percentage of reversed pairs fluctuates between 5.4\% and 15.3\%  (mean 8.1\%). A large portion of pairs yet involve differentiated competitors (supermarkets are typically less expensive and thus always cheaper than most oil company gas stations). The "No differentiation" series results from a focus on pairs which exhibit an average price difference below 2c/l. Among these pairs, the minimum percentage of reversed pairs fluctuates between 13.8\% and 29.3\% (mean 19.5\%). From a consumer viewpoint, this translates in one chance in five to pay the highest price upon patronizing among two competitors of similar price level the one which is cheaper most of the time.
 
 Using maximum 3km and 5km allows to build databases containing respectively 13,846 and 28,433 pairs of gas stations. As expected, rank reversals between two stations decreases in the average spread between their prices, with a large number exhibiting no rank reversals. In order to reduce the influence of static dispersion, the sample is subset based on the value of the average spread between prices. Results are presented for a maximum average spread of 0.02c/l i.e. a 1\% to 2\% average difference in prices.
 
+{\renewcommand{\arraystretch}{1.1}
+
 \begin{table}
 \caption{Pair rank reversals}
-% {\renewcommand{\arraystretch}{0.8}
 \centering
 %\begin{center}
+\begin{footnotesize}
 \begin{tabular}{lrrrrr}
+\hline
 \hline
 {} & \multicolumn{3}{c}{Raw prices} & \multicolumn{2}{c}{Residual prices}  \\
 {} & All & No Total & Price difference & Price difference & Price difference \\
@@ -183,31 +170,20 @@ Mean & 0.09 & 0.08 & 0.21 & 0.41 & 0.45 \\
 Std & 0.13 & 0.12 & 0.13 & 0.10 & 0.04 \\
 Median & 0.02 & 0.01 & 0.19 & 044 & 0.46 \\
 \hline
+\hline
 \multicolumn{6}{l}{\small Pairs including a Total Access gas station are excluded in the three last columns}\\
 \end{tabular}
+\end{footnotesize}
 %\end{center}
 \end{table}
 
-A clear ranking of empirical distribution functions of rank reversals can be observed among pairs of gas stations depending on distances. This is consistent with the idea that nearby gas stations compete in a (virtually) complete information setting, where there is no particular reason to expect rank reversals. Conversely, distance can create an information issue for other pairs, leading to the inexistence of an equilibrium in pure strategies.
+{\renewcommand{\arraystretch}{1.0}
 
-\begin{figure}[H]
-\centering
-\caption{Empirical distribution functions of rank reversals (raw prices)}
-\begin{subfigure}{.4\linewidth}
-\centering
-\includegraphics[width=6cm]{graphs/ecdf_rr_all.png}
-\caption[short]{All pairs}
-\end{subfigure}
-\begin{subfigure}{.4\linewidth}
-\centering
-\includegraphics[width=6cm]{graphs/ecdf_rr_nodiff.png}
-\caption[short]{Pairs with low differentiation}
-\end{subfigure}
-\end{figure}
+A clear ranking of empirical distribution functions of rank reversals can be observed among pairs of gas stations depending on distances. This is consistent with the idea that nearby gas stations compete in a (virtually) complete information setting, where there is no particular reason to expect rank reversals. Conversely, distance can create an information issue for other pairs, leading to the inexistence of an equilibrium in pure strategies.
 
 In order to evaluate the hypothesis according to which information is connected to price dispersion, two measures of price dispersion: rank reversals and standard deviation in spread, are regressed on a proxy for consumer information: distance between stations.
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
 \caption{Regression of rank reversals}
@@ -244,7 +220,7 @@ While the emphasis has so far been laid on examining empirical evidence about th
 
 The methodology employed by \cite{TAP11} consists in considering each gas station successively as the center of a market delimited by a circle of a given radius (robustness of results to variations in radius size is checked). Various statistics accounting for price dispersion can then be computed for each market and period. If one observes $N$ stations close to each other (e.g. with a limit radius of 2km: if no two stations are separated by a distance of more than 2 km) and with prices posted over $T$ periods, this will result in $N*T$ observations as each station is successively considered and, for each station, a statistic representing price dispersion is computed at each period. An expected consequence is that it tends to over represent markets with higher gas station density (typically cities).
 
-\begin{table}[h]
+\begin{table}[H]
 \caption{Overview of market price dispersion}
 \begin{tabular}{lrrr}
 \hline
@@ -269,12 +245,11 @@ Market price std & 0.011 & 0.011 & 0.010 \\
 \floatfoot{Each statistic accounting for price dispersion is first computed for each local market across time. The table reports averages across markets. At the market level, price dispersion has been computed only for days when more than two thirds of competitors' prices were available. Only markets with more than 50 days of data are then taken into account to compute reported statistics.}
 \end{table}
 
-
 Regressions are then run using raw prices and cleaned prices. Also, in order to address the issue of overlapping markets, regression are performed on dispersion data generated in a way that prevents market overlap. Descriptive statistics performed on raw prices are provided.
 
 Standard market dispersion statistics such as range and standard deviation are strongly influenced by static price dispersion. As a consequence, contrarily to the previous section where descriptives statistics performed on raw prices arguably provided a most conservative first idea of price dispersion, clean prices are now to be preferred despite their shortcomings. Results are reported with clean prices, raw prices for markets obtained with radiuses of respectively 3 and 5km. Additionnally, results are reported for non overlapping markets built in a way that is detailed in appendix.
 
-\begin{table}[H]
+\begin{table}[h]
 %\renewcommand{\arraystretch}{0.7}
 \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
 \caption{Regressions of market dispersion}
@@ -348,21 +323,48 @@ Further research remains to be undertaken in two directions: one is the investig
 
 \appendix
 
-\section{Spurious rank reversals}
+\section{Descriptive statistics}
 
-The following figure displays prices posted at a gas station which is rebranded "Total Access" (low cost brand of Total) in the middle of the period studied and at two nearby gas stations. It is easily seen how naively considering the percentage of rank reversals of the rebranded gas station vs. each of its competitors over the whole period would lead to record spurious price dispersion. The price level indeed changes abruptly in a way that cannot go unnoticed by consumers. It thus clearly does not reflect any used of randomized pricing and such rank reversals are thus excluded from the analysis. More generally, this suggests the need to control the frequency of changes in price ranking so as to limit the risk of capturing dispersion reflecting such deterministic changes in pricing policies.
-
-\ \\
-\begin{figure}[H]
-    \caption{Prices of three stations in Chalons-en-Champagne}
+\begin{figure}[!h]
+    \caption{Daily Brent and French diesel retail prices excluding taxes)}
 	\centering
-		\includegraphics[width=16cm]{graphs/spurious_total_access_rr.png}
-	\floatfoot{}
+		\includegraphics[width=16cm]{graphs/macro_trends.png}
+\label{fig:macro_trends}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{Daily number of retail price changes}
+	\centering
+		\includegraphics[width=16cm]{graphs/macro_vol_price_chges.png}
+    \floatfoot{The daily collection of prices has occasionally been delayed by a few hours resulting in some imprecision regarding the exact number of price changes occurring within one day}
+\label{fig:macro_vol_price_chges}
 \end{figure}
 
 \newpage
 
-\section{Additionnal regression results}
+\section{Rank reversals}
+
+\begin{figure}[H]
+\centering
+\caption{Empirical distribution functions of rank reversals (raw prices)}
+\begin{subfigure}{.4\linewidth}
+\centering
+\includegraphics[width=6cm]{graphs/ecdf_rank_reversals_le_1c.png}
+\caption[short]{Pair average price spread $\le$ 1 cent/litre}
+\end{subfigure}
+\begin{subfigure}{.4\linewidth}
+\centering
+\includegraphics[width=6cm]{graphs/ecdf_rank_reversals_le_1c.png}
+\caption[short]{Pair average price spread $\le$ 1 cent/litre}
+\end{subfigure}
+\end{figure}
+
+\begin{figure}[!h]
+    \caption{Percentage of rank reversals among pairs}
+	\centering
+		\includegraphics[width=16cm]{graphs/macro_rank_reversals_le_1c.png}
+    \floatfoot{Series represent for each day the percentage of pairs observed where the usual price order is not respected (reversed rank). No differentiation implies that pairs exhibit an average price difference below 1c/l.}
+\end{figure}
 
 \begin{table}[!htbp]\centering
 \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
@@ -391,7 +393,13 @@ N      &     4,183         &     4,183      &     8,312    \\
 \end{tabular}
 \end{table}
 
+\newpage
+
 \section{In progress}
+
+\subsection{Spurious rank reversals}
+
+The following figure displays prices posted at a gas station which is rebranded "Total Access" (low cost brand of Total) in the middle of the period studied and at two nearby gas stations. It is easily seen how naively considering the percentage of rank reversals of the rebranded gas station vs. each of its competitors over the whole period would lead to record spurious price dispersion. The price level indeed changes abruptly in a way that cannot go unnoticed by consumers. It thus clearly does not reflect any used of randomized pricing and such rank reversals are thus excluded from the analysis. More generally, this suggests the need to control the frequency of changes in price ranking so as to limit the risk of capturing dispersion reflecting such deterministic changes in pricing policies.
 
 \subsection{Number of digits after decimal point}
 

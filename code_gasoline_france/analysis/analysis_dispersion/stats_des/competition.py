@@ -106,7 +106,6 @@ df_info.loc[df_info['group'] == 'INDEPENDANT',
 # OVERVIEW COMP BY REGION
 # ########################
 
-
 print()
 print(u'Overview of competition (excluding Corsica)')
 print(df_info[df_info['reg'] != u'Corse']\
@@ -131,6 +130,7 @@ print(df_reg_comp.to_string())
 # OVERVIEW COMP BY GROUP
 # ########################
 
+print()
 print(u'Overview of competition for Total (excluding Corsica)')
 print(df_info[(df_info['reg'] != u'Corse') &\
               (df_info['group'] == 'TOTAL')]\
@@ -150,3 +150,25 @@ print(df_reg_comp.to_string())
 # todo: function + check w/ quartiles to argue on market bounds
 # todo: exploit R/B/C/I with INSEE codes for competition
 # todo: concentration within INSEE zones
+
+# ########################
+# OVERVIEW SAME GROUP
+# ########################
+
+print()
+print(u'Overview of competition for Mousquetaires (excluding Corsica)')
+print(df_info[(df_info['reg'] != u'Corse') &\
+              (df_info['group_last'] == 'MOUSQUETAIRES')]\
+             [lsd_comp].describe(percentiles = ls_pctiles).to_string())
+
+print()
+print(u'Overview of competition for ESSO (excluding Corsica)')
+print(df_info[(df_info['reg'] != u'Corse') &\
+              (df_info['group_last'] == 'ESSO')]\
+             [lsd_comp].describe(percentiles = ls_pctiles).to_string())
+
+print()
+print(u'Overview of competition for AVIA (excluding Corsica)')
+print(df_info[(df_info['reg'] != u'Corse') &\
+              (df_info['group_last'] == 'AVIA')]\
+             [lsd_comp].describe(percentiles = ls_pctiles).to_string())
