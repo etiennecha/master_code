@@ -47,6 +47,10 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                       parse_dates = ['start', 'end', 'day_0', 'day_1', 'day_2'])
 df_info.set_index('id_station', inplace = True)
 
+print(u'Nb of stations in df_info before filtering: {:d}'.format(len(df_info)))
+print(u'Nb on highway: {:d}'.format(len(df_info[df_info['highway'] == 1])))
+print(u'Nb in Corsica: {:d}'.format(len(df_info[df_info['reg'] == 'Corse'])))
+
 # DF PRICES
 
 df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
@@ -77,6 +81,11 @@ df_comp.set_index('id_station', inplace = True)
 
 # FILTER DATA
 # exclude stations with insufficient (quality) price data
+
+df_pbms = df_station_stats[(df_station_stats['pct_chge'] < 0.03) |\
+                           (df_station_stats['nb_valid'] < 90)]
+print(u'Nb with insufficient/pbmatic price data: {:d}'.format(len(df_pbms)))
+
 df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
                                (df_station_stats['nb_valid'] < 90))]
 ls_keep_ids = list(set(df_filter.index).intersection(\
@@ -87,6 +96,8 @@ df_prices_ttc = df_prices_ttc[ls_keep_ids]
 df_info = df_info.ix[ls_keep_ids]
 df_station_stats = df_station_stats.ix[ls_keep_ids]
 df_comp = df_comp.ix[ls_keep_ids]
+
+print(u'Nb of stations after all filters: {:d}'.format(len(df_info)))
 
 # DF COST (WHOLESALE GAS PRICES)
 df_cost = pd.read_csv(os.path.join(path_dir_built_other_csv,
@@ -129,7 +140,7 @@ ls_ids_nidf = df_info[df_info['reg'] != 'Ile-de-France'].index
 ls_ids_fra = df_info.index
 
 ls_loop_groups = [('Supermarkets', ls_ids_sup),
-                  ('Non Supermarkets', ls_ids_nsup),
+                  ('Others', ls_ids_nsup),
                   ('Paris region', ls_ids_idf),
                   ('Non Paris region', ls_ids_nidf),
                   ('France', ls_ids_fra)]
@@ -177,44 +188,9 @@ df_desc.ix['Nb stations (observed)'] =\
   [df_prices_ttc[ls_ids_group].count(1).mean()\
      for group_title, ls_ids_group in ls_loop_groups]
 
+print()
 print(df_desc.to_string())
 
-# ##################################
-# HISTOGRAM PRICE CHANGE PROBABLITY
-# ##################################
-
-myarray = df_station_stats['pct_chge'].values
-weights = np.ones_like(myarray)/float(len(myarray)) * 100
-
-fig = plt.figure()
-ax = fig.add_subplot(111)
-n, bins, rectangles = ax.hist(myarray,
-                              weights = weights,
-                              bins = np.linspace(0, 1, 21),
-                              normed = 0)
-ax.set_xlabel('Daily price change probability')
-ax.set_ylabel('Percent')
-plt.show()
-
-# #########################
-# HISTOGRAM PRICE CHANGES
-# #########################
-
-df_chges = df_prices_ttc - df_prices_ttc.shift(1)
-ar_chges = df_chges.values.flatten()
-ar_chges = ar_chges[(~np.isnan(ar_chges)) & (np.abs(ar_chges) > 1e-10)]
-
-ar_chges = ar_chges * 100
-weights = np.ones_like(ar_chges)/float(len(ar_chges)) * 100
-
-fig = plt.figure()
-ax = fig.add_subplot(111)
-n, bins, rectangles = ax.hist(ar_chges,
-                              weights = weights,
-                              bins = np.linspace(-10, 10, 101),
-                              normed = 0)
-ax.set_xlabel('Price changes')
-ax.set_ylabel('Percent')
-ax.set_xlim(-10, 10)
-plt.xticks(np.linspace(-10, 10, 21))
-plt.show()
+ls_cols_desc_tex = ['France', 'Supermarkets', 'Others']
+print()
+print(df_desc[ls_cols_desc_tex].to_latex())
