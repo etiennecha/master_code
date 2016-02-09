@@ -150,7 +150,8 @@ dict_df_pair_stats =\
     {cat: df_pair_stats[df_pair_stats['cat'] == cat].copy()\
             for cat in df_pair_stats['cat'].unique()}
 
-ls_loop_merge = [['residuals', 'all'],
+ls_loop_merge = [['residuals_no_mc', 'all'],
+                 ['residuals_mc', 'all'],
                  ['all', 'all'],
                  ['after_mc', 'after_mc'],
                  ['before_mc', 'before_mc'],

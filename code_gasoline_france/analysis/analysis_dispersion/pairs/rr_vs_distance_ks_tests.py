@@ -105,9 +105,12 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
+df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
+                      (df_pairs['nb_ctd_both'] < 90))]
+
 # RESTRICT CATEOGORY
 df_pairs_all = df_pairs.copy()
-df_pairs = df_pairs[df_pairs['cat'] == 'residuals'].copy()
+df_pairs = df_pairs[df_pairs['cat'] == 'residuals_no_mc'].copy()
 
 # COMP VS SAME GROUP
 df_pair_same =\
@@ -137,88 +140,93 @@ df_pair_nsup_nd = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() <= diff_bound)
 # STATS DES
 # ##########
 
-# histogram of average spreads (abs value required)
-hist_test = plt.hist(df_pairs['mean_spread'].abs().values,
-                     bins = 100,
-                     range = (0, 0.3))
-plt.show()
-
-ls_loop = [['All', df_pair_comp],
-           ['No differentiation', df_pair_comp_nd],
-           ['Differentiation', df_pair_comp_d]]
-
 zero = 1e-10
-for ppd_name, df_pairs_temp in ls_loop:
+
+# Todo:
+# KS test comparing same corner to market (3 and 5?)
+# OLS QR here too?
+# Graphs back up (same scenarios than graphs displayed in paper?)
+# Check nb obs
+
+# Interesting case: differentiated & residuals
+df_pairs_temp = df_pair_comp_d
+
+ls_loop_dist = [(0, 1, 0.2),
+                (1, 3, 0.5),
+                (3, 5, 1.0)]
+ls_loop_df_dist = [(dist_min,
+                    dist_max,
+                    alpha,
+                    df_pairs_temp[(df_pairs_temp['distance'] >= dist_min) &\
+                            (df_pairs_temp['distance'] < dist_max)]) for\
+                     dist_min, dist_max, alpha in ls_loop_dist]
+
+# GRAPH: ECDF RANK REVERSALS
+df_all = df_pairs_temp[df_pairs_temp['distance'] <= 3]
+fig = plt.figure()
+ax = fig.add_subplot(111)
+x = np.linspace(min(df_all['pct_rr']), max(df_all['pct_rr']), num=100)
+for dist_min, dist_max, alpha, df_pairs_dist in ls_loop_df_dist:
+  ecdf_dist = ECDF(df_pairs_dist['pct_rr'])
+  y_dist = ecdf_dist(x)
+  ax.step(x,
+          y_dist,
+          label = r'{:d}km '.format(dist_min) +\
+                  r'$\leq d_{ij} <$' +\
+                  r' {:d}km'.format(dist_max),
+          color = 'k',
+          alpha = alpha)
+plt.legend(loc = 4)
+plt.show()
+
+# KS test
+
+# For each same corner is <= 0.5 or 1 and further 1 to 3 (check with 5)
+# Non differentiated - Raw prices
+# Non differentiated - Price residuals
+# Differentiated - Price residuals (got to rerun with cat == 'residuals_no_mc')
+
+# Todo: cover supermarket pairs vs. others?
+
+ls_loop_pair_dis = [['No diff', df_pair_comp_nd],
+                    ['Diff', df_pair_comp_d]]
+
+dist_max = 3
+for title, df_temp in ls_loop_pair_dis:
   print()
-  print(ppd_name)
-  print("Nb pairs", len(df_pairs_temp))
-  print("Of which no rank rank reversals",\
-           len(df_pairs_temp['pct_rr'][df_pairs_temp['pct_rr'] <= zero]))
-  
-  # rr & spread vs distance + per type of brand
-  #hist_test = plt.hist(df_pairs_nodiff['pct_rr']\
-  #                       [~pd.isnull(df_pairs_nodiff['pct_rr'])],
-  #                     bins = 50)
-  df_all = df_pairs_temp[(~pd.isnull(df_pairs_temp['pct_rr'])) &\
-                         (df_pairs_temp['distance'] <= 3)]
-  df_close = df_pairs_temp[(~pd.isnull(df_pairs_temp['pct_rr'])) &\
-                           (df_pairs_temp['distance'] <= 1)]
-  df_far = df_pairs_temp[(~pd.isnull(df_pairs_temp['pct_rr'])) &\
-                         (df_pairs_temp['distance'] > 1)]
-  
-  # plot ecdf of rank reversals: close vs. far
-  ecdf = ECDF(df_all['pct_rr'])
-  ecdf_close = ECDF(df_close['pct_rr'])
-  ecdf_far = ECDF(df_far['pct_rr'])
-  x = np.linspace(min(df_all['pct_rr']), max(df_all['pct_rr']), num=100)
-  y = ECDF(x)
-  y_close = ecdf_close(x)
-  y_far = ecdf_far(x)
-  plt.rcParams['figure.figsize'] = 8, 6
-  ax = plt.subplot()
-  ax.step(x, y_close, label = r'$d_{ij} \leq 1km$')
-  ax.step(x, y_far, label = r'$1km < d_{ij} \leq 3km$')
-  plt.title(ppd_name)
-  plt.legend()
-  plt.tight_layout()
-  plt.show()
-  
-  print('\nk-s test of equality of rank reversal distributions')
-  print(ks_2samp(df_close['pct_rr'], df_far['pct_rr']))
-  # one side test not implemented in python ? (not in scipy at least)
-  
-  print('\nNb of pairs', len(df_all['pct_rr']))
-  print('Nb of pairs w/ short distance', len(df_close['pct_rr']))
-  print('Nb of pairs w/ longer distance', len(df_far['pct_rr']))
-  
-  #print('Pair types representation among all pairs, close pairs, far pairs')
-  #for df_temp, name_df in zip([df_all, df_close, df_far], ['All', 'Close', 'Far']):
-  #  print ('\n%s' %name_df, len(df_temp), 'pairs')
-  #  for pair_type in np.unique(df_temp['pair_type']):
-  #    print("{:20} {:>4.2f}".\
-  #            format(pair_type, len(df_temp[df_temp['pair_type'] == pair_type]) /\
-  #                     float(len(df_temp))))
+  print(title)
+  for dist_sc in (0.5, 1):
+    df_sc = df_temp[df_temp['distance'] <= dist_sc]
+    df_further = df_temp[df_temp['distance'] >= 1]
+    print()
+    print('Nb pairs same corner ({:.1f}km): {:d}'.format(dist_sc, len(df_sc)))
+    print('Nb pairs further: {:d}'.format(len(df_further)))
+    print('KS stats', ks_2samp(df_sc['pct_rr'], df_further['pct_rr']))
 
-# HEATMAP: PCT SAME VS PCT RR
-heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['pct_same'].values,
-                                         df_pair_comp_nd['pct_rr'].values,
-                                         bins=30)
-extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
-ax.set_xlabel('Pct same price')
-ax.set_ylabel('Pct rank reversals')
-plt.show()
-
-# HEATMAP: PCT RR VS MEAN SPREAD
-heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['abs_mean_spread'].values,
-                                         df_pair_comp_nd['pct_rr'].values,
-                                         bins=30)
-extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
-ax.set_xlabel('Mean spread')
-ax.set_ylabel('Pct rank reversals')
-plt.show()
+## #######
+## BACKUP
+## #######
+#
+## HEATMAP: PCT SAME VS PCT RR
+#heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['pct_same'].values,
+#                                         df_pair_comp_nd['pct_rr'].values,
+#                                         bins=30)
+#extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+#fig = plt.figure()
+#ax = fig.add_subplot(111)
+#ax.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
+#ax.set_xlabel('Pct same price')
+#ax.set_ylabel('Pct rank reversals')
+#plt.show()
+#
+## HEATMAP: PCT RR VS MEAN SPREAD
+#heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['abs_mean_spread'].values,
+#                                         df_pair_comp_nd['pct_rr'].values,
+#                                         bins=30)
+#extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+#fig = plt.figure()
+#ax = fig.add_subplot(111)
+#ax.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
+#ax.set_xlabel('Mean spread')
+#ax.set_ylabel('Pct rank reversals')
+#plt.show()

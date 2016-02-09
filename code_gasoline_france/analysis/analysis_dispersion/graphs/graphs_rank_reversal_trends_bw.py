@@ -108,6 +108,8 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
+df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
+                      (df_pairs['nb_ctd_both'] < 90))]
 
 # DF RANK REVERSALS
 df_rr = pd.read_csv(os.path.join(path_dir_built_dis_csv,

@@ -159,7 +159,7 @@ def get_ls_dispersion_res(res):
   return res[0] + get_ls_standardized_frequency(res[3][0])
 
 start = time.clock()
-ls_categories = ['residuals', 'before_mc', 'after_mc', 'no_mc', 'all']
+ls_categories = ['residuals_mc', 'residuals_no_mc', 'before_mc', 'after_mc', 'no_mc', 'all']
 dict_pairs_rr = {k : [] for k in ls_categories}
 dict_ls_ar_rrs = {k : [] for k in ls_categories}
 dict_dict_rr_lengths = {k : {} for k in ls_categories}
@@ -169,10 +169,17 @@ for (indiv_id, other_id, distance, ls_mc_dates) in ls_loop_pairs:
   se_prices_1_cl = df_prices_cl[indiv_id]
   se_prices_2_cl = df_prices_cl[other_id]
   res_cl = get_pair_price_dispersion(se_prices_1_cl, se_prices_2_cl, light = False)
-  dict_pairs_rr['residuals'].append(base_res + get_ls_dispersion_res(res_cl))
-  dict_ls_ar_rrs['residuals'].append(res_cl[2][1])
-  dict_dict_rr_lengths['residuals']['{:s}-{:s}'.format(indiv_id, other_id)] =\
-      res_cl[3][0]
+  # save under two different cats if margin chge or not
+  if ls_mc_dates:
+    dict_pairs_rr['residuals_mc'].append(base_res + get_ls_dispersion_res(res_cl))
+    dict_ls_ar_rrs['residuals_mc'].append(res_cl[2][1])
+    dict_dict_rr_lengths['residuals_mc']['{:s}-{:s}'.format(indiv_id, other_id)] =\
+        res_cl[3][0]
+  else:
+    dict_pairs_rr['residuals_no_mc'].append(base_res + get_ls_dispersion_res(res_cl))
+    dict_ls_ar_rrs['residuals_no_mc'].append(res_cl[2][1])
+    dict_dict_rr_lengths['residuals_no_mc']['{:s}-{:s}'.format(indiv_id, other_id)] =\
+        res_cl[3][0]
   # Raw prices
   se_prices_1 = df_prices_ttc[indiv_id]
   se_prices_2 = df_prices_ttc[other_id]

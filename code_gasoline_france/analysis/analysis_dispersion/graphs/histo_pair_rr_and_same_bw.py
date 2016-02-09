@@ -94,6 +94,9 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
 df_pairs_all = df_pairs.copy()
 df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
 
+df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
+                      (df_pairs['nb_ctd_both'] < 90))]
+
 # COMP VS SAME GROUP
 df_pair_same =\
   df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
