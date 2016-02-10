@@ -189,7 +189,9 @@ plt.show()
 # Todo: cover supermarket pairs vs. others?
 
 ls_loop_pair_dis = [['No diff', df_pair_comp_nd],
-                    ['Diff', df_pair_comp_d]]
+                    ['Diff', df_pair_comp_d],
+                    ['Supermarkets', df_pair_sup],
+                    ['Others', df_pair_nsup]]
 
 dist_max = 3
 for title, df_temp in ls_loop_pair_dis:
