@@ -132,7 +132,8 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
                    ('3km_Residuals', df_prices_cl, dict_markets['All_3km']),
                    ('1km_Residuals', df_prices_cl, dict_markets['All_1km']),
                    ('5km_Residuals', df_prices_cl, dict_markets['All_5km']),
-                   ('3km_Rest_Residuals', df_prices_cl, dict_markets['Restricted_3km'])]
+                   ('3km_Rest_Residuals', df_prices_cl, dict_markets['Restricted_3km']),
+                   ('Stable_Markets_Residuals', df_prices_cl, ls_stable_markets)]
 
 # Can avoid generating markets every time
 dict_df_mds = {}
@@ -155,29 +156,39 @@ df_cost.set_index('date', inplace = True)
 # Yet need price level (a priori not market: national level)
 # Two definitions of expected price?
 
-df_md = dict_df_mds[ls_loop_markets[4][0]]
+df_md = dict_df_mds[ls_loop_markets[5][0]].copy()
 
-# Add cost data
-df_md.set_index('date', inplace = True)
-df_md['cost'] =  df_cost['UFIP RT Diesel R5 EL']
-df_md.reset_index(drop = False, inplace = True)
+## Add cost data
+#df_md.set_index('date', inplace = True)
+#df_md['cost'] =  df_cost['UFIP RT Diesel R5 EL'] * 100
+#df_md.reset_index(drop = False, inplace = True)
 
 # are price residuals totally useless? see if can add nat avg
 # df_md[df_md['id'] == '75014005']['price'].plot()
+
+# need to get rid of nan to be able to cluster
+df_md = df_md[~df_md['cost'].isnull()]
+df_md['str_date'] = df_md['date'].apply(lambda x: x.strftime('%Y%m%d'))
+df_md['int_date'] = df_md['str_date'].astype(int)
+df_md['int_id'] = df_md['id'].astype(int)
 
 # all periods
 res = smf.ols('range ~ cost + nb_comp',
               data = df_md).fit()
 print(res.summary())
+cov2g = sm.stats.sandwich_covariance.cov_cluster_2groups(res,
+                                                         df_md['int_id'],
+                                                         group2 = df_md['int_date'])
+print(np.sqrt(np.diagonal(cov2g[0])))
 
 # before governement intervention (enough cost/price vars?)
 res = smf.ols('range ~ cost + nb_comp',
-              data = df_md[df_md['date'] <= '2012-07']).fit()
+              data = df_md[df_md['date'] <= '2012-07-01']).fit()
 print(res.summary())
 
 # after governement intervention (enough cost/price vars?)
 res = smf.ols('range ~ cost + nb_comp',
-              data = df_md[df_md['date'] >= '2013-02']).fit()
+              data = df_md[df_md['date'] >= '2013-02-01']).fit()
 print(res.summary())
 
 # todo: run with id clustering & id-date clustering

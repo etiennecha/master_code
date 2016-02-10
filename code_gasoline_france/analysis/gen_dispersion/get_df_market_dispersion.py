@@ -17,6 +17,12 @@ path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
 path_dir_built_json = os.path.join(path_dir_built, u'data_json')
 path_dir_built_graphs = os.path.join(path_dir_built, u'data_graphs')
 
+path_dir_built_other = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_other')
+path_dir_built_other_csv = os.path.join(path_dir_built_other, 'data_csv')
+
 path_dir_built_dis = os.path.join(path_data,
                                   u'data_gasoline',
                                   u'data_built',
@@ -111,6 +117,13 @@ ls_drop_ids_nhw =\
   list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
 df_prices_cl[ls_drop_ids_nhw] = np.nan
 
+# DF COST (WHOLESALE GAS PRICES)
+df_cost = pd.read_csv(os.path.join(path_dir_built_other_csv,
+                                   'df_quotations.csv'),
+                                 encoding = 'utf-8',
+                                 parse_dates = ['date'])
+df_cost.set_index('date', inplace = True)
+
 # #########################
 # GET DF MARKET DISPERSION
 # #########################
@@ -192,10 +205,15 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
 
   # Build dfs of local markets
   df_mds = pd.concat(ls_df_md, ignore_index = True)
+  # add cost
+  df_mds.set_index('date', inplace = True)
+  df_mds['cost'] =  df_cost['UFIP RT Diesel R5 EL'] * 100
+  df_mds.reset_index(drop = False, inplace = True)
   ls_df_mds.append(df_mds)
   # output (quite slow)
   df_mds.to_csv(os.path.join(path_dir_built_dis_csv,
                              'df_market_dispersion_{:s}.csv'.format(title)),
+                index = False,
                 encoding = 'utf-8',
                 float_format= '%.3f')
 
