@@ -152,8 +152,10 @@ for km_bound in [1, 3, 5]:
 ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
                    ('3km_Residuals', df_prices_cl, dict_markets['All_3km']),
                    ('1km_Residuals', df_prices_cl, dict_markets['All_1km']),
+                   ('5km_Raw_prices', df_prices_ttc, dict_markets['All_5km']),
                    ('5km_Residuals', df_prices_cl, dict_markets['All_5km']),
                    ('3km_Rest_Residuals', df_prices_cl, dict_markets['Restricted_3km']),
+                   ('Stable_Markets_Raw_prices', df_prices_ttc, ls_stable_markets),
                    ('Stable_Markets_Residuals', df_prices_cl, ls_stable_markets)]
 
 # for each market:
@@ -210,7 +212,7 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
   df_mds['cost'] =  df_cost['UFIP RT Diesel R5 EL'] * 100
   df_mds.reset_index(drop = False, inplace = True)
   ls_df_mds.append(df_mds)
-  # output (quite slow)
+  ## output (quite slow)
   df_mds.to_csv(os.path.join(path_dir_built_dis_csv,
                              'df_market_dispersion_{:s}.csv'.format(title)),
                 index = False,
@@ -235,7 +237,7 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
                                           'avg_nb_comp_t',
                                           'avg_range',
                                           'avg_std',
-                                          'avg_gfs']].median())
+                                          'avg_gfs']].mean())
   ls_se_disp_std.append(df_market_stats[['avg_nb_comp',
                                          'avg_nb_comp_t',
                                          'avg_range',

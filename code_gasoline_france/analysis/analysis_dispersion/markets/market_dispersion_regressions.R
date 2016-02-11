@@ -80,11 +80,14 @@ path.data.disp <- file.path(path.data, 'data_gasoline/data_built/data_dispersion
 file.names <- c('df_market_dispersion_3km_Raw_prices.csv',
                 'df_market_dispersion_3km_Residuals.csv',
                 'df_market_dispersion_1km_Residuals.csv',
+                'df_market_dispersion_5km_Raw_prices.csv',
                 'df_market_dispersion_5km_Residuals.csv',
                 'df_market_dispersion_3km_Rest_Residuals',
+                'df_market_dispersion_Stable_Markets_Raw_prices',
                 'df_market_dispersion_Stable_Markets_Residuals')
 
-path.file <- file.path(path.data.disp, 'df_market_dispersion_Stable_Markets_Residuals.csv')
+# Loop on 1, 2, 4, 5, 7, 8
+path.file <- file.path(path.data.disp, file.names[[1]])
 
 data <- read.csv(path.file, colClasses=c('date'='Date'))
 
