@@ -87,7 +87,7 @@ file.names <- c('df_market_dispersion_3km_Raw_prices.csv',
                 'df_market_dispersion_Stable_Markets_Residuals')
 
 # Loop on 1, 2, 4, 5, 7, 8
-path.file <- file.path(path.data.disp, file.names[[1]])
+path.file <- file.path(path.data.disp, file.names[[8]])
 
 data <- read.csv(path.file, colClasses=c('date'='Date'))
 
@@ -104,13 +104,13 @@ nrow(data_after)
 dfList <- list(all=data, bf=data_before, af=data_after)
 dfListNames <- names(dfList)
 for (name in dfListNames) {
-  print(name)
+  cat(name)
   cat('\n')
   df <- dfList[[name]]
   reg_range <- lm(range ~ cost + nb_comp, df)
-  # print(summary(reg_range))
+  print(summary(reg_range))
   reg_std <- lm(std ~ cost + nb_comp, df)
-  # print(summary(reg_std))
+  print(summary(reg_std))
   
   # Clustered std errors: one way
   df_plm <- plm.data(df,index=c("id","date"))
@@ -123,6 +123,8 @@ for (name in dfListNames) {
   # print(coeftest(reg_std_plm, vcov = date_c_vcov))
   
   # Clustered std errors: two ways
+  cat('Range')
   print(coeftest.cluster(df, reg_range, cluster1 = 'id', cluster2 = 'date'))
+  cat('Std')
   print(coeftest.cluster(df, reg_std, cluster1 = 'id', cluster2 = 'date'))
 }

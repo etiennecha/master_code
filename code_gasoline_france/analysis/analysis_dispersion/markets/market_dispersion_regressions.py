@@ -131,19 +131,22 @@ for km_bound in [1, 3, 5]:
 ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
                    ('3km_Residuals', df_prices_cl, dict_markets['All_3km']),
                    ('1km_Residuals', df_prices_cl, dict_markets['All_1km']),
+                   ('5km_Raw_prices', df_prices_ttc, dict_markets['All_5km']),
                    ('5km_Residuals', df_prices_cl, dict_markets['All_5km']),
                    ('3km_Rest_Residuals', df_prices_cl, dict_markets['Restricted_3km']),
+                   ('Stable_Markets_Raw_prices', df_prices_ttc, ls_stable_markets),
                    ('Stable_Markets_Residuals', df_prices_cl, ls_stable_markets)]
 
-# Can avoid generating markets every time
-dict_df_mds = {}
-for title, df_prices, ls_markets_temp in ls_loop_markets:
-  dict_df_mds[title] =\
-    pd.read_csv(os.path.join(path_dir_built_dis_csv,
-                             'df_market_dispersion_{:s}.csv'.format(title)),
-                encoding = 'utf-8',
-                parse_dates = ['date'],
-                dtype = {'id' : str})
+## Can avoid generating markets every time
+#dict_df_mds = {}
+#for title, df_prices, ls_markets_temp in ls_loop_markets:
+#  dict_df_mds[title] =\
+#    pd.read_csv(os.path.join(path_dir_built_dis_csv,
+#                             'df_market_dispersion_{:s}.csv'.format(title)),
+#                encoding = 'utf-8',
+#                parse_dates = ['date'],
+#                dtype = {'id' : str})
+#df_md = dict_df_mds[ls_loop_markets[5][0]].copy()
 
 # DF COST (WHOLESALE GAS PRICES)
 df_cost = pd.read_csv(os.path.join(path_dir_built_other_csv,
@@ -156,7 +159,13 @@ df_cost.set_index('date', inplace = True)
 # Yet need price level (a priori not market: national level)
 # Two definitions of expected price?
 
-df_md = dict_df_mds[ls_loop_markets[5][0]].copy()
+# loop on 0, 1, 6, 7
+title = ls_loop_markets[0][0]
+df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
+                                 'df_market_dispersion_{:s}.csv'.format(title)),
+                    encoding = 'utf-8',
+                    parse_dates = ['date'],
+                    dtype = {'id' : str})
 
 ## Add cost data
 #df_md.set_index('date', inplace = True)
@@ -172,23 +181,27 @@ df_md['str_date'] = df_md['date'].apply(lambda x: x.strftime('%Y%m%d'))
 df_md['int_date'] = df_md['str_date'].astype(int)
 df_md['int_id'] = df_md['id'].astype(int)
 
-# all periods
-res = smf.ols('range ~ cost + nb_comp',
-              data = df_md).fit()
-print(res.summary())
-cov2g = sm.stats.sandwich_covariance.cov_cluster_2groups(res,
-                                                         df_md['int_id'],
-                                                         group2 = df_md['int_date'])
-print(np.sqrt(np.diagonal(cov2g[0])))
-
-# before governement intervention (enough cost/price vars?)
-res = smf.ols('range ~ cost + nb_comp',
-              data = df_md[df_md['date'] <= '2012-07-01']).fit()
-print(res.summary())
-
-# after governement intervention (enough cost/price vars?)
-res = smf.ols('range ~ cost + nb_comp',
-              data = df_md[df_md['date'] >= '2013-02-01']).fit()
-print(res.summary())
-
-# todo: run with id clustering & id-date clustering
+# loop on each period
+for title_temp, df_temp in [['all', df_md],
+                            ['before', df_md[df_md['date'] <= '2012-07-01']],
+                            ['after', df_md[df_md['date'] >= '2013-02-01']]]:
+  print()
+  print(title_temp)
+  print('Range')
+  res_range = smf.ols('range ~ cost + nb_comp',
+                 data = df_temp).fit()
+  print(res_range.summary())
+  cov2g_range =\
+    sm.stats.sandwich_covariance.cov_cluster_2groups(res_range,
+                                                     df_temp['int_id'],
+                                                     group2 = df_temp['int_date'])
+  print(np.sqrt(np.diagonal(cov2g_range[0])))
+  print('Std')
+  res_std = smf.ols('std ~ cost + nb_comp',
+                 data = df_temp).fit()
+  print(res_std.summary())
+  cov2g_std =\
+    sm.stats.sandwich_covariance.cov_cluster_2groups(res_std,
+                                                     df_temp['int_id'],
+                                                     group2 = df_temp['int_date'])
+  print(np.sqrt(np.diagonal(cov2g_std[0])))
