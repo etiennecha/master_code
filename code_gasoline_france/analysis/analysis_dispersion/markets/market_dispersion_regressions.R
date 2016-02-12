@@ -87,13 +87,13 @@ file.names <- c('df_market_dispersion_3km_Raw_prices.csv',
                 'df_market_dispersion_Stable_Markets_Residuals.csv')
 
 # Loop on 1, 2, 4, 5, 7, 8
-path.file <- file.path(path.data.disp, file.names[[7]])
+path.file <- file.path(path.data.disp, file.names[[8]])
 
 data <- read.csv(path.file, colClasses=c('date'='Date'))
 
 ## restrict to one day per week
-#data$dow <- weekdays(data$date)
-#data <- data[data$dow == 'vendredi',]
+data$dow <- weekdays(data$date)
+data <- data[data$dow == 'vendredi',]
 
 data_before <- data[data$date <= "2012-07-01",]
 data_after <- data[data$date >= "2013-02-01",]
