@@ -160,17 +160,18 @@ df_cost.set_index('date', inplace = True)
 # Two definitions of expected price?
 
 # loop on 0, 1, 6, 7
-title = ls_loop_markets[0][0]
+title = ls_loop_markets[7][0]
 df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
                                  'df_market_dispersion_{:s}.csv'.format(title)),
                     encoding = 'utf-8',
                     parse_dates = ['date'],
                     dtype = {'id' : str})
 
-## Add cost data
-#df_md.set_index('date', inplace = True)
-#df_md['cost'] =  df_cost['UFIP RT Diesel R5 EL'] * 100
-#df_md.reset_index(drop = False, inplace = True)
+# Restrict to one day per week: robustness checks
+df_md.set_index('date', inplace = True)
+df_md['dow'] = df_md.index.dayofweek
+df_md.reset_index(drop = False, inplace = True)
+df_md = df_md[df_md['dow'] == 4] # Friday
 
 # are price residuals totally useless? see if can add nat avg
 # df_md[df_md['id'] == '75014005']['price'].plot()
@@ -182,11 +183,13 @@ df_md['int_date'] = df_md['str_date'].astype(int)
 df_md['int_id'] = df_md['id'].astype(int)
 
 # loop on each period
-for title_temp, df_temp in [['all', df_md],
-                            ['before', df_md[df_md['date'] <= '2012-07-01']],
-                            ['after', df_md[df_md['date'] >= '2013-02-01']]]:
+for title_temp, df_temp in [['All', df_md],
+                            ['Before', df_md[df_md['date'] <= '2012-07-01']],
+                            ['After', df_md[df_md['date'] >= '2013-02-01']]]:
   print()
+  print('-'*60)
   print(title_temp)
+  print()
   print('Range')
   res_range = smf.ols('range ~ cost + nb_comp',
                  data = df_temp).fit()
@@ -195,7 +198,13 @@ for title_temp, df_temp in [['all', df_md],
     sm.stats.sandwich_covariance.cov_cluster_2groups(res_range,
                                                      df_temp['int_id'],
                                                      group2 = df_temp['int_date'])
-  print(np.sqrt(np.diagonal(cov2g_range[0])))
+  var_range = np.sqrt(np.diagonal(cov2g_range[0]))
+  tval_range = res_range.params / var_range
+  print(var_range)
+  print(tval_range.values)
+  # todo: check computation of p values
+  print(scipy.stats.t.sf(np.abs(tval_range), res_range.nobs)*2)
+  print()
   print('Std')
   res_std = smf.ols('std ~ cost + nb_comp',
                  data = df_temp).fit()
@@ -204,4 +213,12 @@ for title_temp, df_temp in [['all', df_md],
     sm.stats.sandwich_covariance.cov_cluster_2groups(res_std,
                                                      df_temp['int_id'],
                                                      group2 = df_temp['int_date'])
-  print(np.sqrt(np.diagonal(cov2g_std[0])))
+  var_std = np.sqrt(np.diagonal(cov2g_std[0]))
+  tval_std = res_std.params / var_std
+  print(var_std)
+  print(tval_std.values)
+  # todo: check computation of p values
+  print(scipy.stats.t.sf(np.abs(tval_std), res_std.nobs - 1)*2)
+
+# toco: check if loss of signif. on cost using friday only due to insuff vars in cost?
+# todo: check if there are markets with supermarkets / no supermarkets?
