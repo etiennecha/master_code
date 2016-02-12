@@ -188,9 +188,10 @@ df_desc.ix['Nb stations (observed)'] =\
   [df_prices_ttc[ls_ids_group].count(1).mean()\
      for group_title, ls_ids_group in ls_loop_groups]
 
-print()
-print(df_desc.to_string())
+ls_cols_desc_tex = ['France', 'Supermarkets', 'Others', 'Paris region', 'Non Paris region']
 
-ls_cols_desc_tex = ['France', 'Supermarkets', 'Others']
+print()
+print(df_desc[ls_cols_desc_tex].to_string())
+
 print()
 print(df_desc[ls_cols_desc_tex].to_latex())

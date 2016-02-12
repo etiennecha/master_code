@@ -1,4 +1,4 @@
-﻿#!/usr/bin/python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
@@ -149,62 +149,54 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
 #df_md = dict_df_mds[ls_loop_markets[5][0]].copy()
 
 # paper regressions: 0, 1, 6, 7
-title = ls_loop_markets[7][0]
-df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
-                                 'df_market_dispersion_{:s}.csv'.format(title)),
-                    encoding = 'utf-8',
-                    parse_dates = ['date'],
-                    dtype = {'id' : str})
+# todo: before and after govt intervention?
 
-## Restrict to one day per week: robustness checks
-#df_md.set_index('date', inplace = True)
-#df_md['dow'] = df_md.index.dayofweek
-#df_md.reset_index(drop = False, inplace = True)
-#df_md = df_md[df_md['dow'] == 4] # Friday
+ls_titles, dict_stats_des = [], {}
+for x in [0, 1, 3, 4, 6, 7]:
+  title = ls_loop_markets[x][0]
+  ls_titles.append(title)
+  df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
+                                   'df_market_dispersion_{:s}.csv'.format(title)),
+                      encoding = 'utf-8',
+                      parse_dates = ['date'],
+                      dtype = {'id' : str})
+  
+  ## Restrict to one day per week: robustness checks
+  #df_md.set_index('date', inplace = True)
+  #df_md['dow'] = df_md.index.dayofweek
+  #df_md.reset_index(drop = False, inplace = True)
+  #df_md = df_md[df_md['dow'] == 4] # Friday
+  
+  # Not necessary... can hide later
+  if 'Residuals' in title:
+    df_md.drop(['cv'], axis = 1, inplace = True)
+  
+  # Stats des: groupby id to compute mean/std for each
+  df_md_mean = df_md.groupby('id').agg('mean')
+  ## Not taking market first: keep df_md
+  #df_md_mean = df_md
+  df_md_mean_desc = df_md_mean.describe()
+  for stat in ['mean', 'std']:
+    # caution: starts by taking mean for each market
+    se_agg_stat = df_md_mean_desc.ix[stat]
+    se_agg_stat.ix['Nb markets'] = len(df_md_mean)
+    se_agg_stat.ix['Nb obs.'] = len(df_md)
+    dict_stats_des.setdefault(stat, []).append(se_agg_stat)
 
-# need to get rid of nan to be able to cluster
-df_md = df_md[~df_md['cost'].isnull()]
-df_md['str_date'] = df_md['date'].apply(lambda x: x.strftime('%Y%m%d'))
-df_md['int_date'] = df_md['str_date'].astype(int)
-df_md['int_id'] = df_md['id'].astype(int)
+lsd_agg = ['Nb obs.',
+           'Nb markets',
+           'nb_comp',
+           'nb_comp_t',
+           'range',
+           'std',
+           'gfs']
 
-# loop on each period
-for title_temp, df_temp in [['All', df_md],
-                            ['Before', df_md[df_md['date'] <= '2012-07-01']],
-                            ['After', df_md[df_md['date'] >= '2013-02-01']]]:
+for stat in dict_stats_des.keys():
   print()
-  print('-'*60)
-  print(title_temp)
-  print()
-  print('Range')
-  res_range = smf.ols('range ~ cost + nb_comp',
-                 data = df_temp).fit()
-  print(res_range.summary())
-  cov2g_range =\
-    sm.stats.sandwich_covariance.cov_cluster_2groups(res_range,
-                                                     df_temp['int_id'],
-                                                     group2 = df_temp['int_date'])
-  var_range = np.sqrt(np.diagonal(cov2g_range[0]))
-  tval_range = res_range.params / var_range
-  print(var_range)
-  print(tval_range.values)
-  # todo: check computation of p values
-  print(scipy.stats.t.sf(np.abs(tval_range), res_range.nobs)*2)
-  print()
-  print('Std')
-  res_std = smf.ols('std ~ cost + nb_comp',
-                 data = df_temp).fit()
-  print(res_std.summary())
-  cov2g_std =\
-    sm.stats.sandwich_covariance.cov_cluster_2groups(res_std,
-                                                     df_temp['int_id'],
-                                                     group2 = df_temp['int_date'])
-  var_std = np.sqrt(np.diagonal(cov2g_std[0]))
-  tval_std = res_std.params / var_std
-  print(var_std)
-  print(tval_std.values)
-  # todo: check computation of p values
-  print(scipy.stats.t.sf(np.abs(tval_std), res_std.nobs - 1)*2)
+  print(stat)
+  df_stat = pd.concat(dict_stats_des[stat],
+                      axis = 1,
+                      keys = ls_titles)
+  print(df_stat.ix[lsd_agg].to_string())
 
-# toco: check if loss of signif. on cost using friday only due to insuff vars in cost?
-# todo: check if there are markets with supermarkets / no supermarkets?
+#print(se_agg_mean[lsd_agg].to_string())

@@ -124,40 +124,7 @@ A sensitive issue in the empirical analysis is the treatment of differentiation,
 
 Figure 3 displays the percentage of pairs of gas stations whose price rank is reversed on each day of the period studied. Among pairs of gas stations built with a maximum distance of 3km, the percentage of reversed pairs fluctuates between 5.4\% and 15.3\%  (mean 8.1\%). The "No differentiation" series results from a focus on pairs which exhibit an average price difference below 2c/l. Among these pairs, the minimum percentage of reversed pairs fluctuates between 13.8\% and 29.3\% (mean 19.5\%). From a consumer viewpoint, this translates in one chance in five to pay the highest price upon patronizing among two competitors of similar price level the one which is cheaper most of the time.
 
-{\renewcommand{\arraystretch}{1.1}
 
-\begin{table}
-\caption{Pair rank reversals}
-\centering
-%\begin{center}
-\begin{footnotesize}
-\begin{tabular}{lrrrrr}
-\hline
-\hline
-{} & \multicolumn{3}{c}{Raw prices} & \multicolumn{2}{c}{Residual prices}  \\
-{} & All & No Total & Price difference & Price difference & Price difference \\
-{} & {} & Access & $\le$ 2c/l (mean) & $\le$ 2c/l (mean) & $\ge$ 2c/l (mean)\\
-\hline
-Max $d_{ij}$: 3km & {} & {} & {} & {} & {} \\
-\hline
-Nb pairs & 16,142 & 13,846 & 5,166 & 5,166 & 8,680 \\
-Mean & 0.09 & 0.08 & 0.19 & 0.39 & 0.45 \\
-Std & 0.13 & 0.12 & 0.13 & 0.11 & 0.05 \\
-Median & 0.02 & 0.01 & 0.17 & 0.43 & 0.46 \\
-\hline
-Max $d_{ij}$: 5 km & {} & {} & {} & {} & {} \\
-\hline
-Nb pairs & 33,478 & 28,433 & 10,314 & 10,314 & 18,119 \\
-Mean & 0.09 & 0.08 & 0.21 & 0.41 & 0.45 \\
-Std & 0.13 & 0.12 & 0.13 & 0.10 & 0.04 \\
-Median & 0.02 & 0.01 & 0.19 & 044 & 0.46 \\
-\hline
-\hline
-\multicolumn{6}{l}{\small Pairs including a Total Access gas station are excluded in the three last columns}\\
-\end{tabular}
-\end{footnotesize}
-%\end{center}
-\end{table}
 
 {\renewcommand{\arraystretch}{1.0}
 
@@ -165,34 +132,7 @@ A clear ranking of empirical distribution functions of rank reversals can be obs
 
 In order to evaluate the hypothesis according to which information is connected to price dispersion, two measures of price dispersion: rank reversals and standard deviation in spread, are regressed on a proxy for consumer information: distance between stations.
 
-\begin{table}[H]
-\centering
-\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
-\caption{Regression of rank reversals}
-\begin{tabular}{lccc}
-\hline
-\hline
-{} & No differentiation & No differentiation & Differentiation \\
-{} & raw prices & residual prices & residual prices \\
-\hline
-OLS: distance             &  0.014\sym{***}  &  0.020\sym{***}  &  0.001\sym{}\\
-{}                        & (0.002)          & (0.002)          & (0.001)   \\
-OLS: same corner                & -0.024\sym{***}  & -0.034\sym{***}  & -0.006\sym{***}\\
-{}                        & (0.007)          & (0.006)          & (0.002) \\
-Quantile 0.25: same corner      & -0.027\sym{***}  & -0.067\sym{***}  & -0.007\sym{***}\\
-{}                        & (0.008)          & (0.010)          & (0.003)  \\
-Quantile 0.50: same corner      & -0.024\sym{*}    & -0.030\sym{***}  & -0.007\sym{**}\\
-{}                        & (0.011)          & (0.005)          & (0.002)    \\
-Quantile 0.75: same corner      & -0.027\sym{*}    & -0.007\sym{*}    & -0.002\sym{}\\
-{}                        & (0.014)          & (0.003)          & (0.001)   \\
-\hline
-N                         & 4,183            &   4,183          &     8,312    \\
-\hline\hline
-\multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
-\multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
-\end{tabular}
-\floatfoot{The "same corner" variable is a dummy variable that takes value one for pairs of gas stations separated by a distance of less than 500 meters, namely those for which consumers are expected to be relatively well informed about prices at each retailer.}\\
-\end{table}
+
 
 Overall, results seem to support the connection between price dispersion and consumer information. Pairs separated by a short distance exhibit less rank reversals, while the average price difference tends to be smaller. Though significant, the effect is weaker for differentiated gas stations. This might partly be due to errors introduced by the cleaning of prices. However, for pairs exhibiting little or no differentiation, results do not diffe significantly whether raw prices or residual prices are taken into account.
 
@@ -202,88 +142,11 @@ While the emphasis has so far been laid on examining empirical evidence about th
 
 The methodology employed by \cite{TAP11} consists in considering each gas station successively as the center of a market delimited by a circle of a given radius (robustness of results to variations in radius size is checked). Various statistics accounting for price dispersion can then be computed for each market and period. If one observes $N$ stations close to each other (e.g. with a limit radius of 2km: if no two stations are separated by a distance of more than 2 km) and with prices posted over $T$ periods, this will result in $N*T$ observations as each station is successively considered and, for each station, a statistic representing price dispersion is computed at each period. An expected consequence is that it tends to over represent markets with higher gas station density (typically cities).
 
-\begin{table}[H]
-\caption{Overview of market price dispersion}
-\begin{tabular}{lrrr}
-\hline
-{} & Radius 5km & Radius 3km & No overlap\\
-\hline
-Nb of markets & 6794 & 5614 & 386 \\
-Avg nb competitors & 11.2 & 6.7 & 3.9 \\
-\hline
-Raw prices & & & \\
-\hline
-Market price range & 0.116 & 0.105 & 0.089\\
-Market gain from search & 0.046 & 0.044 & 0.036 \\
-Market price std & 0.046 & 0.045 & 0.045 \\
-\hline
-Residual prices & & & \\
-\hline
-Market price range & 0.033  & 0.028 & 0.020 \\
-Market gain from search & 0.017 & 0.014 & 0.010 \\
-Market price std & 0.011 & 0.011 & 0.010 \\
-\hline
-\end{tabular}
-\floatfoot{Each statistic accounting for price dispersion is first computed for each local market across time. The table reports averages across markets. At the market level, price dispersion has been computed only for days when more than two thirds of competitors' prices were available. Only markets with more than 50 days of data are then taken into account to compute reported statistics.}
-\end{table}
-
 Regressions are then run using raw prices and cleaned prices. Also, in order to address the issue of overlapping markets, regression are performed on dispersion data generated in a way that prevents market overlap. Descriptive statistics performed on raw prices are provided.
 
 Standard market dispersion statistics such as range and standard deviation are strongly influenced by static price dispersion. As a consequence, contrarily to the previous section where descriptives statistics performed on raw prices arguably provided a most conservative first idea of price dispersion, clean prices are now to be preferred despite their shortcomings. Results are reported with clean prices, raw prices for markets obtained with radiuses of respectively 3 and 5km. Additionnally, results are reported for non overlapping markets built in a way that is detailed in appendix.
 
-\begin{table}[h]
-%\renewcommand{\arraystretch}{0.7}
-\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
-\caption{Regressions of market dispersion}
-\centering
-\begin{tabular}{lcccc}
-\hline
-\hline
-{} & All & All & No overlap & Stable markets\\
-{} & Raw prices & Residual prices & Residual prices &  Residual prices \\
-\hline
-Gains from search & & & & \\
-\hline
-Nb competitors           &  0.003\sym{***}  &  0.001\sym{***}  &  0.001\sym{***}  & 0.001\sym{***} \\
-{}                       & (0.000)          & (0.000)          & (0.000)          & (0.000)        \\
-Cost                     &  0.007\sym{*  }  & -0.006\sym{*}    & -0.005\sym{}     & -0.005\sym{}   \\
-{}                       & (0.003)          & (0.003)          & (0.003)          & (0.003)        \\
-Intercept                &  0.015\sym{***}  &  0.015\sym{***}  & 0.013\sym{***}   &  0.012\sym{**} \\
-{}                       & (0.004)          & (0.004)          & (0.004)          & (0.004)        \\
-\hline
-Standard deviation & & & & \\
-\hline
-Nb competitors           &  0.000\sym{***}  &  0.000\sym{***}  &  0.000\sym{***}  &  0.000\sym{}          \\
-{}                       & (0.000)          & (0.000)          & (0.000)          & (0.000)    \\
-Cost                     & -0.001\sym{   }  & -0.009\sym{***}  & -0.009\sym{***}  & -0.008\sym{***} \\
-{}                       & (0.002)          & (0.002)          & (0.002)          & (0.003)         \\
-Intercept                &  0.044\sym{***}  &  0.022\sym{***}  &  0.021\sym{***}  &  0.021\sym{***} \\
-{}                       & (0.003)          & (0.003)          & (0.003)          & (0.004)    \\
-\hline
-Coefficient of variation & & & & \\
-\hline
-Nb competitors           &  0.000\sym{***}  &        \sym{}    &       \sym{}     &\\
-{}                       & (0.000)          &                  &                  &\\
-Cost                     & -0.024\sym{***}  &        \sym{}    &       \sym{}     &\\
-{}                       & (0.001)          &                  &                  &\\
-Intercept                &  0.064\sym{***}  &        \sym{}    &       \sym{}     &\\
-{}                       & (0.002)          &                  &                  &\\
-\hline
-Range & & & & \\
-\hline
-Nb competitors           &  0.006\sym{***}  &  0.002\sym{***}  &  0.003\sym{***}  &  0.002\sym{***} \\
-{}                       & (0.000)          & (0.000)          & (0.000)          & (0.000)         \\
-Cost                     & -0.004\sym{}     & -0.025\sym{***}  & -0.021\sym{***}  & -0.019\sym{***} \\
-{}                       & (0.005)          & (0.005)          & (0.005)          & (0.006)         \\
-Intercept                &  0.074\sym{***}  & 0.048\sym{***}   &  0.041\sym{***}  &  0.038\sym{***} \\
-{}                       & (0.007)          & (0.007)          & (0.007)          & (0.008)         \\
-\hline
-N                        & 2,756,096        & 2,756,096        & 493,356          &\\
-\hline\hline
-\multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
-\multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
-\end{tabular}
-\end{table}
+
 
 Estimation results show that dispersion is increasing in the number of firm and decreasing in price.
 
@@ -309,31 +172,31 @@ Further research remains to be undertaken in two directions: one is the investig
 
 \begin{figure}[!h]
   \caption{Station-level summary statistics}
-\begin{tabular}{lrrr}
-\toprule
-\toprule
-{}                                &      All &  Supermarkets &   Others \\
-\midrule
-Nb stations                       &          &               &          \\
-All periods                       &    9,217 &         5,055 &    4,162 \\
-Nb of daily observations          &    7,895 &         4,399 &    3,495 \\
-\midrule
-Price and Markup (euro / litre)   &          &               &          \\
-Price after tax                   &     1.37 &          1.33 &     1.40 \\
-Price excl. tax                   &     0.71 &          0.68 &     0.74 \\
-Markup over wholesale cost        &     0.10 &          0.08 &     0.13 \\
-\midrule
-Retail price variations (euro cents / litre)  &      &       &          \\
-Daily price change probability    &     0.17 &          0.18 &     0.15 \\
-Average price increase            &     1.30 &          1.29 &     1.31 \\
-Average price decrease            &    -1.47 &         -1.48 &    -1.46 \\
-\midrule
-Competition                       &          &               &          \\
-Distance to closest rival         &     2.25 &          2.64 &     1.79 \\
-Nb of rivals within 3 km          &     3.22 &          2.51 &     4.08 \\
-Nb of rivals within 5 km          &     6.57 &          4.89 &     8.61 \\
-\bottomrule
-\bottomrule
+\begin{tabular}{lrrrrr}
+    \hline
+    \hline
+    {}          & All   & Supermarkets & Others & Paris region & Others \\
+    \hline
+    Nb stations &       &       &       &       &  \\
+    All periods & 9.217 & 5055  & 4162  & 918   & 8299 \\
+    Nb daily observations & 7896  & 4400  & 3496  & 776   & 7119 \\
+    \hline
+    Price and Markup (euro / litre) &       &       &       &       &  \\
+    Price after tax & 1.37  & 1.33  & 1.4   & 1.38  & 1.36 \\
+    Price excl. Tax & 0.71  & 0.68  & 0.74  & 0.72  & 0.7 \\
+    Markup over wholesale cost & 0.1   & 0.08  & 0.13  & 0.11  & 0.1 \\
+    \hline
+    Retail price variations (euro cent / litre) &       &       &       &       &  \\
+    Daily price change probability & 0.17  & 0.18  & 0.15  & 0.21  & 0.16 \\
+    Average price increase & 1.3   & 1.29  & 1.31  & 1.05  & 1.33 \\
+    Average price decrease & -1.47 & -1.48 & -1.46 & -1.18 & -1.5 \\
+    \hline
+    Competition &       &       &       &       &  \\
+    Distance to closest rival & 2.25  & 2.64  & 1.79  & 1.23  & 2.37 \\
+    Nb of rivals within 3 km & 3.22  & 2.51  & 4.08  & 6.89  & 2.81 \\
+    Nb of rivals within 5 km & 6.57  & 4.89  & 8.61  & 17.79 & 5.33 \\
+    \hline
+    \hline
 \end{tabular}
 \label{tab:station_stats_des}
 \end{figure}
@@ -400,27 +263,115 @@ Notes: Price statistics are obtained by i) computing the average for each statio
     \floatfoot{Series represent for each day the percentage of pairs observed where the usual price order is not respected (reversed rank). No differentiation implies that pairs exhibit an average price difference below 1c/l.}
 \end{figure}
 
-\begin{table}[!htbp]\centering
+\begin{table}
+\caption{Pair rank reversals}
+\centering
+%\begin{center}
+\begin{tabular}{lrrrrr}
+\hline
+\hline
+    & All   & Super- & No supe- & No diff. & Diff. \\
+    &       & markets & markets &       &  \\
+    \hline
+    $d\_{ij} <= 3 km$ &       &       &       &       &  \\
+    \hline
+    Nb. of obs. & 12,264 & 2,331 & 3,708 & 3,411 & 8,850 \\
+    Avg. spread & 0.051 & 0.010 & 0.049 & 0.004 & 0.069 \\
+    Avg. same price & 0.08  & 0.27  & 0.03  & 0.24  & 0.01 \\
+    Avg. rank reversal & 0.08  & 0.14  & 0.10  & 0.23  & 0.03 \\
+    Avg. rank reversal - price resid. & 0.43  & 0.36  & 0.44  & 0.38  & 0.44 \\
+    \hline
+    $d\_{ij} <= 5 km$ &       &       &       &       &  \\
+    Nb. of obs. & 25,007 & 4,515 & 8,355 & 6,387 & 18,613 \\
+    Avg. spread & 0.052 & 0.011 & 0.051 & 0.004 & 0.068 \\
+    Avg. same price & 0.06  & 0.21  & 0.02  & 0.20  & 0.01 \\
+    Avg. rank reversal & 0.09  & 0.15  & 0.09  & 0.24  & 0.03 \\
+    Avg. rank reversal - price resid. & 0.43  & 0.39  & 0.45  & 0.39  & 0.45 \\
+
+\hline
+\hline
+\multicolumn{6}{l}{\small Differentiated if average price spread strictly above 1 euro cent / litre}\\
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
 \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
-\caption{Regression of standard deviation in spread}
-\begin{tabular}{lrrr}
+\caption{Regression of rank reversals}
+\begin{tabular}{lccc}
 \hline
 \hline
 {} & No differentiation & No differentiation & Differentiation \\
 {} & raw prices & residual prices & residual prices \\
 \hline
-OLS: distance &  0.001 \sym{***}&      0.001\sym{***}&       0.000\sym{***}\\
-{} &     (0.000)         &     (0.000)         &     (0.000)   \\
-OLS: dummy &  -0.001\sym{***}&      -0.001\sym{***}&     -0.001\sym{***}\\
-{} &    (0.000)     &     (0.000)         &     (0.000) \\
-Quantile 0.25: dummy     &       -0.001\sym{**}&       -0.001\sym{**}&       -0.000\sym{}\\
-{} &     (0.000)       &     (0.000)         &     (0.000)  \\
-Quantile 0.50: dummy     &       -0.001\sym{**}&      -0.001\sym{*}&       -0.000\sym{}\\
-{} &  (0.000)         &     (0.000)         &     (0.000)    \\
-Quantile 0.75: dummy     &       -0.001\sym{**}&     -0.001\sym{**}&       -0.000\sym{}\\
-{} &     (0.001)         &     (0.001)         &     (0.000)   \\
+OLS: distance             &  0.014\sym{***}  &  0.020\sym{***}  &  0.001\sym{}\\
+{}                        & (0.002)          & (0.002)          & (0.001)   \\
+OLS: same corner                & -0.024\sym{***}  & -0.034\sym{***}  & -0.006\sym{***}\\
+{}                        & (0.007)          & (0.006)          & (0.002) \\
+Quantile 0.25: same corner      & -0.027\sym{***}  & -0.067\sym{***}  & -0.007\sym{***}\\
+{}                        & (0.008)          & (0.010)          & (0.003)  \\
+Quantile 0.50: same corner      & -0.024\sym{*}    & -0.030\sym{***}  & -0.007\sym{**}\\
+{}                        & (0.011)          & (0.005)          & (0.002)    \\
+Quantile 0.75: same corner      & -0.027\sym{*}    & -0.007\sym{*}    & -0.002\sym{}\\
+{}                        & (0.014)          & (0.003)          & (0.001)   \\
 \hline
-N      &     4,183         &     4,183      &     8,312    \\
+N                         & 4,183            &   4,183          &     8,312    \\
+\hline\hline
+\multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\
+\end{tabular}
+\floatfoot{The "same corner" variable is a dummy variable that takes value one for pairs of gas stations separated by a distance of less than 500 meters, namely those for which consumers are expected to be relatively well informed about prices at each retailer.}\\
+\end{table}
+
+\section{Market price dispersion}
+
+\begin{figure}[!h]
+  \caption{Market-level summary statistics}
+    \begin{tabular}{lrrrrrr}
+    \hline
+    \hline
+    & \multicolumn{2}{c}{3 km radius} & \multicolumn{2}{c}{5 km radius} & \multicolumn{2}{c}{Nonoverlapping} \\
+    \hline
+    Nb obs & \multicolumn{2}{c}{5,834,850} & \multicolumn{2}{c}{7,159,153} & \multicolumn{2}{c}{641,314} \\
+    Nb markets & \multicolumn{2}{c}{5,484} & \multicolumn{2}{c}{6,722} & \multicolumn{2}{c}{604} \\
+    Nb sellers & 5.98  & 3.35  & 9.68  & 8.07  & 4.36  & 2.06 \\
+    Nb sellers observed & 5.74  & 3.18  & 9.28  & 7.65  & 4.18  & 2.02 \\
+    \hline
+    Raw prices (euro cent / litre) &       &       &       &       &       &  \\
+    Range & 9.70  & 3.88  & 10.78 & 4.18  & 8.61  & 3.88 \\
+    Standard deviation & 3.80  & 1.43  & 3.96  & 1.35  & 3.65  & 1.66 \\
+    Gain from search & 3.93  & 2.00  & 4.13  & 1.98  & 3.40  & 1.75 \\
+    \hline
+    Residual prices (euro cent / litre) &       &       &       &       &       &  \\
+    Range & 2.50  & 1.04  & 3.01  & 1.38  & 2.01  & 0.74 \\
+    Standard deviation & 0.88  & 0.26  & 0.93  & 0.25  & 0.79  & 0.24 \\
+    Gain from search & 1.25  & 0.51  & 1.50  & 0.67  & 1.01  & 0.38 \\
+    \hline
+    \hline
+\end{tabular}
+\label{tab:station_stats_des}
+\end{figure}
+
+\begin{table}[!h]
+%\renewcommand{\arraystretch}{0.7}
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\caption{Regressions of market dispersion}
+\centering
+\begin{tabular}{lcccc}
+\hline
+\hline
+{} & All & All & No overlap & Stable markets\\
+{} & Raw prices & Residual prices & Residual prices &  Residual prices \\
+\hline
+Gains from search & & & & \\
+\hline
+Nb competitors           &  0.003\sym{***}  &  0.001\sym{***}  &  0.001\sym{***}  & 0.001\sym{***} \\
+{}                       & (0.000)          & (0.000)          & (0.000)          & (0.000)        \\
+Cost                     &  0.007\sym{*  }  & -0.006\sym{*}    & -0.005\sym{}     & -0.005\sym{}   \\
+{}                       & (0.003)          & (0.003)          & (0.003)          & (0.003)        \\
+Intercept                &  0.015\sym{***}  &  0.015\sym{***}  & 0.013\sym{***}   &  0.012\sym{**} \\
+{}                       & (0.004)          & (0.004)          & (0.004)          & (0.004)        \\
+\hline
 \hline\hline
 \multicolumn{4}{l}{\footnotesize Standard errors in parentheses}\\
 \multicolumn{4}{l}{\footnotesize \sym{*} \(p<0.05\), \sym{**} \(p<0.01\), \sym{***} \(p<0.001\)}\\

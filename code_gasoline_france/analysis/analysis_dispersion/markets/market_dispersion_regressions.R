@@ -92,8 +92,8 @@ path.file <- file.path(path.data.disp, file.names[[8]])
 data <- read.csv(path.file, colClasses=c('date'='Date'))
 
 ## restrict to one day per week
-data$dow <- weekdays(data$date)
-data <- data[data$dow == 'vendredi',]
+#data$dow <- weekdays(data$date)
+#data <- data[data$dow == 'vendredi',]
 
 data_before <- data[data$date <= "2012-07-01",]
 data_after <- data[data$date >= "2013-02-01",]

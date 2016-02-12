@@ -118,7 +118,7 @@ df_pairs.loc[df_pairs['distance'] <= 1, 'sc_1000'] = 1
 # RESTRICT CATEGORY
 
 df_pairs_all = df_pairs.copy()
-df_pairs = df_pairs[df_pairs['cat'] == 'residuals_no_mc'].copy()
+df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
 #df_pairs = df_pairs[df_pairs['cat'] == 'residuals'].copy()
 
 # COMPETITORS VS. SAME GROUP
@@ -170,7 +170,7 @@ ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d}'.format(dist_reg),
                       'std_spread ~ sc_{:d}'.format(dist_reg)]
 
 # from statsmodels.regression.quantile_regression import QuantReg
-ls_quantiles = [0.25, 0.5, 0.75]
+ls_quantiles = [0.25, 0.5, 0.75, 0.90]
 
 #mod = smf.quantreg('pct_rr~distance', df_ppd_reg[~pd.isnull(df_ppd_reg['pct_rr'])])
 #res = mod.fit(q=.5)
@@ -195,7 +195,7 @@ ls_quantiles = [0.25, 0.5, 0.75]
 
 def format_ls_reg_fits_to_df(ls_tup_reg_fit, ls_var_names):
   ls_var_attrs = ['params', 'bse', 'tvalues', 'pvalues']
-  ls_reg_attrs = ['nobs', 'rsquared', 'rsquared_adj']
+  ls_reg_attrs = [] #['nobs', 'rsquared', 'rsquared_adj']
   ls_tup_vars = [(var_name, var_attr) for var_attr in ls_var_attrs\
                       for var_name in ls_var_names]
   ls_index, ls_rows = [], []
@@ -211,10 +211,13 @@ def format_ls_reg_fits_to_df(ls_tup_reg_fit, ls_var_names):
                              index = ls_index)
   return df_reg_fits
 
-ls_loop_df_ppd_regs = [['Non differentiated', df_pair_comp_nd],
+ls_loop_df_ppd_regs = [['All pairs', df_pair_comp],
+                       ['Non differentiated', df_pair_comp_nd],
                        ['Differentiated', df_pair_comp_d],
                        ['Supermarkets', df_pair_sup],
-                       ['Non supermarkets', df_pair_nsup]]
+                       ['Non supermarkets', df_pair_nsup],
+                       ['Sups - No diff', df_pair_sup_nd],
+                       ['Nsups - No diff', df_pair_nsup_nd]]
 
 for df_ppd_title, df_ppd_reg in ls_loop_df_ppd_regs:
   print()
