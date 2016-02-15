@@ -1,6 +1,6 @@
-\documentclass[11pt]{article}
+\documentclass[english]{article}
 \usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
+\usepackage[latin1]{inputenc}
 \usepackage{enumerate}
 \usepackage{setspace}
 \usepackage{amsmath,amssymb,amsthm}
@@ -17,21 +17,18 @@
 \usepackage{booktabs}
 \usepackage{caption}
 \usepackage{subcaption}
-\usepackage{rotating}
 % \usepackage[hidelinks]{hyperref}
 \usepackage{floatrow} %[capposition=top]
 \floatsetup{footposition=bottom,capposition=top}
 \renewcommand{\labelitemi}{--}
 \renewcommand{\labelitemii}{$\bullet$}
+\bibliographystyle{chicago}
 % \geometry{left=1in,right=1in,top=1.00in,bottom=1.0in}
 \let\olditemize\itemize
 \renewcommand{\itemize}{
   \olditemize
   \setlength{\itemsep}{-1pt}
 }
-\pdfminorversion=5
-\pdfobjcompresslevel=3
-\pdfcompresslevel=9
 
 \begin{document}
 
@@ -57,33 +54,33 @@ The French supermarket chain Leclerc operates a price comparison website which a
 \textbf{JEL Classification Numbers:} D83, L81, M31
 
 \pagebreak%
-\doublespacing
+%\doublespacing
 
 \section{Introduction}
 
-Since the seminal paper of \cite{STI61}, a large literature on the topic of consumer search and price dispersion has developed. Regarding theory, a paradigm emerged following \cite{VAR80} in which price dispersion results from the absence of pure pricing strategies in equilibrium. Empirically, evidence has remained rather scarce due to difficulty of collecting data really fit for hypothesis testing. Recent examples are \cite{TAP11} and \cite{CHA15} which work with retail gasoline data and investigate changes in positions occupied by stations in local market price distributions. A current active field of research related to search and price dispersion is the understanding of competition between supermarkets.
+Since the seminal paper of \cite{STI61}, a large literature on the topic of consumer search and price dispersion has developed. Following \cite{VAR80}, a paradigm has emerged in which price dispersion results from price randomization by sellers in equilibrium. Empirical research has long been hampered by the scarcity of appropriate data. Recent examples include \cite{TAP11} and \cite{CHA15} which measure and investigate local price dispersion in retail gasoline markets. Distance between sellers is used as proxy for consumer information, whose link with price dispersion is shown to be supported by available data.
 
-The first part of this paper reviews the methodology used by the website quiestlemoinscher.com to compare French supermarkets. Store comparisons are shown to be actually often highly sensitive to the basket of goods considered, suggesting that it is very costly for consumers to purchase at the lowest price(s). TODO: comment relation between information and price "`dispersion"' + comment regressions on price levels (and dispersion?) on local market characteristics, in particular proxies for competition intensity.
+Despite the complexity induced by the multiplicity of products, competition between retail grocery stores appears to be a natural candidate for empirical investigations on the role of consumer information. \cite{LAC02}, using store-level monthly prices of four homogeneous products sold in Israel, has documented the persistence of price dispersion over time, with sellers changing ranks in price distributions in a way that is consistent with \cite{VAR80} predictions. Somewhat surprisingly, very few papers have sought to replicate and challenge the findings with more comprehensive data. A recent example is \cite{DUB15}, which yet also focuses on four products sold in French supermarkets.
 
-\section{Description of quiestlemoinscher.com}
+Using price data obtained from the French price comparison website quiestlemoinscher.com, this paper documents static and dynamic price dispersion between French retail grocery stores. The first part of this paper details the data through a review of the methodology used by the website to compare supermarkets. Store comparisons are shown to be actually often highly sensitive to the basket of goods considered, suggesting that it is very costly for consumers to purchase at the lowest price. TODO: comment results + add public policy conclusions
 
-The following section briefly relates the history of the price comparison website and its methodology.
+\section{Supermarket comparison on Quiestlemoinscher.com}
 
-\subsection{History}
+\subsection{French retail grocery stores}
 
-Soon after its launch in May 2006, the website was forced to close by a court decision. The French group Carrefour had indeed filed a complaint about the lack of transparency and potential biases in store and product choices. An updated version of the website was released on November 2006 and has since then remained online. Legal proceedings nervetheless continued until the rejection by the court of cassation of Carrefour's claims in January 2010.
+As of 2015, the French retailing industry was dominated by six firms, which accounted for over 80\% of total sales: Carrefour and Leclerc were the two largest with c. 20\% market shares each, followed by Intermarche (14\%), Casino (12\%), Auchan (11\%) and Systeme U (10\%). An important distinction between firms lies in the ownership structures: while Carrefour, Casino and Auchan own most of the stores operated under their brands, Leclerc, Intermarche and Systeme U are essentially franchise networks.
+
+The creation of the comparison website Quiestlemoinscher.com is part of a long term strategy of the group Leclerc to prove the competitiveness of its store prices. Soon after the launch in May 2006, the website was forced to close by a court decision, following a complaint by Carrefour regarding the lack of transparency and potential biases in store and product choices. An updated version of the website was released on November 2006 and has since then remained online. Legal proceedings nervetheless continued until the rejection by the court of cassation of Carrefour's claims in January 2010.
 
 A major merit of the legal action undertaken by Carrefour is its consequence for the transparency, namely the release of well identified store product price data. The following section provides an overview of the methodology of the comparison website, two crucial aspects of which are the choices of stores and products.
 
-\subsection{Stores}
+\subsection{Products}
 
 Before 2013, the website only offered comparisons at the chain level. For each chain, according to Qlmc, prices were collected a sample of store expected to be representative of the store population. Broad constraints were thus imposed on store location and size, while exact store choice was claimed to be random.
 
 From 2013 on, the development of the "drive" concept in France has allowed the comparison website to cover far more stores, and thus to start displaying store level comparison. The concept of "drive" implies that consumers are offered the opportunity to shop online from a physical store (at the same prices) and collect their purchases whenever it suits them. The collection of prices can then be achieved efficiently on the internet, as opposed to traditional store visits. As of March 2015, Qlmc claimed to cover 60\% of the stores of the 10 supermarket chains compared (44\% in August 2013).
 
 Regarding store level comparisons, Qlmc  methodology states that each Leclerc is compared with a selection of its most relevant competitors within 30 km, based on Leclerc managers' expertise. The website also indicates that stores whose surface is smaller than 1,000 $m^2$ are excluded, as well as stores belonging to chains which are deemed to be too differentiated (e.g. discounters). Finally, Leclerc stores are not included among potential competitors.
-
-\subsection{Products}
 
 As of March 2015, only national brand products are covered by the website. Products are identified at the bar code level. There are seven food product categories: meat and fish, vegetables and fruits, backery, fresh food, frozen food, savoury grocery, sweet grocery, baby food and drinks. Non food products are split in four categories: health and beauty, houdesold, pets and home and textile. Products are further classified wihin product families. The number of products covered within each family is determined by the volume of national hypermarket and supermarket sales, with a global objective of 3,000 products. Within each family, products are chosen based on the national hypermarket and supermarket detention rate. Products whose detention rate is below 30\% (i.e. products referenced by less than 30\% of the stores) are dropped. This led to a total of 2,461 national brand product references covered for March 2015 (2,510 in August 2013).
 
@@ -97,13 +94,9 @@ The comparison result displayed by Leclerc is then the percentage difference bet
 \end{align*}s
 where $i$ refers to all products in the baskets, $P_{iC}$ and $P_{iL}$ respectively stand for the average price of product $i$ for the competing chain ($C$) and for Leclerc ($L$). The comparison between two stores is very similar except that it uses store prices instead of average chain prices.
 
-\section{Data and replication}
+\subsection{Data and replication}
 
-This section provides an overview of the data collected from the website in 2015 and of the replication of its results. Potential biases in terms of store and product selection are discussed, and the robustness of results is checked with 2007-2012 data.
-
-\subsection{Overview of 2015 data}
-
-In March 2015, the website was explored with a view to find the best way to extract price data. The only feasible solution appeared to successively crawl comparisons between Leclerc stores and each of their competitors. This implies that thereby obtained data are bound to be significantly less exhaustive than the full price database used by Qlmc to establish chain level comparisons.
+This section provides an overview of the data collected from the website in 2015 and of the replication of its results. Potential biases in terms of store and product selection are discussed, and the robustness of results is checked with 2007-2012 data. In March 2015, the website was explored with a view to find the best way to extract price data. The only feasible solution appeared to successively crawl comparisons between Leclerc stores and each of their competitors. This implies that thereby obtained data are bound to be significantly less exhaustive than the full price database used by Qlmc to establish chain level comparisons.
 
 \subsection{Leclerc competitors}
 
