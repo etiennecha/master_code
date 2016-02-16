@@ -32,40 +32,40 @@ pd.set_option('float_format', '{:,.2f}'.format)
 # LOAD DF QLMC
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
-                      dtype = {'INSEE_Code' : str},
+                      dtype = {'c_insee' : str},
                       encoding = 'utf-8')
 # date parsing slow... better if specified format?
 
 # LOAD DF LSA
 df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
                                   'df_lsa_for_qlmc.csv'),
-                     dtype = {u'C_INSEE' : str,
-                              u'C_INSEE_Ardt' : str,
-                              u'C_Postal' : str,
-                              u'SIREN' : str,
-                              u'NIC' : str,
-                              u'SIRET' : str},
-                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
-                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
-                     encoding = 'UTF-8')
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'siren' : str,
+                              u'nic' : str,
+                              u'siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
 
 # drop null id_lsa else gets too big
 # todo: take Period into account (chges of chains)
 df_qlmc = df_qlmc[~df_qlmc['id_lsa'].isnull()]
 df_qlmc = pd.merge(df_qlmc,
-                   df_lsa[['Ident', 'Enseigne_Alt', 'Groupe', 'Surface']],
+                   df_lsa[['id_lsa', 'enseigne_alt', 'groupe', 'surface']],
                    left_on = 'id_lsa',
-                   right_on = 'Ident',
+                   right_on = 'id_lsa',
                    how = 'left')
 # high memory usage..
 
 # Avoid error msg on condition number
-df_qlmc['Surface'] = df_qlmc['Surface'].apply(lambda x: x/1000.0)
+df_qlmc['surface'] = df_qlmc['surface'].apply(lambda x: x/1000.0)
 # df_qlmc_prod['ac_hhi'] = df_qlmc_prod['ac_hhi'] * 10000
 # Try with log of price (semi elasticity)
-df_qlmc['ln_Price'] = np.log(df_qlmc['Price'])
+df_qlmc['ln_price'] = np.log(df_qlmc['price'])
 # Control for dpt (region?)
-df_qlmc['Dpt'] = df_qlmc['INSEE_Code'].str.slice(stop = 2)
+df_qlmc['dpt'] = df_qlmc['c_insee'].str.slice(stop = 2)
 
 # #############################################
 # PRICE DISTRIBUTION PER CHAIN FOR TOP PRODUCTS
@@ -92,12 +92,12 @@ def price_2_freq(se_prices):
   else:
     return 0
 
-se_prod = df_qlmc.groupby(['Family', 'Subfamily', 'Product']).agg('size')
+se_prod = df_qlmc.groupby(['section', 'family', 'product']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
 
 # retail_chain = 'CARREFOUR'
 retail_chain = 'CENTRE E.LECLERC' # 'GEANT CASINO'
-nb_obs_min = 10 # Product must be observed at X stores at least
+nb_obs_min = 30 # Product must be observed at X stores at least
 pct_min = 0.33
 
 print '\nStats des on ref prices for {:s} :'.format(retail_chain)
@@ -106,24 +106,26 @@ for per_ind in range(13):
   print u'\n' + '-'*80
   print u'Period {:d}'.format(per_ind)
   # How close stores are to reference price
-  df_sub = df_qlmc[(df_qlmc['Period'] == per_ind) &\
-                   (df_qlmc['Enseigne_Alt'] == retail_chain)]
-  
+  df_sub = df_qlmc[(df_qlmc['period'] == per_ind) &\
+                   (df_qlmc['enseigne_alt'] == retail_chain)]
+  # All brands together: few prods with ref price (restrict store size?)
+  #df_sub = df_qlmc[(df_qlmc['period'] == per_ind)]
+
   # Check duplicates at store level
-  ls_sub_dup_cols = ['Family', 'Subfamily', 'Product', 'id_lsa']
+  ls_sub_dup_cols = ['section', 'family', 'product', 'id_lsa']
   df_sub_dup = df_sub[(df_sub.duplicated(ls_sub_dup_cols, take_last = True)) |\
                       (df_sub.duplicated(ls_sub_dup_cols, take_last = False))]
   # Make sure no duplicate
   df_sub = df_sub.drop_duplicates(ls_sub_dup_cols)
   
   # Build df with product most common prices
-  df_sub_products =  df_sub[['Family', 'Subfamily', 'Product', 'Price']]\
-                       .groupby(['Family', 'Subfamily', 'Product'])\
+  df_sub_products =  df_sub[['section', 'family', 'product', 'price']]\
+                       .groupby(['section', 'family', 'product'])\
                        .agg([nb_obs,
                              price_1,
                              price_1_freq,
                              price_2,
-                             price_2_freq])['Price']
+                             price_2_freq])['price']
   
   df_sub_products['price_12_freq'] =\
     df_sub_products[['price_1_freq', 'price_2_freq']].sum(axis = 1)
@@ -141,17 +143,17 @@ for per_ind in range(13):
     print u'Nb prod w/ >= {:d} obs: {:d}'.format(\
             nb_obs_min, len(df_enough_obs))
     
-    print u'Nb prod w/ >= {:d} obs and no ref price (0.33): {:d}'.format(\
+    print u'Nb prod w/ >= {:d} obs and ref price (0.33): {:d}'.format(\
             nb_obs_min, len(df_ref_price))
                 
-    print u'Pct prod w/ >= 20 obs and no ref price (0.33): {:.2f}'.format(\
+    print u'Pct prod w/ >= 20 obs and ref price (0.33): {:.2f}'.format(\
             nb_obs_min, len(df_ref_price) / float(len(df_enough_obs)))
     
     df_enough_obs.reset_index(drop = False, inplace = True)
     
     df_sub = pd.merge(df_sub,
                       df_enough_obs,
-                      on = ['Family', 'Subfamily', 'Product'],
+                      on = ['section', 'family', 'product'],
                       how = 'left')
     
     # Build df stores accounting for match with ref prices
@@ -167,18 +169,18 @@ for per_ind in range(13):
     #print df_ref[0:20].to_string()
     
     df_sub['ref_price'] = 'diff'
-    df_sub.loc[df_sub['Price'] == df_sub['price_1'],
+    df_sub.loc[df_sub['price'] == df_sub['price_1'],
                'ref_price'] = 'price_1'
-    df_sub.loc[(df_sub['Price'] != df_sub['price_1']) &\
-               (df_sub['Price'] == df_sub['price_2']),
+    df_sub.loc[(df_sub['price'] != df_sub['price_1']) &\
+               (df_sub['price'] == df_sub['price_2']),
                'ref_price'] = 'price_2'
     df_sub.loc[(df_sub['price_1_freq'] <= pct_min),
                'ref_price'] = 'no_ref'
     #df_sub.loc[df_sub['nb_obs'] < nb_obs_min,
     #           'ref_price'] = 'insuff'
     
-    df_ref = pd.pivot_table(data = df_sub[['Store', 'ref_price']],
-                            index = 'Store',
+    df_ref = pd.pivot_table(data = df_sub[['store', 'ref_price']],
+                            index = 'store',
                             columns = 'ref_price',
                             aggfunc = len,
                             fill_value = 0).astype(int)

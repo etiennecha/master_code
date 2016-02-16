@@ -46,13 +46,13 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
                               u'SIREN' : str,
                               u'NIC' : str,
                               u'SIRET' : str},
-                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
-                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'UTF-8')
 
-df_stores = pd.merge(df_lsa[['Ident', 'Latitude', 'Longitude', 'Enseigne_Alt', 'Groupe']],
+df_stores = pd.merge(df_lsa[['id_lsa', 'latitude', 'longitude', 'enseigne_alt', 'groupe']],
                      df_stores,
-                     left_on = 'Ident',
+                     left_on = 'id_lsa',
                      right_on = 'id_lsa',
                      how = 'right')
 
@@ -65,12 +65,12 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
 # RESTRICT TO ONE PERIOD AND MERGE
 
 per = 2
-df_prices_per = df_prices[df_prices['Period'] == per]
-df_stores_per = df_stores[df_stores['Period'] == per]
+df_prices_per = df_prices[df_prices['period'] == per]
+df_stores_per = df_stores[df_stores['period'] == per]
 
 df_prices_per = pd.merge(df_prices_per,
                          df_stores_per,
-                         on = ['Store'],
+                         on = ['store'],
                          how = 'right')
 
 # #########################
@@ -78,8 +78,8 @@ df_prices_per = pd.merge(df_prices_per,
 # #########################
 
 # Average price by product / chain
-ls_col_gb = ['Enseigne_Alt', 'Family', 'Subfamily', 'Product', 'Price']
-df_chain_prod_prices = df_prices_per.groupby(ls_col_gb[:-1]).agg([len, np.mean])['Price']
+ls_col_gb = ['enseigne_alt', 'section', 'family', 'product', 'price']
+df_chain_prod_prices = df_prices_per.groupby(ls_col_gb[:-1]).agg([len, np.mean])['price']
 
 # Compare two chains
 ls_some_chains = ['INTERMARCHE SUPER',
