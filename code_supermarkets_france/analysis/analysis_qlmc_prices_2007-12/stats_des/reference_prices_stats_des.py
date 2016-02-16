@@ -160,11 +160,11 @@ for per_ind in range(13):
     
     ## With dummy
     #df_sub['ref_price_dum'] = 0
-    #df_sub.loc[df_sub['Price'] == df_sub['price_1'],
+    #df_sub.loc[df_sub['price'] == df_sub['price_1'],
     #           'ref_price_dum'] = 1
     ## Pbm Store can be slightly diff from id_lsa but...
-    #df_ref = df_sub[['Store', 'ref_price_dum']]\
-    #           .groupby('Store').agg([np.size,
+    #df_ref = df_sub[['store', 'ref_price_dum']]\
+    #           .groupby('store').agg([np.size,
     #                                    sum])
     #print df_ref[0:20].to_string()
     

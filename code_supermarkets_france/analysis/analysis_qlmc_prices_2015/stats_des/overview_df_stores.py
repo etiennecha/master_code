@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import *
 from functions_string import *
@@ -9,15 +10,6 @@ import os, sys
 import re
 import json
 import pandas as pd
-from mpl_toolkits.basemap import Basemap
-from matplotlib.collections import PatchCollection
-from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
-from shapely.prepared import prep
-from descartes import PolygonPatch
-
-pd.set_option('float_format', '{:,.3f}'.format)
-format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 path_qlmc_scraped = os.path.join(path_data,
                                  'data_supermarkets',
@@ -36,6 +28,10 @@ path_lsa_csv = os.path.join(path_data,
                             'data_built',
                             'data_lsa',
                             'data_csv')
+
+pd.set_option('float_format', '{:,.3f}'.format)
+format_float_int = lambda x: '{:10,.0f}'.format(x)
+format_float_float = lambda x: '{:10,.3f}'.format(x)
 
 # ##########
 # LOAD DATA
@@ -69,14 +65,14 @@ df_stores = pd.merge(df_stores,
 # STATS DES
 # ###############
 
-print u'\nNf of hypers and supers:'
-print df_stores['type'].value_counts()
+print(u'\nNf of hypers and supers:')
+print(df_stores['type'].value_counts())
 
-print u'\nNb of stores by retail group:'
-print df_stores['groupe'].value_counts()
+print(u'\nNb of stores by retail group:')
+print(df_stores['groupe'].value_counts())
 
-print u'\nNb of stores by chain:'
-print df_stores['enseigne_alt'].value_counts()
+print(u'\nNb of stores by chain:')
+print(df_stores['enseigne_alt'].value_counts())
 
 # todo: check H/S split of sample vs. H/S split by retail group
 
@@ -85,7 +81,8 @@ ls_rg = list(se_rg_vc.index[se_rg_vc >= 1])
 pd.set_option('float_format', '{:,.0f}'.format)
 
 # Drop and use pivot_tables?
-print u'\nSurface distribution by retail group:'
+print()
+print(u'Surface distribution by retail group:')
 ls_df_desc_surf = []
 for rg in ls_rg:
   ls_df_desc_surf.append(df_stores[df_stores['groupe'] == rg]['surface'].describe())
@@ -93,9 +90,10 @@ df_surf_by_rg = pd.concat(ls_df_desc_surf,
                           keys = ls_rg,
                           axis = 1)
 df_surf_by_rg.columns = ['{:7s}'.format(x[0:7]) for x in df_surf_by_rg.columns]
-print df_surf_by_rg.to_string()
+print(df_surf_by_rg.to_string())
 
-print u'\nNb employees by retail group:'
+print()
+print(u'Nb employees by retail group:')
 ls_df_desc_nemp = []
 for rg in ls_rg:
   ls_df_desc_nemp.append(df_stores[df_stores['groupe'] == rg]['nb_emplois'].describe())
@@ -103,11 +101,11 @@ df_nemp_by_rg = pd.concat(ls_df_desc_nemp,
                           keys = ls_rg,
                           axis = 1)
 df_nemp_by_rg.columns = ['{:>7s}'.format(x[0:7]) for x in df_nemp_by_rg.columns]
-print df_nemp_by_rg.to_string()
+print(df_nemp_by_rg.to_string())
 
-# CHAIN FROM LSA VS. QLMC (a bit large tho)
-print pd.pivot_table(df_stores[['store_chain', 'enseigne_alt']],
-                     index = 'enseigne_alt',
-                     columns = 'store_chain',
-                     aggfunc = len,
-                     fill_value=0).to_string()
+## CHAIN FROM LSA VS. QLMC (a bit large tho)
+#print(pd.pivot_table(df_stores[['store_chain', 'enseigne_alt']],
+#                     index = 'enseigne_alt',
+#                     columns = 'store_chain',
+#                     aggfunc = len,
+#                     fill_value=0).to_string())
