@@ -96,7 +96,7 @@ se_prod = df_qlmc.groupby(['section', 'family', 'product']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
 
 # retail_chain = 'CARREFOUR'
-retail_chain = 'CENTRE E.LECLERC' # 'GEANT CASINO'
+retail_chain = 'GEANT CASINO' # 'CENTRE E.LECLERC'
 nb_obs_min = 30 # Product must be observed at X stores at least
 pct_min = 0.33
 
