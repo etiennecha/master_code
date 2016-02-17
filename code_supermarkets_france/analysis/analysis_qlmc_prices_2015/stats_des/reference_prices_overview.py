@@ -106,11 +106,12 @@ se_prod = df_qlmc.groupby(['section', 'family', 'product']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
 
 # WITH ONE PRODUCT
-family, subfamily, product = se_prod.index[0]
+section, family, product = se_prod.index[0]
+print('Working with', section, family, product)
 # produit = u'Coca Cola - Coca Cola avec caféine, 1,5L'
 
-df_qlmc_prod = df_qlmc[(df_qlmc['section'] == family) &\
-                       (df_qlmc['family'] == subfamily) &\
+df_qlmc_prod = df_qlmc[(df_qlmc['section'] == section) &\
+                       (df_qlmc['family'] == family) &\
                        (df_qlmc['product'] == product)].copy()
 ls_pd_disp = ['nb_obs',
               'price_1', 'price_2',
