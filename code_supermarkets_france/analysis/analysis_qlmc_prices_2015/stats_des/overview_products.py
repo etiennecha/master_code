@@ -46,8 +46,8 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
 # todo: move
 df_prices['product'] = df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
 
-# can restrict chain (move?)
-df_prices = df_prices[df_prices['store_chain'] == 'AUCHAN'].copy()
+## can restrict chain (move?)
+#df_prices = df_prices[df_prices['store_chain'] == 'AUCHAN'].copy()
 
 # ###############
 # STATS DES
@@ -114,58 +114,39 @@ print(df_stats[0:20].to_string())
 # run regressions + do graphs
 # by section (/family?) and brand?
 
-## PRICE DISPERSION BY PRODUCT FAMILY
-#
-##                   (u'Epicerie salée', 'g'),
-##                   (u'Epicerie sucrée', 'k'),
-#
-#fig, ax = plt.subplots()
-#for dpt, c_dpt in [(u'Produits frais', 'b'),
-#                   (u'Boissons', 'r')]:
-#  df_temp = df_prod_per.loc[dpt]
-#  df_temp = df_temp[(df_temp['len'] >= df_temp['len'].quantile(0.25)) &\
-#                    (df_temp['mean'] <= df_temp['mean'].quantile(0.75))]
-#  ax.plot(df_temp['mean'].values,
-#          df_temp['cv'].values,
-#          marker = 'o',
-#          linestyle = '',
-#          c = c_dpt,
-#          label = dpt)
-#ax.legend()
-#plt.show()
-## todo: replicate for each brand and output
-## todo: distinguish families by colors
-#
-### Want to describe but without 0 within each period
-##ls_se_pp = []
-##for i in range(13):
-##  ls_se_pp.append(df_prod_per[df_prod_per[i] != 0][i].describe())
-##df_su_prod_per = pd.concat(ls_se_pp, axis= 1, keys = range(13))
-##print df_su_prod_per.to_string()
-#
-### PRICE DISPERSION BY STORE CHAIN
-##fig, ax = plt.subplots()
-##for chain, c_chain in [(u'LECLERC', 'b'),
-##                       (u'AUCHAN', 'g'),
-##                       (u'CARREFOUR', 'r'),
-##                       (u'INTERMARCHE', 'k')]:
-##  df_qlmc_per_chain = df_qlmc_per[(df_qlmc_per['Store_Chain'] == chain) &\
-##                                  (df_qlmc_per['Family'] == u'Produits frais')]
-##  df_prod_per_chain = pd.pivot_table(data = df_qlmc_per_chain[['Family',
-##                                                               'Product',
-##                                                               'Price']],
-##                                     index = ['Family', 'Product'],
-##                                     values = 'Price',
-##                                     aggfunc = [len, np.mean, np.std],
-##                                     fill_value = np.nan)
-##  df_temp = df_prod_per_chain
-##  df_temp = df_temp[(df_temp['len'] >= df_temp['len'].quantile(0.25)) &\
-##                    (df_temp['mean'] <= df_temp['mean'].quantile(0.75))]
-##  ax.plot(df_temp['mean'].values,
-##          df_temp['std'].values,
-##          marker = 'o',
-##          linestyle = '',
-##          c = c_chain,
-##          label = chain)
-##ax.legend()
-##plt.show()
+# GRAPH: DISPERSION BY SECTION
+
+df_stats.reset_index(drop = False, inplace = True)
+
+fig, ax = plt.subplots()
+for section, c_section in [(u'Boissons', 'r'),
+                           (u'Nettoyage', 'g'),
+                           (u'Hygiène et Beauté', 'b')]:
+  df_temp = df_stats[df_stats['section'] == section]
+  df_temp = df_temp[(df_temp['len'] >= df_temp['len'].quantile(0.25)) &\
+                    (df_temp['mean'] <= df_temp['mean'].quantile(0.75))]
+  ax.plot(df_temp['mean'].values,
+          df_temp['cv'].values,
+          marker = 'o',
+          markersize = 4,
+          linestyle = '',
+          lw = 0,
+          c = c_section,
+          label = section)
+ax.legend()
+plt.show()
+
+# todo: replicate for each brand and output
+# todo: distinguish families by colors
+
+# PRICE STATS BY CHAIN
+
+dict_df_chain_stats = {}
+for sc in df_prices['store_chain'].unique():
+  df_chain_prices = df_prices[df_prices['store_chain'] == sc]
+  df_chain_stats =\
+    df_chain_prices[ls_prod_cols + ['price']].groupby(ls_prod_cols).\
+      agg([len,
+           np.median, np.mean, np.std, min, max,
+           PD.cv, PD.iq_range, PD.id_range, PD.minmax_range])['price']
+  dict_df_chain_stats[sc] = df_chain_stats
