@@ -141,6 +141,8 @@ plt.show()
 
 # PRICE STATS BY CHAIN
 
+nb_obs_min = 40
+
 dict_df_chain_stats = {}
 for sc in df_prices['store_chain'].unique():
   df_chain_prices = df_prices[df_prices['store_chain'] == sc]
@@ -149,4 +151,32 @@ for sc in df_prices['store_chain'].unique():
       agg([len,
            np.median, np.mean, np.std, min, max,
            PD.cv, PD.iq_range, PD.id_range, PD.minmax_range])['price']
+  # keep only products with enough obs
+  df_chain_stats = df_chain_stats[df_chain_stats['len'] >= nb_obs_min]
   dict_df_chain_stats[sc] = df_chain_stats
+
+# Display CV by chain for top chains
+ls_chains = ['LECLERC',
+             'INTERMARCHE', # sup and hyp?
+             'SUPER U', # sup
+             'CARREFOUR MARKET', # sup
+             'AUCHAN',
+             'HYPER U',
+             'CORA',
+             'CARREFOUR',
+             'GEANT CASINO']
+
+dict_df_chain_des = {}
+for stat in ['len', 'cv', 'std', 'iq_range', 'id_range', 'minmax_range']:
+  dict_df_chain_des[stat] =\
+      pd.concat([dict_df_chain_stats[chain].describe()[stat]\
+                     for chain in ls_chains],
+                    axis = 1,
+                    keys = ls_chains)
+
+# some id_range displayed negative... float issue: actually 0
+# not easy to compare as products are different
+
+for stat in ['len', 'cv', 'iq_range', 'id_range']:
+  print()
+  print(dict_df_chain_des[stat].to_string())

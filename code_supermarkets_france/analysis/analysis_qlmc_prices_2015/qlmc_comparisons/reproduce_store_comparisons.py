@@ -122,10 +122,10 @@ for lec_id, comp_id, comp_chain\
                      on = ['section', 'family', 'product'],
                      suffixes = ['_lec', '_comp'])
   
-  # manipulation
-  df_duel['diff'] = df_duel['price_comp'] - df_duel['price_lec']
-  df_duel.sort('diff', ascending = False, inplace = True)
-  df_duel = df_duel[int(len(df_duel)*0.2):]
+  ## manipulation
+  #df_duel['diff'] = df_duel['price_comp'] - df_duel['price_lec']
+  #df_duel.sort('diff', ascending = False, inplace = True)
+  #df_duel = df_duel[int(len(df_duel)*0.2):]
   
   ls_rows_compa.append((lec_id,
                         comp_id,
