@@ -1,6 +1,7 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from functions_generic_qlmc import *
@@ -23,7 +24,7 @@ format_str = lambda x: u'{:}'.format(x[:20])
 # LOAD DF QLMC
 # #######################
 
-print u'Loading df_qlmc'
+print(u'Loading df_qlmc')
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
                       encoding = 'utf-8')
@@ -40,7 +41,7 @@ ls_sc_drop = ['CARREFOUR CITY',
               'MARCHE U',
               'U EXPRESS']
 
-df_qlmc = df_qlmc[~df_qlmc['Store_Chain'].isin(ls_sc_drop)]
+df_qlmc = df_qlmc[~df_qlmc['store_chain'].isin(ls_sc_drop)]
 
 ls_sc_replace = [('CENTRE E. LECLERC', 'LECLERC'),
                  ('CENTRE LECLERC', 'LECLERC'),
@@ -50,8 +51,8 @@ ls_sc_replace = [('CENTRE E. LECLERC', 'LECLERC'),
                  ('GEANT', 'GEANT CASINO')]
 
 for sc_old, sc_new in ls_sc_replace:
-  df_qlmc.loc[df_qlmc['Store_Chain'] == sc_old,
-              'Store_Chain'] = sc_new
+  df_qlmc.loc[df_qlmc['store_chain'] == sc_old,
+              'store_chain'] = sc_new
 
 # #############################
 # STATS DES PRICES
@@ -71,12 +72,13 @@ PD = PriceDispersion()
 
 # todo: add functions to describe prices (dispersion, ref prices)
 
-df_qlmc_per = df_qlmc[df_qlmc['Period'] == 1]
+df_qlmc_per = df_qlmc[df_qlmc['period'] == 1]
 
-print u'\nStats des prices within period'
-df_prod_per = pd.pivot_table(data = df_qlmc_per[['Family', 'Product', 'Price']],
-                             index = ['Family', 'Product'],
-                             values = 'Price',
+print()
+print(u'Stats des prices within period')
+df_prod_per = pd.pivot_table(data = df_qlmc_per[['section', 'product', 'price']],
+                             index = ['section', 'product'],
+                             values = 'price',
                              aggfunc = [len,
                                         np.mean,
                                         np.std,
@@ -85,13 +87,9 @@ df_prod_per = pd.pivot_table(data = df_qlmc_per[['Family', 'Product', 'Price']],
                                         PD.id_range,
                                         PD.minmax_range],
                              fill_value = np.nan)
-print df_prod_per.describe()
+print(df_prod_per.describe())
 #df_prod_per.sort('len', ascending = False, inplace = True)
-#print df_prod_per[0:10].to_string()
-#df_prod_per.sort('mean', ascending = False, inplace = True)
-#print df_prod_per[0:10].to_string()
-#df_prod_per.sort('mean', ascending = True, inplace = True)
-#print df_prod_per[0:10].to_string()
+#print(df_prod_per[0:10].to_string())
 
 # stackoverflow.com/questions/21654635/scatter-plots-in-pandas-pyplot-how-to-plot-by-category
 
@@ -122,7 +120,7 @@ plt.show()
 #for i in range(13):
 #  ls_se_pp.append(df_prod_per[df_prod_per[i] != 0][i].describe())
 #df_su_prod_per = pd.concat(ls_se_pp, axis= 1, keys = range(13))
-#print df_su_prod_per.to_string()
+#print(df_su_prod_per.to_string())
 
 ## PRICE DISPERSION BY STORE CHAIN
 #fig, ax = plt.subplots()
@@ -130,13 +128,13 @@ plt.show()
 #                       (u'AUCHAN', 'g'),
 #                       (u'CARREFOUR', 'r'),
 #                       (u'INTERMARCHE', 'k')]:
-#  df_qlmc_per_chain = df_qlmc_per[(df_qlmc_per['Store_Chain'] == chain) &\
-#                                  (df_qlmc_per['Family'] == u'Produits frais')]
-#  df_prod_per_chain = pd.pivot_table(data = df_qlmc_per_chain[['Family',
-#                                                               'Product',
-#                                                               'Price']],
-#                                     index = ['Family', 'Product'],
-#                                     values = 'Price',
+#  df_qlmc_per_chain = df_qlmc_per[(df_qlmc_per['store_chain'] == chain) &\
+#                                  (df_qlmc_per['section'] == u'Produits frais')]
+#  df_prod_per_chain = pd.pivot_table(data = df_qlmc_per_chain[['section',
+#                                                               'product',
+#                                                               'price']],
+#                                     index = ['section', 'product'],
+#                                     values = 'price',
 #                                     aggfunc = [len, np.mean, np.std],
 #                                     fill_value = np.nan)
 #  df_temp = df_prod_per_chain
@@ -156,15 +154,15 @@ plt.show()
 # todo: identify products which are present across 0-8 periods
 prod = u'Coca Cola - Coca Cola avec caféine - 2L'
 for i in range(9):
-	se_prod_prices = df_qlmc[(df_qlmc['Product'] == prod) &\
-                           (df_qlmc['Period'] == i)]['Price']
-	print u'{:d}, Nb: {:d}, Mean: {:.2f}, CV: {:.2f}, iq_range: {:.2f}, id_range: {:.2f}'\
+	se_prod_prices = df_qlmc[(df_qlmc['product'] == prod) &\
+                           (df_qlmc['period'] == i)]['price']
+	print(u'{:d}, Nb: {:d}, Mean: {:.2f}, CV: {:.2f}, iq_range: {:.2f}, id_range: {:.2f}'\
           .format(i,
                   len(se_prod_prices),
                   se_prod_prices.mean(),
                   PD.cv(se_prod_prices),
                   PD.iq_range(se_prod_prices),
-                  PD.id_range(se_prod_prices))
+                  PD.id_range(se_prod_prices)))
 # Can draw all iq_range or id_range Coca products followed
 # Regressions on CV (neutralize product values) for trend
 
@@ -177,28 +175,30 @@ for i in range(9):
 #import matplotlib.pyplot as plt
 ##str_some_prod = u'Philips - Cafetière filtre Cucina lilas 1000W 1.2L (15 tasses) - X1'
 #str_some_prod = u'Canard-Duchene - Champagne brut 12 degrés - 75cl'
-#df_some_prod = df_qlmc[(df_qlmc['Period'] == 0) &\
-#                       (df_qlmc['Product'] == str_some_prod)]
+#df_some_prod = df_qlmc[(df_qlmc['period'] == 0) &\
+#                       (df_qlmc['product'] == str_some_prod)]
 #df_some_prod['Price'].plot(kind = 'box')
 ## pbm... quite far away and other prices quite concentrated
 #plt.show()
 
 ## BACKUP: NB OBS BY PRODUCT AND CHAIN
 #
-#print u'\nProduct nb of obs by period for each chain'
-#df_prod_chain_per = pd.pivot_table(data = df_qlmc[['Period',
-#                                                   'Store_Chain',
-#                                                   'Family',
-#                                                   'Product']],
-#                                   index = ['Store_Chain', 'Family', 'Product'],
-#                                   columns = 'Period',
+#print()
+#print(u'Product nb of obs by period for each chain')
+#df_prod_chain_per = pd.pivot_table(data = df_qlmc[['period',
+#                                                   'store_chain',
+#                                                   'section',
+#                                                   'product']],
+#                                   index = ['store_chain', 'section', 'product'],
+#                                   columns = 'period',
 #                                   aggfunc = len,
 #                                   fill_value = 0).astype(int)
-#for chain in df_qlmc['Store_Chain'].unique():
+#for chain in df_qlmc['store_chain'].unique():
 #  ls_se_chain_pp = []
 #  for i in range(13):
 #    df_temp_chain_prod = df_prod_chain_per.loc[chain]
 #    ls_se_chain_pp.append(df_temp_chain_prod[df_temp_chain_prod[i] != 0][i].describe())
 #  df_su_chain_prod_per = pd.concat(ls_se_chain_pp, axis= 1, keys = range(13))
-#  print u'\n', chain
-#  print df_su_chain_prod_per.to_string()
+#  print()
+#  print(chain)
+#  print(df_su_chain_prod_per.to_string())

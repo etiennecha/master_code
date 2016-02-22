@@ -1,15 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import *
-import os, sys
-import httplib
-import urllib, urllib2
-import json
+import numpy as np
 import pandas as pd
 from functions_generic_qlmc import *
-import numpy as np
 import matplotlib.pyplot as plt
 
 pd.set_option('float_format', '{:,.2f}'.format)
@@ -71,12 +68,14 @@ df_products.set_index('product', inplace = True)
 df_products['nb_obs'] = se_prod_vc
 df_products.sort('nb_obs', ascending = False, inplace = True)
 
-print u'\nOverview nb obs by product:'
-print df_products['nb_obs'].describe()
+print()
+print(u'Overview nb obs by product:')
+print(df_products['nb_obs'].describe())
 
 # Weight of each section
 
-print u'\nWeight of each section dpding on min nb obs:'
+print()
+print(u'Weight of each section dpding on min nb obs:')
 ls_min_nb_obs = [400, 500, 600, 700]
 ls_nb_prods = []
 ls_se_section_vc = []
@@ -91,11 +90,12 @@ df_su_sections = pd.concat(ls_se_section_vc,
                            axis = 1,
                            keys = ls_min_nb_obs)
 df_su_sections.ix['Nb produits'] = ls_nb_prods
-print df_su_sections.to_string()
+print(df_su_sections.to_string())
 
 # Weight of each family (see: groupby to have family and section?)
 
-print u'\nWeight of each family dpding on min nb obs:'
+print()
+print(u'Weight of each family dpding on min nb obs:')
 ls_min_nb_obs = [400, 500, 600, 700]
 ls_nb_prods = []
 ls_se_family_vc = []
@@ -113,7 +113,7 @@ df_su_familys = pd.concat(ls_se_family_vc,
                            keys = ls_min_nb_obs)
 ## Fix index to keep display
 #df_su_familys.ix['Nb produits'] = ls_nb_prods
-print df_su_familys.to_string()
+print(df_su_familys.to_string())
 
 # Overview of products (top 50 in nb obs) by section and family
 
@@ -121,7 +121,8 @@ df_products.reset_index(drop = False, inplace = True)
 df_prod = df_products[['section', 'family', 'product', 'nb_obs']][0:50].copy()
 df_prod.set_index(['section', 'family', 'product'], inplace = True)
 df_prod.sort_index(inplace = True)
-print u'\nTop 50 products by section family:'
-print df_prod.to_string()
+print()
+print(u'Top 50 products by section family:')
+print(df_prod.to_string())
 
 # todo: section weight by value?
