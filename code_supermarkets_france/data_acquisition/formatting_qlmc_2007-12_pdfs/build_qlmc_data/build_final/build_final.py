@@ -356,12 +356,12 @@ df_su_dup_ps = pd.pivot_table(data = df_qlmc_dup_pp[['period', 'store']],
                               index = ['period', 'store'],
                               aggfunc = len,
                               fill_value = 0).astype(int)
-print u'\nStores (by period) with high duplicate count (over 200)'
-print df_su_dup_ps[df_su_dup_ps > 200].to_string()
+print u'\nStores (by period) with high duplicate count (over 350)'
+print df_su_dup_ps[df_su_dup_ps >= 350].to_string()
 # Drop those problematic products (a lot from period 10 on)
 # Probably overlap with previous pbms
 dict_dup_ps_drop = {}
-for Period, Store in df_su_dup_ps[df_su_dup_ps > 200].index:
+for Period, Store in df_su_dup_ps[df_su_dup_ps >= 350].index:
 	# print Period, Store
   dict_dup_ps_drop.setdefault(Period, []).append(Store)
 ls_dup_ps_drop = [(k,v) for k,v in dict_dup_ps_drop.items()]

@@ -37,17 +37,13 @@ print u'\nMerge df_qlmc with df_stores (store info)'
 df_stores = pd.read_csv(os.path.join(path_source_csv,
                                      'df_stores_w_municipality_and_lsa_id.csv'),
                         dtype = {'id_lsa': str,
-                                 'INSEE_ZIP' : str,
-                                 'INSEE_Departement' : str,
-                                 'INSEE_Code' : str,
-                                 'QLMC_Departement' : str},
+                                 'c_insee' : str},
                         encoding = 'UTF-8')
 
 # todo: do before and drop
-df_stores['Store'] = df_stores['Store_Chain'] + u' ' + df_stores['Store_Municipality']
 df_qlmc = pd.merge(df_stores,
                    df_qlmc,
-                   on = ['Period', 'Store'],
+                   on = ['period', 'store'],
                    how = 'right')
 
 # MERGE DF QLMC PRODUCTS
@@ -58,20 +54,20 @@ df_prod_names = pd.read_csv(os.path.join(path_source_csv,
                           encoding='utf-8')
 df_qlmc = pd.merge(df_prod_names,
                    df_qlmc,
-                   on = 'Product',
+                   on = 'product',
                    how = 'right')
 
 # BUILD NORMALIZED PRODUCT INDEX (needed? rather inter periods?)
 print u'\nAdd Product_norm: normalized product name'
-for field in ['Product_brand', 'Product_name', 'Product_format']:
+for field in ['product_brand', 'product_name', 'product_format']:
   df_qlmc[field].fillna(u'', inplace = True)
 
-df_qlmc.loc[df_qlmc['Product_brand'] == u'',
-            'Product_brand'] = 'Sans Marque'
+df_qlmc.loc[df_qlmc['product_brand'] == u'',
+            'product_brand'] = 'Sans Marque'
 
-df_qlmc['Product_norm'] = df_qlmc['Product_brand'] + ' - ' +\
-                          df_qlmc['Product_name'] + ' - ' +\
-                          df_qlmc['Product_format']
+df_qlmc['product_norm'] = df_qlmc['product_brand'] + ' - ' +\
+                          df_qlmc['product_name'] + ' - ' +\
+                          df_qlmc['product_format']
 
 # FIX STORES WHICH WERE LISTED UNDER TWO DIFFERENT NAMES WITHIN A PERIOD
 ls_fix_stores = [[4, u'SUPER U ANGERS BOURG DE PAILLE',
@@ -81,17 +77,17 @@ ls_fix_stores = [[4, u'SUPER U ANGERS BOURG DE PAILLE',
                  [9, u'CARREFOUR MARKET CLERMONT CARRE JAUDE',
                   u'CARREFOUR MARKET', u'CLERMONT FERRAND JAUDE']]
 
-for period, old_Store, new_Store_Chain, new_Store_Municipality in ls_fix_stores:
-  df_qlmc.loc[(df_qlmc['Period'] == period) &\
-              (df_qlmc['Store'] == old_Store),
-              ['Store_Chain', 'Store_Municipality', 'Store']] =\
-                [new_Store_Chain,
-                 new_Store_Municipality,
-                 new_Store_Chain + ' ' + new_Store_Municipality]
+for period, old_store, new_store_chain, new_store_municipality in ls_fix_stores:
+  df_qlmc.loc[(df_qlmc['period'] == period) &\
+              (df_qlmc['store'] == old_store),
+              ['store_chain', 'store_municipality', 'store']] =\
+                [new_store_chain,
+                 new_store_municipality,
+                 new_store_chain + ' ' + new_store_municipality]
 
 # To have perfect harmonization
-df_qlmc.loc[(df_qlmc['Store'] == 'SUPER U BEAUCOUZE'),
-            'INSEE_Municipality'] == u'BEAUCOUZE'
+df_qlmc.loc[(df_qlmc['store'] == 'SUPER U BEAUCOUZE'),
+            'insee_municipality'] == u'BEAUCOUZE'
 
 # #######################
 # DESC STATS (here?)
@@ -101,8 +97,8 @@ pd.set_option('float_format', '{:4,.2f}'.format)
 
 # PRODUCTS PRESENT IN ALL PERIODS
 ls_ls_prod = []
-for per in df_qlmc['Period'].unique():
-  ls_ls_prod.append(list(df_qlmc['Product_norm'][df_qlmc['Period'] == per].unique()))
+for per in df_qlmc['period'].unique():
+  ls_ls_prod.append(list(df_qlmc['product_norm'][df_qlmc['period'] == per].unique()))
 set_prod = set(ls_ls_prod[0])
 for ls_prod in ls_ls_prod[1:]:
 	set_prod.intersection_update(set(ls_prod))
@@ -110,21 +106,21 @@ ls_prod_allp = list(set_prod)
 
 # INSPECT/FIX PRICES
 
-df_qlmc.sort('Price', ascending = False, inplace = True)
+df_qlmc.sort('price', ascending = False, inplace = True)
 print u'\nInspect 100 most expensive (period) products:'
-print df_qlmc[['Period', 'Product_norm', 'Price']][0:100].to_string()
+print df_qlmc[['period', 'product_norm', 'price']][0:100].to_string()
 
 # Prices to be divided by 10 (which periods are concerned?)
 # todo: increase robustness?
 pr_exception = u'Philips - Cafeti\xe8re filtre Cucina lilas 1000W 1.2L (15 tasses) , X1'
-df_qlmc.loc[(df_qlmc['Price'] > 35.5) &\
-            (df_qlmc['Product'] != pr_exception) , 'Price'] =\
-  df_qlmc.loc[(df_qlmc['Price'] > 35.5) &\
-              (df_qlmc['Product'] != pr_exception), 'Price'] / 100.0
+df_qlmc.loc[(df_qlmc['price'] > 35.5) &\
+            (df_qlmc['product'] != pr_exception) , 'price'] =\
+  df_qlmc.loc[(df_qlmc['price'] > 35.5) &\
+              (df_qlmc['product'] != pr_exception), 'price'] / 100.0
 
 # Inspect prices by product (regarless of period)
-df_price_su = df_qlmc[['Product_norm', 'Price']].groupby('Product_norm').\
-                agg([np.median, np.mean, np.std, min, max])['Price']
+df_price_su = df_qlmc[['product_norm', 'price']].groupby('product_norm').\
+                agg([np.median, np.mean, np.std, min, max])['price']
 df_price_su.sort('mean', inplace = True, ascending = False)
 print u'\nInspect prices of 20 most expensive products (all periods pooled):'
 print df_price_su[0:20].to_string()
@@ -132,9 +128,9 @@ print df_price_su[0:20].to_string()
 # Inspect average product prices by period (regarless of period)
 ls_se_avg_prices = []
 for i in range(13):
-  df_qlmc_per = df_qlmc[df_qlmc['Period'] == i]
-  se_avg_prices = df_qlmc_per[['Product_norm', 'Price']]\
-                    .groupby('Product_norm').agg(np.mean)['Price']
+  df_qlmc_per = df_qlmc[df_qlmc['period'] == i]
+  se_avg_prices = df_qlmc_per[['product_norm', 'price']]\
+                    .groupby('product_norm').agg(np.mean)['price']
   ls_se_avg_prices.append(se_avg_prices)
 df_per_prices = pd.DataFrame(ls_se_avg_prices, index = range(13)).T
 df_per_prices['spread'] = df_per_prices.max(axis = 1) - df_per_prices.min(axis = 1)
@@ -145,49 +141,49 @@ print df_per_prices[0:100].to_string()
 # Issues fixed in build_final (periods 6, 8 ,9)
 
 #pr_pbm, period_pbm = u"Gemey Volum'Express mascara noir 10ml", 6
-#print df_qlmc[['Magasin', 'Price']][(df_qlmc['Product_norm'] == pr_pbm) &\
-#                                   (df_qlmc['Period'] == period_pbm)].to_string()
+#print df_qlmc[['store', 'price']][(df_qlmc['product_norm'] == pr_pbm) &\
+#                                   (df_qlmc['period'] == period_pbm)].to_string()
 #
 #pr_pbm, period_pbm = u"Viva Lait TGV demi-écrémé vitaminé 6x50cl", 7
-#print df_qlmc[['Magasin', 'Price']][(df_qlmc['Product_norm'] == pr_pbm) &\
-#                                   (df_qlmc['Period'] == period_pbm)].to_string()
+#print df_qlmc[['store', 'price']][(df_qlmc['product_norm'] == pr_pbm) &\
+#                                   (df_qlmc['period'] == period_pbm)].to_string()
 
 ## Period 6, 8, 9: pbm with goods of price above 10?
 ## Compare mean price with other periods and fix if large diff
 ## Check if prices are consistent (/10 and rounded?)
 #for i in range(13):
 #  print '\n', i
-#  print df_qlmc[df_qlmc['Period'] == i]['Price'].describe()
+#  print df_qlmc[df_qlmc['period'] == i]['Price'].describe()
 
 # Check good average price across periods => see pbms in 6, 8, 9
 
 # Get rid of products with several prices records
-#print df_qlmc[['Product_norm', 'Period', 'Price']]\
-#        [(df_qlmc['Product_norm'] == 'Elle & Vire Beurre doux tendre 250g') &\
+#print df_qlmc[['product_norm', 'period', 'price']]\
+#        [(df_qlmc['product_norm'] == 'Elle & Vire Beurre doux tendre 250g') &\
 #         (df_qlmc['id_lsa'] == '1525')].to_string()
 
 # TODO: examine duplicates (associated with high/low price: way to solve!)
-se_dup_bool = df_qlmc.duplicated(subset = ['Period', 'Store', 'Product_norm'])
-df_dup = df_qlmc[['Period', 'Store', 'Product_norm', 'Price']][se_dup_bool]
+se_dup_bool = df_qlmc.duplicated(subset = ['period', 'store', 'product_norm'])
+df_dup = df_qlmc[['period', 'store', 'product_norm', 'price']][se_dup_bool]
 
-df_dup['Product_norm'][df_dup['Period'] == 0].value_counts()[0:10]
+df_dup['product_norm'][df_dup['period'] == 0].value_counts()[0:10]
 
-df_check = df_qlmc[['Period', 'Store', 'Product_norm', 'Price']]\
-             [(df_qlmc['Period'] == 0) &\
-              (df_qlmc['Product_norm'] == u'Blédina Pêche - fraise dès 4 mois - 2 s - 260g')].copy()
-df_check.sort('Store', inplace = True)
+df_check = df_qlmc[['period', 'store', 'product_norm', 'price']]\
+             [(df_qlmc['period'] == 0) &\
+              (df_qlmc['product_norm'] == u'Blédina Pêche - fraise dès 4 mois - 2 s - 260g')].copy()
+df_check.sort('store', inplace = True)
 
-df_check_2 = df_qlmc[['Period', 'Store', 'Product_norm', 'Price']]\
-               [(df_qlmc['Period'] == 0) &\
-                (df_qlmc['Product_norm'] == u'La-pie-qui-chante - Menthe claire Bonbons 360g')].copy()
-df_check_2.sort('Store', inplace = True)
+df_check_2 = df_qlmc[['period', 'store', 'product_norm', 'price']]\
+               [(df_qlmc['period'] == 0) &\
+                (df_qlmc['product_norm'] == u'La-pie-qui-chante - Menthe claire Bonbons 360g')].copy()
+df_check_2.sort('store', inplace = True)
 
 print u'\nInspect specific product (duplicate issue):'
-print df_qlmc[(df_qlmc['Period'] == 0) &\
-              (df_qlmc['Product_norm'] == u'La-pie-qui-chante - Menthe claire Bonbons 360g') &\
-              (df_qlmc['Store'] == u'GEANT CARCASSONNE')].T.to_string()
+print df_qlmc[(df_qlmc['period'] == 0) &\
+              (df_qlmc['product_norm'] == u'La-pie-qui-chante - Menthe claire Bonbons 360g') &\
+              (df_qlmc['store'] == u'GEANT CARCASSONNE')].T.to_string()
 
-#df_qlmc.drop_duplicates(subset = ['P', 'Store', 'Product_norm'],
+#df_qlmc.drop_duplicates(subset = ['p', 'store', 'product_norm'],
 #                        take_last = True,
 #                        inplace = True)
 
@@ -202,34 +198,34 @@ print df_qlmc[(df_qlmc['Period'] == 0) &\
 id_lsa = '1525'
 
 # Comparison between two periods for one store
-df_temp_1 = df_qlmc[['Product_norm', 'Price']][(df_qlmc['Period'] == 0) &\
+df_temp_1 = df_qlmc[['product_norm', 'price']][(df_qlmc['period'] == 0) &\
                                               (df_qlmc['id_lsa'] == id_lsa)].copy()
-df_temp_2 = df_qlmc[['Product_norm', 'Price']][(df_qlmc['Period'] == 9) &\
+df_temp_2 = df_qlmc[['product_norm', 'price']][(df_qlmc['period'] == 9) &\
                                               (df_qlmc['id_lsa'] == id_lsa)].copy()
-df_temp_3 = pd.merge(df_temp_1, df_temp_2, on = 'Product_norm',
+df_temp_3 = pd.merge(df_temp_1, df_temp_2, on = 'product_norm',
                      how = 'inner', suffixes = ('_1', '_2'))
-df_temp_3['D_value'] = df_temp_3['Price_2'] - df_temp_3['Price_1']
-df_temp_3['D_percent'] = df_temp_3['D_value'] / df_temp_3['Price_1']
+df_temp_3['d_value'] = df_temp_3['price_2'] - df_temp_3['price_1']
+df_temp_3['d_percent'] = df_temp_3['d_value'] / df_temp_3['price_1']
 
 # Comparison between all periods available for one store
-ls_store_per_ind = [int(x) for x in df_qlmc['Period']\
+ls_store_per_ind = [int(x) for x in df_qlmc['period']\
                      [df_qlmc['id_lsa'] == id_lsa].unique()]
 ls_store_per_ind.sort()
-df_store = df_qlmc[['Product_norm', 'Price']][(df_qlmc['Period'] == ls_store_per_ind[0]) &\
+df_store = df_qlmc[['product_norm', 'price']][(df_qlmc['period'] == ls_store_per_ind[0]) &\
                                              (df_qlmc['id_lsa'] == id_lsa)].copy()
 for per_ind in ls_store_per_ind[1:]:
-  df_temp = df_qlmc[['Product_norm', 'Price']]\
-              [(df_qlmc['Period'] == per_ind) &\
+  df_temp = df_qlmc[['product_norm', 'price']]\
+              [(df_qlmc['period'] == per_ind) &\
                (df_qlmc['id_lsa'] == id_lsa)]
   df_store = pd.merge(df_store,
                       df_temp,
-                      on = 'Product_norm',
+                      on = 'product_norm',
                       how = 'outer', suffixes = ('', '_{:02d}'.format(per_ind)))
 
 # Finally harmonize first Price column name
-df_store.rename(columns = {'Price': 'Price_{:02d}'.format(ls_store_per_ind[0])},
+df_store.rename(columns = {'price': 'price_{:02d}'.format(ls_store_per_ind[0])},
                 inplace = True)
-df_store.columns = [x.replace('Price_', 'Period') for x in df_store.columns]
+df_store.columns = [x.replace('price_', 'period') for x in df_store.columns]
 
 # Trivial mistake in price reported: look for problems by product
 # might need to add price folder and work on prices
@@ -241,12 +237,12 @@ print df_store[0:30].to_string()
 ## DATE PARSING
 ## ########################
 #
-#df_qlmc['Date_2'] = pd.to_datetime(df_qlmc['Date'], Product_format = '%d/%m/%Y')
+#df_qlmc['date_2'] = pd.to_datetime(df_qlmc['date'], product_format = '%d/%m/%y')
 #for i in range(13):
 #  print u'Beg of period {:2d}'.Product_format(i),
-#        df_qlmc['Date_2'][df_qlmc['Period'] == i].min()
+#        df_qlmc['date_2'][df_qlmc['period'] == i].min()
 #  print u'End of period {:2d}'.Product_format(i),
-#        df_qlmc['Date_2'][df_qlmc['Period'] == i].max()
+#        df_qlmc['date_2'][df_qlmc['period'] == i].max()
 ## todo: check dates by store
 
 # ########################

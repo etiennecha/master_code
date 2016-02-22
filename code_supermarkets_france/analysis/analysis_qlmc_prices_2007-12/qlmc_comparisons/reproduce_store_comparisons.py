@@ -32,131 +32,127 @@ path_built_csv_lsa = os.path.join(path_built_lsa,
 # LOAD DATA
 # ##############
 
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
-                        encoding = 'utf-8')
+df_qlmc = pd.read_csv(os.path.join(path_built_csv,
+                                   'df_qlmc.csv'),
+                      encoding = 'utf-8')
 
+# harmonize store chains according to qlmc
+df_qlmc['store_chain_alt'] = df_qlmc['store_chain']
+ls_sc_replace = [('CENTRE E. LECLERC', 'LECLERC'),
+                 ('CENTRE LECLERC', 'LECLERC'),
+                 ('E. LECLERC', 'LECLERC'),
+                 ('E.LECLERC', 'LECLERC'),
+                 ('LECLERC EXPRESS', 'LECLERC'),
+                 ('INTERMARCHE HYPER', 'INTERMARCHE'),
+                 ('INTERMARCHE SUPER', 'INTERMARCHE'),
+                 ('SUPER U', 'SYSTEME U'),
+                 ('HYPER U', 'SYSTEME U'),
+                 ('U EXPRESS', 'SYSTEME U'),
+                 ('MARCHE U', 'SYSTEME U'),
+                 ('CARREFOUR PLANET', 'CARREFOUR'),
+                 ('GEANT CASINO', 'GEANT'),
+                 ('GEANT DISCOUNT', 'GEANT'),
+                 ('CARREFOUR MARKET', 'CHAMPION'),
+                 ('HYPER CHAMPION', 'CHAMPION'),
+                 ('CARREFOUR CITY', 'CHAMPION'),
+                 ('CARREFOUR CONTACT', 'CHAMPION')]
+for sc_old, sc_new in ls_sc_replace:
+  df_qlmc.loc[df_qlmc['store_chain'] == sc_old,
+              'store_chain_alt'] = sc_new
 
-# STORE DATA (NEED CHAIN)
+# harmonize store chains in comp pairs too
+df_comp_pairs = pd.read_csv(os.path.join(path_built_csv,
+                                         'df_comp_store_pairs.csv'),
+                                  encoding = 'utf-8')
 
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores.csv'),
-                         encoding='utf-8')
-
-df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
-                                  'df_lsa.csv'),
-                     dtype = {u'C_INSEE' : str,
-                              u'C_INSEE_Ardt' : str,
-                              u'C_Postal' : str,
-                              u'SIREN' : str,
-                              u'NIC' : str,
-                              u'SIRET' : str},
-                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
-                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
-                     encoding = 'UTF-8')
-
-df_stores = pd.merge(df_lsa[['Ident', 'Enseigne_Alt', 'Groupe', 'Surface']],
-                     df_stores,
-                     left_on = 'Ident',
-                     right_on = 'id_lsa',
-                     how = 'right')
-
+df_comp_pairs['store_chain_0_alt'] = df_comp_pairs['store_chain_0']
+df_comp_pairs['store_chain_1_alt'] = df_comp_pairs['store_chain_1']
+for sc_old, sc_new in ls_sc_replace:
+  df_comp_pairs.loc[df_comp_pairs['store_chain_0'] == sc_old,
+                    'store_chain_0_alt'] = sc_new
+  df_comp_pairs.loc[df_comp_pairs['store_chain_1'] == sc_old,
+                    'store_chain_1_alt'] = sc_new
+  
 # ###################################
 # LOOP: COMPARISON WITHIN EACH PERIOD
 # ###################################
 
-# Adhoc fixes
-df_stores.loc[df_stores['Store'] == u'LECLERC LA FERTE BERNARD',
-              'Enseigne_Alt'] = u'CENTRE E.LECLERC'
-#df_stores.loc[df_stores['Store'] == u'INTERMARCHE MORIERES LES AVIGNON',
-#              'Enseigne_Alt'] = u'INTERMARCHE'
-#df_stores.loc[df_stores['Store'] == u'SYSTEME U VERMELLES',
-#              'Enseigne_Alt'] = u'SUPER U'
+## Adhoc fixes
+#df_stores.loc[df_stores['store'] == u'LECLERC LA FERTE BERNARD',
+#              'Enseigne_Alt'] = u'CENTRE E.LECLERC'
+##df_stores.loc[df_stores['Store'] == u'INTERMARCHE MORIERES LES AVIGNON',
+##              'Enseigne_Alt'] = u'INTERMARCHE'
+##df_stores.loc[df_stores['Store'] == u'SYSTEME U VERMELLES',
+##              'Enseigne_Alt'] = u'SUPER U'
 ## pbm: would need to fix df_comp_pairs too
 ls_temp_exclude = [u'INTERMARCHE MORIERES LES AVIGNON',
                    u'SYSTEME U VERMELLES']
 
 ls_df_repro_compa = []
-for per in range(9):
+for i in range(0, 9):
 
-  # RESTRICT TO ONE PERIOD AND MERGE
-  
-  #per = 2
-  df_prices_per = df_prices[df_prices['Period'] == per]
-  df_stores_per = df_stores[df_stores['Period'] == per]
-  
-  df_prices_per = pd.merge(df_prices_per,
-                           df_stores_per,
-                           on = ['Store'],
-                           how = 'right')
-   
-  df_stores_per.set_index('Store', inplace = True)
-
+  # Restrict to period
+  print ''
+  print 'Period {:d}'.format(i)
+  df_qlmc_per = df_qlmc[df_qlmc['period'] == i]
   # Costly to search by store_id within df_prices
   # hence first split df_prices in chain dataframes
-  dict_chain_dfs = {chain: df_prices_per[df_prices_per['Enseigne_Alt'] == chain]\
-                      for chain in df_prices_per['Enseigne_Alt'].unique()}
+  dict_chain_dfs = {chain: df_qlmc_per[df_qlmc_per['store_chain_alt'] == chain]\
+                      for chain in df_qlmc_per['store_chain_alt'].unique()}
   
   # COMPETITOR PAIRS
-  
-  df_comp_pairs = pd.read_csv(os.path.join(path_built_csv,
-                                           'df_comp_store_pairs.csv'),
-                                    encoding = 'utf-8')
-  
-  df_comp_pairs_per = df_comp_pairs[df_comp_pairs['Period'] == per]
+  df_comp_pairs_per = df_comp_pairs[df_comp_pairs['period'] == i]
   
   # LOOP ON PAIRS
-
   start = timeit.default_timer()
   ls_rows_compa = []
-  lec_chain = 'CENTRE E.LECLERC'
+  lec_chain = 'LECLERC'
   lec_id_save = None
   for row_i, row in df_comp_pairs_per.iterrows():
-    if row['Groupe_0'] == 'LECLERC':
-      lec_id, comp_id = row['Store_0'], row['Store_1']
-      comp_chain = row['Enseigne_Alt_1']
-    elif row['Groupe_1'] == 'LECLERC':
-      lec_id, comp_id = row['Store_1'], row['Store_0']
-      comp_chain, comp_groupe = row['Enseigne_Alt_0'], row['Groupe_0']
+    if row['store_chain_0_alt'] == 'LECLERC':
+      lec_id, comp_id = row['store_0'], row['store_1']
+      comp_chain = row['store_chain_1_alt']
+    elif row['store_chain_1_alt'] == 'LECLERC':
+      lec_id, comp_id = row['store_1'], row['store_0']
+      comp_chain, comp_groupe = row['store_chain_0_alt'], row['groupe_0']
     else:
       comp_chain = None
     # only if leclerc pair
     if comp_chain and (lec_id not in ls_temp_exclude):
       # taking advantage of order requires caution on first loop
       if lec_id != lec_id_save:
-        df_lec  = dict_chain_dfs[lec_chain][dict_chain_dfs[lec_chain]['Store'] == lec_id]
-        lec_id_save = df_lec['Store'].iloc[0]
-      df_comp = dict_chain_dfs[comp_chain][dict_chain_dfs[comp_chain]['Store'] == comp_id]
+        df_lec  = dict_chain_dfs[lec_chain]\
+                      [dict_chain_dfs[lec_chain]['store'] == lec_id]
+        lec_id_save = df_lec['store'].iloc[0]
+      df_comp = dict_chain_dfs[comp_chain]\
+                    [dict_chain_dfs[comp_chain]['store'] == comp_id]
       
       # todo: see if need family and subfamily for matching (not much chge)
       df_duel = pd.merge(df_lec,
                          df_comp,
                          how = 'inner',
-                         on = ['Family', 'Subfamily', 'Product'],
+                         on = ['section', 'family', 'product'],
                          suffixes = ['_lec', '_comp'])
       if not df_duel.empty:
-        ls_rows_compa.append((per,
+        ls_rows_compa.append((i,
                               lec_id,
                               comp_id,
-                              df_stores_per.ix[lec_id]['Surface'],
-                              df_stores_per.ix[comp_id]['Surface'],
                               row['dist'],
                               comp_chain,
                               comp_groupe,
                               len(df_duel),
-                              len(df_duel[df_duel['Price_lec'] < df_duel['Price_comp']]),
-                              len(df_duel[df_duel['Price_lec'] > df_duel['Price_comp']]),
-                              len(df_duel[df_duel['Price_lec'] == df_duel['Price_comp']]),
-                              (df_duel['Price_comp'].sum() / df_duel['Price_lec'].sum() - 1) * 100,
-                              df_duel['Price_comp'].mean() - df_duel['Price_lec'].mean()))
+                              len(df_duel[df_duel['price_lec'] < df_duel['price_comp']]),
+                              len(df_duel[df_duel['price_lec'] > df_duel['price_comp']]),
+                              len(df_duel[df_duel['price_lec'] == df_duel['price_comp']]),
+                              (df_duel['price_comp'].sum() /\
+                                 df_duel['price_lec'].sum() - 1) * 100,
+                              df_duel['price_comp'].mean() - df_duel['price_lec'].mean()))
         lec_id_save = None
   
   df_repro_compa = pd.DataFrame(ls_rows_compa,
                                 columns = ['period',
                                            'lec_id',
                                            'comp_id',
-                                           'lec_surface',
-                                           'comp_surface',
                                            'dist',
                                            'comp_enseigne_alt',
                                            'comp_groupe',
@@ -183,6 +179,8 @@ df_compa_all_periods.loc[df_compa_all_periods['nb_comp_wins'] >\
 
 df_compa_all_periods.loc[df_compa_all_periods['nb_obs'] == 0,
                          'rr'] = np.nan
+
+print df_compa_all_periods[0:10].to_string()
 
 ## ##############
 ## STATS DES

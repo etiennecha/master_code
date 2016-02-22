@@ -78,7 +78,8 @@ df_qlmc_stores = pd.read_csv(os.path.join(path_source_csv,
 
 df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
                                   'df_lsa_for_qlmc.csv'),
-                     dtype = {u'c_insee' : str,
+                     dtype = {u'id_lsa' : str,
+                              u'c_insee' : str,
                               u'c_insee_ardt' : str,
                               u'c_postal' : str,
                               u'c_siren' : str,
@@ -241,12 +242,14 @@ df_stores = pd.merge(df_read_fix_ms[['period', 'store_chain', 'store_municipalit
                      how = 'right')
 
 # priority given to hand info
-df_stores.loc[~pd.isnull(df_stores['id_lsa_adhoc']), 'matching_quality'] = 'manuel'
+df_stores.loc[~pd.isnull(df_stores['id_lsa_adhoc']),
+              'matching_quality'] = 'manuel'
 
 df_stores.loc[~pd.isnull(df_stores['id_lsa_adhoc']),
              'id_lsa'] = df_stores['id_lsa_adhoc']
 
-df_stores.loc[pd.isnull(df_stores['matching_quality']), 'matching_quality'] = 'ambigu' # check
+df_stores.loc[pd.isnull(df_stores['matching_quality']),
+              'matching_quality'] = 'ambigu' # check
 
 df_stores.drop(['id_lsa_adhoc'], axis = 1, inplace = True)
 df_stores.sort(columns=['period', 'c_insee', 'store_chain'], inplace = True)

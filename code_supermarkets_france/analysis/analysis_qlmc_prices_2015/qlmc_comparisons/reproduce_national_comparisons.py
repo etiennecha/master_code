@@ -40,7 +40,7 @@ dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
 df_prices.loc[df_prices['store_chain'] == 'HYPER U', 'store_chain'] = 'SUPER U'
 df_prices.loc[df_prices['store_chain'] == 'U EXPRESS', 'store_chain'] = 'SUPER U'
 df_prices.loc[df_prices['store_chain'] == 'HYPER CASINO', 'store_chain'] = 'CASINO'
-df_prices.loc[df_prices['store_chain'] == "LES HALLES D'AUCHAN", 'store_chain'] = 'CASINO'
+df_prices.loc[df_prices['store_chain'] == "LES HALLES D'AUCHAN", 'store_chain'] = 'AUCHAN'
 
 # Average price by product / chain
 ls_col_gb = ['store_chain', 'section', 'family', 'product', 'price']
