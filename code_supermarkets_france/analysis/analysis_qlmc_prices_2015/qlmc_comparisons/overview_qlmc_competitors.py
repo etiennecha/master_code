@@ -1,21 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import *
-import os, sys
-import httplib
-import urllib, urllib2
-from bs4 import BeautifulSoup
-import re
-import json
+import numpy as np
 import pandas as pd
 from functions_generic_qlmc import *
-import numpy as np
-
-pd.set_option('float_format', '{:,.2f}'.format)
-format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 path_built = os.path.join(path_data,
                           'data_supermarkets',
@@ -29,11 +20,14 @@ path_built_lsa = os.path.join(path_data,
                               'data_supermarkets',
                               'data_built',
                               'data_lsa')
-
 path_built_csv_lsa = os.path.join(path_built_lsa, 'data_csv')
 path_built_json_lsa = os.path.join(path_built_lsa, 'data_json')
 path_built_comp_csv_lsa = os.path.join(path_built_csv_lsa, '201407_competition')
 path_built_comp_json_lsa = os.path.join(path_built_json_lsa, '201407_competition')
+
+pd.set_option('float_format', '{:,.2f}'.format)
+format_float_int = lambda x: '{:10,.0f}'.format(x)
+format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 # ##############
 # LOAD DATA
@@ -80,11 +74,12 @@ ls_disp_dist = ['lec_id', 'comp_id',
                 'dist']
 
 # Overview of pair distance distribution
-print u'\nOverview pair dist (km):'
-print df_comp['dist'].describe()
+print(u'\nOverview pair dist (km):')
+print(df_comp['dist'].describe())
 
 # Overview of leclercs' competitors
-print u'\nOverview market dist (km) around leclerc stores:'
+print()
+print(u'Overview market dist (km) around leclerc stores:')
 df_leclerc_comp = df_comp[['lec_name', 'dist']]\
                     .groupby(['lec_name']).agg([len,
                                                 min,
@@ -92,14 +87,14 @@ df_leclerc_comp = df_comp[['lec_name', 'dist']]\
                                                 np.mean,
                                                 np.median])['dist']
 ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
-print df_leclerc_comp.describe(percentiles = ls_pctiles)
+print(df_leclerc_comp.describe(percentiles = ls_pctiles))
 
 ## Latex output
 #pd.set_option('float_format', '{:,.1f}'.format)
-#print df_leclerc_comp.describe(percentiles = ls_pctiles).to_latex()
-## print len(df_leclerc_comp[df_leclerc_comp['max'] > 30])
-## print len(df_leclerc_comp[df_leclerc_comp['mmin'] > 30])
-## print df_comp[df_comp['lec_name'] == u'CENTRE E.LECLERC LOUDÉAC'].to_string()
+#print(df_leclerc_comp.describe(percentiles = ls_pctiles).to_latex())
+## print(len(df_leclerc_comp[df_leclerc_comp['max'] > 30]))
+## print(len(df_leclerc_comp[df_leclerc_comp['mmin'] > 30]))
+## print(df_comp[df_comp['lec_name'] == u'CENTRE E.LECLERC LOUDÉAC'].to_string())
 
 # ###################################
 # OVERVIEW LECLERC STORE COMPETITORS
@@ -120,11 +115,11 @@ lsd0 = ['enseigne', 'adresse1', 'ville', 'surface']
 
 lec_lsa_id_ex = dict_lec_comp.keys()[0]
 
-print u'\nCompetitors picked by Leclerc:'
-print df_lsa.ix[[x[0] for x in dict_lec_comp[lec_lsa_id_ex]]][lsd0].to_string()
+print(u'\nCompetitors picked by Leclerc:')
+print(df_lsa.ix[[x[0] for x in dict_lec_comp[lec_lsa_id_ex]]][lsd0].to_string())
 
-print u'\nAll competitors (25 km) LSA:'
-print df_lsa.ix[[x[0] for x in dict_ls_comp[lec_lsa_id_ex]]][lsd0].to_string()
+print(u'\nAll competitors (25 km) LSA:')
+print(df_lsa.ix[[x[0] for x in dict_ls_comp[lec_lsa_id_ex]]][lsd0].to_string())
 
 # #################################
 # STATS DES: LSA COMP VS. QLMC COMP
@@ -133,7 +128,7 @@ print df_lsa.ix[[x[0] for x in dict_ls_comp[lec_lsa_id_ex]]][lsd0].to_string()
 # todo: count all within 30 km, more than 1000m2, and discard differentiated
 
 ## check enseigne to discard
-#print df_lsa['enseigne'][df_lsa['surface'] >= 1000].value_counts().to_string()
+#print(df_lsa['enseigne'][df_lsa['surface'] >= 1000].value_counts().to_string())
 
 ls_discard_enseigne = [u'ALDI',
                        u'LEADER PRICE',
@@ -248,26 +243,31 @@ for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
   dict_dict_missing['missing_store_larger'][lec_lsa_id] = ls_missing_2_larger
 
 # Could check later if store of same enseigne/groupe further but bigger
-print u'\nCheck nb Leclerc store with missing stores:'
+print()
+print(u'Check nb Leclerc store with missing stores:')
 
 for x in ['missing_comp', 'missing_store', 'missing_store_larger']:
   ls_concerned = [lec_lsa_id for lec_lsa_id, ls_missing\
                      in dict_dict_missing[x].items()\
                        if ls_missing]
-  print u'Nb lec w/ {:s}: {:d}'.format(x, len(ls_concerned))
+  print(u'Nb lec w/ {:s}: {:d}'.format(x, len(ls_concerned)))
 
 # Example
 lec_lsa_id_ex = ls_concerned[0]
 
-for lec_lsa_id_ex in ls_concerned[0:50]:
-  print u'\n' + '-'*20
-  print df_lsa.ix[lec_lsa_id_ex][lsd0 + ['c_postal']].T.to_string()
+for lec_lsa_id_ex in ls_concerned[0:10]:
+  print()
+  print(u'-'*20)
+  print(df_lsa.ix[lec_lsa_id_ex][lsd0 + ['c_postal']].T.to_string())
 
-  print u'\nCompetitors picked by Leclerc:'
-  print df_lsa.ix[[x[0] for x in dict_lec_comp[lec_lsa_id_ex]]][lsd0].to_string()
+  print()
+  print(u'Competitors picked by Leclerc:')
+  print(df_lsa.ix[[x[0] for x in dict_lec_comp[lec_lsa_id_ex]]][lsd0].to_string())
   
-  print u'\nLarge(r) competitors missing?'
-  print df_lsa.ix[dict_dict_missing['missing_store'][lec_lsa_id_ex]][lsd0].to_string()
-
-  print u'\nLarge(r) competitors missing and not in data?'
-  print df_lsa.ix[dict_dict_missing['missing_store_larger'][lec_lsa_id_ex]][lsd0].to_string()
+  print()
+  print(u'Large(r) competitors missing?')
+  print(df_lsa.ix[dict_dict_missing['missing_store'][lec_lsa_id_ex]][lsd0].to_string())
+  
+  print()
+  print(u'Large(r) competitors missing and not in data?')
+  print(df_lsa.ix[dict_dict_missing['missing_store_larger'][lec_lsa_id_ex]][lsd0].to_string())
