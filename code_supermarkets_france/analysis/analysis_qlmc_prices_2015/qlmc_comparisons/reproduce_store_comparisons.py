@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import *
 import os, sys
@@ -42,8 +43,9 @@ dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
 # #########################
 
 # Pick any scraped comparison
-print u'\nExample of comparison displayed on QLMC:'
-print df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()].iloc[0]
+print()
+print(u'Example of comparison displayed on QLMC:')
+print(df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()].iloc[0])
 
 # Replicate comparison
 
@@ -57,7 +59,7 @@ df_lec  = dict_chain_dfs[lec_chain]\
                         [dict_chain_dfs[lec_chain]['store_id'] == lec_id].copy()
 df_comp = dict_chain_dfs[comp_chain]\
                         [dict_chain_dfs[comp_chain]['store_id'] == comp_id].copy()
-print u'Time to select', timeit.default_timer() - start
+print(u'Time to select', timeit.default_timer() - start)
 
 start = timeit.default_timer()
 df_duel = pd.merge(df_lec,
@@ -66,23 +68,25 @@ df_duel = pd.merge(df_lec,
                    on = ['section', 'family', 'product'],
                    suffixes = ['_lec', '_comp'])
 # df_duel.drop(['chain_lec', 'chain_comp'], axis = 1, inplace = True)
-print u'Time to merge', timeit.default_timer() - start
+print(u'Time to merge', timeit.default_timer() - start)
 
-print u'\nReplication of comparison:'
-print (df_duel['price_comp'].sum() / df_duel['price_lec'].sum() - 1) * 100
+print()
+print(u'\nReplication of comparison:')
+print((df_duel['price_comp'].sum() / df_duel['price_lec'].sum() - 1) * 100)
 
-print u'\nOverview product prices:'
-print df_duel[['price_lec', 'price_comp']].describe()
+print()
+print(u'Overview product prices:')
+print(df_duel[['price_lec', 'price_comp']].describe())
 
-print u'\nAverage on product by product comparison'
+print(u'Average on product by product comparison')
 # (todo: add weighted pct (Leclerc's method?))
 df_duel['diff'] = df_duel['price_comp'] - df_duel['price_lec']
 df_duel['pct_diff'] = df_duel['price_comp'] / df_duel['price_lec'] - 1
-print df_duel[['diff', 'pct_diff']].describe()
+print(df_duel[['diff', 'pct_diff']].describe())
 
-print u'\nDesc of abs value of percent difference:'
-print df_duel['pct_diff'].abs().describe(\
-        percentiles = [0.1, 0.25, 0.5, 0.75, 0.9])
+print(u'Desc of abs value of percent difference:')
+print(df_duel['pct_diff'].abs().describe(\
+        percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]))
 
 #df_duel.sort('diff', ascending = False, inplace = True)
 #print df_duel[0:10].to_string()
@@ -147,12 +151,13 @@ df_repro_compa = pd.DataFrame(ls_rows_compa,
                                          'nb_draws',
                                          'pct_compa',
                                          'mean_compa'])
-print u'Time for loop', timeit.default_timer() - start
+print(u'Time for loop', timeit.default_timer() - start)
 
 ls_pctiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
 
-print u'\nDescribe pct_compa:'
-print df_repro_compa['pct_compa'].describe(percentiles = ls_pctiles)
+print()
+print(u'Describe pct_compa:')
+print(df_repro_compa['pct_compa'].describe(percentiles = ls_pctiles))
 
 df_repro_compa['rr'] = df_repro_compa['nb_comp_wins'] /\
                          df_repro_compa['nb_obs'] * 100
@@ -182,14 +187,15 @@ df_delta = pd.merge(df_qlmc_comparisons[['lec_id', 'comp_id',
                    how = 'left')
 
 # Ok with comparisons when Leclerc loses
-print u'\nCheck comparisons when Leclerc loses:'
-print df_delta[df_delta['pct_compa'] <= 0].to_string()
-print len(df_delta[df_delta['qlmc_winner'] == 'OTH'])
+print()
+print(u'Check comparisons when Leclerc loses:')
+print(df_delta[df_delta['pct_compa'] <= 0].to_string())
+print(len(df_delta[df_delta['qlmc_winner'] == 'OTH']))
 
-print u'\nCheck replication of qlmc comparisons:'
+print(u'Check replication of qlmc comparisons:')
 df_delta = df_delta[df_delta['pct_compa'] >= 0]
 df_delta['delta'] = df_delta['qlmc_pct_compa'] - df_delta['pct_compa']
-print df_delta['delta'].describe()
+print(df_delta['delta'].describe())
 
 # Summary by chain
 ls_su_chains = ['AUCHAN', 'CARREFOUR', 'GEANT CASINO', 'INTERMARCHE', 'SUPER U']
@@ -201,8 +207,8 @@ df_su_chains = pd.concat(ls_se_chain_desc,
                          axis = 1,
                          keys = ls_su_chains)
 pd.set_option('float_format', '{:,.1f}'.format)
-print u'\nSummary by chain: comparison results:'
-print df_su_chains.to_string()
+print(u'Summary by chain: comparison results:')
+print(df_su_chains.to_string())
 
 # Summary by chain: rr
 ls_se_chain_rr = [df_repro_compa[df_repro_compa['comp_chain']\
@@ -211,5 +217,5 @@ ls_se_chain_rr = [df_repro_compa[df_repro_compa['comp_chain']\
 df_chain_rr = pd.concat(ls_se_chain_rr,
                         axis = 1,
                         keys = ls_su_chains)
-print u'\nSummary by chain: rank reversal results:'
-print df_chain_rr.to_string()
+print(u'Summary by chain: rank reversal results:')
+print(df_chain_rr.to_string())

@@ -64,8 +64,9 @@ df_stores.sort(['period', 'store'],
 # drop stores non identified i.e. w/ no id_lsa
 df_stores = df_stores[~df_stores['id_lsa'].isnull()]
 # check no duplicate (period, lsa_id) => should not be...
-print u'\nCheck no duplicates (should be empty):'
-print df_stores[df_stores.duplicated(['period', 'id_lsa'])]
+print()
+print(u'Check no duplicates (should be empty):')
+print(df_stores[df_stores.duplicated(['period', 'id_lsa'])])
 # drop in case there are...
 df_stores = df_stores.drop_duplicates(['period', 'id_lsa'])
 
@@ -73,7 +74,7 @@ df_stores = df_stores.drop_duplicates(['period', 'id_lsa'])
 # GET CLOSE STORE PAIRS
 # #####################
 
-print '\nGetting list of qlmc close pairs:'
+print('Getting list of qlmc close pairs:')
 ls_close_pairs  = []
 for period in df_stores['period'].drop_duplicates():
   df_stores_per = df_stores[df_stores['period'] == period]

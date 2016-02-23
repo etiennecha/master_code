@@ -1,6 +1,7 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from functions_generic_qlmc import *
@@ -33,10 +34,9 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
 # COMPARE PAIRS
 # ###############
 
-#Period = 5
 ls_df_repro_compa = []
 ls_ls_prod_draws = []
-for period in range(9)[0:3]:
+for period in range(0, 13):
   df_comp_pairs_per = df_comp_pairs[df_comp_pairs['period'] == period]
   df_prices_per = df_prices[df_prices['period'] == period]
   ls_rows_compa = []
@@ -82,13 +82,14 @@ for period in range(9)[0:3]:
                           len(df_duel[df_duel['price_0'] == df_duel['price_1']]),
                           df_duel[['price_0', 'price_1']].sum().argmin(),
                           np.abs((df_duel[['price_0', 'price_1']].sum().min() /\
-                                    df_duel[['price_0', 'price_1']].sum().max() - 1)* 100),
+                                    df_duel[['price_0', 'price_1']].sum().max()-1)*100),
                           mean_diff,
                           (df_duel['price_0'] - df_duel['price_1']).abs().mean(),
                           mean_rr_saving))
 
     # Save product names when equal prices
-    ls_prod_draws += list(df_duel[df_duel['price_0'] == df_duel['price_1']]['product'].values)
+    ls_prod_draws += list(df_duel[df_duel['price_0'] ==\
+                            df_duel['price_1']]['product'].values)
   
   # Pbm: pct compa does not make sense: todo do always cheapest / most expensive
   df_repro_compa = pd.DataFrame(ls_rows_compa,
@@ -143,8 +144,9 @@ pd.set_option('float_format', '{:,.3f}'.format)
 
 ls_pctiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
 
-print u'\nOverview of winner value pct:'
-print df_repro_compa['winner_value_pct'].describe(percentiles = ls_pctiles)
+print()
+print(u'Overview of winner value pct:')
+print(df_repro_compa['winner_value_pct'].describe(percentiles = ls_pctiles))
 
 df_repro_compa['rank_rev'] = df_repro_compa['nb_1_wins'] /\
                                df_repro_compa['nb_obs'] * 100
@@ -154,11 +156,14 @@ df_repro_compa.loc[df_repro_compa['nb_1_wins'] >\
                    'rank_rev'] = df_repro_compa['nb_0_wins'] /\
                                    df_repro_compa['nb_obs'] * 100
 
-print u'\nGeneral overview'
-print df_repro_compa.describe().to_string()
+print()
+print(u'General overview')
+print(df_repro_compa.describe().to_string())
 
 import matplotlib.pyplot as plt
-df_repro_compa.plot(kind = 'scatter', x = 'winner_value_pct', y = 'rank_rev')
+df_repro_compa.plot(kind = 'scatter',
+                    x = 'winner_value_pct',
+                    y = 'rank_rev')
 plt.show()
 
 # Check if some products are prone to draws? how to do efficiently?
@@ -166,21 +171,21 @@ plt.show()
 
 # Todo: add from LSA: Enseigne_Alt and Group to have correct df_comp and df_same
 
-print smf.ols('rank_rev ~ winner_value_pct + dist',
-        data = df_repro_compa).fit().summary()
+print(smf.ols('rank_rev ~ winner_value_pct + dist',
+        data = df_repro_compa).fit().summary())
 
 df_repro_compa['close'] = 0
 df_repro_compa.loc[df_repro_compa['dist'] <= 5, 'close'] = 1
 
-print df_repro_compa[['close', 'same_municipality']].describe()
+print(df_repro_compa[['close', 'same_municipality']].describe())
 
-print smf.ols('rank_rev ~ winner_value_pct + close',
-        data = df_repro_compa).fit().summary()
+print(smf.ols('rank_rev ~ winner_value_pct + close',
+        data = df_repro_compa).fit().summary())
 
-print smf.ols('rank_rev ~ winner_value_pct + same_municipality',
-        data = df_repro_compa).fit().summary()
+print(smf.ols('rank_rev ~ winner_value_pct + same_municipality',
+        data = df_repro_compa).fit().summary())
 
 # Product draw
 se_prod_draws_vc = pd.Series(ls_prod_draws).value_counts()
-print u'Top 20 products in terms of draws:'
-print se_prod_draws_vc[0:20]
+print(u'Top 20 products in terms of draws:')
+print(se_prod_draws_vc[0:20])

@@ -65,13 +65,16 @@ df_stores = pd.merge(df_stores,
 # STATS DES
 # ###############
 
-print(u'\nNf of hypers and supers:')
+print()
+print(u'Nf of hypers and supers:')
 print(df_stores['type'].value_counts())
 
-print(u'\nNb of stores by retail group:')
+print()
+print(u'Nb of stores by retail group:')
 print(df_stores['groupe'].value_counts())
 
-print(u'\nNb of stores by chain:')
+print()
+print(u'Nb of stores by chain:')
 print(df_stores['enseigne_alt'].value_counts())
 
 # todo: check H/S split of sample vs. H/S split by retail group

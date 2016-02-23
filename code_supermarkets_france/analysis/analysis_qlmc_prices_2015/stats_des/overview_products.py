@@ -179,4 +179,5 @@ for stat in ['len', 'cv', 'std', 'iq_range', 'id_range', 'minmax_range']:
 
 for stat in ['len', 'cv', 'iq_range', 'id_range']:
   print()
+  print(stat)
   print(dict_df_chain_des[stat].to_string())

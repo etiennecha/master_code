@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import *
 import os, sys
@@ -86,24 +87,25 @@ for chain_a, chain_b in ls_compare_chains:
   df_duel_sub['pct_diff'] = (df_duel_sub['mean_{:s}'.format(chain_b)] /\
                               df_duel_sub['mean_{:s}'.format(chain_a)] - 1)*100
 
-  print u'\nReplicate QLMC comparison: {:s} vs {:s}'.format(chain_a, chain_b)
+  print()
+  print(u'Replicate QLMC comparison: {:s} vs {:s}'.format(chain_a, chain_b))
   res = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
            df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100
-  print u'{:.1f}'.format(res)
+  print(u'{:.1f}'.format(res))
   
   # Save both nb stores of chain b and res
   ls_res.append([len(df_prices[df_prices['store_chain'] ==\
                                  chain_b]['store_id'].unique()), res])
 
   percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]
-  print df_duel_sub[['diff', 'pct_diff']].describe(percentiles = percentiles)
+  print(df_duel_sub[['diff', 'pct_diff']].describe(percentiles = percentiles))
 
   # Manipulate or assume consumer is somewhat informed
   df_duel_sub.sort('diff', ascending = False, inplace = True)
   df_duel_sub = df_duel_sub[len(df_duel_sub)/10:]
   res = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
            df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100
-  print u'After manip against Leclerc: {:.1f}'.format(res)
+  print(u'After manip against Leclerc: {:.1f}'.format(res))
 
 ##print df_duel[0:10].to_string()
 
@@ -127,7 +129,10 @@ ls_qlmc_official = [['AUCHAN', 140, 125, '7.6%'],
                     ['SYSTEME U', 1044, 632, '6.7%']]
 
 df_recap = pd.DataFrame(ls_qlmc_official,
-                        columns = ['Chain', 'Nb stores', 'Nb stores in QLMC', 'QLMC: vs. LEC'])
+                        columns = ['Chain',
+                                   'Nb stores',
+                                   'Nb stores in QLMC',
+                                   'QLMC: vs. LEC'])
 df_recap.set_index('Chain', inplace = True)
 
 # Merge with my results
@@ -147,4 +152,5 @@ df_recap = pd.merge(df_recap,
                     how = 'outer')
 
 print()
+print(u'Summary of March 2015 national comparisons:')
 print(df_recap.to_string())

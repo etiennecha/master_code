@@ -1,17 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import *
-import os, sys
-import httplib
-import urllib, urllib2
-from bs4 import BeautifulSoup
-import re
-import json
+import numpy as np
 import pandas as pd
 from functions_generic_qlmc import *
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import textwrap
@@ -59,8 +54,9 @@ df_u_prod = df_u_prod[['section', 'family', 'product', 'freq_prod']][0:50]
 
 df_u_prod.set_index(['section', 'family', 'product'], inplace = True)
 df_u_prod.sort_index(inplace = True)
-print u'\nTop 50 products by section family:'
-print df_u_prod.to_string()
+print()
+print(u'Top 50 products by section family:')
+print(df_u_prod.to_string())
 
 # ###################
 # COMPARE TWO STORES
@@ -176,27 +172,30 @@ ls_func_2 = [nb_products,
 df_res_pre = df_comparison[['section', store_a, store_b]]\
                .groupby('section').agg({store_a : ls_func_1})[store_a]
 
-print u'\nFirst set of functions:'
-print df_res_pre.to_string()
+print()
+print(u'First set of functions:')
+print(df_res_pre.to_string())
 
 df_res = df_comparison[['section', store_a, store_b]]\
            .groupby('section').agg({store_a : ls_func_2})[store_a]
 
-print u'\nSecond set of functions:'
-print df_res.to_string()
+print()
+print(u'Second set of functions:')
+print(df_res.to_string())
 
-print u'\nSecond set of functions w/ all products:'
-print df_comparison.groupby(lambda idx: 0).agg(ls_func_2)['section'].T.to_string()
+print()
+print(u'Second set of functions w/ all products:')
+print(df_comparison.groupby(lambda idx: 0).agg(ls_func_2)['section'].T.to_string())
 
 # todo: 
 # stack all competitor pairs and use groupby to make global stats
 # could keep rayons btw?
 # for this: loop over leclerc competitor pairs and index with pair
 
-print u'\nNb stores by chain:'
-print df_prices[['store_chain', 'store_id']]\
+print(u'\nNb stores by chain:')
+print(df_prices[['store_chain', 'store_id']]\
                .drop_duplicates(['store_chain', 'store_id'])\
-               .groupby('store_chain').agg('size')
+               .groupby('store_chain').agg('size'))
 
 import itertools
 some_chain = 'ATAC'
@@ -228,7 +227,7 @@ df_comparison = df_chain_comparison # global var in comp functions
 df_res_chain = df_chain_comparison[['store_pair', store_a, store_b]]\
                  .groupby('store_pair').agg({store_a : ls_func_2})[store_a]
 
-print u'\nOverview chain pairs:'
-print df_res_chain.to_string()
+print(u'Overview chain pairs:')
+print(df_res_chain.to_string())
 
 # todo: add distance between pairs

@@ -68,7 +68,7 @@ print df_prices[['nb_prod_obs', 'nb_store_obs']].describe()
 # REGRESSION
 # ##############
 
-ref_var = 'store_id' # default to product
+ref_var = 'product' # store_id
 
 df_prices['ln_price'] = np.log(df_prices['price'])
 
@@ -86,7 +86,7 @@ else:
 
 sparse_mat_prod_store = DictVectorizer(sparse=True).fit_transform(pd_as_dicts_2)
 res_01 = scipy.sparse.linalg.lsqr(sparse_mat_prod_store,
-                                  df_prices['ln_price'].values,
+                                  df_prices['price'].values,
                                   iter_lim = 100,
                                   calc_var = True)
 nb_fd_01 = len(df_prices) - len(res_01[0])
@@ -111,6 +111,7 @@ df_stores_fe = df_res_01[len(ls_products):].copy()
 # - Store FEs are centered around this ref price
 
 # Check 
+# Ok if using 'product' as ref and price (not log))
 print u'\nMean price of reference product:',\
       df_prices[df_prices['product'] == pd_as_dicts[0]['product']]['price'].mean()
 

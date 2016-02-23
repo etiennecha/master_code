@@ -1,17 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import *
-import os, sys
-import httplib
-import urllib, urllib2
-from bs4 import BeautifulSoup
-import re
-import json
+import numpy as np
 import pandas as pd
 from functions_generic_qlmc import *
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import textwrap
@@ -27,10 +22,12 @@ path_csv = os.path.join(path_data,
                         'data_csv_201503')
 
 df_prices = pd.read_csv(os.path.join(path_csv,
-                                     'df_prices.csv'))
+                                     'df_prices.csv'),
+                        encoding = 'utf-8')
 
 df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'df_stores_final.csv'))
+                                     'df_stores_final.csv'),
+                        encoding = 'utf-8')
 
 ## Most common products
 se_prod_vc = df_prices['product'].value_counts()
@@ -59,7 +56,7 @@ df_desc['range'] = df_desc['max'] - df_desc['min']
 df_desc['range_2'] = df_desc['75%'] - df_desc['25%']
 
 #print df_desc[['count', 'mean', 'std', 'cv', 'gfs', 'range', 'range_2']].to_string()
-print df_desc.to_string()
+print(df_desc.to_string())
 
 # following filled with nan... must be better way
 df_prod_prices = df_product.pivot(index='store_id',
@@ -70,14 +67,17 @@ df_prod_prices = df_product.pivot(index='store_id',
 # todo: update matplotlib http://stackoverflow.com/questions/21997897/ (ctd)
 # changing-what-the-ends-of-whiskers-represent-in-matplotlibs-boxplot-function
 
-ls_sb = ['INTERMARCHE',
-         'SUPER U',
-         'CARREFOUR',
-         'LECLERC',
-         'AUCHAN',
-         'GEANT CASINO']
-
-ax = df_prod_prices[ls_sb].plot(kind = 'box') #, whis = [0.10, 0.90])
+# display by price order (median)
+ls_chains = ['INTERMARCHE',
+             'SUPER U',
+             'CARREFOUR',
+             'LECLERC',
+             'AUCHAN',
+             'GEANT CASINO']
+se_med = df_desc.ix[ls_chains]['50%'].copy()
+se_med.sort(ascending = True, inplace = True)
+ls_chains = list(se_med.index)
+ax = df_prod_prices[ls_chains].plot(kind = 'box') #, whis = [0.10, 0.90])
 
 # ax.get_xticklabels()[0].get_text()
 # textwrap.fill(ax.get_xticklabels()[0].get_text(), width = 20)
