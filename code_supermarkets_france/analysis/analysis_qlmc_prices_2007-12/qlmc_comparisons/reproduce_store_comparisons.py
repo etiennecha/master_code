@@ -89,7 +89,7 @@ ls_temp_exclude = [u'INTERMARCHE MORIERES LES AVIGNON',
                    u'SYSTEME U VERMELLES']
 
 ls_df_repro_compa = []
-for i in range(0, 9):
+for i in range(0, 13):
 
   # Restrict to period
   print ''
@@ -180,7 +180,11 @@ df_compa_all_periods.loc[df_compa_all_periods['nb_comp_wins'] >\
 df_compa_all_periods.loc[df_compa_all_periods['nb_obs'] == 0,
                          'rr'] = np.nan
 
-print df_compa_all_periods[0:10].to_string()
+df_compa_all_periods.sort('pct_compa', inplace = True)
+print df_compa_all_periods[0:30].to_string()
+
+# pbm: id is not unique store identifier => add and use id_lsa?
+df_compa_all_periods[df_compa_all_periods['pct_compa'] < 0]['lec_id'].value_counts()
 
 ## ##############
 ## STATS DES
