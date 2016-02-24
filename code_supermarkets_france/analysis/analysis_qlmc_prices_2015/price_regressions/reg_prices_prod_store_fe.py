@@ -86,15 +86,23 @@ else:
   pd_as_dicts_2 = [dict_temp if dict_temp['product'] != ref \
                    else {'store_id': dict_temp['store_id']} for dict_temp in pd_as_dicts]
 
+price_col = 'price'
 sparse_mat_prod_store = DictVectorizer(sparse=True).fit_transform(pd_as_dicts_2)
 res_01 = scipy.sparse.linalg.lsqr(sparse_mat_prod_store,
-                                  df_prices['ln_price'].values,
+                                  df_prices[price_col].values,
                                   iter_lim = 100,
                                   calc_var = True)
 nb_fd_01 = len(df_prices) - len(res_01[0])
 ar_std_01 = np.sqrt(res_01[3]**2/nb_fd_01 * res_01[9])
 ls_stores = sorted(df_prices['store_id'].copy().drop_duplicates().values)
 ls_products = sorted(df_prices['product'].copy().drop_duplicates().values)
+
+# Compute rsquare
+y_hat = sparse_mat_prod_store * res_01[0]
+df_prices['yhat'] = y_hat
+df_prices['residual'] = df_prices[price_col] - df_prices['yhat'] 
+rsquare = 1 - ((df_prices[price_col] - df_prices['yhat'])**2).sum() /\
+                ((df_prices[price_col] - df_prices[price_col].mean())**2).sum()
 
 if ref_var == 'store_id':
   ls_stores.remove(ref)

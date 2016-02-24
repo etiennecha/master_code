@@ -177,136 +177,38 @@ df_qlmc['nb_prod_obs'] =\
 
 print df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe()
 
-# ############
-# REGRESSIONS
-# ############
+# PRICE LEVEL
 
-## test get_dummies /w sparse option (requires pandas => 0.16.1)
-#df_test = pd.get_dummies(df_qlmc,
-#                         columns = ['product', 'qlmc_chain'],
-#                         prefix = ['product', 'qlmc_chain'],
-#                         sparse = True)
+# generate log price deviation
+df_qlmc['log_pd'] = np.log(df_qlmc['price'] /\
+                      df_qlmc.groupby('product')['price'].transform('mean'))
 
-# create df to convert to sparse (need index: 0 to n obs)
-df_i = pd.DataFrame('intercept', columns = ['col'], index = df_qlmc.index)
-df_i.index.name = 'row'
+# pbm with patsy with python 2.7.10? update or use python2.7.6
+res_a = smf.ols("log_pd ~ C(qlmc_chain, Treatment(reference='LECLERC'))",
+                data = df_qlmc).fit()
+print res_a.summary()
+#rob_cov_a = sm.stats.sandwich_covariance.cov_hc0(res_a)
 
-df_0 = df_qlmc[['product']].copy()
-df_0['product'] = 'C(product) ' + df_0['product']
-df_0.index.name = 'row'
-df_0.rename(columns = {'product': 'col'}, inplace = True)
+res_b = smf.ols("log_pd ~ C(section) + surface + ac_hhi + " +\
+                "C(qlmc_chain, Treatment(reference = 'LECLERC'))",
+                data = df_qlmc).fit()
+print res_b.summary()
+# todo: cluster std errors by store and/or product?
 
-df_1 = df_qlmc[['qlmc_chain']].copy()
-df_1['qlmc_chain'] = 'C(qlmc_chain) ' + df_1['qlmc_chain']
-df_1.index.name = 'row'
-df_1.rename(columns = {'qlmc_chain': 'col'}, inplace = True)
+# PRIE DISPERSION
 
-df_2 = pd.concat([df_i, df_0, df_1], axis = 0)
+# generate national prod price deviation
+df_qlmc['cv'] = df_qlmc.groupby('product')['price'].transform('std') /\
+                  df_qlmc.groupby('product')['price'].transform('mean')
 
-# omit one category for each categorical variable (reference)
-# a priori can simply drop row if there is an intercept (mat row created)
-df_2['val'] = 1
-ref_prod =  df_qlmc['product'].drop_duplicates().sort_values().iloc[0]
-ref_chain = 'LECLERC' # df_qlmc['qlmc_chain'].drop_duplicates().sort_values().iloc[0]
-ls_refs = ['C(product) ' + ref_prod,
-           'C(qlmc_chain) ' + ref_chain]
-for ref in ls_refs:
-  df_2 = df_2[~(df_2['col'] == ref)]
-df_2.set_index('col', append = True, inplace = True)
+df_qlmc['range'] = df_qlmc.groupby('product')['price'].transform('max') -\
+                  df_qlmc.groupby('product')['price'].transform('in')
 
-# build sparse matrix
-s = pd.Series(df_2['val'].values)
-s.index = df_2.index
-ss = s.to_sparse()
-A, rows, columns = ss.to_coo(row_levels=['row'],
-                             column_levels = ['col'],
-                             sort_labels = True)
-price_col = 'ln_price'
-y = df_qlmc[price_col].values
-param_names = columns
 
-## check pop variable... 0 for Leclerc in Porto Vecchio
-## todo: check w/ clustered std errors on stores?
-#
-#str_exo = "C(qlmc_chain) + C(product)"
-#X = dmatrix(str_exo, data = df_qlmc, return_type = "matrix")
-#y = df_qlmc['price'].values
-#
-##str_exo = "price ~ C(qlmc_chain) + C(product)"
-###str_exo = "price ~ C(qlmc_chain) + surface + C(region) + C(product) + ac_hhi + ac_nb_stores"
-##y, X = dmatrices(str_exo,
-##                 data = df_qlmc,
-##                 return_type = "matrix")
-#param_names = X.design_info.column_names
-#A = csr_matrix(X)
+df_disp = df_qlmc.drop_duplicates('product')
 
-res = scipy.sparse.linalg.lsqr(A,
-                               y,
-                               iter_lim = 100,
-                               calc_var = True)
-param_values = res[0]
-nb_freedom_degrees = len(df_qlmc) - len(res[0])
-param_se = np.sqrt(res[3]**2/nb_freedom_degrees * res[9])
+res_c = smf.ols("cv ~ C(section, Treatment(reference = 'Frais'))", data = df_disp).fit()
+print res_c.summary()
 
-df_reg = pd.DataFrame(zip(param_names,
-                          param_values,
-                          param_se), columns = ['name', 'coeff', 'bse'])
-df_reg['tstat'] = df_reg['coeff'] / df_reg['bse']
-print u'\nReg result (omitting prod and region FEs):'
-print df_reg[(~df_reg['name'].str.contains(u'C\(product\)')) &\
-             (~df_reg['name'].str.contains(u'C\(region\)'))].to_string()
-
-# try to create result instance to use statsmodels post estimation functions
-# https://github.com/statsmodels/statsmodels/blob/master/statsmodels/stats/sandwich_covariance.py
-# https://github.com/statsmodels/statsmodels/blob/master/statsmodels/regression/linear_model.py
-
-# scipy.sparse.linalg.lsqr returns only diag of (X'X)^{-1}... insuff to get cov
-# pinv_wexog: pseudo inverse of X (n, p) i.e. (X'X)^{-1}X' which is (p, n) dense
-# cannot simply use existing sm code since requires pinv_wexog
-# hence avoid it => use (X'X){-1} which is (p, p) dense
-# https://gist.github.com/josef-pkt/21ca2394b073440b3e23
-xtx = A.T.dot(A).toarray()
-xtxi = np.linalg.inv(xtx)
-resid = np.array(y.flatten()) - A.dot(res[0]) # need to use A (sparse)
-df_resid = len(df_qlmc) - len(res[0])
-nobs = len(df_qlmc)
-xu = A.T.dot(scipy.sparse.dia_matrix((resid, 0), shape=(nobs, nobs))).T
-assert scipy.sparse.issparse(xu)
-S = xu.T.dot(xu).toarray()
-cov_p = xtxi.dot(S).dot(xtxi)
-bse = np.sqrt(np.diag(cov_p))
-
-# check computation of various het_scale
-hc0_het_scale = resid**2
-hc1_het_scale = nobs/(df_resid)*(resid**2)
-#hc2_h = np.diag(np.dot(A, np.dot(xtxi, A.T)))
-#hc2_het_scale = resid**2/(1-hc2_h)
-
-# compute rsquare
-y_hat = A * res[0]
-rsquare = 1 - ((y - y_hat)**2).sum() /\
-                ((y - y.mean())**2).sum()
-
-# goodness of fit (to compare with log)
-if price_col == 'ln_price':
-  df_qlmc['price_hat'] = np.exp(y_hat)
-else:
-  df_qlmc['price_hat'] = y_hat
-print('SS of residuals for price:',
-      ((df_qlmc['price'] - df_qlmc['price_hat'])**2).sum())
-
-#### #################
-#### NON SPARSE REG 
-#### #################
-###
-#### Check regression results with reduced nb stores / products
-###
-###print u'\nNo control:'
-###res_a = smf.ols("price ~ C(qlmc_chain) + C(product)",
-###                data = df_qlmc).fit()
-###rob_cov_a = sm.stats.sandwich_covariance.cov_hc0(res_a)
-###
-####print u'\nWith controls:'
-####res_b = smf.ols("price ~ C(product) + C(c_departement) + surface + ac_hhi + " +\
-####                "C(qlmc_chain, Treatment(reference = 'CENTRE E.LECLERC'))",
-####                data = df_qlmc).fit()
+res_d = smf.ols("range ~ C(section, Treatment(reference = 'Frais'))", data = df_disp).fit()
+print res_c.summary()
