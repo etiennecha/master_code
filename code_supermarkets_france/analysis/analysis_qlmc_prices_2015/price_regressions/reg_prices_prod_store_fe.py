@@ -68,7 +68,7 @@ print df_prices[['nb_prod_obs', 'nb_store_obs']].describe()
 # REGRESSION
 # ##############
 
-ref_var = 'product' # store_id
+ref_var = 'store_id' # store_id
 
 df_prices['ln_price'] = np.log(df_prices['price'])
 
@@ -78,15 +78,17 @@ pd_as_dicts = [dict(r.iteritems())\
 #                   for dict_temp in pd_as_dicts]
 
 if ref_var == 'store_id':
-  pd_as_dicts_2 = [dict_temp if dict_temp['store_id'] != pd_as_dicts[0]['store_id']\
+  ref = u'centre-e-leclerc-les-angles' # pd_as_dicts[0]['store_id']
+  pd_as_dicts_2 = [dict_temp if dict_temp['store_id'] != ref \
                    else {'product': dict_temp['product']} for dict_temp in pd_as_dicts]
 else:
-  pd_as_dicts_2 = [dict_temp if dict_temp['product'] != pd_as_dicts[0]['product']\
+  ref = pd_as_dicts[0]['product']
+  pd_as_dicts_2 = [dict_temp if dict_temp['product'] != ref \
                    else {'store_id': dict_temp['store_id']} for dict_temp in pd_as_dicts]
 
 sparse_mat_prod_store = DictVectorizer(sparse=True).fit_transform(pd_as_dicts_2)
 res_01 = scipy.sparse.linalg.lsqr(sparse_mat_prod_store,
-                                  df_prices['price'].values,
+                                  df_prices['ln_price'].values,
                                   iter_lim = 100,
                                   calc_var = True)
 nb_fd_01 = len(df_prices) - len(res_01[0])
@@ -95,9 +97,9 @@ ls_stores = sorted(df_prices['store_id'].copy().drop_duplicates().values)
 ls_products = sorted(df_prices['product'].copy().drop_duplicates().values)
 
 if ref_var == 'store_id':
-  ls_stores.remove(pd_as_dicts[0]['store_id'])
+  ls_stores.remove(ref)
 else:
-  ls_products.remove(pd_as_dicts[0]['product'])
+  ls_products.remove(ref)
 
 # Caution: so happens that products are returned before stores (dict keys..?)
 ls_rows_01 = zip(ls_products + ls_stores, res_01[0], ar_std_01)

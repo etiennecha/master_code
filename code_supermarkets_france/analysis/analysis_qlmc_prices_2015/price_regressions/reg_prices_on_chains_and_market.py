@@ -206,8 +206,10 @@ df_2 = pd.concat([df_i, df_0, df_1], axis = 0)
 # omit one category for each categorical variable (reference)
 # a priori can simply drop row if there is an intercept (mat row created)
 df_2['val'] = 1
-ls_refs = ['C(product) ' + df_qlmc['product'].drop_duplicates().sort_values().iloc[0],
-           'C(qlmc_chain) ' + df_qlmc['qlmc_chain'].drop_duplicates().sort_values().iloc[0]]
+ref_prod =  df_qlmc['product'].drop_duplicates().sort_values().iloc[0]
+ref_chain = 'LECLERC' # df_qlmc['qlmc_chain'].drop_duplicates().sort_values().iloc[0]
+ls_refs = ['C(product) ' + ref_prod,
+           'C(qlmc_chain) ' + ref_chain]
 for ref in ls_refs:
   df_2 = df_2[~(df_2['col'] == ref)]
 df_2.set_index('col', append = True, inplace = True)
@@ -219,7 +221,7 @@ ss = s.to_sparse()
 A, rows, columns = ss.to_coo(row_levels=['row'],
                              column_levels = ['col'],
                              sort_labels = True)
-y = df_qlmc['price'].values
+y = df_qlmc['ln_price'].values
 param_names = columns
 
 ## check pop variable... 0 for Leclerc in Porto Vecchio
