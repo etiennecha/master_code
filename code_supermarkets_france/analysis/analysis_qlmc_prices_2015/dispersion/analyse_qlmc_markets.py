@@ -7,6 +7,9 @@ from add_to_path import *
 import os, sys
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
 import timeit
 
 pd.set_option('float_format', '{:,.2f}'.format)
@@ -45,6 +48,11 @@ for i, row in df_qlmc_comparisons.iterrows():
      (row['comp_id'] in ls_keep_stores):
     dict_markets.setdefault(row['lec_id'], []).append(row['comp_id'])
 
+merge_option = 'inner' # or 'outer'
+# pbm with outer for now
+# cheapest store cannot be cheapest on products it does not carry
+# ok to check robustness of cheapest being sometimes most expensive etc.
+
 # see if quick enough without using dict_chain_dfs
 ls_df_markets = []
 for lec_id, ls_comp_id in dict_markets.items():
@@ -60,13 +68,17 @@ for lec_id, ls_comp_id in dict_markets.items():
                            df_comp[['section', 'family', 'product', 'price']],
                            on = ['section', 'family', 'product'],
                            suffixes = ('', '_{:s}'.format(comp_id)),
-                           how = 'inner')
+                           how = merge_option)
     # do before?
     df_market.set_index(['section', 'family', 'product'], inplace = True)
     df_market.rename(columns = {'price' : 'price_{:s}'.format(lec_id)},
                      inplace = True)
     df_market.columns = [x[6:] for x in df_market.columns] # get rid of 'price_'
-    
+    # if outer merge: keep only products carried by 67% stores or more
+    if merge_option == 'outer':
+      nb_stores = len(df_market.columns)
+      df_market = df_market[df_market.count(1) >= nb_stores * 0.67]
+    # df not saved if empty else pbm with next loop
     if len(df_market) != 0:
       ls_df_markets.append(df_market)
 
@@ -74,8 +86,11 @@ ls_market_rows = []
 for df_market in ls_df_markets:
   
   # Aggregate stats: basket with all products
-  nb_products = len(df_market) # check enough products
+  nb_stores = len(df_market.columns)
+  nb_prods = len(df_market) # check enough products
   agg_sum = df_market.sum() # dispersion in total sum
+  ls_cols_ascending = agg_sum.sort(ascending = True, inplace = False).index.tolist()
+  ls_cols_descending = agg_sum.sort(ascending = False, inplace = False).index.tolist()
   agg_range = agg_sum.max() - agg_sum.min()
   agg_range_pct = agg_range / agg_sum.mean()
   agg_gfs = agg_sum.mean() - agg_sum.min()
@@ -95,21 +110,28 @@ for df_market in ls_df_markets:
   #print('Product dispersion summary stats')
   #print(df_market[['mean', 'range', 'range_pct', 'gfs', 'gfs_pct', 'std', 'cv']].describe())
   
-  # Ranking within market?
+  # Ranking within market
+  # Handling of equalities is a bit tricky (less relevant with residuals probably)
   # http://stackoverflow.com/questions/21188151/pandas-getting-the-name-of-the-minimum-column
-  df_market['cheapest'] = df_market[ls_cols].T.idxmin()
-  df_market['priciest'] = df_market[ls_cols].T.idxmax()
+  df_market['cheapest'] = df_market[ls_cols_ascending].T.idxmin()
+  df_market['cheapest_2'] = df_market[ls_cols_descending].T.idxmin()
+  df_market['priciest'] = df_market[ls_cols_descending].T.idxmax()
+  df_market['priciest_2'] = df_market[ls_cols_ascending].T.idxmax()
   se_cheapest_vc = df_market['cheapest'].value_counts(normalize = 1)
   se_priciest_vc = df_market['priciest'].value_counts(normalize = 1)
+  se_cheapest_2_vc = df_market['cheapest_2'].value_counts(normalize = 1)
+  se_priciest_2_vc = df_market['priciest_2'].value_counts(normalize = 1)
 
-  if se_priciest_vc.index[0] not in se_cheapest_vc.index:
-    se_cheapest_vc.ix[se_priciest_vc.index[0]] = 0.0
-  if se_cheapest_vc.index[0] not in se_priciest_vc.index:
-    se_priciest_vc.ix[se_cheapest_vc.index[0]] = 0.0
+  if se_priciest_vc.index[0] not in se_cheapest_2_vc.index:
+    se_cheapest_2_vc.ix[se_priciest_vc.index[0]] = 0.0
+  if se_cheapest_vc.index[0] not in se_priciest_2_vc.index:
+    se_priciest_2_vc.ix[se_cheapest_vc.index[0]] = 0.0
   
   ls_market_rows.append([df_market.columns[0],
-                         len(df_market.columns),
-                         len(df_market),
+                         nb_stores,
+                         nb_prods,
+                         agg_range_pct,
+                         agg_gfs_pct,
                          df_market['range'].mean(),
                          df_market['range_pct'].mean(),
                          df_market['gfs'].mean(),
@@ -119,9 +141,56 @@ for df_market in ls_df_markets:
                          se_cheapest_vc.iloc[0],
                          se_priciest_vc.index[0],
                          se_priciest_vc.iloc[0],
-                         se_cheapest_vc.ix[se_priciest_vc.index[0]],
-                         se_priciest_vc.ix[se_cheapest_vc.index[0]]])
+                         se_cheapest_2_vc.ix[se_priciest_vc.index[0]],
+                         se_priciest_2_vc.ix[se_cheapest_vc.index[0]]])
 
-# todo: compare with aggregate result
-# todo: check if cheapest always have higher share than priciest?
-# todo: check avg percentage of time cheapest is most expensive and vice versa
+lsd1 = ['agg_range_pct',
+        'agg_gfs_pct',
+        'range',
+        'range_pct',
+        'gfs',
+        'gfs_pct',
+        'cv']
+
+lsd2 = ['cheapest_ct_id',
+        'cheapest_ct_pct',
+        'priciest_ct_id',
+        'priciest_ct_pct',
+        'priciest_ch_pct', # nb of products on which priciest is cheapest
+        'cheapest_pr_pct'] # nb of products on which cheapest is priciest
+
+df_su = pd.DataFrame(ls_market_rows,
+                     columns = ['lec_id',
+                                'nb_stores',
+                                'nb_prods'] + lsd1 + lsd2)
+
+df_su = df_su[(df_su['nb_prods'] >= 50) &\
+              (df_su['nb_stores'] >= 3)]
+
+print()
+print('Stats des: markets with more than 50 products:')
+print(df_su.describe().to_string())
+
+print()
+print('Stats des: markets with more than 100 products:')
+print(df_su[df_su['nb_prods'] >= 100].describe().to_string())
+
+print()
+print('Stats des: markets with more than 100 products and 4 stores:')
+print(df_su[(df_su['nb_prods'] >= 100) &\
+            (df_su['nb_stores'] >= 4)].describe().to_string())
+
+print()
+print('Markets with high dispersion')
+# inspect extreme priciest_ch_pct markets
+print(df_su[df_su['priciest_ch_pct'] >= 0.33].to_string())
+
+for df_market in ls_df_markets:
+  if df_market.columns[0] == 'centre-e-leclerc-loudun':
+    break
+
+print(df_market[df_market['cheapest_2'] != df_market['cheapest']][0:40].to_string())
+
+# todo: run with raw prices and price residuals (several methods?)
+# then: check link between price level and price dispersion
+# also with nb stores (w/ real number?)
