@@ -49,10 +49,13 @@ for i, row in df_qlmc_comparisons.iterrows():
 ls_df_markets = []
 for lec_id, ls_comp_id in dict_markets.items():
   if ls_comp_id:
-    df_market = df_prices[df_prices['store_id'] == lec_id]\
-                      [['section', 'family', 'product', 'price']]
+    df_market = dict_chain_dfs['LECLERC']\
+                    [dict_chain_dfs['LECLERC']['store_id'] == lec_id]\
+                         [['section', 'family', 'product', 'price']]
     for comp_id in ls_comp_id:
-      df_comp = df_prices[df_prices['store_id'] == comp_id]
+      store_chain = df_stores[df_stores['store_id'] == comp_id]['store_chain'].iloc[0]
+      df_comp = dict_chain_dfs[store_chain]\
+                    [dict_chain_dfs[store_chain]['store_id'] == comp_id]
       df_market = pd.merge(df_market,
                            df_comp[['section', 'family', 'product', 'price']],
                            on = ['section', 'family', 'product'],
@@ -63,7 +66,9 @@ for lec_id, ls_comp_id in dict_markets.items():
     df_market.rename(columns = {'price' : 'price_{:s}'.format(lec_id)},
                      inplace = True)
     df_market.columns = [x[6:] for x in df_market.columns] # get rid of 'price_'
-    ls_df_markets.append(df_market)
+    
+    if len(df_market) != 0:
+      ls_df_markets.append(df_market)
 
 ls_market_rows = []
 for df_market in ls_df_markets:
@@ -104,11 +109,12 @@ for df_market in ls_df_markets:
   
   ls_market_rows.append([df_market.columns[0],
                          len(df_market.columns),
+                         len(df_market),
                          df_market['range'].mean(),
                          df_market['range_pct'].mean(),
                          df_market['gfs'].mean(),
                          df_market['gfs_pct'].mean(),
-                         df_market['cv'],
+                         df_market['cv'].mean(),
                          se_cheapest_vc.index[0],
                          se_cheapest_vc.iloc[0],
                          se_priciest_vc.index[0],
