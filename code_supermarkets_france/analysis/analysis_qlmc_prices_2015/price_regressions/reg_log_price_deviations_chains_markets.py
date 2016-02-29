@@ -90,7 +90,7 @@ ls_comp_files = ['df_store_prospect_comp_HS_v_all_10km.csv',
                  'df_store_prospect_comp_HS_v_all_20km.csv',
                  'df_store_prospect_comp_HS_v_all_1025km.csv']
 df_comp = pd.read_csv(os.path.join(path_built_lsa_comp_csv,
-                                   ls_comp_files[0]),
+                                   ls_comp_files[1]),
                       dtype = {'id_lsa' : str},
                       encoding = 'utf-8')
 
@@ -114,9 +114,9 @@ df_insee_areas = pd.read_csv(os.path.join(path_insee_extracts,
 df_au_agg = pd.read_csv(os.path.join(path_insee_extracts,
                                      u'df_au_agg_final.csv'),
                         encoding = 'UTF-8')
-df_au_agg['Med_rev_AU'] = df_au_agg['QUAR2UC10']
+df_au_agg['med_rev_au'] = df_au_agg['QUAR2UC10']
 df_insee_areas = pd.merge(df_insee_areas,
-                          df_au_agg[['AU2010', 'Med_rev_AU']],
+                          df_au_agg[['AU2010', 'med_rev_au']],
                           left_on = 'AU2010',
                           right_on = 'AU2010')
 
@@ -124,9 +124,9 @@ df_insee_areas = pd.merge(df_insee_areas,
 df_uu_agg = pd.read_csv(os.path.join(path_insee_extracts,
                                      u'df_uu_agg_final.csv'),
                         encoding = 'UTF-8')
-df_uu_agg['Med_rev_UU'] = df_uu_agg['QUAR2UC10']
+df_uu_agg['med_rev_uu'] = df_uu_agg['QUAR2UC10']
 df_insee_areas = pd.merge(df_insee_areas,
-                          df_uu_agg[['UU2010', 'Med_rev_UU']],
+                          df_uu_agg[['UU2010', 'med_rev_uu']],
                           left_on = 'UU2010',
                           right_on = 'UU2010')
 
@@ -142,22 +142,26 @@ df_lsa = pd.merge(df_lsa,
                   how = 'left')
 
 df_lsa = pd.merge(df_lsa,
-                  df_insee_areas[['CODGEO', 'Med_rev_AU', 'Med_rev_UU']],
+                  df_insee_areas[['CODGEO', 'med_rev_au', 'med_rev_uu']],
                   left_on = 'c_insee',
                   right_on = 'CODGEO',
                   how = 'left')
 
 ls_lsa_cols = ['id_lsa',
+               'region', # robustness check: exclude Ile-de-France
                'surface',
                'nb_caisses',
                'nb_emplois'] +\
                list(df_comp.columns[1:]) +\
-               list(df_demand.columns[1:])
+               list(df_demand.columns[1:]) +\
+               ['med_rev_au', 'med_rev_uu']
 
 df_stores = pd.merge(df_stores,
                      df_lsa[ls_lsa_cols],
                      on = 'id_lsa',
                      how = 'left')
+
+df_prices.drop('store_chain', axis = 1, inplace = True)
 
 df_qlmc = pd.merge(df_prices,
                    df_stores,
@@ -166,21 +170,33 @@ df_qlmc = pd.merge(df_prices,
 
 # Avoid error msg on condition number
 df_qlmc['surface'] = df_qlmc['surface'].apply(lambda x: x/1000.0)
-# df_qlmc_prod['ac_hhi'] = df_qlmc_prod['ac_hhi'] * 10000
-# Try with log of price (semi elasticity)
-df_qlmc['ln_price'] = np.log(df_qlmc['price'])
+#df_qlmc['ac_hhi'] = df_qlmc['ac_hhi'] * 10000
+#df_qlmc['hhi'] = df_qlmc['hhi'] * 10000
 
-## ###############################
-## RESTRICTIONS ON PRODUCTS/STORES
-## ###############################
-#
-## drop chain(s) with too few stores
-#df_qlmc = df_qlmc[~(df_qlmc['qlmc_chain'].isin(['SUPERMARCHE MATCH',
-#                                                'ATAC',
-#                                                'MIGROS',
-#                                                'RECORD',
-#                                                'G 20']))]
-#
+# Build log variables
+for col in ['price', 'surface', 'hhi', 'ac_hhi',
+            'med_rev_uu', 'med_rev_au',
+            'pop_cont_10', 'pop_ac_10km', 'pop_ac_20km']:
+  df_qlmc['ln_{:s}'.format(col)] = np.log(df_qlmc[col])
+
+# Create dummy high hhi
+df_qlmc['dum_high_hhi'] = 0
+df_qlmc.loc[df_qlmc['hhi'] >= 0.20, 'dum_high_hhi'] = 1
+
+# Exclude Ile-de-France as robustness check
+df_qlmc = df_qlmc[df_qlmc['region'] != u'Ile-de-France']
+
+# ###############################
+# RESTRICTIONS ON PRODUCTS/STORES
+# ###############################
+
+# drop chain(s) with too few stores
+df_qlmc = df_qlmc[~(df_qlmc['qlmc_chain'].isin(['SUPERMARCHE MATCH',
+                                                'ATAC',
+                                                'MIGROS',
+                                                'RECORD',
+                                                'G 20']))]
+
 ## keep only if products observed w/in at least 1000 stores (or more: memory..)
 #df_qlmc['nb_prod_obs'] =\
 #  df_qlmc.groupby('product')['product'].transform(len).astype(int)
@@ -196,43 +212,70 @@ df_qlmc['ln_price'] = np.log(df_qlmc['price'])
 #  df_qlmc.groupby('product')['product'].transform(len).astype(int)
 #
 #print df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe()
+
+
+# generate log price deviation
+df_qlmc['log_pd'] = np.log(df_qlmc['price'] /\
+                      df_qlmc.groupby('product')['price'].transform('mean'))
+
+# pbm with patsy with python 2.7.10? update or use python2.7.6
+res_a = smf.ols("log_pd ~ C(qlmc_chain, Treatment(reference='LECLERC'))",
+                data = df_qlmc).fit()
+print res_a.summary()
+#rob_cov_a = sm.stats.sandwich_covariance.cov_hc0(res_a)
+
+res_b = smf.ols("log_pd ~ surface + ac_hhi + " +\
+                "C(qlmc_chain, Treatment(reference = 'LECLERC'))",
+                data = df_qlmc).fit()
+print res_b.summary()
+# todo: cluster std errors by store and/or product?
+
+res_c = smf.ols("log_pd ~ surface + hhi + " +\
+                "C(qlmc_chain, Treatment(reference = 'LECLERC'))",
+                data = df_qlmc).fit()
+print res_c.summary()
+
+res_d = smf.ols("log_pd ~ surface + hhi", data = df_qlmc).fit()
+print res_d.summary()
+
+res_e = smf.ols("log_pd ~ surface + hhi + " +\
+                "ln_pop_cont_10 + ln_med_rev_uu", data = df_qlmc).fit()
+print res_e.summary()
+
+res_g = smf.ols("log_pd ~ surface + ac_hhi + " +\
+                "ln_pop_ac_10km + ln_med_rev_au", data = df_qlmc).fit()
+print res_g.summary()
+
+res_h = smf.ols("log_pd ~ surface + hhi + " +\
+                "ln_pop_ac_10km + ln_med_rev_au", data = df_qlmc).fit()
+print res_h.summary()
+
+res_i = smf.ols("log_pd ~ surface + hhi + " +\
+                "ln_pop_ac_10km + ln_med_rev_au + "
+                "C(qlmc_chain, Treatment(reference = 'LECLERC'))",
+                data = df_qlmc).fit()
+print res_j.summary()
+
+# interesting to add region
+
+## ##############
+## MOVE
+## ##############
 #
-## PRICE LEVEL
+## PRIE DISPERSION
 #
-## generate log price deviation
-#df_qlmc['log_pd'] = np.log(df_qlmc['price'] /\
-#                      df_qlmc.groupby('product')['price'].transform('mean'))
+## generate national prod price deviation
+#df_qlmc['cv'] = df_qlmc.groupby('product')['price'].transform('std') /\
+#                  df_qlmc.groupby('product')['price'].transform('mean')
 #
-## pbm with patsy with python 2.7.10? update or use python2.7.6
-#res_a = smf.ols("log_pd ~ C(qlmc_chain, Treatment(reference='LECLERC'))",
-#                data = df_qlmc).fit()
-#print res_a.summary()
-##rob_cov_a = sm.stats.sandwich_covariance.cov_hc0(res_a)
+#df_qlmc['range'] = df_qlmc.groupby('product')['price'].transform('max') -\
+#                  df_qlmc.groupby('product')['price'].transform('min')
 #
-#res_b = smf.ols("log_pd ~ C(section) + surface + ac_hhi + " +\
-#                "C(qlmc_chain, Treatment(reference = 'LECLERC'))",
-#                data = df_qlmc).fit()
-#print res_b.summary()
-## todo: cluster std errors by store and/or product?
 #
-### ##############
-### MOVE
-### ##############
-##
-### PRIE DISPERSION
-##
-### generate national prod price deviation
-##df_qlmc['cv'] = df_qlmc.groupby('product')['price'].transform('std') /\
-##                  df_qlmc.groupby('product')['price'].transform('mean')
-##
-##df_qlmc['range'] = df_qlmc.groupby('product')['price'].transform('max') -\
-##                  df_qlmc.groupby('product')['price'].transform('min')
-##
-##
-##df_disp = df_qlmc.drop_duplicates('product')
-##
-##res_c = smf.ols("cv ~ C(section, Treatment(reference = 'Frais'))", data = df_disp).fit()
-##print res_c.summary()
-##
-##res_d = smf.ols("range ~ C(section, Treatment(reference = 'Frais'))", data = df_disp).fit()
-##print res_c.summary()
+#df_disp = df_qlmc.drop_duplicates('product')
+#
+#res_c = smf.ols("cv ~ C(section, Treatment(reference = 'Frais'))", data = df_disp).fit()
+#print res_c.summary()
+#
+#res_d = smf.ols("range ~ C(section, Treatment(reference = 'Frais'))", data = df_disp).fit()
+#print res_c.summary()
