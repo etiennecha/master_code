@@ -45,12 +45,15 @@ lsd0 = [u'enseigne',
         u'ville'] #, u'latitude', u'longitude']
 
 # Type restriction
-ls_h_and_s = [['H', ['H'], 25, 'H_v_H'],
-              ['H', ['H', 'X', 'S'], 25, 'H_v_all'],
-              ['S', ['H', 'X', 'S'], 10, 'S_v_all']]
+ls_h_and_s = [[['H'], ['H'], 25, 'H_v_H'],
+              [['H'], ['H', 'X', 'S'], 25, 'H_v_all'],
+              [['S'], ['H', 'X', 'S'], 10, 'S_v_all'],
+              [['H', 'S'], ['H', 'X', 'S'], 10, 'HS_v_all_10km'],
+              [['H', 'S'], ['H', 'X', 'S'], 20, 'HS_v_all_10km']]
 
+dict_df_comp = {}
 for type_store, type_comp, dist_comp, title in ls_h_and_s:
-  df_lsa_type = df_lsa[(df_lsa['type_alt'] == type_store)].copy()
+  df_lsa_type = df_lsa[(df_lsa['type_alt'].isin(type_store))].copy()
   
   # Competitors for one store
   
@@ -129,10 +132,11 @@ for type_store, type_comp, dist_comp, title in ls_h_and_s:
                              'ac_store_share', 'store_share',
                              'ac_group_share', 'group_share',
                              'ac_hhi', 'hhi']
-
   print u'\n', title
   print df_lsa_type[ls_disp_lsa_comp][0:20].to_string()
   
+  dict_df_comp[title] = df_lsa_type
+
   df_lsa_type.to_csv(os.path.join(path_built_csv,
                                   '201407_competition',
                                   'df_store_prospect_comp_%s.csv' %title),

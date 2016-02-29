@@ -195,20 +195,24 @@ res_b = smf.ols("log_pd ~ C(section) + surface + ac_hhi + " +\
 print res_b.summary()
 # todo: cluster std errors by store and/or product?
 
-# PRIE DISPERSION
-
-# generate national prod price deviation
-df_qlmc['cv'] = df_qlmc.groupby('product')['price'].transform('std') /\
-                  df_qlmc.groupby('product')['price'].transform('mean')
-
-df_qlmc['range'] = df_qlmc.groupby('product')['price'].transform('max') -\
-                  df_qlmc.groupby('product')['price'].transform('in')
-
-
-df_disp = df_qlmc.drop_duplicates('product')
-
-res_c = smf.ols("cv ~ C(section, Treatment(reference = 'Frais'))", data = df_disp).fit()
-print res_c.summary()
-
-res_d = smf.ols("range ~ C(section, Treatment(reference = 'Frais'))", data = df_disp).fit()
-print res_c.summary()
+## ##############
+## MOVE
+## ##############
+#
+## PRIE DISPERSION
+#
+## generate national prod price deviation
+#df_qlmc['cv'] = df_qlmc.groupby('product')['price'].transform('std') /\
+#                  df_qlmc.groupby('product')['price'].transform('mean')
+#
+#df_qlmc['range'] = df_qlmc.groupby('product')['price'].transform('max') -\
+#                  df_qlmc.groupby('product')['price'].transform('min')
+#
+#
+#df_disp = df_qlmc.drop_duplicates('product')
+#
+#res_c = smf.ols("cv ~ C(section, Treatment(reference = 'Frais'))", data = df_disp).fit()
+#print res_c.summary()
+#
+#res_d = smf.ols("range ~ C(section, Treatment(reference = 'Frais'))", data = df_disp).fit()
+#print res_c.summary()
