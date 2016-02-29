@@ -64,20 +64,6 @@ for ls_enseigne_lsa_to_qlmc in ls_ls_enseigne_lsa_to_qlmc:
 
 # LOAD STORE COMPETITION (todo: aggregate elsewhere)
 
-df_comp_h = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                     '201407_competition',
-                                     'df_store_prospect_comp_H_v_all.csv'),
-                        encoding = 'utf-8')
-
-df_comp_s = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                     '201407_competition',
-                                     'df_store_prospect_comp_S_v_all.csv'), 
-                        encoding = 'utf-8')
-
-df_comp = pd.concat([df_comp_h, df_comp_s],
-                    axis = 0,
-                    ignore_index = True)
-
 ls_lsa_info_cols = [u'surface',
                     u'nb_caisses',
                     u'nb_emplois',

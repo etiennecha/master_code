@@ -49,7 +49,7 @@ ls_h_and_s = [[['H'], ['H'], 25, 'H_v_H'],
               [['H'], ['H', 'X', 'S'], 25, 'H_v_all'],
               [['S'], ['H', 'X', 'S'], 10, 'S_v_all'],
               [['H', 'S'], ['H', 'X', 'S'], 10, 'HS_v_all_10km'],
-              [['H', 'S'], ['H', 'X', 'S'], 20, 'HS_v_all_10km']]
+              [['H', 'S'], ['H', 'X', 'S'], 20, 'HS_v_all_20km']]
 
 dict_df_comp = {}
 for type_store, type_comp, dist_comp, title in ls_h_and_s:
@@ -127,22 +127,38 @@ for type_store, type_comp, dist_comp, title in ls_h_and_s:
   
   df_lsa_type.sort(['c_insee_ardt', 'enseigne'], inplace = True)
   
-  ls_disp_lsa_comp = lsd0 + ['dist_cl_comp', 'dist_cl_groupe',
-                             'ac_nb_stores', 'ac_nb_chains', 'ac_nb_comp',
-                             'ac_store_share', 'store_share',
-                             'ac_group_share', 'group_share',
-                             'ac_hhi', 'hhi']
+  ls_comp_cols = ['dist_cl_comp', 'dist_cl_groupe',
+                  'ac_nb_stores', 'ac_nb_chains', 'ac_nb_comp',
+                  'ac_store_share', 'store_share',
+                  'ac_group_share', 'group_share',
+                  'ac_hhi', 'hhi']
+
+  ls_disp_lsa_comp = lsd0 + ls_comp_cols
+
   print u'\n', title
   print df_lsa_type[ls_disp_lsa_comp][0:20].to_string()
   
   dict_df_comp[title] = df_lsa_type
 
-  df_lsa_type.to_csv(os.path.join(path_built_csv,
-                                  '201407_competition',
-                                  'df_store_prospect_comp_%s.csv' %title),
-                     encoding = 'utf-8',
-                     float_format ='%.3f',
-                     index = False)
+  df_lsa_type[['id_lsa'] + ls_comp_cols]\
+    .to_csv(os.path.join(path_built_csv,
+                         '201407_competition',
+                         'df_store_prospect_comp_%s.csv' %title),
+            encoding = 'utf-8',
+            float_format ='%.3f',
+            index = False)
+
+df_hs_1025 = pd.concat([dict_df_comp['H_v_all'],
+                        dict_df_comp['S_v_all']],
+                        axis = 0)
+
+df_hs_1025[['id_lsa'] + ls_comp_cols]\
+  .to_csv(os.path.join(path_built_csv,
+                       '201407_competition',
+                       'df_store_prospect_comp_HS_v_all_1025km.csv'),
+          encoding = 'utf-8',
+          float_format ='%.3f',
+          index = False)
 
 # Caution: dist_cl_groupe for small groups: very high
 # Remedy(?): erase if Groupe != Groupe_Alt

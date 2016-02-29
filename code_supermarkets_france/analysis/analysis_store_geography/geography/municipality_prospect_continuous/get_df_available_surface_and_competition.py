@@ -187,6 +187,9 @@ df_comp['nb_h_by_stores'] = df_comp['nb_households'] / df_comp['nb_stores']
 df_comp['surf_by_h'] = df_comp['surface'] / df_comp['nb_households']
 df_comp.replace([np.inf, -np.inf], np.nan, inplace = True)
 
+# HHI scale
+df_comp['hhi'] = df_comp['hhi'] * 10000
+
 print u'\nOverview competition:'
 dict_formatters = {'hhi' : format_float_float,
                    'available_surface' : format_float_int}

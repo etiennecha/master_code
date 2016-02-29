@@ -48,21 +48,24 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv,
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'utf-8')
 
-df_lsa = df_lsa[(~pd.isnull(df_lsa['latitude'])) &\
-                (~pd.isnull(df_lsa['longitude']))].copy()
+df_lsa = df_lsa[(~df_lsa['latitude'].isnull()) &\
+                (~df_lsa['longitude'].isnull())].copy()
 
 df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
                                         'df_communes.csv'),
                            dtype = {'DEP': str,
                                     'CODGEO' : str},
                            encoding = 'utf-8')
+# Has both districts and aggregate for Paris/Marseille/Lyon (e.g. DEP == '75')
 
 df_com_insee.set_index('CODGEO', inplace = True)
 
-# LOAD GEO FRANCE
+# LOAD GEO FRANCE (Keep Corse)
 geo_france = GeoFrance(path_dpt = path_geo_dpt,
-                       path_com = path_geo_com)
+                       path_com = path_geo_com,
+                       corse = True)
 df_com = geo_france.df_com
+# Has only districts for Paris/Marseille/Lyon (e.g. departement == 'PARIS')
 
 # KEEP ONLY ONE LINE PER MUNICIPALITY (several polygons for some)
 df_com['poly_area'] = df_com['poly'].apply(lambda x: x.area)
@@ -98,68 +101,79 @@ lsd0 = [u'enseigne',
         u'c_postal',
         u'ville'] #, u'Latitude', u'Longitude']
 
-# Check correspondence between INSEE and IGN
-df_com_insee_fm = df_com_insee[~df_com_insee['DEP'].isin(['2A', '2B', '97'])].copy()
-print df_com[~df_com['c_insee'].isin(df_com_insee_fm.index)].to_string()
+## Check correspondence between INSEE and IGN
+#df_com_insee_fm = df_com_insee[~df_com_insee['DEP'].isin(['2A', '2B', '97'])].copy()
+#print df_com[~df_com['c_insee'].isin(df_com_insee_fm.index)].to_string()
 
 # Add population to IGN data
 df_com.set_index('c_insee', inplace = True)
 df_com['pop'] = df_com_insee['P10_POP']
 
-# Type restriction
-ls_h_and_s_demand = [['H', 25],
-                     ['S', 10]]
+# PARAMETERS FOR DEMAND PROXIES
+# - no weighting (ac stands for competition authority): 10, 20, 25 km
+# - weighting with different discount factors
+ls_ac_dist = [10, 20, 25]
+ls_cont_disct = [8, 10, 12]
 
-for type_store, dist_demand in ls_h_and_s_demand:
-  df_lsa_type = df_lsa[df_lsa['type_alt'] == type_store].copy()
+ls_demand_cols = ['pop_ac_{:d}km'.format(ac_dist) for ac_dist in ls_ac_dist] +\
+                 ['pop_cont_{:d}'.format(cont_disct) for cont_disct in ls_cont_disct]
+
+df_lsa_hs = df_lsa[df_lsa['type_alt'].isin(['H', 'S'])]
+ls_rows_demand = []
+for row_ind, row in df_lsa_hs.iterrows():
+  ## could actually keep reference store since using groupe surface only
+  #df_lsa_sub_temp = df_lsa_sub[df_lsa_sub.index != row_ind].copy()
+  df_com_temp = df_com.copy()
+  df_com_temp['lat_store'] = row['latitude']
+  df_com_temp['lng_store'] = row['longitude']
+  df_com_temp['dist'] = compute_distance_ar(df_com_temp['lat_store'],
+                                            df_com_temp['lng_store'],
+                                            df_com_temp['lat_cl'],
+                                            df_com_temp['lng_cl'])
+  # Population within radius (no weighting)
+  ls_ac_demand = [df_com_temp['pop'][df_com_temp['dist'] <= ac_dist].sum()\
+                    for dist in ls_ac_dist]
   
-  # Population available for one store
-  
-  ls_rows_demand = []
-  for row_ind, row in df_lsa_type.iterrows():
-    ## could actually keep reference store since using groupe surface only
-    #df_lsa_sub_temp = df_lsa_sub[df_lsa_sub.index != row_ind].copy()
-    df_com_temp = df_com.copy()
-    df_com_temp['lat_store'] = row['latitude']
-    df_com_temp['lng_store'] = row['longitude']
-    df_com_temp['dist'] = compute_distance_ar(df_com_temp['lat_store'],
-                                              df_com_temp['lng_store'],
-                                              df_com_temp['lat_cl'],
-                                              df_com_temp['lng_cl'])
-    # AC
-    ac_pop = df_com_temp['pop'][df_com_temp['dist'] <= dist_demand].sum()
-    
-    # CONTINUOUS
-    df_com_temp['wgtd_pop'] = np.exp(-df_com_temp['dist']/10) *\
+  # Discounted population (all France)
+  ls_cont_demand = []
+  for cont_disct in ls_cont_disct:
+    df_com_temp['wgtd_pop'] = np.exp(-df_com_temp['dist']/ cont_disct) *\
                                           df_com_temp['pop']
-    pop = df_com_temp['wgtd_pop'].sum()
+    ls_cont_demand.append(df_com_temp['wgtd_pop'].sum())
 
-    ls_rows_demand.append((row_ind, ac_pop, pop))
+  ls_rows_demand.append([row['id_lsa'], row['type_alt']] +\
+                        ls_ac_demand +\
+                        ls_cont_demand)
 
-  df_des_demand = pd.DataFrame(ls_rows_demand,
-                               columns = ['index', 'ac_pop', 'pop'])
-  df_des_demand.set_index('index', inplace = True)
-  
-  df_lsa_type = pd.merge(df_lsa_type,
-                         df_des_demand,
-                         how = 'left',
-                         left_index = True,
-                         right_index = True)
-  
-  df_lsa_type.sort(['c_insee_ardt', 'enseigne'], inplace = True)
-  
-  ls_disp_lsa_comp = lsd0 + ['ac_pop', 'pop']
+df_demand = pd.DataFrame(ls_rows_demand,
+                         columns = ['id_lsa', 'type_alt'] + ls_demand_cols)
 
-  print u'\n', type_store
-  print df_lsa_type[ls_disp_lsa_comp][0:10].to_string()
-  
-  ## temp: avoid error with dates before 1900 and strftime (when outputing to csv)
-  #df_lsa_type.loc[df_lsa_type[u'Date_Ouv'] <= '1900', 'Date_Ouv'] =\
-  #   pd.to_datetime('1900/01/01', format = '%Y/%m/%d')
+df_demand['pop_ac_1025km'] = df_demand['pop_ac_10km']
+df_demand.loc[df_demand['type_alt'] == 'H',
+              'pop_ac_1025km'] = df_demand['pop_ac_25km']
+df_demand.drop(['type_alt'], axis = 1, inplace = True)
 
-  df_lsa_type.to_csv(os.path.join(path_built_csv,
-                                  '201407_competition',
-                                  'df_store_prospect_demand_%s.csv' %type_store),
-                     float_format ='%.3f',
-                     index = False,
-                     encoding = 'utf-8')
+# CHECK RESULTS
+df_lsa_hs_demand = pd.merge(df_lsa_hs,
+                            df_demand[['id_lsa'] + ls_demand_cols],
+                            how = 'left',
+                            left_on = 'id_lsa',
+                            right_on = 'id_lsa')
+
+df_lsa_hs_demand.sort(['pop_ac_10km'], ascending = False, inplace = True)
+lsd_lsa_demand = ['id_lsa'] + lsd0 + ls_demand_cols
+
+print ''
+print df_lsa_hs_demand[lsd_lsa_demand][0:10].to_string()
+
+print ''
+print df_lsa_hs_demand[lsd_lsa_demand][-10:].to_string()
+
+
+# OUTPUT
+df_demand.to_csv(os.path.join(path_built_csv,
+                              '201407_competition',
+                              'df_store_prospect_demand.csv'),
+                 float_format ='%.3f',
+                 index = False,
+                 encoding = 'utf-8')

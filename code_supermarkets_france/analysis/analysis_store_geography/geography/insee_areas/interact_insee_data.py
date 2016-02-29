@@ -32,14 +32,13 @@ path_insee_extracts = os.path.join(path_data,
 path_geo_dpt = os.path.join(path_data, 'data_maps', 'GEOFLA_DPT_WGS84', 'DEPARTEMENT')
 path_geo_com = os.path.join(path_data, 'data_maps', 'GEOFLA_COM_WGS84', 'COMMUNE')
 
-# ########################
-# LOAD DATA AND GEO FRANCE
-# ########################
+# ##########
+# LOAD DATA
+# ##########
 
 # LSA Data
-
 df_lsa = pd.read_csv(os.path.join(path_built_csv,
-                                  'df_lsa.csv'),
+                                  'df_lsa_active_hsx.csv'),
                      dtype = {u'c_insee' : str,
                               u'c_insee_ardt' : str,
                               u'c_postal' : str,
@@ -50,10 +49,9 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv,
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'utf-8')
 
-# LOAD INSEE DATA
+# INSEE DATA
 
-# todo: fix pbms with num vs. string (CODEGEO in particular)
-
+# Mapping of municipality codes to insee areas codes
 df_insee_areas = pd.read_csv(os.path.join(path_insee_extracts,
                                           u'df_insee_areas.csv'),
                              encoding = 'UTF-8')
@@ -61,11 +59,14 @@ df_insee_areas = pd.read_csv(os.path.join(path_insee_extracts,
 df_au_agg = pd.read_csv(os.path.join(path_insee_extracts,
                                      u'df_au_agg_final.csv'),
                         encoding = 'UTF-8')
+# AU2010 read as str (some contains letters)
 
 df_uu_agg = pd.read_csv(os.path.join(path_insee_extracts,
                                      u'df_uu_agg_final.csv'),
                         encoding = 'UTF-8')
+# UU2010 read as str (some contains letters)
 
+# Socio demographic data on insee areas
 df_com = pd.read_csv(os.path.join(path_insee_extracts,
                                   'data_insee_extract.csv'),
                      encoding = 'UTF-8',
@@ -73,21 +74,19 @@ df_com = pd.read_csv(os.path.join(path_insee_extracts,
                               u'CODGEO' : str,
                               u'UU2010' : str,
                               u'AU2010' : str})
+# Paris/Lyon/Marseille: one line each here
 
-# GET RID OF DOMTOM AND CORSICA
-df_com = df_com[~(df_com['DEP'].isin(['2A', '2B', '971', '972', '973', '974']))]
-
-df_com['CODGEO'] = df_com['CODGEO'].apply(\
-                         lambda x: "{:05d}".format(x)\
-                           if (type(x) == np.int64 or type(x) == long) else x)
-
-# ADD INSEE AREA CODES TO df_lsa_gps
-
-df_lsa = pd.merge(df_insee_areas,
-                  df_lsa,
-                  left_on = 'CODGEO',
-                  right_on = 'c_insee',
-                  how = 'right')
+# GET RID OF DOMTOM & FORMAT MUNICIPALITY CODE
+df_insee_areas =\
+  df_insee_areas[df_insee_areas['CODGEO'].str.slice(stop = -3) != '97']
+df_com = df_com[~(df_com['DEP'].isin(['971', '972', '973', '974']))]
+# Exact same list of municipalities in both files
+# Can use df_insee_areas to avoid codes which do no correspond to geo areas
+df_lsa = pd.merge(df_lsa,
+                  df_insee_areas,
+                  left_on = 'c_insee',
+                  right_on = 'CODGEO',
+                  how = 'left')
 
 # ##########################
 # ANALYSIS AT COMMUNE LEVEL
@@ -222,6 +221,9 @@ print df_au_agg[ls_disp_au][0:20].to_latex(index = False,
 # ANALYSIS AT UU LEVEL
 # ##########################
 
+# Get rid of non geo areas
+df_uu_agg = df_uu_agg[~df_uu_agg['LIBUU2010'].str.contains(u'Communes rurales')]
+
 # Same except: 'AU2010' / 'UU2010', 'LIBAU2010' / 'LIBUU2010'
 # Also need to sort and drop nan
 df_uu_agg.sort('P10_POP', ascending = False, inplace = True)
@@ -229,8 +231,8 @@ df_uu_agg = df_uu_agg[~pd.isnull(df_uu_agg['P10_POP'])]
 
 # NB STORES BY UU IN A GIVEN PERIOD
 df_uu_agg.set_index('UU2010', inplace = True)
-se_au_vc = df_lsa['UU2010'].value_counts()
-df_uu_agg['Nb GS'] = se_au_vc
+se_uu_vc = df_lsa['UU2010'].value_counts()
+df_uu_agg['Nb GS'] = se_uu_vc
 
 # RENAME AU2010 FOR OUTPUT
 df_uu_agg['LIBUU2010'] = df_uu_agg['LIBUU2010'].apply(\
@@ -255,23 +257,25 @@ df_uu_agg.rename(columns = {'P10_POP' : 'Pop',
                             'POPDENSITY10': 'Pop density',
                             'QUAR2UC10' : 'Med rev'}, inplace = True)
 
-ls_disp_au = ['Area', 'Pop', 'Size', 'Pop density', 'Med rev',
+ls_disp_uu = ['Area', 'Pop', 'Size', 'Pop density', 'Med rev',
               'Nb GS', 'Pop by GS', 'Surface', 'Pop by surf']
 
 dict_formatters.update({'Med rev' : format_float_float})
 
-print u'\nTop 20 Aires Urbaines in terms of inhabitants'
-print df_uu_agg[ls_disp_au][0:20].to_latex(index = False,
+print u'\nTop 20 Unites Urbaines in terms of inhabitants'
+print df_uu_agg[ls_disp_uu][0:20].to_latex(index = False,
                                            index_names = False,
                                            formatters = dict_formatters)
 
-## Nb stores vs. population (# stores by head decreasing in population density?)
-## exclude paris (+ todo: check with exclusion of au internationales)
-#plt.scatter(df_uu_agg['P10_POP'][df_uu_agg['AU2010']!='001'],
-#            df_uu_agg['nb_stores'][df_uu_agg['AU2010']!='001'])
-#plt.show()
-#
-## Store density vs. pop density (# stores by head decreasing in population density?)
-#plt.scatter(df_uu_agg['POPDENSITY10'][df_uu_agg['AU2010']!='001'],
-#            df_uu_agg['pop_by_store'][df_uu_agg['AU2010']!='001'])
-#plt.show()
+# Nb stores vs. population (# stores by head decreasing in population density?)
+# exclude paris (+ todo: check with exclusion of au internationales)
+df_uu_disp = df_uu_agg[(~df_uu_agg.index.isin(['00851'])) &\
+                       (df_uu_agg['Nb GS'] > 0)]
+plt.scatter(df_uu_disp['Pop'], df_uu_disp['Nb GS'])
+plt.show()
+
+# Store density vs. pop density (# stores by head decreasing in population density?)
+df_au_disp = df_au_agg[(~df_au_agg.index.isin(['001'])) &\
+                       (df_au_agg['Nb GS'] > 0)]
+plt.scatter(df_au_disp['Pop'], df_au_disp['Nb GS'])
+plt.show()

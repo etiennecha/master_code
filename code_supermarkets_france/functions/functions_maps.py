@@ -61,7 +61,8 @@ class GeoFrance:
                                 'y_ct'         : [d['Y_CENTROID'] for d in self.m_fra.com_info],
                                 'x_cl'         : [d['X_CHF_LIEU'] for d in self.m_fra.com_info],
                                 'y_cl'         : [d['Y_CHF_LIEU'] for d in self.m_fra.com_info]})
-    self.df_com = self.df_com[self.df_com['region'] != 'CORSE']
+    if not corse:
+      self.df_com = self.df_com[self.df_com['region'] != 'CORSE']
 
   def convert_gps_to_ign(self, x, y):
     x_l_93_ign = (self.m_fra(x, y)[0] + 700000 - self.m_fra(3, 46.5)[0])/100.0
