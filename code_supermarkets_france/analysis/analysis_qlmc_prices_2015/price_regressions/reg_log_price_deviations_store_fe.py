@@ -88,6 +88,7 @@ df_prices = pd.merge(df_prices,
                      df_stores[['store_id', 'id_lsa', 'c_departement']],
                      on = 'store_id',
                      how = 'left')
+df_prices = df_prices[~df_prices['c_departement'].isnull()]
 df_prices['ln_pd'] = np.log(df_prices['price'] /\
                       df_prices.groupby(['product', 'c_departement'])['price'].transform('mean'))
 df_prices = df_prices[~df_prices['ln_pd'].isnull()]
@@ -155,8 +156,10 @@ df_prices = df_prices[~df_prices['product'].isin(ls_suspicious_prods)]
 
 price_col = 'ln_pd'
 
-# create df to convert to sparse (need index: 0 to n obs)
-df_i = pd.DataFrame('intercept', columns = ['col'], index = df_prices.index)
+# create df to convert to sparse (use df_prices.index: not 0 to nobs)
+df_i = pd.DataFrame('intercept',
+                    columns = ['col'],
+                    index = df_prices.index)
 df_i.index.name = 'row'
 
 df_0 = df_prices[['store_id']].copy()
@@ -173,6 +176,17 @@ ls_refs = [ref_id]
 for ref in ls_refs:
   df_2 = df_2[~(df_2['col'] == ref)]
 df_2.set_index('col', append = True, inplace = True)
+
+# add variables which are not dummies: need to append multiindex df
+df_3 = pd.DataFrame(df_prices['price'].values,
+                    columns = ['val'],
+                    index = df_prices.index)
+df_3.index.name = 'row'
+df_3['col'] = 'price'
+df_3.set_index('col', append = True, inplace = True)
+
+# concat dfs
+df_2 = pd.concat([df_2, df_3], axis = 0)
 
 # build sparse matrix
 s = pd.Series(df_2['val'].values)
