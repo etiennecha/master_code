@@ -23,7 +23,7 @@ path_built_csv = os.path.join(path_data,
                               'data_csv_201503')
 
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+                                     'df_prices_cleaned.csv'),
                         encoding = 'utf-8')
 
 df_stores = pd.read_csv(os.path.join(path_built_csv,
@@ -35,6 +35,9 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
                                                'df_qlmc_competitors.csv'),
                                   encoding = 'utf-8')
+
+df_prices['price_res'] = df_prices['price'] - df_prices['price_hat']
+price_col = 'price_res'
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
@@ -59,19 +62,19 @@ for lec_id, ls_comp_id in dict_markets.items():
   if ls_comp_id:
     df_market = dict_chain_dfs['LECLERC']\
                     [dict_chain_dfs['LECLERC']['store_id'] == lec_id]\
-                         [['section', 'family', 'product', 'price']]
+                         [['section', 'family', 'product', price_col]]
     for comp_id in ls_comp_id:
       store_chain = df_stores[df_stores['store_id'] == comp_id]['store_chain'].iloc[0]
       df_comp = dict_chain_dfs[store_chain]\
                     [dict_chain_dfs[store_chain]['store_id'] == comp_id]
       df_market = pd.merge(df_market,
-                           df_comp[['section', 'family', 'product', 'price']],
+                           df_comp[['section', 'family', 'product', price_col]],
                            on = ['section', 'family', 'product'],
                            suffixes = ('', '_{:s}'.format(comp_id)),
                            how = merge_option)
     # do before?
     df_market.set_index(['section', 'family', 'product'], inplace = True)
-    df_market.rename(columns = {'price' : 'price_{:s}'.format(lec_id)},
+    df_market.rename(columns = {price_col : '{:s}_{:s}'.format(price_col, lec_id)},
                      inplace = True)
     df_market.columns = [x[6:] for x in df_market.columns] # get rid of 'price_'
     # if outer merge: keep only products carried by 67% stores or more

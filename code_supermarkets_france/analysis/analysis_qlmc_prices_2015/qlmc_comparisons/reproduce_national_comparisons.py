@@ -37,11 +37,14 @@ dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
 # REPRODUCE QLMC COMPARISON
 # #########################
 
-# Can rename HYPER U to SUPER U to get similar groups as on website?
-df_prices.loc[df_prices['store_chain'] == 'HYPER U', 'store_chain'] = 'SUPER U'
-df_prices.loc[df_prices['store_chain'] == 'U EXPRESS', 'store_chain'] = 'SUPER U'
-df_prices.loc[df_prices['store_chain'] == 'HYPER CASINO', 'store_chain'] = 'CASINO'
-df_prices.loc[df_prices['store_chain'] == "LES HALLES D'AUCHAN", 'store_chain'] = 'AUCHAN'
+# Rename chains to have similar chains as on qlmc
+ls_replace_chains = [['HYPER U', 'SUPER U'],
+                     ['U EXPRESS', 'SUPER U'],
+                     ['HYPER CASINO', 'CASINO'],
+                     ["LES HALLES D'AUCHAN", 'AUCHAN']]
+for old_chain, new_chain in ls_replace_chains:
+  df_prices.loc[df_prices['store_chain'] == old_chain,
+                'store_chain'] = new_chain
 
 # Average price by product / chain
 ls_col_gb = ['store_chain', 'section', 'family', 'product', 'price']
