@@ -132,7 +132,7 @@ for row_ind, row in df_lsa_hs.iterrows():
                                             df_com_temp['lng_cl'])
   # Population within radius (no weighting)
   ls_ac_demand = [df_com_temp['pop'][df_com_temp['dist'] <= ac_dist].sum()\
-                    for dist in ls_ac_dist]
+                    for ac_dist in ls_ac_dist]
   
   # Discounted population (all France)
   ls_cont_demand = []
