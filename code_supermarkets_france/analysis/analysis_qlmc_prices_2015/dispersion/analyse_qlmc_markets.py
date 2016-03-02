@@ -170,29 +170,39 @@ df_su = pd.DataFrame(ls_market_rows,
 df_su = df_su[(df_su['nb_prods'] >= 50) &\
               (df_su['nb_stores'] >= 3)]
 
-print()
-print('Stats des: markets with more than 50 products:')
-print(df_su.describe().to_string())
+if price_col not in ['price_res']:
+  print()
+  print('Stats des: markets with more than 50 products:')
+  print(df_su.describe().to_string())
+  
+  print()
+  print('Stats des: markets with more than 100 products:')
+  print(df_su[df_su['nb_prods'] >= 100].describe().to_string())
+  
+  print()
+  print('Stats des: markets with more than 100 products and 4 stores:')
+  print(df_su[(df_su['nb_prods'] >= 100) &\
+              (df_su['nb_stores'] >= 4)].describe().to_string())
+  
+  print()
+  print('Markets with high dispersion')
+  # inspect extreme priciest_ch_pct markets
+  print(df_su[df_su['priciest_ch_pct'] >= 0.33].to_string())
+  
+  for df_market in ls_df_markets:
+    if df_market.columns[0] == 'centre-e-leclerc-loudun':
+      break
+  
+  print(df_market[df_market['cheapest_2'] != df_market['cheapest']][0:40].to_string())
 
-print()
-print('Stats des: markets with more than 100 products:')
-print(df_su[df_su['nb_prods'] >= 100].describe().to_string())
+else:
+  # Lighter version when using price_res
+  print()
+  print(df_su[['nb_stores', 'nb_prods', 'range', 'gfs'] + lsd2].describe().to_string())
 
-print()
-print('Stats des: markets with more than 100 products and 4 stores:')
-print(df_su[(df_su['nb_prods'] >= 100) &\
-            (df_su['nb_stores'] >= 4)].describe().to_string())
-
-print()
-print('Markets with high dispersion')
-# inspect extreme priciest_ch_pct markets
-print(df_su[df_su['priciest_ch_pct'] >= 0.33].to_string())
-
-for df_market in ls_df_markets:
-  if df_market.columns[0] == 'centre-e-leclerc-loudun':
-    break
-
-print(df_market[df_market['cheapest_2'] != df_market['cheapest']][0:40].to_string())
+  for df_market in ls_df_markets:
+    if df_market.columns[0] == 'res_centre-e-leclerc-loudun':
+      break
 
 # todo: run with raw prices and price residuals (several methods?)
 # then: check link between price level and price dispersion

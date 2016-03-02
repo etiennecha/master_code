@@ -62,23 +62,23 @@ df_qlmc = df_qlmc[~df_qlmc['product'].isin(ls_suspicious_prods)]
 # Avoid error msg on condition number
 df_qlmc['ln_price'] = np.log(df_qlmc['price'])
 
-# Refine data
-
-# keep only if products observed w/in at least 1000 stores (or more: memory..)
-df_qlmc['nb_prod_obs'] =\
-  df_qlmc.groupby('product')['product'].transform(len).astype(int)
-df_qlmc = df_qlmc[df_qlmc['nb_prod_obs'] >= 1000]
-
-# keep only stores w/ at least 400 products
-df_qlmc['nb_store_obs'] =\
- df_qlmc.groupby('store_id')['store_id'].transform(len).astype(int)
-df_qlmc = df_qlmc[df_qlmc['nb_store_obs'] >= 400]
-
-# count product obs again
-df_qlmc['nb_prod_obs'] =\
-  df_qlmc.groupby('product')['product'].transform(len).astype(int)
-
-print df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe()
+## Refine data
+#
+## keep only if products observed w/in at least 1000 stores (or more: memory..)
+#df_qlmc['nb_prod_obs'] =\
+#  df_qlmc.groupby('product')['product'].transform(len).astype(int)
+#df_qlmc = df_qlmc[df_qlmc['nb_prod_obs'] >= 1000]
+#
+## keep only stores w/ at least 400 products
+#df_qlmc['nb_store_obs'] =\
+# df_qlmc.groupby('store_id')['store_id'].transform(len).astype(int)
+#df_qlmc = df_qlmc[df_qlmc['nb_store_obs'] >= 400]
+#
+## count product obs again
+#df_qlmc['nb_prod_obs'] =\
+#  df_qlmc.groupby('product')['product'].transform(len).astype(int)
+#
+#print df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe()
 
 # ############
 # REGRESSIONS
