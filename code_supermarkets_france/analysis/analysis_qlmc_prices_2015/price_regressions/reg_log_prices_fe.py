@@ -124,7 +124,7 @@ ss = s.to_sparse()
 A, rows, columns = ss.to_coo(row_levels=['row'],
                              column_levels = ['col'],
                              sort_labels = True)
-price_col = 'ln_price'
+price_col = 'price'
 y = df_qlmc[price_col].values
 param_names = columns
 
@@ -163,11 +163,19 @@ else:
 # OUTPUT
 # ######
 
+# Prices
 df_qlmc.to_csv(os.path.join(path_built_csv,
-                            'df_prices_cleaned.csv'),
+                            'df_res_{:s}s.csv'.format(price_col)),
                encoding = 'utf-8',
                float_format='%.3f',
                index = False)
+
+# Fixed effects
+df_reg.to_csv(os.path.join(path_built_csv,
+                           'df_res_{:s}_fes.csv'.format(price_col)),
+              encoding = 'utf-8',
+              float_format='%.3f',
+              index = False)
 
 ## ###############
 ## BU PATSY SYNTAX

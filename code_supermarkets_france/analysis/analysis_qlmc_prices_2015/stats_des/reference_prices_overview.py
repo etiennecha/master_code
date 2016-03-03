@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
 
 path_built_csv = os.path.join(path_data,
                               'data_supermarkets',
@@ -27,67 +28,36 @@ format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 # #######################
-# LOAD DF QLMC
+# LOAD DATA
 # #######################
 
 # LOAD DF PRICES
 df_prices = pd.read_csv(os.path.join(path_built_csv,
                                      'df_prices.csv'),
                         encoding = 'utf-8')
+# store chain harmonization per qlmc
+ls_replace_chains = [['HYPER U', 'SUPER U'],
+                     ['U EXPRESS', 'SUPER U'],
+                     ['HYPER CASINO', 'CASINO'],
+                     ["LES HALLES D'AUCHAN", 'AUCHAN']]
+for old_chain, new_chain in ls_replace_chains:
+  df_prices.loc[df_prices['store_chain'] == old_chain,
+                'store_chain'] = new_chain
 
-# LOAD DF STORES (INCLUDING LSA INFO)
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
-                        dtype = {'c_insee' : str,
-                                 'id_lsa' : str},
-                        encoding = 'utf-8')
+# adhoc fixes
+ls_suspicious_prods = [u'VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
+df_prices = df_prices[~df_prices['product'].isin(ls_suspicious_prods)]
+df_prices['product'] =\
+  df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
 
-df_lsa = pd.read_csv(os.path.join(path_lsa_csv,
-                                  'df_lsa_active.csv'),
-                     dtype = {u'id_lsa' : str,
-                              u'c_insee' : str,
-                              u'c_insee_ardt' : str,
-                              u'c_postal' : str,
-                              u'c_siren' : str,
-                              u'c_nic' : str,
-                              u'c_siret' : str},
-                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
-                                    u'date_chg_enseigne', u'date_chg_surface'],
-                     encoding = 'utf-8')
-
-df_stores = pd.merge(df_stores,
-                     df_lsa[['id_lsa', 'enseigne_alt', 'groupe', 'surface']],
-                     on = 'id_lsa',
-                     how = 'left')
-
-# BUILD DF QLMC WITH PRICE AND STORE INFO
-df_prices.drop(['store_chain'], axis = 1, inplace = True) # in df_stores too...
-df_qlmc = pd.merge(df_prices,
-                   df_stores,
-                   left_on = 'store_id',
-                   right_on = 'store_id',
-                   how = 'left')
-df_qlmc = df_qlmc[~df_qlmc['id_lsa'].isnull()]
-
-# Avoid error msg on condition number
-df_qlmc['surface'] = df_qlmc['surface'].apply(lambda x: x/1000.0)
-# df_qlmc_prod['ac_hhi'] = df_qlmc_prod['ac_hhi'] * 10000
-# Try with log of price (semi elasticity)
-df_qlmc['ln_price'] = np.log(df_qlmc['price'])
-# Control for dpt (region?)
-df_qlmc['ppt'] = df_qlmc['c_insee'].str.slice(stop = 2)
-
-# #############################################
-# PRICE DISTRIBUTION PER CHAIN FOR TOP PRODUCTS
-# #############################################
-
+# BUILD DF REF PRICES
 def nb_obs(se_prices):
   return len(se_prices)
 
 def price_1(se_prices):
   return se_prices.value_counts().index[0]
 
-def price_1_freq(se_prices):
+def price_1_fq(se_prices):
   return se_prices.value_counts().iloc[0] / float(len(se_prices))
 
 def price_2(se_prices):
@@ -96,89 +66,74 @@ def price_2(se_prices):
   else:
     return np.nan
 
-def price_2_freq(se_prices):
+def price_2_fq(se_prices):
   if len(se_prices.value_counts()) > 1:
     return se_prices.value_counts().iloc[1] / float(len(se_prices))
   else:
     return 0
 
-se_prod = df_qlmc.groupby(['section', 'family', 'product']).agg('size')
-se_prod.sort(ascending = False, inplace = True)
+# Frequency of most common prices (add dispersion measure?)
+df_ref = df_prices[['section', 'family', 'product', 'price']]\
+           .groupby(['section', 'family', 'product']).agg([price_1,
+                                                           price_1_fq,
+                                                           price_2,
+                                                           price_2_fq])['price']
+df_ref['price_12_fq'] = df_ref[['price_1_fq', 'price_2_fq']].sum(axis = 1)
 
-# WITH ONE PRODUCT
-section, family, product = se_prod.index[0]
-print('Working with', section, family, product)
-# produit = u'Coca Cola - Coca Cola avec caféine, 1,5L'
+# General statistics
+df_desc = pd.pivot_table(df_prices,
+                         values = 'price',
+                         index = ['section', 'family', 'product'],
+                         aggfunc = 'describe').unstack()
+df_desc['cv'] = df_desc['std'] / df_desc['mean']
+df_desc['range_iq'] = df_desc['75%'] - df_desc['25%']
+df_desc['pct_iq'] = df_desc['75%'] / df_desc['25%']
+df_desc.drop(['25%', '75%'], axis = 1, inplace = True)
+df_desc['count'] = df_desc['count'].astype(int)
 
-df_qlmc_prod = df_qlmc[(df_qlmc['section'] == section) &\
-                       (df_qlmc['family'] == family) &\
-                       (df_qlmc['product'] == product)].copy()
-ls_pd_disp = ['nb_obs',
-              'price_1', 'price_2',
-              'price_1_freq', 'price_2_freq', 'price_12_freq']
+df_disp = pd.merge(df_desc,
+                   df_ref,
+                   left_index = True,
+                   right_index = True,
+                   how = 'outer')
 
-# One period (need product to be available in this one)
-df_pd =  df_qlmc_prod[['price', 'enseigne_alt']]\
-           .groupby('enseigne_alt').agg([nb_obs,
-                                         price_1,
-                                         price_1_freq,
-                                         price_2,
-                                         price_2_freq])['price']
-df_pd.sort('nb_obs', ascending = False, inplace = True)
-df_pd['price_12_freq'] = df_pd[['price_1_freq', 'price_2_freq']].sum(axis = 1)
+df_disp.sort('count', ascending = False, inplace = True)
 
-print()
-print(u'price frequencies per chains for one product in period 1')
-print(df_pd[ls_pd_disp].to_string())
+df_disp = df_disp[df_disp['count'] >= 100]
 
-## All periods
-#df_pd_2 =  df_qlmc_prod[['period', 'price', 'enseigne_alt']]\
-#             .groupby(['period', 'enseigne_alt']).agg([nb_obs,
-#                                                       price_1,
-#                                                       price_1_freq,
-#                                                       price_2,
-#                                                       price_2_freq])['price']
-#
-## Sort by nb of obs within each period             
-#df_pd_2.reset_index('period', drop = False, inplace = True)
-#df_pd_2.sort(['period', 'nb_obs'], ascending = False, inplace = True)
-#df_pd_2.set_index('period', append = True, inplace = True)
-#df_pd_2 = df_pd_2.swaplevel(0, 1, axis = 0)
-#df_pd_2['price_12_freq'] = df_pd_2[['price_1_freq', 'price_2_freq']].sum(axis = 1)
-#
-#print()
-#print(u'price frequencies per chains for one product in all periods')
-#print(df_pd_2[df_pd_2['nb_obs'] >= 10][ls_pd_disp].to_string())
-#
-## Extract by chain
-#df_pd_2.sortlevel(inplace = True)
-#print()
-#print(u'price frequencies for one product and chain in all periods')
-#print(df_pd_2.loc[(slice(None), u'CENTRE E.LECLERC'),:][ls_pd_disp].to_string())
-#
-## Todo: Expand 
-## => over products if can be
-## => baskets of good (by period / chain given product scarcity)
+print('Stats des national product price distributions:')
+print(df_disp.describe().to_string())
 
-# For one chain within period, if no need to take same store sample:
-df_sub = df_qlmc[(df_qlmc['enseigne_alt'] == 'CENTRE E.LECLERC')]
-ls_sub_top_prods = df_sub['product'].value_counts().index[0:20].tolist()
-df_sub = df_sub[df_sub['product'].isin(ls_sub_top_prods)]
+print('Overview national product price distributions:')
+print(df_disp[0:20].to_string())
 
-df_pd_3 =  df_sub[['price', 'product']]\
-             .groupby(['product']).agg([nb_obs,
-                                        price_1,
-                                        price_1_freq,
-                                        price_2,
-                                        price_2_freq])['price']
-df_pd_3['price_12_freq'] = df_pd_3[['price_1_freq', 'price_2_freq']].sum(axis = 1)
+ls_top_products = [u'COCA COLA COCA-COLA PET 1.5L',
+                   u'COCA COLA ZERO COCA-COLA ZERO PET CONTOUR 1,5L',
+                   u'CRISTALINE EAU CRISTALINE BOUTEILLE 1.5 LITRE X6',
+                   u'CRISTALINE EAU CRISTALINE BOUTEILLE 1.5 LITRE',
+                   u'PRESIDENT CAMEMBERT PRÉSIDENT ENTIER 20%MG 250G',
+                   u'PRESIDENT EMMENTAL PRESIDENT 28%MG 250G']
 
-print()
-print(u'Price frequencies for 20 products and one chain in one period')
-print(df_pd_3[ls_pd_disp].to_string())
+## High dispersion on ham?
+# u'HERTA JAMBON LE BON PARIS -25% DE SEL HERTA 4TRANCHES 120G',
+# u'FLEURY MICHON JAMBON S/COUENNE TENEUR SEL RÉDUIT OMEGA3 4TR.160G'
 
-# Todo: 
-# for one chain: one row by period (could add by dpt)
-# price distribution for each unique product (rayon/famille/prod)
-# take avg of first freq and second freq (could take interquartile gap etc)
-# keep only if enough products
+df_disp.reset_index(drop = False, inplace = True)
+
+df_disp['dtp'] = 0
+df_disp.loc[df_disp['product'].isin(ls_top_products), 'dtp'] = 1
+
+ls_top_brands = ['Herta', 'Fleury', 'Coca', 'Cristaline', 'President']
+df_disp['dtb'] = 0
+for brand in ls_top_brands:
+  df_disp.loc[df_disp['product'].str.contains(brand, case = False), 'dtb'] = 1
+
+print(smf.ols('cv ~ C(section) + mean + dtp', data = df_disp).fit().summary())
+
+print(df_disp[df_disp['dtp'] == 1].to_string())
+
+# todo: check extreme cv / iq_range and price freq
+df_disp.sort('cv', ascending = False, inplace = True)
+print(df_disp[0:10].to_string())
+
+# check product with only Bledina as name???
