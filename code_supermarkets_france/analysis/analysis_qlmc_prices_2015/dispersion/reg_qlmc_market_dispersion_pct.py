@@ -174,6 +174,8 @@ df_disp_res = dict_df_disp['disp_lpd']
 # REGRESSIONS
 # ##############
 
+# MARKETS
+
 df_disp = pd.merge(df_disp_agg_res,
                    df_stores,
                    on = 'store_id',
@@ -207,3 +209,16 @@ print(res_std.summary())
 res_range = smf.ols('range ~ ac_hhi + ac_hhi_2 + ln_pop_cont_10 + ln_med_rev_au',
                     data = df_disp).fit()
 print(res_range.summary())
+
+# PRODUCTS
+
+df_disp_prod = pd.merge(df_disp_res,
+                        df_stores,
+                        on = 'store_id',
+                        how = 'left')
+
+df_prod = df_disp_prod[df_disp_prod['product'] ==\
+            df_disp_prod['product'].iloc[0]].copy()
+df_prod.sort('mean', ascending = True, inplace = True)
+
+# not sure can use mean here... shoud not reflect how expensive market is here...
