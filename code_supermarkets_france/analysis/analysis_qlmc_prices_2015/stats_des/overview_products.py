@@ -46,9 +46,6 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
 # todo: move
 df_prices['product'] = df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
 
-## can restrict chain (move?)
-#df_prices = df_prices[df_prices['store_chain'] == 'AUCHAN'].copy()
-
 # ###############
 # STATS DES
 # ###############
@@ -62,122 +59,136 @@ df_prices.set_index(ls_prod_cols, inplace = True)
 df_prices['nb_obs'] = se_prod_vc
 df_prices.reset_index(drop = False, inplace = True)
 
-df_prods = df_prices[ls_prod_cols + ['nb_obs']].drop_duplicates(ls_prod_cols)
-
-# PRODUCT SECTIONS
-print()
-print(u'Product sections')
-df_sections = pd.pivot_table(data = df_prods[['section', 'product']],
-                             index = 'section',
-                             aggfunc = len,
-                             fill_value = 0).astype(int)['product']
-print(df_sections.to_string())
-
-# PRODUCT FAMILIES
-print()
-print(u'Product families')
-df_families = pd.pivot_table(data = df_prods[['section', 'family', 'product']],
-                             index = ['section', 'family'],
-                             aggfunc = len,
-                             fill_value = 0).astype(int)['product']
-print(df_families.to_string())
+df_prices = df_prices[df_prices['nb_obs'] >= 200]
 
 # PRODUCT PRICE STATS
-
-# todo: table with product min, max, mean, std, cv, interquartile
-
 class PriceDispersion:
   def cv(self, se_prices):
     return se_prices.std() / se_prices.mean()
-  def iq_range(self, se_prices):
+  def iq_rg(self, se_prices):
     return se_prices.quantile(0.75) - se_prices.quantile(0.25)
-  def id_range(self, se_prices):
+  def id_rg(self, se_prices):
     return se_prices.quantile(0.90) - se_prices.quantile(0.10)
-  def minmax_range(self, se_prices):
+  def minmax_rg(self, se_prices):
     return se_prices.max() - se_prices.min()
-
 PD = PriceDispersion()
 
-df_stats = df_prices[ls_prod_cols + ['price']].groupby(ls_prod_cols).\
-            agg([len,
-                 np.median, np.mean, np.std, min, max,
-                 PD.cv, PD.iq_range, PD.id_range, PD.minmax_range])['price']
+df_stats = df_prices[ls_prod_cols + ['price']]\
+             .groupby(ls_prod_cols).agg([len,
+                                         np.mean,
+                                         np.std,
+                                         min,
+                                         np.median,
+                                         max,
+                                         PD.cv,
+                                         PD.iq_rg,
+                                         PD.id_rg,
+                                         PD.minmax_rg])['price']
+df_stats.rename(columns = {'len': 'nb_obs',
+                           'median' : 'med'},
+                inplace = True)
+df_stats['nb_obs'] = df_stats['nb_obs'].astype(int)
 
 print()
 print(u'General overview')
 print(df_stats.describe().to_string())
 
-df_stats.sort('len', ascending = False, inplace = True)
 print()
-print(df_stats[0:20].to_string())
+print(u'Inspect large minmax ranges')
+df_stats.sort('minmax_rg', ascending = False, inplace = True)
+print(df_stats[0:30].to_string())
 
-# run regressions + do graphs
-# by section (/family?) and brand?
+print()
+print(u'Inspect large id ranges')
+df_stats.sort('id_rg', ascending = False, inplace = True)
+print(df_stats[0:30].to_string())
 
-# GRAPH: DISPERSION BY SECTION
+print()
+print(u'Inspect large cvs')
+df_stats.sort('cv', ascending = False, inplace = True)
+print(df_stats[0:30].to_string())
 
-df_stats.reset_index(drop = False, inplace = True)
+print()
+print(u'Inspect top nb_obs')
+df_stats.sort('nb_obs', ascending = False, inplace = True)
+print(df_stats[0:30].to_string())
 
-fig, ax = plt.subplots()
-for section, c_section in [(u'Boissons', 'r'),
-                           (u'Nettoyage', 'g'),
-                           (u'Hygiène et Beauté', 'b')]:
-  df_temp = df_stats[df_stats['section'] == section]
-  df_temp = df_temp[(df_temp['len'] >= df_temp['len'].quantile(0.25)) &\
-                    (df_temp['mean'] <= df_temp['mean'].quantile(0.75))]
-  ax.plot(df_temp['mean'].values,
-          df_temp['cv'].values,
-          marker = 'o',
-          markersize = 4,
-          linestyle = '',
-          lw = 0,
-          c = c_section,
-          label = section)
-ax.legend()
-plt.show()
+# PRODUCT SECTIONS
+df_prods = df_prices[ls_prod_cols + ['nb_obs']].drop_duplicates(ls_prod_cols)
+print()
+print(u'Product sections')
+se_sections = pd.pivot_table(data = df_prods[['section', 'product']],
+                             index = 'section',
+                             aggfunc = len,
+                             fill_value = 0).astype(int)['product']
+print(se_sections.to_string())
 
-# todo: replicate for each brand and output
-# todo: distinguish families by colors
+# PRODUCT FAMILIES
+print()
+print(u'Product families')
+se_families = pd.pivot_table(data = df_prods[['section', 'family', 'product']],
+                             index = ['section', 'family'],
+                             aggfunc = len,
+                             fill_value = 0).astype(int)['product']
+print(se_families.to_string())
 
-# PRICE STATS BY CHAIN
+# DF WITH FAMILIES, SECTIONS AND NB OBS (FOR PAPER)
+dict_section_families = {}
+for (section, family), nb_prods in se_families.iteritems():
+  dict_section_families.setdefault(section, [])\
+                       .append(u'{:s} ({:d})'.format(family, nb_prods)) 
+dict_section_families = {k: '; '.join(v) for k,v in dict_section_families.items()}
+se_section_families = pd.Series(dict_section_families)
+df_section_families = se_section_families.to_frame()
+df_section_families.reset_index(inplace = True, drop = False)
+df_section_families['index'] =\
+    df_section_families['index'].apply(\
+      lambda x: u'{:s} ({:d})'.format(x, se_sections.ix[x]))
+df_section_families.rename(columns = {'index' : 'section',
+                                      0 : 'families'},
+                           inplace = True)
 
-nb_obs_min = 40
+pd.set_option("display.max_colwidth", 10000)
+print(df_section_families.to_string(index = False))
+pd.set_option("display.max_colwidth", 50)
 
-dict_df_chain_stats = {}
-for sc in df_prices['store_chain'].unique():
-  df_chain_prices = df_prices[df_prices['store_chain'] == sc]
-  df_chain_stats =\
-    df_chain_prices[ls_prod_cols + ['price']].groupby(ls_prod_cols).\
-      agg([len,
-           np.median, np.mean, np.std, min, max,
-           PD.cv, PD.iq_range, PD.id_range, PD.minmax_range])['price']
-  # keep only products with enough obs
-  df_chain_stats = df_chain_stats[df_chain_stats['len'] >= nb_obs_min]
-  dict_df_chain_stats[sc] = df_chain_stats
+## todo: detection of very high prices (do with reference prices)
+## (typically: observed only at few stores)
+#print(df_prices[df_prices['product'] == u'HASBRO LA BONNE PAYE'].to_string())
+#print(df_prices[df_prices['product'] == u'GOLIATH TRIOMINOS DE LUXE'].to_string())
 
-# Display CV by chain for top chains
-ls_chains = ['LECLERC',
-             'INTERMARCHE', # sup and hyp?
-             'SUPER U', # sup
-             'CARREFOUR MARKET', # sup
-             'AUCHAN',
-             'HYPER U',
-             'CORA',
-             'CARREFOUR',
-             'GEANT CASINO']
+# (with high nb obs)
+# df_prod = df_prices[df_prices['product'] == 'RICARD RICARD 45° 1 LITRE'].copy()
+# df_prod.sort('price', ascending = False, inplace = True)
 
-dict_df_chain_des = {}
-for stat in ['len', 'cv', 'std', 'iq_range', 'id_range', 'minmax_range']:
-  dict_df_chain_des[stat] =\
-      pd.concat([dict_df_chain_stats[chain].describe()[stat]\
-                     for chain in ls_chains],
-                    axis = 1,
-                    keys = ls_chains)
+## #############################
+## GRAPH: DISPERSION BY SECTION
+## ############################
+#
+#df_stats.reset_index(drop = False, inplace = True)
+#
+#fig, ax = plt.subplots()
+#for family, c_family in [(u'Colas, Boissons gazeuses et aux Fruits', 'g'),
+#                         (u'Eaux', 'b')]:
+#  df_temp = df_stats[df_stats['family'] == family]
+#  #df_temp = df_temp[(df_temp['len'] >= df_temp['len'].quantile(0.25)) &\
+#  #                  (df_temp['mean'] <= df_temp['mean'].quantile(0.75))]
+#  ax.plot(df_temp['mean'].values,
+#          df_temp['cv'].values,
+#          marker = 'o',
+#          markersize = 4,
+#          linestyle = '',
+#          lw = 0,
+#          c = c_family,
+#          label = family)
+#ax.legend()
+#plt.show()
 
-# some id_range displayed negative... float issue: actually 0
-# not easy to compare as products are different
+# ############################
+# STATS BY SECTION AND FAMILY
+# ############################
 
-for stat in ['len', 'cv', 'iq_range', 'id_range']:
-  print()
-  print(stat)
-  print(dict_df_chain_des[stat].to_string())
+df_desc = pd.pivot_table(df_stats,
+                         values = 'mean',
+                         index = ['section'],
+                         aggfunc = 'describe') # .unstack()

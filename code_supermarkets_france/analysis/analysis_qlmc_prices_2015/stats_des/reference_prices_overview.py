@@ -130,10 +130,13 @@ for brand in ls_top_brands:
 
 print(smf.ols('cv ~ C(section) + mean + dtp', data = df_disp).fit().summary())
 
+print(smf.ols('price_1_fq ~ C(section) + mean + dtp', data = df_disp).fit().summary())
+
 print(df_disp[df_disp['dtp'] == 1].to_string())
 
 # todo: check extreme cv / iq_range and price freq
 df_disp.sort('cv', ascending = False, inplace = True)
+print()
 print(df_disp[0:10].to_string())
 
 # check product with only Bledina as name???
