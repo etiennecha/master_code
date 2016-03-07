@@ -125,6 +125,7 @@ dict_df_chain_store_desc = {}
 
 for retail_chain in ls_loop_rcs:
   print()
+  print(u'-'*60)
   print(retail_chain)
 
   nb_obs_min = 50 # Product must be observed at X stores at least
@@ -165,7 +166,7 @@ for retail_chain in ls_loop_rcs:
   
   if len(df_enough_obs) > 0:
     
-    print(u'\nOverview at product level')
+    print(u'Overview at product level')
     print(df_enough_obs.describe())
     
     df_enough_obs_desc = df_enough_obs.describe()
