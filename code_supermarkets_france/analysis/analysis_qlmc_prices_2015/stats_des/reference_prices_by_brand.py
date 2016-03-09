@@ -35,47 +35,28 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
                                      'df_prices.csv'),
                         encoding = 'utf-8')
 
-# LOAD DF STORES (INCLUDING LSA INFO)
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
-                        dtype = {'c_insee' : str,
-                                 'id_lsa' : str},
-                        encoding = 'utf-8')
+# store chain harmonization per qlmc
+ls_replace_chains = [['HYPER U', 'SUPER U'],
+                     ['U EXPRESS', 'SUPER U'],
+                     ['HYPER CASINO', 'CASINO'],
+                     ["LES HALLES D'AUCHAN", 'AUCHAN']]
+for old_chain, new_chain in ls_replace_chains:
+  df_prices.loc[df_prices['store_chain'] == old_chain,
+                'store_chain'] = new_chain
 
-df_lsa = pd.read_csv(os.path.join(path_lsa_csv,
-                                  'df_lsa_active.csv'),
-                     dtype = {u'id_lsa' : str,
-                              u'c_insee' : str,
-                              u'c_insee_ardt' : str,
-                              u'c_postal' : str,
-                              u'c_siren' : str,
-                              u'c_nic' : str,
-                              u'c_siret' : str},
-                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
-                                    u'date_chg_enseigne', u'date_chg_surface'],
-                     encoding = 'utf-8')
+# adhoc fixes
+ls_suspicious_prods = [u'VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
+df_prices = df_prices[~df_prices['product'].isin(ls_suspicious_prods)]
+df_prices['product'] =\
+  df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
 
-df_stores = pd.merge(df_stores,
-                     df_lsa[['id_lsa', 'enseigne_alt', 'groupe', 'surface']],
-                     on = 'id_lsa',
-                     how = 'left')
+df_qlmc = df_prices
 
-# BUILD DF QLMC WITH PRICE AND STORE INFO
-df_prices.drop(['store_chain'], axis = 1, inplace = True) # in df_stores too...
-df_qlmc = pd.merge(df_prices,
-                   df_stores,
-                   left_on = 'store_id',
-                   right_on = 'store_id',
-                   how = 'left')
-df_qlmc = df_qlmc[~df_qlmc['id_lsa'].isnull()]
-
-# Avoid error msg on condition number
-df_qlmc['surface'] = df_qlmc['surface'].apply(lambda x: x/1000.0)
-# df_qlmc_prod['ac_hhi'] = df_qlmc_prod['ac_hhi'] * 10000
-# Try with log of price (semi elasticity)
-df_qlmc['ln_price'] = np.log(df_qlmc['price'])
-# Control for dpt (region?)
-df_qlmc['dpt'] = df_qlmc['c_insee'].str.slice(stop = 2)
+# Robustness check: 2000 most detained products only
+ls_prod_cols = ['section', 'family', 'product']
+se_prod_vc = df_prices[ls_prod_cols].groupby(ls_prod_cols).agg(len)
+ls_keep_products = [x[-1] for x in list(se_prod_vc[0:4000].index)]
+df_qlmc = df_qlmc[df_qlmc['product'].isin(ls_keep_products)]
 
 # #############################################
 # PRICE DISTRIBUTION PER CHAIN FOR TOP PRODUCTS
@@ -102,25 +83,25 @@ def price_2_freq(se_prices):
   else:
     return 0
 
-se_prod = df_qlmc.groupby(['section', 'family', 'product']).agg('size')
-se_prod.sort(ascending = False, inplace = True)
+nb_obs_min = 40 # Product must be observed at X stores at least
+pct_min = 0.33
 
-ls_loop_rcs = ['CENTRE E.LECLERC',
-               'INTERMARCHE SUPER',
-               'CARREFOUR MARKET',
-               'AUCHAN',
-               'HYPER U',
-               'INTERMARCHE HYPER',
-               'CORA',
+ls_loop_rcs = ['AUCHAN',
                'CARREFOUR',
-               'GEANT CASINO']
+               'CARREFOUR MARKET',
+               'GEANT CASINO',
+               'CASINO',
+               'CORA',
+               'INTERMARCHE',
+               'LECLERC',
+               'SIMPLY MARKET',
+               'SUPER U']
 
 dict_ls_se_desc = {'nb_stores_by_prod' : [],
                    'freq_prods' : [],
                    'nb_prods_by_store' : [],
                    'no_ref' : [],
                    'freq_stores' : []}
-
 dict_df_chain_store_desc = {}
 
 for retail_chain in ls_loop_rcs:
@@ -128,25 +109,10 @@ for retail_chain in ls_loop_rcs:
   print(u'-'*60)
   print(retail_chain)
 
-  nb_obs_min = 50 # Product must be observed at X stores at least
-  pct_min = 0.33
-  
   print()
   print('Stats des on ref prices for {:s} :'.format(retail_chain))
-  
-  # How close stores are to reference price
-  df_sub = df_qlmc[(df_qlmc['enseigne_alt'] == retail_chain)]
-  # All brands together: few prods with ref price (restrict store size?)
-  #df_sub = df_qlmc[(df_qlmc['period'] == per_ind)]
-  
-  # Check duplicates at store level
-  ls_sub_dup_cols = ['section', 'family', 'product', 'id_lsa']
-  df_sub_dup = df_sub[(df_sub.duplicated(ls_sub_dup_cols, take_last = True)) |\
-                      (df_sub.duplicated(ls_sub_dup_cols, take_last = False))]
-  # Make sure no duplicate
-  df_sub = df_sub.drop_duplicates(ls_sub_dup_cols)
-  
   # Build df with product most common prices
+  df_sub = df_qlmc[(df_qlmc['store_chain'] == retail_chain)]
   df_sub_products =  df_sub[['section', 'family', 'product', 'price']]\
                        .groupby(['section', 'family', 'product'])\
                        .agg([nb_obs,
@@ -162,7 +128,6 @@ for retail_chain in ls_loop_rcs:
   df_enough_obs = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min)]
   df_ref_price = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min) &\
                                  (df_sub_products['price_1_freq'] >= pct_min)]
-  
   
   if len(df_enough_obs) > 0:
     
@@ -242,7 +207,6 @@ for retail_chain in ls_loop_rcs:
                         'diff',
                         'price_1',
                         'price_2']].describe())
-      
 
       df_ref_pct_desc = df_ref_pct.describe()
       dict_ls_se_desc['nb_prods_by_store'].append(df_ref_pct_desc['nb_obs'])
@@ -262,18 +226,16 @@ for retail_chain in ls_loop_rcs:
     for col in ['nb_prods_by_store', 'no_ref', 'freq_stores']:
       dict_ls_se_desc[col].append(None)
 
-print()
-print(df_qlmc['enseigne_alt'].value_counts())
-
 dict_df_desc = {k: pd.concat(v, axis = 1, keys = ls_loop_rcs)\
                    for k, v in dict_ls_se_desc.items()}
 
 dict_ens_alt_replace = {'CENTRE E.LECLERC' : 'LECLERC',
                         'INTERMARCHE SUPER' : 'ITM SUP',
                         'INTERMARCHE HYPER' : 'ITM HYP',
-                        'CARREFOUR MARKET' : 'CAR. MARKET'}
+                        'CARREFOUR MARKET' : 'CAR. MARKET',
+                        'SIMPLY MARKET' : 'SIMPLY'}
 
-dict_ds_desc = {k: v.rename(columns = dict_ens_alt_replace, inplace = True)\
+dict_df_desc = {k: v.rename(columns = dict_ens_alt_replace)\
                    for k,v in dict_df_desc.items()}
 
 print()
@@ -292,9 +254,8 @@ for x in ['freq_prods', 'no_ref', 'freq_stores']:
   print(x)
   print(dict_df_desc[x].to_string(float_format = '{:,.2f}'.format))
 
-print()
-print('Check price stats by chain at store level')
-
-for x in ['CENTRE E.LECLERC', 'AUCHAN', 'CARREFOUR', 'GEANT CASINO']:
-  print()
-  print(dict_df_chain_store_desc[x][0:20].to_string())
+#print()
+#print('Check price stats by chain at store level')
+#for x in ['CENTRE E.LECLERC', 'AUCHAN', 'CARREFOUR', 'GEANT CASINO']:
+#  print()
+#  print(dict_df_chain_store_desc[x][0:20].to_string())
