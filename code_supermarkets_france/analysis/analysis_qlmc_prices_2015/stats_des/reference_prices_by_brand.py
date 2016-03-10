@@ -36,13 +36,14 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
                         encoding = 'utf-8')
 
 # store chain harmonization per qlmc
-ls_replace_chains = [['HYPER U', 'SUPER U'],
+ls_replace_chains = [['HYPER CASINO', 'CASINO'],
+                     ['HYPER U', 'SUPER U'],
                      ['U EXPRESS', 'SUPER U'],
-                     ['HYPER CASINO', 'CASINO'],
                      ["LES HALLES D'AUCHAN", 'AUCHAN']]
 for old_chain, new_chain in ls_replace_chains:
   df_prices.loc[df_prices['store_chain'] == old_chain,
                 'store_chain'] = new_chain
+# does not chge much to include only super-u or hyper-u
 
 # adhoc fixes
 ls_suspicious_prods = [u'VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
@@ -55,7 +56,7 @@ df_qlmc = df_prices
 # Robustness check: 2000 most detained products only
 ls_prod_cols = ['section', 'family', 'product']
 se_prod_vc = df_prices[ls_prod_cols].groupby(ls_prod_cols).agg(len)
-ls_keep_products = [x[-1] for x in list(se_prod_vc[0:4000].index)]
+ls_keep_products = [x[-1] for x in list(se_prod_vc[0:3000].index)]
 df_qlmc = df_qlmc[df_qlmc['product'].isin(ls_keep_products)]
 
 # #############################################
@@ -129,7 +130,7 @@ for retail_chain in ls_loop_rcs:
   df_ref_price = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min) &\
                                  (df_sub_products['price_1_freq'] >= pct_min)]
   
-  if len(df_enough_obs) > 0:
+  if len(df_enough_obs) >= 100:
     
     print(u'Overview at product level')
     print(df_enough_obs.describe())
@@ -183,26 +184,16 @@ for retail_chain in ls_loop_rcs:
                             fill_value = 0).astype(int)
     
     try:
-      # drop if not enough data (but should report ?)
-      se_nb_tot_obs = df_ref.sum(axis = 1).astype(int)
-      #se_insuff = df_ref['insuff'] / df_ref.sum(axis = 1)
-      #df_ref.drop(labels = ['insuff'], axis = 1, inplace = True)
-      
       df_ref_pct = df_ref.apply(lambda x: x / x.sum(), axis = 1)
       df_ref_pct['nb_obs'] = df_ref.sum(axis = 1).astype(int)
-      df_ref_pct['nb_tot_obs'] = se_nb_tot_obs
-      #df_ref_pct['insuff'] = se_insuff
       if 'no_ref' not in df_ref_pct.columns:
         df_ref_pct['no_ref'] = 0
-      
-      #print()
-      #print(u'Overview ref prices:')
-      #print(df_ref.to_string())
-      
+      # keep only stores with enough procucts
+      df_ref_pct = df_ref_pct[df_ref_pct['nb_obs'] >= 100]
+
       print()
       print(u'Overview at store level:')
-      print(df_ref_pct[['nb_tot_obs', # 'insuff',
-                        'nb_obs',
+      print(df_ref_pct[['nb_obs',
                         'no_ref',
                         'diff',
                         'price_1',
@@ -223,7 +214,8 @@ for retail_chain in ls_loop_rcs:
       for col in ['nb_prods_by_store', 'no_ref', 'freq_stores']:
         dict_ls_se_desc[col].append(None)
   else:
-    for col in ['nb_prods_by_store', 'no_ref', 'freq_stores']:
+    for col in ['nb_stores_by_prod', 'freq_prods',
+                'nb_prods_by_store', 'no_ref', 'freq_stores']:
       dict_ls_se_desc[col].append(None)
 
 dict_df_desc = {k: pd.concat(v, axis = 1, keys = ls_loop_rcs)\
@@ -239,23 +231,23 @@ dict_df_desc = {k: v.rename(columns = dict_ens_alt_replace)\
                    for k,v in dict_df_desc.items()}
 
 print()
-print('Distributions of nb of prods by store and vice versa')
-for x in ['nb_prods_by_store', 'nb_stores_by_prod']:
-  print()
-  print(x)
-  print(dict_df_desc[x].to_string(float_format = '{:,.0f}'.format))
-
-print()
 print('freq_prods: frequency of the most common price')
 print('no_ref: percentage of products in store with no brand ref price (33%...)')
 print('freq_stores: percentage of products in store which follow brand ref price')
-for x in ['freq_prods', 'no_ref', 'freq_stores']:
+
+lsd_su = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']
+for x in ['nb_prods_by_store', 'nb_stores_by_prod', 'freq_prods', 'no_ref', 'freq_stores']:
   print()
   print(x)
-  print(dict_df_desc[x].to_string(float_format = '{:,.2f}'.format))
+  print(dict_df_desc[x].ix[lsd_su].T.to_string(float_format = '{:,.2f}'.format))
 
 #print()
 #print('Check price stats by chain at store level')
 #for x in ['CENTRE E.LECLERC', 'AUCHAN', 'CARREFOUR', 'GEANT CASINO']:
 #  print()
 #  print(dict_df_chain_store_desc[x][0:20].to_string())
+
+# check ITM and LECLERC: freq_stores == 1 !!! which ones?
+
+df_chain_store_su = dict_df_chain_store_desc['SUPER U'].copy()
+df_chain_store_su.sort('price_1', ascending = False, inplace = True)
