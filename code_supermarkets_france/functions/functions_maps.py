@@ -8,6 +8,12 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from mpl_toolkits.basemap import Basemap
 from shapely.geometry import Point, Polygon, MultiPoint, MultiPolygon, shape
+from descartes import PolygonPatch
+from matplotlib.colors import Normalize
+from matplotlib.collections import PatchCollection
+import matplotlib.font_manager as fm
+from pysal.esda.mapclassify import Natural_Breaks as nb
+from matplotlib import colors
 import math
 import urllib2
 import StringIO

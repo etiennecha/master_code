@@ -61,16 +61,6 @@ df_prices.reset_index(drop = False, inplace = True)
 
 df_prices = df_prices[df_prices['nb_obs'] >= 200]
 
-# PRODUCT PRICE STATS
-class PriceDispersion:
-  def cv(self, se_prices):
-    return se_prices.std() / se_prices.mean()
-  def iq_rg(self, se_prices):
-    return se_prices.quantile(0.75) - se_prices.quantile(0.25)
-  def id_rg(self, se_prices):
-    return se_prices.quantile(0.90) - se_prices.quantile(0.10)
-  def minmax_rg(self, se_prices):
-    return se_prices.max() - se_prices.min()
 PD = PriceDispersion()
 
 df_stats = df_prices[ls_prod_cols + ['price']]\
@@ -161,11 +151,20 @@ pd.set_option("display.max_colwidth", 50)
 # df_prod = df_prices[df_prices['product'] == 'RICARD RICARD 45° 1 LITRE'].copy()
 # df_prod.sort('price', ascending = False, inplace = True)
 
+# ############################
+# STATS BY SECTION AND FAMILY
+# ############################
+
+# Describe product (mean) price by section
+df_stats.reset_index(drop = False, inplace = True)
+df_desc = pd.pivot_table(df_stats,
+                         values = 'mean',
+                         index = ['section'],
+                         aggfunc = 'describe').unstack()
+
 ## #############################
 ## GRAPH: DISPERSION BY SECTION
 ## ############################
-#
-#df_stats.reset_index(drop = False, inplace = True)
 #
 #fig, ax = plt.subplots()
 #for family, c_family in [(u'Colas, Boissons gazeuses et aux Fruits', 'g'),
@@ -183,12 +182,3 @@ pd.set_option("display.max_colwidth", 50)
 #          label = family)
 #ax.legend()
 #plt.show()
-
-# ############################
-# STATS BY SECTION AND FAMILY
-# ############################
-
-df_desc = pd.pivot_table(df_stats,
-                         values = 'mean',
-                         index = ['section'],
-                         aggfunc = 'describe') # .unstack()

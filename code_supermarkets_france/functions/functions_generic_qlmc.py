@@ -8,6 +8,43 @@ import math
 import pandas as pd
 import numpy as np
 
+ls_chain_brands = [u'HYPER CHAMPION',
+                   u'CHAMPION',
+                   u'INTERMARCHE HYPER',
+                   u'INTERMARCHE SUPER',
+                   u'INTERMARCHE',
+                   u'AUCHAN',
+                   u'CARREFOUR MARKET',
+                   u'CARREFOUR CITY',
+                   u'CARREFOUR CONTACT',
+                   u'CARREFOUR PLANET',
+                   u'CARREFOUR',
+                   u'CORA',
+                   u'CENTRE E. LECLERC',
+                   u'CENTRE LECLERC',
+                   u'E. LECLERC',
+                   u'LECLERC EXPRESS',
+                   u'LECLERC',
+                   u'GEANT CASINO',
+                   u'GEANT DISCOUNT',
+                   u'GEANT',
+                   u'CASINO',
+                   u'HYPER U',
+                   u'SUPER U',
+                   u'SYSTEME U',
+                   u'U EXPRESS',
+                   u'MARCHE U']
+
+ls_brand_patches = [u'Pepito',
+                    u'Liebig',
+                    u'Babette',
+                    u'Grany',
+                    u'Père Dodu',
+                    u'Lustucru',
+                    u'La Baleine',
+                    u'Ethiquable', 
+                    u'Bn']
+
 def dec_json(chemin):
   with open(chemin, 'r') as fichier:
     return json.loads(fichier.read())
@@ -137,6 +174,39 @@ def get_nom_and_format(libelle):
                      u'']
   return ls_nom_format
 
+def compute_distance(coordinates_A, coordinates_B):
+  d_lat = math.radians(float(coordinates_B[0]) - float(coordinates_A[0]))
+  d_lon = math.radians(float(coordinates_B[1]) - float(coordinates_A[1]))
+  lat_1 = math.radians(float(coordinates_A[0]))
+  lat_2 = math.radians(float(coordinates_B[0]))
+  a = math.sin(d_lat/2.0) * math.sin(d_lat/2.0) + \
+        math.sin(d_lon/2.0) * math.sin(d_lon/2.0) * math.cos(lat_1) * math.cos(lat_2)
+  c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+  distance = 6371 * c
+  return round(distance, 2)
+
+def compute_distance_ar(ar_lat_A, ar_lng_A, ar_lat_B, ar_lng_B):
+  d_lat = np.radians(ar_lat_B - ar_lat_A)
+  d_lng = np.radians(ar_lng_B - ar_lng_A)
+  lat_1 = np.radians(ar_lat_A)
+  lat_2 = np.radians(ar_lat_B)
+  ar_a = np.sin(d_lat/2.0) * np.sin(d_lat/2.0) + \
+           np.sin(d_lng/2.0) * np.sin(d_lng/2.0) * np.cos(lat_1) * np.cos(lat_2)
+  ar_c = 2 * np.arctan2(np.sqrt(ar_a), np.sqrt(1-ar_a))
+  ar_distance = 6371 * ar_c
+  return np.round(ar_distance, 2)
+
+def get_ls_ls_cross_distances(ls_gps):
+  # Size can be lowered by filling only half the matrix
+  ls_ls_cross_distances = [[np.nan for gps in ls_gps] for gps in ls_gps]
+  for i, gps_i in enumerate(ls_gps):
+    for j, gps_j in enumerate(ls_gps[i+1:], start = i+1):
+      if gps_i and gps_j:
+        distance_i_j = compute_distance(gps_i, gps_j)
+        ls_ls_cross_distances[i][j] = distance_i_j
+        ls_ls_cross_distances[j][i] = distance_i_j
+  return ls_ls_cross_distances
+
 def compute_price_dispersion(se_prices):
   price_mean = se_prices.mean()
   price_std = se_prices.std()
@@ -193,72 +263,59 @@ def compare_stores(df_prices, field_id, id_0, id_1):
           tot_sum_0, tot_sum_1,
           np.round(abs_pct_tot_diff, 1), np.round(avg_abs_pct_diff, 1)]
 
-def compute_distance(coordinates_A, coordinates_B):
-  d_lat = math.radians(float(coordinates_B[0]) - float(coordinates_A[0]))
-  d_lon = math.radians(float(coordinates_B[1]) - float(coordinates_A[1]))
-  lat_1 = math.radians(float(coordinates_A[0]))
-  lat_2 = math.radians(float(coordinates_B[0]))
-  a = math.sin(d_lat/2.0) * math.sin(d_lat/2.0) + \
-        math.sin(d_lon/2.0) * math.sin(d_lon/2.0) * math.cos(lat_1) * math.cos(lat_2)
-  c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-  distance = 6371 * c
-  return round(distance, 2)
+class PriceDispersion:
 
-def compute_distance_ar(ar_lat_A, ar_lng_A, ar_lat_B, ar_lng_B):
-  d_lat = np.radians(ar_lat_B - ar_lat_A)
-  d_lng = np.radians(ar_lng_B - ar_lng_A)
-  lat_1 = np.radians(ar_lat_A)
-  lat_2 = np.radians(ar_lat_B)
-  ar_a = np.sin(d_lat/2.0) * np.sin(d_lat/2.0) + \
-           np.sin(d_lng/2.0) * np.sin(d_lng/2.0) * np.cos(lat_1) * np.cos(lat_2)
-  ar_c = 2 * np.arctan2(np.sqrt(ar_a), np.sqrt(1-ar_a))
-  ar_distance = 6371 * ar_c
-  return np.round(ar_distance, 2)
+  def kurtosis(self, se_prices):
+    # pbm with obs... may not be just nb
+    try:
+      return se_prices.kurtosis()
+    except:
+      return np.nan
 
-def get_ls_ls_cross_distances(ls_gps):
-  # Size can be lowered by filling only half the matrix
-  ls_ls_cross_distances = [[np.nan for gps in ls_gps] for gps in ls_gps]
-  for i, gps_i in enumerate(ls_gps):
-    for j, gps_j in enumerate(ls_gps[i+1:], start = i+1):
-      if gps_i and gps_j:
-        distance_i_j = compute_distance(gps_i, gps_j)
-        ls_ls_cross_distances[i][j] = distance_i_j
-        ls_ls_cross_distances[j][i] = distance_i_j
-  return ls_ls_cross_distances
+  def skew(self, se_prices):
+    return se_prices.skew()
 
-ls_chain_brands = [u'HYPER CHAMPION',
-                   u'CHAMPION',
-                   u'INTERMARCHE HYPER',
-                   u'INTERMARCHE SUPER',
-                   u'INTERMARCHE',
-                   u'AUCHAN',
-                   u'CARREFOUR MARKET',
-                   u'CARREFOUR CITY',
-                   u'CARREFOUR CONTACT',
-                   u'CARREFOUR PLANET',
-                   u'CARREFOUR',
-                   u'CORA',
-                   u'CENTRE E. LECLERC',
-                   u'CENTRE LECLERC',
-                   u'E. LECLERC',
-                   u'LECLERC EXPRESS',
-                   u'LECLERC',
-                   u'GEANT CASINO',
-                   u'GEANT DISCOUNT',
-                   u'GEANT',
-                   u'CASINO',
-                   u'HYPER U',
-                   u'SUPER U',
-                   u'SYSTEME U',
-                   u'U EXPRESS',
-                   u'MARCHE U']
+  def cv(self, se_prices):
+    return se_prices.std() / se_prices.mean()
 
-ls_brand_patches = [u'Pepito',
-                    u'Liebig',
-                    u'Babette',
-                    u'Grany',
-                    u'Père Dodu',
-                    u'Lustucru',
-                    u'La Baleine',
-                    u'Ethiquable', 
-                    u'Bn']
+  def gfs(self, se_prices):
+    return se_prices.mean() - se_prices.min()
+  
+  def minmax_rg(self, se_prices):
+    return se_prices.max() - se_prices.min()
+  
+  def iq_rg(self, se_prices):
+    return se_prices.quantile(0.75) - se_prices.quantile(0.25)
+  
+  def id_rg(self, se_prices):
+    return se_prices.quantile(0.90) - se_prices.quantile(0.10)
+
+  def gfs_pct(self, se_prices):
+    return self.gfs(se_prices) / se_prices.mean()
+  
+  def minmax_pct(self, se_prices):
+    return self.minmax_rg(se_prices) / se_prices.mean()
+  
+  def iq_pct(self, se_prices):
+    return self.iq_rg(se_prices) / se_prices.mean()
+
+  def id_pct(self, se_prices):
+    return self.id_rg(se_prices) / se_prices.mean()
+
+  def price_1(self, se_prices):
+    return se_prices.value_counts().index[0]
+  
+  def price_1_fq(self, se_prices):
+    return se_prices.value_counts().iloc[0] / float(len(se_prices))
+  
+  def price_2(self, se_prices):
+    if len(se_prices.value_counts()) > 1:
+      return se_prices.value_counts().index[1]
+    else:
+      return np.nan
+  
+  def price_2_fq(self, se_prices):
+    if len(se_prices.value_counts()) > 1:
+      return se_prices.value_counts().iloc[1] / float(len(se_prices))
+    else:
+      return 0
