@@ -46,16 +46,10 @@ ls_chains = ['AUCHAN',
 path_source = os.path.join(path_data,
                            'data_supermarkets',
                            'data_source',
-                           'data_qlmc_2007-12')
+                           'data_qlmc_2014')
 path_source_pdf = os.path.join(path_source, 'data_pdf')
 path_source_pdftotext = os.path.join(path_source_pdf, 'pdftotext.exe')
-
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2007-12')
-path_built_csv = os.path.join(path_built, 'data_csv')
-
+path_source_csv = os.path.join(path_source, 'data_csv')
 ls_folders = ['201405_by_chain',
               '201409_by_chain']
 
@@ -123,7 +117,7 @@ df_qlmc.rename(columns = {'LSA'     : 'id_lsa',
                           'Date'    : 'date'},
                inplace = True)
 
-df_qlmc.to_csv(os.path.join(path_built_csv,
+df_qlmc.to_csv(os.path.join(path_source_csv,
                             'df_qlmc_201405.csv'),
                encoding = 'utf-8',
                float_format='%.2f',
@@ -209,7 +203,7 @@ df_qlmc_2.rename(columns = {'LSA'     : 'id_lsa',
                             'Groupe'  : 'store_group'},
                  inplace = True)
 
-df_qlmc_2.to_csv(os.path.join(path_built_csv,
+df_qlmc_2.to_csv(os.path.join(path_source_csv,
                               'df_qlmc_201409.csv'),
                  encoding = 'utf-8',
                  float_format='%.2f',

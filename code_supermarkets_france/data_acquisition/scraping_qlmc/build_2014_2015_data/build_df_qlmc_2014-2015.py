@@ -10,21 +10,21 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2007-12')
-
-path_built_csv = os.path.join(path_built,
-                              'data_csv')
+path_source_2014 = os.path.join(path_data,
+                                'data_supermarkets',
+                                'data_source',
+                                'data_qlmc_2014')
+path_source_2014_csv = os.path.join(path_source_2014,
+                                    'data_csv')
 
 path_built_2015 = os.path.join(path_data,
                                'data_supermarkets',
                                'data_built',
                                'data_qlmc_2015')
-
 path_built_2015_csv = os.path.join(path_built_2015,
                                    'data_csv_201503')
+path_built_201415_csv = os.path.join(path_built_2015,
+                                     'data_csv_2014-2015')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -39,22 +39,12 @@ ls_periods = ['201405', '201409']
 dict_dfs = {}
 for period in ls_periods:
   dict_dfs['qlmc_{:s}'.format(period)] =\
-      pd.read_csv(os.path.join(path_built_csv,
+      pd.read_csv(os.path.join(path_source_2014_csv,
                                'df_qlmc_{:s}.csv'.format(period)),
                   dtype = {'ean' : str,
                            'id_lsa' : str}, # to update soon
                   encoding = 'utf-8')
-  
-  dict_dfs['freq_prods_{:s}'.format(period)] =\
-    pd.read_csv(os.path.join(path_built_csv,
-                             'df_chain_product_price_freq_{:s}.csv'.format(period)),
-                encoding = 'utf-8')
-  
-  dict_dfs['freq_stores_{:s}'.format(period)] =\
-      pd.read_csv(os.path.join(path_built_csv,
-                               'df_chain_store_price_freq_{:s}.csv'.format(period)),
-                  encoding = 'utf-8')
-
+ 
 ls_prod_cols = ['ean', 'product']
 ls_store_cols = ['id_lsa', 'store_name']
 
@@ -185,8 +175,9 @@ df_stores_2015 = pd.merge(df_stores_2015_temp,
                           how = 'left')
 
 # Build df_stores_2014
-df_stores_201405 = df_qlmc_201405[['id_lsa', 'store_name', 'store_chain']].drop_duplicates()
-df_stores_201409 = df_qlmc_201409[['id_lsa', 'store_name', 'store_chain']].drop_duplicates()
+ls_store_cols_2014 = ['id_lsa', 'store_name', 'store_chain']
+df_stores_201405 = df_qlmc_201405[ls_store_cols_2014].drop_duplicates()
+df_stores_201409 = df_qlmc_201409[ls_store_cols_2014].drop_duplicates()
 
 df_stores_2014 = pd.concat([df_stores_201405, df_stores_201409])
 df_stores_2014.drop_duplicates('id_lsa', inplace = True, take_last = False)                         
@@ -229,6 +220,21 @@ df_qlmc_all = df_qlmc_all[['id_lsa', 'store_name', 'store_chain',
                            'price_1', 'date_1',
                            'price_2', 'date_2']]
 
+# ######
+# OUTPUT
+# ######
+
+df_qlmc_all.to_csv(os.path.join(path_built_201415_csv,
+                                 'df_qlmc_2014-2015.csv'),
+                    encoding = 'utf-8',
+                    float_format='%.2f',
+                    index = False)
+
+# #########
+# OVERVIEW
+# #########
+
+
 # All periods observed? 670 stores with 158 to 1599 obs
 df_full = df_qlmc_all[(~df_qlmc_all['price_0'].isnull()) &\
                       (~df_qlmc_all['price_1'].isnull()) &\
@@ -250,30 +256,3 @@ df_store = df_full[df_full['id_lsa'] == '460']
 # Can also consider 0 to 2
 df_sub = df_qlmc_all[(~df_qlmc_all['price_0'].isnull()) &\
                      (~df_qlmc_all['price_2'].isnull())]
-
-# ##################
-# DYNA RANK REVERSAL
-# ##################
-
-# todo:
-# - get competitor pairs
-# - subtract price dataframes
-
-ls_df_price_cols = ['ean', 'price_0', 'price_1', 'price_2']
-
-df_price_1 = df_full[df_full['id_lsa'] == '12'][ls_df_price_cols]
-df_price_1.set_index('ean', inplace = True)
-
-df_price_2 = df_full[df_full['id_lsa'] == '460'][ls_df_price_cols]
-df_price_2.set_index('ean', inplace = True)
-
-df_spread = df_price_1 - df_price_2
-# filter nan lines (could as well use first col)
-df_spread = df_spread[df_spread.count(1) == 3]
-df_spread['nb_2_wins'] = df_spread[ls_df_price_cols[1:]]\
-                           .apply(lambda x: (x > 10e-4).sum(), axis = 1)
-df_spread['nb_1_wins'] = df_spread[ls_df_price_cols[1:]]\
-                           .apply(lambda x: (x < -10e-4).sum(), axis = 1)
-
-# Nb products with a change in rank
-len(df_spread[(df_spread['nb_2_wins'] > 0) & (df_spread['nb_1_wins'] > 0)])
