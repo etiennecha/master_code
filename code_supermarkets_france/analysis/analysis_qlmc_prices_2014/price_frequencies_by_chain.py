@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
 from __future__ import print_function
@@ -10,47 +10,50 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_qlmc_2007-12')
+
+path_built_csv = os.path.join(path_built,
+                              'data_csv')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-# #######################
-# LOAD DF QLMC
-# #######################
+# ###########
+# LOAD DATA
+# ###########
 
-# LOAD DF PRICES
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
-                        encoding = 'utf-8')
+ls_periods = ['201405', '201409']
+period = ls_periods[1]
+df_qlmc = pd.read_csv(os.path.join(path_built_csv,
+                                   'df_qlmc_{:s}.csv'.format(period)),
+                      dtype = {'ean' : str,
+                               'id_lsa' : str}, # to update soon
+                      encoding = 'utf-8')
 
 # store chain harmonization per qlmc
 ls_replace_chains = [['HYPER CASINO', 'CASINO'],
                      ['HYPER U', 'SUPER U'],
                      ['U EXPRESS', 'SUPER U'],
-                     ["LES HALLES D'AUCHAN", 'AUCHAN']]
+                     ["LES HALLES D'AUCHAN", 'AUCHAN'],
+                     ['INTERMARCHE SUPER', 'INTERMARCHE'],
+                     ['INTERMARCHE HYPER', 'INTERMARCHE'], # any?
+                     ['MARKET', 'CARREFOUR MARKET'],
+                     ['CENTRE E.LECLERC', 'LECLERC']]
+
 for old_chain, new_chain in ls_replace_chains:
-  df_prices.loc[df_prices['store_chain'] == old_chain,
-                'store_chain'] = new_chain
+  df_qlmc.loc[df_qlmc['store_chain'] == old_chain,
+              'store_chain'] = new_chain
 # does not chge much to include only super-u or hyper-u
 
-# adhoc fixes
-ls_suspicious_prods = [u'VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
-df_prices = df_prices[~df_prices['product'].isin(ls_suspicious_prods)]
-df_prices['product'] =\
-  df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
-
-df_qlmc = df_prices
-
-ls_prod_cols = ['section', 'family', 'product']
+ls_prod_cols = ['ean', 'product']
+ls_store_cols = ['id_lsa', 'store_name']
 
 # Robustness check: 2000 most detained products only
-se_prod_vc = df_prices[ls_prod_cols].groupby(ls_prod_cols).agg(len)
+se_prod_vc = df_qlmc[ls_prod_cols].groupby(ls_prod_cols).agg(len)
 ls_keep_products = [x[-1] for x in list(se_prod_vc[0:3000].index)]
 df_qlmc = df_qlmc[df_qlmc[ls_prod_cols[-1]].isin(ls_keep_products)]
 
@@ -92,8 +95,8 @@ for retail_chain in ls_loop_rcs:
   print('Stats des on ref prices for {:s} :'.format(retail_chain))
   # Build df with product most common prices
   df_sub = df_qlmc[(df_qlmc['store_chain'] == retail_chain)]
-  df_sub_products =  df_sub[['section', 'family', 'product', 'price']]\
-                       .groupby(['section', 'family', 'product'])\
+  df_sub_products =  df_sub[ls_prod_cols + ['price']]\
+                       .groupby(ls_prod_cols)\
                        .agg([len,
                              'mean',
                              PD.kurtosis,
@@ -142,7 +145,7 @@ for retail_chain in ls_loop_rcs:
     
     df_sub = pd.merge(df_sub,
                       df_enough_obs,
-                      on = ['section', 'family', 'product'],
+                      on = ls_prod_cols,
                       how = 'left')
     
     # Build df stores accounting for match with ref prices
@@ -155,8 +158,8 @@ for retail_chain in ls_loop_rcs:
     df_sub.loc[(df_sub['price_1_fq'] <= pct_min),
                'ref_price'] = 'no_ref'
     
-    df_ref = pd.pivot_table(data = df_sub[['store_id', 'ref_price']],
-                            index = 'store_id',
+    df_ref = pd.pivot_table(data = df_sub[ls_store_cols + ['ref_price']],
+                            index = ls_store_cols,
                             columns = 'ref_price',
                             aggfunc = len,
                             fill_value = 0).astype(int)
@@ -234,7 +237,7 @@ for x in ['nb_prods_by_store', 'nb_stores_by_prod', 'no_ref', 'freq_prods', 'fre
 
 # check ITM and LECLERC: freq_stores == 1 !!! which ones?
 
-df_chain_store_su = dict_df_chain_store_desc['SUPER U'].copy()
+df_chain_store_su = dict_df_chain_store_desc['CARREFOUR'].copy()
 df_chain_store_su.sort('price_1', ascending = False, inplace = True)
 
 # ##############################################
@@ -281,6 +284,16 @@ print(df_compa[lsd_compa].describe().to_string())
 print()
 print(df_compa[df_compa['price_1_fq_lec'] >= 0.33][lsd_compa].describe().to_string())
 
+print()
+print(u'Pct draws: {:.2f}'.format(len(df_compa[(df_compa['diff'].abs() <= 10e-4)]) /\
+                                  float(len(df_compa))* 100))
+print(u'Pct LEC wins: {:.2f}'.format(len(df_compa[(df_compa['diff'] > 10e-4)]) /\
+                                  float(len(df_compa))* 100))
+print(u'Pct GC wins: {:.2f}'.format(len(df_compa[(df_compa['diff'] < -10e-4)]) /\
+                                  float(len(df_compa))* 100))
+
+# todo: compare in both periods (and third i.e. 2015 if possible)
+
 # ############################################
 # OUTPUT
 # ############################################
@@ -291,6 +304,8 @@ for chain in dict_df_chain_product_stats.keys():
   df_chain_products['store_chain'] = chain
   ls_df_chain_products.append(df_chain_products)
 df_chain_products = pd.concat(ls_df_chain_products)
+# dunno how to solve cleanly ('index' appears at concat step)
+df_chain_products.drop('index', axis = 1, inplace = True)
 
 ls_df_chain_stores = []
 for chain in dict_df_chain_store_desc.keys():
@@ -300,14 +315,16 @@ for chain in dict_df_chain_store_desc.keys():
 df_chain_stores = pd.concat(ls_df_chain_stores)
 df_chain_stores.reset_index(drop = False, inplace = True)
 
-df_chain_products.to_csv(os.path.join(path_built_csv,
-                                     'df_chain_product_price_freq.csv'),
-                        encoding = 'utf-8',
-                        float_format='%.3f',
-                        index = False)
+df_chain_products.to_csv(\
+  os.path.join(path_built_csv,
+               'df_chain_product_price_freq_{:s}.csv'.format(period)),
+  encoding = 'utf-8',
+  float_format='%.3f',
+  index = False)
 
-df_chain_stores.to_csv(os.path.join(path_built_csv,
-                                     'df_chain_store_price_freq.csv'),
-                        encoding = 'utf-8',
-                        float_format='%.3f',
-                        index = False)
+df_chain_stores.to_csv(\
+  os.path.join(path_built_csv,
+               'df_chain_store_price_freq_{:s}.csv'.format(period)),
+  encoding = 'utf-8',
+  float_format='%.3f',
+  index = False)

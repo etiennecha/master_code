@@ -79,7 +79,7 @@ print(df_comp['dist'].describe())
 
 # Overview of leclercs' competitors
 print()
-print(u'Overview market dist (km) around leclerc stores:')
+print(u'Overview of competition around leclerc stores:')
 df_leclerc_comp = df_comp[['lec_name', 'dist']]\
                     .groupby(['lec_name']).agg([len,
                                                 min,

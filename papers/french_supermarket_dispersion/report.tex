@@ -138,30 +138,6 @@ Despite the fact that French supermarket chains are known not to implement unifo
 
 \begin{table}[H]
 \renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Overview of competition around the 575 Leclerc stores in Qlmc}\label{tab:qlmc_comp}
-\small
-\begin{tabular}{lr|rrrr}
-\toprule
-\toprule
-{}         & Nb          &    \multicolumn{4}{c}{Distance (km) to} \\
-{}         & competitors &    closest & furthest & mean & median \\
-\midrule
-Mean  &   5.0 &   2.4 &  15.9 &   8.8 &     8.5 \\
-Std   &   1.6 &   2.5 &   9.7 &   5.1 &     6.0 \\
-Min   &   1.0 &   0.1 &   0.9 &   0.8 &     0.5 \\
-Q10   &   3.0 &   0.7 &   4.6 &   3.0 &     2.5 \\
-Q25   &   4.0 &   1.1 &   8.4 &   4.8 &     3.7 \\
-Q50   &   5.0 &   1.8 &  15.3 &   7.8 &     6.5 \\
-Q75   &   6.0 &   2.7 &  21.5 &  12.3 &    12.5 \\
-Q90   &   7.0 &   4.7 &  26.3 &  15.7 &    18.0 \\
-Max   &  12.0 &  21.1 &  67.0 &  28.6 &    28.5 \\
-\bottomrule
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\renewcommand{\arraystretch}{0.7}% Tighter
 \caption{Representation of major national chains}\label{tab:qlmc_chain_repr}
 \small
 \begin{tabular}{lrrr}
@@ -184,13 +160,36 @@ SYSTEME U        &           1030 &             420 &            41 \\
 \end{tabular}
 \end{table}
 
+\begin{table}[H]
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Overview of competition around the 575 Leclerc stores in Qlmc}\label{tab:qlmc_comp}
+\small
+\begin{tabular}{lr|rrrr}
+\toprule
+\toprule
+{}         & Nb          &    \multicolumn{4}{c}{Distance (km) to} \\
+{}         & competitors &    closest & furthest & mean & median \\
+\midrule
+Mean  &   5.0 &   2.4 &  15.9 &   8.8 &     8.5 \\
+Std   &   1.6 &   2.5 &   9.7 &   5.1 &     6.0 \\
+Min   &   1.0 &   0.1 &   0.9 &   0.8 &     0.5 \\
+Q10   &   3.0 &   0.7 &   4.6 &   3.0 &     2.5 \\
+Q25   &   4.0 &   1.1 &   8.4 &   4.8 &     3.7 \\
+Q50   &   5.0 &   1.8 &  15.3 &   7.8 &     6.5 \\
+Q75   &   6.0 &   2.7 &  21.5 &  12.3 &    12.5 \\
+Q90   &   7.0 &   4.7 &  26.3 &  15.7 &    18.0 \\
+Max   &  12.0 &  21.1 &  67.0 &  28.6 &    28.5 \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Data from 2007-2012}
 
 \begin{table}[H]
 \renewcommand{\arraystretch}{0.7}% Tighter
 \caption{Overview of stores and products 2007-2012}
 \small
-
 \begin{tabular}{rllrrrr}
 \toprule
 \toprule
@@ -214,6 +213,56 @@ SYSTEME U        &           1030 &             420 &            41 \\
 \end{tabular}
 \end{table}
 
+\newpage
 
+\section{Chain price policies}
+
+\begin{table}[H]
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Distribution of the frequencies of the most common price per product}\label{tab:qlmc_prod_freq_50}
+\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\toprule
+{} &    count &  mean &  std &  min &  25\% &  50\% &  75\% &  max \\
+\midrule
+AUCHAN             &   416 &  0.19 & 0.11 & 0.05 & 0.12 & 0.16 & 0.22 & 0.63 \\
+CARREFOUR          &   319 &  0.29 & 0.17 & 0.07 & 0.17 & 0.23 & 0.36 & 0.87 \\
+CARREFOUR MARKET   &   777 &  0.33 & 0.19 & 0.11 & 0.20 & 0.26 & 0.42 & 1.00 \\
+GEANT CASINO       &   417 &  0.89 & 0.10 & 0.45 & 0.83 & 0.91 & 0.97 & 1.00 \\
+CASINO             &   157 &  0.37 & 0.15 & 0.06 & 0.29 & 0.33 & 0.44 & 0.86 \\
+CORA               &   364 &  0.20 & 0.11 & 0.06 & 0.14 & 0.17 & 0.23 & 0.90 \\
+INTERMARCHE        & 1,326 &  0.25 & 0.19 & 0.05 & 0.13 & 0.18 & 0.29 & 0.97 \\
+LECLERC            & 1,788 &  0.38 & 0.23 & 0.03 & 0.14 & 0.38 & 0.59 & 0.95 \\
+SUPER U            & 1,077 &  0.39 & 0.12 & 0.09 & 0.32 & 0.37 & 0.44 & 0.91 \\
+\bottomrule
+\bottomrule
+\multicolumn{9}{p{0.8\textwidth}}{\footnotesize Reading note: On average, 38\% of all Leclerc stores set the very same price for a given product.}
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Distribution of the frequencies of "standard" prices per store}\label{tab:qlmc_store_freq_50}
+\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\toprule
+{} &    count &  mean &  std &  min &  25\% &  50\% &  75\% &  max \\
+\midrule
+AUCHAN            & 107 &  0.01 & 0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 \\
+CARREFOUR         & 146 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.09 & 0.13 \\
+CARREFOUR MARKET  & 223 &  0.12 & 0.05 & 0.00 & 0.10 & 0.13 & 0.15 & 0.21 \\
+GEANT CASINO      &  91 &  0.80 & 0.23 & 0.06 & 0.70 & 0.94 & 0.96 & 0.98 \\
+CASINO            &  74 &  0.04 & 0.02 & 0.01 & 0.03 & 0.05 & 0.06 & 0.09 \\
+CORA              &  54 &  0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 & 0.02 \\
+INTERMARCHE       & 513 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.10 & 0.17 \\
+LECLERC           & 552 &  0.28 & 0.12 & 0.01 & 0.19 & 0.31 & 0.38 & 0.51 \\
+SUPER U           & 409 &  0.08 & 0.05 & 0.00 & 0.04 & 0.06 & 0.12 & 0.17 \\
+\bottomrule
+\bottomrule
+\multicolumn{9}{p{0.8\textwidth}}{\footnotesize Reading note: A price is considered "standard" if it is shared by 50\% of the chain stores or more. On average, a Leclerc store sells 28\% of its products at a "standard" price.}
+\end{tabular}
+\end{table}
 
 \end{document}

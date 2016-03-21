@@ -44,11 +44,11 @@ df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
                                                'df_qlmc_competitors.csv'),
                                   encoding = 'utf-8')
 
-df_products = df_prices[['section', 'family', 'product']].drop_duplicates()
-
-## Check product unicity
-#print df_products['product'].value_counts()[0:10]
-## one issue detected: treated
+ls_prod_cols = ['section', 'family', 'product']
+df_products = df_prices[ls_prod_cols + ['price']].groupby(ls_prod_cols)\
+                                                 .agg([len, 'mean'])['price']
+df_products.reset_index(drop = False, inplace = True)
+df_products.rename(columns = {'len': 'nb_obs'}, inplace = True)
 
 # ##################
 # STATS DES PRODUCTS
@@ -63,61 +63,73 @@ df_products = df_prices[['section', 'family', 'product']].drop_duplicates()
 #print len(df_prices[df_prices['date'] < '2015-03-01']) / float(len(df_prices))
 ## only 17% records before 2015-03-01
 
-se_prod_vc = df_prices['product'].value_counts()
-df_products.set_index('product', inplace = True)
-df_products['nb_obs'] = se_prod_vc
-df_products.sort('nb_obs', ascending = False, inplace = True)
-
 print()
 print(u'Overview nb obs by product:')
 print(df_products['nb_obs'].describe())
 
-# Weight of each section
+# Check effect of min nb_obs requirement on section / families
+ls_min_nb_obs = [0, 400, 500, 600, 700]
 
 print()
 print(u'Weight of each section dpding on min nb obs:')
-ls_min_nb_obs = [400, 500, 600, 700]
+
 ls_nb_prods = []
-ls_se_section_vc = []
+ls_val_prods = []
+ls_se_section_len = []
+ls_se_section_sum = []
 for min_nb_obs in ls_min_nb_obs:
-  se_section_vc = df_products[df_products['nb_obs'] >= min_nb_obs]\
-                             ['section'].value_counts()
-  ls_nb_prods.append(se_section_vc.sum())
-  se_section_vc = se_section_vc / se_section_vc.sum() * 100
-  ls_se_section_vc.append(se_section_vc)
+  df_sections = df_products[df_products['nb_obs'] >= min_nb_obs]\
+                           [['section', 'mean']].groupby('section')\
+                                                .agg([len, sum])['mean']
+  ls_se_section_len.append(df_sections['len'] / df_sections['len'].sum() * 100)
+  ls_se_section_sum.append(df_sections['sum'] / df_sections['sum'].sum() * 100)
+  ls_nb_prods.append(df_sections['len'].sum())
+  ls_val_prods.append(df_sections['sum'].sum())
 
-df_su_sections = pd.concat(ls_se_section_vc,
-                           axis = 1,
-                           keys = ls_min_nb_obs)
-df_su_sections.ix['Nb produits'] = ls_nb_prods
-print(df_su_sections.to_string())
-
-# Weight of each family (see: groupby to have family and section?)
+dict_df_su_sections = {}
+for title, ls_se_temp, ls_agg in [['Nb prods', ls_se_section_len, ls_nb_prods],
+                                  ['Value prods', ls_se_section_sum, ls_val_prods]]:
+  df_su_sections = pd.concat(ls_se_temp,
+                             axis = 1,
+                             keys = ls_min_nb_obs)
+  df_su_sections.ix[title] = ls_agg
+  dict_df_su_sections[title] = df_su_sections
+  print()
+  print(title)
+  print(df_su_sections.to_string())
 
 print()
 print(u'Weight of each family dpding on min nb obs:')
-ls_min_nb_obs = [400, 500, 600, 700]
-ls_nb_prods = []
-ls_se_family_vc = []
-for min_nb_obs in ls_min_nb_obs:
-  #se_family_vc = df_products[df_products['nb_obs'] >= min_nb_obs]\
-  #                          ['family'].value_counts()
-  se_family_vc = df_products[df_products['nb_obs'] >= min_nb_obs]\
-                            .groupby(['section', 'family']).agg('count')['nb_obs']
-  ls_nb_prods.append(se_family_vc.sum())
-  se_family_vc = se_family_vc / se_family_vc.sum() * 100
-  ls_se_family_vc.append(se_family_vc)
 
-df_su_familys = pd.concat(ls_se_family_vc,
-                           axis = 1,
-                           keys = ls_min_nb_obs)
-## Fix index to keep display
-#df_su_familys.ix['Nb produits'] = ls_nb_prods
-print(df_su_familys.to_string())
+ls_nb_prods = []
+ls_val_prods = []
+ls_se_family_len = []
+ls_se_family_sum = []
+for min_nb_obs in ls_min_nb_obs:
+  df_families = df_products[df_products['nb_obs'] >= min_nb_obs]\
+                           [['section', 'family', 'mean']]\
+                           .groupby(['section', 'family'])\
+                           .agg([len, sum])['mean']
+  ls_se_family_len.append(df_families['len'] / df_families['len'].sum() * 100)
+  ls_se_family_sum.append(df_families['sum'] / df_families['sum'].sum() * 100)
+  ls_nb_prods.append(df_families['len'].sum())
+  ls_val_prods.append(df_families['sum'].sum())
+
+dict_df_su_families = {}
+for title, ls_se_temp, ls_agg in [['Nb prods', ls_se_family_len, ls_nb_prods],
+                                  ['Value prods', ls_se_family_sum, ls_val_prods]]:
+  df_su_families = pd.concat(ls_se_temp,
+                             axis = 1,
+                             keys = ls_min_nb_obs)
+  # df_su_families.ix[title] = ls_agg # breaks multi-index
+  dict_df_su_families[title] = df_su_families
+  print()
+  print(title)
+  print(df_su_families.to_string())
 
 # Overview of products (top 50 in nb obs) by section and family
 
-df_products.reset_index(drop = False, inplace = True)
+df_products.sort('nb_obs', ascending = False, inplace = True)
 df_prod = df_products[['section', 'family', 'product', 'nb_obs']][0:50].copy()
 df_prod.set_index(['section', 'family', 'product'], inplace = True)
 df_prod.sort_index(inplace = True)
