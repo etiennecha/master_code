@@ -39,8 +39,10 @@ df_comp_pairs = pd.read_csv(os.path.join(path_built_201415_csv,
                                      'id_lsa_1' : str},
                             encoding = 'utf-8')
 
+df_comp_pairs = df_comp_pairs[df_comp_pairs['dist'] <= 10]
+
 ls_tup_pers = [('0', '1'), ('1', '2'), ('0', '2')]
-for tup_per in :
+for tup_per in ls_tup_pers:
   df_qlmc['pct_var_{:s}{:s}'.format(*tup_per)] =\
     df_qlmc['price_{:s}'.format(tup_per[1])] /\
       df_qlmc['price_{:s}'.format(tup_per[0])] - 1
@@ -68,14 +70,14 @@ df_02 = df_qlmc[(~df_qlmc['price_0'].isnull()) &\
 # ##################
 
 # Consider 3 periods here (could pick only 2 within the 3)
-ls_per = ['0', '1']
+ls_per = ['0', '2']
 ls_df_price_cols = ['ean'] + ['price_{:s}'.format(per) for per in ls_per]
 
 id_lsa_0, id_lsa_1 = df_comp_pairs[['id_lsa_0', 'id_lsa_1']].iloc[0].values
 
-df_qlmc_temp = df_full
+df_qlmc_temp = df_02
 ls_store_cols = ['id_lsa', 'store_name', 'store_chain']
-df_stores_temp =  df_full[ls_store_cols].drop_duplicates()
+df_stores_temp =  df_qlmc_temp[ls_store_cols].drop_duplicates()
 ls_keep_stores = list(df_stores_temp['id_lsa'].values)
 
 ls_rows_compa = []

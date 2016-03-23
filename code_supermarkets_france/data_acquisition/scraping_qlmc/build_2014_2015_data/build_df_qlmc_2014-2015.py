@@ -116,7 +116,8 @@ df_qlmc_201405 = df_qlmc_201405[~df_qlmc_201405['ean'].isin(ls_ean_todrop)]
 
 # merge left with next record (no need to touch df_prod_2014)
 df_prod_201409 = df_qlmc_201409[ls_prod_cols].drop_duplicates()
-ls_exclude_ean = set(df_prod_201409['ean'].unique()).difference(set(df_prod_2014['ean'].unique()))
+ls_exclude_ean = set(df_prod_201409['ean'].unique())\
+                   .difference(set(df_prod_2014['ean'].unique()))
 df_qlmc_201409 = df_qlmc_201409[~df_qlmc_201409['ean'].isin(ls_exclude_ean)]
 # make sure no ambiguitu (?)
 df_prod_201409 = df_qlmc_201409[ls_prod_cols].drop_duplicates()
@@ -155,11 +156,13 @@ df_stores_2015 = pd.read_csv(os.path.join(path_built_2015_csv,
                              dtype = {'id_lsa' : str},
                              encoding = 'utf-8')
 
-df_stores_pbm = df_stores_2015[(df_stores_2015.duplicated('id_lsa', take_last = True)) |\
-                               (df_stores_2015.duplicated('id_lsa', take_last = False))]
+df_stores_pbm =\
+  df_stores_2015[(df_stores_2015.duplicated('id_lsa', take_last = True)) |\
+                 (df_stores_2015.duplicated('id_lsa', take_last = False))]
 
-df_stores_2015 = df_stores_2015[~((df_stores_2015.duplicated('id_lsa', take_last = True)) |\
-                                  (df_stores_2015.duplicated('id_lsa', take_last = False)))]
+df_stores_2015 =\
+  df_stores_2015[~((df_stores_2015.duplicated('id_lsa', take_last = True)) |\
+                   (df_stores_2015.duplicated('id_lsa', take_last = False)))]
 
 df_qlmc_2015 = pd.merge(df_qlmc_2015,
                         df_stores_2015[['store_id', 'id_lsa']],
@@ -230,10 +233,27 @@ df_qlmc_all.to_csv(os.path.join(path_built_201415_csv,
                     float_format='%.2f',
                     index = False)
 
+df_prod_all.to_csv(os.path.join(path_built_201415_csv,
+                                'df_prod_2014-2015.csv'),
+                   encoding = 'utf-8',
+                   float_format='%.2f',
+                   index = False)
+
+df_qlmc_201405.to_csv(os.path.join(path_built_201415_csv,
+                                   'df_qlmc_201405.csv'),
+                      encoding = 'utf-8',
+                      float_format='%.2f',
+                      index = False)
+
+df_qlmc_201409.to_csv(os.path.join(path_built_201415_csv,
+                                   'df_qlmc_201409.csv'),
+                      encoding = 'utf-8',
+                      float_format='%.2f',
+                      index = False)
+
 # #########
 # OVERVIEW
 # #########
-
 
 # All periods observed? 670 stores with 158 to 1599 obs
 df_full = df_qlmc_all[(~df_qlmc_all['price_0'].isnull()) &\
@@ -256,3 +276,12 @@ df_store = df_full[df_full['id_lsa'] == '460']
 # Can also consider 0 to 2
 df_sub = df_qlmc_all[(~df_qlmc_all['price_0'].isnull()) &\
                      (~df_qlmc_all['price_2'].isnull())]
+
+## Overview data from april-may 2014
+#print(df_qlmc_201405[['store_chain', 'id_lsa']].drop_duplicates()\
+#                                        .groupby('store_chain').agg(len))
+
+## Overview data from septembrer 2014
+## Exact same number as in "groupe" ad campaign
+#print(df_qlmc_201409[['store_chain', 'id_lsa']].drop_duplicates()\
+#                                        .groupby('store_chain').agg(len))
