@@ -65,6 +65,12 @@ df_full = df_qlmc[(~df_qlmc['price_0'].isnull()) &\
 df_02 = df_qlmc[(~df_qlmc['price_0'].isnull()) &\
                 (~df_qlmc['price_2'].isnull())]
 
+# Check indiv price vars for suspicious changes
+# Quite a few pbms to fix... should check price distributions in static
+# print(df_02[df_02['store_chain'] == 'INTERMARCHE']['pct_var_02'].describe())
+# print(df_full[df_full['pct_var_01'] > 1].to_string())
+
+
 # ##################
 # DYNA RANK REVERSAL
 # ##################
@@ -75,7 +81,7 @@ ls_df_price_cols = ['ean'] + ['price_{:s}'.format(per) for per in ls_per]
 
 id_lsa_0, id_lsa_1 = df_comp_pairs[['id_lsa_0', 'id_lsa_1']].iloc[0].values
 
-df_qlmc_temp = df_02
+df_qlmc_temp = df_full
 ls_store_cols = ['id_lsa', 'store_name', 'store_chain']
 df_stores_temp =  df_qlmc_temp[ls_store_cols].drop_duplicates()
 ls_keep_stores = list(df_stores_temp['id_lsa'].values)

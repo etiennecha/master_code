@@ -95,6 +95,8 @@ df_qlmc.loc[(df_qlmc['store'] == 'SUPER U BEAUCOUZE'),
 
 # BUILD DATETIME DATE COLUMN
 print u'\nParse dates'
+df_qlmc.loc[df_qlmc['period'] == 11, 'date'] =\
+  df_qlmc.loc[df_qlmc['period'] == 11, 'date'].str.replace('2011', '2012')
 df_qlmc['date_str'] = df_qlmc['date']
 df_qlmc['date'] = pd.to_datetime(df_qlmc['date'], format = '%d/%m/%Y')
 

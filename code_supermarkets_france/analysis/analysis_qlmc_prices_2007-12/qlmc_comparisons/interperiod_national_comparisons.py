@@ -27,6 +27,7 @@ path_built_csv = os.path.join(path_built,
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
                       encoding = 'utf-8')
+#                       parse_dates = ['date'])
 
 # harmonize store chains according to qlmc
 df_qlmc['store_chain_alt'] = df_qlmc['store_chain']
@@ -52,94 +53,86 @@ for sc_old, sc_new in ls_sc_replace:
   df_qlmc.loc[df_qlmc['store_chain'] == sc_old,
               'store_chain_alt'] = sc_new
 
-# #########################
-# REPRODUCE QLMC COMPARISON
-# #########################
+# Average price by period/chain/product
+ls_prod_cols = ['section', 'family' , 'product'] # product
+ls_col_gb = ['period', 'store_chain_alt'] + ls_prod_cols + ['price']
+df_mcpp = df_qlmc.groupby(ls_col_gb[:-1]).agg([len, np.mean])['price']
+df_mcpp.reset_index(drop = False, inplace = True)
 
-ls_df_res = []
-for i in range(0, 13):
+dict_df_chain_su = {}
+for chain in df_mcpp['store_chain_alt'].unique():
+  df_chain = df_mcpp[(df_mcpp['store_chain_alt'] == chain) &\
+                     (df_mcpp['len'] >= 20)]
   
-  # Restrict to period
+  ls_rows = []
+  # tup_per = (0, 1)
+  ls_tup_per = [(i, i+1) for i in range(0, 12)]
+  for tup_per in ls_tup_per:
+    df_chain_0 = df_chain[df_chain['period'] == tup_per[0]]
+    df_chain_1 = df_chain[df_chain['period'] == tup_per[1]]
+    df_compa = pd.merge(df_chain_0[ls_prod_cols + ['mean']],
+                        df_chain_1[ls_prod_cols + ['mean']],
+                        on = ls_prod_cols,
+                        how = 'inner',
+                        suffixes = ('_t', '_t+1'))
+    nb_prods = len(df_compa)
+    agg_chge = np.nan
+    if nb_prods != 0:
+      agg_chge = ((df_compa['mean_t+1'].sum() / df_compa['mean_t'].sum()) - 1) * 100
+    ls_rows.append((tup_per[0], tup_per[1], nb_prods, agg_chge))
+  
+  df_chain_su = pd.DataFrame(ls_rows,
+                             columns = ['per_t', 'per_t+1', 'nb_obs', 'var'])
+  dict_df_chain_su[chain] = df_chain_su
   print ''
-  print 'Period {:d}'.format(i)
-  df_qlmc_per = df_qlmc[df_qlmc['period'] == i]
-  
-  # Average price by product / chain
-  ls_col_gb = ['store_chain_alt', 'section', 'family', 'product', 'price']
-  df_chain_prod_prices = df_qlmc_per.groupby(ls_col_gb[:-1]).agg([len, np.mean])['price']
-  
-  # Compare two chains
-  ls_some_chains = ['AUCHAN',
-                    'CARREFOUR',
-                    'CHAMPION',
-                    'CORA',
-                    'GEANT',
-                    'INTERMARCHE',
-                    'SYSTEME U',
-                    'LECLERC']
+  print chain
+  print df_chain_su.to_string()
 
-  ls_compare_chains = [['LECLERC', chain] for chain in ls_some_chains]
-  ls_res, ls_res_ind = [], []
-  for chain_a, chain_b in ls_compare_chains:
-    # chain_a, chain_b = 'CENTRE E.LECLERC', 'CARREFOUR'
-    df_chain_a = df_chain_prod_prices.loc[(chain_a),:]
-    df_chain_b = df_chain_prod_prices.loc[(chain_b),:]
-    # print df_test.loc[(slice(None), u'CENTRE E.LECLERC'),:].to_string()
-    
-    df_duel = pd.merge(df_chain_a,
-                       df_chain_b,
-                       left_index = True,
-                       right_index = True,
-                       how = 'inner',
-                       suffixes = (u'_{:s}'.format(chain_a), u'_{:s}'.format(chain_b)))
-    
-    # Nb obs required varies by chain (figure below for october..)
-    # Min 16 for CORA, Max 21 for Carrefour Market, Intermarche and Systeme U
-    # Leclerc: 20, Auchan 19, Carrefour 19, Geant 18
-    
-    df_duel_sub = df_duel[(df_duel['len_{:s}'.format(chain_a)] >= 15) &\
-                          (df_duel['len_{:s}'.format(chain_b)] >= 15)].copy()
-  
-    if df_duel_sub.empty:
-      print u'\nNot enough obs for:', chain_a, chain_b
-    else:
-      df_duel_sub['diff'] = df_duel_sub['mean_{:s}'.format(chain_b)] -\
-                              df_duel_sub['mean_{:s}'.format(chain_a)]
-      
-      df_duel_sub['pct_diff'] = (df_duel_sub['mean_{:s}'.format(chain_b)] /\
-                                  df_duel_sub['mean_{:s}'.format(chain_a)] - 1)*100
-  
-      res = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
-               df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100
-      
-      # Save both nb stores of chain b and res
-      ls_res.append([len(df_qlmc_per[df_qlmc_per['store_chain_alt'] ==\
-                                       chain_b]['store'].unique()), res])
-      ls_res_ind.append(chain_b)
-      
-      #print u'\nReplicated QLMC comparison: {:s} vs {:s}'.format(chain_a, chain_b)
-      #print u'{:.1f}'.format(res)
-  
-      #percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]
-      #print df_duel_sub[['diff', 'pct_diff']].describe(percentiles = percentiles)
-  
-      ## Manipulate or assume consumer is somewhat informed
-      #df_duel_sub.sort('diff', ascending = False, inplace = True)
-      #df_duel_sub = df_duel_sub[len(df_duel_sub)/10:]
-      #res = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
-      #         df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100
-      #print u'After manip against Leclerc: {:.1f}'.format(res)
-  
-  ##print df_duel[0:10].to_string()
-  
-  df_res = pd.DataFrame(ls_res,
-                        index = ls_res_ind,
-                        columns = ['Nb stores (my data)', 'vs. LEC (my data)'])
-  df_res['vs. LEC (my data)'] =\
-    df_res['vs. LEC (my data)'].apply(lambda x: u'{:.1f}%'.format(x))
-  df_res.ix['LECLERC'] = [len(df_qlmc_per[df_qlmc_per['store_chain_alt'] ==\
-                                'LECLERC']['store'].unique()), u'']
-  
-  ls_df_res.append(df_res)
+# Gather in one table
+ls_keys, ls_se_var = [], []
+for chain, df_chain_su in dict_df_chain_su.items():
+  ls_keys.append(chain)
+  ls_se_var.append(df_chain_su['var'])
+df_var_su = pd.concat(ls_se_var, axis = 1, keys = ls_keys)
 
-  print df_res.to_string()
+## Add periods and day delta (if date is parsed)
+#ls_dates = [df_qlmc[df_qlmc['period'] == i]['date'].max() for i in range(0, 13)]
+#ls_tup_dates = [(some_date.strftime('%m/%Y'), ls_dates[i+1].strftime('%m/%Y'))\
+#                   for i, some_date in enumerate(ls_dates[:-1])]
+#ls_delta_dates = [ls_dates[i+1] - some_date\
+#                    for i, some_date in enumerate(ls_dates[:-1])]
+#ls_str_dates = ['-'.join(tup_dates) for tup_dates in ls_tup_dates]
+#df_var_su['period'] = ls_str_dates
+#df_var_su['length'] = ls_delta_dates
+
+# From 05/2007 to 06/2012 (or 05/2011 if using section/family)
+for chain in dict_df_chain_su.keys():
+  y = 1
+  for x in df_var_su[chain].values:
+    y = y * (x + 100)/100
+  y = (y-1) * 100
+  print 'Chge for brand {:s} : {:.2f}'.format(chain, y)
+
+# From 05/2007 to 05/2011
+for chain in dict_df_chain_su.keys():
+  y = 1
+  for x in df_var_su[chain][4:].values:
+    y = y * (x + 100)/100
+  y = (y-1) * 100
+  print 'Chge for brand {:s} : {:.2f}'.format(chain, y)
+
+# Try to merge across periods within same chain? (could pool all chains?)
+chain = 'LECLERC'
+df_chain = df_mcpp[(df_mcpp['store_chain_alt'] == chain)]
+df_ap = df_chain[df_chain['period'] == 0][ls_prod_cols + ['mean']]
+for period in range(1, 10):
+  df_ap = pd.merge(df_ap,
+                   df_chain[df_chain['period'] == period]\
+                           [ls_prod_cols + ['mean']],
+                   on = ls_prod_cols,
+                   how = 'inner',
+                   suffixes = ('', '_{:d}'.format(period)))
+
+df_ap.set_index(ls_prod_cols, inplace = True)
+se_per_sum = df_ap.sum()
+(se_per_sum / se_per_sum.shift(1) - 1) * 100

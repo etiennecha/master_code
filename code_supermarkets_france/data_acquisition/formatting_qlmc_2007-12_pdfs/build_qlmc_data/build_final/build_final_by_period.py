@@ -42,10 +42,10 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores.csv'),
                          encoding='utf-8')
 
-for Period in df_stores['Period'].unique():
-  df_qlmc_per = df_qlmc[df_qlmc['Period'] == Period]
-  df_prices_per = df_prices[df_prices['Period'] == Period]
-  df_stores_per = df_stores[df_stores['Period'] == Period]
+for Period in df_stores['period'].unique():
+  df_qlmc_per = df_qlmc[df_qlmc['period'] == Period]
+  df_prices_per = df_prices[df_prices['period'] == Period]
+  df_stores_per = df_stores[df_stores['period'] == Period]
 
   df_qlmc_per.to_csv(os.path.join(path_built_csv_by_period,
                                   'df_qlmc_{:d}.csv'.format(Period)),
