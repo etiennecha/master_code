@@ -26,8 +26,8 @@ path_built_csv = os.path.join(path_built,
 
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
-                      encoding = 'utf-8')
-#                       parse_dates = ['date'])
+                      encoding = 'utf-8',
+                      parse_dates = ['date'])
 
 # harmonize store chains according to qlmc
 df_qlmc['store_chain_alt'] = df_qlmc['store_chain']
@@ -54,7 +54,7 @@ for sc_old, sc_new in ls_sc_replace:
               'store_chain_alt'] = sc_new
 
 # Average price by period/chain/product
-ls_prod_cols = ['section', 'family' , 'product'] # product
+ls_prod_cols = ['section', 'family' , 'product'] # ['product']
 ls_col_gb = ['period', 'store_chain_alt'] + ls_prod_cols + ['price']
 df_mcpp = df_qlmc.groupby(ls_col_gb[:-1]).agg([len, np.mean])['price']
 df_mcpp.reset_index(drop = False, inplace = True)
@@ -95,17 +95,19 @@ for chain, df_chain_su in dict_df_chain_su.items():
   ls_se_var.append(df_chain_su['var'])
 df_var_su = pd.concat(ls_se_var, axis = 1, keys = ls_keys)
 
-## Add periods and day delta (if date is parsed)
-#ls_dates = [df_qlmc[df_qlmc['period'] == i]['date'].max() for i in range(0, 13)]
-#ls_tup_dates = [(some_date.strftime('%m/%Y'), ls_dates[i+1].strftime('%m/%Y'))\
-#                   for i, some_date in enumerate(ls_dates[:-1])]
-#ls_delta_dates = [ls_dates[i+1] - some_date\
-#                    for i, some_date in enumerate(ls_dates[:-1])]
-#ls_str_dates = ['-'.join(tup_dates) for tup_dates in ls_tup_dates]
-#df_var_su['period'] = ls_str_dates
-#df_var_su['length'] = ls_delta_dates
+# Add periods and day delta (if date is parsed)
+ls_dates = [df_qlmc[df_qlmc['period'] == i]['date'].max() for i in range(0, 13)]
+ls_tup_dates = [(some_date.strftime('%m/%Y'), ls_dates[i+1].strftime('%m/%Y'))\
+                   for i, some_date in enumerate(ls_dates[:-1])]
+ls_delta_dates = [ls_dates[i+1] - some_date\
+                    for i, some_date in enumerate(ls_dates[:-1])]
+ls_str_dates = ['-'.join(tup_dates) for tup_dates in ls_tup_dates]
+df_var_su['period'] = ls_str_dates
+df_var_su['length'] = ls_delta_dates
 
 # From 05/2007 to 06/2012 (or 05/2011 if using section/family)
+print()
+print('Inflation over 05/2007 - 06/2012')
 for chain in dict_df_chain_su.keys():
   y = 1
   for x in df_var_su[chain].values:
@@ -114,6 +116,8 @@ for chain in dict_df_chain_su.keys():
   print 'Chge for brand {:s} : {:.2f}'.format(chain, y)
 
 # From 05/2007 to 05/2011
+print()
+print('Inflation over 05/2007 - 05/2011')
 for chain in dict_df_chain_su.keys():
   y = 1
   for x in df_var_su[chain][4:].values:
