@@ -71,26 +71,7 @@ df_qlmc['dpt'] = df_qlmc['c_insee'].str.slice(stop = 2)
 # PRICE DISTRIBUTION PER CHAIN FOR TOP PRODUCTS
 # #############################################
 
-def nb_obs(se_prices):
-  return len(se_prices)
-
-def price_1(se_prices):
-  return se_prices.value_counts().index[0]
-
-def price_1_freq(se_prices):
-  return se_prices.value_counts().iloc[0] / float(len(se_prices))
-
-def price_2(se_prices):
-  if len(se_prices.value_counts()) > 1:
-    return se_prices.value_counts().index[1]
-  else:
-    return np.nan
-
-def price_2_freq(se_prices):
-  if len(se_prices.value_counts()) > 1:
-    return se_prices.value_counts().iloc[1] / float(len(se_prices))
-  else:
-    return 0
+PD = PriceDispersion()
 
 se_prod = df_qlmc.groupby(['section', 'family', 'product']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
@@ -121,19 +102,30 @@ for per_ind in range(13):
   # Build df with product most common prices
   df_sub_products =  df_sub[['section', 'family', 'product', 'price']]\
                        .groupby(['section', 'family', 'product'])\
-                       .agg([nb_obs,
-                             price_1,
-                             price_1_freq,
-                             price_2,
-                             price_2_freq])['price']
-  
-  df_sub_products['price_12_freq'] =\
-    df_sub_products[['price_1_freq', 'price_2_freq']].sum(axis = 1)
+                       .agg([len,
+                             'mean',
+                             PD.kurtosis,
+                             PD.skew,
+                             PD.price_1,
+                             PD.price_1_fq,
+                             PD.price_2,
+                             PD.price_2_fq])['price']
+  df_sub_products.columns = [col.replace('PD.', '') for col in df_sub_products.columns]
+  df_sub_products.rename(columns = {'len': 'nb_obs'}, inplace = True)
+  df_sub_products['price_12_fq'] =\
+    df_sub_products[['price_1_fq', 'price_2_fq']].sum(axis = 1)
+  # kurtosis and skew: div by 0 (only one price)
+  # fix (a priori highly degenerate hence not normal)
+  df_sub_products.loc[df_sub_products['kurtosis'].abs() >= 1000,
+                      'kurtosis'] = np.nan
+  df_sub_products.loc[df_sub_products['skew'].abs() >= 1000,
+                      'skew'] = np.nan
+  df_sub_products.reset_index(drop = False, inplace = True)
   
   # Keep only products observed at enough stores
   df_enough_obs = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min)]
   df_ref_price = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min) &\
-                                 (df_sub_products['price_1_freq'] >= pct_min)]
+                                 (df_sub_products['price_1_fq'] >= pct_min)]
 
   if len(df_enough_obs) > 0:
     
@@ -149,35 +141,20 @@ for per_ind in range(13):
     print u'Pct prod w/ >= 20 obs and ref price (0.33): {:.2f}'.format(\
             nb_obs_min, len(df_ref_price) / float(len(df_enough_obs)))
     
-    df_enough_obs.reset_index(drop = False, inplace = True)
-    
     df_sub = pd.merge(df_sub,
                       df_enough_obs,
                       on = ['section', 'family', 'product'],
                       how = 'left')
     
     # Build df stores accounting for match with ref prices
-    
-    ## With dummy
-    #df_sub['ref_price_dum'] = 0
-    #df_sub.loc[df_sub['price'] == df_sub['price_1'],
-    #           'ref_price_dum'] = 1
-    ## Pbm Store can be slightly diff from id_lsa but...
-    #df_ref = df_sub[['store', 'ref_price_dum']]\
-    #           .groupby('store').agg([np.size,
-    #                                    sum])
-    #print df_ref[0:20].to_string()
-    
     df_sub['ref_price'] = 'diff'
     df_sub.loc[df_sub['price'] == df_sub['price_1'],
                'ref_price'] = 'price_1'
     df_sub.loc[(df_sub['price'] != df_sub['price_1']) &\
                (df_sub['price'] == df_sub['price_2']),
                'ref_price'] = 'price_2'
-    df_sub.loc[(df_sub['price_1_freq'] <= pct_min),
+    df_sub.loc[(df_sub['price_1_fq'] <= pct_min),
                'ref_price'] = 'no_ref'
-    #df_sub.loc[df_sub['nb_obs'] < nb_obs_min,
-    #           'ref_price'] = 'insuff'
     
     df_ref = pd.pivot_table(data = df_sub[['store', 'ref_price']],
                             index = 'store',

@@ -138,8 +138,6 @@ for retail_chain in ls_loop_rcs:
             len(df_ref_price), 
             len(df_ref_price) / float(len(df_enough_obs)) * 100))
     
-    # df_enough_obs.reset_index(drop = False, inplace = True)
-    
     df_sub = pd.merge(df_sub,
                       df_enough_obs,
                       on = ['section', 'family', 'product'],

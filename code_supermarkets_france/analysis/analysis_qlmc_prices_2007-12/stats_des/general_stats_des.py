@@ -27,9 +27,7 @@ df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
                       parse_dates = ['date'],
                       encoding = 'utf-8')
-
 # date parsing slow? specify format?
-
 #print u'\nParse dates'
 #df_qlmc['date_str'] = df_qlmc['date']
 #df_qlmc['date'] = pd.to_datetime(df_qlmc['date'], format = '%d/%m/%Y')
@@ -38,17 +36,13 @@ df_qlmc = pd.read_csv(os.path.join(path_built_csv,
 # STATS DES: PRELIM
 # ##################
 
-ls_unique_prod_cols = ['section',
-                       'family',
-                       'product']
-
-ls_unique_store_cols = ['store_chain',
-                        'store']
+ls_prod_cols = ['section', 'family', 'product']
+ls_store_cols = ['store_chain', 'store']
 
 # PRODUCT DEPARTMENTS
 
 print u'\nproduct departments by period:'
-df_prod = df_qlmc[['period'] + ls_unique_prod_cols].drop_duplicates()
+df_prod = df_qlmc[['period'] + ls__prod_cols].drop_duplicates()
 df_rayons = pd.pivot_table(data = df_prod[['period', 'section', 'product']],
                            index = 'section',
                            columns = 'period',
@@ -71,7 +65,7 @@ print df_familles.to_string()
 # STORE CHAINS (ORIGINAL)
 
 print u'\nstore chains (qlmc classification) by period:'
-df_store = df_qlmc[['period'] + ls_unique_store_cols].drop_duplicates()
+df_store = df_qlmc[['period'] + ls_store_cols].drop_duplicates()
 df_chains = pd.pivot_table(data = df_store[['period', 'store_chain', 'store']],
                            index = 'store_chain',
                            columns = 'period',
@@ -79,23 +73,11 @@ df_chains = pd.pivot_table(data = df_store[['period', 'store_chain', 'store']],
                            fill_value = 0).astype(int)['store']
 print df_chains.to_string()
 
-# Obs:
-# AUCHAN: ok
-
-# CARREFOUR: ok
+# Remarks on chains
 # CHAMPION stops after 5 (normal..)
 # CARREFOUR MARKET starts at 4
-
-# LECLERC: need to standardize to "LECLERC"
-# "CENTRE E. LECLERC", "CENTRE LECLERC", "E. LECLERC', "E.LECLERC"
-# maybe also 'LECLERC EXPRESS" (very few)
-
-# CASINO:
-# need to rename "GEANT" to "GEANT CASINO"
-
-# U:
-# can rename "SYSTEME U" to "SUPER U"
-# (but may include some "HYPER U" which are then distinguished
+# Rename "SYSTEME U" to "SUPER U"
+# (but may include some "HYPER U" which are distinguished later)
 
 # Fix store_chain for prelim stats des
 ls_sc_drop = ['CARREFOUR CITY',
@@ -141,25 +123,25 @@ print df_su_prod_per.to_string()
 
 # todo: check those w/ few obs if fix them when possible
 
-## NB OBS BY PRODUCT AND CHAIN
-#
-#print u'\nproduct nb of obs by period for each chain'
-#df_prod_chain_per = pd.pivot_table(data = df_qlmc[['period',
-#                                                   'store_chain',
-#                                                   'section',
-#                                                   'product']],
-#                                   index = ['store_chain', 'section', 'product'],
-#                                   columns = 'period',
-#                                   aggfunc = len,
-#                                   fill_value = 0).astype(int)
-#for chain in df_qlmc['store_chain'].unique():
-#  ls_se_chain_pp = []
-#  for i in range(13):
-#    df_temp_chain_prod = df_prod_chain_per.loc[chain]
-#    ls_se_chain_pp.append(df_temp_chain_prod[df_temp_chain_prod[i] != 0][i].describe())
-#  df_su_chain_prod_per = pd.concat(ls_se_chain_pp, axis= 1, keys = range(13))
-#  print u'\n', chain
-#  print df_su_chain_prod_per.to_string()
+# NB OBS BY PRODUCT AND CHAIN
+
+print u'\nproduct nb of obs by period for each chain'
+df_prod_chain_per = pd.pivot_table(data = df_qlmc[['period',
+                                                   'store_chain',
+                                                   'section',
+                                                   'product']],
+                                   index = ['store_chain', 'section', 'product'],
+                                   columns = 'period',
+                                   aggfunc = len,
+                                   fill_value = 0).astype(int)
+for chain in df_qlmc['store_chain'].unique():
+  ls_se_chain_pp = []
+  for i in range(13):
+    df_temp_chain_prod = df_prod_chain_per.loc[chain]
+    ls_se_chain_pp.append(df_temp_chain_prod[df_temp_chain_prod[i] != 0][i].describe())
+  df_su_chain_prod_per = pd.concat(ls_se_chain_pp, axis= 1, keys = range(13))
+  print u'\n', chain
+  print df_su_chain_prod_per.to_string()
 
 # #################
 # STATS DES: PRICES
