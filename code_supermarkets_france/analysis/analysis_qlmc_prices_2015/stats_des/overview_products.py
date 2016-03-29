@@ -12,12 +12,6 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 
-path_qlmc_scraped = os.path.join(path_data,
-                                 'data_supermarkets',
-                                 'data_qlmc_2015',
-                                 'data_source',
-                                 'data_scraped_201503')
-
 path_built_csv = os.path.join(path_data,
                               'data_supermarkets',
                               'data_built',
@@ -139,6 +133,7 @@ df_section_families.rename(columns = {'index' : 'section',
                            inplace = True)
 
 pd.set_option("display.max_colwidth", 10000)
+print()
 print(df_section_families.to_string(index = False))
 pd.set_option("display.max_colwidth", 50)
 

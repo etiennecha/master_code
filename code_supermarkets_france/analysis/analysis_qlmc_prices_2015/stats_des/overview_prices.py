@@ -56,10 +56,12 @@ df_prices['product'] =\
 
 PD = PriceDispersion()
 
+ls_prod_cols = ['section', 'family', 'product']
+
 # Product price distributions
 df_desc = pd.pivot_table(df_prices,
                          values = 'price',
-                         index = ['section', 'family', 'product'],
+                         index = ls_prod_cols,
                          aggfunc = 'describe').unstack()
 df_desc['cv'] = df_desc['std'] / df_desc['mean']
 df_desc['iq_rg'] = df_desc['75%'] - df_desc['25%']
@@ -68,13 +70,13 @@ df_desc.drop(['25%', '75%'], axis = 1, inplace = True)
 df_desc['count'] = df_desc['count'].astype(int)
 
 # Most common prices (and kurtosis / skew)
-df_freq = df_prices[['section', 'family', 'product', 'price']]\
-                  .groupby(['section', 'family', 'product']).agg([PD.kurtosis,
-                                                                  PD.skew,
-                                                                  PD.price_1,
-                                                                  PD.price_1_fq,
-                                                                  PD.price_2,
-                                                                  PD.price_2_fq])['price']
+df_freq = df_prices[ls_prod_cols + ['price']]\
+                  .groupby(ls_prod_cols).agg([PD.kurtosis,
+                                              PD.skew,
+                                              PD.price_1,
+                                              PD.price_1_fq,
+                                              PD.price_2,
+                                              PD.price_2_fq])['price']
 df_freq.columns = [col.replace('PD.', '') for col in df_freq.columns]
 df_freq['price_12_fq'] = df_freq[['price_1_fq', 'price_2_fq']].sum(axis = 1)
 
@@ -91,9 +93,11 @@ df_overview = df_overview[df_overview['count'] >= 200]
 # STATS DES
 ##########################
 
+print()
 print('Stats des national product price distributions:')
 print(df_overview.describe().to_string())
 
+print()
 print('Overview national product price distributions:')
 print(df_overview[0:20].to_string())
 
@@ -118,8 +122,10 @@ df_overview['dtb'] = 0
 for brand in ls_top_brands:
   df_overview.loc[df_overview['product'].str.contains(brand, case = False), 'dtb'] = 1
 
+print()
 print(smf.ols('cv ~ C(section) + mean + dtp', data = df_overview).fit().summary())
 
+print()
 print(smf.ols('price_1_fq ~ C(section) + mean + dtp', data = df_overview).fit().summary())
 
 print()

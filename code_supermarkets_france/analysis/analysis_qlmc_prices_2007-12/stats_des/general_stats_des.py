@@ -1,6 +1,7 @@
-﻿#!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+﻿#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from functions_generic_qlmc import *
@@ -19,18 +20,14 @@ pd.set_option('float_format', '{:4,.2f}'.format)
 format_str = lambda x: u'{:}'.format(x[:20])
 
 # #######################
-# LOAD DF QLMC
+# LOAD DATA
 # #######################
 
-print u'Loading df_qlmc'
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
                       parse_dates = ['date'],
+                      dayfirst = True,
                       encoding = 'utf-8')
-# date parsing slow? specify format?
-#print u'\nParse dates'
-#df_qlmc['date_str'] = df_qlmc['date']
-#df_qlmc['date'] = pd.to_datetime(df_qlmc['date'], format = '%d/%m/%Y')
 
 # ##################
 # STATS DES: PRELIM
@@ -41,37 +38,39 @@ ls_store_cols = ['store_chain', 'store']
 
 # PRODUCT DEPARTMENTS
 
-print u'\nproduct departments by period:'
-df_prod = df_qlmc[['period'] + ls__prod_cols].drop_duplicates()
+print(u'Product departments by period:')
+df_prod = df_qlmc[['period'] + ls_prod_cols].drop_duplicates()
 df_rayons = pd.pivot_table(data = df_prod[['period', 'section', 'product']],
                            index = 'section',
                            columns = 'period',
                            aggfunc = len,
                            fill_value = 0).astype(int)['product']
-print df_rayons.to_string()
-# Obs: discontinuity after period 9
+print(df_rayons.to_string())
+# Discontinuity after period 9
 
 # PRODUCT FAMILIES
 
-print u'\nproduct families by period:'
-df_familles = pd.pivot_table(data = df_prod[['period', 'section', 'product']],
-                             index = 'section',
-                             columns = 'period',
-                             aggfunc = len,
-                             fill_value = 0).astype(int)['product']
-print df_familles.to_string()
+print()
+print('Product families by period:')
+df_family = pd.pivot_table(data = df_prod[['period', 'family', 'product']],
+                           index = 'family',
+                           columns = 'period',
+                           aggfunc = len,
+                           fill_value = 0).astype(int)['product']
+print(df_family.to_string())
 # Obs: small discontinuity after period 6 and larger after period 9
 
-# STORE CHAINS (ORIGINAL)
+# STORE CHAINS (from QLMC)
 
-print u'\nstore chains (qlmc classification) by period:'
+print()
+print(u'Store chains (qlmc classification) by period:')
 df_store = df_qlmc[['period'] + ls_store_cols].drop_duplicates()
 df_chains = pd.pivot_table(data = df_store[['period', 'store_chain', 'store']],
                            index = 'store_chain',
                            columns = 'period',
                            aggfunc = len,
                            fill_value = 0).astype(int)['store']
-print df_chains.to_string()
+print(df_chains.to_string())
 
 # Remarks on chains
 # CHAMPION stops after 5 (normal..)
@@ -107,7 +106,8 @@ for sc_old, sc_new in ls_sc_replace:
 
 # NB OBS BY PRODUCT
 
-print u'\nproduct nb of obs by period'
+print()
+print(u'Product nb of obs by period')
 df_prod_per = pd.pivot_table(data = df_qlmc[['period', 'section', 'product']],
                              index = ['section', 'product'],
                              columns = 'period',
@@ -119,13 +119,15 @@ ls_se_pp = []
 for i in range(13):
   ls_se_pp.append(df_prod_per[df_prod_per[i] != 0][i].describe())
 df_su_prod_per = pd.concat(ls_se_pp, axis= 1, keys = range(13))
-print df_su_prod_per.to_string()
+print()
+print(df_su_prod_per.to_string())
 
 # todo: check those w/ few obs if fix them when possible
 
 # NB OBS BY PRODUCT AND CHAIN
 
-print u'\nproduct nb of obs by period for each chain'
+print()
+print(u'Product nb of obs by period for each chain')
 df_prod_chain_per = pd.pivot_table(data = df_qlmc[['period',
                                                    'store_chain',
                                                    'section',
@@ -140,20 +142,6 @@ for chain in df_qlmc['store_chain'].unique():
     df_temp_chain_prod = df_prod_chain_per.loc[chain]
     ls_se_chain_pp.append(df_temp_chain_prod[df_temp_chain_prod[i] != 0][i].describe())
   df_su_chain_prod_per = pd.concat(ls_se_chain_pp, axis= 1, keys = range(13))
-  print u'\n', chain
-  print df_su_chain_prod_per.to_string()
-
-# #################
-# STATS DES: PRICES
-# #################
-
-## potential issue outlier detection
-## example: boxplot
-#import matplotlib.pyplot as plt
-##str_some_prod = u'Philips - Cafetière filtre Cucina lilas 1000W 1.2L (15 tasses) - X1'
-#str_some_prod = u'Canard-Duchene - Champagne brut 12 degrés - 75cl'
-#df_some_prod = df_qlmc[(df_qlmc['period'] == 0) &\
-#                       (df_qlmc['product'] == str_some_prod)]
-#df_some_prod['Price'].plot(kind = 'box')
-## pbm... quite far away and other prices quite concentrated
-#plt.show()
+  print()
+  print(chain)
+  print(df_su_chain_prod_per.to_string())
