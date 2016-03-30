@@ -63,7 +63,7 @@ PD = PriceDispersion()
 nb_obs_min = 40 # Product must be observed at X stores at least
 pct_min = 0.33 # Ref price is share by X% of stores only (else no ref)
 
-ls_loop_rcs = ['AUCHAN',
+ls_loop_scs = ['AUCHAN',
                'CARREFOUR',
                'CARREFOUR MARKET',
                'GEANT CASINO',
@@ -83,15 +83,12 @@ dict_ls_se_desc = {'nb_stores_by_prod' : [],
 dict_df_chain_product_stats = {}
 dict_df_chain_store_desc = {}
 
-for retail_chain in ls_loop_rcs:
+for store_chain in ls_loop_scs:
   print()
   print(u'-'*60)
-  print(retail_chain)
-
-  print()
-  print('Stats des on ref prices for {:s} :'.format(retail_chain))
+  print(store_chain)
   # Build df with product most common prices
-  df_sub = df_qlmc[(df_qlmc['store_chain'] == retail_chain)]
+  df_sub = df_qlmc[(df_qlmc['store_chain'] == store_chain)]
   df_sub_products =  df_sub[['section', 'family', 'product', 'price']]\
                        .groupby(['section', 'family', 'product'])\
                        .agg([len,
@@ -106,29 +103,31 @@ for retail_chain in ls_loop_rcs:
   df_sub_products.rename(columns = {'len': 'nb_obs'}, inplace = True)
   df_sub_products['price_12_fq'] =\
     df_sub_products[['price_1_fq', 'price_2_fq']].sum(axis = 1)
-  # kurtosis and skew: div by 0 (only one price)
+  # Pbm with kurtosis and skew: div by 0 (only one price)
   # fix (a priori highly degenerate hence not normal)
   df_sub_products.loc[df_sub_products['kurtosis'].abs() >= 1000,
                       'kurtosis'] = np.nan
   df_sub_products.loc[df_sub_products['skew'].abs() >= 1000,
                       'skew'] = np.nan
   df_sub_products.reset_index(drop = False, inplace = True)
-  
   # Keep only products observed at enough stores
   df_enough_obs = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min)]
   df_ref_price = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min) &\
                                  (df_sub_products['price_1_fq'] >= pct_min)]
-  dict_df_chain_product_stats[retail_chain] = df_enough_obs
+  # Save chain product stats
+  dict_df_chain_product_stats[store_chain] = df_enough_obs
   
+  # Define ref prices and get stats from store viewpoint
   if len(df_enough_obs) >= 100:
-    
+    print()
     print(u'Overview at product level')
     print(df_enough_obs.describe().to_string())
     
     df_enough_obs_desc = df_enough_obs.describe()
     dict_ls_se_desc['nb_stores_by_prod'].append(df_enough_obs_desc['nb_obs'])
     dict_ls_se_desc['freq_prods'].append(df_enough_obs_desc['price_1_fq'])
-
+    
+    print()
     print(u'Nb prod w/ >= {:d} obs: {:d}'.format(\
             nb_obs_min,
             len(df_enough_obs)))
@@ -140,7 +139,7 @@ for retail_chain in ls_loop_rcs:
     
     df_sub = pd.merge(df_sub,
                       df_enough_obs,
-                      on = ['section', 'family', 'product'],
+                      on = ls_prod_cols,
                       how = 'left')
     
     # Build df stores accounting for match with ref prices
@@ -182,7 +181,7 @@ for retail_chain in ls_loop_rcs:
       
       # also save store stats for each chain
       df_ref_pct.sort('price_1', ascending = False, inplace = True)
-      dict_df_chain_store_desc[retail_chain] = df_ref_pct
+      dict_df_chain_store_desc[store_chain] = df_ref_pct
 
     except:
       print()
@@ -194,7 +193,7 @@ for retail_chain in ls_loop_rcs:
                 'nb_prods_by_store', 'no_ref', 'freq_stores']:
       dict_ls_se_desc[col].append(None)
 
-dict_df_desc = {k: pd.concat(v, axis = 1, keys = ls_loop_rcs)\
+dict_df_desc = {k: pd.concat(v, axis = 1, keys = ls_loop_scs)\
                    for k, v in dict_ls_se_desc.items()}
 
 dict_ens_alt_replace = {'CENTRE E.LECLERC' : 'LECLERC',
