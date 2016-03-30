@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from functions_generic_qlmc import *
@@ -17,55 +18,42 @@ path_built = os.path.join(path_data,
 path_built_csv = os.path.join(path_built,
                               'data_csv')
 
-path_built_lsa_csv = os.path.join(path_data,
-                                  'data_supermarkets',
-                                  'data_built',
-                                  'data_lsa',
-                                  'data_csv')
-
 pd.set_option('float_format', '{:,.2f}'.format)
 
 # #######################
-# LOAD DF QLMC
+# LOAD DATA
 # #######################
 
 # LOAD DF QLMC
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
-                      dtype = {'c_insee' : str},
+                      parse_dates = ['date'],
+                      dayfirst = True,
                       encoding = 'utf-8')
-# date parsing slow... better if specified format?
 
-# LOAD DF LSA
-df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                  'df_lsa_for_qlmc.csv'),
-                     dtype = {u'c_insee' : str,
-                              u'c_insee_ardt' : str,
-                              u'c_postal' : str,
-                              u'siren' : str,
-                              u'nic' : str,
-                              u'siret' : str},
-                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
-                                    u'date_chg_enseigne', u'date_chg_surface'],
-                     encoding = 'utf-8')
+# Fix Store_Chain for prelim stats des
+ls_sc_drop = ['CARREFOUR CITY',
+              'CARREFOUR CONTACT',
+              'CARREFOUR PLANET',
+              'GEANT DISCOUNT',
+              'HYPER CHAMPION',
+              'INTERMARCHE HYPER',
+              'LECLERC EXPRESS',
+              'MARCHE U',
+              'U EXPRESS']
 
-# drop null id_lsa else gets too big
-# todo: take Period into account (chges of chains)
-df_qlmc = df_qlmc[~df_qlmc['id_lsa'].isnull()]
-df_qlmc = pd.merge(df_qlmc,
-                   df_lsa[['id_lsa', 'enseigne_alt', 'groupe', 'surface']],
-                   left_on = 'id_lsa',
-                   right_on = 'id_lsa',
-                   how = 'left')
-# high memory usage..
+df_qlmc = df_qlmc[~df_qlmc['store_chain'].isin(ls_sc_drop)]
 
-# Avoid error msg on condition number
-df_qlmc['surface'] = df_qlmc['surface'].apply(lambda x: x/1000.0)
-# df_qlmc_prod['ac_hhi'] = df_qlmc_prod['ac_hhi'] * 10000
-# Try with log of price (semi elasticity)
-df_qlmc['ln_price'] = np.log(df_qlmc['price'])
-# Control for dpt (region?)
-df_qlmc['dpt'] = df_qlmc['c_insee'].str.slice(stop = 2)
+ls_sc_replace = [('CENTRE E. LECLERC', 'LECLERC'),
+                 ('CENTRE LECLERC', 'LECLERC'),
+                 ('E. LECLERC', 'LECLERC'),
+                 ('E.LECLERC', 'LECLERC'),
+                 ('SYSTEME U', 'SUPER U'),
+                 ('GEANT', 'GEANT CASINO'),
+                 ('CHAMPION', 'CARREFOUR MARKET')]
+for sc_old, sc_new in ls_sc_replace:
+  df_qlmc.loc[df_qlmc['store_chain'] == sc_old,
+              'store_chain'] = sc_new
 
 # #############################################
 # PRICE DISTRIBUTION PER CHAIN FOR TOP PRODUCTS
@@ -76,19 +64,19 @@ PD = PriceDispersion()
 se_prod = df_qlmc.groupby(['section', 'family', 'product']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
 
-# retail_chain = 'CARREFOUR'
-retail_chain = 'GEANT CASINO' # 'CENTRE E.LECLERC'
-nb_obs_min = 30 # Product must be observed at X stores at least
+store_chain = 'CARREFOUR' # 'CENTRE E.LECLERC'
+nb_obs_min = 20 # Product must be observed at X stores at least
 pct_min = 0.33
 
-print '\nStats des on ref prices for {:s} :'.format(retail_chain)
+print('Stats des on ref prices for {:s} :'.format(store_chain))
 
 for per_ind in range(13):
-  print u'\n' + '-'*80
-  print u'Period {:d}'.format(per_ind)
+  print()
+  print(u'-'*80)
+  print(u'Period {:d}'.format(per_ind))
   # How close stores are to reference price
   df_sub = df_qlmc[(df_qlmc['period'] == per_ind) &\
-                   (df_qlmc['enseigne_alt'] == retail_chain)]
+                   (df_qlmc['store_chain'] == store_chain)]
   # All brands together: few prods with ref price (restrict store size?)
   #df_sub = df_qlmc[(df_qlmc['period'] == per_ind)]
 
@@ -128,18 +116,19 @@ for per_ind in range(13):
                                  (df_sub_products['price_1_fq'] >= pct_min)]
 
   if len(df_enough_obs) > 0:
+   
+    print()
+    print(u'Overview at product level')
+    print(df_enough_obs.describe().to_string())
     
-    print u'\nOverview at product level'
-    print df_enough_obs.describe()
+    print(u'Nb prod w/ >= {:d} obs: {:d}'.format(\
+            nb_obs_min, len(df_enough_obs)))
     
-    print u'Nb prod w/ >= {:d} obs: {:d}'.format(\
-            nb_obs_min, len(df_enough_obs))
-    
-    print u'Nb prod w/ >= {:d} obs and ref price (0.33): {:d}'.format(\
-            nb_obs_min, len(df_ref_price))
+    print(u'Nb prod w/ >= {:d} obs and ref price (0.33): {:d}'.format(\
+            nb_obs_min, len(df_ref_price)))
                 
-    print u'Pct prod w/ >= 20 obs and ref price (0.33): {:.2f}'.format(\
-            nb_obs_min, len(df_ref_price) / float(len(df_enough_obs)))
+    print(u'Pct prod w/ >= 20 obs and ref price (0.33): {:.2f}'.format(\
+            nb_obs_min, len(df_ref_price) / float(len(df_enough_obs))))
     
     df_sub = pd.merge(df_sub,
                       df_enough_obs,
@@ -175,15 +164,16 @@ for per_ind in range(13):
       
       #print u'\nOverview ref prices:'
       #print df_ref.to_string()
-      
-      print u'\nOverview at store level:'
-      print df_ref_pct[['nb_tot_obs', # 'insuff',
+     
+      print()
+      print(u'Overview at store level:')
+      print(df_ref_pct[['nb_tot_obs', # 'insuff',
                         'nb_obs',
                         'no_ref',
                         'diff',
                         'price_1',
-                        'price_2']].describe()
+                        'price_2']].describe().to_string())
     except:
-      print u'\nNot enough data to display store ref prices'
+      print(u'Not enough data to display store ref prices')
 
 # print df_qlmc['Enseigne_alt'].value_counts()
