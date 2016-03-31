@@ -37,50 +37,51 @@ pd.set_option('float_format', '{:,.3f}'.format)
 
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
+                      dtype = {'id_lsa' : str},
                       parse_dates = ['date'],
                       encoding = 'utf-8')
 
 # RESTRICT TO ONE PERIOD
 
 for per in range(7,8):
-  print 'Period', per
-  df_qlmc_per = df_qlmc[df_qlmc['Period'] == per]
+  print 'period', per
+  df_qlmc_per = df_qlmc[df_qlmc['period'] == per]
   
   # #########################
   # FILTER STORES: ENOUGH OBS
   # #########################
 
-  ls_stores = df_qlmc_per['Store'].unique()
+  ls_stores = df_qlmc_per['store'].unique()
   set_keep_stores = set(ls_stores)
   # Want stores which have at least 10 products in each 4 Families below
-  df_store_families = df_qlmc_per[['Store', 'Family']].pivot_table(index = 'Store',
-                                                                   columns = 'Family',
+  df_store_families = df_qlmc_per[['store', 'section']].pivot_table(index = 'store',
+                                                                   columns = 'section',
                                                                    aggfunc=len,
                                                                    fill_value=0)
   ls_required_Families = [u'Boissons',
                           u'Epicerie salée',
                           u'Epicerie sucrée',
                           u'Produits frais']
-  for Family in ls_required_Families:
-    df_store_families = df_store_families[df_store_families[Family] >= 10]
+  for section in ls_required_Families:
+    df_store_families = df_store_families[df_store_families[section] >= 10]
   ls_keep_stores = list(df_store_families.index.unique())
   print u'Nb stores kept:', len(ls_keep_stores)
-  df_qlmc_per = df_qlmc_per[df_qlmc_per['Store'].isin(ls_keep_stores)]
+  df_qlmc_per = df_qlmc_per[df_qlmc_per['store'].isin(ls_keep_stores)]
   
   # OLS WITH STORE AND PRODUCT FE
   pd_as_dicts = [dict(r.iteritems())\
-                   for _, r in df_qlmc_per[['Store', 'Product']].iterrows()]
-  pd_as_dicts_2 = [dict_temp if dict_temp['Product'] != u"3D'S - Bacon extrud\xe9s - 85g"\
-                   else {'Store': dict_temp['Store']} for dict_temp in pd_as_dicts]
+                   for _, r in df_qlmc_per[['store', 'product']].iterrows()]
+  pd_as_dicts_2 = [dict_temp if dict_temp['product'] != u"3D'S - Bacon extrud\xe9s - 85g"\
+                   else {'store': dict_temp['store']} for dict_temp in pd_as_dicts]
   sparse_mat_magasin_produit = DictVectorizer(sparse=True).fit_transform(pd_as_dicts_2)
   res_01 = scipy.sparse.linalg.lsqr(sparse_mat_magasin_produit,
-                                    df_qlmc_per['Price'].values,
+                                    df_qlmc_per['price'].values,
                                     iter_lim = 100,
                                     calc_var = True)
   nb_fd_01 = len(df_qlmc_per) - len(res_01[0])
   ar_std_01 = np.sqrt(res_01[3]**2/nb_fd_01 * res_01[9])
-  ls_stores = sorted(df_qlmc_per['Store'].copy().drop_duplicates().values)
-  ls_products = sorted(df_qlmc_per['Product'].copy().drop_duplicates().values)[1:]
+  ls_stores = sorted(df_qlmc_per['store'].copy().drop_duplicates().values)
+  ls_products = sorted(df_qlmc_per['product'].copy().drop_duplicates().values)[1:]
   # Caution: so happens that products are returned before stores (dict keys..?)
   ls_rows_01 = zip(ls_products + ls_stores, res_01[0], ar_std_01)
   df_res_01 = pd.DataFrame(ls_rows_01, columns = ['Name', 'Coeff', 'Std'])
@@ -88,51 +89,51 @@ for per in range(7,8):
   df_stores_fe = df_res_01[len(ls_products):].copy()
 
   # OLS WITH STORE FAMILY AND PRODUCT FE
-  df_qlmc_per['Store_Family'] = df_qlmc_per['Store']+ '_' + df_qlmc_per['Family']
-  df_qlmc_per.sort(['Store_Family', 'Product'], inplace = True)
+  df_qlmc_per['store_section'] = df_qlmc_per['store']+ '_' + df_qlmc_per['section']
+  df_qlmc_per.sort(['store_section', 'product'], inplace = True)
   pd_as_dicts = [dict(r.iteritems())\
-                   for _, r in df_qlmc_per[['Store_Family', 'Product']].iterrows()]
-  pd_as_dicts_2 = [dict_temp if dict_temp['Product'] != u"3D'S - Bacon extrud\xe9s - 85g"\
-                   else {'Store_Family': dict_temp['Store_Family']} for dict_temp in pd_as_dicts]
+                   for _, r in df_qlmc_per[['store_section', 'product']].iterrows()]
+  pd_as_dicts_2 = [dict_temp if dict_temp['product'] != u"3D'S - Bacon extrud\xe9s - 85g"\
+                   else {'store_section': dict_temp['store_section']} for dict_temp in pd_as_dicts]
   sparse_mat_magasinr_produit = DictVectorizer(sparse=True).fit_transform(pd_as_dicts_2)
   res_02 = scipy.sparse.linalg.lsqr(sparse_mat_magasinr_produit,
-                                    df_qlmc_per['Price'].values,
+                                    df_qlmc_per['price'].values,
                                     iter_lim = 100,
                                     calc_var = True)
   nb_fd_02 = len(df_qlmc_per) - len(res_02[0])
   ar_std_02 = np.sqrt(res_02[3]**2/nb_fd_02 * res_02[9])
-  ls_products = sorted(df_qlmc_per['Product'].copy().drop_duplicates().values)[1:]
-  ls_store_families = sorted(df_qlmc_per['Store_Family'].copy().drop_duplicates().values)
+  ls_products = sorted(df_qlmc_per['product'].copy().drop_duplicates().values)[1:]
+  ls_store_families = sorted(df_qlmc_per['store_section'].copy().drop_duplicates().values)
   # Caution: seems product FE returned before store_rayon...
   ls_rows = zip(ls_products + ls_store_families, res_02[0])
   df_res_02 = pd.DataFrame(ls_rows, columns = ['Name', 'Coeff'])
  
   df_sf_fe = df_res_02[len(ls_products):].copy()
   # assumes no '_' in store name and product categories
-  df_sf_fe['Store'] = df_sf_fe['Name'].apply(lambda x: x.split('_')[0])
-  df_sf_fe['Family'] = df_sf_fe['Name'].apply(lambda x: x.split('_')[-1])
+  df_sf_fe['store'] = df_sf_fe['Name'].apply(lambda x: x.split('_')[0])
+  df_sf_fe['section'] = df_sf_fe['Name'].apply(lambda x: x.split('_')[-1])
   ls_keep_Families = [u'Boissons',
                       u'Epicerie salée',
                       u'Epicerie sucrée',
                       u'Produits frais']
-  df_sf_fe = df_sf_fe[df_sf_fe['Family'].isin(ls_keep_Families)
-  df_sf_su = df_sf_fe[['Store', 'Family', 'Coff'
+  df_sf_fe = df_sf_fe[df_sf_fe['section'].isin(ls_keep_Families)
+  df_sf_su = df_sf_fe[['store', 'section', 'Coff'
   
   df_sf_su = pd.pivot_table(df_sf_fe,
-                            index = 'Store',
-                            columns = 'Family',
+                            index = 'store',
+                            columns = 'section',
                             values = 'Coeff')
   
   # Add chain + surf etc? (could be from LSA)
-  df_stores_per = df_qlmc[['Store', 'Store_Chain']].drop_duplicates()
-  df_stores_per.set_index('Store', inplace = True)
+  df_stores_per = df_qlmc[['store', 'store_chain']].drop_duplicates()
+  df_stores_per.set_index('store', inplace = True)
   df_sf_su_2 = pd.merge(df_sf_su,
                         df_stores_per,
                         left_index = True,
                         right_index = True,
                         how = 'left')
-  df_sf_su_2.set_index('Store_Chain', append = True, inplace = True)
-  # Store_Chain: poor quality: need to add LSA
+  df_sf_su_2.set_index('store_chain', append = True, inplace = True)
+  # store_chain: poor quality: need to add LSA
   
   # OLD QUARTILE CREATION: todo: update
 
@@ -199,11 +200,11 @@ for per in range(7,8):
 print u'\nCompare results from sparse reg. vs. statsmodels ols:'
 
 # NO INTERCEPT: Consistent results
-df_test = df_qlmc_per[(df_qlmc_per['Store'] == df_qlmc_per['Store'].iloc[0])].copy()
-pd_as_dicts = [dict(r.iteritems()) for _, r in df_test[['Store_Family']].iterrows()]
+df_test = df_qlmc_per[(df_qlmc_per['store'] == df_qlmc_per['store'].iloc[0])].copy()
+pd_as_dicts = [dict(r.iteritems()) for _, r in df_test[['store_section']].iterrows()]
 sparse_mat_magasin_produit = DictVectorizer(sparse=True).fit_transform(pd_as_dicts)
 res_00 = scipy.sparse.linalg.lsqr(sparse_mat_magasin_produit,
-                                  df_test['Price'].values,
+                                  df_test['price'].values,
                                   iter_lim = 100,
                                   calc_var = True)
 # Compute standard errors (need degrees of freedom + be caution with res_00[3])
@@ -212,18 +213,18 @@ ar_std_errors = np.sqrt(res_00[3]**2/nb_freedom_degrees * res_00[9])
 print u'No intercept:'
 print u'Coeffs:', np.around(res_00[0], 3)
 print u'Std:', np.around(ar_std_errors, 3)
-print smf.ols('Price ~ 0 + Store_Family', data = df_test).fit().summary()
+print smf.ols('price ~ 0 + store_section', data = df_test).fit().summary()
 
 # WITH INTERCEPT: Consistent results once ref category eliminated
 df_test['Intercept'] = 'Intercept'
 pd_as_dicts = [dict(r.iteritems())\
-                 for _, r in df_test[['Intercept', 'Store_Family']].iterrows()]
+                 for _, r in df_test[['Intercept', 'store_section']].iterrows()]
 # get rid of reference category
-pd_as_dicts_2 = [dict_temp if dict_temp['Store_Family'] != 'AUCHAN AUBAGNE_Boissons'\
+pd_as_dicts_2 = [dict_temp if dict_temp['store_section'] != 'AUCHAN AUBAGNE_Boissons'\
                    else {'Intercept': 'Intercept'} for dict_temp in pd_as_dicts ]
 sparse_mat_magasin_produit = DictVectorizer(sparse=True).fit_transform(pd_as_dicts_2)
 res_0b = scipy.sparse.linalg.lsqr(sparse_mat_magasin_produit,
-                                  df_test['Price'].values,
+                                  df_test['price'].values,
                                   iter_lim = 100,
                                   calc_var = True)
 nb_freedom_degrees = len(df_test) - len(res_00[0])
@@ -231,6 +232,6 @@ ar_std_errors_b = np.sqrt(res_0b[3]**2/nb_freedom_degrees * res_0b[9])
 print u'\nWith intercept:'
 print u'Coeffs:', np.around(res_0b[0], 3)
 print u'Std:', np.around(ar_std_errors_b, 3)
-print smf.ols('Price ~ Store_Family', data = df_test).fit().summary()
+print smf.ols('price ~ store_section', data = df_test).fit().summary()
 
 # todo: check with two FEs (two ref categories?)

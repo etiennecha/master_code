@@ -21,7 +21,7 @@ pd.set_option('float_format', '{:4,.2f}'.format)
 format_str = lambda x: u'{:}'.format(x[:20])
 
 # #######################
-# LOAD DF QLMC
+# LOAD DATA
 # #######################
 
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
