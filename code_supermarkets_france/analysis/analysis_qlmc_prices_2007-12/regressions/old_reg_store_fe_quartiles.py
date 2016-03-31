@@ -31,14 +31,13 @@ path_built_lsa_csv = os.path.join(path_data,
 
 pd.set_option('float_format', '{:,.3f}'.format)
 
-# LOAD DF QLMC
+# ############
+# LOAD DATA
+# ############
 
-print u'Loading df_qlmc'
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
-                      dtype = {'id_lsa' : str,
-                               'INSEE_ZIP' : str,
-                               'INSEE_Code' : str},
+                      parse_dates = ['date'],
                       encoding = 'utf-8')
 
 # RESTRICT TO ONE PERIOD
