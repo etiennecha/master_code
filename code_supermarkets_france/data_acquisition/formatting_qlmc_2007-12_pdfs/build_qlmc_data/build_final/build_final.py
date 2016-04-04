@@ -406,15 +406,18 @@ print len(df_qlmc[df_qlmc.duplicated(['period', 'store', 'product_norm'], take_l
 # OUTPUT
 # ######
 
+# drop date => output date as string (date_str)
 df_qlmc.drop(['id_fra_stores',
               'id_fra_stores_2',
               'street_fra_stores',
               'product',
-              'matching_quality'],
+              'matching_quality',
+              'date'],
              axis = 1,
              inplace = True)
 
-df_qlmc.rename(columns = {'product_norm' : 'product'},
+df_qlmc.rename(columns = {'product_norm' : 'product',
+                          'date_str' : 'date'},
                inplace = True)
 
 df_qlmc.to_csv(os.path.join(path_built_csv,
@@ -444,8 +447,6 @@ df_stores.to_csv(os.path.join(path_built_csv,
                  float_format='%.2f',
                  encoding='utf-8',
                  index=False)
-
-
 
 ## ##########################################
 ## DEPRECATED: INSPECTION OF PRICE DUPLICATES

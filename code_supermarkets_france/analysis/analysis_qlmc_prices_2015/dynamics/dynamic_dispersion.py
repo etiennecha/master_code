@@ -39,7 +39,7 @@ df_comp_pairs = pd.read_csv(os.path.join(path_built_201415_csv,
                                      'id_lsa_1' : str},
                             encoding = 'utf-8')
 
-df_comp_pairs = df_comp_pairs[df_comp_pairs['dist'] <= 10]
+df_comp_pairs = df_comp_pairs[df_comp_pairs['dist'] <= 15]
 
 ls_tup_pers = [('0', '1'), ('1', '2'), ('0', '2')]
 for tup_per in ls_tup_pers:
@@ -81,7 +81,7 @@ ls_df_price_cols = ['ean'] + ['price_{:s}'.format(per) for per in ls_per]
 
 id_lsa_0, id_lsa_1 = df_comp_pairs[['id_lsa_0', 'id_lsa_1']].iloc[0].values
 
-df_qlmc_temp = df_full
+df_qlmc_temp = df_02
 ls_store_cols = ['id_lsa', 'store_name', 'store_chain']
 df_stores_temp =  df_qlmc_temp[ls_store_cols].drop_duplicates()
 ls_keep_stores = list(df_stores_temp['id_lsa'].values)
@@ -92,10 +92,10 @@ for row_i, row in df_comp_pairs.iterrows():
   # id_lsa_0, id_lsa_1 = '455', '54'
   if (id_lsa_0 in ls_keep_stores) and (id_lsa_1 in ls_keep_stores):
   
-    df_price_0 = df_full[df_full['id_lsa'] == id_lsa_0][ls_df_price_cols]
+    df_price_0 = df_qlmc_temp[df_qlmc_temp['id_lsa'] == id_lsa_0][ls_df_price_cols]
     df_price_0.set_index('ean', inplace = True)
     
-    df_price_1 = df_full[df_full['id_lsa'] == id_lsa_1][ls_df_price_cols]
+    df_price_1 = df_qlmc_temp[df_qlmc_temp['id_lsa'] == id_lsa_1][ls_df_price_cols]
     df_price_1.set_index('ean', inplace = True)
     
     df_spread = df_price_0 - df_price_1
@@ -163,7 +163,12 @@ df_compa_2['pct_draw'] = df_compa_2['nb_draw'] / df_compa_2['nb_obs'].astype(flo
 for tup_chains in [('LECLERC', 'GEANT CASINO'),
                    ('LECLERC', 'CARREFOUR'),
                    ('CARREFOUR', 'GEANT CASINO'),
-                   ('CARREFOUR MARKET', 'CASINO')]:
+                   ('CARREFOUR MARKET', 'CASINO'),
+                   ('LECLERC', 'AUCHAN'),
+                   ('GEANT CASINO', 'AUCHAN'),
+                   ('CARREFOUR', 'AUCHAN'),
+                   ('AUCHAN', 'INTERMARCHE'),
+                   ('AUCHAN', 'SUPER U')]:
   
   print()
   print(tup_chains)

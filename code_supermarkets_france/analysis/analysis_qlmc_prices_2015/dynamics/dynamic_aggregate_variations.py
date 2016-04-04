@@ -70,179 +70,78 @@ df_02 = df_qlmc[(~df_qlmc['price_0'].isnull()) &\
 # print(df_02[df_02['store_chain'] == 'INTERMARCHE']['pct_var_02'].describe())
 # print(df_full[df_full['pct_var_01'] > 1].to_string())
 
+# #########################
+# MAY 2014 vs. MARCH 2015
+# #########################
 
-# ##################
-# DYNA RANK REVERSAL
-# ##################
+# - Classical Method: compare avg chain prices across periods
+# - Can restrict products to avoid comp effects
 
-# Consider 3 periods here (could pick only 2 within the 3)
-ls_per = ['0', '2']
-ls_df_price_cols = ['ean'] + ['price_{:s}'.format(per) for per in ls_per]
+# Average price by period/chain/product
+ls_prod_cols = ['ean'] # ['section', 'family' , 'product']
+ls_price_cols = ['price_0', 'price_1', 'price_2']
+dict_df_mcp = {}
+for price_col in ls_price_cols:
+  ls_col_gb = ['store_chain'] + ls_prod_cols + [price_col]
+  df_mcp = df_qlmc.groupby(ls_col_gb[:-1]).agg([len, 'mean'])[price_col]
+  df_mcp = df_mcp[(~df_mcp['mean'].isnull()) &\
+                  (df_mcp['len'] >= 20)]
+  df_mcp.reset_index(drop = False, inplace = True)
+  dict_df_mcp[price_col] = df_mcp
 
-id_lsa_0, id_lsa_1 = df_comp_pairs[['id_lsa_0', 'id_lsa_1']].iloc[0].values
+df_per_0, df_per_1, df_per_2 = dict_df_mcp['price_0'],\
+                               dict_df_mcp['price_1'],\
+                               dict_df_mcp['price_2']
 
-df_qlmc_temp = df_full
-ls_store_cols = ['id_lsa', 'store_name', 'store_chain']
-df_stores_temp =  df_qlmc_temp[ls_store_cols].drop_duplicates()
-ls_keep_stores = list(df_stores_temp['id_lsa'].values)
+ls_scs = ['LECLERC',
+          'AUCHAN',
+          'CARREFOUR',
+          'CARREFOUR MARKET',
+          'GEANT CASINO',
+          'CASINO',
+          'SUPER U',
+          'INTERMARCHE',
+          'CORA']
 
-ls_rows_compa = []
-for row_i, row in df_comp_pairs.iterrows():
-  id_lsa_0, id_lsa_1 = row[['id_lsa_0', 'id_lsa_1']].values
-  # id_lsa_0, id_lsa_1 = '455', '54'
-  if (id_lsa_0 in ls_keep_stores) and (id_lsa_1 in ls_keep_stores):
-  
-    df_price_0 = df_full[df_full['id_lsa'] == id_lsa_0][ls_df_price_cols]
-    df_price_0.set_index('ean', inplace = True)
-    
-    df_price_1 = df_full[df_full['id_lsa'] == id_lsa_1][ls_df_price_cols]
-    df_price_1.set_index('ean', inplace = True)
-    
-    df_spread = df_price_0 - df_price_1
-    # filter nan lines (could as well use first col)
-    df_spread = df_spread[df_spread.count(1) == len(ls_per)]
-    
-    nb_obs = len(df_spread)
-    
-    # nb of products cheaper at each store within each period
-    se_nb_prod_0_wins = df_spread[df_spread < -10e-4].count()
-    se_nb_prod_1_wins = df_spread[df_spread >  10e-4].count()
-    
-    # nb of periods where product is cheaper
-    df_spread['nb_per_1_wins'] = df_spread[ls_df_price_cols[1:]]\
-                                   .apply(lambda x: (x >  10e-4).sum(), axis = 1)
-    df_spread['nb_per_0_wins'] = df_spread[ls_df_price_cols[1:]]\
-                                   .apply(lambda x: (x < -10e-4).sum(), axis = 1)
-    # nb products which exhibit dynamic rank reversals
-    nb_rr = len(df_spread[(df_spread['nb_per_1_wins'] > 0) &\
-                          (df_spread['nb_per_0_wins'] > 0)])
-    # nb products with no dynamic rank reversal
-    nb_dom = len(df_spread[((df_spread['nb_per_1_wins'] == 0) |\
-                            (df_spread['nb_per_0_wins'] == 0)) &\
-                           ((df_spread['nb_per_1_wins'] != 0) |\
-                            (df_spread['nb_per_0_wins'] != 0))])
-    # nb products with always exact same price
-    nb_draw = len(df_spread[(df_spread['nb_per_1_wins'] == 0) &\
-                            (df_spread['nb_per_0_wins'] == 0)])
-    # total amounts
-    se_sum_0 = df_price_0.ix[df_spread.index].sum(0)
-    se_sum_1 = df_price_1.ix[df_spread.index].sum(0)
-    se_delta = se_sum_1 - se_sum_0
+ls_rows_02 = []
+for chain in ls_scs:
+  df_chain_0 = df_per_0[df_per_0['store_chain'] == chain]
+  df_chain_2 = df_per_2[df_per_2['store_chain'] == chain]
+  df_compa = pd.merge(df_chain_0[ls_prod_cols + ['mean']],
+                      df_chain_2[ls_prod_cols + ['mean']],
+                      on = ls_prod_cols,
+                      how = 'inner',
+                      suffixes = ('_t', '_t+1'))
+  nb_prods = len(df_compa)
+  agg_chge = np.nan
+  if nb_prods != 0:
+    agg_chge = ((df_compa['mean_t+1'].sum() / df_compa['mean_t'].sum()) - 1) * 100
+  ls_rows_02.append((chain, nb_prods, agg_chge))
+df_02 = pd.DataFrame(ls_rows_02,
+                     columns = ['store_chain', 'nb_prods', 'var'])
+print(df_02.to_string())
 
-    ls_rows_compa.append([id_lsa_0, id_lsa_1,
-                          nb_obs, nb_rr, nb_dom, nb_draw] +\
-                         se_nb_prod_0_wins.tolist() +\
-                         se_nb_prod_1_wins.tolist() +\
-                         se_sum_0.values.tolist() +\
-                         se_sum_1.values.tolist())
 
-df_compa = pd.DataFrame(ls_rows_compa,
-                        columns = ['id_lsa_0', 'id_lsa_1',
-                                   'nb_obs', 'nb_rr', 'nb_dom', 'nb_draw'] +\
-                                  ['nb_wins_{:s}_0'.format(per) for per in ls_per] +\
-                                  ['nb_wins_{:s}_1'.format(per) for per in ls_per] +\
-                                  ['price_{:s}_0'.format(per) for per in ls_per] +\
-                                  ['price_{:s}_1'.format(per) for per in ls_per])
+ls_scs_12 = ['LECLERC',
+             'CARREFOUR',
+             'CARREFOUR MARKET',
+             'GEANT CASINO',
+             'CASINO']
 
-ls_pair_cols = ['id_lsa_0', 'id_lsa_1', 'dist',
-                'store_name_0', 'store_name_1',
-                'store_chain_0', 'store_chain_1']
-
-df_compa_2 = pd.merge(df_compa,
-                      df_comp_pairs[ls_pair_cols],
-                      on = ['id_lsa_0', 'id_lsa_1'],
-                      how = 'left')
-
-df_compa_2['pct_rr'] = df_compa_2['nb_rr'] / df_compa_2['nb_obs'].astype(float)
-df_compa_2['pct_dom'] = df_compa_2['nb_dom'] / df_compa_2['nb_obs'].astype(float)
-df_compa_2['pct_draw'] = df_compa_2['nb_draw'] / df_compa_2['nb_obs'].astype(float)
-
-# Brand comparison: need to sort order to have one brand per column
-# Cannot restrict ls_per here... will work only for aggregate compa
-
-for tup_chains in [('LECLERC', 'GEANT CASINO'),
-                   ('LECLERC', 'CARREFOUR'),
-                   ('CARREFOUR', 'GEANT CASINO'),
-                   ('CARREFOUR MARKET', 'CASINO')]:
-  
-  print()
-  print(tup_chains)
-  
-  df_cc = df_compa_2[(df_compa_2['store_chain_0'].isin(tup_chains)) &\
-                     (df_compa_2['store_chain_1'].isin(tup_chains))].copy()
-  
-  lsd0 = ['dist', 'nb_obs', 'pct_rr', 'pct_dom', 'pct_draw']
-  print(df_cc[lsd0].describe().to_string())
-  
-  ls_copy_cols = ['store_name', 'store_chain', 'id_lsa'] +\
-                 ['nb_wins_{:s}'.format(per) for per in ls_per] +\
-                 ['price_{:s}'.format(per) for per in ls_per]
-  
-  tup_sufs = ['A', 'B']
-  for brand, suf in zip(tup_chains, tup_sufs):
-    for col in ls_copy_cols:
-      df_cc[u'{:s}_{:s}'.format(col, suf)] = 0
-      df_cc.loc[df_cc['store_chain_0'] == brand,
-                     u'{:s}_{:s}'.format(col, suf)] =\
-        df_cc[u'{:s}_0'.format(col)]
-      df_cc.loc[df_cc['store_chain_1'] == brand,
-                     u'{:s}_{:s}'.format(col, suf)] =\
-        df_cc[u'{:s}_1'.format(col)]
-  
-  ls_drop_cols = [u'{:s}_0'.format(x) for x in ls_copy_cols] +\
-                 [u'{:s}_1'.format(x) for x in ls_copy_cols]
-  
-  df_cc.drop(ls_drop_cols, axis = 1, inplace = True)
-  
-  # add cols:
-  
-  # - % prod wins within period 
-  # - % prod draws within period
-  # - % prod rank reversals within period
-  # - % aggregate compa within period
-  # - avg value aggreate compa within period
-  
-  for per in ls_per:
-    df_cc['pct_prod_wins_{:s}_A'.format(per)] =\
-        df_cc['nb_wins_{:s}_A'.format(per)] / df_cc['nb_obs'].astype(float)
-    df_cc['pct_prod_wins_{:s}_B'.format(per)] =\
-        df_cc['nb_wins_{:s}_B'.format(per)] / df_cc['nb_obs'].astype(float)
-    df_cc['pct_prod_draws_{:s}'.format(per)] =\
-        1 - df_cc[['pct_prod_wins_{:s}_A'.format(per),
-                   'pct_prod_wins_{:s}_B'.format(per)]].sum(1)
-    df_cc['pct_prod_rr_{:s}'.format(per)] = df_cc[['pct_prod_wins_{:s}_A'.format(per),
-                   'pct_prod_wins_{:s}_B'.format(per)]].min(1)
-    df_cc['pct_agg_compa_{:s}'.format(per)] =\
-      df_cc['price_{:s}_B'.format(per)] / df_cc['price_{:s}_A'.format(per)] - 1
-    df_cc['avg_agg_compa_{:s}'.format(per)] =\
-      (df_cc['price_{:s}_B'.format(per)] - df_cc['price_{:s}_A'.format(per)]) /\
-         df_cc['nb_obs']
-  
-  ls_dcc = ['pct_prod_wins_{:s}_A'.format(per) for per in ls_per] +\
-           ['pct_prod_draws_{:s}'.format(per) for per in ls_per] +\
-           ['pct_prod_rr_{:s}'.format(per) for per in ls_per] +\
-           ['pct_agg_compa_{:s}'.format(per) for per in ls_per]
-  
-  print(df_cc[ls_dcc].describe().to_string())
-  
-  # todo: rr at agg level?
-  ls_pct_agg_compa_cols = ['pct_agg_compa_{:s}'.format(per) for per in ls_per]
-  df_cc['nb_per_A_wins'] = df_cc[ls_pct_agg_compa_cols]\
-                                 .apply(lambda x: (x >  10e-4).sum(), axis = 1)
-  df_cc['nb_per_B_wins'] = df_cc[ls_pct_agg_compa_cols]\
-                                 .apply(lambda x: (x < -10e-4).sum(), axis = 1)
-  
-  nb_rr_agg = len(df_cc[(df_cc['nb_per_A_wins'] > 0) &\
-                        (df_cc['nb_per_B_wins'] > 0)])
-  nb_dom_agg = len(df_cc[((df_cc['nb_per_A_wins'] == 0) |\
-                          (df_cc['nb_per_B_wins'] == 0)) &\
-                         ((df_cc['nb_per_A_wins'] != 0) |\
-                          (df_cc['nb_per_B_wins'] != 0))])
-  nb_draw_agg = len(df_cc[(df_cc['nb_per_A_wins'] == 0) &\
-                          (df_cc['nb_per_B_wins'] == 0)])
-  nb_some_draw_agg = len(df_cc[df_cc[['nb_per_A_wins',
-                                      'nb_per_B_wins']].sum(1) < len(ls_per)])
-
-  print(u'Pct rr agg: {:.2f}'.format(nb_rr_agg / float(len(df_cc))))
-  print(u'Pct draw agg: {:.2f}'.format(nb_draw_agg / float(len(df_cc))))
-  print(u'Pct some draw agg: {:.2f}'.format(nb_some_draw_agg / float(len(df_cc))))
+ls_rows_12 = []
+for chain in ls_scs_12:
+  df_chain_1 = df_per_1[df_per_1['store_chain'] == chain]
+  df_chain_2 = df_per_2[df_per_2['store_chain'] == chain]
+  df_compa = pd.merge(df_chain_1[ls_prod_cols + ['mean']],
+                      df_chain_2[ls_prod_cols + ['mean']],
+                      on = ls_prod_cols,
+                      how = 'inner',
+                      suffixes = ('_t', '_t+1'))
+  nb_prods = len(df_compa)
+  agg_chge = np.nan
+  if nb_prods != 0:
+    agg_chge = ((df_compa['mean_t+1'].sum() / df_compa['mean_t'].sum()) - 1) * 100
+  ls_rows_12.append((chain, nb_prods, agg_chge))
+df_12 = pd.DataFrame(ls_rows_12,
+                     columns = ['store_chain', 'nb_prods', 'var'])
+print(df_12.to_string())

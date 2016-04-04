@@ -24,10 +24,12 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # LOAD DATA
 # ###########
 
+dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
+                      dtype = {'id_lsa' : str},
                       parse_dates = ['date'],
-                      dayfirst = True,
+                      date_parser = dateparse,
                       encoding = 'utf-8')
 
 # todo: check mapping product vs. section/family (if not done?)
@@ -105,6 +107,13 @@ df_sections = pd.pivot_table(data = df_prods[['period', 'section', 'product']],
                              aggfunc = len,
                              fill_value = 0).astype(int)['product']
 print(df_sections.to_string())
+
+df_sections.ix['TOTAL'] = df_sections.sum()
+
+df_sections_pct = df_sections / df_sections.sum() * 100
+df_sections_pct.ix['TOTAL'] = df_sections.sum()
+print()
+print(df_sections_pct.to_string())
 
 # PRODUCT FAMILIES
 print()

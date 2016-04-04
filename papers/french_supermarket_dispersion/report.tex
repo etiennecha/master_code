@@ -17,6 +17,8 @@
 \usepackage{booktabs}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{tabularx}
+\usepackage[flushleft]{threeparttable}
 % \usepackage[hidelinks]{hyperref}
 \usepackage{floatrow} %[capposition=top]
 \floatsetup{footposition=bottom,capposition=top}
@@ -64,11 +66,9 @@ Despite the complexity induced by the multiplicity of products, competition betw
 
 Using price data obtained from the French price comparison website quiestlemoinscher.com, this paper documents static and dynamic price dispersion between French retail grocery stores. The first part of this paper details the data through a review of the methodology used by the website to compare supermarkets. Store comparisons are shown to be actually often highly sensitive to the basket of goods considered, suggesting that it is very costly for consumers to purchase at the lowest price. TODO: comment results + add public policy conclusions
 
-\section{Supermarket comparison on Quiestlemoinscher.com}
+\section{Price comparison on Quiestlemoinscher.com}
 
-\subsection{French retail grocery stores}
-
-As of 2015, the French retailing industry was dominated by six firms, which accounted for over 80\% of total sales: Carrefour and Leclerc were the two largest with c. 20\% market shares each, followed by Intermarche (14\%), Casino (12\%), Auchan (11\%) and Systeme U (10\%). An important distinction between firms lies in the ownership structures: while Carrefour, Casino and Auchan own most of the stores operated under their brands, Leclerc, Intermarche and Systeme U are essentially franchise networks.
+As of 2015, the French retailing industry was dominated by six firms, which accounted for over 80\% of total sales: Carrefour and Leclerc were the two largest with c. 20\% market shares each, followed by Intermarche (14\%), Casino (12\%), Auchan (11\%) and Systeme U (10\%). An important distinction between firms lies in the ownership structures. While Carrefour, Casino and Auchan own most of the stores operated under their brands, Leclerc, Intermarche and Systeme U are essentially franchise networks.
 
 The creation of the comparison website Quiestlemoinscher.com is part of a long term strategy of the group Leclerc to prove the competitiveness of its store prices. Soon after the launch in May 2006, the website was forced to close by a court decision, following a complaint by Carrefour regarding the lack of transparency and potential biases in store and product choices. An updated version of the website was released on November 2006 and has since then remained online. Legal proceedings nervetheless continued until the rejection by the court of cassation of Carrefour's claims in January 2010.
 
@@ -76,13 +76,13 @@ A major merit of the legal action undertaken by Carrefour is its consequence for
 
 \subsection{Products}
 
-Before 2013, the website only offered comparisons at the chain level. For each chain, according to Qlmc, prices were collected a sample of store expected to be representative of the store population. Broad constraints were thus imposed on store location and size, while exact store choice was claimed to be random.
+Before 2013, the website only offered comparisons at the chain level. For each chain, according to Qlmc, prices were collected at a sample of store expected to be representative of the store network. Broad constraints were thus imposed on store location and size, while exact store choice was claimed to be random.
 
-From 2013 on, the development of the "drive" concept in France has allowed the comparison website to cover far more stores, and thus to start displaying store level comparison. The concept of "drive" implies that consumers are offered the opportunity to shop online from a physical store (at the same prices) and collect their purchases whenever it suits them. The collection of prices can then be achieved efficiently on the internet, as opposed to traditional store visits. As of March 2015, Qlmc claimed to cover 60\% of the stores of the 10 supermarket chains compared (44\% in August 2013).
+From 2013 on, the development of the "drive" concept in France has allowed the comparison website to cover far more stores, and thus to start displaying store level comparison. The concept of "drive" generally implies that consumers are offered the opportunity to shop online from a physical store (at the same prices) and collect their purchases whenever it suits them. The collection of prices can then be achieved efficiently on the internet, as opposed to traditional store visits. As of March 2015, Qlmc claimed to cover 60\% of the stores of the 10 supermarket chains compared (44\% in August 2013).
 
 Regarding store level comparisons, Qlmc  methodology states that each Leclerc is compared with a selection of its most relevant competitors within 30 km, based on Leclerc managers' expertise. The website also indicates that stores whose surface is smaller than 1,000 $m^2$ are excluded, as well as stores belonging to chains which are deemed to be too differentiated (e.g. discounters). Finally, Leclerc stores are not included among potential competitors.
 
-As of March 2015, only national brand products are covered by the website. Products are identified at the bar code level. There are seven food product categories: meat and fish, vegetables and fruits, backery, fresh food, frozen food, savoury grocery, sweet grocery, baby food and drinks. Non food products are split in four categories: health and beauty, houdesold, pets and home and textile. Products are further classified wihin product families. The number of products covered within each family is determined by the volume of national hypermarket and supermarket sales, with a global objective of 3,000 products. Within each family, products are chosen based on the national hypermarket and supermarket detention rate. Products whose detention rate is below 30\% (i.e. products referenced by less than 30\% of the stores) are dropped. This led to a total of 2,461 national brand product references covered for March 2015 (2,510 in August 2013).
+As of March 2015, only national brand products are covered by the website. Products are identified at the bar code level. There are seven food product categories: meat and fish, vegetables and fruits, bakery, fresh food, frozen food, savoury grocery, sweet grocery, baby food and drinks. Non food products are split in four categories: health and beauty, household, pets and home and textile. Products are further classified within product families. Regarding chain comparisons, the number of products covered within each family is determined by the volume of national hypermarket and supermarket sales, with a global objective of 3,000 products. Within each family, products are chosen based on the national hypermarket and supermarket detention rate. Products whose detention rate is below 30\% (i.e. products referenced by less than 30\% of the stores) are dropped. This led to a total of 2,461 national brand product references covered for March 2015 (2,510 in August 2013). As regards store level comparisons, all products found at both stores are used in comparisons.
 
 \subsection{Price comparison}
 
@@ -94,35 +94,45 @@ The comparison result displayed by Leclerc is then the percentage difference bet
 \end{align*}s
 where $i$ refers to all products in the baskets, $P_{iC}$ and $P_{iL}$ respectively stand for the average price of product $i$ for the competing chain ($C$) and for Leclerc ($L$). The comparison between two stores is very similar except that it uses store prices instead of average chain prices.
 
-\subsection{Data and replication}
+\section{Data and replication of price comparisons}
 
-This section provides an overview of the data collected from the website in 2015 and of the replication of its results. Potential biases in terms of store and product selection are discussed, and the robustness of results is checked with 2007-2012 data. In March 2015, the website was explored with a view to find the best way to extract price data. The only feasible solution appeared to successively crawl comparisons between Leclerc stores and each of their competitors. This implies that thereby obtained data are bound to be significantly less exhaustive than the full price database used by Qlmc to establish chain level comparisons.
+This section provides an overview of the data collected from the website in 2015 and of the replication of its results. Potential biases in terms of store and product selection are discussed, and the robustness of results is checked with 2007-2012 data. In March 2015, the website was explored with a view to find the best way to extract price data. The only feasible solution appeared to successively crawl comparisons between Leclerc stores and each of their competitors. This implies that obtained data are less exhaustive than the full price database used by QLMC to establish chain level comparisons.
 
 \subsection{Leclerc competitors}
 
-A total number of of 575 Leclerc stores were found to be listed on the website. The comparison of each store with its respective selection of competitors yielded 2,390 pairs of stores, involving 1,815 unique Leclerc competitors (the number of pairs is larger since a store can be listed as a competitor of several Leclerc stores). Data were missing for 14 Leclerc stores and 51 Leclerc competitors. This implies that among competitors of the 561 Leclerc stores for which price data have been collected, 36 out of 1811 are missing ($\le 2 \%$).
+A total number of 575 Leclerc stores were found to be listed on the website. The comparison of each store with its respective selection of competitors yielded 2,390 pairs of stores, involving 1,815 unique Leclerc competitors (the number of pairs is larger since a store can be listed as a competitor of several Leclerc stores). Data were missing for 14 Leclerc stores and 51 Leclerc competitors. This implies that among competitors of the 561 Leclerc stores for which price data have been collected, 36 out of 1811 are missing ($\le 2 \%$).
 
-Table~\ref{tab:qlmc_comp} provides an overview of competition according to qlmc comparisons, even though it must be reminded that the website does not claim to be comprehensive. On average, a Leclerc store is compared with 5 competitors, and over 50\% over the stores have a competitor listed within 2 km. The furthest competitor is generally within 30 km (15 km for almost half of them), except for 28 stores. Also, 14 Leclerc stores have no competitor listed within 10 km. If one store met these two criteria (or variations), it would be reasonable to suspect that the lack of nearby competitors led to include competitors beyond reasonable distance but it is not the case. For instance, the Leclerc outlet which has the furthest competitor in the data (67 km) is listed with 7 competitors, of which 5 are located within 30 km.
+Table~\ref{tab:qlmc_chain_repr} provides an overview of store coverage for the ten national chains compared on Qlmc. Coverage is high and rather close to coverage in the full qlmc sample for chains which are characterized by large store surfaces: Auchan, Carrefour, Cora, Geant and Leclerc. This can be explained by the fact that Leclerc is present across all regions and operates rather large stores. Regarding chains with smaller store formats, coverage is lower in percentage and also generally with respect to the full qlmc sample (e.g. 22\% for Casino vs. 39\% claimed by the website). Two natural explanations are the fact that stores from these chains are generally less likely to be considered relevant local competitors for Leclerc stores, and the slower development of "drive" within smaller stores (which make price collection less costly).
 
-TODO: add paragraph about competitor selection (share of competitors compared vs. all within 30 km etc.)
-
-Table~\ref{tab:qlmc_chain_repr} provides an overview of store coverage for the ten national chains compared on qlmc. Coverage is high and rather close to coverage in the full qlmc sample for chains which are characterized by large store surfaces: Auchan, Carrefour, Cora, Geant and Leclerc. This can be explained by the fact that Leclerc is present across all regions and operates rather large stores. Regarding chains with smaller store formats, coverage is lower in percentage and also generally with respect to the full qlmc sample (e.g. 22\% for Casino vs. 39\% claimed by the website). Two natural explanations are the fact that stores from these chains are generally less likely to be considered relevant local competitors for Leclerc stores, and the slower development of "drive" within smaller stores (which make price collection less costly).
+Table~\ref{tab:qlmc_comp} provides an overview of competition according to qlmc comparisons (the website does not claim to be comprehensive). On average, a Leclerc store is compared with 5 competitors, and over 50\% over Leclerc stores are compared with a store located within 2 km. The furthest competitor is generally within 30 km (15 km for almost half of them), except for 28 stores. For 14 Leclerc stores, the closest listed store if over 10 km away. No store meets these two criteria, hence it does not seem obvious that the lack or omission of nearby competitors led to include stores beyond reasonable distance. For instance, the Leclerc outlet which has the furthest competitor in the data (67 km) is listed with 7 competitors, of which 5 are located within 30 km.
 
 \subsection{Products}
 
-TODO: Table by family... compare with 2007-2012 split (and 2014), include product examples (?),nb products by chain stores (large only vs small?)
+Price records obtained from the website include all products used in each store level comparison. As a consequence, there are 12,318 unique products in the data as of March 2015. Table~\ref{tab:qlmc_sections} provides an overview of the relative weights of each section in terms of product number and value. The five largest sections, regardless of the criterion, are Fresh products, Health and Beauty, Savoury Grocery, Sweet Grocery and Drinks. Families within each sections are detailed in table~\ref{tab:qlmc_families}. Drinks and Health and Beauty products tend to have a larger value than other categories', so that they account for a significantly higher share in terms of value than product count.
 
-\subsection{History}
+\subsection{Chain and store level comparisons}
 
-Price records of the 2007-2012 period were made available by Qlmc in pdf files. They were thus downloaded and processed to build a database (footnote: pdf files exist for price records of May 2014 but are not used in the current version of the paper).
+Results for chain level comparisons performed according to the methodology described in the website documentation are reported in table~\ref{tab:qlmc_chain_comparisons}.
 
-\section{Accounting for prices}
+\subsection{Comparison history}
 
-Since its creation in 2007, the main page of quiestlemoinscher displays price comparisons between major retail chains. On the one hand, such information may be considered relevant by consumers willing to adopt a rule of thumb which weighs the cost/time of transportation with prices and products expected to be offered in a store of a given chain. On the other hand, without being deceptive per se, such comparisons could simply reflect differences in store characteristics such as location, size, market competitiveness etc. In order to address this issue, this section first investigates price dispersion within chains, and then discusses the possibility to account for prices through observed store and market characteristics.
+Collected data can be used to compare prices across periods and therefore to explain part of the changes recorded in successive chain price comparisons displayed by the website. Inflation between two successive periods is computed by comparing the sum of average prices of all products available over the two periods. Variations can then multiplied to obtain statistics over longer periods.
 
-\subsection{}
+Leclerc prices between May 2007 and May 2012 have increased by 1.13\% (average annual increase of 0.25\%). Until May 2011, other chain display similarly low variations. This translates in a relative status quo in chain comparison results. Geant Casino is then the most expensive chain (+6\% to +10\%vs. Leclerc), followed by Cora and Carrefour Market (+5\%). Auchan, Carrefour, Geant Casino, Intermarche and Systeme U display rather similar price levels (+3-4\%).
+After May 2011, most chains display a progressive loss in competitivess as compared to Leclerc. A remarkable exception is Geant Casino which, after a peak at +13.8\% vs. Leclerc in September 2012, becomes increasingly price competitive from May 2013 on. Carrefour appears to be willing to match this progression in 2014, and then to give up in 2015. As a consequence, while Geant Casino was the most expensive chain at the beginning of the period studied, it is the closest competitor of Leclerc in terms of price level as of March 2015 (+1.3\% vs. Leclerc, to be compared with +12.2\% in March 2013).
+Intra-chains comparisons between May 2014 and March 2015 suggest that the relative loss in price competitiveness of Carrefour actually results from a mild change in prices by Carrefour (-1.4\%) constrasting with significant cuts implemented by other chains (e.g. -4.3\% for Auchan, -5.1\% for Leclerc, -5.2\% for Intermarche). Geant Casino achieves its unprecedented level of price competitiveness through an 8.5\% decrease.
 
-Despite the fact that French supermarket chains are known not to implement uniform national pricing policies, industry sources (todo: find and add references) suggest that pricing tends to be centralized. Given the difficulty of optimizing prices of thousands of products within several hundred stores over France, it seems reasonable to expect empirical investigations to provide some guidance about pricing rules actually implemented within stores.
+\section{Measuring and accounting for price dispersion}
+
+Since its creation in 2007, Qlmc prominently displays aggregate comparisons with its major national competitors. On the one hand, such information may be considered relevant by consumers willing to adopt a rule of thumb which weighs the cost/time of transportation with prices and products expected to be offered in a store of a given chain. On the other hand, without being deceptive per se, such comparisons could simply reflect differences in store characteristics such as location, size, market competitiveness etc. In order to address this issue, this section first investigates price dispersion within chains, and then discusses the possibility to account for prices through observed store and market characteristics.
+
+\subsection{Chain pricing policies}
+
+French supermarket chains are known not to implement uniform national pricing policies. Empirical investigations however reveal different degrees of price dispersion within chains.
+
+\subsection{Static price dispersion}
+
+\subsection{Dynamic price dispersion}
 
 \newpage
 
@@ -132,32 +142,38 @@ Despite the fact that French supermarket chains are known not to implement unifo
 
 \appendix
 
-\section{Data}
-
-\subsection{Data from March 2015}
+\section{Store data}
 
 \begin{table}[H]
+\begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
 \caption{Representation of major national chains}\label{tab:qlmc_chain_repr}
 \small
-\begin{tabular}{lrrr}
+\begin{tabular}{lr|rr|rr}
 \toprule
-{} &  \multicolumn{2}{c}{Nb stores}   &  Coverage      \\
-{} &   France (LSA) & Extract QLMC    & (\%)           \\
+          & France & \multicolumn{2}{c|}{QLMC} & \multicolumn{2}{c}{Data} \\
+          & Nb stores & Nb stores & Coverage & Nb stores & Coverage \\
 \midrule
-AUCHAN           &            142 &             112 &            79 \\
-CARREFOUR        &            222 &             172 &            77 \\
-CARREFOUR MARKET &            925 &             242 &            26 \\
-CASINO           &            392 &              85 &            22 \\
-CORA             &             58 &              54 &            93 \\
-GEANT            &            107 &              93 &            87 \\
-INTERMARCHE      &           1770 &             541 &            31 \\
-LECLERC          &            579 &             572 &            99 \\
-SIMPLY MARKET    &            305 &              52 &            17 \\
-SYSTEME U        &           1030 &             420 &            41 \\
+    Auchan & 142   & 125   & 88\%  & 112   & 79\% \\
+    Carrefour & 222   & 188   & 85\%  & 171   & 77\% \\
+    Carrefour Market & 925   & 421   & 46\%  & 239   & 26\% \\
+    Casino & 392   & 151   & 39\%  & 76    & 19\% \\
+    Cora  & 58    & 58    & 100\% & 54    & 93\% \\
+    Geant & 108   & 108   & 100\% & 92    & 85\% \\
+    Intermarche & 1,770 & 1,022 & 58\%  & 530   & 30\% \\
+    Leclerc & 579   & 579   & 100\% & 561   & 97\% \\
+    Simply Market & 305   & 50    & 16\%  & 49    & 16\% \\
+    Systeme U & 1,030 & 632   & 61\%  & 413   & 40\% \\
+\midrule		
+    Total & 5,531 & 3,334 & 60\%  & 2,297 & 42\% \\
 \bottomrule
 \bottomrule
 \end{tabular}
+\begin{tablenotes}
+      \small
+      \item Data about store chains were provided by LSA, which is the source used by Qlmc.
+\end{tablenotes}
+\end{threeparttable}
 \end{table}
 
 \begin{table}[H]
@@ -184,85 +200,189 @@ Max   &  12.0 &  21.1 &  67.0 &  28.6 &    28.5 \\
 \end{tabular}
 \end{table}
 
-\subsection{Data from 2007-2012}
+\newpage
+
+\section{Product data}
 
 \begin{table}[H]
 \renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Overview of stores and products 2007-2012}
+\caption{Overview of product section weights}\label{tab:qlmc_sections}
 \small
-\begin{tabular}{rllrrrr}
+\begin{tabular}{lrr|rr|rr}
 \toprule
 \toprule
-  P &  Date start &    Date end &  Nb rows &  Nb stores &  Nb products &  Avg nb products \\
-\multicolumn{6}{c}{}&  by store \\
+& \multicolumn{2}{c}{All products} & \multicolumn{2}{c|}{$\ge$ 500 obs} & \multicolumn{2}{c|}{$\ge$ 700 obs} \\
+& Nb \% & Value \% & Nb \% & Value \% & Nb \% & Value \% \\
 \midrule
-  0 &  09/05/2007 &  25/05/2007 &  554,691 &        344 &        2,325 &                  1,612 \\
-  1 &  10/08/2007 &  31/08/2007 &  570,193 &        335 &        2,384 &                  1,702 \\
-  2 &  21/01/2008 &  12/02/2008 &  544,366 &        318 &        2,374 &                  1,712 \\
-  3 &  04/04/2008 &  30/04/2008 &  417,272 &        246 &        2,443 &                  1,696 \\
-  4 &  01/04/2009 &  30/04/2009 &  414,911 &        701 &        1,471 &                    592 \\
-  5 &  01/09/2009 &  28/09/2009 &  432,510 &        726 &        1,463 &                    596 \\
-  6 &  05/03/2010 &  03/04/2010 &  446,309 &        739 &        1,466 &                    604 \\
-  7 &  18/10/2010 &  16/11/2010 &  385,253 &        624 &        1,479 &                    617 \\
-  8 &  28/01/2011 &  22/02/2011 &  357,188 &        634 &        1,383 &                    563 \\
-  9 &  28/04/2011 &  20/05/2011 &  240,710 &        637 &          954 &                    378 \\
- 10 &  17/10/2011 &  09/11/2011 &  430,968 &        640 &        1,674 &                    673 \\
- 11 &  30/01/2011 &  22/02/2011 &  464,604 &        617 &        1,657 &                    753 \\
- 12 &  12/05/2012 &  01/06/2012 &  607,185 &        605 &        1,805 &                  1,004 \\
+    Baby and dietetic food & 4.7   & 4.3   & 3.9   & 3.0   & 3.3   & 2.4 \\
+    Drinks & 10.0  & 15.3  & 10.9  & 20.4  & 11.1  & 21.9 \\
+    Fresh products & 21.1  & 15.5  & 19.8  & 16.7  & 18.4  & 15.2 \\
+    Frozen food & 3.0   & 3.1   & 3.0   & 3.9   & 2.4   & 3.1 \\
+    Health and beauty & 17.3  & 26.9  & 11.5  & 12.8  & 12.4  & 13.4 \\
+    Home and textile & 2.5   & 3.4   & 0.5   & 0.7   & 0.3   & 0.4 \\
+    Household & 5.5   & 6.8   & 5.5   & 6.8   & 5.8   & 7.2 \\
+    Pets  & 1.9   & 2.8   & 3.0   & 4.4   & 3.0   & 4.5 \\
+    Savoury grocery & 16.5  & 9.4   & 19.6  & 12.5  & 20.4  & 12.6 \\
+    Sweet grocery & 17.0  & 12.3  & 22.1  & 18.8  & 22.8  & 19.2 \\
+    Vegetables and fruits & 0.5   & 0.4   & 0.2   & 0.2   & 0.2   & 0.2 \\
+\midrule
+    Total & 100.0 & 100.0 & 100.0 & 100.0 & 100.0 & 100.0 \\
+    Total Nb or Value (euros) & 12,318 & 43,883 & 3,467 & 9,138 & 2,578 & 6,682 \\
+\bottomrule
 \bottomrule
 \end{tabular}
+\end{table}
+
+\begin{table}[H]
+\renewcommand{\arraystretch}{0.8}% Tighter
+\caption{Overview of product families within sections}\label{tab:qlmc_families}
+\small
+\begin{tabularx}{\linewidth}{l >{\setlength{\baselineskip}{0.75\baselineskip}}X}
+%\begin{tabular}{p{0.3\linewidth}p{0.7\linewidth}}
+\toprule
+\toprule
+    Section & Families \\
+    \midrule
+    Baby and dietetic food (573) & Baby food (418); Dietetic products (155) \\
+    Drinks (1,233) & Beer and Spirits (443); Fizzy drinks and Cola (244); Water (176); Juices and Smoothies (110); Squash and Cordial (101); Wine, Champagne and Cider (159) \\
+    Fresh products (2,595) & Butter and Cream (199); Meat (490); Cheese (491); Milk and eggs (150); Fish (98); Delicatessen (660); Yoghurts and Chilled Desserts (507) \\
+    Frozen food (368) & Ice cream and Frozen yoghurt (101); Frozen vegetables and fries (91); Frozen pizzas, pies and ready meals (128); Frozen Meat and Fish (48) \\
+    Health and Beauty (2,127) & Kitchen Roll and Tissues (86); Oral care (169); Feminine care and Baby changing (138); Drugstore (97); Haircare (558); Face and body skincare (951); Men toiletries (128) \\
+    Home and textile (308) & DIY and Car (9); Kitchen and dining room (50); Home Office (171); Batteries, lightbulbs and plugs (54) \\
+    Household (679) & Air fresheners and insect killers (118); Laundry (124); Cloths, Gloves and Scourers (45); Cleaning (225); Dishwashing (64); Specialist laundry and Washing machine cleaner (103) \\
+    Pets (239) & Cat and dog food (233); Litter (6) \\
+    Savoury grocery (2,032) & Snacks (214); Condiments and Spices (609); Canned goods (406); Precooked dishes (205); Pasta, Rice and Flour (328); Soups (270) \\
+    Sweet grocery (2,099) & Biscuits (294); Coffee and Tea (368); Chocolates ans sweets (450); Desserts, Sugar and Sweeteners (318); Breakfast (453); Cakes (215) \\
+    Vegetables and fruits (65) & Fruits (65) \\
+\bottomrule
+\bottomrule
+\end{tabularx}
+%\end{tabular}
+\end{table}
+
+\section{Comparison data}
+
+\begin{table}[H]
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Comparisons at the chain level}\label{tab:qlmc_chain_comparisons}
+\small
+\begin{tabular}{l|rr|rr|rrrr}
+\toprule
+\toprule
+          & \multicolumn{2}{c|}{Nb stores} &  \multicolumn{2}{c|}{Nb products} & \multicolumn{4}{c}{Comparison vs. Leclerc} \\
+           & Qlmc  & Data  & Qlmc  & Data  & Qlmc  & Data  & Bias 10\% & Bias 20\% \\
+\midrule
+    Auchan & 125   & 112   & 1,976 & 2,382 & +7.6\% & +6.5\% & +5.5\% & +5.0\% \\
+    Carrefour & 188   & 171   & 1,294 & 1,284 & +7.8\% & +8.2\% & +7.0\% & +6.0\% \\
+    Carrefour market & 421   & 239   & 2,032 & 3,401 & +13.5\% & +12.4\% & +11.6\% & +10.2\% \\
+    Casino & 151   & 76    & na    & 1,650 & +16.7\% & +16.8\% & +15.8\% & +15.4\% \\
+    Cora  & 58    & 54    & 1,326 & 2,994 & +10.2\% & +9.4\% & +8.3\% & +7.3\% \\
+    Geant Casino & 108   & 92    & 1,582 & 1,582 & +1.8\% & +1.5\% & +0.7\% & +0.4\% \\
+    Intermarche & 1,022 & 530   & 1,971 & 6,287 & +7.0\% & +7.1\% & +5.8\% & +5.0\% \\
+    Simply market & 50    & 49    & na    & 1,070 & +12.9\% & +13.4\% & +11.6\% & +11.2\% \\
+    Systeme U & 632   & 413   & 2,386 & 4,565 & +6.7\% & +5.8\% & +4.8\% & +4.7\% \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item Comparisons are based on 561 Leclerc stores (vs. 581 in Qlmc). In the column "Bias 10\%", the 10\% products which compare most favorably for Leclerc in terms of percent price difference are dropped.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\begin{table}[H]
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Comparisons between Leclerc stores and their competitors by chain}\label{tab:qlmc_store_comparisons}
+\small
+\begin{tabular}{lr|rrrrrrr}
+\toprule
+\toprule
+          & Nb    & \multicolumn{7}{c}{Comparison of Leclerc stores vs. competitors by chain} \\
+          & pairs & Mean  & Std   & Min   & Q25  & Q50 & Q75  & Max \\
+\midrule
+    Auchan & 118   & +6.5\% & 3.3\% & +1.6\% & +4.1\% & +5.7\% & +8.3\% & +19.5\% \\
+    Carrefour & 175   & +8.2\% & 5.2\% & -3.5\% & +5.8\% & +8.1\% & +9.4\% & +36.2\% \\
+    Carrefour market & 235   & +13.8\% & 3.3\% & +1.3\% & +11.7\% & +13.5\% & +15.8\% & +24.5\% \\
+    Casino & 57    & +17.9\% & 4.8\% & +0.5\% & +16.8\% & +18.7\% & +21.0\% & +27.5\% \\
+    Cora  & 57    & +8.6\% & 2.4\% & +3.6\% & +6.7\% & +8.4\% & +10.3\% & +15.6\% \\
+    Geant Casino & 99    & +1.8\% & 1.5\% & -0.6\% & +0.7\% & +1.3\% & +2.3\% & +5.3\% \\
+    Intermarche & 525   & +7.1\% & 2.8\% & +2.0\% & +5.4\% & +6.6\% & +8.2\% & +28.4\% \\
+    Simply market & 49    & +13.4\% & 6.2\% & +6.5\% & +9.8\% & +10.6\% & +15.4\% & +31.8\% \\
+    Systeme U & 355   & +6.7\% & 4.0\% & +1.1\% & +3.8\% & +5.8\% & +8.7\% & +26.0\% \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item Pairs are required to include 400 products or more. There are 118 comparisons between a Leclerc store and an Auchan store. On average, an Auchan store is 6.5\% more expensive than its Leclerc competitor.
+\end{tablenotes}
+\end{threeparttable}
 \end{table}
 
 \newpage
 
-\section{Chain price policies}
+\section{Chain pricing policies}
 
 \begin{table}[H]
+\begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Distribution of the frequencies of the most common price per product}\label{tab:qlmc_prod_freq_50}
+\caption{Distribution of the frequencies of the most common price per product}\label{tab:qlmc_prod_freq}
 \small
 \begin{tabular}{lrrrrrrrr}
 \toprule
 \toprule
-{} &    count &  mean &  std &  min &  25\% &  50\% &  75\% &  max \\
+{}                 &  Nb &  Mean &  Std &  Min &  Q25 &  Q50 &  Q75 &  Max \\
 \midrule
-AUCHAN             &   416 &  0.19 & 0.11 & 0.05 & 0.12 & 0.16 & 0.22 & 0.63 \\
-CARREFOUR          &   319 &  0.29 & 0.17 & 0.07 & 0.17 & 0.23 & 0.36 & 0.87 \\
-CARREFOUR MARKET   &   777 &  0.33 & 0.19 & 0.11 & 0.20 & 0.26 & 0.42 & 1.00 \\
-GEANT CASINO       &   417 &  0.89 & 0.10 & 0.45 & 0.83 & 0.91 & 0.97 & 1.00 \\
-CASINO             &   157 &  0.37 & 0.15 & 0.06 & 0.29 & 0.33 & 0.44 & 0.86 \\
-CORA               &   364 &  0.20 & 0.11 & 0.06 & 0.14 & 0.17 & 0.23 & 0.90 \\
-INTERMARCHE        & 1,326 &  0.25 & 0.19 & 0.05 & 0.13 & 0.18 & 0.29 & 0.97 \\
-LECLERC            & 1,788 &  0.38 & 0.23 & 0.03 & 0.14 & 0.38 & 0.59 & 0.95 \\
-SUPER U            & 1,077 &  0.39 & 0.12 & 0.09 & 0.32 & 0.37 & 0.44 & 0.91 \\
+Auchan             &   416 &  0.19 & 0.11 & 0.05 & 0.12 & 0.16 & 0.22 & 0.63 \\
+Carrefour          &   319 &  0.29 & 0.17 & 0.07 & 0.17 & 0.23 & 0.36 & 0.87 \\
+Carrefour Market   &   777 &  0.33 & 0.19 & 0.11 & 0.20 & 0.26 & 0.42 & 1.00 \\
+Geant Casino       &   417 &  0.89 & 0.10 & 0.45 & 0.83 & 0.91 & 0.97 & 1.00 \\
+Casino             &   157 &  0.37 & 0.15 & 0.06 & 0.29 & 0.33 & 0.44 & 0.86 \\
+Cora               &   364 &  0.20 & 0.11 & 0.06 & 0.14 & 0.17 & 0.23 & 0.90 \\
+Intermarche        & 1,326 &  0.25 & 0.19 & 0.05 & 0.13 & 0.18 & 0.29 & 0.97 \\
+Leclerc            & 1,788 &  0.38 & 0.23 & 0.03 & 0.14 & 0.38 & 0.59 & 0.95 \\
+Systeme U          & 1,077 &  0.39 & 0.12 & 0.09 & 0.32 & 0.37 & 0.44 & 0.91 \\
 \bottomrule
 \bottomrule
-\multicolumn{9}{p{0.8\textwidth}}{\footnotesize Reading note: On average, 38\% of all Leclerc stores set the very same price for a given product.}
+%\multicolumn{9}{p{0.8\textwidth}}{\footnotesize Reading note: On average, 38\% of all Leclerc stores set the very same price for a given product.}
 \end{tabular}
+\begin{tablenotes}
+      \small
+      \item On average, 38\% of all Leclerc stores set the very same price for a given product.
+\end{tablenotes}
+\end{threeparttable}
 \end{table}
 
 \begin{table}[H]
+\begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
 \caption{Distribution of the frequencies of "standard" prices per store}\label{tab:qlmc_store_freq_50}
 \small
 \begin{tabular}{lrrrrrrrr}
 \toprule
 \toprule
-{} &    count &  mean &  std &  min &  25\% &  50\% &  75\% &  max \\
+{}                &  Nb &  Mean &  Std &  Min &  Q25 &  Q50 &  Q75 &  Max \\
 \midrule
-AUCHAN            & 107 &  0.01 & 0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 \\
-CARREFOUR         & 146 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.09 & 0.13 \\
-CARREFOUR MARKET  & 223 &  0.12 & 0.05 & 0.00 & 0.10 & 0.13 & 0.15 & 0.21 \\
-GEANT CASINO      &  91 &  0.80 & 0.23 & 0.06 & 0.70 & 0.94 & 0.96 & 0.98 \\
-CASINO            &  74 &  0.04 & 0.02 & 0.01 & 0.03 & 0.05 & 0.06 & 0.09 \\
-CORA              &  54 &  0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 & 0.02 \\
-INTERMARCHE       & 513 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.10 & 0.17 \\
-LECLERC           & 552 &  0.28 & 0.12 & 0.01 & 0.19 & 0.31 & 0.38 & 0.51 \\
-SUPER U           & 409 &  0.08 & 0.05 & 0.00 & 0.04 & 0.06 & 0.12 & 0.17 \\
+Auchan            & 107 &  0.01 & 0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 \\
+Carrefour         & 146 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.09 & 0.13 \\
+Carrefour Market  & 223 &  0.12 & 0.05 & 0.00 & 0.10 & 0.13 & 0.15 & 0.21 \\
+Geant Casino      &  91 &  0.80 & 0.23 & 0.06 & 0.70 & 0.94 & 0.96 & 0.98 \\
+Casino            &  74 &  0.04 & 0.02 & 0.01 & 0.03 & 0.05 & 0.06 & 0.09 \\
+Cora              &  54 &  0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 & 0.02 \\
+Intermarche       & 513 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.10 & 0.17 \\
+Leclerc           & 552 &  0.28 & 0.12 & 0.01 & 0.19 & 0.31 & 0.38 & 0.51 \\
+Systeme U         & 409 &  0.08 & 0.05 & 0.00 & 0.04 & 0.06 & 0.12 & 0.17 \\
 \bottomrule
 \bottomrule
-\multicolumn{9}{p{0.8\textwidth}}{\footnotesize Reading note: A price is considered "standard" if it is shared by 50\% of the chain stores or more. On average, a Leclerc store sells 28\% of its products at a "standard" price.}
 \end{tabular}
+\begin{tablenotes}
+      \small
+      \item A price is considered "standard" if it is shared by 50\% of the chain stores or more. On average, a Leclerc store sells 28\% of its products at a "standard" price.
+\end{tablenotes}
+\end{threeparttable}
 \end{table}
 
 \end{document}

@@ -36,10 +36,13 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # LOAD DATA
 # ###########
 
+dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')
 df_qlmc_0712 = pd.read_csv(os.path.join(path_built_200712_csv,
-                                        'df_qlmc.csv'),
-                           encoding = 'utf-8',
-                           parse_dates = ['date'])
+                                   'df_qlmc.csv'),
+                      dtype = {'id_lsa' : str},
+                      parse_dates = ['date'],
+                      date_parser = dateparse,
+                      encoding = 'utf-8')
 
 # harmonize store chains according to qlmc
 df_qlmc_0712['store_chain_alt'] = df_qlmc_0712['store_chain']
@@ -201,6 +204,8 @@ df_mcp_2012.reset_index(drop = False, inplace = True)
 
 df_mcp_2012.loc[df_mcp_2012['store_chain_alt'] == 'CHAMPION',
                 'store_chain_alt'] = 'CARREFOUR MARKET'
+df_mcp_2012.loc[df_mcp_2012['store_chain_alt'] == 'GEANT',
+                'store_chain_alt'] = 'GEANT CASINO'
 df_mcp_2012.rename(columns = {'store_chain_alt' : 'store_chain'}, inplace = True)
 
 ls_prod_cols_14 = ['ean', 'section', 'family', 'product']

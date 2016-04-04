@@ -24,8 +24,12 @@ path_built_csv = os.path.join(path_built,
 # LOAD DATA
 # ####################
 
+dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
+                      dtype = {'id_lsa' : str},
+                      parse_dates = ['date'],
+                      date_parser = dateparse,
                       encoding = 'utf-8')
 
 # harmonize store chains according to qlmc
@@ -109,10 +113,19 @@ for i in range(0, 13):
   
       res = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
                df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100
-      
+      nb_stores = len(df_qlmc_per[df_qlmc_per['store_chain_alt'] ==\
+                                    chain_b]['store'].unique())
+      nb_prods = len(df_duel_sub)
+      pct_a_wins = len(df_duel_sub[df_duel_sub['diff'] > 10e-4]) / float(nb_prods)
+      pct_b_wins = len(df_duel_sub[df_duel_sub['diff'] < -10e-4]) / float(nb_prods)
+      pct_draws = len(df_duel_sub[df_duel_sub['diff'].abs() <= 10e-4]) / float(nb_prods)
       # Save both nb stores of chain b and res
-      ls_res.append([len(df_qlmc_per[df_qlmc_per['store_chain_alt'] ==\
-                                       chain_b]['store'].unique()), res])
+      ls_res.append([nb_stores,
+                     res,
+                     nb_prods,
+                     pct_a_wins,
+                     pct_b_wins,
+                     pct_draws])
       ls_res_ind.append(chain_b)
       
       #print u'\nReplicated QLMC comparison: {:s} vs {:s}'.format(chain_a, chain_b)
@@ -132,12 +145,16 @@ for i in range(0, 13):
   
   df_res = pd.DataFrame(ls_res,
                         index = ls_res_ind,
-                        columns = ['Nb stores (my data)', 'vs. LEC (my data)'])
+                        columns = ['Nb stores (my data)',
+                                   'vs. LEC (my data)',
+                                   'Nb prods',
+                                   'Pct Leclerc wins',
+                                   'Pct Competitor wins',
+                                   'Pct draws'])
   df_res['vs. LEC (my data)'] =\
     df_res['vs. LEC (my data)'].apply(lambda x: u'{:.1f}%'.format(x))
-  df_res.ix['LECLERC'] = [len(df_qlmc_per[df_qlmc_per['store_chain_alt'] ==\
-                                'LECLERC']['store'].unique()), u'']
-  
+  df_res.loc[u'LECLERC', u'Nb stores (my data)'] =\
+                len(df_qlmc_per[df_qlmc_per['store_chain_alt'] ==\
+                                  'LECLERC']['store'].unique())
   ls_df_res.append(df_res)
-
   print df_res.to_string()

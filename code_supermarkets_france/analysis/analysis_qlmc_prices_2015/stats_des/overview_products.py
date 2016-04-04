@@ -53,7 +53,8 @@ df_prices.set_index(ls_prod_cols, inplace = True)
 df_prices['nb_obs'] = se_prod_vc
 df_prices.reset_index(drop = False, inplace = True)
 
-df_prices = df_prices[df_prices['nb_obs'] >= 200]
+## need to comment out when outputing section / families
+#df_prices = df_prices[df_prices['nb_obs'] >= 200]
 
 PD = PriceDispersion()
 

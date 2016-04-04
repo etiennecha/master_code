@@ -24,10 +24,13 @@ path_built_csv = os.path.join(path_built,
 # LOAD DATA
 # ####################
 
+dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
-                      encoding = 'utf-8',
-                      parse_dates = ['date'])
+                      dtype = {'id_lsa' : str},
+                      parse_dates = ['date'],
+                      date_parser = dateparse,
+                      encoding = 'utf-8')
 
 # harmonize store chains according to qlmc
 df_qlmc['store_chain_alt'] = df_qlmc['store_chain']
@@ -54,7 +57,7 @@ for sc_old, sc_new in ls_sc_replace:
               'store_chain_alt'] = sc_new
 
 # Average price by period/chain/product
-ls_prod_cols = ['section', 'family' , 'product'] # ['product']
+ls_prod_cols = ['product'] # ['section', 'family' , 'product']
 ls_col_gb = ['period', 'store_chain_alt'] + ls_prod_cols + ['price']
 df_mcpp = df_qlmc.groupby(ls_col_gb[:-1]).agg([len, np.mean])['price']
 df_mcpp.reset_index(drop = False, inplace = True)
@@ -62,7 +65,7 @@ df_mcpp.reset_index(drop = False, inplace = True)
 dict_df_chain_su = {}
 for chain in df_mcpp['store_chain_alt'].unique():
   df_chain = df_mcpp[(df_mcpp['store_chain_alt'] == chain) &\
-                     (df_mcpp['len'] >= 20)]
+                     (df_mcpp['len'] >= 10)]
   
   ls_rows = []
   # tup_per = (0, 1)
@@ -115,12 +118,22 @@ for chain in dict_df_chain_su.keys():
   y = (y-1) * 100
   print 'Chge for brand {:s} : {:.2f}'.format(chain, y)
 
-# From 05/2007 to 05/2011
+# FROM 05/2007 to 02/2011 (supposed to be stable?)
 print()
-print('Inflation over 05/2007 - 05/2011')
+print('Inflation over 05/2007 - 02/2011')
 for chain in dict_df_chain_su.keys():
   y = 1
-  for x in df_var_su[chain][4:].values:
+  for x in df_var_su[chain][:8].values:
+    y = y * (x + 100)/100
+  y = (y-1) * 100
+  print 'Chge for brand {:s} : {:.2f}'.format(chain, y)
+
+# From 05/2007 to 05/2011
+print()
+print('Inflation over 05/2007 - 02/2011')
+for chain in dict_df_chain_su.keys():
+  y = 1
+  for x in df_var_su[chain][4:8].values:
     y = y * (x + 100)/100
   y = (y-1) * 100
   print 'Chge for brand {:s} : {:.2f}'.format(chain, y)

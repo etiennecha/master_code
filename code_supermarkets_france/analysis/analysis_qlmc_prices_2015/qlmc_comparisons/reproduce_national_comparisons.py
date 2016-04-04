@@ -20,7 +20,8 @@ path_built_csv = os.path.join(path_data,
                               'data_csv_201503')
 
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'))
+                                     'df_prices.csv'),
+                        encoding = 'utf-8')
 
 df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'))
@@ -97,18 +98,29 @@ for chain_a, chain_b in ls_compare_chains:
   print(u'{:.1f}'.format(res))
   
   # Save both nb stores of chain b and res
-  ls_res.append([len(df_prices[df_prices['store_chain'] ==\
-                                 chain_b]['store_id'].unique()), res])
+  nb_stores = len(df_prices[df_prices['store_chain'] ==\
+                                chain_b]['store_id'].unique())
+  nb_prods = len(df_duel_sub)
+  pct_a_wins = len(df_duel_sub[df_duel_sub['diff'] > 10e-4]) / float(nb_prods)
+  pct_b_wins = len(df_duel_sub[df_duel_sub['diff'] < -10e-4]) / float(nb_prods)
+  pct_draws = len(df_duel_sub[df_duel_sub['diff'].abs() <= 10e-4]) / float(nb_prods)
+  # Save both nb stores of chain b and res
+  ls_res.append([nb_stores,
+                 res,
+                 nb_prods,
+                 pct_a_wins,
+                 pct_b_wins,
+                 pct_draws])
 
   percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]
   print(df_duel_sub[['diff', 'pct_diff']].describe(percentiles = percentiles))
 
   # Manipulate or assume consumer is somewhat informed
-  df_duel_sub.sort('diff', ascending = False, inplace = True)
-  df_duel_sub = df_duel_sub[len(df_duel_sub)/10:]
-  res = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
+  df_duel_sub.sort('pct_diff', ascending = False, inplace = True)
+  df_duel_sub = df_duel_sub[len(df_duel_sub)/5:]
+  res_2 = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
            df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100
-  print(u'After manip against Leclerc: {:.1f}'.format(res))
+  print(u'After manip against Leclerc: {:.1f}'.format(res_2))
 
 ##print df_duel[0:10].to_string()
 
@@ -141,12 +153,17 @@ df_recap.set_index('Chain', inplace = True)
 # Merge with my results
 df_res = pd.DataFrame(ls_res,
                       index = ls_some_chains,
-                      columns = ['Nb stores (my data)', 'vs. LEC (my data)'])
+                      columns = ['Nb stores (my data)',
+                                 'vs. LEC (my data)',
+                                 'Nb prods',
+                                 'Pct Leclerc wins',
+                                 'Pct Competitor wins',
+                                 'Pct draws'])
 df_res.rename(index = {'SUPER U' : 'SYSTEME U'}, inplace = True)
-df_res['vs. LEC (my data)'] =\
-  df_res['vs. LEC (my data)'].apply(lambda x: u'{:.1f}%'.format(x))
-df_res.ix['LECLERC'] = [len(df_prices[df_prices['store_chain'] ==\
-                              'LECLERC']['store_id'].unique()), u'']
+df_res['vs. LEC (my data)'].apply(lambda x: u'{:.1f}%'.format(x))
+df_res.loc[u'LECLERC', u'Nb stores (my data)'] =\
+              len(df_prices[df_prices['store_chain'] ==\
+                                'LECLERC']['store_id'].unique())
 
 df_recap = pd.merge(df_recap,
                     df_res,

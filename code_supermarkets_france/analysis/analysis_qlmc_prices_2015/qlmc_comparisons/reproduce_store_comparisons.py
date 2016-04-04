@@ -71,19 +71,21 @@ df_duel = pd.merge(df_lec,
 print(u'Time to merge', timeit.default_timer() - start)
 
 print()
-print(u'\nReplication of comparison:')
+print(u'Replication of comparison:')
 print((df_duel['price_comp'].sum() / df_duel['price_lec'].sum() - 1) * 100)
 
 print()
 print(u'Overview product prices:')
 print(df_duel[['price_lec', 'price_comp']].describe())
 
+print()
 print(u'Average on product by product comparison')
 # (todo: add weighted pct (Leclerc's method?))
 df_duel['diff'] = df_duel['price_comp'] - df_duel['price_lec']
 df_duel['pct_diff'] = df_duel['price_comp'] / df_duel['price_lec'] - 1
 print(df_duel[['diff', 'pct_diff']].describe())
 
+print()
 print(u'Desc of abs value of percent difference:')
 print(df_duel['pct_diff'].abs().describe(\
         percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]))
@@ -172,7 +174,7 @@ print(df_repro_compa.describe(percentiles = ls_pctiles).to_string())
 
 print()
 print(u'Overview of pair with similar prices:')
-print df_repro_compa[df_repro_compa['pct_draws'] >= 30].to_string()
+print(df_repro_compa[df_repro_compa['pct_draws'] >= 30].to_string())
 
 import matplotlib.pyplot as plt
 #df_repro_compa['pct_compa_abs'] = df_repro_compa['pct_compa'].abs()
@@ -212,24 +214,50 @@ df_delta['delta'] = df_delta['qlmc_pct_compa'] - df_delta['pct_compa']
 print(df_delta['delta'].describe())
 
 # Summary by chain
-ls_su_chains = ['AUCHAN', 'CARREFOUR', 'GEANT CASINO', 'INTERMARCHE', 'SUPER U']
+ls_scs = ['AUCHAN',
+          'CARREFOUR',
+          'CARREFOUR MARKET',
+          'CASINO',
+          'CORA',
+          'GEANT CASINO',
+          'INTERMARCHE',
+          'SIMPLY MARKET',
+          'SUPER U']
+
 ls_se_chain_desc =\
-  [df_repro_compa[(df_repro_compa['comp_chain'] == chain) &\
+  [df_repro_compa[(df_repro_compa['comp_chain'] == store_chain) &\
                   (df_repro_compa['nb_obs'] >= 400)]['pct_compa'].describe()\
-                      for chain in ls_su_chains]
+                      for store_chain in ls_scs]
 df_su_chains = pd.concat(ls_se_chain_desc,
                          axis = 1,
-                         keys = ls_su_chains)
+                         keys = ls_scs)
 pd.set_option('float_format', '{:,.1f}'.format)
+print()
 print(u'Summary by chain: comparison results:')
-print(df_su_chains.to_string())
+print(df_su_chains.T.to_string())
 
 # Summary by chain: rr
 ls_se_chain_rr = [df_repro_compa[df_repro_compa['comp_chain']\
-                                     == chain]['rr'].describe()\
-                        for chain in ls_su_chains]
+                                     == store_chain]['rr'].describe()\
+                        for store_chain in ls_scs]
 df_chain_rr = pd.concat(ls_se_chain_rr,
                         axis = 1,
-                        keys = ls_su_chains)
+                        keys = ls_scs)
+print()
 print(u'Summary by chain: rank reversal results:')
-print(df_chain_rr.to_string())
+print(df_chain_rr.T.to_string())
+
+# Summary by chain / stats
+dict_df_chain_stat = {}
+for stat in ['rr', 'pct_draws']:
+  ls_se_chain_stat = [df_repro_compa[df_repro_compa['comp_chain']\
+                                         == store_chain][stat].describe()\
+                            for store_chain in ls_scs]
+  df_chain_stat = pd.concat(ls_se_chain_stat,
+                            axis = 1,
+                            keys = ls_scs)
+  dict_df_chain_stat[stat] = df_chain_stat
+
+print()
+print(u'Summary by chain: pct_draws')
+print(dict_df_chain_stat['pct_draws'].T.to_string())

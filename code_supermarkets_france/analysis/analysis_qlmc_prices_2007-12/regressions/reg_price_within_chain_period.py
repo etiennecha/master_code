@@ -40,11 +40,12 @@ pd.set_option('float_format', '{:,.2f}'.format)
 # LOAD DATA
 # ############
 
+dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
                       dtype = {'id_lsa' : str},
                       parse_dates = ['date'],
-                      dayfirst = True,
+                      date_parser = dateparse,
                       encoding = 'utf-8')
 
 # Fix Store_Chain for prelim stats des
@@ -76,7 +77,8 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                         dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 # same field (fixed tho) in df_qlmc
-df_stores.drop(['store_chain',
+df_stores.drop(['store',
+                'store_chain',
                 'store_municipality',
                 'insee_municipality',
                 'qlmc_surface',
@@ -200,7 +202,7 @@ df_qlmc.loc[df_qlmc['hhi'] >= 0.20, 'dum_high_hhi'] = 1
 # ############
 
 df_qlmc = df_qlmc[(df_qlmc['period'] == 1) &\
-                  (df_qlmc['stor_echain'] == 'AUCHAN')]
+                  (df_qlmc['store_chain'] == 'AUCHAN')]
 
 se_prod = df_qlmc.groupby(['section', 'family', 'product']).agg('size')
 se_prod.sort(ascending = False, inplace = True)
@@ -209,16 +211,16 @@ se_prod.sort(ascending = False, inplace = True)
 section, family, product = se_prod.index[0]
 df_qlmc_prod = df_qlmc[(df_qlmc['section'] == section) &\
                        (df_qlmc['family'] == family) &\
-                       (df_qlmc['product'] == produit)].copy()
+                       (df_qlmc['product'] == product)].copy()
 
-print(u'regression of price of {:s}'.format(produit))
-reg = smf.ols('price ~ surface + ac_hhi + C(reg)',
+print(u'regression of price of {:s}'.format(product))
+reg = smf.ols('price ~ surface + ac_hhi + C(region)',
               data = df_qlmc_prod,
               missing = 'drop').fit()
 print(reg.summary())
 
-print(u'regression of log price of {:s}'.format(produit))
-reg = smf.ols('ln_price ~ surface + ac_hhi + C(reg)',
+print(u'regression of log price of {:s}'.format(product))
+reg = smf.ols('ln_price ~ surface + ac_hhi + C(region)',
               data = df_qlmc_prod,
               missing = 'drop').fit()
 print(reg.summary())
@@ -231,14 +233,9 @@ print(reg.summary())
 ls_top_prod = [x[-1] for x in se_prod.index[0:200]]
 df_qlmc_prods = df_qlmc[df_qlmc['product'].isin(ls_top_prod)].copy()
 
-print(u'regression of price of top 20 products (avail in data)')
-reg = smf.ols('price ~ C(product) + surface + hhi + C(reg)',
-              data = df_qlmc_prods,
-              missing = 'drop').fit()
-print(reg.summary())
-
 print(u'regression of log price of top 20 products (avail in data)')
-reg = smf.ols('ln_price ~ C(product) + surface + hhi + C(reg)',
+reg = smf.ols('ln_price ~ C(product) + ln_surface ' +\
+                          '+ ln_hhi + ln_pop_cont_10 + ln_med_rev_uu',
               data = df_qlmc_prods,
               missing = 'drop').fit()
 print(reg.summary())
@@ -251,10 +248,13 @@ df_qlmc_prods.loc[(df_qlmc_prods['hhi'] >= df_qlmc_prods['hhi'].quantile(0.75)) 
                      df_qlmc_prods['group_share'].quantile(0.75)),
                   'dum_mp'] = 1
 
+df_corr[['ln_surface', 'ln_pop_cont_10', 'ln_med_rev_uu', 'ln_hhi']]
+
 # todo: endogenize
 print(df_qlmc_prods['dum_mp'].describe())
 
-reg = smf.ols('ln_price ~ C(product) + surface + dum_mp + C(reg)',
+reg = smf.ols('ln_price ~ C(product) + ln_surface ' +\
+                          '+ dum_mp + ln_pop_cont_10 + ln_med_rev_uu',
               data = df_qlmc_prods,
               missing = 'drop').fit()
 print(reg.summary())
