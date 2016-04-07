@@ -23,7 +23,7 @@ path_built_csv = os.path.join(path_data,
                               'data_csv_201503')
 
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices_cleaned.csv'),
+                                     'df_res_ln_prices.csv'),
                         encoding = 'utf-8')
 
 df_stores = pd.read_csv(os.path.join(path_built_csv,

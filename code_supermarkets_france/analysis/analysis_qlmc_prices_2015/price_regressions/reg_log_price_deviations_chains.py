@@ -31,6 +31,13 @@ path_built_lsa_csv = os.path.join(path_data,
                                   'data_lsa',
                                   'data_csv')
 
+path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv,
+                                       '201407_competition')
+
+path_insee_extracts = os.path.join(path_data,
+                                   'data_insee',
+                                   'data_extracts')
+
 # #############
 # LOAD DATA
 # #############
@@ -42,6 +49,7 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
 # Add store chars / environement
 df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'),
+                        dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 
 # Add qlmc_chain
@@ -62,85 +70,102 @@ for ls_enseigne_lsa_to_qlmc in ls_ls_enseigne_lsa_to_qlmc:
   df_stores.loc[df_stores['store_chain'].isin(ls_enseigne_lsa_to_qlmc[0]),
               'qlmc_chain'] = ls_enseigne_lsa_to_qlmc[1]
 
-# LOAD STORE COMPETITION (todo: aggregate elsewhere)
+# LOAD LSA STORE DATA
+df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {u'id_lsa' : str,
+                              u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
 
-df_comp_h = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                     '201407_competition',
-                                     'df_store_prospect_comp_H_v_all.csv'),
+# LOAD COMPETITION
+ls_comp_files = ['df_store_prospect_comp_HS_v_all_10km.csv',
+                 'df_store_prospect_comp_HS_v_all_20km.csv',
+                 'df_store_prospect_comp_HS_v_all_1025km.csv']
+df_comp = pd.read_csv(os.path.join(path_built_lsa_comp_csv,
+                                   ls_comp_files[0]),
+                      dtype = {'id_lsa' : str},
+                      encoding = 'utf-8')
+
+# LOAD DEMAND
+df_demand = pd.read_csv(os.path.join(path_built_lsa_comp_csv,
+                                     'df_store_prospect_demand.csv'),
+                        dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 
-df_comp_s = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                     '201407_competition',
-                                     'df_store_prospect_comp_S_v_all.csv'), 
-                        encoding = 'utf-8')
+# LOAD REVENUE (would be better to dedicate a script)
+df_insee_areas = pd.read_csv(os.path.join(path_insee_extracts,
+                                          u'df_insee_areas.csv'),
+                             encoding = 'UTF-8')
 
-df_comp = pd.concat([df_comp_h, df_comp_s],
-                    axis = 0,
-                    ignore_index = True)
+## add municipality revenue
+#df_com = pd.read_csv(os.path.join(path_insee_extracts,
+#                                  'data_insee_extract.csv'),
+#                     encoding = 'UTF-8')
 
-ls_lsa_info_cols = [u'surface',
-                    u'nb_caisses',
-                    u'nb_emplois',
-                    u'nb_parking',
-                    u'int_ind',
-                    u'groupe',
-                    u'groupe_alt',
-                    u'enseigne_alt',
-                    u'type_alt']
+# add AU revenue
+df_au_agg = pd.read_csv(os.path.join(path_insee_extracts,
+                                     u'df_au_agg_final.csv'),
+                        encoding = 'UTF-8')
+df_au_agg['med_rev_au'] = df_au_agg['QUAR2UC10']
+df_insee_areas = pd.merge(df_insee_areas,
+                          df_au_agg[['AU2010', 'med_rev_au']],
+                          left_on = 'AU2010',
+                          right_on = 'AU2010')
 
-ls_lsa_comp_cols = ['ac_nb_stores',
-                    'ac_nb_comp',
-                    'ac_store_share',
-                    'ac_group_share',
-                    'ac_hhi',
-                    'dist_cl_comp',
-                    'dist_cl_groupe',
-                    'hhi',
-                    'store_share',
-                    'group_share',
-                    'c_departement',
-                    'region']
+# add UU revenue
+df_uu_agg = pd.read_csv(os.path.join(path_insee_extracts,
+                                     u'df_uu_agg_final.csv'),
+                        encoding = 'UTF-8')
+df_uu_agg['med_rev_uu'] = df_uu_agg['QUAR2UC10']
+df_insee_areas = pd.merge(df_insee_areas,
+                          df_uu_agg[['UU2010', 'med_rev_uu']],
+                          left_on = 'UU2010',
+                          right_on = 'UU2010')
+
+# MERGE DATA
+df_lsa = pd.merge(df_lsa,
+                  df_comp,
+                  on = 'id_lsa',
+                  how = 'left')
+
+df_lsa = pd.merge(df_lsa,
+                  df_demand,
+                  on = 'id_lsa',
+                  how = 'left')
+
+df_lsa = pd.merge(df_lsa,
+                  df_insee_areas[['CODGEO', 'med_rev_au', 'med_rev_uu']],
+                  left_on = 'c_insee',
+                  right_on = 'CODGEO',
+                  how = 'left')
+
+ls_lsa_cols = ['id_lsa',
+               'region', # robustness check: exclude Ile-de-France
+               'surface',
+               'nb_caisses',
+               'nb_emplois'] +\
+               list(df_comp.columns[1:]) +\
+               list(df_demand.columns[1:]) +\
+               ['med_rev_au', 'med_rev_uu']
 
 df_stores = pd.merge(df_stores,
-                     df_comp[['id_lsa'] +\
-                             ls_lsa_info_cols +\
-                             ls_lsa_comp_cols],
-                     left_on = 'id_lsa',
-                     right_on = 'id_lsa',
+                     df_lsa[ls_lsa_cols],
+                     on = 'id_lsa',
                      how = 'left')
 
-# LOAD STORE DEMAND
+df_prices.drop('store_chain', axis = 1, inplace = True)
 
-df_demand_h = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                     '201407_competition',
-                                     'df_store_prospect_demand_H.csv'),
-                        encoding = 'utf-8')
-
-df_demand_s = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                       '201407_competition',
-                                       'df_store_prospect_comp_S_v_all.csv'), 
-                        encoding = 'utf-8')
-
-df_demand = pd.concat([df_demand_h, df_demand_s],
-                      axis = 0,
-                      ignore_index = True)
-
-df_stores = pd.merge(df_stores,
-                     df_demand[['id_lsa', 'pop', 'ac_pop']],
-                     left_on = 'id_lsa',
-                     right_on = 'id_lsa',
-                     how = 'left')
-
-# Merge store chars and prices
-
-print len(df_prices)
-
-# drop redundant columns
-df_prices.drop(['store_chain'], axis = 1, inplace = True)
 df_qlmc = pd.merge(df_prices,
                    df_stores,
-                   how = 'left',
-                   on = 'store_id')
+                   on = ['store_id'],
+                   how = 'left')
 
 print len(df_qlmc)
 
@@ -202,7 +227,7 @@ df_qlmc['cv'] = df_qlmc.groupby('product')['price'].transform('std') /\
                   df_qlmc.groupby('product')['price'].transform('mean')
 
 df_qlmc['range'] = df_qlmc.groupby('product')['price'].transform('max') -\
-                  df_qlmc.groupby('product')['price'].transform('in')
+                  df_qlmc.groupby('product')['price'].transform('min')
 
 
 df_disp = df_qlmc.drop_duplicates('product')

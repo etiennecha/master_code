@@ -147,7 +147,8 @@ for col in ['surface', 'hhi', 'ac_hhi',
             'pop_ac_10km', 'pop_ac_20km']:
   df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
 
-df_stores['ac_hhi_2'] = df_stores['ac_hhi']**2
+##  need to center first... still high multicolinearity
+# df_stores['ac_hhi_2'] = df_stores['ac_hhi']**2
 
 # LOAD MARKET DISPERSION
 price_col = 'lpd' # or 'price' for log price dev to mean of raw prices
@@ -202,11 +203,11 @@ print(df_disp[['nb_stores', 'ac_hhi', 'hhi',
                'ln_pop_cont_10', 'ln_pop_cont_12',
                'ln_med_rev_au', 'ln_med_rev_uu']].corr().to_string())
 
-res_std = smf.ols('std ~ ac_hhi + ac_hhi_2 + ln_pop_cont_10 + ln_med_rev_au',
+res_std = smf.ols('std ~ ac_hhi + ln_pop_cont_10 + ln_med_rev_au',
                   data = df_disp).fit()
 print(res_std.summary())
 
-res_range = smf.ols('range ~ ac_hhi + ac_hhi_2 + ln_pop_cont_10 + ln_med_rev_au',
+res_range = smf.ols('range ~ ac_hhi + ln_pop_cont_10 + ln_med_rev_au',
                     data = df_disp).fit()
 print(res_range.summary())
 
