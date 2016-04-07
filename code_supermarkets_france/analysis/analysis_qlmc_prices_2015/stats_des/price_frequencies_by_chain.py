@@ -60,7 +60,7 @@ df_qlmc = df_qlmc[df_qlmc[ls_prod_cols[-1]].isin(ls_keep_products)]
 
 PD = PriceDispersion()
 
-nb_obs_min = 40 # Product must be observed at X stores at least
+nb_obs_min = 20 # Product must be observed at X stores at least
 pct_min = 0.33 # Ref price is share by X% of stores only (else no ref)
 
 ls_loop_scs = ['AUCHAN',

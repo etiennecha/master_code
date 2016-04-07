@@ -124,7 +124,7 @@ ss = s.to_sparse()
 A, rows, columns = ss.to_coo(row_levels=['row'],
                              column_levels = ['col'],
                              sort_labels = True)
-price_col = 'price'
+price_col = 'ln_price'
 y = df_qlmc[price_col].values
 param_names = columns
 

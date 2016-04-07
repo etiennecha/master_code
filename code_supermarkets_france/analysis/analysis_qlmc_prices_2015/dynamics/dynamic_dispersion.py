@@ -153,22 +153,24 @@ df_compa_2 = pd.merge(df_compa,
                       on = ['id_lsa_0', 'id_lsa_1'],
                       how = 'left')
 
-df_compa_2['pct_rr'] = df_compa_2['nb_rr'] / df_compa_2['nb_obs'].astype(float)
-df_compa_2['pct_dom'] = df_compa_2['nb_dom'] / df_compa_2['nb_obs'].astype(float)
-df_compa_2['pct_draw'] = df_compa_2['nb_draw'] / df_compa_2['nb_obs'].astype(float)
+df_compa_2['pct_rr'] = df_compa_2['nb_rr'] / df_compa_2['nb_obs'].astype(float) * 100
+df_compa_2['pct_dom'] = df_compa_2['nb_dom'] / df_compa_2['nb_obs'].astype(float) * 100
+df_compa_2['pct_draw'] = df_compa_2['nb_draw'] / df_compa_2['nb_obs'].astype(float) * 100
 
 # Brand comparison: need to sort order to have one brand per column
 # Cannot restrict ls_per here... will work only for aggregate compa
 
-for tup_chains in [('LECLERC', 'GEANT CASINO'),
-                   ('LECLERC', 'CARREFOUR'),
-                   ('CARREFOUR', 'GEANT CASINO'),
-                   ('CARREFOUR MARKET', 'CASINO'),
-                   ('LECLERC', 'AUCHAN'),
-                   ('GEANT CASINO', 'AUCHAN'),
-                   ('CARREFOUR', 'AUCHAN'),
-                   ('AUCHAN', 'INTERMARCHE'),
-                   ('AUCHAN', 'SUPER U')]:
+ls_tup_chains = [('LECLERC', 'GEANT CASINO'),
+                 ('LECLERC', 'CARREFOUR'),
+                 ('GEANT CASINO', 'CARREFOUR'),
+                 ('CARREFOUR', 'AUCHAN'),
+                 ('CARREFOUR', 'INTERMARCHE'),
+                 ('CARREFOUR', 'SUPER U'),
+                 ('AUCHAN', 'INTERMARCHE'),
+                 ('AUCHAN', 'SUPER U'),
+                 ('INTERMARCHE', 'SUPER U')]
+
+for tup_chains in ls_tup_chains:
   
   print()
   print(tup_chains)
@@ -209,19 +211,19 @@ for tup_chains in [('LECLERC', 'GEANT CASINO'),
   
   for per in ls_per:
     df_cc['pct_prod_wins_{:s}_A'.format(per)] =\
-        df_cc['nb_wins_{:s}_A'.format(per)] / df_cc['nb_obs'].astype(float)
+        df_cc['nb_wins_{:s}_A'.format(per)] / df_cc['nb_obs'].astype(float) * 100
     df_cc['pct_prod_wins_{:s}_B'.format(per)] =\
-        df_cc['nb_wins_{:s}_B'.format(per)] / df_cc['nb_obs'].astype(float)
+        df_cc['nb_wins_{:s}_B'.format(per)] / df_cc['nb_obs'].astype(float) * 100
     df_cc['pct_prod_draws_{:s}'.format(per)] =\
         1 - df_cc[['pct_prod_wins_{:s}_A'.format(per),
                    'pct_prod_wins_{:s}_B'.format(per)]].sum(1)
     df_cc['pct_prod_rr_{:s}'.format(per)] = df_cc[['pct_prod_wins_{:s}_A'.format(per),
                    'pct_prod_wins_{:s}_B'.format(per)]].min(1)
     df_cc['pct_agg_compa_{:s}'.format(per)] =\
-      df_cc['price_{:s}_B'.format(per)] / df_cc['price_{:s}_A'.format(per)] - 1
+      (df_cc['price_{:s}_B'.format(per)] / df_cc['price_{:s}_A'.format(per)] - 1) * 100
     df_cc['avg_agg_compa_{:s}'.format(per)] =\
       (df_cc['price_{:s}_B'.format(per)] - df_cc['price_{:s}_A'.format(per)]) /\
-         df_cc['nb_obs']
+         df_cc['nb_obs'] * 100
   
   ls_dcc = ['pct_prod_wins_{:s}_A'.format(per) for per in ls_per] +\
            ['pct_prod_draws_{:s}'.format(per) for per in ls_per] +\
@@ -248,6 +250,6 @@ for tup_chains in [('LECLERC', 'GEANT CASINO'),
   nb_some_draw_agg = len(df_cc[df_cc[['nb_per_A_wins',
                                       'nb_per_B_wins']].sum(1) < len(ls_per)])
 
-  print(u'Pct rr agg: {:.2f}'.format(nb_rr_agg / float(len(df_cc))))
-  print(u'Pct draw agg: {:.2f}'.format(nb_draw_agg / float(len(df_cc))))
-  print(u'Pct some draw agg: {:.2f}'.format(nb_some_draw_agg / float(len(df_cc))))
+  print(u'Pct rr agg: {:.2f}'.format(nb_rr_agg / float(len(df_cc)) * 100))
+  print(u'Pct draw agg: {:.2f}'.format(nb_draw_agg / float(len(df_cc)) * 100))
+  print(u'Pct some draw agg: {:.2f}'.format(nb_some_draw_agg / float(len(df_cc)) *100))

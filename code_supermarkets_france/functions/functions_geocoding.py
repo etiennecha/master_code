@@ -124,26 +124,26 @@ def get_google_geocoding_stats(dict_geocoding):
 if __name__=="__main__":
   
   # Need to have a google api key
-  path_data_0 = u'W:\Bureau\Etienne_work\Data'
-  path_data_1 = u'C:\Bureau\Etienne_work\Data'
+  path_data_0 = u'W:\\Bureau\\Etienne_work\\Data'
+  path_data_1 = u'C:\\Users\\etna\\Desktop\\Etienne_work\\Data'
   if not os.path.exists(path_data_0):
     path_data_0 = path_data_1
   path_dir_api_keys = os.path.join(path_data_0, 'api_keys')
   with open(os.path.join(path_dir_api_keys, 'key_google_api.txt'), 'r') as f:
     key_google_api = f.read()
   
-  # Geocoding tests: Google vs. Mapquest
-  location = u'9 rue des Grandes Allées, 02600 Villers-Cotterêts'
-  test_google_geocoding =  geocode_via_google(key_google_api,
-                                              location)
-  test_mapquest_geocoding = geocode_via_mapquest(location)
+  ## Geocoding tests: Google vs. Mapquest
+  #location = u'9 rue des Grandes Allées, 02600 Villers-Cotterêts'
+  #test_google_geocoding =  geocode_via_google(key_google_api,
+  #                                            location)
+  #test_mapquest_geocoding = geocode_via_mapquest(location)
   
-  # Routing test: Google directions with addresses and gps
-  origin = u'7 rue Marie Bonaparte, Saint Cloud'
-  destination = u'15 Boulevard Gabriel Péri, Malakoff'
-  test_google_direction_adr = get_google_direction(key_google_api,
-                                                   origin,
-                                                   destination)
+  ## Routing test: Google directions with addresses and gps
+  #origin = u'7 rue Marie Bonaparte, Saint Cloud'
+  #destination = u'15 Boulevard Gabriel Péri, Malakoff'
+  #test_google_direction_adr = get_google_direction(key_google_api,
+  #                                                 origin,
+  #                                                 destination)
 
   gps_origin = '48.853 2.216'
   gps_destination = '48.819 2.300'
