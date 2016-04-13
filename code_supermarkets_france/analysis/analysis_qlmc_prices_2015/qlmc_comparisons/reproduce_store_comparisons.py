@@ -8,6 +8,8 @@ import os, sys
 import numpy as np
 import pandas as pd
 import timeit
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -30,7 +32,7 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                         encoding = 'utf-8')
 
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
-                                               'df_qlmc_competitors.csv'),
+                                               'df_qlmc_competitors_final.csv'),
                                   encoding = 'utf-8')
 
 # Costly to search by store_id within df_prices
@@ -261,3 +263,16 @@ for stat in ['rr', 'pct_draws']:
 print()
 print(u'Summary by chain: pct_draws')
 print(dict_df_chain_stat['pct_draws'].T.to_string())
+
+# CHECK RR VS TIME
+
+df_repro_2 = pd.merge(df_qlmc_comparisons[['lec_id', 'comp_id',
+                                           'gg_dur_val']],
+                      df_repro_compa,
+                      on = ['lec_id', 'comp_id'],
+                      how = 'left')
+
+chain = 'AUCHAN'
+df_chain = df_repro_2[(df_repro_2['comp_chain'] == 'AUCHAN') &\
+                      (df_repro_2['gg_dur_val'] <= 20)]
+df_chain.plot(kind = 'scatter', x = 'gg_dur_val', y = 'rr')

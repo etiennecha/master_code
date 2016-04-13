@@ -201,8 +201,10 @@ df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 # robustness: reject residuals if beyond 40%
 df_prices = df_prices[df_prices['res'].abs() < 0.4]
 
-#se_store_disp = df_prices[['store_id', 'res']].groupby('store_id').agg(lambda x: (x**2).mean())
-se_store_disp = df_prices[['store_id', 'res']].groupby('store_id').agg(lambda x: x.abs().mean())
+#se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
+#                                              .agg(lambda x: (x**2).mean())
+se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
+                                              .agg(lambda x: x.abs().mean())
 df_stores.set_index('store_id', inplace = True)
 df_stores['disp'] = se_store_disp
 
@@ -239,12 +241,15 @@ for chain in ls_some_chains:
   print(chain)
   df_chain = df_stores[df_stores['qlmc_chain'] == chain]
   print(df_chain[['store_price', 'disp', 'hhi']].corr())
-  print(smf.ols('store_price ~ disp + hhi + C(region) + surface', data = df_chain).fit().summary())
+  print(smf.ols('store_price ~ disp + hhi + C(region) + surface',
+                data = df_chain).fit().summary())
 
 
 # INSPECT GEANT CASINO
 
-df_stores[df_stores['store_chain'] == 'GEANT CASINO'].plot(kind = 'scatter', x = 'store_price', y = 'disp')
+df_stores[df_stores['store_chain'] == 'GEANT CASINO'].plot(kind = 'scatter',
+                                                           x = 'store_price',
+                                                           y = 'disp')
 plt.show()
 
 lsdo = ['store_name', 'store_price', 'disp', 'price_1', 'price_2', 'surface', 'region']

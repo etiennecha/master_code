@@ -12,7 +12,7 @@ import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
 import timeit
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
@@ -39,9 +39,12 @@ df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
 df_prices['price_res'] = df_prices['price'] - df_prices['price_hat']
 df_prices['lpd'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 
-price_col = 'lpd' # or 'price' for log price dev to mean of raw prices
+dict_df_su = {}
+dict_df_disp = {}
 
-for price_col in ['lpd', 'price']: # 'price'
+# price: log price deviation to mean (raw prices)
+# lpd: epsilon from regression with store and product FEs
+for price_col in ['price', 'lpd']:
   
   print()
   print(price_col)
@@ -235,3 +238,7 @@ for price_col in ['lpd', 'price']: # 'price'
                  encoding = 'utf-8',
                  float_format='%.4f',
                  index = False)
+
+  # temp save
+  dict_df_su[price_col] = df_su
+  dict_df_disp[price_col] = df_disp

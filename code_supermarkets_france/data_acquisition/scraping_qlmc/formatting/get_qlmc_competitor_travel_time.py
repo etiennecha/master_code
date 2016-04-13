@@ -155,23 +155,23 @@ else:
                        'comp_lng']].values.tolist() +\
                   [None])
 
-# Query Google Direction for dist and duration
-for i, res in enumerate(ls_res):
-  if (not res) or (res[6]['status'] == 'OVER_QUERY_LIMIT'):
-    try:
-      origin = ' '.join([str(x) for x in res[2:4]])
-      destination = ' '.join([str(x) for x in res[4:6]])
-      gg = get_google_direction(key_google_api,
-                                origin,
-                                destination)
-    except:
-      gg = None
-      print u'Pbm with', ls_res[0:6]
-    # over write list while looping: bof bof
-    ls_res[i][6] = gg
-enc_json(ls_res,
-         os.path.join(path_built_json,
-                      'ls_qlmc_competitors_directions.json'))
+## Query Google Direction for dist and duration
+#for i, res in enumerate(ls_res):
+#  if (not res) or (res[6]['status'] == 'OVER_QUERY_LIMIT'):
+#    try:
+#      origin = ' '.join([str(x) for x in res[2:4]])
+#      destination = ' '.join([str(x) for x in res[4:6]])
+#      gg = get_google_direction(key_google_api,
+#                                origin,
+#                                destination)
+#    except:
+#      gg = None
+#      print u'Pbm with', ls_res[0:6]
+#    # over write list while looping: bof bof
+#    ls_res[i][6] = gg
+#enc_json(ls_res,
+#         os.path.join(path_built_json,
+#                      'ls_qlmc_competitors_directions.json'))
 
 ls_rows_direction = []
 for res in ls_res:
