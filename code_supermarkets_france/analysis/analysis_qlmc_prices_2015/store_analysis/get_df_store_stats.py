@@ -7,8 +7,9 @@ from add_to_path import *
 from functions_generic_qlmc import *
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
-import textwrap
 
 pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -38,8 +39,11 @@ path_insee_extracts = os.path.join(path_data,
 # ############
 
 # LOAD DF PRICES
+#df_prices = pd.read_csv(os.path.join(path_built_csv,
+#                                     'df_prices.csv'),
+#                        encoding = 'utf-8')
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+                                     'df_res_ln_prices.csv'),
                         encoding = 'utf-8')
 
 # LOAD QLMC STORE DATA
@@ -48,9 +52,13 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                         dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 
+# fix issue
+df_stores.loc[df_stores['store_name'].str.contains('CARREFOUR CITY'),
+              'store_chain'] = 'CARREFOUR CITY' # should not be in CARREFOUR...
+
 # HARMONZATION OF CHAINS
 ls_ls_enseigne_lsa_to_qlmc = [[['CENTRE E.LECLERC'], 'LECLERC'],
-                              [['GEANT CASINO'], 'GEANT'],
+                              [['GEANT CASINO'], 'GEANT CASINO'],
                               [['HYPER CASINO'], 'CASINO'],
                               [['INTERMARCHE SUPER',
                                 'INTERMARCHE HYPER',
@@ -172,9 +180,75 @@ df_stores = pd.merge(df_stores,
                      on = 'store_id',
                      how = 'left')
 
+# ADD STORE PRICE FE
+df_fes = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_res_ln_price_fes.csv'),
+                     encoding = 'utf-8')
+
+df_store_fes = df_fes[df_fes['name'].str.startswith('C(store_id)')].copy()
+df_store_fes['store_id'] = df_store_fes['name'].apply(\
+                             lambda x: x.replace('C(store_id)', '').strip())
+df_store_fes['store_price'] = (df_store_fes['coeff'] + 1) * 100
+
+df_stores = pd.merge(df_stores,
+                     df_store_fes,
+                     on = 'store_id',
+                     how = 'left')
+
+# ADD STORE DISPERSION
+df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
+
+# robustness: reject residuals if beyond 40%
+df_prices = df_prices[df_prices['res'].abs() < 0.4]
+
+#se_store_disp = df_prices[['store_id', 'res']].groupby('store_id').agg(lambda x: (x**2).mean())
+se_store_disp = df_prices[['store_id', 'res']].groupby('store_id').agg(lambda x: x.abs().mean())
+df_stores.set_index('store_id', inplace = True)
+df_stores['disp'] = se_store_disp
+
 # ####################
 # INVESTIGATE LECLERC
 # ####################
 
-chain = 'LECLERC'
-df_chain = df_stores[df_stores['store_chain'] == 'LECLERC']
+
+ls_some_chains = ['LECLERC',
+                  'INTERMARCHE', # +7.0%
+                  'SYSTEME U', # +6.7% for both hyper and super
+                  'CARREFOUR MARKET', # +13.5%
+                  'AUCHAN',  # +7.6%
+                  'CORA', # +10.2%
+                  'CARREFOUR', # +7.8%
+                  'GEANT CASINO', #+1.8% (only Geant? also Hyper?)
+                  'CASINO',  # +16.7%
+                  'SIMPLY MARKET'] # +12.9%
+
+print()
+print('Store FEs by chain')
+df_su_store_fes = df_stores[['store_price', 'qlmc_chain']].groupby('qlmc_chain')\
+                                              .describe().unstack()
+print(df_su_store_fes.ix[ls_some_chains].to_string())
+
+print()
+print('Dispersion by chain')
+df_su_disp = df_stores[['disp', 'qlmc_chain']].groupby('qlmc_chain')\
+                                              .describe().unstack()
+print(df_su_disp.ix[ls_some_chains].to_string())
+
+for chain in ls_some_chains:
+  print()
+  print(chain)
+  df_chain = df_stores[df_stores['qlmc_chain'] == chain]
+  print(df_chain[['store_price', 'disp', 'hhi']].corr())
+  print(smf.ols('store_price ~ disp + hhi + C(region) + surface', data = df_chain).fit().summary())
+
+
+# INSPECT GEANT CASINO
+
+df_stores[df_stores['store_chain'] == 'GEANT CASINO'].plot(kind = 'scatter', x = 'store_price', y = 'disp')
+plt.show()
+
+lsdo = ['store_name', 'store_price', 'disp', 'price_1', 'price_2', 'surface', 'region']
+
+# some outliers with low price
+print(df_stores[(df_stores['store_chain'] == 'GEANT CASINO') &\
+                (df_stores['store_price'] <= 96.5)][lsdo].to_string())

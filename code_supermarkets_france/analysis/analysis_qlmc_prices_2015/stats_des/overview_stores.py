@@ -29,9 +29,9 @@ path_lsa_csv = os.path.join(path_data,
                             'data_lsa',
                             'data_csv')
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.3f}'.format(x)
+format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 # ##########
 # LOAD DATA
@@ -61,54 +61,80 @@ df_stores = pd.merge(df_stores,
                      on = 'id_lsa',
                      how = 'left')
 
+# overwrite store_chain
+ls_replace_chains = [['HYPER U', 'SUPER U'],
+                     ['U EXPRESS', 'SUPER U'],
+                     ['HYPER CASINO', 'CASINO'],
+                     ["LES HALLES D'AUCHAN", 'AUCHAN']]
+for old_chain, new_chain in ls_replace_chains:
+  df_stores.loc[df_stores['store_chain'] == old_chain,
+                'store_chain'] = new_chain
+
+ls_some_chains = ['LECLERC',
+                  'INTERMARCHE',
+                  'SUPER U',
+                  'CARREFOUR MARKET',
+                  'AUCHAN',
+                  'CORA',
+                  'CARREFOUR',
+                  'GEANT CASINO',
+                  'CASINO',
+                  'SIMPLY MARKET']
+
+df_stores_excl = df_stores[~df_stores['store_chain'].isin(ls_some_chains)].copy()
+df_stores = df_stores[df_stores['store_chain'].isin(ls_some_chains)]
+
 # ###############
 # STATS DES
 # ###############
 
+# http://pbpython.com/pandas-pivot-table-explained.html
+
+# NB STORES / HYPERS / SUPERS BY CHAINS
+df_type = pd.pivot_table(df_stores,
+                         index = 'store_chain',
+                         columns = 'type',
+                         values = 'id_lsa',
+                         aggfunc  = 'count').fillna(0).astype(int)
+df_type['Tot'] = df_type.sum(1)
+df_type.ix['Total'] = df_type.sum(0)
+#df_type['Pct_Hypers'] = df_type['H'] / df_type['Tot'].astype(float) * 100
+#df_type['Pct_Supers'] = df_type['S'] / df_type['Tot'].astype(float) * 100
 print()
-print(u'Nf of hypers and supers:')
-print(df_stores['type'].value_counts())
+print(df_type.to_string())
 
-print()
-print(u'Nb of stores by retail group:')
-print(df_stores['groupe'].value_counts())
+# DESCRIBE SOME COLS BY CHAIN
+ls_cols = ['surface',
+           'nb_caisses',
+           'nb_emplois',
+           'nb_parking',
+           'nb_pompes']
+# caution for some vars, missing means 0
+for col in ['nb_parking', 'nb_pompes']:
+  df_stores.loc[(~df_stores['id_lsa'].isnull()) &\
+                (df_stores[col].isnull()), col] = 0
 
-print()
-print(u'Nb of stores by chain:')
-print(df_stores['enseigne_alt'].value_counts())
+dict_df_cols = {}
+for col in ls_cols:
+  df_col = df_stores[['store_chain', col]].groupby('store_chain')\
+                                          .describe()[col].unstack().astype(int)
+  dict_df_cols = df_col
+  print()
+  print(col)
+  print(df_col.to_string())
 
-# todo: check H/S split of sample vs. H/S split by retail group
+# DESCRIBE SOME COLS BY CHAIN WITH HYPER / SUPER SPLIT
+ls_cols.sort()
+dict_aggfunc = {col : ['mean'] for col in ls_cols}
+dict_aggfunc[ls_cols[0]] = ['count', 'mean']
+df_su_0 = pd.pivot_table(df_stores,
+                         index = ['store_chain', 'type'],
+                         values = ls_cols,
+                         aggfunc = dict_aggfunc).astype(int)
+print(df_su_0.to_string())
 
-se_rg_vc = df_stores['groupe'].value_counts()
-ls_rg = list(se_rg_vc.index[se_rg_vc >= 1])
-pd.set_option('float_format', '{:,.0f}'.format)
-
-# Drop and use pivot_tables?
-print()
-print(u'Surface distribution by retail group:')
-ls_df_desc_surf = []
-for rg in ls_rg:
-  ls_df_desc_surf.append(df_stores[df_stores['groupe'] == rg]['surface'].describe())
-df_surf_by_rg = pd.concat(ls_df_desc_surf,
-                          keys = ls_rg,
-                          axis = 1)
-df_surf_by_rg.columns = ['{:7s}'.format(x[0:7]) for x in df_surf_by_rg.columns]
-print(df_surf_by_rg.to_string())
-
-print()
-print(u'Nb employees by retail group:')
-ls_df_desc_nemp = []
-for rg in ls_rg:
-  ls_df_desc_nemp.append(df_stores[df_stores['groupe'] == rg]['nb_emplois'].describe())
-df_nemp_by_rg = pd.concat(ls_df_desc_nemp,
-                          keys = ls_rg,
-                          axis = 1)
-df_nemp_by_rg.columns = ['{:>7s}'.format(x[0:7]) for x in df_nemp_by_rg.columns]
-print(df_nemp_by_rg.to_string())
-
-## CHAIN FROM LSA VS. QLMC (a bit large tho)
-#print(pd.pivot_table(df_stores[['store_chain', 'enseigne_alt']],
-#                     index = 'enseigne_alt',
-#                     columns = 'store_chain',
-#                     aggfunc = len,
-#                     fill_value=0).to_string())
+df_su_1 = pd.pivot_table(df_stores,
+                         index = ['store_chain'],
+                         values = ls_cols,
+                         aggfunc = dict_aggfunc).astype(int)
+print(df_su_1.to_string())
