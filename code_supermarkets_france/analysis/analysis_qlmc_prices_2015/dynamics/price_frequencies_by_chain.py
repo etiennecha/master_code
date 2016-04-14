@@ -28,7 +28,7 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # ###########
 
 ls_periods = ['201405', '201409']
-period = ls_periods[1]
+period = ls_periods[0]
 df_qlmc = pd.read_csv(os.path.join(path_built_201415_csv,
                                    'df_qlmc_{:s}.csv'.format(period)),
                       dtype = {'ean' : str,

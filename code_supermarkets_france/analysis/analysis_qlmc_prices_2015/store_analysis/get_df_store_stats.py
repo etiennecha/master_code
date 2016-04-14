@@ -206,7 +206,7 @@ se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
 #se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
 #                                              .agg(lambda x: x.abs().mean())
 df_stores.set_index('store_id', inplace = True)
-df_stores['disp'] = se_store_disp
+df_stores['store_dispersion'] = se_store_disp
 
 # ####################
 # INVESTIGATE LECLERC
@@ -232,27 +232,29 @@ print(df_su_store_fes.ix[ls_some_chains].to_string())
 
 print()
 print('Dispersion by chain')
-df_su_disp = df_stores[['disp', 'qlmc_chain']].groupby('qlmc_chain')\
-                                              .describe().unstack()
+df_su_disp = df_stores[['store_dispersion', 'qlmc_chain']].groupby('qlmc_chain')\
+                                                          .describe().unstack()
 print(df_su_disp.ix[ls_some_chains].to_string())
 
 for chain in ls_some_chains:
   print()
   print(chain)
   df_chain = df_stores[df_stores['qlmc_chain'] == chain]
-  print(df_chain[['store_price', 'disp', 'hhi']].corr())
-  print(smf.ols('store_price ~ disp + hhi + C(region) + surface',
+  print(df_chain[['store_price', 'store_dispersion', 'hhi']].corr())
+  print(smf.ols('store_price ~ store_dispersion + hhi + C(region) + surface',
                 data = df_chain).fit().summary())
-
 
 # INSPECT GEANT CASINO
 
-df_stores[df_stores['store_chain'] == 'GEANT CASINO'].plot(kind = 'scatter',
-                                                           x = 'store_price',
-                                                           y = 'disp')
-plt.show()
+for chain in ['GEANT CASINO', 'AUCHAN', 'CARREFOUR', 'LECLERC']:
+  df_stores[df_stores['store_chain'] == chain].plot(kind = 'scatter',
+                                                    x = 'store_price',
+                                                    y = 'store_dispersion')
+  plt.title(chain)
+  plt.show()
 
-lsdo = ['store_name', 'store_price', 'disp', 'price_1', 'price_2', 'surface', 'region']
+lsdo = ['store_name', 'store_price', 'store_dispersion',
+        'price_1', 'price_2', 'surface', 'region']
 
 # some outliers with low price
 print(df_stores[(df_stores['store_chain'] == 'GEANT CASINO') &\
