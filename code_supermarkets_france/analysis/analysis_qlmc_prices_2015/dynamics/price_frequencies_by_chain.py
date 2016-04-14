@@ -10,13 +10,14 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2007-12')
-
-path_built_csv = os.path.join(path_built,
-                              'data_csv')
+path_built_2015 = os.path.join(path_data,
+                               'data_supermarkets',
+                               'data_built',
+                               'data_qlmc_2015')
+path_built_201415_csv = os.path.join(path_built_2015,
+                                     'data_csv_2014-2015')
+path_built_201415_json = os.path.join(path_built_2015,
+                                     'data_json_2014-2015')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -28,7 +29,7 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 ls_periods = ['201405', '201409']
 period = ls_periods[1]
-df_qlmc = pd.read_csv(os.path.join(path_built_csv,
+df_qlmc = pd.read_csv(os.path.join(path_built_201415_csv,
                                    'df_qlmc_{:s}.csv'.format(period)),
                       dtype = {'ean' : str,
                                'id_lsa' : str}, # to update soon
@@ -316,14 +317,14 @@ df_chain_stores = pd.concat(ls_df_chain_stores)
 df_chain_stores.reset_index(drop = False, inplace = True)
 
 df_chain_products.to_csv(\
-  os.path.join(path_built_csv,
+  os.path.join(path_built_201415_csv,
                'df_chain_product_price_freq_{:s}.csv'.format(period)),
   encoding = 'utf-8',
   float_format='%.3f',
   index = False)
 
 df_chain_stores.to_csv(\
-  os.path.join(path_built_csv,
+  os.path.join(path_built_201415_csv,
                'df_chain_store_price_freq_{:s}.csv'.format(period)),
   encoding = 'utf-8',
   float_format='%.3f',

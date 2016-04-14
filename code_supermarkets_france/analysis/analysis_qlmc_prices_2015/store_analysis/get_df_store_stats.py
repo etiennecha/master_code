@@ -201,10 +201,10 @@ df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 # robustness: reject residuals if beyond 40%
 df_prices = df_prices[df_prices['res'].abs() < 0.4]
 
-#se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
-#                                              .agg(lambda x: (x**2).mean())
 se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
-                                              .agg(lambda x: x.abs().mean())
+                                              .agg('std')
+#se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
+#                                              .agg(lambda x: x.abs().mean())
 df_stores.set_index('store_id', inplace = True)
 df_stores['disp'] = se_store_disp
 
