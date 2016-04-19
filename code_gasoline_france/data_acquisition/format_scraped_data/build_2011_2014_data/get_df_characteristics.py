@@ -10,8 +10,7 @@ import pprint
 
 path_dir_source = os.path.join(path_data,
                                'data_gasoline',
-                               'data_source',
-                               'data_gouv_scraped')
+                               'data_source')
 
 path_dir_built = os.path.join(path_data,
                                     'data_gasoline',
@@ -31,6 +30,7 @@ master_info = dec_json(os.path.join(path_dir_built_json,
 # ########################################
 
 path_dir_gps = os.path.join(path_dir_source,
+                            'data_gouv_scraped',
                             'data_gps')
 
 ls_gps_file_names = ['20130117_dict_gps_essence.json',
@@ -69,6 +69,7 @@ df_gps = df_gps.astype(float)
 
 # Load gps provided by Ronan (from prix-carburant.gouv.fr but older)
 df_rls = pd.read_csv(os.path.join(path_dir_source,
+                                  'data_gouv_scraped',
                                   'data_station_info',
                                   'data_rls.csv'),
                      dtype = {'idpdv' : str})
@@ -89,6 +90,7 @@ df_gps = df_gps.apply(lambda x: np.round(x, 3))
 # #######################
 
 ls_gouv_highway_ids = dec_json(os.path.join(path_dir_source,
+                                            u'data_gouv_scraped',
                                             u'data_highway',
                                             u'20141206_ls_highway_ids.json'))
 

@@ -18,8 +18,7 @@ path_dir_built_csv = os.path.join(path_dir_built, 'data_csv')
 
 path_dir_source = os.path.join(path_data,
                                'data_gasoline',
-                               'data_source',
-                               'data_gouv_scraped')
+                               'data_source')
 
 # ######################
 # LOAD GAS STATION DATA
