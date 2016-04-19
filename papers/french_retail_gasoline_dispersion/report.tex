@@ -32,7 +32,7 @@
 
 \begin{document}
 
-\title{Price dispersion on the French retail gasoline market\ \\ \ \\(Very preliminary)}
+\title{Price dispersion on the French retail gasoline market\ \\ \ \\Working paper}
 \author{Etienne Chamayou\thanks{e-mail:
 \textit{etienne.chamayou@ensae.fr}}\medskip\\{\normalsize CREST and Department of Economics, Ecole Polytechnique }}
 \maketitle
@@ -42,7 +42,7 @@
 \onehalfspacing
 
 \textbf{Abstract:}
-This paper studies static and dynamic price dispersion in the French retail gasoline market. Using a large panel of daily gas station prices to produce statistics accounting for local competition, it finds support for a link between consumer information and price dispersion. Indeed, among competitors exhibiting similar price levels, changes in price rankings are found to be positively correlated with the distance separating both sellers, namely with the difficulty for consumers to compare prices. Supermarkets, which generally operate at low markups, are over-represented among pairs of competitors with similar price levels as well as among pairs of competitors which regularly set at the very same price. This is consistent with them addressing demand from well informed price sensitive customers, as opposed to oil company and independent gas stations generally more focused on less informed and/or more loyal or captive customers.
+This paper studies differentiation and temporal price dispersion in the French retail gasoline market. Using a large panel of gas station prices over three years, it finds support for the connection between consumer information and price dispersion. Indeed, changes in price rankings are found to be positively correlated with distances, namely with the costs that drivers need to incur to compare prices. Supermarkets, which generally operate at low markups, are over-represented among pairs of competitors which exhibit low dynamic dispersion, or are more likely to sell at the very same price. This suggests that well informed drivers, who are more likely to purchase at the lowest price, account for a higher share of demand addressed by supermarkets gas stations than for others.
 
 \strut
 
@@ -69,21 +69,20 @@ The following paper elaborates on the methodology used by \cite{TAP11} to study 
 
 \section{Literature}
 
-\section{The theory of price dispersion}
-
 A major contribution of the consumer search literature was made by \cite{VAR80} through the modeling of price dispersion as a result of mixed pricing strategies. According to the paper, price dispersion thereby obtained could be interpreted as "temporal" price dispersion, typically in the form of "sales". This provided a rationale for rank reversals i.e. a seller being cheaper or more expensive than a competitor with positive probabilities.
 
 The dynamic interpretation of the model is not unambiguous however. In the model, firms are ex-ante indifferent between all prices in the support of the equilibrium price distribution (also holds in terms of randomization over utilities). Ex-post, indifference obviously no more exists. The cheapest firm attracts shoppers but would be better off increasing its price to match the second cheapest price. Other firms would rather increase their price to consumers' reservation price, or try to undercut the cheapest firm. In the retail gasoline market, while it may not be possible for firms to change prices on too frequent a basis, periods of significant oil price variations reveal that gas stations can adjust prices on a daily basis. If one admits that gas stations play according to \cite{VAR80} on a given day, it is thus not clear why sellers would wish to keep prices unchanged the following day. A possible explanation may be that firms refrain from changing prices too often for fear of triggering more search by consumers and thus more intense competition. Whether this can be obtained in a fully competitive setting  or would require some kind of collusion (possibly at the retail chain level or at the local level) remains an open question.
 
-\section{Empirical analysis}
+\cite{TAP11} work with a data set including daily prices of gas stations within four states in the US over one year and a half. In order to test the relation between consumer information and price dispersion, they rely on the assumption that distance between sellers is likely to reflect consumer information. Indeed, when gas stations are located in the same street, a higher share of consumers is likely to perfectly observe prices than when gas stations are located further away from each other. When the share of uninformed consumers becomes negligible, sellers can be expected to compte a la Betrand (or Hotelling) and prices should essentially match cost fluctuation except for some frictions. On the other hand, if information is imperfect, persistent dispersion can be expected to arise following the intuition exposed in \cite{VAR80}. 
 
-\cite{TAP11} work with a data set including daily prices of gas stations within four states in the US over one year and a half. They argue that gas stations located across the same corner should display less rank reversal vs. those a bit further, since consumer information on prices should decrease with distance. This is shown to be true and all the more convincing as close gas stations display a lower average spread. Regressions of various measures accounting for price dispersion on marginal costs and the number of firms in the market (built by considering circles of varying radiuses) yields results consistent with the extension of \cite{VAR80} proposed by the paper (resp. negative and positive impacts). All the analysis is performed with raw prices, which, I argue, is bound to bias some results.
+\cite{TAP11} measure temporal price dispersion between two stations as the probability that the gas station which is in general cheaper (in terms of day count) turns out to be more expensive. Formally, considering the prices $p_{it}$ and $p_{jt}$ of two stations $i$ and $j$ over $T_{ij}$ days, such that $p_{it} \ge p_{ij}$ is observed most of the time, the rank reversals statistic writes:
 
-A simple way to measure temporal price dispersion between two stations with daily observations is to consider the probability that the station which is in general cheaper (in terms of day count) turns out to be more expensive. Formally, considering the prices $p_{it}$ and $p_{jt}$ of two stations $i$ and $j$ over $T_{ij}$ days, such that $p_{it} \ge p_{ij}$ is observed most of the time, the rank reversals statistic writes:
 
 \begin{align*}
 r_{ij} = \frac{1}{T_{ij}} \sum_{t=1}^{T_{ij}} \mathbbm{1}_{p_{jt} > p_{it}}
 \end{align*}
+
+They find temporal price dispersion to be positively correlated with distance, which is all the more convincing as close gas stations tend be less differentiated. Regressions of various measures accounting for price dispersion on marginal costs and the number of firms in the market (built by considering circles of varying radiuses) yields results consistent with the extension of \cite{VAR80} proposed by the paper (resp. negative and positive impacts). All the analysis is performed with raw prices.
 
 \section{The French retail gasoline market}
 

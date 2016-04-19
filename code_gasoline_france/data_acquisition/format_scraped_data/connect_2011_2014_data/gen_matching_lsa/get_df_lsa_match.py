@@ -27,8 +27,8 @@ path_source_other = os.path.join(path_data,
 
 path_lsa_csv = os.path.join(path_data,
                             'data_supermarkets',
-                            'data_lsa',
                             'data_built',
+                            'data_lsa',
                             'data_csv')
 
 # #############
@@ -56,19 +56,19 @@ df_info.set_index('id_station', inplace = True)
 
 # could use lsa file fitted for period considered
 df_lsa = pd.read_csv(os.path.join(path_lsa_csv,
-                                  'df_lsa_active_fm_hsx.csv'),
-                     dtype = {'Ident': str,
-                              'Code INSEE' : str,
-                              'Code INSEE ardt' : str,
-                              'Siret' : str},
-                     parse_dates = [u'DATE ouv',
-                                    u'DATE ferm',
-                                    u'DATE réouv',
-                                    u'DATE chg enseigne',
-                                    u'DATE chgt surf'],
-                     encoding = 'UTF-8')
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {'id_lsa': str,
+                              'c_insee' : str,
+                              'c_insee_ardt' : str,
+                              'c_siren' : str},
+                     parse_dates = [u'date_ouv',
+                                    u'date_fer',
+                                    u'date_reouv',
+                                    u'date_chg_enseigne',
+                                    u'date_chg_surface'],
+                     encoding = 'utf-8')
 
-df_lsa_gas = df_lsa[~pd.isnull(df_lsa['Pompes'])].copy()
+df_lsa_gas = df_lsa[~pd.isnull(df_lsa['nb_pompes'])].copy()
 # turns out this field is far from complete
 
 # ##########
@@ -99,7 +99,7 @@ dict_lsa_stores_alt_brand = {u'INTERMARCHE SUPER': u'INTERMARCHE',
                              u'SUPERMARCHE MATCH' : u'CORA'}
 
 # Overwrite enseigne alt to make most general
-df_lsa_gas['Enseigne_alt'] = df_lsa_gas['Enseigne_alt'].apply(\
+df_lsa_gas['enseigne_alt'] = df_lsa_gas['enseigne_alt'].apply(\
                                lambda x: dict_lsa_stores_alt_brand[x]\
                                            if dict_lsa_stores_alt_brand.get(x)\
                                            else x)
@@ -128,18 +128,18 @@ ls_rows_matching = []
 for enseigne_store, enseigne_lsa, enseigne_lsa_alt in ls_matching:
   for row_ind, row in df_info[(df_info['brand_0'] == enseigne_store)].iterrows():
     insee_code = row['ci_ardt_1'] # need ardt: 1 a priori
-    df_city_stores = df_lsa_gas[(df_lsa_gas['Code INSEE ardt'] == insee_code) &\
-                                (df_lsa_gas['Enseigne'] == enseigne_lsa)]
+    df_city_stores = df_lsa_gas[(df_lsa_gas['c_insee_ardt'] == insee_code) &\
+                                (df_lsa_gas['enseigne'] == enseigne_lsa)]
     if len(df_city_stores) == 1:
       ls_rows_matching.append((row_ind,
-                               df_city_stores.iloc[0]['Ident'],
+                               df_city_stores.iloc[0]['id_lsa'],
                                'direct'))
     elif len(df_city_stores) == 0:
-      df_city_stores_alt = df_lsa_gas[(df_lsa_gas['Code INSEE ardt'] == insee_code) &\
-                                      (df_lsa_gas['Enseigne_alt'] == enseigne_lsa_alt)]
+      df_city_stores_alt = df_lsa_gas[(df_lsa_gas['c_insee_ardt'] == insee_code) &\
+                                      (df_lsa_gas['enseigne_alt'] == enseigne_lsa_alt)]
       if len(df_city_stores_alt) == 1:
         ls_rows_matching.append((row_ind,
-                                 df_city_stores_alt.iloc[0]['Ident'],
+                                 df_city_stores_alt.iloc[0]['id_lsa'],
                                  'indirect'))
       elif len(df_city_stores_alt) == 0:
         ls_rows_matching.append((row_ind,
@@ -171,7 +171,6 @@ ls_disp_ma = ['Q', 'brand_0', 'Enseigne',
                    'adr_city', 'Ville',
                    'adr_street', 'ADRESSE1', 'ADRESSE2']
 
-ls_disp_noma = ['Q', 'brand_0', 'ci_ardt_1', 'adr_zip', 'adr_city', 'adr_street', 'name']
 
 print u'\nOverview matching quality:'
 print df_info_w_lsa['Q'].value_counts()
@@ -182,6 +181,7 @@ print df_info_w_lsa.pivot_table(index = 'brand_0',
                                 aggfunc = 'size',
                                 fill_value = 0)
 
+#ls_disp_noma = ['Q', 'brand_0', 'ci_ardt_1', 'adr_zip', 'adr_city', 'adr_street', 'name']
 #print df_info_w_lsa[ls_disp_noma]\
 #                   [(df_info_w_lsa['brand_0'] == 'CORA') &\
 #                   (pd.isnull(df_info_w_lsa['id_lsa']))][0:20].to_string()
@@ -351,7 +351,8 @@ for id_station, id_lsa in ls_fix_dup:
 df_info_w_lsa.sort(columns=['id_lsa'], inplace = True)
 df_tp = df_info_w_lsa[~df_info_w_lsa['id_lsa'].isnull()]
 
-print u'\nUnresolved duplicates:'
+print u''
+print u'Unresolved matchint duplicates:'
 print df_tp[(df_tp.duplicated(subset = ['id_lsa'],
                               take_last = True)) |\
             (df_tp.duplicated(subset = ['id_lsa'],
@@ -362,16 +363,18 @@ print df_tp[(df_tp.duplicated(subset = ['id_lsa'],
 # ###############
 
 df_info_w_lsa = pd.merge(df_info_w_lsa,
-                         df_lsa[['Ident', 'Longitude', 'Latitude']],
+                         df_lsa[['id_lsa', 'longitude', 'latitude']],
                          how = 'right',
                          left_on = 'id_lsa',
-                         right_on = 'Ident')
+                         right_on = 'id_lsa')
 
 df_info_w_lsa['dist'] = df_info_w_lsa.apply(\
                           lambda x: compute_distance(\
                                            (x['lng'], x['lat']),
-                                           (x['Longitude'], x['Latitude'])),
+                                           (x['longitude'], x['latitude'])),
                           axis = 1)
 
+print u''
+print u'Overview significant gps discrepancy (lsa vs. gov best)'
 print df_info_w_lsa[df_info_w_lsa['dist'] > 5]\
         [ls_dup_disp + ['dist']].to_string()
