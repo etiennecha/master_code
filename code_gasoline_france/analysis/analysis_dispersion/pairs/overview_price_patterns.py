@@ -133,6 +133,17 @@ df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
 df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
 df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
 
+# COMP SUP VS. NON SUP
+
+df_pair_sup = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
+                           (df_pair_comp['group_type_2'] == 'SUP')]
+df_pair_nsup = df_pair_comp[(df_pair_comp['group_type_1'] != 'SUP') &\
+                            (df_pair_comp['group_type_2'] != 'SUP')]
+df_pair_sup_nd = df_pair_sup[(df_pair_sup['mean_spread'].abs() <= diff_bound)]
+df_pair_nsup_nd = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() <= diff_bound)]
+df_pair_sup_d = df_pair_sup[(df_pair_sup['mean_spread'].abs() > diff_bound)]
+df_pair_nsup_d = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() > diff_bound)]
+
 # LISTS FOR DISPLAY
 
 lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
@@ -147,7 +158,7 @@ zero = 1e-10
 ls_pctiles = [0.05, 0.10, 0.25, 0.5, 0.75, 0.90, 0.95]
 
 # ########################
-# OVERVIEW DIFFERENTIATION
+# OVERVIEW SPREADS
 # ########################
 
 # Based on spread value and frequency:
@@ -254,8 +265,7 @@ print(df_comp.ix[ls_bertrand_ids][['dist_c', 'dist_c_sup', 'nb_c_1km', 'nb_c_3km
 print(u'\nNb of high pct_same (above 20 pct):')
 print(len(df_pair_comp[df_pair_comp['pct_same'] >= 0.3]))
 
-df_pair_comp['pct_1_lead'] =\
-  df_pair_comp['nb_1_lead'].astype(float) /\
+df_pair_comp['pct_1_lead'] = df_pair_comp['nb_1_lead'].astype(float) /\
     df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
 df_pair_comp['pct_2_lead'] =\
   df_pair_comp['nb_2_lead'].astype(float) /\
@@ -265,25 +275,12 @@ df_pair_comp['pct_sim_same'] =\
     df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
 df_pair_comp.replace([np.inf, -np.inf], np.nan, inplace = True)
 
-print(u'\nInspect pct_same above 30 pct:')
+print()
+print(u'Inspect pct_same above 30 pct:')
 print(df_pair_comp[df_pair_comp['pct_same'] >= 0.3]\
         [lsd + ['nb_1_lead', 'nb_2_lead', 
                 'pct_same', 'nb_chge_to_same',
                 'pct_1_lead', 'pct_2_lead', 'pct_sim_same']][0:10].to_string())
-
-print(u'\nPct price convergence (both grouped) when pct_same above 30 pct:')
-print(df_pair_comp[df_pair_comp['pct_same'] >= 0.3]['pct_price_cv'].describe())
-
-print(u'\nMax pct price convergence when pct_same above 30 pct:')
-print(df_pair_comp[df_pair_comp['pct_same'] >= 0.3]\
-        [['pct_price_cv_1', 'pct_price_cv_2']].max(1).describe())
-
-print(u'\nPct price convergence (both_grouped) when pct_rr above 30 pct:')
-print(df_pair_comp[df_pair_comp['pct_rr'] >= 0.3]['pct_price_cv'].describe())
-
-print(u'\nMax pct price convergence when pct_rr above 30 pct:')
-print(df_pair_comp[df_pair_comp['pct_rr'] >= 0.3]\
-        [['pct_price_cv_1', 'pct_price_cv_2']].max(1).describe())
 
 # STANDARD SPREAD
 lsd_f_sp = ['mc_spread', 'smc_spread',
@@ -291,21 +288,11 @@ lsd_f_sp = ['mc_spread', 'smc_spread',
             'pct_rr']
 
 # if exists: can generalize rank reversal and leadership
-print(u'\nInspect given spread with significant frequency:')
+print()
+print(u'Inspect given spread with significant frequency:')
 print(df_pair_comp[(df_pair_comp['mc_spread'] == 0.010) &\
                (df_pair_comp['freq_mc_spread'] >= 25)]\
               [lsd + lsd_f_sp][0:10].to_string())
-
-# DISTANCE VS. PERCENT SAME PRICES
-print(u'\nDistance in 4th quartile of pct_same:')
-print(df_pair_comp_nd[df_pair_comp_nd['pct_same'] >=\
-                        df_pair_comp_nd['pct_same'].quantile(0.75)]\
-                     ['distance'].describe())
-
-print(u'\nDistance in 3 lower quartiles of pct_same:')
-print(df_pair_comp_nd[df_pair_comp_nd['pct_same'] <\
-                        df_pair_comp_nd['pct_same'].quantile(0.75)]\
-                     ['distance'].describe())
 
 #len(df_pair_comp_nd[(df_pair_comp_nd['pct_same'] >= 0.33) &\
 #                    (df_pair_comp_nd['pct_rr'] >= 0.33)])

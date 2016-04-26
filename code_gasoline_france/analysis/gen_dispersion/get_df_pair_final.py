@@ -222,12 +222,15 @@ df_pairs['mean_rr_len'] = (df_pairs['nb_spread'] * df_pairs['pct_rr']) / df_pair
 df_pairs['mean_rr_len'] = df_pairs['mean_rr_len'].replace(np.inf, np.nan)
 
 # ADD MEASURE OF PRICE CONVERGENCE
-df_pairs['pct_price_cv'] = df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)/\
-                             df_pairs[['nb_chges_1', 'nb_chges_2']].sum(1)
-df_pairs['pct_price_cv_1'] = df_pairs[['nb_2_lead', 'nb_chge_to_same']].sum(1)/\
-                               df_pairs[['nb_chges_1']].sum(1)
-df_pairs['pct_price_cv_2'] = df_pairs[['nb_1_lead', 'nb_chge_to_same']].sum(1)/\
-                               df_pairs[['nb_chges_2']].sum(1)
+df_pairs['pct_to_same_maxu'] = (df_pairs[['nb_1_lead', 'nb_2_lead']].max(1) +\
+                                 df_pairs['nb_chge_to_same'] ) /\
+                                   df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+
+df_pairs['pct_to_same_maxl'] = (df_pairs[['nb_1_lead', 'nb_2_lead']].max(1)) /\
+                                   df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+
+df_pairs['pct_to_same_min'] = (df_pairs[['nb_1_lead', 'nb_2_lead']].min(1)) /\
+                                   df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
 
 # ######
 # OUPUT
