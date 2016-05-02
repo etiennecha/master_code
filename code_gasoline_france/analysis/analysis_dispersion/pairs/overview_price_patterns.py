@@ -116,6 +116,25 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
 df_pairs_all = df_pairs.copy()
 df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
 
+## robustness check with idf: 1 km max
+#ls_dense_dpts = [75, 92, 93, 94]
+#df_pairs = df_pairs[~((((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
+#                        (df_pairs['dpt_2'].isin(ls_dense_dpts))) &\
+#                       (df_pairs['distance'] > 1)))]
+
+## robustness check keep closest competitor
+#df_pairs.sort(['id_1', 'distance'], ascending = True, inplace = True)
+#df_pairs.drop_duplicates('id_1', inplace = True, take_last = False)
+## could also collect closest for each id_2 and filter further
+## - id_1 can have closer competitor as an id_2
+## - duplicates in id_2 (that can be solved also but drops too much)
+#df_pairs.sort(['id_2', 'distance'], ascending = True, inplace = True)
+#df_pairs.drop_duplicates('id_2', inplace = True, take_last = False)
+## - too many drops: end ids always listed as id_2 disappear... etc.
+
+### robustness check: rr>20 == 0
+#df_pairs = df_pairs[(df_pairs['rr>20'] == 0)]
+#df_pairs = df_pairs[(df_pairs['mean_rr_len'] <= 21)]
 # COMPETITORS VS. SAME GROUP
 
 df_pair_same =\
@@ -221,80 +240,114 @@ print()
 print('Overview same sign spreads ({:d}):'.format(len(df_high_diff_spreads)))
 print(df_high_diff_spreads[lsd_spread].describe(percentiles=ls_pctiles).to_string())
 
-# #######################
-# OVERVIEW PRICE PATTERNS
-# #######################
-
-### Spread stability
-#for df_pair_temp in [df_pair_comp, df_pair_comp_d, df_pair_comp_nd]:
-#  print(df_pair_temp['freq_mc_spread'].describe())
-
-# Same price: "Betrand" (or collusion..) competition vs distance
-
-print()
-print(u'Distribution of pct_same among non differentiated')
-print(df_pair_comp_nd['pct_same'].describe())
-
-df_bertrand = df_pair_comp[df_pair_comp['pct_same'] >= 1/2.0]
-ls_bertrand_ids = list(set(df_bertrand[['id_1', 'id_2']].values.flatten()))
-
-print()
-print(u'Overview: distance separating pairs of "Bertrand" competitors')
-print(df_bertrand['distance'].describe())
-
-# Seems that not always the closest at all (due to differentiation?)
-print()
-print(u'Overview of group type of stations in pairs of "Bertrand" competitors')
-print(df_info.ix[ls_bertrand_ids]['group_type'].value_counts())
-
-print()
-print(u'Overview of group type of stations in pairs of non differentiated competitors')
-ls_comp_nd_ids = list(set(df_pair_comp_nd[['id_1', 'id_2']].values.flatten()))
-print(df_info.ix[ls_comp_nd_ids]['group_type'].value_counts())
-
-print()
-print(u'Overview of group type of stations in all competitor pairs')
-ls_comp_ids = list(set(df_pair_comp[['id_1', 'id_2']].values.flatten()))
-print(df_info.ix[ls_comp_ids]['group_type'].value_counts())
-
-print()
-print(u'Overview of competition of stations in pairs of "Bertrand" competitors')
-print(df_comp.ix[ls_bertrand_ids][['dist_c', 'dist_c_sup', 'nb_c_1km', 'nb_c_3km']].describe())
-
+# #############################
 # ALIGNED PRICES AND LEADERSHIP
-print(u'\nNb of high pct_same (above 20 pct):')
-print(len(df_pair_comp[df_pair_comp['pct_same'] >= 0.3]))
+# #############################
+
+## HEATMAP: PCT SAME VS PCT RR
+#heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['pct_same'].values,
+#                                         df_pair_comp_nd['pct_rr'].values,
+#                                         bins=30)
+#extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+#plt.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
+#plt.show()
+#
+## HEATMAP: PCT RR VS MEAN SPREAD (rounding issues)
+#heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['abs_mean_spread'].values,
+#                                         df_pair_comp_nd['pct_rr'].values,
+#                                         bins=30)
+#extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+#plt.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
+#plt.show()
+
+# ALIGNED PRICES
+print()
+print(u'Nb aligned prices i.e. pct_same >= 0.33',\
+      len(df_pairs[(df_pairs['pct_same'] >= 0.33)])) # todo: harmonize pct i.e. * 100
+# Pct same vs. mean_spread: make MSE appear? (i.e. close prices but no steady gap...)
+
+print()
+print(u'Overview aligned prices i.e. pct_same >= 0.33:')
+print(df_pairs[(df_pairs['pct_same'] >= 0.33)][['pct_rr', 'nb_rr']].describe())
+
+# STANDARD SPREAD (ALLOW GENERALIZATION OF LEADERSHIP?)
+print()
+print('Inspect abs mc_spread == 0.010')
+print(df_pairs[(df_pairs['mc_spread'] == 0.010) | (df_pairs['mc_spread'] == -0.010)]
+              [['distance', 'abs_mean_spread',
+                'pct_rr', 'freq_mc_spread', 'pct_same']].describe())
 
 df_pair_comp['pct_1_lead'] = df_pair_comp['nb_1_lead'].astype(float) /\
-    df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
-df_pair_comp['pct_2_lead'] =\
-  df_pair_comp['nb_2_lead'].astype(float) /\
-    df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
-df_pair_comp['pct_sim_same'] =\
-  df_pair_comp['nb_chge_to_same'].astype(float) /\
-    df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
-df_pair_comp.replace([np.inf, -np.inf], np.nan, inplace = True)
+  df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+df_pair_comp['pct_2_lead'] = df_pair_comp['nb_2_lead'].astype(float) /\
+  df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+df_pair_comp['pct_sim_same'] = df_pair_comp['nb_chge_to_same'].astype(float) /\
+  df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
+#print(df_pair_comp[df_pair_comp['pct_same'] >= 1/3.0]\
+#        [lsd + ['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same',
+#                'pct_1_lead', 'pct_2_lead', 'pct_sim_same']][0:10].to_string())
+
+# NO LEADER
+nl_ps_lim = 33/100.0
+nl_pct_lead_lim = 10/100.0
+df_nl = df_pair_comp[(df_pair_comp['pct_same'] >= nl_ps_lim) &\
+                     (df_pair_comp['pct_1_lead'] <= 10/100.0) &\
+                     (df_pair_comp['pct_2_lead'] <= 10/100.0) ].copy()
+se_nl_chains = pd.concat([df_nl['brand_last_1'], df_nl['brand_last_2']]).value_counts()
+print()
+print(u'Chains: pair with high similar price pct but no leader')
+print(se_nl_chains.to_string())
+
+lsdnl = ['distance', 'id_1', 'id_2', 'brand_last_1', 'brand_last_2',
+        'pct_same', 'pct_1_lead', 'pct_2_lead', 'pct_sim_same']
 
 print()
-print(u'Inspect pct_same above 30 pct:')
-print(df_pair_comp[df_pair_comp['pct_same'] >= 0.3]\
-        [lsd + ['nb_1_lead', 'nb_2_lead', 
-                'pct_same', 'nb_chge_to_same',
-                'pct_1_lead', 'pct_2_lead', 'pct_sim_same']][0:10].to_string())
+print(df_nl[lsdnl][0:20].to_string())
 
-# STANDARD SPREAD
-lsd_f_sp = ['mc_spread', 'smc_spread',
-            'freq_mc_spread', 'freq_smc_spread',
-            'pct_rr']
+# LEADERSHIP?
+# Restrictive def:
+# - pct_to_same_max: max lead or simulatenously change to same
+# - pct_to_same_min: min lead
 
-# if exists: can generalize rank reversal and leadership
+ps_lim =      33/100.0
+ptsmaxu_lim = 95/100.0
+ptsmaxl_lim = 25/100.0
+ptsmin_lim =  05/100.0
+
+df_leadership =\
+  df_pair_comp[(df_pair_comp['pct_same'] >= ps_lim) &\
+               (df_pair_comp['pct_to_same_maxl'] >= (3 * df_pair_comp['pct_to_same_min'])) &\
+               (df_pair_comp['pct_to_same_maxl'] > 0.10)].copy()
+
+df_leadership['leader_brand'] = df_leadership['brand_last_1']
+df_leadership.loc[df_leadership['nb_2_lead'] > df_leadership['nb_1_lead'],
+                  'leader_brand'] = df_leadership['brand_last_2']
+
+df_leadership['follower_brand'] = df_leadership['brand_last_1']
+df_leadership.loc[df_leadership['nb_2_lead'] < df_leadership['nb_1_lead'],
+                  'leader_brand'] = df_leadership['brand_last_2']
+
+lsdl = ['distance', 'id_1', 'id_2', 'brand_last_1', 'brand_last_2',
+        'pct_same', 'pct_1_lead', 'pct_2_lead', 'pct_sim_same',
+        'leader_brand', 'follower_brand']
+
 print()
-print(u'Inspect given spread with significant frequency:')
-print(df_pair_comp[(df_pair_comp['mc_spread'] == 0.010) &\
-               (df_pair_comp['freq_mc_spread'] >= 25)]\
-              [lsd + lsd_f_sp][0:10].to_string())
+print(u'Overview of leadership')
+print(df_leadership[lsdl][0:20].to_string())
 
-#len(df_pair_comp_nd[(df_pair_comp_nd['pct_same'] >= 0.33) &\
-#                    (df_pair_comp_nd['pct_rr'] >= 0.33)])
-#df_pair_comp_nd[(df_pair_comp_nd['pct_same'] >= 0.33) &\
-#                (df_pair_comp_nd['pct_rr'] >= 0.33)][lsd]
+print()
+print('Chain of leaders')
+print(df_leadership['leader_brand'].value_counts()[0:10])
+
+print()
+print('Chain of followers')
+print(df_leadership['follower_brand'].value_counts()[0:10])
+
+# Question: how often is a leader a follower (and vice versa?)
+
+# UNSURE
+
+df_unsure =\
+  df_pair_comp[(df_pair_comp['pct_same'] >= ps_lim) &\
+               (df_pair_comp['pct_to_same_maxl'] <= (3 * df_pair_comp['pct_to_same_min'])) &\
+               (df_pair_comp['pct_to_same_maxl'] > 0.10)].copy()

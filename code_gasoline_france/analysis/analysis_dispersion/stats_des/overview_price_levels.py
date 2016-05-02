@@ -120,20 +120,25 @@ df_info = pd.merge(df_info,
                    right_index = True,
                    how = 'left')
 
-# DEFINE SOME GROUPS (DROP?)
+# REFINE GROUP TYPE
+# beginning: ELF + need to use future info
+# (todo: add TA with no detected margin chge?)
+df_info.loc[((df_info['brand_0'] == 'ELF') |\
+             (df_info['brand_last'] == 'ESSO_EXPRESS')),
+            'group_type'] = 'DIS'
+df_info.loc[(df_info['brand_last'].isin(['ELF',
+                                         'ESSO_EXPRESS',
+                                         'TOTAL_ACCESS'])),
+            'group_type_last'] = 'DIS'
+# Further GMS refining
+ls_hypers = ['AUCHAN', 'CARREFOUR', 'GEANT', 'LECLERC', 'CORA',
+             'INTERMARCHE', 'SYSTEMEU']
+df_info.loc[(df_info['brand_0'].isin(ls_hypers)),
+            'group_type'] = 'HYP'
+df_info.loc[(df_info['brand_last'].isin(ls_hypers)),
+            'group_type_last'] = 'HYP'
 
-ls_ids_sup = df_info[df_info['group_type_last'] == 'SUP'].index
-ls_ids_nsup = df_info[df_info['group_type_last'] != 'SUP'].index
-ls_ids_idf = df_info[df_info['reg'] == 'Ile-de-France'].index
-ls_ids_nidf = df_info[df_info['reg'] != 'Ile-de-France'].index
-ls_ids_fra = df_info.index
-
-ls_loop_groups = [('Supermarkets', ls_ids_sup),
-                  ('Others', ls_ids_nsup),
-                  ('Paris region', ls_ids_idf),
-                  ('Non Paris region', ls_ids_nidf),
-                  ('France', ls_ids_fra)]
-
+# SELECTION PRICE / DAY
 ls_cols_price = ['price_at', 'price_bt', 'Markup']
 ls_cols_comp = ['nb_c_1km', 'nb_c_3km', 'nb_c_5km', 'dist_c']
 ls_cols_rigidity = ['pct_chge', 'avg_pos_chge', 'avg_neg_chge']
@@ -142,13 +147,12 @@ df_info.rename(columns = {'group' : 'group_0',
                           'group_type' : 'group_type_0'},
                inplace = True)
 
-# SELECTION PRICE / DAY
+#str_date, str_be = '2011-09-04', '0'
+str_date, str_be = '2014-12-04', 'last'
 
-str_date = '2014-12-04' # '2011-09-04'
 df_info['price_at'] = df_prices_ttc.ix[str_date]
 df_info['price_bt'] = df_prices_ht.ix[str_date]
 
-str_be = 'last' # '0'
 df_info['brand'] = df_info['brand_{:s}'.format(str_be)]
 df_info['group'] = df_info['group_{:s}'.format(str_be)]
 df_info['group_type'] = df_info['group_type_{:s}'.format(str_be)]
@@ -156,7 +160,7 @@ df_info['group_type'] = df_info['group_type_{:s}'.format(str_be)]
 df_sub = df_info[~df_info['price_at'].isnull()].copy()
 df_sub['nb_brand'] = df_sub[['price_at', 'brand']].groupby('brand')\
                                                   .transform(len)['price_at']
-df_sub = df_sub[df_sub['nb_brand'] >= 30]
+df_sub = df_sub[df_sub['nb_brand'] >= 50]
 
 # #######################
 # STATS DES: CHAIN PRICES
@@ -169,18 +173,19 @@ df_desc = df_sub[['price_at', 'group_type', 'brand']]\
 df_desc.reset_index(drop = False, inplace = True)
 df_desc['Q75/Q25'] = df_desc['75%'] / df_desc['25%']
 df_desc['Q90/Q10'] = df_desc['90%'] / df_desc['10%']
-df_desc.drop(['min', '10%', '25%', '50%', '75%', '90%', 'max'],
-             axis = 1,
-             inplace = True)
+#df_desc.drop(['min', '10%', '25%', '50%', '75%', '90%', 'max'],
+#             axis = 1,
+#             inplace = True)
+df_desc['count'] = df_desc['count'].astype(int)
 
-ls_drop_brands = ['INDEPENDANT',
-                  'COLRUYT',
-                  'NETTO']
-df_desc = df_desc[~df_desc['brand'].isin(ls_drop_brands)]
+#ls_drop_brands = ['INDEPENDANT',
+#                  'COLRUYT',
+#                  'NETTO']
+#df_desc = df_desc[~df_desc['brand'].isin(ls_drop_brands)]
 
 print()
 print(u'Price distribution by chain:')
-print(df_desc.to_string())
+print(df_desc.to_string(float_format = '{:,.2f}'.format))
 
 # ############
 # REGRESSIONS
@@ -201,6 +206,9 @@ print()
 
 res_chains = smf.ols('price_at ~ brand', data = df_sub).fit()
 print(res_chains.summary())
+
+res_type = smf.ols('price_at ~ group_type', data = df_sub).fit()
+print(res_type.summary())
 
 res_chains_sup = smf.ols('price_at ~ brand',
                          data = df_sub[df_sub['group_type'] == 'SUP']).fit()

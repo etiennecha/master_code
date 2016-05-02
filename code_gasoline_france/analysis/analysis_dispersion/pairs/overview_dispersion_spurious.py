@@ -103,8 +103,8 @@ dict_dtype = dict([('%s_1' %x, str) for x in ls_dtype_temp] +\
                   [('%s_2' %x, str) for x in ls_dtype_temp])
 df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
                                     'df_pair_final.csv'),
-              encoding = 'utf-8',
-              dtype = dict_dtype)
+                       encoding = 'utf-8',
+                       dtype = dict_dtype)
 
 df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
                       (df_pairs['nb_ctd_both'] < 90))]
@@ -120,11 +120,11 @@ price_cat = 'all' # 'residuals_no_mc'
 print(u'Prices used : {:s}'.format(price_cat))
 df_pairs = df_pairs[df_pairs['cat'] == price_cat].copy()
 
-# robustness check with idf: 1 km max
-ls_dense_dpts = [75, 92, 93, 94]
-df_pairs = df_pairs[~((((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
-                        (df_pairs['dpt_2'].isin(ls_dense_dpts))) &\
-                       (df_pairs['distance'] > 1)))]
+## robustness check with idf: 1 km max
+#ls_dense_dpts = [75, 92, 93, 94]
+#df_pairs = df_pairs[~((((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
+#                        (df_pairs['dpt_2'].isin(ls_dense_dpts))) &\
+#                       (df_pairs['distance'] > 1)))]
 
 ## robustness check keep closest competitor
 #df_pairs.sort(['id_1', 'distance'], ascending = True, inplace = True)
@@ -231,7 +231,7 @@ print(df_pair_comp[ls_disp][(df_pair_comp['mean_rr_len'] >= 15)][0:10].to_string
 # #########################################################
 
 # Histogram of average spreads (abs value required)
-hist_test = plt.hist(df_pairs['mean_spread'].abs().values,
+hist_test = plt.hist(df_pair_comp['mean_spread'].abs().values,
                      bins = 100,
                      range = (0, 0.3))
 plt.show()
@@ -310,183 +310,59 @@ for df_temp_title, df_temp in ls_loop_dd:
 # GENERAL STATS DES
 # #################
 
-# Overview of most common spread frequency (various distances)
-ls_df_temp = []
+# detected biases not dealt with here
+
+# OVERVIEW OF PAIR STATS DEPENDING ON DISTANCE
+
+print()
+print(u'Overview of pair stats depending on distance:')
+
+ls_col_overview = ['mean_abs_spread',
+                   'freq_mc_spread',
+                   'pct_same',
+                   'pct_rr']
+
 ls_distances = [5, 4, 3, 2, 1, 0.5]
-for distance in ls_distances:
-  ls_df_temp.append(df_pairs[df_pairs['distance'] <= distance]\
-                       ['freq_mc_spread'].describe())
 
-df_d_f_mcs = pd.concat(ls_df_temp, axis = 1, keys = ls_distances)
+df_pair_temp = df_pair_comp
+
+dict_df_dist_desc = {}
 print()
-print(u'Overview of most common spread frequency for various distances:')
-print(df_d_f_mcs.to_string())
+for col in ls_col_overview:
+  ls_se_temp = []
+  for distance in ls_distances:
+    ls_se_temp.append(df_pair_comp[df_pair_comp['distance'] <= distance]\
+                                  [col].describe())
+  df_desc_temp = pd.concat(ls_se_temp, axis = 1, keys = ls_distances)
+  dict_df_dist_desc[col] = df_desc_temp
 
-# Overview of pct same price (various distances)
-ls_df_temp = []
-ls_distances = [5, 4, 3, 2, 1, 0.5]
-for distance in ls_distances:
-  ls_df_temp.append(df_pairs[df_pairs['distance'] <= distance]\
-                       ['pct_same'].describe())
-df_d_pct_sp = pd.concat(ls_df_temp, axis = 1, keys = ls_distances)
-print()
-print(u'Overview of pct same price for various distances:')
-print(df_d_pct_sp.to_string())
+  print()
+  print(u'Overview of {:s} frequency for various max mean spread:'.format(col))
+  print(df_desc_temp.to_string())
 
-# Overview of most common spread frequency (various differentiation)
-ls_df_temp = []
-ls_mean_spread = [0.1, 0.05, 0.02,  0.01, 0.005, 0.0025]
-for mean_spread in ls_mean_spread:
-  ls_df_temp.append(df_pairs[(df_pairs['distance'] <= 5) &\
-                             (df_pairs['abs_mean_spread'] <= mean_spread)]
-                            ['freq_mc_spread'].describe())
-df_ms_f_mcs = pd.concat(ls_df_temp, axis = 1, keys = ls_mean_spread)
-print()
-print(u'Overview of most common spread frequency for various max mean spread:')
-print(df_ms_f_mcs.to_string())
-
-# Overview of pct same price (various differentiation)
-ls_df_temp = []
-ls_mean_spread = [0.1, 0.05, 0.02,  0.01, 0.005, 0.0025]
-for mean_spread in ls_mean_spread:
-  ls_df_temp.append(df_pairs[(df_pairs['distance'] <= 5) &\
-                             (df_pairs['abs_mean_spread'] <= mean_spread)]
-                            ['pct_same'].describe())
-df_ms_pct_sp = pd.concat(ls_df_temp, axis = 1, keys = ls_mean_spread)
-print()
-print(u'Overview of pct same price for various max mean spread:')
-print(df_ms_pct_sp.to_string())
-
-# RANK REVERSALS (todo: compare vs nb identical prices)
-# Overview of pct rr price (various differentiation)
-ls_df_temp = []
-ls_mean_spread = [0.1, 0.05, 0.01, 0.005, 0.002, 0.001]
-for mean_spread in ls_mean_spread:
-  ls_df_temp.append(df_pairs[(df_pairs['distance'] <= 3) &\
-                             (df_pairs['abs_mean_spread'] <= mean_spread)]
-                            ['pct_rr'].describe())
-df_ms_pct_rr = pd.concat(ls_df_temp, axis = 1, keys = ls_mean_spread)
-print(u'Overview of pct rank reversals for various max mean spread')
-print(df_ms_pct_rr.to_string())
-
-# GAIN FROM SEARCH
-# Overview of gain from search (various differentiation)
-ls_df_temp = []
-ls_mean_spread = [0.1, 0.05, 0.01, 0.005, 0.002, 0.001]
-for mean_spread in ls_mean_spread:
-  ls_df_temp.append(df_pairs[(df_pairs['distance'] <= 3) &\
-                             (df_pairs['abs_mean_spread'] <= mean_spread)]
-                            ['mean_abs_spread'].describe())
-df_ms_gfs = pd.concat(ls_df_temp, axis = 1, keys = ls_mean_spread)
-print()
-print(u'Overview of gain from search for various max mean spread:')
-print(df_ms_gfs.to_string())
-
-# #############################
-# ALIGNED PRICES AND LEADERSHIP
-# #############################
-
-## HEATMAP: PCT SAME VS PCT RR
-#heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['pct_same'].values,
-#                                         df_pair_comp_nd['pct_rr'].values,
-#                                         bins=30)
-#extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-#plt.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
-#plt.show()
-#
-## HEATMAP: PCT RR VS MEAN SPREAD (rounding issues)
-#heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['abs_mean_spread'].values,
-#                                         df_pair_comp_nd['pct_rr'].values,
-#                                         bins=30)
-#extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-#plt.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
-#plt.show()
-
-# ALIGNED PRICES
-print()
-print(u'Nb aligned prices i.e. pct_same >= 0.33',\
-      len(df_pairs[(df_pairs['pct_same'] >= 0.33)])) # todo: harmonize pct i.e. * 100
-# Pct same vs. mean_spread: make MSE appear? (i.e. close prices but no steady gap...)
+# OVERVIEW OF PAIR STATS DEPENDING ON STATIC DIFFERENTIATION
 
 print()
-print(u'Overview aligned prices i.e. pct_same >= 0.33:')
-print(df_pairs[(df_pairs['pct_same'] >= 0.33)][['pct_rr', 'nb_rr']].describe())
+print(u'Overview of pair stats depending on static differentiation:')
 
-# STANDARD SPREAD (ALLOW GENERALIZATION OF LEADERSHIP?)
-print()
-print('Inspect abs mc_spread == 0.010')
-print(df_pairs[(df_pairs['mc_spread'] == 0.010) | (df_pairs['mc_spread'] == -0.010)]
-              [['distance', 'abs_mean_spread',
-                'pct_rr', 'freq_mc_spread', 'pct_same']].describe())
+ls_col_overview = ['mean_abs_spread',
+                   'freq_mc_spread',
+                   'pct_same',
+                   'pct_rr']
 
-df_pair_comp['pct_1_lead'] = df_pair_comp['nb_1_lead'].astype(float) /\
-  df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
-df_pair_comp['pct_2_lead'] = df_pair_comp['nb_2_lead'].astype(float) /\
-  df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
-df_pair_comp['pct_sim_same'] = df_pair_comp['nb_chge_to_same'].astype(float) /\
-  df_pair_comp[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
-#print(df_pair_comp[df_pair_comp['pct_same'] >= 1/3.0]\
-#        [lsd + ['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same',
-#                'pct_1_lead', 'pct_2_lead', 'pct_sim_same']][0:10].to_string())
+ls_abs_mean_spread = [0.1, 0.05, 0.02,  0.01, 0.005, 0.002]
 
-# NO LEADER
-nl_ps_lim = 33/100.0
-nl_pct_lead_lim = 10/100.0
-df_nl = df_pair_comp[(df_pair_comp['pct_same'] >= nl_ps_lim) &\
-                     (df_pair_comp['pct_1_lead'] <= 10/100.0) &\
-                     (df_pair_comp['pct_2_lead'] <= 10/100.0) ].copy()
-se_nl_chains = pd.concat([df_nl['brand_last_1'], df_nl['brand_last_2']]).value_counts()
-print()
-print(u'Chains: pair with high similar price pct but no leader')
-print(se_nl_chains.to_string())
+df_pair_temp = df_pair_comp[(df_pair_comp['distance'] <= 3)]
 
-lsdnl = ['distance', 'id_1', 'id_2', 'brand_last_1', 'brand_last_2',
-        'pct_same', 'pct_1_lead', 'pct_2_lead', 'pct_sim_same']
-
-print(df_nl[lsdnl][0:20].to_string())
-
-# LEADERSHIP?
-# Restrictive def:
-# - pct_to_same_max: max lead or simulatenously change to same
-# - pct_to_same_min: min lead
-
-ps_lim =      33/100.0
-ptsmaxu_lim = 95/100.0
-ptsmaxl_lim = 25/100.0
-ptsmin_lim =  05/100.0
-
-df_leadership = df_pair_comp[(df_pair_comp['pct_same'] >= ps_lim) &\
-                             (df_pair_comp['pct_to_same_maxl'] >= (3 * df_pair_comp['pct_to_same_min'])) &\
-                             (df_pair_comp['pct_to_same_maxl'] > 0.10)].copy()
-
-df_leadership['leader_brand'] = df_leadership['brand_last_1']
-df_leadership.loc[df_leadership['nb_2_lead'] > df_leadership['nb_1_lead'],
-                  'leader_brand'] = df_leadership['brand_last_2']
-
-df_leadership['follower_brand'] = df_leadership['brand_last_1']
-df_leadership.loc[df_leadership['nb_2_lead'] < df_leadership['nb_1_lead'],
-                  'leader_brand'] = df_leadership['brand_last_2']
-
-lsdl = ['distance', 'id_1', 'id_2', 'brand_last_1', 'brand_last_2',
-        'pct_same', 'pct_1_lead', 'pct_2_lead', 'pct_sim_same',
-        'leader_brand', 'follower_brand']
-
-print()
-print(u'Overview of leadership')
-print(df_leadership[lsdl][0:20].to_string())
-
-print()
-print('Chain of leaders')
-print(df_leadership['leader_brand'].value_counts()[0:10])
-
-print()
-print('Chain of followers')
-print(df_leadership['follower_brand'].value_counts()[0:10])
-
-# Question: how often is a leader a follower (and vice versa?)
-
-# UNSURE
-
-df_unsure = df_pair_comp[(df_pair_comp['pct_same'] >= ps_lim) &\
-                         (df_pair_comp['pct_to_same_maxl'] <= (3 * df_pair_comp['pct_to_same_min'])) &\
-                         (df_pair_comp['pct_to_same_maxl'] > 0.10)].copy()
+dict_df_diff_desc = {}
+for col in ls_col_overview:
+  ls_se_temp = []
+  for ams in ls_abs_mean_spread:
+    ls_se_temp.append(df_pair_comp[(df_pair_comp['abs_mean_spread'] <= ams)]\
+                                  [col].describe())
+  df_desc_temp = pd.concat(ls_se_temp, axis = 1, keys = ls_abs_mean_spread)
+  dict_df_diff_desc[col] = df_desc_temp
+  
+  print()
+  print(u'Overview of {:s} frequency for various max mean spread:'.format(col))
+  print(df_desc_temp.to_string())

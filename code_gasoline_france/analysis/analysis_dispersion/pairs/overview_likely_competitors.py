@@ -53,6 +53,13 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
+# DF COMP
+df_comp = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_comp.csv'),
+                      encoding = 'utf-8',
+                      dtype = {'id_station' : str})
+df_comp.set_index('id_station', inplace = True)
+
 # CLOSE STATIONS
 dict_ls_close = dec_json(os.path.join(path_dir_built_json,
                                       'dict_ls_close.json'))
@@ -104,6 +111,16 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
+# RESTRICT CATEGORY
+
+df_pairs_all = df_pairs.copy()
+df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
+
+# ################################
+# BUILD CLOSEST SAME / COMPETITORS
+# ################################
+
+
 # LOOP TO FIND (id, dist, stat except for two first)
 # - closest comp
 # - closest non comp
@@ -117,61 +134,177 @@ def extract_id(df_station, id_station):
   id_same.remove(id_station)
   return id_same[0]
 
-df_pairs['abs_mean_spread'] = df_pairs['mean_spread'].abs()
+#df_pairs['abs_mean_spread'] = df_pairs['mean_spread'].abs()
 df_pairs['freq_rr'] = df_pairs['nb_spread'] / df_pairs['nb_rr']
 df_pairs['freq_rr'] = df_pairs['freq_rr'].replace([np.inf, -np.inf], np.nan)
 
-df_pairs.sort('distance', inplace = True)
+df_pairs.sort('distance', ascending = True, inplace = True)
 
-ls_rows = []
 ls_ids = list(set(df_pairs['id_1'].tolist() + df_pairs['id_2'].tolist()))
-ls_fields = [('pct_same', False), # sort order: ascending?
-             ('abs_mean_spread', True),
-             ('pct_rr', False),
-             ('freq_rr', True),
-             ('freq_mc_spread', False)]
+ls_fields_other = ['id',
+                  'brand_last',
+                  'group_type_last']
+ls_fields_stats = ['distance',
+                   'abs_mean_spread',
+                   'pct_same',
+                   'pct_rr',
+                   'mc_spread',
+                   'freq_mc_spread']
 
-# seems slow... optimize?
-for id_station in ls_ids[0:1000]:
+nb_comp_max = 2
+ls_rows = []
+for id_station in ls_ids:
   df_station = df_pairs[(df_pairs['id_1'] == id_station) |\
                         (df_pairs['id_2'] == id_station)].copy()
   # closest same group station
   df_closest_same = df_station[df_station['group_last_1'] ==\
-                                 df_station['group_last_2']]
-  id_same, distance_same = None, np.nan
+                               df_station['group_last_2']].copy()
+  # need to have proper dim Null res_same
+  res_same = [None for field in ls_fields_other] +\
+             [np.nan for field in ls_fields_stats]
   if len(df_closest_same) > 0:
-    id_same = extract_id(df_closest_same, id_station)
-    distance_same = df_closest_same['distance'].iloc[0]
-  # closest competitor station
+    row_other = df_closest_same.iloc[0]
+    # find if other has suffix 1 or 2
+    ls_ids = row_other[['id_1', 'id_2']].values.tolist()
+    id_station_ind = ls_ids.index(id_station)
+    other_ind = 1
+    if id_station_ind == 0:
+      other_ind = 2
+    res_same = row_other[['{:s}_{:d}'.format(field, other_ind)\
+                            for field in ls_fields_other]].values.tolist() +\
+               row_other[ls_fields_stats].values.tolist()
+  row = [id_station,
+         df_info.ix[id_station]['brand_last'],
+         df_info.ix[id_station]['group_type_last']] +\
+        res_same
+  # closest competitor station (could impose limit on abs_mean_spread)
   df_closest_comp = df_station[df_station['group_last_1'] !=\
-                                 df_station['group_last_2']].copy()
-  id_comp, distance_comp = None, np.nan
-  if len(df_closest_comp) > 0:
-    id_comp = extract_id(df_closest_comp, id_station)
-    distance_comp = df_closest_comp['distance'].iloc[0]
-  row = [id_station, id_same, distance_same, id_comp, distance_comp]
-  df_temp = df_closest_comp # choose all (df_station) or comp only (df_closest_comp)
-  if len(df_temp) > 0:
-    for field, sort_order in ls_fields:
-      id_field, dist_field, stat_field = None, np.nan, np.nan
-      df_temp.sort(field, ascending = sort_order, inplace = True)
-      id_field = extract_id(df_temp, id_station)
-      dist_field = df_temp['distance'].iloc[0]
-      stat_field = df_temp[field].iloc[0]
-      row += [id_field, dist_field, stat_field]
-  else:
-    for field, sort_order in ls_fields:
-      row += [None, np.nan, np.nan]
+                               df_station['group_last_2']].copy()
+  df_closest_comp = df_closest_comp[df_closest_comp['abs_mean_spread'] <= 0.01]
+  for row_other_i, row_other in df_closest_comp[:nb_comp_max].iterrows():
+    ls_ids = row_other[['id_1', 'id_2']].values.tolist()
+    id_station_ind = ls_ids.index(id_station)
+    other_ind = 1
+    if id_station_ind == 0:
+      other_ind = 2
+    res_comp = row_other[['{:s}_{:d}'.format(field, other_ind)\
+                            for field in ls_fields_other]].values.tolist() +\
+               row_other[ls_fields_stats].values.tolist()
+    row += res_comp
   ls_rows.append(row)
 
-ls_cols = ['id_station',
-           'id_friend', 'dist_friend',
-           'id_comp', 'dist_comp'] +\
-          [x for ls_x in [['id_{:s}'.format(field),
-                           'dist_{:s}'.format(field),
-                           field] for field, sort_order in ls_fields] for x in ls_x]
+ls_fields = ls_fields_other + ls_fields_stats
+ls_same_cols = ['{:s}_same'.format(field) for field in ls_fields]
+ls_ls_comp_cols = [['{:s}_{:d}'.format(field, ind)\
+                     for field in ls_fields]\
+                   for ind in range(1, nb_comp_max + 1)]
+ls_cols  = ['id_station', 'brand_last', 'group_type_last'] +\
+           ls_same_cols +\
+           [x for ls_x in ls_ls_comp_cols for x in ls_x]
+df_env = pd.DataFrame(ls_rows,
+                      columns = ls_cols)
 
-df_lcomp = pd.DataFrame(ls_rows, columns = ls_cols)
-df_lcomp.set_index('id_station', inplace = True)
+# ############
+# STATS DES
+# ############
 
-print(df_lcomp.describe().to_string())
+# best to have filtered on differentiation when building data
+
+print()
+print(u'Check rank reversal of closest vs. second closest competitor:')
+
+print()
+print('Supermarkets:')
+print(df_env[(~df_env['id_2'].isnull()) & (df_env['group_type_last'] == 'SUP')]\
+            [['abs_mean_spread_1', 'abs_mean_spread_2', 'distance_1', 'distance_2',
+              'pct_rr_1', 'pct_rr_2', 'pct_same_1', 'pct_same_2']].describe().to_string())
+
+print()
+print('Others:')
+print(df_env[(~df_env['id_2'].isnull()) & (df_env['group_type_last'] != 'SUP')]\
+            [['abs_mean_spread_1', 'abs_mean_spread_2', 'distance_1', 'distance_2',
+              'pct_rr_1', 'pct_rr_2', 'pct_same_1', 'pct_same_2']].describe().to_string())
+
+# ############
+# REGRESSIONS
+# ############
+
+# higher same price share / lower rank reversals
+
+# ADD PCT SAME / RR IN INFO
+df_env.set_index('id_station', inplace = True)
+ls_ind = range(1, nb_comp_max + 1)
+df_info['pct_rr'] = df_env[['pct_rr_{:d}'.format(i) for i in ls_ind]].min(1)
+df_info['pct_same'] = df_env[['pct_same_{:d}'.format(i) for i in ls_ind]].max(1)
+df_info['abs_mean_spread'] = df_env[['abs_mean_spread_{:d}'.format(i) for i in ls_ind]].min(1)
+df_info['distance'] = df_env[['distance_{:d}'.format(i) for i in ls_ind]].min(1)
+
+
+# SELECTION PRICE / DAY
+
+str_date = '2014-12-04' # '2011-09-04'
+df_info['price_at'] = df_prices_ttc.ix[str_date]
+df_info['price_bt'] = df_prices_ht.ix[str_date]
+
+str_be = 'last' # '0'
+df_info['brand'] = df_info['brand_{:s}'.format(str_be)]
+df_info['group'] = df_info['group_{:s}'.format(str_be)]
+df_info['group_type'] = df_info['group_type_{:s}'.format(str_be)]
+
+df_sub = df_info[~df_info['price_at'].isnull()].copy()
+df_sub['nb_brand'] = df_sub[['price_at', 'brand']].groupby('brand')\
+                                                  .transform(len)['price_at']
+df_sub = df_sub[df_sub['nb_brand'] >= 30]
+
+# ADD SOME GEO DUMMIES
+ls_ls_areas = [['idf', ['77', '78', '91', '95']],
+               ['pariss', ['92', '93', '94']],
+               ['paris', ['75']],
+               ['paca', ['13']]]
+for area_title, ls_area_dpts in ls_ls_areas:
+  df_sub[area_title] = 0
+  df_sub.loc[df_sub['dpt'].isin(ls_area_dpts),
+             area_title] = 1
+
+# ADD DISCOUNT CATEGORY
+ls_dis = ['TOTAL_ACCESS', 'ESSO_EXPRESS']
+df_sub.loc[df_sub['brand_last'].isin(ls_dis),
+           'group_type_last'] = 'DIS'
+
+# Regressions including only stations which have a non diff competitor only
+
+for col, col2 in [['pct_rr', 'no_rr'],
+                  ['pct_same', 'no_same']]:
+  res_chains_a = smf.ols('price_at ~ idf + pariss + paris + brand' +\
+                         ' + {:s}:C(group_type_last)'.format(col),
+                          data = df_sub).fit()
+  print(res_chains_a.summary())
+
+# Regressions with all stations
+
+df_sub['no_comp'] = 0
+df_sub.loc[df_sub['distance'].isnull(), 'no_comp'] = 1
+
+df_sub['no_rr'] = 0
+df_sub['no_same'] = 0
+df_sub.loc[df_sub['pct_rr'] == 0, 'no_rr'] = 1
+df_sub.loc[df_sub['pct_same'] == 0, 'no_same'] = 1
+
+df_sub.loc[df_sub['pct_rr'].isnull(), 'pct_rr'] = 0
+df_sub.loc[df_sub['pct_same'].isnull(), 'pct_same'] = 0
+
+for col, col2 in [['pct_rr', 'no_rr'],
+                  ['pct_same', 'no_same']]:
+  res_chains_b = smf.ols('price_at ~ idf + pariss + paris + brand'\
+                         ' + no_comp:C(group_type_last)' +\
+#                         ' + {:s}:C(group_type_last)'.format(col2) +\
+                         ' + {:s}:C(group_type_last)'.format(col),
+                         data = df_sub).fit()
+  print(res_chains_b.summary())
+
+#df_info['no_comp'] = 0
+#df_info.loc[df_info['distance'].isnull(), 'no_comp'] = 1
+#
+#col, col2 = 'pct_rr', 'rr'
+#df_info['comp_no_{:s}'.format(col2)] = 0
+#df_info['comp_no_{:s}'.format(col2)] = 0

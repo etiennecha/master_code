@@ -110,7 +110,7 @@ df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
 
 # RESTRICT CATEOGORY
 df_pairs_all = df_pairs.copy()
-df_pairs = df_pairs[df_pairs['cat'] == 'residuals_no_mc'].copy()
+df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
 
 # COMP VS SAME GROUP
 df_pair_same =\
@@ -148,8 +148,8 @@ zero = 1e-10
 # Graphs back up (same scenarios than graphs displayed in paper?)
 # Check nb obs
 
-# Interesting case: differentiated & residuals
-df_pairs_temp = df_pair_comp_d
+# Interesting case: differentiated w/ residuals
+df_pairs_temp = df_pair_nsup_nd
 
 ls_loop_dist = [(0, 1, 0.2),
                 (1, 3, 0.5),
@@ -204,31 +204,3 @@ for title, df_temp in ls_loop_pair_dis:
     print('Nb pairs same corner ({:.1f}km): {:d}'.format(dist_sc, len(df_sc)))
     print('Nb pairs further: {:d}'.format(len(df_further)))
     print('KS stats', ks_2samp(df_sc['pct_rr'], df_further['pct_rr']))
-
-## #######
-## BACKUP
-## #######
-#
-## HEATMAP: PCT SAME VS PCT RR
-#heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['pct_same'].values,
-#                                         df_pair_comp_nd['pct_rr'].values,
-#                                         bins=30)
-#extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-#fig = plt.figure()
-#ax = fig.add_subplot(111)
-#ax.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
-#ax.set_xlabel('Pct same price')
-#ax.set_ylabel('Pct rank reversals')
-#plt.show()
-#
-## HEATMAP: PCT RR VS MEAN SPREAD
-#heatmap, xedges, yedges = np.histogram2d(df_pair_comp_nd['abs_mean_spread'].values,
-#                                         df_pair_comp_nd['pct_rr'].values,
-#                                         bins=30)
-#extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-#fig = plt.figure()
-#ax = fig.add_subplot(111)
-#ax.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
-#ax.set_xlabel('Mean spread')
-#ax.set_ylabel('Pct rank reversals')
-#plt.show()
