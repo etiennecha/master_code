@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
@@ -35,7 +36,7 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'dpt' : str})
 df_info.set_index('id_station', inplace = True)
 
-print len(df_info)
+print(len(df_info))
 
 df_info = df_info[(df_info['highway'] != 1) &
                   (~pd.isnull(df_info['start']))]
@@ -70,12 +71,12 @@ df_distances = pd.concat(ls_se_distances, axis = 1, keys = ls_ids)
 # except for the fact that the first column in in last position
 df_distances.ix[ls_ids[0]] = np.nan
 df_distances[ls_ids[-1]] = np.nan
-print u'\nLength of computation:', time.time() - start
+print(u'Length of computation:', time.time() - start)
 
 ## Check results
-## print df_distances.ix[ls_ids][0:10]
-# print compute_distance(ls_gps[1], ls_gps[10])
-# print df_distances.loc[ls_ids[10], ls_ids[1]]
+## print(df_distances.ix[ls_ids][0:10])
+# print(compute_distance(ls_gps[1], ls_gps[10]))
+# print(df_distances.loc[ls_ids[10], ls_ids[1]])
 
 # ###########################
 # IDENTIFY SUSPECT DISTANCES 
@@ -93,7 +94,8 @@ for id_station in df_distances.columns:
 #lsd0 = ['name', 'adr_street', 'adr_zip', 'adr_city',
 #        'brand_0', 'brand_1', 'start', 'end', 'lat', 'lng']
 #for tup_ids in ls_pbm_tup_ids[0:10]:
-#  print '\n', df_info.ix[list(tup_ids)][lsd0].to_string()
+#  print()
+#  print(df_info.ix[list(tup_ids)][lsd0].to_string())
 ## One potential duplicated detected: 86000018, 86000021
 
 # #######
@@ -130,5 +132,5 @@ enc_json(ls_close_pairs, os.path.join(path_dir_built_json,
 enc_json(dict_ls_close, os.path.join(path_dir_built_json,
                                      'dict_ls_close.json'))
 
-print u'\nFound and saved {:d} close pairs'.format(len(ls_close_pairs))
-print u'\nFound and saved neighbours for {:d} stations'.format(len(dict_ls_close))
+print(u'Found and saved {:d} close pairs'.format(len(ls_close_pairs)))
+print(u'Found and saved neighbours for {:d} stations'.format(len(dict_ls_close)))

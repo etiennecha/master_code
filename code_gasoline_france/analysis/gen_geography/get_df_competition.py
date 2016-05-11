@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
@@ -76,8 +77,10 @@ enc_json(ls_comp_pairs, os.path.join(path_dir_built_json,
 enc_json(dict_ls_comp, os.path.join(path_dir_built_json,
                                      'dict_ls_comp.json'))
 
-print u'\nFound and saved {:d} pairs of competitors'.format(len(ls_comp_pairs))
-print u'\nFound and saved competitors for {:d} stations'.format(len(dict_ls_comp))
+print()
+print(u'Found and saved {:d} pairs of competitors'.format(len(ls_comp_pairs)))
+print()
+print(u'Found and saved competitors for {:d} stations'.format(len(dict_ls_comp)))
 
 # ########################
 # MARKETS AROUND STATIONS
@@ -233,7 +236,8 @@ df_comp.to_csv(os.path.join(path_dir_built_csv,
 
 ls_dict_markets = []
 for distance in [3, 4, 5]:
-  print '\nMarkets with distance', distance
+  print()
+  print('Markets with distance', distance)
   ls_markets = []
   for k,v in dict_ls_close.items():
     ls_close_ids = [x[0] for x in v if x[1] <= distance]
@@ -256,7 +260,7 @@ for distance in [3, 4, 5]:
   for market in ls_closed_markets:
   	dict_market_size.setdefault(len(market), []).append(market)
   for k,v in dict_market_size.items():
-  	print k, len(v)
+  	print(k, len(v))
   ls_dict_markets.append(dict_market_size)
 
 enc_json(ls_dict_markets,
@@ -265,7 +269,8 @@ enc_json(ls_dict_markets,
 
 # MOST ROBUST MARKETS
 
-print '\nMarkets robust to distance vars'
+print()
+print('Markets robust to distance vars')
 dict_refined, dict_rejected = {}, {}
 for market_size, ls_markets in ls_dict_markets[0].items():
   for market in ls_markets:
@@ -275,7 +280,7 @@ for market_size, ls_markets in ls_dict_markets[0].items():
     else:
       dict_rejected.setdefault(market_size, []).append(market)
 for k, v in dict_refined.items():
-  print k, len(v)
+  print(k, len(v))
 
 ls_robust_markets = [x for k,v in dict_refined.items() for x in v]
 
@@ -283,13 +288,13 @@ enc_json(ls_robust_markets,
          os.path.join(path_dir_built_json,
                       'ls_robust_stable_markets.json'))
 
-# STATS DES
-
-# have a look (tacit collusion?)
-ax = df_prices_ttc[[u'41700003', u'41700004', u'41700006'] +\
-                   ['45240001', '45240002']].plot()
-df_prices_ttc.mean(1).plot(ax=ax)
-plt.show()
-
-ax = df_prices_ttc[[u'73300001', u'73300002', u'73300004']].plot()
-plt.show()
+## STATS DES
+#
+## have a look (tacit collusion?)
+#ax = df_prices_ttc[[u'41700003', u'41700004', u'41700006'] +\
+#                   ['45240001', '45240002']].plot()
+#df_prices_ttc.mean(1).plot(ax=ax)
+#plt.show()
+#
+#ax = df_prices_ttc[[u'73300001', u'73300002', u'73300004']].plot()
+#plt.show()

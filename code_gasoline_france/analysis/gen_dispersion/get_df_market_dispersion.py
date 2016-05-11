@@ -124,6 +124,37 @@ df_cost = pd.read_csv(os.path.join(path_dir_built_other_csv,
                                  parse_dates = ['date'])
 df_cost.set_index('date', inplace = True)
 
+# GEN LOW PRICE AND HIGH PRICE MARKETS
+# pbm with chging discounters btw...
+# (check with describe / hist if ok over time...)
+df_info.loc['17240001', 'brand_last'] = 'TOTAL_ACCESS'
+# temp fix ... todo check 95230007
+ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
+df_info.loc[df_info['brand_last'].isin(ls_discounter),
+             'group_type_last'] = 'DIS'
+df_info.loc[df_info['brand_0'].isin(ls_discounter),
+             'group_type'] = 'DIS'
+# should exclude margin chge stations?
+
+df_info['type_last'] = 'HIGH'
+df_info.loc[(df_info['brand_last'].isin(ls_discounter)) |\
+            (df_info['group_type_last'] == 'SUP'),
+            'type_last'] = 'LOW'
+df_info['type'] = 'HIGH'
+df_info.loc[(df_info['brand_0'].isin(ls_discounter)) |\
+            (df_info['group_type'] == 'SUP'),
+            'type'] = 'LOW'
+
+set_low_ids = set(df_info[(df_info['type'] == 'LOW') & (df_info['type_last'] == 'LOW')].index)
+set_high_ids = set(df_info[(df_info['type'] == 'HIGH') & (df_info['type_last'] == 'HIGH')].index)
+dict_ls_comp_low, dict_ls_comp_high = {}, {}
+for k, v in dict_ls_comp.items():
+  if k in set_low_ids:
+    dict_ls_comp_low[k] = [(id_comp, dist) for id_comp, dist in v if id_comp in set_low_ids]
+  elif k in set_high_ids:
+    dict_ls_comp_high[k] = [(id_comp, dist) for id_comp, dist in v if id_comp in set_high_ids]
+# could gain efficiency by restricting distance first and using set intersections
+
 # #########################
 # GET DF MARKET DISPERSION
 # #########################
@@ -146,9 +177,12 @@ for km_bound in [1, 3, 5]:
       get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound)
   dict_markets['Restricted_{:d}km_random'.format(km_bound)] =\
       get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
+  dict_markets['Low_{:d}km'.format(km_bound)] =\
+      get_ls_ls_market_ids(dict_ls_comp_low, km_bound)
+  dict_markets['High_{:d}km'.format(km_bound)] =\
+      get_ls_ls_market_ids(dict_ls_comp_high, km_bound)
 
 # GET MARKET DISPERSION
-
 ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
                    ('3km_Residuals', df_prices_cl, dict_markets['All_3km']),
                    ('1km_Residuals', df_prices_cl, dict_markets['All_1km']),
@@ -156,7 +190,11 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
                    ('5km_Residuals', df_prices_cl, dict_markets['All_5km']),
                    ('3km_Rest_Residuals', df_prices_cl, dict_markets['Restricted_3km']),
                    ('Stable_Markets_Raw_prices', df_prices_ttc, ls_stable_markets),
-                   ('Stable_Markets_Residuals', df_prices_cl, ls_stable_markets)]
+                   ('Stable_Markets_Residuals', df_prices_cl, ls_stable_markets),
+                   ('Low_3km', df_prices_ttc, dict_markets['Low_3km']),
+                   ('High_3km', df_prices_ttc, dict_markets['High_3km']),
+                   ('Low_3km_Residuals', df_prices_cl, dict_markets['Low_3km']),
+                   ('High_3km_Residuals', df_prices_cl, dict_markets['High_3km'])]
 
 # for each market:
 # market desc: (max) nb firms, mean nb firms observed,
@@ -226,7 +264,8 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
   #
   #print u'\nStats des: restriction on nb of sellers:'
   #nb_comp_lim = df_market_stats['avg_nb_comp'].quantile(0.75)
-  #print u'\n', df_market_stats[df_market_stats['avg_nb_comp'] <= nb_comp_lim].describe()
+  #print()
+  #print(df_market_stats[df_market_stats['avg_nb_comp'] <= nb_comp_lim].describe())
   #
   #df_dispersion = pd.concat(ls_df_market_dispersion, ignore_index = True)
   #df_dispersion = df_dispersion[(df_dispersion['nb_comp_t'] >= 3) &\

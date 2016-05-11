@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
@@ -171,8 +172,8 @@ df_robust_nb['HHI'] =\
   df_robust_nb.apply(lambda x: ((x[ls_chains] * 100 / x.sum())**2).sum() +\
                                ((100 / x.sum())**2) * x['INDEPENDANT'],  axis = 1)
 
-print u'\nOverview HHI robust markets'
-print df_robust_nb['HHI'].describe()
+print(u'Overview HHI robust markets')
+print(df_robust_nb['HHI'].describe())
 
 # Can combine HHI within INSEE area & stable markets to find high concentration
 # or around stations instead of stable markets

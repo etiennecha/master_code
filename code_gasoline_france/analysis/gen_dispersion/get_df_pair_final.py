@@ -239,7 +239,7 @@ df_pairs['pct_to_same_min'] = (df_pairs[['nb_1_lead', 'nb_2_lead']].min(1)) /\
 df_pairs.to_csv(os.path.join(path_dir_built_dis_csv,
                              'df_pair_final.csv'),
                 encoding = 'utf-8',
-                float_format= '%.3f',
+                float_format= '%.4f',
                 index = False)
 
 ## SEPARATE SAME GROUP vs. COMPETITORS

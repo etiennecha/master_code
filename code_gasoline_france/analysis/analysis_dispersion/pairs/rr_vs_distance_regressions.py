@@ -117,9 +117,21 @@ df_pairs.loc[df_pairs['distance'] <= 1, 'sc_1000'] = 1
 
 # RESTRICT CATEGORY
 
+cat = 'no_mc' # 'residuals'
 df_pairs_all = df_pairs.copy()
-df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
-#df_pairs = df_pairs[df_pairs['cat'] == 'residuals'].copy()
+df_pairs = df_pairs[df_pairs['cat'] == cat].copy()
+
+# REFINE CATEGORIES
+# - distinguish discounter among non sup
+# - interested in discounter vs discounter and discounter vs. sup
+
+# based on brand_last
+ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
+for i in (1, 2):
+  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
+               'group_type_last_{:d}'.format(i)] = 'DIS'
+  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
+               'group_type_{:d}'.format(i)] = 'DIS'
 
 # COMPETITORS VS. SAME GROUP
 
@@ -147,6 +159,36 @@ df_pair_nsup = df_pair_comp[(df_pair_comp['group_type_1'] != 'SUP') &\
 df_pair_sup_nd = df_pair_sup[(df_pair_sup['mean_spread'].abs() <= diff_bound)]
 df_pair_nsup_nd = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() <= diff_bound)]
 
+# ALTERNATIVE
+
+dict_pair_all = {'any' : df_pair_comp}
+
+dict_pair_all['sup'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
+                                   (df_pair_comp['group_type_2'] == 'SUP')]
+
+dict_pair_all['oil_ind'] =\
+    df_pair_comp[(df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
+                 (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))]
+
+dict_pair_all['dis'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'DIS') &\
+                                   (df_pair_comp['group_type_2'] == 'DIS')]
+
+dict_pair_all['sup_dis'] = df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
+                                       (df_pair_comp['group_type_2'] == 'DIS')) |
+                                      ((df_pair_comp['group_type_1'] == 'DIS') &\
+                                       (df_pair_comp['group_type_2'] == 'SUP'))]
+
+dict_pair_all['oil_sup'] =\
+    df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
+                  (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))) |
+                 ((df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
+                  (df_pair_comp['group_type_2'] == 'SUP'))]
+
+dict_pair_nd = {}
+for df_type_title, df_type_pairs in dict_pair_all.items():
+  dict_pair_nd[df_type_title] =\
+      df_type_pairs[df_type_pairs['abs_mean_spread'] <= diff_bound].copy()
+
 # LISTS FOR DISPLAY
 
 lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
@@ -162,7 +204,7 @@ ls_dist_ols_formulas = ['abs_mean_spread ~ distance',
                         'pct_rr ~ distance',
                         'std_spread ~ distance']
 
-dist_reg = 500
+dist_reg = 1000
 
 ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d}'.format(dist_reg),
                       'mean_abs_spread ~ sc_{:d}'.format(dist_reg),
@@ -181,9 +223,12 @@ ls_quantiles = [0.25, 0.5, 0.75, 0.90]
 
 # check => https://groups.google.com/forum/?hl=fr#!topic/pystatsmodels/XnXu_k1h-gc
 
-## Output data to csv to run quantile regressions in R
-#path_dir_built_csv = os.path.join(path_dir_built_paper, 'data_csv')
-#df_ppd.to_csv(os.path.join(path_dir_built_csv, 'data_ppd.csv'))
+# Output data to csv to run quantile regressions in R
+df_pair_comp.to_csv(os.path.join(path_dir_built_dis_csv,
+                                 'df_pair_comp_{:s}.csv'.format(cat)),
+                    float_format= '%.4f',
+                    encoding = 'utf-8',
+                    index = False)
 
 # REWRITE OUTPUT REGS
 
@@ -211,15 +256,30 @@ def format_ls_reg_fits_to_df(ls_tup_reg_fit, ls_var_names):
                              index = ls_index)
   return df_reg_fits
 
-ls_loop_df_ppd_regs = [['All pairs', df_pair_comp],
-                       ['Non differentiated', df_pair_comp_nd],
-                       ['Differentiated', df_pair_comp_d],
-                       ['Supermarkets', df_pair_sup],
-                       ['Non supermarkets', df_pair_nsup],
-                       ['Sups - No diff', df_pair_sup_nd],
-                       ['Nsups - No diff', df_pair_nsup_nd]]
+#ls_loop_df_ppd_regs = [['All pairs', df_pair_comp],
+#                       ['Non differentiated', df_pair_comp_nd],
+#                       ['Differentiated', df_pair_comp_d],
+#                       ['Supermarkets', df_pair_sup],
+#                       ['Non supermarkets', df_pair_nsup],
+#                       ['Sups - No diff', df_pair_sup_nd],
+#                       ['Nsups - No diff', df_pair_nsup_nd]]
+
+ls_loop_df_ppd_regs = [('All', dict_pair_all['any']),
+                       ('Sup', dict_pair_all['sup']),
+                       ('Nd All', dict_pair_nd['any']),
+                       ('Nd Oil Ind', dict_pair_nd['oil_ind']),
+                       ('Nd Sup', dict_pair_nd['sup']),
+                       ('Sup Dis', dict_pair_all['sup_dis']),
+                       ('Nd Sup Dis', dict_pair_nd['sup_dis']),
+                       ('Oil Ind', dict_pair_all['oil_ind'])]
+
+# Some issues with current implementation of quantreg => R
+# Work with dist 1000 until Oil Ind...
 
 for df_ppd_title, df_ppd_reg in ls_loop_df_ppd_regs:
+  df_ppd_reg = df_ppd_reg[(df_ppd_reg['distance'] <= 3)].copy()
+  #df_ppd_reg.loc[df_ppd_reg['pct_rr'] == 0, 'pct_rr'] = 0.0001
+  #df_ppd_reg.loc[df_ppd_reg['distance'] == 0, 'distance'] = 0.0001
   print()
   print(df_ppd_title)
   # Simple ols

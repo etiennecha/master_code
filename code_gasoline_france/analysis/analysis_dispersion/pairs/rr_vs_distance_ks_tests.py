@@ -149,7 +149,7 @@ zero = 1e-10
 # Check nb obs
 
 # Interesting case: differentiated w/ residuals
-df_pairs_temp = df_pair_nsup_nd
+df_pairs_temp = df_pair_comp_nd
 
 ls_loop_dist = [(0, 1, 0.2),
                 (1, 3, 0.5),

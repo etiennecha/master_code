@@ -288,7 +288,7 @@ df_pairs.replace([np.inf, -np.inf], np.nan, inplace = True)
 df_pairs.to_csv(os.path.join(path_dir_built_dis_csv,
                              'df_pair_stats.csv'),
                 encoding = 'utf-8',
-                float_format= '%.3f',
+                float_format= '%.4f',
                 index = False)
 
 ## ################

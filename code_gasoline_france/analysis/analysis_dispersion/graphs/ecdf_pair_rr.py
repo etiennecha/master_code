@@ -100,6 +100,17 @@ df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
 df_pairs_all = df_pairs.copy()
 df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
 
+# REFINE TYPES
+# - distinguish discounter among non sup
+# - interested in discounter vs discounter and discounter vs. sup
+# based on brand_last
+ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
+for i in (1, 2):
+  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
+               'group_type_last_{:d}'.format(i)] = 'DIS'
+  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
+               'group_type_{:d}'.format(i)] = 'DIS'
+
 # COMP VS SAME GROUP
 df_pair_same =\
   df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
@@ -111,13 +122,14 @@ df_pair_comp =\
 # DIFFERENTIATION
 
 for diff_bound in [0.01, 0.02, 0.05]: # , 0.02, 0.05]:
-  df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
-  df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
-  df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
-  df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
   
-  # COMP SUP VS. NON SUP
+  # COMP VS SAME GROUP (UNUSED)
+  df_pair_same_nd = df_pair_same[df_pair_same['abs_mean_spread'] <= diff_bound]
+  df_pair_same_d  = df_pair_same[df_pair_same['abs_mean_spread'] > diff_bound]
+  df_pair_comp_nd = df_pair_comp[df_pair_comp['abs_mean_spread'] <= diff_bound]
+  df_pair_comp_d  = df_pair_comp[df_pair_comp['abs_mean_spread'] > diff_bound]
   
+  # SUP VS. NON SUP (COMPETITORS)
   df_pair_sup = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
                              (df_pair_comp['group_type_2'] == 'SUP')]
   df_pair_nsup = df_pair_comp[(df_pair_comp['group_type_1'] != 'SUP') &\
@@ -125,11 +137,34 @@ for diff_bound in [0.01, 0.02, 0.05]: # , 0.02, 0.05]:
   df_pair_sup_nd = df_pair_sup[(df_pair_sup['mean_spread'].abs() <= diff_bound)]
   df_pair_nsup_nd = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() <= diff_bound)]
   
+  # ALTERNATIVE
+  dict_pair_all = {'any' : df_pair_comp}
+  dict_pair_all['sup'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
+                                     (df_pair_comp['group_type_2'] == 'SUP')]
+  dict_pair_all['oil_ind'] =\
+      df_pair_comp[(df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
+                   (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))]
+  dict_pair_all['dis'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'DIS') &\
+                                     (df_pair_comp['group_type_2'] == 'DIS')]
+  dict_pair_all['sup_dis'] = df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
+                                         (df_pair_comp['group_type_2'] == 'DIS')) |
+                                        ((df_pair_comp['group_type_1'] == 'DIS') &\
+                                         (df_pair_comp['group_type_2'] == 'SUP'))]
+  dict_pair_all['oil_sup'] =\
+      df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
+                    (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))) |
+                   ((df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
+                    (df_pair_comp['group_type_2'] == 'SUP'))]
+  dict_pair_nd = {}
+  for df_type_title, df_type_pairs in dict_pair_all.items():
+    dict_pair_nd[df_type_title] =\
+        df_type_pairs[df_type_pairs['abs_mean_spread'] <= diff_bound].copy()
+  
   # ##########################
   # GRAPH ECDF RANK REVERSALS
   # ##########################
   
-  df_pairs_temp = df_pair_comp_nd
+  df_pairs_temp = dict_pair_nd['any']
 
   df_all = df_pairs_temp[df_pairs_temp['distance'] <= 5]
   ls_loop_dist = [(0, 1, 0.2),
@@ -160,6 +195,8 @@ for diff_bound in [0.01, 0.02, 0.05]: # , 0.02, 0.05]:
   ax.xaxis.set_ticks_position('bottom')
   ax.get_yaxis().set_tick_params(which='both', direction='out')
   ax.get_xaxis().set_tick_params(which='both', direction='out')
+  plt.xlabel(u'% of obs')
+  plt.ylabel(u'Rank reversals')
   plt.legend(loc = 4)
   plt.savefig(os.path.join(path_dir_built_dis_graphs,
                            dir_graphs,
@@ -171,8 +208,8 @@ for diff_bound in [0.01, 0.02, 0.05]: # , 0.02, 0.05]:
   # GRAPH ECDF RANK REVERSALS: SUPS / NON SUPS
   # ############################################
   
-  for title_temp, df_pairs_temp in [('sup', df_pair_sup_nd),
-                                    ('nsup', df_pair_nsup_nd)]:
+  for title_temp, df_pairs_temp in [('sup', dict_pair_nd['sup']),
+                                    ('nsup', dict_pair_nd['oil_ind'])]:
 
     df_all = df_pairs_temp[df_pairs_temp['distance'] <= 5]
     ls_loop_dist = [(0, 1, 0.2),
@@ -203,6 +240,8 @@ for diff_bound in [0.01, 0.02, 0.05]: # , 0.02, 0.05]:
     ax.xaxis.set_ticks_position('bottom')
     ax.get_yaxis().set_tick_params(which='both', direction='out')
     ax.get_xaxis().set_tick_params(which='both', direction='out')
+    plt.xlabel(u'Rank reversals')
+    plt.ylabel(u'% of obs')
     plt.legend(loc = 4)
     plt.savefig(os.path.join(path_dir_built_dis_graphs,
                              dir_graphs,

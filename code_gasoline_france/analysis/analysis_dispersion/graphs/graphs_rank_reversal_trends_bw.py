@@ -155,6 +155,17 @@ df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
 df_pairs['tup_ids'] = df_pairs.apply(lambda row: (row['id_1'], row['id_2']),
                                    axis = 1)
 
+# REFINE TYPES
+# - distinguish discounter among non sup
+# - interested in discounter vs discounter and discounter vs. sup
+# based on brand_last
+ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
+for i in (1, 2):
+  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
+               'group_type_last_{:d}'.format(i)] = 'DIS'
+  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
+               'group_type_{:d}'.format(i)] = 'DIS'
+
 # COMP VS SAME GROUP
 df_pair_same =\
   df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
@@ -166,12 +177,13 @@ df_pair_comp =\
 # DIFFERENTIATION
 for diff_bound in [0.01, 0.02, 0.05]:
   
-  df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
-  df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
-  df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
-  df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
+  # COMP VS SAME GROUP (UNUSED)
+  df_pair_same_nd = df_pair_same[df_pair_same['abs_mean_spread'] <= diff_bound]
+  df_pair_same_d  = df_pair_same[df_pair_same['abs_mean_spread'] > diff_bound]
+  df_pair_comp_nd = df_pair_comp[df_pair_comp['abs_mean_spread'] <= diff_bound]
+  df_pair_comp_d  = df_pair_comp[df_pair_comp['abs_mean_spread'] > diff_bound]
   
-  # COMP SUP VS. NON SUP
+  # SUP VS. NON SUP (COMPETITORS)
   df_pair_sup = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
                              (df_pair_comp['group_type_2'] == 'SUP')]
   df_pair_nsup = df_pair_comp[(df_pair_comp['group_type_1'] != 'SUP') &\
@@ -179,11 +191,34 @@ for diff_bound in [0.01, 0.02, 0.05]:
   df_pair_sup_nd = df_pair_sup[(df_pair_sup['mean_spread'].abs() <= diff_bound)]
   df_pair_nsup_nd = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() <= diff_bound)]
   
+  # ALTERNATIVE
+  dict_pair_all = {'any' : df_pair_comp}
+  dict_pair_all['sup'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
+                                     (df_pair_comp['group_type_2'] == 'SUP')]
+  dict_pair_all['oil_ind'] =\
+      df_pair_comp[(df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
+                   (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))]
+  dict_pair_all['dis'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'DIS') &\
+                                     (df_pair_comp['group_type_2'] == 'DIS')]
+  dict_pair_all['sup_dis'] = df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
+                                         (df_pair_comp['group_type_2'] == 'DIS')) |
+                                        ((df_pair_comp['group_type_1'] == 'DIS') &\
+                                         (df_pair_comp['group_type_2'] == 'SUP'))]
+  dict_pair_all['oil_sup'] =\
+      df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
+                    (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))) |
+                   ((df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
+                    (df_pair_comp['group_type_2'] == 'SUP'))]
+  dict_pair_nd = {}
+  for df_type_title, df_type_pairs in dict_pair_all.items():
+    dict_pair_nd[df_type_title] =\
+        df_type_pairs[df_type_pairs['abs_mean_spread'] <= diff_bound].copy()
+
   # Keep filtered pairs
-  df_rr = df_rr.ix[df_pair_comp['tup_ids'].values]
-  df_rr_nd = df_rr.ix[df_pair_comp_nd['tup_ids'].values]
-  df_rr_nd_sup = df_rr.ix[df_pair_sup_nd['tup_ids'].values]
-  df_rr_nd_nsup = df_rr.ix[df_pair_nsup_nd['tup_ids'].values]
+  df_rr = df_rr.ix[dict_pair_all['any']['tup_ids'].values]
+  df_rr_nd = df_rr.ix[dict_pair_nd['any']['tup_ids'].values]
+  df_rr_nd_sup = df_rr.ix[dict_pair_nd['sup']['tup_ids'].values]
+  df_rr_nd_nsup = df_rr.ix[dict_pair_nd['oil_ind']['tup_ids'].values]
   
   zero = np.float64(1e-10)
   ls_df_rrs_su = []
@@ -213,8 +248,8 @@ for diff_bound in [0.01, 0.02, 0.05]:
   
   ls_loop_rr_temp = [['All pairs', ls_df_rrs_su[0]],
                      ['Low differentiation', ls_df_rrs_su[1]],
-                     ['Both supermarkets', ls_df_rrs_su[2]],
-                     ['Not supermarkets', ls_df_rrs_su[3]]]
+                     ['Supermarkets', ls_df_rrs_su[2]],
+                     ['Oil & Independent', ls_df_rrs_su[3]]]
   
   fig = plt.figure()
   ax1 = fig.add_subplot(111)
@@ -237,7 +272,7 @@ for diff_bound in [0.01, 0.02, 0.05]:
   ax1.get_yaxis().set_tick_params(which='both', direction='out')
   ax1.get_xaxis().set_tick_params(which='both', direction='out')
   plt.xlabel('')
-  plt.ylabel(u'% reversed pairs')
+  plt.ylabel(u'Share of reversed pairs')
   plt.tight_layout()
   plt.savefig(os.path.join(path_dir_built_dis_graphs,
                            dir_graphs,
