@@ -1,4 +1,4 @@
-#!/usr/bin/python
+﻿#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
@@ -187,143 +187,67 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
 #                dtype = {'id' : str})
 #df_md = dict_df_mds[ls_loop_markets[5][0]].copy()
 
-# paper regressions: 0, 1, 6, 7
-# todo: before and after govt intervention?
+# paper regressions: 0, 1, 6, 7, 8, 9 (or 10, 11?)
+title = ls_loop_markets[7][0]
+print(title)
+df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
+                                 'df_market_dispersion_{:s}.csv'.format(title)),
+                    encoding = 'utf-8',
+                    parse_dates = ['date'],
+                    dtype = {'id' : str})
 
-# #############
-# LOAD DATA
-# #############
+## Restrict to one or two day(s) per week: robustness checks
+#df_md.set_index('date', inplace = True)
+#df_md['dow'] = df_md.index.dayofweek
+#df_md.reset_index(drop = False, inplace = True)
+#df_md = df_md[(df_md['dow'] == 2) |(df_md['dow'] == 4)] # Friday
 
-dict_df_md = {}
-ls_titles, dict_stats_des = [], {}
-for x in [0, 1, 3, 4, 6, 7, 8, 9, 10, 11]:
-  title = ls_loop_markets[x][0]
-  ls_titles.append(title)
-  df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
-                                   'df_market_dispersion_{:s}.csv'.format(title)),
-                      encoding = 'utf-8',
-                      parse_dates = ['date'],
-                      dtype = {'id' : str})
-  
-  ## Restrict to one day per week: robustness checks
-  #df_md.set_index('date', inplace = True)
-  #df_md['dow'] = df_md.index.dayofweek
-  #df_md.reset_index(drop = False, inplace = True)
-  #df_md = df_md[df_md['dow'] == 4] # Friday
-  
-  ## Not necessary... can hide later
-  #if 'Residuals' in title:
-  #  df_md.drop(['cv'], axis = 1, inplace = True)
-  
-  dict_df_md[title] = df_md
+# need to get rid of nan to be able to cluster
+df_md = df_md[~df_md['cost'].isnull()]
+df_md['str_date'] = df_md['date'].apply(lambda x: x.strftime('%Y%m%d'))
+df_md['int_date'] = df_md['str_date'].astype(int)
+df_md['int_id'] = df_md['id'].astype(int)
 
-# ###############
-# STATS DES
-# ###############
-
-lsd_agg = ['Nb obs',
-           'Nb markets',
-           'nb_comp',
-           'nb_comp_t',
-           'range',
-           'std',
-           'gfs']
-
-# Stats des by market def / price (general)
-ls_titles, ls_se_mean, ls_se_std, = [], [], []
-for x in [0, 1, 3, 4, 6, 7, 8, 9, 10, 11]:
-  title = ls_loop_markets[x][0]
-  df_md = dict_df_md[title]
-  nb_obs = len(df_md)
-  se_mean = df_md[lsd_agg[2:]].mean()
-  se_mean.ix['Nb obs'] = nb_obs
-  se_mean.ix['Nb markets'] = len(df_md['id'].unique())
-  se_std = df_md[lsd_agg[2:]].std()
-  se_std.ix['Nb obs'] = nb_obs
-  se_std.ix['Nb markets'] = len(df_md['id'].unique())
-  ls_titles.append(title)
-  ls_se_mean.append(se_mean)
-  ls_se_std.append(se_std)
-
-df_mean = pd.concat(ls_se_mean,
-                     axis = 1,
-                     keys = ls_titles)
-
-df_std = pd.concat(ls_se_std,
-                     axis = 1,
-                     keys = ls_titles)
-
-print('Stats overall')
-print()
-print('mean')
-print(df_mean.ix[lsd_agg].to_string())
-print()
-print('std')
-print(df_std.ix[lsd_agg].to_string())
-
-# Stats des by market def / price and market
-
-ls_titles_2 = []
-dict_stats_des = {}
-for x in [0, 1, 3, 4, 6, 7, 8, 9, 10, 11]:
-  title = ls_loop_markets[x][0]
-  df_md = dict_df_md[title]
-  # Stats des: groupby id to compute mean/std for each
-  df_md_mean = df_md.groupby('id').agg('mean')
-  ## Not taking market first: keep df_md
-  #df_md_mean = df_md
-  df_md_mean_desc = df_md_mean.describe()
-  for stat in ['mean', 'std']:
-    # caution: starts by taking mean for each market
-    se_agg_stat = df_md_mean_desc.ix[stat]
-    se_agg_stat.ix['Nb markets'] = len(df_md_mean)
-    se_agg_stat.ix['Nb obs'] = len(df_md)
-    dict_stats_des.setdefault(stat, []).append(se_agg_stat)
-  ls_titles_2.append(title)
-
-print('Stats: by market')
-for stat in ['mean', 'std']:
+# loop on each period
+for title_temp, df_temp in [['All', df_md],
+                            ['Before', df_md[df_md['date'] <= '2012-07-01']],
+                            ['After', df_md[df_md['date'] >= '2013-02-01']]]:
   print()
-  print(stat)
-  df_stat = pd.concat(dict_stats_des[stat],
-                      axis = 1,
-                      keys = ls_titles_2)
-  print(df_stat.ix[lsd_agg].to_string())
+  print('-'*60)
+  print(title_temp)
+  print()
+  print('Range')
+  res_range = smf.ols('range ~ price + nb_comp',
+                 data = df_temp).fit()
+  print(res_range.summary())
+  cov2g_range =\
+    sm.stats.sandwich_covariance.cov_cluster_2groups(res_range,
+                                                     df_temp['int_id'],
+                                                     group2 = df_temp['int_date'])
+  var_range = np.sqrt(np.diagonal(cov2g_range[0]))
+  tval_range = (res_range.params / var_range).values
+  pval_range = scipy.stats.t.sf(np.abs(tval_range), res_range.nobs - 1)*2
+  # todo: check computation of p values
+  print('var  : ' + ' '.join(['{:7.4f};'.format(x) for x in var_range]))
+  print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_range]))
+  print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_range]))
+  
+  print()
+  print('Std')
+  res_std = smf.ols('std ~ price + nb_comp',
+                 data = df_temp).fit()
+  print(res_std.summary())
+  cov2g_std =\
+    sm.stats.sandwich_covariance.cov_cluster_2groups(res_std,
+                                                     df_temp['int_id'],
+                                                     group2 = df_temp['int_date'])
+  var_std = np.sqrt(np.diagonal(cov2g_std[0]))
+  tval_std = (res_std.params / var_std).values
+  pval_std = scipy.stats.t.sf(np.abs(tval_std), res_std.nobs - 1)*2
+  # todo: check computation of p values
+  print('var  : ' +  ' '.join(['{:7.4f};'.format(x) for x in var_std]))
+  print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_std]))
+  print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_std]))
 
-#print(se_agg_mean[lsd_agg].to_string())
-
-## MARKET STATS BY TYPE
-#df_info.loc['17240001', 'brand_last'] = 'TOTAL_ACCESS'
-## temp fix ... todo check 95230007
-#ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
-#df_info.loc[df_info['brand_last'].isin(ls_discounter),
-#             'group_type_last'] = 'DIS'
-#df_info.loc[df_info['brand_0'].isin(ls_discounter),
-#             'group_type'] = 'DIS'
-## should exclude margin chge stations?
-#
-#df_info['type_last'] = 'HIGH'
-#df_info.loc[(df_info['brand_last'].isin(ls_discounter)) |\
-#            (df_info['group_type_last'] == 'SUP'),
-#            'type_last'] = 'LOW'
-#df_info['type'] = 'HIGH'
-#df_info.loc[(df_info['brand_0'].isin(ls_discounter)) |\
-#            (df_info['group_type'] == 'SUP'),
-#            'type'] = 'LOW'
-#
-## todo: add check for margin change?
-#ls_rows_su_sm = []
-#for ls_ids in ls_stable_markets:
-#  df_ids = df_info.ix[ls_ids]
-#  ls_ids_high = df_ids[df_ids['type_last'] == 'HIGH'].index
-#  ls_ids_low = df_ids[df_ids['type_last'] == 'LOW'].index
-#  ls_rows_su_sm.append((len(ls_ids), len(ls_ids_high), len(ls_ids_low)))
-#
-#df_su_sm = pd.DataFrame(ls_rows_su_sm,
-#                        columns = ['nb_tot', 'nb_high', 'nb_low'])
-#
-## todo overview and fix
-## e.g
-## df_prices_ttc[ls_stable_markets[74]].plot()
-## df_prices_ttc['43210002'].ix['2013-02':'2013-07'].plot()
-## df_prices_ttc['43210002'].ix['2013-03-18':'2013-06'] = np.nan
+# toco: check if loss of signif. on cost using friday only due to insuff vars in cost?
+# todo: check if there are markets with supermarkets / no supermarkets?
