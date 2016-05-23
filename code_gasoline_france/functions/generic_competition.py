@@ -388,15 +388,15 @@ def get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, random_order = False
       ls_ids_covered += ls_market_ids
   return ls_ls_market_ids
   
-def get_market_price_dispersion(ls_market_ids, df_price):
+def get_market_price_dispersion(ls_market_ids, df_price, ddof = 0):
   """
   Consider whole population observed hence we measure actual std (ddof = 0)
   """
   df_market_prices = df_price[ls_market_ids]
   se_nb_market_prices =(~np.isnan(df_market_prices)).sum(1)
   se_range = df_market_prices.max(1) - df_market_prices.min(1)
-  se_std = df_market_prices.std(1, ddof = 0)
-  se_coeff_var = df_market_prices.std(1, ddof = 0) / df_market_prices.mean(1)
+  se_std = df_market_prices.std(1, ddof = ddof)
+  se_coeff_var = df_market_prices.std(1, ddof = ddof) / df_market_prices.mean(1)
   se_gain_from_search = df_market_prices.mean(1) - df_market_prices.min(1)
   return pd.DataFrame({'range' : se_range,
                        'cv'    : se_coeff_var,

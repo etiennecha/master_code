@@ -75,7 +75,8 @@ ls_brand_fix = [['10000017', [[u'TOTAL ACCESS', 1005]]], # new station Total the
                 ['91590008', [[u'TOTAL ACCESS', 298]]], # TA created as Total (renovation) then TA (was Elf before)
                 ['93420006', [[u'TOTAL ACCESS', 521]]],
                 ['78150001', [[u'ELF', 0], [u'TOTAL ACCESS', 19]]], # double change TOTAL ELF TOTAL TA simplified
-                ['86360003', [[u'TOTAL', 0], [u'TOTAL ACCESS', 448]]]] # same with TOTAL
+                ['86360003', [[u'TOTAL', 0], [u'TOTAL ACCESS', 448]]], # same with TOTAL
+                ['17240001', [[u'TOTAL', 0], [u'TOTAL ACCESS', 828]]]]
 
 for id_gouv, ls_fixed_station_brands in ls_brand_fix:
   master_price['dict_info'][id_gouv]['brand'] = ls_fixed_station_brands

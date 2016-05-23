@@ -176,37 +176,48 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
                    ('Low_3km_Residuals', df_prices_cl, dict_markets['Low_3km']),
                    ('High_3km_Residuals', df_prices_cl, dict_markets['High_3km'])]
 
-## Can avoid generating markets every time
-#dict_df_mds = {}
-#for title, df_prices, ls_markets_temp in ls_loop_markets:
-#  dict_df_mds[title] =\
-#    pd.read_csv(os.path.join(path_dir_built_dis_csv,
-#                             'df_market_dispersion_{:s}.csv'.format(title)),
-#                encoding = 'utf-8',
-#                parse_dates = ['date'],
-#                dtype = {'id' : str})
-#df_md = dict_df_mds[ls_loop_markets[5][0]].copy()
+# interest: 0, 1, 6, 7, 8, 9 (or 10, 11?)
+# keep for output:
+# - reg with 3 km high and low - raw
+# - reg with 3 km high and low - res
+# - reg with stable markets - res
 
-# paper regressions: 0, 1, 6, 7, 8, 9 (or 10, 11?)
-title = ls_loop_markets[7][0]
-print(title)
-df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
-                                 'df_market_dispersion_{:s}.csv'.format(title)),
-                    encoding = 'utf-8',
-                    parse_dates = ['date'],
-                    dtype = {'id' : str})
+dict_df_mds = {}
+for market_def in ls_loop_markets[6:]:
+  title = market_def[0]
+  df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
+                                   'df_market_dispersion_{:s}.csv'.format(title)),
+                      encoding = 'utf-8',
+                      parse_dates = ['date'],
+                      dtype = {'id' : str})
 
-## Restrict to one or two day(s) per week: robustness checks
-#df_md.set_index('date', inplace = True)
-#df_md['dow'] = df_md.index.dayofweek
-#df_md.reset_index(drop = False, inplace = True)
-#df_md = df_md[(df_md['dow'] == 2) |(df_md['dow'] == 4)] # Friday
+  ## Restrict to one or two day(s) per week: robustness checks
+  #df_md.set_index('date', inplace = True)
+  #df_md['dow'] = df_md.index.dayofweek
+  #df_md.reset_index(drop = False, inplace = True)
+  #df_md = df_md[(df_md['dow'] == 2) |(df_md['dow'] == 4)] # Friday
+  
+  # need to get rid of nan to be able to cluster
+  df_md = df_md[~df_md['cost'].isnull()]
+  df_md['str_date'] = df_md['date'].apply(lambda x: x.strftime('%Y%m%d'))
+  df_md['int_date'] = df_md['str_date'].astype(int)
+  df_md['int_id'] = df_md['id'].astype(int)
 
-# need to get rid of nan to be able to cluster
-df_md = df_md[~df_md['cost'].isnull()]
-df_md['str_date'] = df_md['date'].apply(lambda x: x.strftime('%Y%m%d'))
-df_md['int_date'] = df_md['str_date'].astype(int)
-df_md['int_id'] = df_md['id'].astype(int)
+  # create dummy for Low/High if necessary
+  if ('Low' in title):
+    df_md['d_high'] = 0
+  elif ('High' in title):
+    df_md['d_high'] = 1
+  dict_df_mds[title] = df_md
+
+dict_df_regs = {'no_overlap_res' : dict_df_mds['Stable_Markets_Residuals']}
+dict_df_regs['3km_lh_raw'] = pd.concat([dict_df_mds['Low_3km'],
+                                        dict_df_mds['High_3km']])
+dict_df_regs['3km_lh_res'] = pd.concat([dict_df_mds['Low_3km_Residuals'],
+                                        dict_df_mds['High_3km_Residuals']])
+
+df_md = dict_df_regs['no_overlap_res']
+#df_md = df_md[df_md['nb_comp'] >= 4]
 
 # loop on each period
 for title_temp, df_temp in [['All', df_md],
@@ -216,38 +227,45 @@ for title_temp, df_temp in [['All', df_md],
   print('-'*60)
   print(title_temp)
   print()
-  print('Range')
-  res_range = smf.ols('range ~ price + nb_comp',
-                 data = df_temp).fit()
-  print(res_range.summary())
-  cov2g_range =\
-    sm.stats.sandwich_covariance.cov_cluster_2groups(res_range,
-                                                     df_temp['int_id'],
-                                                     group2 = df_temp['int_date'])
-  var_range = np.sqrt(np.diagonal(cov2g_range[0]))
-  tval_range = (res_range.params / var_range).values
-  pval_range = scipy.stats.t.sf(np.abs(tval_range), res_range.nobs - 1)*2
-  # todo: check computation of p values
-  print('var  : ' + ' '.join(['{:7.4f};'.format(x) for x in var_range]))
-  print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_range]))
-  print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_range]))
-  
-  print()
-  print('Std')
-  res_std = smf.ols('std ~ price + nb_comp',
-                 data = df_temp).fit()
-  print(res_std.summary())
-  cov2g_std =\
-    sm.stats.sandwich_covariance.cov_cluster_2groups(res_std,
-                                                     df_temp['int_id'],
-                                                     group2 = df_temp['int_date'])
-  var_std = np.sqrt(np.diagonal(cov2g_std[0]))
-  tval_std = (res_std.params / var_std).values
-  pval_std = scipy.stats.t.sf(np.abs(tval_std), res_std.nobs - 1)*2
-  # todo: check computation of p values
-  print('var  : ' +  ' '.join(['{:7.4f};'.format(x) for x in var_std]))
-  print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_std]))
-  print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_std]))
+  for disp_stat in ['range', 'std']:
+    print()
+    print(disp_stat)
+    formula = '{:s} ~ cost + nb_comp'.format(disp_stat)
+    if 'd_high' in df_temp.columns:
+      formula = formula + ' + d_high'
+    res = smf.ols(formula, data = df_temp).fit()
+    print(res.summary())
+    cov2g =\
+      sm.stats.sandwich_covariance.cov_cluster_2groups(res,
+                                                       df_temp['int_id'],
+                                                       group2 = df_temp['int_date'])
+    var = np.sqrt(np.diagonal(cov2g[0]))
+    tval = (res.params / var).values
+    pval = scipy.stats.t.sf(np.abs(tval), res.nobs - 1)*2
+    # todo: check computation of p values
+    print('var  : ' + ' '.join(['{:7.4f};'.format(x) for x in var]))
+    print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval]))
+    print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval]))
 
 # toco: check if loss of signif. on cost using friday only due to insuff vars in cost?
 # todo: check if there are markets with supermarkets / no supermarkets?
+
+# Simulations: range and std increase in nb firms for same distribution?
+for i in range(10):
+  print()
+  nb_markets = 10000
+  df_sim = pd.DataFrame(np.random.normal(0, 0.01, (10000, 10)))
+  df_sim['nb_sellers'] = 3
+  for i in range(3, 11):
+    df_sim.loc[nb_markets/10*(i-1)+1:, 'nb_sellers'] = i
+  df_sim['range'] = df_sim.apply(lambda row: row[:int(row['nb_sellers'])].max() -\
+                                             row[:int(row['nb_sellers'])].min(),
+                                 axis = 1)
+  df_sim['std'] = df_sim.apply(lambda row: row[:int(row['nb_sellers'])].std(ddof = 1.5),
+                               axis = 1)
+
+  print(smf.ols('std ~ nb_sellers', df_sim).fit().summary())
+  for i in range(3, 11):
+  	print(df_sim[df_sim['nb_sellers'] == i]['std'].mean())
+
+# degree of freedom of 1.3 seems to decrease the bias

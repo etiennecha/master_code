@@ -283,7 +283,8 @@ print u'\nOverview cuts of 0.04 at least:'
 print df_cuts_su['nb_promo_04'].describe()
 
 print u'\nDay with max nb of price cuts:'
-print df_cuts_su[df_cuts_su['nb_promo_04'] == 3115]
+print df_cuts_su[df_cuts_su['nb_promo_04'] == df_cuts_su['nb_promo_04'].max()]
+# impact of government intervention
 
 print u'\nExamples of cut on this day:'
 print df_chges.ix['2012-08-31'][df_chges.ix['2012-08-31'] < - 0.04][0:10]

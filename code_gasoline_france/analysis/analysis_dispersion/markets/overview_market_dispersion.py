@@ -120,12 +120,13 @@ df_prices_cl[ls_drop_ids_nhw] = np.nan
 # GEN LOW PRICE AND HIGH PRICE MARKETS
 # pbm with chging discounters btw...
 # (check with describe / hist if ok over time...)
-df_info.loc['17240001', 'brand_last'] = 'TOTAL_ACCESS'
-# temp fix ... todo check 95230007
+# GEN LOW PRICE AND HIGH PRICE MARKETS
+# todo check 95230007
 ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
 df_info.loc[df_info['brand_last'].isin(ls_discounter),
              'group_type_last'] = 'DIS'
-df_info.loc[df_info['brand_0'].isin(ls_discounter),
+df_info.loc[(df_info['brand_0'].isin(ls_discounter)) |\
+            (df_info['brand_last'] == 'ESSO_EXPRESS'),
              'group_type'] = 'DIS'
 # should exclude margin chge stations?
 
@@ -135,6 +136,7 @@ df_info.loc[(df_info['brand_last'].isin(ls_discounter)) |\
             'type_last'] = 'LOW'
 df_info['type'] = 'HIGH'
 df_info.loc[(df_info['brand_0'].isin(ls_discounter)) |\
+            (df_info['brand_last'] == 'ESSO_EXPRESS') |\
             (df_info['group_type'] == 'SUP'),
             'type'] = 'LOW'
 
@@ -281,6 +283,7 @@ for x in [0, 1, 3, 4, 6, 7, 8, 9, 10, 11]:
     dict_stats_des.setdefault(stat, []).append(se_agg_stat)
   ls_titles_2.append(title)
 
+print()
 print('Stats: by market')
 for stat in ['mean', 'std']:
   print()
@@ -293,23 +296,6 @@ for stat in ['mean', 'std']:
 #print(se_agg_mean[lsd_agg].to_string())
 
 ## MARKET STATS BY TYPE
-#df_info.loc['17240001', 'brand_last'] = 'TOTAL_ACCESS'
-## temp fix ... todo check 95230007
-#ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
-#df_info.loc[df_info['brand_last'].isin(ls_discounter),
-#             'group_type_last'] = 'DIS'
-#df_info.loc[df_info['brand_0'].isin(ls_discounter),
-#             'group_type'] = 'DIS'
-## should exclude margin chge stations?
-#
-#df_info['type_last'] = 'HIGH'
-#df_info.loc[(df_info['brand_last'].isin(ls_discounter)) |\
-#            (df_info['group_type_last'] == 'SUP'),
-#            'type_last'] = 'LOW'
-#df_info['type'] = 'HIGH'
-#df_info.loc[(df_info['brand_0'].isin(ls_discounter)) |\
-#            (df_info['group_type'] == 'SUP'),
-#            'type'] = 'LOW'
 #
 ## todo: add check for margin change?
 #ls_rows_su_sm = []

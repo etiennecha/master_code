@@ -51,7 +51,32 @@ ls_corrections_diesel =  [(u'2400008' , 1.56 , [u'20120216', u'20120219']), # 0.
                           (u'83510003', 1.492, [u'20120724', u'20120729']), #0.001 unsure
                           (u'86170003', 1.378, [u'20111016', u'20111017']), #0.013
                           (u'93440003', 1.49 , [u'20120914', u'20120916']), #0.149
-                          (u'93561001', 1.45 , [u'20111129'])] #0.145
+                          (u'93561001', 1.45 , [u'20111129']), #0.145
+                          (u'78170006', np.nan, ['20130312', '20130318']), # surge
+                          (u'26140005', np.nan, ['20130725', '20130727']), # drop, unsure
+                          (u'93230004', np.nan, ['20120609', '20120621']), # surge
+                          (u'88300005', np.nan, ['20141127', '20141204']),
+                          (u'87430001', np.nan, ['20141204', '20141204']),
+                          (u'84550001', np.nan, ['20130725', '20130727']), # drop, unsure
+                          (u'75016001', np.nan, ['20141204', '20141204']),
+                          (u'74130001', np.nan, ['20130918', '20130919']), # surge
+                          (u'72700004', np.nan, ['20141204', '20141204']),
+                          (u'68200013', np.nan, ['20120104', '20120107']), # surge
+                          (u'66000012', np.nan, ['20130309', '20130317']), # 2 surges
+                          (u'65200002', np.nan, ['20130417', '20130418']), # surge
+                          (u'44490002', np.nan, ['20141022', '20141029']), # surge
+                          (u'41100001', np.nan, ['20141203', '20141204']),
+                          (u'28000004', np.nan, ['20141204', '20141204']),
+                          (u'22100001', np.nan, ['20141204', '20141204']),
+                          (u'20290003', np.nan, ['20120615', '20120619']),
+                          (u'6000010' , np.nan, ['20141202', '20141204']),
+                          (u'6250001' , np.nan, ['20130616', '20130617']), # surge
+                          (u'20260003', np.nan, ['20141202', '20141204']),
+                          (u'33480003', np.nan, ['20141129', '20141204']),
+                          (u'33133002', np.nan, ['20141204', '20141204']),
+                          (u'4600001' , np.nan, ['20130101', '20130330']), # isolated low price
+                          (u'30700005', np.nan, ['20120716', '20120901']), # usolated high price
+                          (u'99999001', np.nan, ['20130807', '20131128'])] # erase...
 
 ls_corrections_diesel_e = expand_ls_price_corrections(ls_corrections_diesel,
                                                       master_price['dates'])
@@ -92,8 +117,66 @@ print u'Length:', len(master_price)
 #  se_prices.plot()
 #  plt.show()
 
-## MOVE TO PRICE ANALYSIS
-#dict_sales = get_sales(ls_ls_price_variations, 3)
-#ls_sales = [(k, len(v)) for k, v in dict_sales.items()] 
-#ls_sales = sorted(ls_sales, key=lambda x: x[1], reverse = True)
-## Analysis of periods of sales: seems some are particularly concerned (uncertainty) 
+## Inspect remaining abnormal price variations
+#df_prices = pd.DataFrame(master_price['diesel_price'],
+#                         index = master_price['ids'],
+#                         columns = pd.to_datetime(master_price['dates'],
+#                                                  format = '%Y%m%d')).T
+#df_chge = df_prices - df_prices.shift(1)
+#df_chge[df_chge.abs() <= 1e-5] = np.nan
+## general detection
+#se_pbms = df_chge.apply(lambda row: 1 if len(row[row.abs() >= 0.15])> 0 else 0,
+#                        axis = 0)
+#se_pbms = se_pbms[se_pbms != 0]
+#for id_station in se_pbms.index:
+#  print ''
+#  print id_station
+#  print df_chge[id_station][df_chge[id_station].abs() >= 0.15]
+## focus beginning and end (lower threshold)
+#df_chge.fillna(method = 'backfill', axis = 0, inplace = True)
+#df_chge.fillna(method = 'ffill', axis = 0, inplace = True)
+#print ''
+#print df_chge.ix[-1][df_chge.ix[-1].abs() >= 0.1] # a few to fix
+#print df_chge.ix[0][df_chge.ix[0].abs() >= 0.1]  # no pbm
+#
+## legit variations... one-off if not specified
+#ls_checked = ['37170004',
+#              '33370009',
+#              '94000002',
+#              '92210001',
+#              '83550003', # doubt not one-off but seems legit
+#              '82130001', # doubt
+#              '79160003', # doubt
+#              '75007003', # rigid
+#              '75018009', # rigid
+#              '75005001',
+#              '42410001', # rigid
+#              '34070003', # rigid (?)
+#              '11000004',
+#              '34800002', # rigid
+#              '32000008'] # rigid
+
+## Compare original vs fixed
+#df_prices_bu = pd.DataFrame(master_price_bu,
+#                            index = master_price['ids'],
+#                            columns = pd.to_datetime(master_price['dates'],
+#                                                     format = '%Y%m%d')).T
+#for station_ind, ls_corrs in dict_opposit.items()[0:10]:
+#  print station_ind, ls_corrs
+#  day_ind_0, day_ind_1 = ls_corrs[0][0]-20,  ls_corrs[0][1]+20
+#  ax = df_prices[df_prices.columns[station_ind]].iloc[day_ind_0:day_ind_1].plot()
+#  df_prices_bu[df_prices.columns[station_ind]].iloc[day_ind_0:day_ind_1].plot()
+#  plt.show()
+
+## Check changes robust to missing prices (checked also with 0.15)
+#df_prices_ff = df_prices.fillna(method = 'ffill', axis = 0)
+#df_chge_ff = df_prices_ff - df_prices_ff.shift(1)
+#se_pbms_ff = df_chge_ff.apply(lambda row: 1 if len(row[row.abs() >= 0.20])> 0 else 0,
+#                              axis = 0)
+#se_pbms_ff = se_pbms_ff[se_pbms_ff != 0]
+#for id_station in se_pbms_ff.index:
+#  if id_station not in ls_checked:
+#    print id_station
+#    ax = df_prices[id_station].plot()
+#    df_prices.mean(1).plot(ax=ax)
+#    plt.show()

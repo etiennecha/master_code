@@ -17,18 +17,18 @@ path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
 path_dir_built_json = os.path.join(path_dir_built, u'data_json')
 path_dir_built_graphs = os.path.join(path_dir_built, u'data_graphs')
 
+path_dir_built_other = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_other')
+path_dir_built_other_csv = os.path.join(path_dir_built_other, 'data_csv')
+
 path_dir_built_dis = os.path.join(path_data,
                                   u'data_gasoline',
                                   u'data_built',
                                   u'data_dispersion')
 path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
 path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
-
-path_dir_built_other = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_built',
-                                    u'data_other')
-path_dir_built_other_csv = os.path.join(path_dir_built_other, 'data_csv')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -117,12 +117,19 @@ ls_drop_ids_nhw =\
   list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
 df_prices_cl[ls_drop_ids_nhw] = np.nan
 
+# DF COST (WHOLESALE GAS PRICES)
+df_cost = pd.read_csv(os.path.join(path_dir_built_other_csv,
+                                   'df_quotations.csv'),
+                                 encoding = 'utf-8',
+                                 parse_dates = ['date'])
+df_cost.set_index('date', inplace = True)
+
 # GEN LOW PRICE AND HIGH PRICE MARKETS
+# temp fix ... todo check 95230007
 ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
 df_info.loc[df_info['brand_last'].isin(ls_discounter),
              'group_type_last'] = 'DIS'
-df_info.loc[(df_info['brand_0'].isin(ls_discounter)) |\
-            (df_info['brand_last'] == 'ESSO_EXPRESS'),
+df_info.loc[df_info['brand_0'].isin(ls_discounter),
              'group_type'] = 'DIS'
 # should exclude margin chge stations?
 
@@ -132,7 +139,6 @@ df_info.loc[(df_info['brand_last'].isin(ls_discounter)) |\
             'type_last'] = 'LOW'
 df_info['type'] = 'HIGH'
 df_info.loc[(df_info['brand_0'].isin(ls_discounter)) |\
-            (df_info['brand_last'] == 'ESSO_EXPRESS') |\
             (df_info['group_type'] == 'SUP'),
             'type'] = 'LOW'
 
@@ -145,6 +151,27 @@ for k, v in dict_ls_comp.items():
   elif k in set_high_ids:
     dict_ls_comp_high[k] = [(id_comp, dist) for id_comp, dist in v if id_comp in set_high_ids]
 # could gain efficiency by restricting distance first and using set intersections
+
+dict_nb_c_3km = {}
+for k,v in dict(list(dict_ls_comp_low.items())  +\
+                list(dict_ls_comp_high.items())).items(): 
+  dict_nb_c_3km[k] = [(id_comp, dist) for id_comp, dist in v if dist <= 3]
+
+df_nb_comp = pd.DataFrame([[k, len(v) + 1] for k,v in dict_nb_c_3km.items()],
+                          columns = ['id_station', 'nb_c_3km'])
+
+# #########################
+# GET DF MARKET DISPERSION
+# #########################
+
+## PARAMETERS
+#km_bound = 5
+#ls_markets = get_ls_ls_market_ids(dict_ls_comp, km_bound)
+#ls_markets_st = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound)
+#ls_markets_st_rd = get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
+
+# MEAN NAT PRICE (RAW)
+se_mean_price = df_prices_ttc.mean(1) * 100
 
 # GET MARKETS
 dict_markets = {}
@@ -174,82 +201,119 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
                    ('Low_3km_Residuals', df_prices_cl, dict_markets['Low_3km']),
                    ('High_3km_Residuals', df_prices_cl, dict_markets['High_3km'])]
 
-## Can avoid generating markets every time
-#dict_df_mds = {}
-#for title, df_prices, ls_markets_temp in ls_loop_markets:
-#  dict_df_mds[title] =\
-#    pd.read_csv(os.path.join(path_dir_built_dis_csv,
-#                             'df_market_dispersion_{:s}.csv'.format(title)),
-#                encoding = 'utf-8',
-#                parse_dates = ['date'],
-#                dtype = {'id' : str})
-#df_md = dict_df_mds[ls_loop_markets[5][0]].copy()
+# for each market:
+# market desc: (max) nb firms, mean nb firms observed,
+# dispersion: mean- range / gfs / std / gfs
+# finally: display mean and std over all markets
+# alternatively: Tappata approach : mean over all market-days, not markets
 
-# paper regressions: 0, 1, 6, 7, 8, 9 (or 10, 11?)
-title = ls_loop_markets[-1][0]
-print(title)
-df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
-                                 'df_market_dispersion_{:s}.csv'.format(title)),
-                    encoding = 'utf-8',
-                    parse_dates = ['date'],
-                    dtype = {'id' : str})
 
-## Restrict to one or two day(s) per week: robustness checks
-#df_md.set_index('date', inplace = True)
-#df_md['dow'] = df_md.index.dayofweek
-#df_md.reset_index(drop = False, inplace = True)
-#df_md = df_md[(df_md['dow'] == 2) |(df_md['dow'] == 4)] # Friday
-
-# need to get rid of nan to be able to cluster
-df_md = df_md[~df_md['cost'].isnull()]
-df_md['str_date'] = df_md['date'].apply(lambda x: x.strftime('%Y%m%d'))
-df_md['int_date'] = df_md['str_date'].astype(int)
-df_md['int_id'] = df_md['id'].astype(int)
-
-# loop on each period
-for title_temp, df_temp in [['All', df_md],
-                            ['Before', df_md[df_md['date'] <= '2012-07-01']],
-                            ['After', df_md[df_md['date'] >= '2013-02-01']]]:
-  
-  df_temp = df_temp.copy()
-  df_temp['trend']= range(len(df_temp))
-
-  print()
-  print('-'*60)
-  print(title_temp)
-  print()
-  print('Range')
-  res_range = smf.ols('range ~ cost + nb_comp + trend',
-                 data = df_temp).fit()
-  print(res_range.summary())
-  cov2g_range =\
-    sm.stats.sandwich_covariance.cov_cluster_2groups(res_range,
-                                                     df_temp['int_id'],
-                                                     group2 = df_temp['int_date'])
-  var_range = np.sqrt(np.diagonal(cov2g_range[0]))
-  tval_range = (res_range.params / var_range).values
-  pval_range = scipy.stats.t.sf(np.abs(tval_range), res_range.nobs - 1)*2
-  # todo: check computation of p values
-  print('var  : ' + ' '.join(['{:7.4f};'.format(x) for x in var_range]))
-  print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_range]))
-  print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_range]))
+ls_df_market_stats, ls_se_disp_mean, ls_se_disp_std = [], [], []
+ls_df_mds = []
+for title, df_prices, ls_markets_temp in ls_loop_markets[10:11]:
   
   print()
-  print('Std')
-  res_std = smf.ols('std ~ cost + nb_comp + trend',
-                 data = df_temp).fit()
-  print(res_std.summary())
-  cov2g_std =\
-    sm.stats.sandwich_covariance.cov_cluster_2groups(res_std,
-                                                     df_temp['int_id'],
-                                                     group2 = df_temp['int_date'])
-  var_std = np.sqrt(np.diagonal(cov2g_std[0]))
-  tval_std = (res_std.params / var_std).values
-  pval_std = scipy.stats.t.sf(np.abs(tval_std), res_std.nobs - 1)*2
-  # todo: check computation of p values
-  print('var  : ' +  ' '.join(['{:7.4f};'.format(x) for x in var_std]))
-  print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_std]))
-  print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_std]))
+  print(title)
+  
+  ls_df_md = []
+  # Euros to cent
+  df_prices = df_prices * 100
+  
+  ls_df_market_dispersion =\
+    [get_market_price_dispersion(market_ids, df_prices, ddof = 1.8)\
+          for market_ids in ls_markets_temp]
+  
+    # cv useless when using residual prices (div by almost 0)
+  ls_stats = ['range', 'gfs', 'std', 'cv', 'nb_comp', 'nb_comp_t']
+  ls_ls_market_stats = []
+  ls_market_ref_ids = []
+  for ls_market_ids, df_market_dispersion in zip(ls_markets_temp, ls_df_market_dispersion):
+    if len(df_market_dispersion) > 0:
+      df_md = df_market_dispersion[(df_market_dispersion['nb_comp'] >= 3) &\
+                                   (df_market_dispersion['nb_comp_t']/\
+                                    df_market_dispersion['nb_comp'].astype(float)\
+                                      >= 2.0/3)].copy()
+      if len(df_md) > 90:
+        df_md['id'] = ls_market_ids[0]
+        df_md['price'] = se_mean_price # index pbm?
+        df_md['date'] = df_md.index
+        ls_df_md.append(df_md)
+        ## Save average/std for this local market
+        #ls_ls_market_stats.append([df_md[field].mean()\
+        #                            for field in ls_stats] +\
+        #                          [df_md[field].std()\
+        #                            for field in ls_stats] +\
+        #                          [len(df_md)])
+        #ls_market_ref_ids.append(ls_market_ids[0])
+  
+  ## Summary table for each local market
+  #ls_columns = ['avg_%s' %field for field in ls_stats]+\
+  #             ['std_%s' %field for field in ls_stats]+\
+  #             ['nb_obs']
+  #df_market_stats = pd.DataFrame(ls_ls_market_stats, ls_market_ref_ids, ls_columns)
+  #ls_df_market_stats.append(df_market_stats)
 
-# toco: check if loss of signif. on cost using friday only due to insuff vars in cost?
-# todo: check if there are markets with supermarkets / no supermarkets?
+  # Build dfs of local markets
+  df_mds = pd.concat(ls_df_md, ignore_index = True)
+  # add cost
+  df_mds.set_index('date', inplace = True)
+  df_mds['cost'] =  df_cost['UFIP RT Diesel R5 EL'] * 100
+  df_mds.reset_index(drop = False, inplace = True)
+
+  df_mds = df_mds[~df_mds['cost'].isnull()]
+  df_mds['str_date'] = df_mds['date'].apply(lambda x: x.strftime('%Y%m%d'))
+  df_mds['int_date'] = df_mds['str_date'].astype(int)
+  df_mds['int_id'] = df_mds['id'].astype(int)
+   
+  df_mds = pd.merge(df_mds,
+                    df_nb_comp,
+                    left_on = 'id',
+                    right_on = 'id_station',
+                    how = 'left')
+  # LOW => HIGH were discarded...
+  df_mds = df_mds[~df_mds['nb_c_3km'].isnull()]
+
+  #df_mds = df_mds[df_mds['nb_comp'] <= 15]
+
+  # ls_df_mds.append(df_mds)
+  
+  # REGRESSIONS
+  for title_temp, df_temp in [['All', df_mds],
+                              ['Before', df_mds[df_mds['date'] <= '2012-07-01']],
+                              ['After', df_mds[df_mds['date'] >= '2013-02-01']]]:
+    print()
+    print('-'*60)
+    print(title_temp)
+    print()
+    print('Range')
+    res_range = smf.ols('range ~ price + nb_c_3km',
+                   data = df_temp).fit()
+    print(res_range.summary())
+    cov2g_range =\
+      sm.stats.sandwich_covariance.cov_cluster_2groups(res_range,
+                                                       df_temp['int_id'],
+                                                       group2 = df_temp['int_date'])
+    var_range = np.sqrt(np.diagonal(cov2g_range[0]))
+    tval_range = (res_range.params / var_range).values
+    pval_range = scipy.stats.t.sf(np.abs(tval_range), res_range.nobs - 1)*2
+    # todo: check computation of p values
+    print('var  : ' + ' '.join(['{:7.4f};'.format(x) for x in var_range]))
+    print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_range]))
+    print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_range]))
+    
+    print()
+    print('Std')
+    res_std = smf.ols('std ~ price + nb_c_3km',
+                   data = df_temp).fit()
+    print(res_std.summary())
+    cov2g_std =\
+      sm.stats.sandwich_covariance.cov_cluster_2groups(res_std,
+                                                       df_temp['int_id'],
+                                                       group2 = df_temp['int_date'])
+    var_std = np.sqrt(np.diagonal(cov2g_std[0]))
+    tval_std = (res_std.params / var_std).values
+    pval_std = scipy.stats.t.sf(np.abs(tval_std), res_std.nobs - 1)*2
+    # todo: check computation of p values
+    print('var  : ' +  ' '.join(['{:7.4f};'.format(x) for x in var_std]))
+    print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_std]))
+    print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_std]))
