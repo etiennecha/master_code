@@ -9,8 +9,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tkr
 
-pd.set_option('float_format', '{:,.1f}'.format)
-
 path_built = os.path.join(path_data,
                           u'data_ameli',
                           u'data_built')
@@ -22,14 +20,18 @@ path_built_graphs = os.path.join(path_built, u'data_graphs')
 path_dir_insee = os.path.join(path_data, u'data_insee')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
 
+pd.set_option('float_format', '{:,.1f}'.format)
+
 # ############
 # LOAD DATA
 # ############
 
 # LOAD DF PHYSICIANS
-file_extension = u'generaliste_75_2014'
+file_extension = u'df_gp_75_2014'
 df_physicians = pd.read_csv(os.path.join(path_built_csv,
                                          '%s.csv' %file_extension),
+                            dtype = {'zip': str,
+                                     'CODGEO' : str},
                             encoding = 'utf-8')
 
 ## todo: geog and distance in other script (try to separate creation vs. analysis)
@@ -49,21 +51,6 @@ ls_disp_base = ['gender','name', 'surname', 'zip_city',
 # ############
 # STATS DES
 # ############
-
-# ARDT
-
-df_physicians['zip'] = df_physicians['zip_city'].str.slice(stop = 5)
-df_physicians['CODGEO'] = df_physicians['zip'].apply(\
-                            lambda x: re.sub(u'750([0-9]{2})', u'751\\1', x))
-
-## DF ARDT ALL
-#gb_ardt = df_physicians[['CODGEO', 'c_base']].groupby('CODGEO')
-#df_ardts = gb_ardt.agg([len, np.mean, np.median])['c_base']
-#df_ardts['len'] = df_ardts['len'].astype(int)
-#print df_ardts.to_string()
-#df_ardts.reset_index(inplace = True)
-#df_ardts = pd.merge(df_ardts, df_inscom, left_on = 'CODGEO', right_on = 'CODGEO')
-#df_ardts['phys_density'] = df_ardts['len'] / df_ardts['P10_POP'].astype(float)
 
 # DF ARDT COMPREHENSIVE
 # todo: try also with min and max price (then may want to restrict), also spread?
@@ -90,6 +77,7 @@ df_ardts['phy_s1_density'] = df_ardts['nb_phy_s1'] * 100000 / df_ardts['P10_POP'
 df_ardts['phy_s2_density'] = df_ardts['nb_phy_s2'] * 100000 / df_ardts['P10_POP'].astype(float)
 
 # nb: count gives number of prices known for physicians in sector 2
+print ''
 print df_ardts[['CODGEO', 'phy_density', 'phy_s2_density'] +\
                ls_des_cols].to_string()
 
@@ -107,6 +95,7 @@ ax.xaxis.set_major_formatter(x_format)
 plt.xlabel('Median fiscal revenue by household (euros)')
 plt.ylabel('Nb of GPs per 100,000 inhab.')
 #plt.title('Density of GPs vs. revenue by district')
+ax.grid(True)
 plt.tight_layout() 
 fig.set_size_inches(width, height)
 plt.savefig(os.path.join(path_built_graphs,
@@ -125,6 +114,7 @@ ax.xaxis.set_major_formatter(x_format)
 plt.xlabel('Median fiscal revenue by household (euros)')
 plt.ylabel('Nb of Sector 1 GPs per 100,000 inhab.')
 #plt.title('Density of Sector 1 GPs vs. revenue by district')
+ax.grid(True)
 plt.tight_layout()
 fig.set_size_inches(width, height)
 plt.savefig(os.path.join(path_built_graphs,
@@ -143,6 +133,7 @@ ax.xaxis.set_major_formatter(x_format)
 plt.xlabel('Median fiscal revenue by household (euros)')
 plt.ylabel('Nb of Sector 2 GPs per 100,000 inhab.')
 #plt.title('Density of Sector 2 GPs vs. revenue by district')
+ax.grid(True)
 plt.tight_layout()
 fig.set_size_inches(width, height)
 plt.savefig(os.path.join(path_built_graphs,
@@ -161,6 +152,7 @@ ax.xaxis.set_major_formatter(x_format)
 plt.xlabel('Median fiscal revenue by household (euros)')
 plt.ylabel('Average sector 2 consultation price (euros)')
 #plt.title('Average sector 2 consultation price vs. revenue by district')
+ax.grid(True)
 plt.tight_layout()
 fig.set_size_inches(width, height)
 plt.savefig(os.path.join(path_built_graphs,
@@ -179,6 +171,7 @@ df_physicians_s2 = pd.merge(df_physicians_s2,
 
 formula = 'c_base ~ C(status) + phy_density + QUAR2UC10'
 res01 = smf.ols(formula = formula, data = df_physicians_s2, missing= 'drop').fit()
+print ''
 print res01.summary()
 
 # ADD age
@@ -190,4 +183,5 @@ for ardt in df_physicians_s2['CODGEO'].unique():
 	ls_spread.append(df_physicians_s2['spread'][df_physicians_s2['CODGEO'] == ardt].describe())
 df_spread = pd.concat(ls_spread, axis = 1, keys = df_physicians_s2['CODGEO'].unique()).T
 df_spread.sort('count', ascending = False, inplace = True)
+print ''
 print df_spread.to_string()

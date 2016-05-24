@@ -208,6 +208,12 @@ df_physicians['zip_city'] =\
      lambda x: standardize_string(dict_zip_city_rep, x))
 df_physicians = df_physicians[df_physicians['zip_city'] != '75175 ROUEN CEDEX'].copy()
 
+df_physicians['zip'] = df_physicians['zip_city'].str.slice(stop = 5)
+df_physicians['city'] = df_physicians['zip_city'].str.slice(start = 5).str.strip()
+df_physicians['CODGEO'] = df_physicians['zip'].apply(\
+                            lambda x: re.sub(u'750([0-9]{2})', u'751\\1', x))
+df_physicians.drop(['zip_city'], axis = 1, inplace = True)
+
 # convention
 dict_convention_rep = {u"Conventionné secteur 2" : u'2',
                        u"Conventionné secteur 1" : u'1',
@@ -246,9 +252,9 @@ df_physicians.rename(\
 
 # DISPLAY
 
-ls_disp_base_1 = ['gender','name', 'surname', 'street', 'zip_city',
+ls_disp_base_1 = ['gender','name', 'surname', 'street', 'zip', 'city', 'CODGEO',
                   'convention', 'carte_vitale', 'status']
-ls_disp_base_2 = ['gender','name', 'surname', 'zip_city',
+ls_disp_base_2 = ['gender','name', 'surname', 'zip', 'city', 'CODGEO',
                   'convention', 'carte_vitale', 'status']
 ls_disp_services = ['c_base', 'c_proba', 'c_min', 'c_max',
                     'avis', 'fond', 'imagerie', 'chirurgie_cat']

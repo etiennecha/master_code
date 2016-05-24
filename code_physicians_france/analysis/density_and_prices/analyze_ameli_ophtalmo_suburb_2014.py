@@ -26,14 +26,18 @@ path_built_graphs = os.path.join(path_built, u'data_graphs')
 path_dir_insee = os.path.join(path_data, u'data_insee')
 path_dir_insee_extracts = os.path.join(path_dir_insee, 'data_extracts')
 
+pd.set_option('float_format', '{:,.1f}'.format)
+
 # ############
 # LOAD DATA
 # ############
 
 # LOAD DF PHYSICIANS
-file_extension = u'ophtalmo_suburb_2014'
+file_extension = u'df_ophtalmo_suburb_2014'
 df_physicians = pd.read_csv(os.path.join(path_built_csv,
-                                         'df_{:s}.csv'.format(file_extension)),
+                                         '{:s}.csv'.format(file_extension)),
+                            dtype = {'zip': str,
+                                     'CODGEO' : str},
                             encoding = 'utf-8')
 
 ## BIAS?
@@ -107,17 +111,31 @@ width, height = 12, 5
 df_draw = df_ardts[df_ardts['P10_POP'] >= 30000].copy()
 df_draw['ardt'] = df_draw['LIBGEO']
 
+df_draw = df_draw[(~df_draw['QUAR2UC10'].isnull()) &\
+                  (~df_draw['c_base_mean'].isnull()) &\
+                  (~df_draw['ardt'].isnull()) &\
+                  (~df_draw['P10_POP'].isnull())]
+
+# exclude outlier neuilly sur seine (although favorable to story)
+df_draw = df_draw[df_draw['ardt'] != u'Neuilly-sur-Seine']
+
+#matplotlib.rcParams['axes.titlesize'] = 12
+matplotlib.rcParams['axes.labelsize'] = 12
+
 # Scatter: Density of GPs vs. Median revenue
 fig, ax = plt.subplots()
 ax.scatter(df_draw['QUAR2UC10'], df_draw['phy_density'], s=(df_draw['P10_POP']/1000.0))
 for row_i, row in df_draw.iterrows():
-  ax.annotate(row['ardt'], (row['QUAR2UC10'], row['phy_density'] + 1))
+  ax.annotate(row['ardt'], (row['QUAR2UC10'] - 300, row['phy_density'] + 0.8), size = 6)
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
 plt.xlabel('Median fiscal revenue by household (euros)')
 plt.ylabel('Nb of %s per 100,000 inhab.' %phy)
+plt.setp(ax.get_xticklabels(), fontsize=12)
+plt.setp(ax.get_yticklabels(), fontsize=12)
 #plt.title('Density of %s vs. revenue by district' %phy)
 plt.tight_layout() 
+ax.grid(True)
 fig.set_size_inches(width, height)
 plt.savefig(os.path.join(path_built_graphs, 'Ophtalmo_Idf_DensityVsRevenue.png'),
             dpi = dpi)
@@ -126,15 +144,19 @@ plt.close()
 
 # Scatter: Density of Sector 1 GPs vs. Median revenue
 fig, ax = plt.subplots()
-ax.scatter(df_draw['QUAR2UC10'], df_draw['phy_s1_density'])
+ax.scatter(df_draw['QUAR2UC10'], df_draw['phy_s1_density'], clip_on = False, zorder = 100)
 for row_i, row in df_draw.iterrows():
-  ax.annotate(row['ardt'], (row['QUAR2UC10'], row['phy_s1_density'] + 2))
+  ax.annotate(row['ardt'], (row['QUAR2UC10'] - 300, row['phy_s1_density'] + 0.8), size = 6)
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
 plt.xlabel('Median fiscal revenue by household (euros)')
 plt.ylabel('Nb of Sector 1 %s per 100,000 inhab.' %phy)
+plt.setp(ax.get_xticklabels(), fontsize=12)
+plt.setp(ax.get_yticklabels(), fontsize=12)
 #plt.title('Density of Sector 1 %s vs. revenue by district' %phy)
 plt.tight_layout() 
+plt.ylim(0, plt.ylim()[1])
+ax.grid(True)
 fig.set_size_inches(width, height)
 plt.savefig(os.path.join(path_built_graphs, 'Ophtalmo_Idf_DensityS1VsRevenue.png'),
             dpi = dpi)
@@ -145,14 +167,17 @@ plt.close()
 fig, ax = plt.subplots()
 ax.scatter(df_draw['QUAR2UC10'], df_draw['phy_s2_density'])
 for row_i, row in df_draw.iterrows():
-  ax.annotate(row['ardt'], (row['QUAR2UC10'], row['phy_s2_density'] + 2))
+  ax.annotate(row['ardt'], (row['QUAR2UC10'] - 300, row['phy_s2_density'] + 0.8), size=6)
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
 plt.xlabel('Median fiscal revenue by household (euros)')
 # Add precision about households
 plt.ylabel('Nb of Sector 2 %s per 100,000 inhab.' %phy)
+plt.setp(ax.get_xticklabels(), fontsize=12)
+plt.setp(ax.get_yticklabels(), fontsize=12)
 #plt.title('Density of Sector 2 %s vs. revenue by district' %phy)
 plt.tight_layout() 
+ax.grid(True)
 fig.set_size_inches(width, height)
 plt.savefig(os.path.join(path_built_graphs, 'Ophtalmo_Idf_DensityS2VsRevenue.png'),
             dpi = dpi)
@@ -164,20 +189,82 @@ fig, ax = plt.subplots()
 # s=(df_draw['c_base_count']*16)
 ax.scatter(df_draw['QUAR2UC10'], df_draw['c_base_mean'], s=(df_draw['P10_POP']/1000.0))
 for row_i, row in df_draw.iterrows():
-  ax.annotate(row['ardt'], (row['QUAR2UC10'], row['c_base_mean'] + 1))
+  ax.annotate(row['ardt'], (row['QUAR2UC10'] - 300, row['c_base_mean'] + 0.8), size = 6)
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
 plt.xlabel('Median fiscal revenue by household (euros)')
 plt.ylabel('Average sector 2 consultation price (euros)')
+plt.setp(ax.get_xticklabels(), fontsize=12)
+plt.setp(ax.get_yticklabels(), fontsize=12)
 #plt.title('Average consultation price vs. revenue by district')
-plt.tight_layout() 
+plt.tight_layout()
+ax.grid(True)
 fig.set_size_inches(width, height)
 plt.savefig(os.path.join(path_built_graphs, 'Ophtalmo_Idf_ConsultationS2VsRevenue.png'),
             dpi = dpi)
 plt.close()
 #plt.show()
 
+# Scatter: improve label display locations
 
+def get_text_positions(x_data, y_data, txt_width, txt_height):
+  a = zip(y_data, x_data)
+  text_positions = list(y_data)
+  for index, (y, x) in enumerate(a):
+    local_text_positions = [i for i in a if i[0] > (y - txt_height) 
+                              and (abs(i[1] - x) < txt_width * 2) and i != (y,x)]
+    if local_text_positions:
+      sorted_ltp = sorted(local_text_positions)
+      if abs(sorted_ltp[0][0] - y) < txt_height: #True == collision
+        differ = np.diff(sorted_ltp, axis=0)
+        a[index] = (sorted_ltp[-1][0] + txt_height, a[index][1])
+        text_positions[index] = sorted_ltp[-1][0] + txt_height*1.01
+        for k, (j, m) in enumerate(differ):
+          #j is the vertical distance between words
+          if j > txt_height * 2: #if True then room to fit a word in
+            a[index] = (sorted_ltp[k][0] + txt_height, a[index][1])
+            text_positions[index] = sorted_ltp[k][0] + txt_height
+            break
+  return text_positions
+
+def text_plotter(text, x_data, y_data, text_positions, txt_width,txt_height):
+  for z,x,y,t in zip(text, x_data, y_data, text_positions):
+    plt.annotate(z, xy=(x-txt_width/2, t + 0.5), size=6)
+    if y != t:
+      plt.arrow(x, t,0,y-t, color='red',alpha=0.3, width=txt_width*0.05, 
+          head_width=txt_width/2,
+          head_length=txt_height*0.5, 
+          zorder=0,
+          length_includes_head=True)
+
+
+fig, ax = plt.subplots()
+p1 = ax.scatter(df_draw['QUAR2UC10'], df_draw['c_base_mean'], s=(df_draw['P10_POP']/1000.0))
+txt_height = 0.04*(plt.ylim()[1] - plt.ylim()[0])
+txt_width = 0.02*(plt.xlim()[1] - plt.xlim()[0])
+text_positions = get_text_positions(df_draw['QUAR2UC10'].values,
+                                    df_draw['c_base_mean'].values,
+                                    txt_width,
+                                    txt_height)
+text_plotter(df_draw['ardt'].values,
+             df_draw['QUAR2UC10'].values,
+             df_draw['c_base_mean'].values,
+             text_positions,
+             txt_width,
+             txt_height)
+plt.xlabel('Median fiscal revenue by household (euros)')
+plt.ylabel('Average sector 2 consultation price (euros)')
+plt.setp(ax.get_xticklabels(), fontsize=12)
+plt.setp(ax.get_yticklabels(), fontsize=12)
+ax.grid(True)
+fig.set_size_inches(width, height)
+plt.savefig(os.path.join(path_built_graphs, 'Ophtalmo_Idf_ConsultationS2VsRevenue_alt.png'),
+            dpi = dpi)
+plt.close()
+
+# ############
+# TODO: UPDATE
+# ############
 
 ## Seems differences linked largely to status / convention
 #

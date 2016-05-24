@@ -199,7 +199,9 @@ df_ameli['spe'] =\
 # Excludes non GP (a priori)
 #df_gp_2012 = df_ameli[(~df_ameli['spe'].str.contains('exclusif')) &\
 #                      (df_ameli['spe'] != u'Médecin gériatre')].copy()
-df_physicians = df_ameli[df_ameli['spe'] == u'MG'].copy()
+
+# df_physicians = df_ameli[df_ameli['spe'] == u'MG'].copy()
+df_physicians = df_ameli.copy()
 
 # gender
 ls_fix_name = [[' HELENE ROLLAND CAPPIELLO', 'Mme  HELENE ROLLAND CAPPIELLO'],
@@ -245,13 +247,16 @@ df_physicians['CODGEO'] = se_insee_codes
 # OUTPUT
 # #######
 
+df_physicians.index.name = 'id_physician'
+
 file_extension = 'gp_2012'
 
 # CSV
 df_physicians.to_csv(os.path.join(path_built_csv,
                                 u'df_{:s}.csv'.format(file_extension)),
-                  encoding = u'utf-8',
-                  float_format = u'%.1f')
+                     index = True,
+                     encoding = u'utf-8',
+                     float_format = u'%.1f')
 
 ## JSON
 #df_physicians = df_physicians.copy()

@@ -342,6 +342,8 @@ se_insee_codes = pd.Series(ls_rows, index = df_physicians.index)
 df_physicians['CODGEO'] = se_insee_codes
 # print df_physicians[df_physicians['CODGEO'].isnull()].T.to_string()
 
+df_physicians.drop(['zip_city'], axis = 1, inplace = True)
+
 # #######
 # DISPLAY
 # #######

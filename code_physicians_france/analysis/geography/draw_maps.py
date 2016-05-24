@@ -108,6 +108,9 @@ plt.clf()
 fig = plt.figure()
 ax = fig.add_subplot(111, axisbg = 'w', frame_on = False)
 
+# restrict to sector 2?
+df_physicians = df_physicians[df_physicians['convention'].str.contains('2', na = False)]
+
 dev = m_fra.scatter([phys.x for phys in df_physicians['point']],
                     [phys.y for phys in df_physicians['point']],
                     8, marker = 'D', lw=0.25,
@@ -124,3 +127,5 @@ ax.add_collection(PatchCollection(df_com[df_com['NOM_DEPT'] == "PARIS"]['patches
 
 m_fra.drawcountries() # necessary to have map displayed if only add_collection (dunno why?)
 plt.show()
+
+# todo: with osm tiles... + include close suburbs? (how many not placed?)

@@ -303,9 +303,9 @@ df_physicians.drop(['zip_city'], axis = 1, inplace = True)
 # DISPLAY
 # ########
 
-ls_disp_base_1 = ['gender', 'name', 'surname', 'street', 'zip', 'city',
+ls_disp_base_1 = ['gender', 'name', 'surname', 'street', 'zip', 'city', 'CODGEO',
                   'convention', 'carte_vitale', 'status', 'spe', 'nb_loc']
-ls_disp_base_2 = ['gender', 'name', 'surname', 'zip', 'city',
+ls_disp_base_2 = ['gender', 'name', 'surname', 'zip', 'city', 'CODGEO',
                   'convention', 'carte_vitale', 'status', 'spe', 'nb_loc']
 ls_disp_services = ['c_base', 'c_proba', 'c_min', 'c_max',
                     'c_0-2a', 'c_2-6a', 'ecg']
