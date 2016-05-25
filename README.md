@@ -24,11 +24,11 @@ The code_supermarkets_france folder contains the code used to collect, process a
 
 Supermarkets typically cary several thousand products and implement promotions of various types which make price comparison an intricate issue. Even more than in the single product case (e.g. gasoline), it seems reasonable to except that the cost associated with an accurate price comparison leads a significant portion of consumers to give up searching and shop at random or following various rules of thumb.This project aims at studying how price dispersion and levels vary with the degree of competition and demand characteristics across markets. A major source of data is the price comparison website ([quiestlemoinscher.com](http://www.quiestlemoinscher.com/)) launched by the supermarket chain Leclerc around 2006 with a view to prove the competitiveness of its prices as compared to other chains.
 
-### Physician in France
+### Physician fees and locations in Paris
 
 The code_physicians_france folder contains the code used to collect, process and analyse data described in:
 
-- Physician fees and densities in Paris ([Note](https://github.com/etiennecha/master_code/blob/master/papers/french_physicians/report.pdf))
+- Physician fees and locations in Paris ([Note](https://github.com/etiennecha/master_code/blob/master/papers/french_physicians/report.pdf))
 
 The French national health insurance agency operates a website ([annuairesante.ameli.fr](http://annuairesante.ameli.fr/)) which lists physicians and prices. Data were collected from the website in 2014 to study physician locations and price levels (in the case of physicians whose fees are not regulated).
 
