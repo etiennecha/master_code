@@ -40,7 +40,8 @@ df_population_arm = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
 
 df_population = pd.concat([df_population_com, df_population_arm], ignore_index = True)
 ls_population_select_columns = ['CODGEO', 'LIBGEO', 'REG', 'DEP',
-                                'ZE2010', 'P10_POP', 'SUPERF']
+                                'P10_POP', 'SUPERF',
+                                'P10_POP0014', 'P10_POP6074', 'P10_POP75P']
 df_population = df_population[ls_population_select_columns]
 df_population.index = df_population['CODGEO']
 
@@ -105,25 +106,26 @@ df_revenus.index = df_revenus['CODGEO']
 
 # todo: add statu / type from UU file (or AU?): rural, urbain etc.
 
-df_communes = df_population[['LIBGEO', 'REG', 'DEP', 'P10_POP', 'SUPERF']].copy()
+df_communes = df_population.copy()
 
-ls_disp_logement = ['P10_LOG', 'P10_MEN', 'P10_PMEN', 
-                    'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P'] 
+lsd_logement = ['P10_LOG', 'P10_MEN', 'P10_PMEN', 
+                'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P'] 
+
 df_communes = pd.merge(df_communes,
-                       df_logement[ls_disp_logement],
+                       df_logement[lsd_logement],
+                       how = 'left',
                        left_index = True,
                        right_index = True)
 
-ls_disp_revenus = ['MENFIS10', 'PMENFIS10', 'MENIMP10', 
-                    'QUAR1UC10', 'QUAR2UC10', 'QUAR3UC10',
-                    'RDUC10', 'PTSA10', 'PPEN10', 'PBEN10', 'PAUT10']
+lsd_revenus = ['MENFIS10', 'PMENFIS10', 'MENIMP10', 
+               'QUAR1UC10', 'QUAR2UC10', 'QUAR3UC10',
+               'RDUC10', 'PTSA10', 'PPEN10', 'PBEN10', 'PAUT10']
 
 df_communes = pd.merge(df_communes,
-                       df_revenus[ls_disp_revenus],
+                       df_revenus[lsd_revenus],
+                       how = 'left',
                        left_index = True,
                        right_index = True)
-
-df_communes.reset_index(inplace = True)
 
 df_communes.to_csv(os.path.join(path_dir_insee_built,
                                 'df_communes.csv'),
