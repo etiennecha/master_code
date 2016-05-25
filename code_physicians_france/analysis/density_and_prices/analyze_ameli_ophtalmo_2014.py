@@ -120,10 +120,12 @@ print df_ardts['nb_s2'].sum() / df_inscom[df_inscom['CODGEO'] == '75056']\
                                           ['P10_POP'].astype(float) * 100
 print df_physicians['c_base'].describe()
 
-phy = 'ophtalmologists'
+phy = 'ophthalmologists'
 
 dpi = 300
 width, height = 12, 5
+
+xlabel_rev = 'Arrondissement population median revenue (th euros)'
 
 # Scatter: Density of GPs vs. Median revenue
 df_ardts['ardt'] = df_ardts['CODGEO'].str.slice(start = 3)
@@ -133,7 +135,7 @@ for row_i, row in df_ardts.iterrows():
   ax.annotate(row['ardt'], (row['QUAR2UC10'], row['density_tot'] + 1))
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
-plt.xlabel('Median fiscal revenue by household (euros)')
+plt.xlabel(xlabel_rev)
 plt.ylabel('Nb of %s per 100,000 inhab.' %phy)
 ax.grid(True)
 #plt.title('Density of %s vs. revenue by district' %phy)
@@ -152,7 +154,7 @@ for row_i, row in df_ardts.iterrows():
   ax.annotate(row['ardt'], (row['QUAR2UC10'], row['density_s1'] + 0.3))
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
-plt.xlabel('Median fiscal revenue by household (euros)')
+plt.xlabel(xlabel_rev)
 plt.ylabel('Nb of Sector 1 %s per 100,000 inhab.' %phy)
 plt.ylim(0, plt.ylim()[1])
 ax.grid(True)
@@ -172,7 +174,7 @@ for row_i, row in df_ardts.iterrows():
   ax.annotate(row['ardt'], (row['QUAR2UC10'], row['density_s2'] + 1))
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
-plt.xlabel('Median fiscal revenue by household (euros)')
+plt.xlabel(xlabel_rev)
 # Add precision about households
 plt.ylabel('Nb of Sector 2 %s per 100,000 inhab.' %phy)
 #plt.title('Density of Sector 2 %s vs. revenue by district' %phy)
@@ -193,7 +195,7 @@ for row_i, row in df_ardts.iterrows():
   ax.annotate(row['ardt'], (row['QUAR2UC10'], row['c_base_mean'] + 2))
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
-plt.xlabel('Median fiscal revenue by household (euros)')
+plt.xlabel(xlabel_rev)
 plt.ylabel('Average sector 2 consultation price (euros)')
 #plt.title('Average consultation price vs. revenue by district')
 ax.grid(True)

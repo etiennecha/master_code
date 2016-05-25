@@ -116,6 +116,8 @@ print df_physicians['c_base'].describe()
 dpi = 300
 width, height = 12, 5
 
+xlabel_rev = 'Arrondissement population median revenue (th euros)'
+
 # Scatter: Density of GPs vs. Median revenue
 fig, ax = plt.subplots()
 ax.scatter(df_ardts['QUAR2UC10'], df_ardts['density_tot'])
@@ -123,7 +125,7 @@ for row_i, row in df_ardts.iterrows():
   ax.annotate(row['ardt'], (row['QUAR2UC10'], row['density_tot'] + 3))
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
-plt.xlabel('Median fiscal revenue by household (euros)')
+plt.xlabel(xlabel_rev)
 plt.ylabel('Nb of GPs per 100,000 inhab.')
 #plt.title('Density of GPs vs. revenue by district')
 ax.grid(True)
@@ -142,7 +144,7 @@ for row_i, row in df_ardts.iterrows():
   ax.annotate(row['ardt'], (row['QUAR2UC10'], row['density_s1'] + 2))
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
-plt.xlabel('Median fiscal revenue by household (euros)')
+plt.xlabel(xlabel_rev)
 plt.ylabel('Nb of Sector 1 GPs per 100,000 inhab.')
 #plt.title('Density of Sector 1 GPs vs. revenue by district')
 ax.grid(True)
@@ -161,7 +163,7 @@ for row_i, row in df_ardts.iterrows():
   ax.annotate(row['ardt'], (row['QUAR2UC10'], row['density_s2'] + 2))
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
-plt.xlabel('Median fiscal revenue by household (euros)')
+plt.xlabel(xlabel_rev)
 plt.ylabel('Nb of Sector 2 GPs per 100,000 inhab.')
 #plt.title('Density of Sector 2 GPs vs. revenue by district')
 ax.grid(True)
@@ -180,7 +182,7 @@ for row_i, row in df_ardts.iterrows():
   ax.annotate(row['ardt'], (row['QUAR2UC10'], row['c_base_mean'] + 1))
 x_format = tkr.FuncFormatter('{:,.0f}'.format)
 ax.xaxis.set_major_formatter(x_format)
-plt.xlabel('Median fiscal revenue by household (euros)')
+plt.xlabel(xlabel_rev)
 plt.ylabel('Average sector 2 consultation price (euros)')
 #plt.title('Average sector 2 consultation price vs. revenue by district')
 ax.grid(True)
