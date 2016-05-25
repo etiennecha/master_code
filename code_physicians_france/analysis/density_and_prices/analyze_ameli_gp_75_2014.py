@@ -111,7 +111,8 @@ print df_ardts['nb_tot'].sum() / df_inscom[df_inscom['CODGEO'] == '75056']\
                                           ['P10_POP'].astype(float) * 100
 print df_ardts['nb_s2'].sum() / df_inscom[df_inscom['CODGEO'] == '75056']\
                                           ['P10_POP'].astype(float) * 100
-print df_physicians['c_base'].describe()
+print df_physicians[df_physicians['convention'].str.contains('2', na = False)]\
+                   ['c_base'].describe()
 
 dpi = 300
 width, height = 12, 5
