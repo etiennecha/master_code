@@ -1,12 +1,12 @@
 ## My econ research repository
 
-This repository contains the code of virtually all the economic research projects I have been or am currently working on. Some of them are not really meant to be public (tests, drafts etc) and are thus not listed or adequately described in the overview provided below.
+This repository contains the code of virtually all the economic research projects I have been or am currently working on. 
 
 ----------
 
 ### Competition on the French retail gasoline market
 
-The code_gasoline_france folder contains the code used to collect, process and analyse data of two research projects:
+The code_gasoline_france folder contains code used to collect, process and analyse data of two research projects:
 
 
 - Price dispersion in the French retail gasoline market ([Working paper](https://github.com/etiennecha/master_code/blob/master/papers/french_retail_gasoline_dispersion/french_retail_gasoline_dispersion.pdf))
@@ -17,7 +17,7 @@ The main source of data is the governmental website ([prix-carburants.gouv.fr](h
 
 ### Competition between French grocery stores
 
-The code_supermarkets_france folder contains the code used to collect, process and analyse data described in:
+The code_supermarkets_france folder contains code used to collect, process and analyse data described in:
 
 
 - Competition between French grocery stores: Evidence from a price comparison website ([Working paper](https://github.com/etiennecha/master_code/blob/master/papers/french_supermarkets_competition/french_supermarkets_competition.pdf))
@@ -26,7 +26,7 @@ Supermarkets typically cary several thousand products and implement promotions o
 
 ### Physician fees and locations in Paris
 
-The code_physicians_france folder contains the code used to collect, process and analyse data described in:
+The code_physicians_france folder contains code used to collect, process and analyse data described in:
 
 - Physician fees and locations in Paris ([Note](https://github.com/etiennecha/master_code/blob/master/papers/french_physicians/report.pdf))
 
