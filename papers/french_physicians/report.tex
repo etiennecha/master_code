@@ -16,6 +16,8 @@
 \usepackage{array}
 \usepackage{siunitx}
 \usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[flushleft]{threeparttable}
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{rotating}
@@ -48,7 +50,7 @@
 
 \textbf{Abstract:}
 
-This note compares the fees and densities of general practitioners and ophthalmologists in Paris. A large majority of ophthalmologists can freely chose their price policy (sector 2), while most general practitioners follow fee policies determined by law (sector 1). Using data from the French National Health Service, this note shows that the density and prices of sector 2 physicians, irrespective of their specialty, are strongly correlated to revenue at the Paris arrondissement level. Since most ophthalmologists are sector 2, the densities of ophthalmologists across arrondissements exhibit large inequalities, while general practitioners are more evenly geographically distributed.
+This note compares the fees and densities of general practitioners and ophthalmologists in Paris. A large majority of ophthalmologists can freely chose their price policy (sector 2), while most general practitioners follow fee policies determined by law (sector 1). Using data from the French National Health Service, this note shows that the density and prices of sector 2 physicians, irrespective of their specialty, are strongly correlated to revenue at the Paris arrondissement level. Since most ophthalmologists are sector 2, the densities of ophthalmologists across arrondissements exhibit large inequalities, while general practitioners are more evenly geographically distributed. The 5\textsuperscript{th} highest income district has a 180\% higher opthalmologist density, respectively 50\% higher general practitioner density, than the 5\textsuperscript{th} lowest income district.
 
 \strut
 
@@ -61,52 +63,58 @@ Local physician shortages are a growing health policy issue in France. Among the
 
 This note compares the fees and densities of general practitioners and ophthalmologists in Paris. Prices of general practitioners are largely regulated, hence the only way to increase income for most of them is to increase the number of consultations. Conversely, many ophthalmologists freely chose their price policy. They can thus increase revenue through higher fees, which gives them an incentive to settle in wealthier areas.
 
-Using data from the French National Health Service, this note shows that the densities and fees of sector 2 physicians, irrespective of their specialty, are strongly correlated to revenue at the Paris arrondissement level. Since most ophthalmologists are sector 2, the densities of ophthalmologists across arrondissements exhibit large inequalities, while general practitioners are more evenly distributed. Descriptive statistics are provided in appendix.
+Using data from the French National Health Service, this note shows that the densities and fees of sector 2 physicians, irrespective of their specialty, are strongly correlated to revenue at the Paris arrondissement level. Since most ophthalmologists are sector 2, the densities of ophthalmologists across arrondissements exhibit large inequalities, while general practitioners are more evenly distributed. The 5\textsuperscript{th} highest income district has a 180\% higher opthalmologist density, respectively 50\% higher general practitioner density, than the 5\textsuperscript{th} lowest income district.
 
 \section{Data}
 
-Physician locations and fees were collected in 2014 from www.annuairesante.ameli.fr, a website operated by the French National Health Service meant to foster access to healthcare. The website includes all active physicians except for pure hospital practitioners. Data were aggregated at the "arrondissement" level in Paris, and matched with socio-demographic data from the French 2010 national census and fiscal data. The variable used to account for population revenue by arrondissement is the median fiscal revenue by consumption unit (Household declared revenues are weighted according to OECD methodology). The share of people aged over 65 in the arrondissement is used to account for variations in demand related to ageing. The analysis focuses on basic consultation fees. Regarding sector 1 physicians, they amount to 23 euros for general practitioners, and 28 euros for ophthalmologists at the time of the study. In sector 2, the average fees in Paris are respectively 38 and 65 euros. Descriptive statistics are provided in tables~\ref{tab:GP_stats_des} and \ref{tab:Ophthalmo_stats_des}. Data contain 2,488 general practitioners, of which 58\% belong to sector 1, 35\% belong to sector 2 and 7\% to neither of them. Similarly, there are 450 listed ophthalmologists, of which 15\% belong to sector 1 and 85\% to sector 2.
+Physician locations and fees were collected in 2014 from the website annuairesante.ameli.fr, a website operated by the French National Health Service meant to foster access to healthcare. The website includes all active physicians except for pure hospital practitioners. Data were aggregated at the "arrondissement" level in Paris, and matched with socio-demographic data from the French 2010 national census and fiscal data. The variable used to account for population revenue by arrondissement is the median fiscal revenue by consumption unit (Household declared revenues are weighted according to OECD methodology). The share of people aged over 65 in the arrondissement is used to account for variations in demand related to ageing. The analysis focuses on basic consultation fees. Regarding sector 1 physicians, they amount to 23 euros for general practitioners, and 28 euros for ophthalmologists at the time of the study. In sector 2, the average fees in Paris are respectively 38 and 65 euros. Descriptive statistics are provided in Tables~\ref{tab:GP_stats_des} and \ref{tab:Ophthalmo_stats_des}. Data contain 2,488 general practitioners, of which 58\% belong to sector 1, 35\% belong to sector 2 and 7\% to neither of them. Similarly, there are 450 listed ophthalmologists, of which 15\% belong to sector 1 and 85\% to sector 2. All physician densities are expressed per 100,000 inhabitants.
 
 \section{General Practitioners}
 
-The density of GPs per inhabitant exhibits moderate dispersion across Paris arrondissements. A correlation with revenue can be most clearly observed for the density of sector 2 GPs i.e. physicans who choose their price policy. The same pattern can be observed with the average consultation price. Results of regressions of sector 2 GP densities and fees on revenue and share of people aged over 65 are provided in table~\ref{tab:regs_density_fees}.
+The overall densities of GPs are bunched around 100 and 150, and appear to be moderately correlated with income (cf. Figure~\ref{fig:GP_densities}). The 8th district constitute an outlier given its unusually high physician density, above 300. A correlation with revenue can be most clearly observed for the density of sector 2 GPs i.e. physicans who choose their price policy (cf. Figure~\ref{fig:GP_s2_densities}). The same pattern can be observed with the average consultation fees (cf. Figure~\ref{fig:GP_s2_fees}). Results of regressions of sector 2 GP densities and fees on revenue and share of people aged over 65 are provided in Table~\ref{tab:regs_density_fees}.
 
 \begin{figure}[H]
     \caption{Density of GPs vs. revenue by district}
+		\label{fig:GP_densities}
 	\centering
 		\includegraphics[width=16cm]{images/GP_Ardt_DensityVsRevenue.png}
 \end{figure}
 
 \begin{figure}[H]
     \caption{Density of sector 1 GPs vs. revenue by district}
+		\label{fig:GP_s1_densities}
 	\centering
 		\includegraphics[width=16cm]{images/GP_Ardt_DensityS1VsRevenue.png}
 \end{figure}
 
 \begin{figure}[H]
     \caption{Density of sector 2 GPs vs. revenue by district}
+		\label{fig:GP_s2_densities}
 	\centering
 		\includegraphics[width=16cm]{images/GP_Ardt_DensityS2VsRevenue.png}
 \end{figure}
 
 \begin{figure}[H]
     \caption{Sector 2 GP consultation fees vs. revenue by district}
+		\label{fig:GP_s2_fees}
 	\centering
 		\includegraphics[width=16cm]{images/GP_Ardt_ConsultationS2VsRevenue.png}
 \end{figure}
 
 \section{Ophthalmologists}
 
-The number of ophthalmologists per inhabitant exhibits stronger correlation with revenue than in the case of GPs. The density of sector 1 ophthalmologists is relatively stable across districts, but these account for a small portion of ophthalmologists in Paris. Both the density of sector 2 ophthalmologists and their average consultation price are largely correlated with revenue. Results of regressions of sector 2 ophthalmologists densities and fees on revenue and share of people aged over 65 are provided in table~\ref{tab:regs_density_fees}.
+The number of ophthalmologists per inhabitant exhibits stronger correlation with revenue than in the case of GPs (cf. Figure~\ref{fig:Ophtalmo_s2_fees}). The density of sector 1 ophthalmologists is relatively stable across districts, but these account for a small portion of ophthalmologists in Paris. Both the density of sector 2 ophthalmologists and their average consultation price are largely correlated with revenue (cf. Figure~\ref{fig:Ophtalmo_s2_densities} and \ref{fig:Ophtalmo_s2_fees}). Results of regressions of sector 2 ophthalmologists densities and fees on revenue and share of people aged over 65 are provided in Table~\ref{tab:regs_density_fees}.
 
 \begin{figure}[H]
     \caption{Density ophtalmologists vs. revenue by district}
+		\label{fig:Ophtalmo_densities}
 	\centering
 		\includegraphics[width=16cm]{images/Ophtalmo_Ardt_DensityVsRevenue.png}
 \end{figure}
 
 \begin{figure}[H]
     \caption{Density of sector 1 ophtalmologists vs. revenue by district}
+		\label{fig:Ophtalmo_s1_densities}
 	\centering
 		\includegraphics[width=16cm]{images/Ophtalmo_Ardt_DensityS1VsRevenue.png}
 \end{figure}
@@ -114,12 +122,14 @@ The number of ophthalmologists per inhabitant exhibits stronger correlation with
 
 \begin{figure}[H]
     \caption{Density of sector 2 ophtalmologists vs. revenue by district}
+		\label{fig:Ophtalmo_s2_densities}
 	\centering
 		\includegraphics[width=16cm]{images/Ophtalmo_Ardt_DensityS2VsRevenue.png}
 \end{figure}
 
 \begin{figure}[H]
     \caption{Sector 2 ophtalmologist fees vs. revenue by district}
+		\label{fig:Ophtalmo_s2_fees}
 	\centering
 		\includegraphics[width=16cm]{images/Ophtalmo_Ardt_ConsultationS2VsRevenue.png}
 \end{figure}
@@ -207,7 +217,9 @@ Tot. & 2,244  & 20    & 25    & 19    & 17    & 69    & 18 \\
 \section{Regressions}
 
 \begin{table}[h]
-\caption{Regression of density and fees}
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.8} % too large by default...
+\caption{Regressions of densities and fees}
 \label{tab:regs_density_fees}
 \def\sym#1{\ifmmode^{#1}\else\[^{#1}\]\fi}
 \sisetup{table-space-text-post = \sym{***}}
@@ -228,9 +240,14 @@ Tot. & 2,244  & 20    & 25    & 19    & 17    & 69    & 18 \\
 {Nb. obs.}     & {20}    & {17}    & {20}    & {17} \\
 \hline
 \hline
-\multicolumn{5}{l}{\small T-statistics in square brackets} \\
-\multicolumn{5}{l}{\small {**} p < 1\%, {*} p < 5\%}
-\end{tabular}%
+\end{tabular}
+\begin{tablenotes}
+			\small
+			\item T-statistics in square brackets.
+      \item {**} p < 1\%, {*} p < 5\%
+      \item Arrondissements with less than 5 price observations are dropped hence only 17 are used in the Ophtalmologist regression.
+\end{tablenotes}
+\end{threeparttable}
 \end{table}
 
 \end{document}

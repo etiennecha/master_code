@@ -110,14 +110,27 @@ print df_ardts[[col_area, 'P10_POP', 'PCT_65P', 'QUAR2UC10',
                 'density_tot', 'density_s2',
                 'c_base_count', 'c_base_mean', 'c_base_std', ]].to_string()
 
+# sorted by wealth to provide simple inequality measure
+df_ardts.sort('QUAR2UC10', ascending = True, inplace = True)
+print ''
+#print df_ardts[[col_area, 'P10_POP', 'PCT_65P', 'QUAR2UC10',
+#                'density_tot', 'density_s2',
+#                'c_base_count', 'c_base_mean', 'c_base_std', ]].to_string()
+gap_55 = df_ardts.iloc[-5]['density_tot'] / df_ardts.iloc[4]['density_tot']
+print 'The 5th highest income arrdt has a {:.1f}x '.format(gap_55) +\
+          'time higher density than the 5th lowest income arrdt'
+
 # Paris overall
 print ''
 print 'Stats Paris Overall'
 print df_inscom[df_inscom['CODGEO'] == '75056'].T
+print ''
 print df_ardts['nb_tot'].sum() / df_inscom[df_inscom['CODGEO'] == '75056']\
                                           ['P10_POP'].astype(float) * 100
+print ''
 print df_ardts['nb_s2'].sum() / df_inscom[df_inscom['CODGEO'] == '75056']\
                                           ['P10_POP'].astype(float) * 100
+print ''
 print df_physicians[df_physicians['convention'].str.contains('2', na = False)]\
                    ['c_base'].describe()
 
