@@ -73,15 +73,7 @@ df_authors['nb_items'] =\
 df_authors['author_id'] =\
   df_authors['url'].apply(lambda x: re.search(u'/[a-z]{1}/(.*?)\.html', x).group(1))
 
-df_authors.to_csv(os.path.join(path_built_csv,
-                               'df_repec_ideas_list.csv'),
-                  index = False,
-                  encoding = 'utf-8')
-
 #df_authors.to_csv(os.path.join(path_built_csv,
-#                               u'df_excel_repec_ideas_list.csv'),
-#                index = False,
-#                encoding = 'latin-1',
-#                sep = ';',
-#                escapechar = '\\',
-#                quoting = 1)
+#                               'df_repec_ideas_list.csv'),
+#                  index = False,
+#                  encoding = 'utf-8')

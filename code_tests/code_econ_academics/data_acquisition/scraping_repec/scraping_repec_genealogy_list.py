@@ -50,7 +50,7 @@ df_authors['year'] = df_authors['year'].str.replace('(', '')\
 df_authors.loc[df_authors['year'] == ' ', 'year'] = None
 df_authors['url'] = df_authors['url'].str.replace('"', '')
 
-#df_authors.to_csv(os.path.join(path_built_csv,
-#                               'df_repec_genealogy_list.csv'),
-#                  index = False,
-#                  encoding = 'utf-8')
+df_authors.to_csv(os.path.join(path_built_csv,
+                               'df_repec_genealogy_list.csv'),
+                  index = False,
+                  encoding = 'utf-8')

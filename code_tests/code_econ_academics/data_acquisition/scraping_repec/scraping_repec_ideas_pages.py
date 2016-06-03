@@ -47,7 +47,7 @@ ls_got_author_url = [x[0] for x in ls_author_info]
 #author_url = '/e/pac16.html'
 
 for row_i, row in df_authors[(df_authors['top_5'] == 1) &\
-                             (~df_authors['url'].isin(ls_got_author_url))][0:820].iterrows():
+                             (~df_authors['url'].isin(ls_got_author_url))][0:500].iterrows():
   
   author_url = row['url']
   url = 'https://ideas.repec.org' + author_url
@@ -116,25 +116,25 @@ for author_info in ls_author_info:
                     list(author_info[1][7:9]))
 
 df_ai = pd.DataFrame(ls_rows_ai,
-                     columns = ['id',
+                     columns = ['author_url',
                                 'first_name',
-                                'mid_name',
+                                'middle_name',
                                 'last_name',
                                 'suffix',
-                                'repec_id',
+                                'id',
                                 'email',
                                 'webpage',
                                 'address'])
 
-for col in ['first_name', 'mid_name', 'last_name',
-            'suffix', 'webpage', 'address', 'repec_id']:
+for col in ['first_name', 'middle_name', 'last_name',
+            'suffix', 'webpage', 'address', 'id']:
   df_ai[col] = df_ai[col].str.strip()
 
 for col, erase in [['first_name', 'First Name:'],
-                   ['mid_name', 'Middle Name:'],
+                   ['middle_name', 'Middle Name:'],
                    ['last_name', 'Last Name:'],
                    ['suffix', 'Suffix:'],
-                   ['repec_id', 'RePEc Short-ID:']]:
+                   ['id', 'RePEc Short-ID:']]:
   df_ai[col] = df_ai[col].apply(lambda x: x.replace(erase, u''))
 
 # max nb of institution... separate percent etc.

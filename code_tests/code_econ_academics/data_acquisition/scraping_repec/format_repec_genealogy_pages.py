@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 import re
 import pandas as pd
 import json
+from unidecode import unidecode
 
 def dec_json(path_f):
   with open(path_f, 'r') as f:
@@ -38,6 +39,9 @@ df_authors = pd.read_csv(os.path.join(path_built_csv,
 
 ls_author_info = dec_json(os.path.join(path_source_json,
                                        'ls_repec_genealogy_author_info.json'))
+
+# Caution: invalid html hence need recent BeautifulSoup / html parser
+# need to install lxml to be ok (basic html parser fails)
 
 # ####################
 # FORMAT AUTHOR INFO
@@ -162,7 +166,7 @@ print u'Nb inconsistencies in grad year to check:', len(df_check_year)
 df_check_inst = df_final[(df_final['grad_institution'].isnull()) &\
                          (~df_final['grad_year'].isnull())]
 print u''
-print u'Nb grad year but not institution extracted (/listed?)', len(df_check_inst)
+print u'Nb grad year but no institution extracted (/listed?)', len(df_check_inst)
 
 ## could build dict first from ls_author_info with (cleaned) url as keys...
 #for url in df_check_inst['url'].values[0:100]:
@@ -193,7 +197,7 @@ print u'Nb grad year but not institution extracted (/listed?)', len(df_check_ins
 # need to extract student year too
 ls_student_rows = []
 for author_url, grad, advisor, students in ls_author_info:
-  soup_students = BeautifulSoup(students)
+  soup_students = BeautifulSoup(students, "lxml")
   # li can be either institution (with students within) or students
   for li in soup_students.findAll('li'):
     lia = li.find('a', {'href' : True})
@@ -262,6 +266,9 @@ df_students['student_name'] =\
 
 df_students.loc[df_students['student_year'] == 'Year?',
                 'student_year'] = None
+
+## check if parsing ok
+#df_students[df_students['author_id'] == 'pal51']
 
 # #######
 # OUTPUT
@@ -337,7 +344,33 @@ df_students.to_csv(os.path.join(path_built_csv,
 
 # excel csv
 df_students.to_csv(os.path.join(path_built_csv,
-                             u'excel_repec_genealogy_students.csv'),
+                                 u'excel_repec_genealogy_students.csv'),
+                index = False,
+                encoding = 'latin-1',
+                sep = ';',
+                escapechar = '\\',
+                quoting = 1)
+
+# NO ACCENT VERSIONS
+
+for col in ['author', 'grad_institution', 'advisor_1', 'advisor_2']:
+  df_final[col] =\
+    df_final[col].apply(lambda x: unidecode(unicode(x)) if not pd.isnull(x) else x)
+
+for col in ['student_institution', 'student_name']:
+  df_students[col] =\
+    df_students[col].apply(lambda x: unidecode(unicode(x)) if not pd.isnull(x) else x)
+
+df_final.to_csv(os.path.join(path_built_csv,
+                             u'excelna_repec_genealogy.csv'),
+                index = False,
+                encoding = 'latin-1',
+                sep = ';',
+                escapechar = '\\',
+                quoting = 1)
+
+df_students.to_csv(os.path.join(path_built_csv,
+                                 u'excelna_repec_genealogy_students.csv'),
                 index = False,
                 encoding = 'latin-1',
                 sep = ';',
