@@ -138,3 +138,13 @@ for col, erase in [['first_name', 'First Name:'],
   df_ai[col] = df_ai[col].apply(lambda x: x.replace(erase, u''))
 
 # max nb of institution... separate percent etc.
+dict_len = {}
+for x in ls_author_info:
+  dict_len.setdefault(len(x[-1]), []).append(x[0])
+# up to 12 institutions... many w/ 1% hence extract % first and keep only 1% or more?
+
+# todo:
+# extract papers (knowing if published in top 5 recently to limit spurious matching)
+# check with latest version of bs4 if soup still broken (on monday)
+# output all authors with (cleaned?) institutions for parsed ones
+# matching with econ lit, use of institutions?
