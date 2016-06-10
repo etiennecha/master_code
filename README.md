@@ -10,7 +10,7 @@ The code_gasoline_france folder contains code used to collect, process and analy
 
 
 - Price dispersion in the French retail gasoline market ([Working paper](https://github.com/etiennecha/master_code/blob/master/papers/french_retail_gasoline_dispersion/french_retail_gasoline_dispersion.pdf))
-- Rebranding in the French retail gasoline market: local competitive effects of price decreases ([Working paper (update soon!)](https://github.com/etiennecha/master_code/blob/master/papers/french_retail_gasoline_total_access/french_retail_gasoline_total_access.pdf))
+- Rebranding in the French retail gasoline market: local competitive effects of price decreases ([Working paper](https://github.com/etiennecha/master_code/blob/master/papers/french_retail_gasoline_total_access/french_retail_gasoline_total_access.pdf))
 
 The main source of data is the governmental website ([prix-carburants.gouv.fr](http://www.prix-carburants.gouv.fr)). It was launched in 2006 by the French governement with a view to improve price transparency in the retail gasoline market.
 
