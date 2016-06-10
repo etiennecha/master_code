@@ -151,12 +151,12 @@ ax1 = fig.add_subplot(111, frame_on = False, aspect = 'equal')
 l1 = ax1.scatter([store.x for store in df_ta_converted['point'][df_ta_converted['brand_0'] == 'TOTAL']],
                  [store.y for store in df_ta_converted['point'][df_ta_converted['brand_0'] == 'TOTAL']],
                  s = 20, marker = 'o', lw=0,
-                 alpha = 0.4, facecolor = '#FE2E2E', 
+                 alpha = 0.3, facecolor = '#FE2E2E', 
                  antialiased = True, zorder = 3)
 l2 = ax1.scatter([store.x for store in df_ta_converted['point'][df_ta_converted['brand_0'] == 'ELF']],
                  [store.y for store in df_ta_converted['point'][df_ta_converted['brand_0'] == 'ELF']],
                  s = 20, marker = 'o', lw=0,
-                 alpha = 0.5, facecolor = '#2E64FE',
+                 alpha = 0.3, facecolor = '#2E64FE',
                  antialiased = True, zorder = 3)
 ax1.legend((l1, l2),
            ('Ex-Total', 'Ex-Elf'),
@@ -182,6 +182,7 @@ plt.savefig(os.path.join(path_dir_built_ta_graphs,
             alpha=True,
             pad_inches = 0,
             bbox_inches = 'tight') # or 'tight' ?
+plt.close()
 
 # todo: backgroup: top 10/100 (whatever) AU/UU/BV (how many inside/outside => what makes sense?)
 # idea: how many market touched? urban only phenomenon?
