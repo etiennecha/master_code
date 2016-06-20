@@ -295,8 +295,8 @@ At the market level, price dispersion is found to increase with the number of co
 \begin{tabular}{lrrrrr}
 \hline
 \hline
-      & Nb    & \multicolumn{2}{c}{Avg price spread} & Avg rank & Avg same \\
-      & pairs & avg  & std                           & reversals (\%) & price (\%) \\
+      & Nb.   & \multicolumn{2}{c}{Price spread} & \% Rank   & \% Same\\
+      & pairs & Abs. avg.  & Std. dev.           & reversals & price \\
 \hline
 \textbf{$d_{ij} \le  3 km$} &       &       &       &       &  \\
 \hline
@@ -334,7 +334,7 @@ Discounter vs. supermarket pairs & 2,003 & 0.5   & 1.2   & 25.0  & 13.6 \\
 \end{tabular}
 \begin{tablenotes}
 			\small
-      \item Except for the first column, all figures are category averages of statistics which were first computed at the pair level. The average and standard deviation in price spread respectively account for the existence of a persistent price difference, and dynamic price dispersion around this difference.
+      \item Except for the first column, all figures are averages of statistics computed at the pair level. As regards the price spread, the absolute value of the average accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), and the standard deviation measures dispersion around the long term price difference (0 if both gas stations always set the same price).
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -510,9 +510,9 @@ N     & \multicolumn{1}{c}{8,647} & \multicolumn{1}{c}{8,647} & \multicolumn{1}{
 
 \newpage
 
-\section{Details on rank reversals}
+\section{Detection of spurious rank reversals}
 
-\subsection{Changes in pricing policies}
+Empirical observations on price dispersion at the pair level lead to question to which extent statistics used by \cite{CHA11} are appropriate to study pair and market price dispersion. The conversion by Total S.A. of "Total" gas stations to its discount brand, "Total Access", generates many observations with spuriously high rank reversals. Indeed, rank reversals are recorded due to a one-off change in the pricing policy of gas stations, in the case in point, a 10 euro cent per liter price decrease.
 
 French data raise the issue of the nature of rank reversals measured by the statistic previously described. Indeed, the transformation by the firm "Total" of a significant number of its gas stations to low cost gas stations generates rank reversals which are clearly unrelated to the use of randomized pricing (cf. appendix). In order to avoid including "spurious rank reversals" in the analysis, the frequency of changes in price ranking was also considered in the analysis. Conservatively, pairs of gas stations involving such a brand and price policy change have been excluded from the analysis. It has also been checked that price policies implemented by competitors of rebranded gas stations were not significantly affected.
 
@@ -520,6 +520,6 @@ The following figure displays prices posted at a gas station which is rebranded 
 
 \subsection{Price rigidities and Edgeworth cycles}
 
-Maskin and Tirole (1988) [TODO: add ref] offer an alternative explanation for rank reversals. They indeed show that in a context where sellers have to commit on prices for at least one period, cycles can occur which are characterized by periods of undercutting punctuated by one firm accepting to set a high price when margin becomes too small. XXX [TODO: add ref] find evidence of such cycles with XXX data. Though standard test rule out the presence such cycles in French data, evidence of other specific patterns of prices has been found.
+\cite{MAS88} develop in which rank reversals. They indeed show that in a context where sellers have to commit on prices for at least one period, cycles can occur which are characterized by periods of undercutting punctuated by one firm accepting to set a high price when margin becomes too small. XXX [TODO: add ref] find evidence of such cycles with XXX data. Though standard test rule out the presence such cycles in French data, evidence of other specific patterns of prices has been found.
 
 \end{document} 

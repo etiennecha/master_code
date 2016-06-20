@@ -301,6 +301,7 @@ def get_ls_lengths_rr_naive(ar_abs_spread_rr):
   """ 
   Lists lengths of streaks of positive values in a non negative array:
   np.nan are considered as 0 except if in between positive values
+  Streak is recorded also if starts at beginning or ends at end of array
   
   Parameters:
   -----------

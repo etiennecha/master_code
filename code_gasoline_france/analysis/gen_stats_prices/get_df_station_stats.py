@@ -200,7 +200,7 @@ print df_chge_dow['dow_max'].value_counts()
 # ########################
 
 # Promotions: look for successive inverse price cuts at station level
-ls_ls_promo = get_sales(ls_ls_price_variations, 3)
+ls_ls_promo = get_sales(ls_ls_price_variations, 4)
 
 # Add to rows: nb of promotions per day of week
 ls_index_dow = df_prices.index.dayofweek
@@ -233,7 +233,7 @@ df_promo = pd.DataFrame(ls_rows_promo,
 
 df_promo.sort('nb_promo', ascending = False ,inplace = True)
 print '\nNb stations with over 10 promo', len(df_promo[df_promo['nb_promo'] >= 10])
-print '\n', df_promo[0:10]
+print '\n', df_promo[0:10].to_string()
 
 # STATS DES
 
@@ -329,6 +329,11 @@ df_station_stats.to_csv(os.path.join(path_dir_built_csv,
                          index_label = 'id_station',
                          float_format= '%.4f',
                          encoding = 'utf-8')
+
+df_promo.to_csv(os.path.join(path_dir_built_csv,
+                             'df_station_promo.csv'),
+                index_label = 'id_station',
+                encoding = 'utf-8')
 
 # ###############
 # MOVE / DISPOSE?
