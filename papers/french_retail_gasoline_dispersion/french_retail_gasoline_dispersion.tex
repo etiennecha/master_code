@@ -16,6 +16,8 @@
 \usepackage{array}
 \usepackage{booktabs}
 \usepackage{siunitx}
+\usepackage{dcolumn}
+\newcolumntype{.}{D{.}{.}{-1}}
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{tabularx}
@@ -109,7 +111,7 @@ Significant limitations of the governmental comparison website include the fact 
 
 \subsection{Descriptive statistics}
 
-Prices and brand changes were collected from prix-carburants.gouv.fr on a daily basis between September 4, 2011 and December 4, 2014, hence a period of about 3 years, interrupted by some gaps related to data acquisition issues (Figure~\ref{tab:brent_and_diesel}) . Over this period, prices of 10,180 gas stations (after duplicate reconciliations) were recorded, of which 437 were located on highways, 124 on the island of Corsica, and 402 were found to have insufficient or suspicious price data. The analysis was thus performed with a total number of 9,217 gas stations. Due to the fact that price observations are not always available (gas station maintenance, probable mistakes, stations which are not required by law to keep prices posted), there is actually an average of 7,895 prices observed on a daily basis. On average, c. 1,500 gas stations (c. 18\% of gas stations observed and retained) change prices within a day. The average gas station changes price a little less than every week.
+Prices and brand changes were collected from prix-carburants.gouv.fr on a daily basis between September 4, 2011 and December 4, 2014, hence a period of about 3 years, interrupted by some gaps related to data acquisition issues (Figure~\ref{fig:brent_and_diesel}) . Over this period, prices of 10,180 gas stations (after duplicate reconciliations) were recorded, of which 437 were located on highways, 124 on the island of Corsica, and 402 were found to have insufficient or suspicious price data. The analysis was thus performed with a total number of 9,217 gas stations. Due to the fact that price observations are not always available (gas station maintenance, probable mistakes, stations which are not required by law to keep prices posted), there is actually an average of 7,895 prices observed on a daily basis. On average, c. 1,500 gas stations (c. 18\% of gas stations observed and retained) change prices within a day. The average gas station changes price a little less than every week.
 
 \begin{figure}[H]
     \caption{Daily Brent and French diesel retail prices}
@@ -150,11 +152,11 @@ Table~\ref{tab:stats_des_markets} reports descriptive statistics of price disper
 
 The results of regressions of measured price dispersion on the number of firms and cost are reported in table~\ref{tab:regs_markets}. Considering the government intervention between August 2012 and January 2013, estimation outputs are provided for the period starting February 1, 2013 (628 days) and their robustness is checked over the period ending on July 1, 2012 (302 days). They are consistent with results obtained by \cite{TAP11}: dispersion is found to increase with the number of firms and decrease with cost.
 
-Given the richness of price data, price dispersion can also be measured at the gas station level, using each residual price distribution. Measures of price dispersion thereby obtained are reported in Table~\ref{station_price_support_stats_des}. Price distributions of low price gas station tend exhibit smaller standard deviations but fatter tails than these of high price gas stations. They are often left-skewed which reflects the use of occasional promotions, often implemented at the chain level. Conversely, no systematic skew is observed for high price gas stations. Regression results in Table~\ref{station_price_support_regs} confirm the fact that dispersion is positively associated with the number of competitors for high price gas stations. It is yet not true regarding low price gas stations.
+Given the richness of price data, price dispersion can also be measured at the gas station level, using each residual price distribution. Measures of price dispersion thereby obtained are reported in Table~\ref{tab:station_price_support_stats_des}. Price distributions of low price gas station tend exhibit smaller standard deviations but fatter tails than these of high price gas stations. They are often left-skewed which reflects the use of occasional promotions, often implemented at the chain level. Conversely, no systematic skew is observed for high price gas stations. Regression results in Table~\ref{tab:station_price_support_regs} confirm the fact that dispersion is positively associated with the number of competitors for high price gas stations. It is yet not true regarding low price gas stations.
 
 \section{Conclusion}
 
-This paper expands the methodology of \cite{TAP11} to measure and analyse price dispersion in the French retail gasoline market, taking into account the presence of significant differentiation and potential segmentation. Rank reversals are generally found to be less frequent for pairs gas stations separated by a short distance i.e. competitors whose prices are easy to compare for consumers. This result supports the hypothesis of a connection between consumer information and price dispersion. Pairs of competitors which operate at low prices exhibit less rank reversals than those which sell at higher prices, and many are actually observed to set the very same price on a regular basis. Conversely, among high price gas stations, all pairs tend to be characterized by significant static and/or dynamic price dispersion. 
+This paper expands the methodology of \cite{TAP11} to measure and analyse price dispersion in the French retail gasoline market, taking into account the presence of significant differentiation and potential segmentation. Rank reversals are generally found to be less frequent for pairs gas stations separated by a short distance i.e. competitors whose prices are easy to compare for consumers. This result supports the hypothesis of a connection between consumer information and price dispersion. Pairs of competitors which operate at low prices exhibit less rank reversals than those which sell at higher prices, and many are actually observed to set the very same price on a regular basis. Conversely, among high price gas stations, all pairs tend to be characterized by significant static and/or dynamic price dispersion.
 
 At the market level, price dispersion is found to increase with the number of competitors, and decrease with cost. This is consistent with predictions of a model a la \cite{VAR80}. In the presence of significant differentiation, working with raw prices typically leads to largely overestimate price dispersion related to search costs.
 
@@ -296,6 +298,7 @@ At the market level, price dispersion is found to increase with the number of co
 \hline
 \hline
       & Nb.   & \multicolumn{2}{c}{Price spread} & \% Rank   & \% Same\\
+\cmidrule(l{2pt}r{2pt}){3-4}
       & pairs & Abs. avg.  & Std. dev.           & reversals & price \\
 \hline
 \textbf{$d_{ij} \le  3 km$} &       &       &       &       &  \\
@@ -334,7 +337,7 @@ Discounter vs. supermarket pairs & 2,003 & 0.5   & 1.2   & 25.0  & 13.6 \\
 \end{tabular}
 \begin{tablenotes}
 			\small
-      \item Except for the first column, all figures are averages of statistics computed at the pair level. As regards the price spread, the absolute value of the average accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), and the standard deviation measures dispersion around the long term price difference (0 if both gas stations always set the same price).
+      \item Except for the first column, all figures are averages of statistics computed at the pair level. As regards the price spread, the absolute value of the average (Abs. avg.) accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), and the standard deviation (Std. dev.) measures dispersion around the long term price difference (0 if both gas stations always set the same price).
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -361,32 +364,28 @@ Discounter vs. supermarket pairs & 2,003 & 0.5   & 1.2   & 25.0  & 13.6 \\
 \end{subfigure}
 \end{figure}
 
-\sisetup{input-symbols = ()}
-
 \begin{table}[H]
 \renewcommand{\arraystretch}{0.8} % too large by default...
 \centering
-\def\sym#1{\ifmmode^{#1}\else\[^{#1}\]\fi}
 \caption{Regression of rank reversals}
-\sisetup{table-space-text-post = \sym{***}}
-\begin{tabular}{lll*{5}{S[table-align-text-post=false]}} %{lrrrrrr}
+\begin{tabular}{ll.....} %{lrrrrrr}
 \hline
 \hline
-          & Dependent &       & \multicolumn{4}{c}{Quantile regressions} \\
-          & Variable & OLS   & 25\%  & 50\%  & 75\%  & 90\% \\
+                  & Dependent  &             & \multicolumn{4}{c}{Quantile regressions} \\
+                  & Variable   & \multicolumn{1}{c}{OLS}   & \multicolumn{1}{c}{25\%}  & \multicolumn{1}{c}{50\%}  & \multicolumn{1}{c}{75\%}  & \multicolumn{1}{c}{90\%} \\
 \hline
-All pairs         & $r_{ij}$   & -0.035 & -0.030 & -0.047 & -0.043 & -0.033 \\
-(N = 3,345)       &            & (6.57)\sym{**} & (4.01)\sym{**} & (5.12)\sym{**} & (5.34)\sym{**} & (4.45)\sym{**} \\
-                  & $std_{ij}$ & -0.001 & -0.001 & -0.001 & -0.001 & -0.002 \\
-                  &            & (4.73)\sym{**} & (3.09)\sym{**} & (3.53)\sym{**} & (3.52)\sym{**} & (2.75)\sym{**} \\
-Supermarket pairs & $r_{ij}$   & -0.026 & -0.016 & -0.027 & -0.043 & -0.036 \\
-(N = 1,488)       &            & (3.73)\sym{**} & (2.56)\sym{*} & (2.77)\sym{**} & (2.78)\sym{**} & (2.34)\sym{*} \\
-                  & $std_{ij}$ & -0.000 & -0.000 & -0.000 & 0.000 & -0.000 \\
-                  &            & (1.01)\sym{} & (0.71)\sym{} & (1.04)\sym{} & (0.25)\sym{} & (0.54)\sym{} \\
-Oil/ind pairs     & $r_{ij}$   & -0.033 & -0.057 & -0.039 & -0.02 & 0.017 \\
-(N = 277)         &            & (2.60)\sym{*} & (2.73)\sym{**} & (2.17)\sym{*} & (1.29)\sym{} & (1.16)\sym{} \\
-                  & $std_{ij}$ & -0.003 & -0.003 & -0.003 & -0.001 & -0.002 \\
-                  &            & (3.48)\sym{**} & (3.85)\sym{**} & (3.76)\sym{**} & (1.04)\sym{} & (1.02)\sym{} \\
+All pairs         & $r_{ij}$   & -0.035^{**} & -0.030^{**} & -0.047^{**} & -0.043^{**} & -0.033^{**} \\
+(N = 3,345)       &            & [6.57]      & [4.01]      & [5.12]      & [5.34]      & [4.45]      \\
+                  & $std_{ij}$ & -0.001^{**} & -0.001^{**} & -0.001^{**} & -0.001^{**} & -0.002^{**} \\
+                  &            & [4.73]      & [3.09]      & [3.53]      & [3.52]      & [2.75]      \\
+Supermarket pairs & $r_{ij}$   & -0.026^{**} & -0.016^{*}  & -0.027^{**} & -0.043^{**} & -0.036^{*}  \\
+(N = 1,488)       &            & [3.73]      & [2.56]      & [2.77]      & [2.78]      & [2.34]      \\
+                  & $std_{ij}$ & -0.000^{}   & -0.000^{}   & -0.000^{}   & 0.000^{}    & -0.000^{}   \\
+                  &            & [1.01]      & [0.71]      & [1.04]      & [0.25]      & [0.54]      \\
+Oil/ind pairs     & $r_{ij}$   & -0.033^{*}  & -0.057^{**} & -0.039^{*}  & -0.02^{}    & 0.017^{}    \\
+(N = 277)         &            & [2.60]      & [2.73]      & [2.17]      & [1.29]      & [1.16]      \\
+                  & $std_{ij}$ & -0.003^{**} & -0.003^{**} & -0.003^{**} & -0.001^{}   & -0.002^{}   \\
+                  &            & [3.48]      & [3.85]      & [3.76]      & [1.04]      & [1.02]      \\
 \hline
 \hline
 \end{tabular}%
@@ -429,26 +428,25 @@ Nb obs     & \multicolumn{2}{c}{5,852,850} & \multicolumn{2}{c}{1,709,055} & \mu
 \begin{table}[!h]
 %\renewcommand{\arraystretch}{0.8} % too large by default...
 \centering
-\def\sym#1{\ifmmode^{#1}\else\[^{#1}\]\fi}
 \caption{Regressions of market dispersion}
-\sisetup{table-space-text-post = \sym{***}}
-\begin{tabular}{ll*{6}{S[table-align-text-post=false, parse-numbers=false]}} %{lrrrrrr}
+\begin{tabular}{l......} %{lrrrrrr}
 \hline
 \hline
-Sample & \multicolumn{4}{c}{3 km radius} & \multicolumn{2}{c}{No-overlap} \\
-       & \multicolumn{2}{c}{Raw prices} & \multicolumn{2}{c}{Residuals} & \multicolumn{2}{c}{Residuals} \\
-Dependent variable & {Range} & {Std}   & {Range} & {Std}   & {Range} & {Std} \\
+Markets          & \multicolumn{4}{c}{3 km radius} & \multicolumn{2}{c}{No-overlap} \\
+Prices           & \multicolumn{2}{c}{Raw prices} & \multicolumn{2}{c}{Residuals} & \multicolumn{2}{c}{Residuals} \\
+Dispersion stat. & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std}   & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std}   & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} \\
 \hline
-Cost  & -0.031 & -0.014 & -0.038 & -0.015 & -0.042 & -0.016 \\
-      & [3.86]\sym{**} & [4.76]\sym{**} & [4.95]\sym{**} & [5.04]\sym{**} & [4.73]\sym{**} & [4.68]\sym{**} \\
-Nb firms & 0.560 & 0.093 & 0.265 & 0.046 & 0.208 & 0.033 \\
-      & [15.41]\sym{**} & [9.40]\sym{**} & [26.19]\sym{**} & [15.75]\sym{**} & [13.56]\sym{**} & [7.08]\sym{**} \\
-High price & 2.703 & 1.109 & 0.619 & 0.258 &       &  \\
-      & [26.53]\sym{**} & [26.78]\sym{**} & [17.87]\sym{**} & [18.63]\sym{**} &       &  \\
-Constant & 1.854 & 1.386 & 2.670 & 1.294 & 3.370 & 1.535 \\
-      & [3.71]\sym{**} & [7.56]\sym{**} & [6.04]\sym{**} & [7.48]\sym{**} & [6.49]\sym{**} & [7.44]\sym{**} \\
-N     & \multicolumn{2}{c}{1,074,894} & \multicolumn{2}{c}{1,074,894} & \multicolumn{2}{c}{261,687} \\
-R^{2}    & {0.42}  & {0.31}  & {0.26}  & {0.12}  & {0.09}  & {0.02} \\
+Cost        & -0.031^{**} & -0.014^{**} & -0.038^{**} & -0.015^{**} & -0.042^{**} & -0.016^{**}            \\
+            & [3.86]      & [4.76]      & [4.95]      & [5.04]      & [4.73]      & [4.68]                 \\
+Nb firms    & 0.560^{**}  & 0.093^{**}  & 0.265^{**}  & 0.046^{**}  & 0.208^{**}  & 0.033^{**}             \\
+            & [15.41]     & [9.40]      & [26.19]     & [15.75]     & [13.56]     & [7.08]                 \\
+High price  & 2.703^{**}  & 1.109^{**}  & 0.619^{**}  & 0.258^{**}  &             &                        \\
+            & [26.53]     & [26.78]     & [17.87]     & [18.63]     &             &                        \\
+Constant    & 1.854^{**}  & 1.386^{**}  & 2.670^{**}  & 1.294^{**}  & 3.370^{**}  & 1.535^{**}             \\
+            & [3.71]      & [7.56]      & [6.04]      & [7.48]      & [6.49]      & [7.44]                 \\
+\hline
+R2          & 0.42  & 0.31  & 0.26  & 0.12  & 0.09  & 0.02                                                 \\
+N           & \multicolumn{2}{c}{1,074,894} & \multicolumn{2}{c}{1,074,894} & \multicolumn{2}{c}{261,687}  \\
 \hline
 \hline
 \end{tabular}%
@@ -484,23 +482,22 @@ Trimmed range 10\% & 3.42  & (1.11) & 4.02  & (1.54) \\
 \caption{Regressions of gas station price residual distributions}
 \label{tab:station_price_support_regs}
 \centering
-\def\sym#1{\ifmmode^{#1}\else\[^{#1}\]\fi}
-\sisetup{table-space-text-post = \sym{***}}
-\begin{tabular}{ll*{4}{S[table-align-text-post=false, parse-numbers=false]}} %{lrrrrrr}
+\begin{tabular}{l....} %{lrrrrrr}
 \hline
 \hline
-      & \multicolumn{1}{l}{Tr. range} & \multicolumn{1}{l}{Std} & \multicolumn{1}{l}{Tr. range} & \multicolumn{1}{l}{Std} \\
+      & \multicolumn{1}{c}{Tr. range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Tr. range} & \multicolumn{1}{c}{Std} \\
 \hline
-      & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} \\
-Constant & 4.802 & 1.243 & 4.266 & 1.106 \\
-      & [35.45]\sym{**} & [33.58]\sym{**} & [230.88]\sym{**} & [307.05]\sym{**} \\
-Low type & -0.507 & -0.138 & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} \\
-      & [4.81]\sym{**} & [5.31]\sym{**} & {} & {}\\
-Nb competitors & 0.021 & 0.008 & 0.040 & 0.012 \\
-      & [2.64]\sym{**} & [3.79]\sym{**} & [2.75]\sym{**} & [4.19]\sym{**} \\
-Nb competiors * & -0.039 & -0.014 & \multicolumn{1}{c}{-0.064} & \multicolumn{1}{c}{-0.020} \\
-Low type & [2.13]* & [3.08]\sym{**} & [3.32]\sym{**} & [4.90]\sym{**} \\
+Constant        & 4.802^{**} & 1.243^{**}  & 4.266         & 1.106          \\
+                & [35.45]    & [33.58]     & [230.88]^{**} & [307.05]^{**}  \\
+Low type        & -0.507^{**}& -0.138^{**} &               &                \\
+                & [4.81]     & [5.31]      &               &                \\
+Nb competitors  & 0.021^{**} & 0.008^{**}  & 0.040^{**}    & 0.012^{**}     \\
+                & [2.64]     & [3.79]      & [2.75]        & [4.19]         \\
+Nb competiors * & -0.039^{*} & -0.014^{**} & -0.064^{**}   & -0.020^{**}    \\
+Low type        & [2.13]     & [3.08]      & [3.32]        & [4.90]         \\
+\hline
 Controls & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{2}{c}{Region*type} \\
+\hline
 R2    & \multicolumn{1}{c}{0.03} & \multicolumn{1}{c}{0.04} & \multicolumn{1}{c}{0.07} & \multicolumn{1}{c}{0.09} \\
 N     & \multicolumn{1}{c}{8,647} & \multicolumn{1}{c}{8,647} & \multicolumn{1}{c}{8,647} & \multicolumn{1}{c}{8,647} \\
 \hline
