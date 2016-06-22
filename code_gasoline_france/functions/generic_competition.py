@@ -272,9 +272,9 @@ def get_pair_price_dispersion(ar_prices_a, ar_prices_b, light = True):
   ls_ls_lengths = [[], []]
   if not light:
     if percent_rr > zero:
-      # ls_lengths_rr_naive = get_ls_lengths_rr_naive(ar_abs_spread_rr)
+      ls_lengths_rr_naive = get_ls_lengths_rr_naive(ar_abs_spread_rr)
       ls_lengths_rr_strict = get_ls_lengths_rr_strict(ar_abs_spread_rr)
-      ls_ls_lengths = [ls_lengths_rr_strict, []] # ls_lengths_rr_naive
+      ls_ls_lengths = [ls_lengths_rr_strict, ls_lengths_rr_naive] # ls_lengths_rr_naive
   return [ls_scalars, ls_day_inds_rr, ls_arrays, ls_ls_lengths]
 
 def count_nb_rr_conservative(ar_abs_spread_rr):

@@ -156,13 +156,21 @@ for (indiv_id, other_id, distance) in ls_keep_pairs:
   ls_loop_pairs.append((indiv_id, other_id, distance, ls_mc_dates))
 
 def get_ls_dispersion_res(res):
-  return res[0] + get_ls_standardized_frequency(res[3][0])
+  #return res[0] + get_ls_standardized_frequency(res[3][0])
+  se_strict_len = pd.Series(res[3][0])
+  se_naive_len = pd.Series(res[3][1])
+  su_rr_len = [se_strict_len.max(),
+               se_naive_len.max(),
+               se_strict_len.mean(),
+               se_naive_len.mean()]
+  return res[0] + su_rr_len + get_ls_standardized_frequency(res[3][0])
 
 start = time.clock()
 ls_categories = ['residuals_mc', 'residuals_no_mc', 'before_mc', 'after_mc', 'no_mc', 'all']
 dict_pairs_rr = {k : [] for k in ls_categories}
 dict_ls_ar_rrs = {k : [] for k in ls_categories}
 dict_dict_rr_lengths = {k : {} for k in ls_categories}
+ls_pair_rr_len = []
 for (indiv_id, other_id, distance, ls_mc_dates) in ls_loop_pairs:
   base_res = [indiv_id, other_id, distance]
   # Residuals
@@ -210,6 +218,7 @@ for (indiv_id, other_id, distance, ls_mc_dates) in ls_loop_pairs:
     dict_ls_ar_rrs['all'].append(res[2][1])
     dict_dict_rr_lengths['all']['{:s}-{:s}'.format(indiv_id, other_id)] =\
         res[3][0]
+    ls_pair_rr_len.append([base_res, 'chge', res[3]])
   else:
     res = get_pair_price_dispersion(se_prices_1, se_prices_2, light = False)
     dict_pairs_rr['no_mc'].append(base_res + get_ls_dispersion_res(res))
@@ -220,6 +229,7 @@ for (indiv_id, other_id, distance, ls_mc_dates) in ls_loop_pairs:
     dict_ls_ar_rrs['all'].append(res[2][1])
     dict_dict_rr_lengths['all']['{:s}-{:s}'.format(indiv_id, other_id)] =\
         res[3][0]
+    ls_pair_rr_len.append([base_res, 'no_chge', res[3]])
 print('Loop: rank reversals',  time.clock() - start)
 
 # BUILD DF PAIR RANK REVERSALS
@@ -233,12 +243,16 @@ ls_scalar_cols  = ['nb_spread', 'nb_same_price', 'nb_1_cheaper', 'nb_2_cheaper',
                    'nb_rr', 'pct_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr',
                    'avg_abs_spread', 'avg_spread', 'std_spread', 'std_abs_spread']
 
-ls_freq_std_cols = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
+ls_rr_len_su_cols = ['srr_max', 'nrr_max', 'srr_mean', 'nrr_mean']
+ls_rr_len_norm_cols = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 
 ls_columns  = ['cat', 'id_1', 'id_2', 'distance'] +\
-              ls_scalar_cols + ls_freq_std_cols
+              ls_scalar_cols +\
+              ls_rr_len_su_cols +\
+              ls_rr_len_norm_cols
 
-df_pairs_rr = pd.DataFrame(ls_rows_pairs_rr, columns = ls_columns)
+df_pairs_rr = pd.DataFrame(ls_rows_pairs_rr,
+                           columns = ls_columns)
 
 # BUILD DF RANK REVERSALS
 
@@ -252,6 +266,37 @@ for cat, ls_ar_rrs in dict_ls_ar_rrs.items():
 
 # could use tuple index but not very convenient to read csv
 # store dates in column to make csv convenient to read
+
+## CHECK RR MAX LENGTH
+#ls_rows_rr_len = []
+#for base_res, mc_chge, pair_len in ls_pair_rr_len:
+#  se_strict_len = pd.Series(pair_len[0])
+#  se_naive_len = pd.Series(pair_len[1])
+#  ls_rows_rr_len.append(base_res +\
+#                        [mc_chge,
+#                         se_strict_len.max(),
+#                         se_naive_len.max(),
+#                         se_strict_len.mean(),
+#                         se_naive_len.mean()])
+#
+#df_rr_len = pd.DataFrame(ls_rows_rr_len,
+#                         columns = ['id_1', 'id_2', 'dist', 'mc_chge',
+#                                    'srr_max', 'nrr_max',
+#                                    'srr_mean', 'nrr_mean'])
+#
+#print()
+#print('Overview of pairs with margin chge:')
+#print(df_rr_len[df_rr_len['mc_chge'] == 'chge'].describe())
+#
+#print()
+#print('Overview of pairs without margin chge:')
+#print(df_rr_len[df_rr_len['mc_chge'] == 'no_chge'].describe())
+#
+#print()
+#print('Check pairs (no margin chge with high max length rank reversals:')
+#df_rr_len_nc = df_rr_len[df_rr_len['mc_chge'] == 'no_chge'].copy()
+#df_rr_len_nc.sort('nrr_max', ascending = False, inplace = True)
+#print(df_rr_len_nc[0:30].to_string())
 
 # #########
 # OUPUT

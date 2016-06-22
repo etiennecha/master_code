@@ -219,7 +219,10 @@ for df_temp_title, df_temp in dict_pair_comp.items():
 # STATS DES
 # ##########
 
-# todo: max rr length with naive measure (to include first and last)
+col = 'nb_rr'
+lsdt = ['id_1', 'id_2', 'pair_type',
+        'brand_last_1', 'brand_last_2',
+        'pct_rr', 'mean_rr_len'] + [col]
 
 ls_loop_pair_disp = [('All', dict_pair_comp['any']),
                      ('Sup', dict_pair_comp['sup']),
@@ -234,24 +237,22 @@ ls_loop_pair_disp = [('All', dict_pair_comp['any']),
 
 ls_se_temp = []
 for temp_title, df_temp_title in ls_loop_pair_disp:
-  ls_se_temp.append(df_temp_title['nb_rr'].describe())
-df_mean_rr_len = pd.concat(ls_se_temp,
-                           axis = 1,
-                           keys = [x[0] for x in ls_loop_pair_disp])
+  ls_se_temp.append(df_temp_title[col].describe())
+df_col_su = pd.concat(ls_se_temp,
+                      axis = 1,
+                      keys = [x[0] for x in ls_loop_pair_disp])
 print()
-print('Overview mean_rr_len by category:')
-print(df_mean_rr_len.to_string())
+print('Overview by category:')
+print(df_col_su.to_string())
 
 print()
-print('Overview mean_rr_len for all non differentiated pairs:')
+print('Overview for all non differentiated pairs:')
 ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.90]
-print(df_pair_comp_nd['nb_rr'].describe(percentiles = ls_pctiles))
+print(df_pair_comp_nd[col].describe(percentiles = ls_pctiles))
 
 print()
-print('Check pairs with high nb_rr:')
-lsdt = ['id_1', 'id_2', 'pair_type', 'brand_last_1', 'brand_last_2',
-        'mean_rr_len', 'pct_rr', 'nb_rr']
-df_pair_comp.sort('nb_rr', ascending = False, inplace = True)
+print('Check pairs with highest val:')
+df_pair_comp.sort(col, ascending = False, inplace = True)
 print(df_pair_comp[lsdt][0:50].to_string())
 
 # ##########
@@ -266,13 +267,13 @@ df_prices_2 = df_prices_ttc.ix['2013-05':].copy()
 path_graphs_hnr = os.path.join(path_dir_built_dis_graphs,
                                'high_nb_rr')
 
-for title, df_temp in ls_loop_pair_disp[0:1]:
+for title, df_temp in ls_loop_pair_disp[0:3]:
   path_graphs_hnr_temp = os.path.join(path_graphs_hnr,
                                       title)
   if not os.path.exists(path_graphs_hnr_temp):
     os.makedirs(path_graphs_hnr_temp)
   df_temp.sort('nb_rr', ascending = False, inplace = True)
-  for row_i, row in df_temp[0:20].iterrows():
+  for row_i, row in df_temp[0:30].iterrows():
     #fig = plt.figure()
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
     #fig.subplots_adjust(top=0.88)
@@ -299,7 +300,7 @@ for title, df_temp in ls_loop_pair_disp[0:1]:
     ##ax1.xaxis.grid(True)
     #mondays1 = WeekdayLocator(MONDAY)
     #ax1.xaxis.set_major_locator(mondays1)
-    ax1.grid(True, which = 'major')
+    ax1.grid(True)
 
     #ax2 = fig.add_subplot(2,1,2)
     #df_prices_2[id_station].plot(ax=ax2, c = 'g')
@@ -324,10 +325,10 @@ for title, df_temp in ls_loop_pair_disp[0:1]:
     ##ax2.xaxis.grid(True)
     #mondays2 = WeekdayLocator(MONDAY)
     #ax2.xaxis.set_major_locator(mondays2)
-    ax2.grid(True, which = 'major')
+    ax2.grid(True)
     lns = l21 + l22
     labs = [l.get_label() for l in lns]
-    ax2.legend(lns, labs, bbox_to_anchor = (0.0, -0.15), ncol = 2, loc = 2)
+    ax2.legend(lns, labs, bbox_to_anchor = (-0.007, -0.15), ncol = 2, loc = 2)
     
     #fig.suptitle(u'{:s} {:s} - {:s} {:s}'.format(row['id_1'],
     #                                             df_info.ix[row['id_1']]['brand_last'],
@@ -340,7 +341,7 @@ for title, df_temp in ls_loop_pair_disp[0:1]:
     plt.subplots_adjust(bottom=0.15) # top = 0.90
     # plt.show()
     plt.savefig(os.path.join(path_graphs_hnr_temp,
-                             u'{:.2f}_{:s}_{:s}.png'.format(row['pct_rr'],
+                             u'{:.2f}_{:s}_{:s}.png'.format(row[col],
                                                             row['id_1'],
                                                             row['id_2'])),
                 dpi = 200)

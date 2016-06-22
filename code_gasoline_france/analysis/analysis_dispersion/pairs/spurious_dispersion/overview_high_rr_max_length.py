@@ -219,7 +219,10 @@ for df_temp_title, df_temp in dict_pair_comp.items():
 # STATS DES
 # ##########
 
-# todo: max rr length with naive measure (to include first and last)
+col = 'nrr_max'
+lsdt = ['id_1', 'id_2', 'pair_type',
+        'brand_last_1', 'brand_last_2',
+        'pct_rr', 'mean_rr_len'] + [col]
 
 ls_loop_pair_disp = [('All', dict_pair_comp['any']),
                      ('Sup', dict_pair_comp['sup']),
@@ -232,31 +235,25 @@ ls_loop_pair_disp = [('All', dict_pair_comp['any']),
                      ('Nd Dis', dict_pair_comp_nd['dis']),
                      ('Nd Sup Dis', dict_pair_comp_nd['sup_dis'])]
 
-print()
-print('Nb of gas stations with mean_rr_len >= 20:',
-      len(df_pair_comp[df_pair_comp['mean_rr_len'] >= 20]))
-
 ls_se_temp = []
 for temp_title, df_temp_title in ls_loop_pair_disp:
-  ls_se_temp.append(df_temp_title['mean_rr_len'].describe())
-df_mean_rr_len = pd.concat(ls_se_temp,
-                           axis = 1,
-                           keys = [x[0] for x in ls_loop_pair_disp])
+  ls_se_temp.append(df_temp_title[col].describe())
+df_col_su = pd.concat(ls_se_temp,
+                      axis = 1,
+                      keys = [x[0] for x in ls_loop_pair_disp])
 print()
-print('Overview mean_rr_len by category:')
-print(df_mean_rr_len.to_string())
+print('Overview by category:')
+print(df_col_su.to_string())
 
 print()
-print('Overview mean_rr_len for all non differentiated pairs:')
+print('Overview for all non differentiated pairs:')
 ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.90]
-print(df_pair_comp_nd['mean_rr_len'].describe(percentiles = ls_pctiles))
+print(df_pair_comp_nd[col].describe(percentiles = ls_pctiles))
 
 print()
-print('Check pairs with mean_rr_len >= 20:')
-lsdt = ['id_1', 'id_2', 'pair_type', 'brand_last_1', 'brand_last_2',
-        'mean_rr_len', 'pct_rr']
-print(df_pair_comp[df_pair_comp['mean_rr_len'] >= 20][lsdt].to_string())
-
+print('Check pairs with highest val:')
+df_pair_comp.sort(col, ascending = False, inplace = True)
+print(df_pair_comp[lsdt][0:50].to_string())
 
 # todo:
 # exclude ids based on successive price policy changes:
@@ -272,15 +269,15 @@ print(df_pair_comp[df_pair_comp['mean_rr_len'] >= 20][lsdt].to_string())
 # ##########
 
 path_graphs_hmrl = os.path.join(path_dir_built_dis_graphs,
-                                'high_mean_rr_length')
+                                'high_max_rr_length')
 
-for title, df_temp in ls_loop_pair_disp:
+for title, df_temp in ls_loop_pair_disp[0:3]:
   path_graphs_hmrl_temp = os.path.join(path_graphs_hmrl,
                                       title)
   if not os.path.exists(path_graphs_hmrl_temp):
     os.makedirs(path_graphs_hmrl_temp)
-  df_temp.sort('mean_rr_len', ascending = False, inplace = True)
-  for row_i, row in df_temp[0:20].iterrows():
+  df_temp.sort('nrr_max', ascending = False, inplace = True)
+  for row_i, row in df_temp[0:30].iterrows():
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
     l1 = ax.plot(df_prices_ttc.index,
@@ -307,7 +304,7 @@ for title, df_temp in ls_loop_pair_disp:
     plt.tight_layout()
     #plt.show()
     plt.savefig(os.path.join(path_graphs_hmrl_temp,
-                             u'{:.2f}_{:s}_{:s}.png'.format(row['mean_rr_len'],
+                             u'{:.2f}_{:s}_{:s}.png'.format(row[col],
                                                             row['id_1'],
                                                             row['id_2'])),
                 dpi = 200)

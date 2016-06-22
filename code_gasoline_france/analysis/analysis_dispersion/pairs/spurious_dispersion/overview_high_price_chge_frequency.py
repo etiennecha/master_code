@@ -14,6 +14,8 @@ path_dir_built = os.path.join(path_data,
                               u'data_built',
                               u'data_scraped_2011_2014')
 path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built, u'data_json')
+path_dir_built_graphs = os.path.join(path_dir_built, u'data_graphs')
 
 path_dir_built_dis = os.path.join(path_data,
                                   u'data_gasoline',
@@ -40,14 +42,14 @@ rcParams['figure.figsize'] = 16, 6
 #import locale
 #locale.setlocale(locale.LC_ALL, 'fra_fra')
 
-dir_graphs = 'bw'
+#dir_graphs = 'bw'
+str_ylabel = 'Price (euro/liter)'
 
 # #########
 # LOAD DATA
 # #########
 
-# DF STATION INFO
-
+# DF INFO
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
                       encoding = 'utf-8',
@@ -58,45 +60,37 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'ci_ardt_1' :str,
                                'ci_2' : str,
                                'ci_ardt_2' : str,
-                               'dpt' : str},
-                      parse_dates = [u'day_%s' %i for i in range(4)]) # fix
+                               'dpt' : str})
 df_info.set_index('id_station', inplace = True)
 
 # DF STATION STATS
-
 df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                             'df_station_stats.csv'),
                                encoding = 'utf-8',
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
-# DF STATION STATS
-
-df_station_promo = pd.read_csv(os.path.join(path_dir_built_csv,
-                                            'df_station_promo.csv'),
-                               encoding = 'utf-8',
-                               dtype = {'id_station' : str})
-df_station_promo.set_index('id_station', inplace = True)
+# CLOSE STATIONS
+dict_ls_close = dec_json(os.path.join(path_dir_built_json,
+                                      'dict_ls_close.json'))
 
 # DF PRICES
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
 
 df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_prices_ht_final.csv'),
-                           parse_dates = ['date'])
+                        parse_dates = ['date'])
 df_prices_ht.set_index('date', inplace = True)
-
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
-                                        'df_prices_ttc_final.csv'),
-                           parse_dates = ['date'])
-df_prices_ttc.set_index('date', inplace = True)
 
 df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_cleaned_prices.csv'),
                           parse_dates = ['date'])
 df_prices_cl.set_index('date', inplace = True)
 
-# FILTER DATA
-# exclude stations with insufficient (quality) price data
+# basic station filter (geo scope or insufficient obs.)
 df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
                                (df_station_stats['nb_valid'] < 90))]
 ls_keep_ids = list(set(df_filter.index).intersection(\
@@ -106,11 +100,10 @@ ls_drop_ids = list(set(df_prices_ttc.columns).difference(set(ls_keep_ids)))
 df_prices_ttc[ls_drop_ids] = np.nan
 df_prices_ht[ls_drop_ids] = np.nan
 # highway stations may not be in df_prices_cl (no pbm here)
-ls_drop_ids_nhw =\
-  list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
-df_prices_cl[ls_drop_ids_nhw] = np.nan
-# restrict df_info
-df_info = df_info.ix[ls_keep_ids]
+ls_drop_ids_cl = list(set(df_prices_cl.columns).difference(set(ls_keep_ids)))
+df_prices_cl[ls_drop_ids_cl] = np.nan
+#df_info = df_info.ix[ls_keep_ids]
+#df_station_stats = df_station_stats.ix[ls_keep_ids]
 
 # DF PAIRS
 ls_dtype_temp = ['id', 'ci_ardt_1']
@@ -121,6 +114,15 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
+# basic pair filter (insufficient obs.)
+df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
+                      (df_pairs['nb_ctd_both'] < 90))]
+
+# todo? harmonize pct i.e. * 100
+
+# LISTS FOR DISPLAY
+lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
+lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 
 # DF RANK REVERSALS
 df_rr = pd.read_csv(os.path.join(path_dir_built_dis_csv,
@@ -156,10 +158,70 @@ df_macro = df_macro[[u'Brent',
                      u'Retail avg excl. taxes - Others']]
 df_macro['Brent'] = df_macro['Brent'].fillna(method = 'bfill')
 
-# DF QUOTATIONS (FOR DISPLAY)
+# #############
+# PREPARE DATA
+# #############
 
+# RESTRICT CATEGORY: PRICES AND MARGIN CHGE
+df_pairs_all = df_pairs.copy()
+price_cat = 'no_mc' # 'residuals_no_mc'
+print(u'Prices used : {:s}'.format(price_cat))
+df_pairs = df_pairs[df_pairs['cat'] == price_cat].copy()
+
+# robustness check with idf: 1 km max
+ls_dense_dpts = [75, 92, 93, 94]
+df_pairs = df_pairs[~((((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
+                        (df_pairs['dpt_2'].isin(ls_dense_dpts))) &\
+                       (df_pairs['distance'] > 1)))]
+
+## robustness check keep closest competitor
+#df_pairs.sort(['id_1', 'distance'], ascending = True, inplace = True)
+#df_pairs.drop_duplicates('id_1', inplace = True, take_last = False)
+# could also collect closest for each id_2 and filter further
+# - id_1 can have closer competitor as an id_2
+# - duplicates in id_2 (that can be solved also but drops too much)
+#df_pairs.sort(['id_2', 'distance'], ascending = True, inplace = True)
+#df_pairs.drop_duplicates('id_2', inplace = True, take_last = False)
+## - too many drops: end ids always listed as id_2 disappear... etc.
+
+### robustness check: rr>20 == 0
+#df_pairs = df_pairs[(df_pairs['rr>20'] == 0)]
+#df_pairs = df_pairs[(df_pairs['mean_rr_len'] <= 21)]
+
+# COMPETITORS VS. SAME GROUP
+df_pair_same =\
+  df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
+           (df_pairs['group_last_1'] == df_pairs['group_last_2'])].copy()
+df_pair_comp =\
+  df_pairs[(df_pairs['group_1'] != df_pairs['group_2']) &\
+           (df_pairs['group_last_1'] != df_pairs['group_last_2'])].copy()
+
+# DIFFERENTIATED VS. NON DIFFERENTIATED
+diff_bound = 0.01
+df_pair_same_nd = df_pair_same[df_pair_same['abs_mean_spread'] <= diff_bound]
+df_pair_same_d  = df_pair_same[df_pair_same['abs_mean_spread'] > diff_bound]
+df_pair_comp_nd = df_pair_comp[df_pair_comp['abs_mean_spread'] <= diff_bound]
+df_pair_comp_d  = df_pair_comp[df_pair_comp['abs_mean_spread'] > diff_bound]
+
+# DICT OF DFS
+# pairs without spread restriction
+# (keep pairs with group change in any)
+dict_pair_comp = {'any' : df_pair_comp}
+for k in df_pair_comp['pair_type'].unique():
+  dict_pair_comp[k] = df_pair_comp[df_pair_comp['pair_type'] == k].copy()
+# low spread pairs
+dict_pair_comp_nd = {}
+for df_temp_title, df_temp in dict_pair_comp.items():
+  dict_pair_comp_nd[df_temp_title] =\
+      df_temp[df_temp['abs_mean_spread'] <= diff_bound].copy()
+
+# ##########
+# STATS DES
+# ##########
+
+# Add cost based pricing in df_quotations (for display)
+# todo: check TICPE in 2014
 cost_ref = 'UFIP RT Diesel R5 EL' # u'ULSD 10 CIF NWE EL' (stops beg 2014) 
-
 df_quotations['Cost based'] = \
   (df_quotations[cost_ref] + 0.4419) *  1.196 + 0.08
 for (date_beg, date_end, amount) in [['2012-08-31', '2012-11-30', 0.030],
@@ -169,99 +231,7 @@ for (date_beg, date_end, amount) in [['2012-08-31', '2012-11-30', 0.030],
   df_quotations.loc[date_beg:date_end, 'Cost based'] =\
     (df_quotations.loc[date_beg:date_end, cost_ref]  - amount + 0.4419) *  1.196 + 0.08
 
-# #######################
-# TEMPORAL RANK REVERSALS
-# #######################
-
-# RESTRICT CATEGORY (EXCLUDE MC)
-df_pairs_bu = df_pairs.copy()
-df_pairs = df_pairs[df_pairs['cat'] == 'all']
-
-# REFINE CATEGORIES
-# - distinguish discounter among non sup
-# - interested in discounter vs discounter and discounter vs. sup
-
-# based on brand_last
-ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
-for i in (1, 2):
-  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
-               'group_type_last_{:d}'.format(i)] = 'DIS'
-  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
-               'group_type_{:d}'.format(i)] = 'DIS'
-df_info.loc[df_info['brand_last'].isin(ls_discounter),
-             'group_type_last'] = 'DIS'
-df_info.loc[df_info['brand_last'].isin(ls_discounter),
-             'group_type'] = 'DIS'
-
-# COMPETITORS VS. SAME GROUP
-
-df_pair_same =\
-  df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
-           (df_pairs['group_last_1'] == df_pairs['group_last_2'])].copy()
-df_pair_comp =\
-  df_pairs[(df_pairs['group_1'] != df_pairs['group_2']) &\
-           (df_pairs['group_last_1'] != df_pairs['group_last_2'])].copy()
-
-# DIFFERENTIATED VS. NON DIFFERENTIATED
-
-diff_bound = 0.01
-df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
-df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
-df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
-df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
-
-# COMP SUP VS. NON SUP
-
-df_pair_sup = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
-                           (df_pair_comp['group_type_2'] == 'SUP')]
-df_pair_nsup = df_pair_comp[(df_pair_comp['group_type_1'] != 'SUP') &\
-                            (df_pair_comp['group_type_2'] != 'SUP')]
-df_pair_sup_nd = df_pair_sup[(df_pair_sup['mean_spread'].abs() <= diff_bound)]
-df_pair_nsup_nd = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() <= diff_bound)]
-
-# ALTERNATIVE
-
-dict_pair_all = {'any' : df_pair_comp}
-
-dict_pair_all['sup'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
-                                   (df_pair_comp['group_type_2'] == 'SUP')]
-
-dict_pair_all['oil_ind'] =\
-    df_pair_comp[(df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
-                 (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))]
-
-dict_pair_all['dis'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'DIS') &\
-                                   (df_pair_comp['group_type_2'] == 'DIS')]
-
-dict_pair_all['sup_dis'] = df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
-                                       (df_pair_comp['group_type_2'] == 'DIS')) |
-                                      ((df_pair_comp['group_type_1'] == 'DIS') &\
-                                       (df_pair_comp['group_type_2'] == 'SUP'))]
-
-dict_pair_all['oil_sup'] =\
-    df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
-                  (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))) |
-                 ((df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
-                  (df_pair_comp['group_type_2'] == 'SUP'))]
-
-dict_pair_nd = {}
-for df_type_title, df_type_pairs in dict_pair_all.items():
-  dict_pair_nd[df_type_title] =\
-      df_type_pairs[df_type_pairs['abs_mean_spread'] <= diff_bound].copy()
-
-# LISTS FOR DISPLAY
-
-lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
-lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
-
-dir_graphs = 'bw'
-str_ylabel = 'Price (euro/liter)'
-
-
-# ##########
-# STATS DES
-# ##########
-
+# Merge station stats (promo info) with info
 ls_stats_cols = df_station_stats.columns
 
 df_station_stats = pd.merge(df_info,
@@ -294,7 +264,7 @@ df_quotations_1 = df_quotations.ix['2011-10-03':'2012-04-02'].copy()
 df_quotations_2 = df_quotations.ix['2013-12-30':'2014-06-30'].copy()
 
 path_graphs_pcf = os.path.join(path_dir_built_dis_graphs,
-                               'price_change_frequency')
+                               'high_price_change_frequency')
 
 for title, df_temp in dict_df_temp.items():
   path_graphs_pcf_temp = os.path.join(path_graphs_pcf,

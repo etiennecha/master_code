@@ -320,7 +320,6 @@ print(df_sup[(df_sup['pk_1'] >= nb_lim) & (df_sup['pk_2'] >= nb_lim)]\
 # GRAPHS
 # ##########
 
-
 #for df_prices in [df_prices_ttc.ix[:'2011-12'], df_prices_ttc.ix['2014-01':'2014-04']]:
 #  ax1 = df_prices['22190001'].plot()
 #  for day_date, day_dow in zip(df_prices.index, df_prices.index.dayofweek):
@@ -338,7 +337,7 @@ df_prices_1 = df_prices_ttc.ix['2011-10-03':'2012-01-02'].copy()
 df_prices_2 = df_prices_ttc.ix['2013-12-30':'2014-03-31'].copy()
 
 path_graphs_dpd = os.path.join(path_dir_built_dis_graphs,
-                               'dynamic_price_discrimination')
+                               'high_nb_promo_and_surges')
 
 for title, df_temp in dict_df_temp.items():
   path_graphs_dpd_temp = os.path.join(path_graphs_dpd,
