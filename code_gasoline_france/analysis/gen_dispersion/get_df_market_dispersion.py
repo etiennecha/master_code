@@ -125,28 +125,29 @@ df_cost = pd.read_csv(os.path.join(path_dir_built_other_csv,
 df_cost.set_index('date', inplace = True)
 
 # GEN LOW PRICE AND HIGH PRICE MARKETS
-# pbm with chging discounters btw...
-# (check with describe / hist if ok over time...)
-df_info.loc['17240001', 'brand_last'] = 'TOTAL_ACCESS'
-# temp fix ... todo check 95230007
-ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
-df_info.loc[df_info['brand_last'].isin(ls_discounter),
-             'group_type_last'] = 'DIS'
-df_info.loc[df_info['brand_0'].isin(ls_discounter),
-             'group_type'] = 'DIS'
-# should exclude margin chge stations?
 
-df_info['type_last'] = 'HIGH'
-df_info.loc[(df_info['brand_last'].isin(ls_discounter)) |\
-            (df_info['group_type_last'] == 'SUP'),
-            'type_last'] = 'LOW'
-df_info['type'] = 'HIGH'
-df_info.loc[(df_info['brand_0'].isin(ls_discounter)) |\
-            (df_info['group_type'] == 'SUP'),
-            'type'] = 'LOW'
+## pbm with chging discounters btw...
+## (check with describe / hist if ok over time...)
+#df_info.loc['17240001', 'brand_last'] = 'TOTAL_ACCESS'
+## temp fix ... todo check 95230007
+#ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
+#df_info.loc[df_info['brand_last'].isin(ls_discounter),
+#             'group_type_last'] = 'DIS'
+#df_info.loc[df_info['brand_0'].isin(ls_discounter),
+#             'group_type'] = 'DIS'
+## should exclude margin chge stations?
 
-set_low_ids = set(df_info[(df_info['type'] == 'LOW') & (df_info['type_last'] == 'LOW')].index)
-set_high_ids = set(df_info[(df_info['type'] == 'HIGH') & (df_info['type_last'] == 'HIGH')].index)
+df_info['price_cat_last'] = 'HIGH'
+df_info.loc[(df_info['group_type_last'].isin(['SUP', 'DIS'])),
+            'price_cat_last'] = 'LOW'
+df_info['price_cat'] = 'HIGH'
+df_info.loc[(df_info['group_type'].isin(['SUP', 'DIS'])),
+            'price_cat'] = 'LOW'
+
+set_low_ids = set(df_info[(df_info['price_cat'] == 'LOW') &\
+                          (df_info['price_cat_last'] == 'LOW')].index)
+set_high_ids = set(df_info[(df_info['price_cat'] == 'HIGH') &\
+                           (df_info['price_cat_last'] == 'HIGH')].index)
 dict_ls_comp_low, dict_ls_comp_high = {}, {}
 for k, v in dict_ls_comp.items():
   if k in set_low_ids:

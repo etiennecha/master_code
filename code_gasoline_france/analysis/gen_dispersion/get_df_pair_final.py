@@ -232,6 +232,43 @@ df_pairs['pct_to_same_maxl'] = (df_pairs[['nb_1_lead', 'nb_2_lead']].max(1)) /\
 df_pairs['pct_to_same_min'] = (df_pairs[['nb_1_lead', 'nb_2_lead']].min(1)) /\
                                    df_pairs[['nb_1_lead', 'nb_2_lead', 'nb_chge_to_same']].sum(1)
 
+# ADD PAIR TYPE
+df_pairs['pair_type'] = None
+df_pairs.loc[(df_pairs['group_type_1'] == 'SUP') &\
+             (df_pairs['group_type_2'] == 'SUP'),
+            'pair_type'] = 'sup'
+
+df_pairs.loc[(df_pairs['group_type_1'].isin(['OIL', 'IND'])) &\
+             (df_pairs['group_type_2'].isin(['OIL', 'IND'])),
+             'pair_type'] = 'oil&ind'
+
+df_pairs.loc[(df_pairs['group_type_1'] == 'DIS') &\
+             (df_pairs['group_type_2'] == 'DIS'),
+             'pair_type'] = 'dis'
+
+df_pairs.loc[((df_pairs['group_type_1'] == 'SUP') &\
+              (df_pairs['group_type_2'] == 'DIS')) |
+             ((df_pairs['group_type_1'] == 'DIS') &\
+              (df_pairs['group_type_2'] == 'SUP')),
+             'pair_type'] = 'sup_dis'
+
+df_pairs.loc[((df_pairs['group_type_1'] == 'SUP') &\
+              (df_pairs['group_type_2'].isin(['OIL', 'IND']))) |
+             ((df_pairs['group_type_1'].isin(['OIL', 'IND'])) &\
+              (df_pairs['group_type_2'] == 'SUP')),
+             'pair_type'] = 'oil&ind_sup'
+
+df_pairs.loc[((df_pairs['group_type_1'] == 'DIS') &\
+              (df_pairs['group_type_2'].isin(['OIL', 'IND']))) |
+             ((df_pairs['group_type_1'].isin(['OIL', 'IND'])) &\
+              (df_pairs['group_type_2'] == 'DIS')),
+             'pair_type'] = 'oil&ind_dis'
+
+df_pairs.loc[(~df_pairs['pair_type'].isnull()) &\
+             ((df_pairs['group_type_1'] != df_pairs['group_type_last_1']) |\
+              (df_pairs['group_type_2'] != df_pairs['group_type_last_2'])),
+             'pair_type'] = 'amb'
+
 # ######
 # OUPUT
 # ######

@@ -14,6 +14,8 @@ path_dir_built = os.path.join(path_data,
                               u'data_built',
                               u'data_scraped_2011_2014')
 path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
+path_dir_built_json = os.path.join(path_dir_built, u'data_json')
+path_dir_built_graphs = os.path.join(path_dir_built, u'data_graphs')
 
 path_dir_built_dis = os.path.join(path_data,
                                   u'data_gasoline',
@@ -40,14 +42,14 @@ rcParams['figure.figsize'] = 16, 6
 #import locale
 #locale.setlocale(locale.LC_ALL, 'fra_fra')
 
-dir_graphs = 'bw'
+#dir_graphs = 'bw'
+str_ylabel = 'Price (euro/liter)'
 
-# #########
+# ################
 # LOAD DATA
-# #########
+# ################
 
-# DF STATION INFO
-
+# DF INFO
 df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_station_info_final.csv'),
                       encoding = 'utf-8',
@@ -58,45 +60,37 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'ci_ardt_1' :str,
                                'ci_2' : str,
                                'ci_ardt_2' : str,
-                               'dpt' : str},
-                      parse_dates = [u'day_%s' %i for i in range(4)]) # fix
+                               'dpt' : str})
 df_info.set_index('id_station', inplace = True)
 
 # DF STATION STATS
-
 df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                             'df_station_stats.csv'),
                                encoding = 'utf-8',
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
-# DF STATION STATS
-
-df_station_promo = pd.read_csv(os.path.join(path_dir_built_csv,
-                                            'df_station_promo.csv'),
-                               encoding = 'utf-8',
-                               dtype = {'id_station' : str})
-df_station_promo.set_index('id_station', inplace = True)
+# CLOSE STATIONS
+dict_ls_close = dec_json(os.path.join(path_dir_built_json,
+                                      'dict_ls_close.json'))
 
 # DF PRICES
+df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
+                                         'df_prices_ttc_final.csv'),
+                        parse_dates = ['date'])
+df_prices_ttc.set_index('date', inplace = True)
 
 df_prices_ht = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_prices_ht_final.csv'),
-                           parse_dates = ['date'])
+                        parse_dates = ['date'])
 df_prices_ht.set_index('date', inplace = True)
-
-df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
-                                        'df_prices_ttc_final.csv'),
-                           parse_dates = ['date'])
-df_prices_ttc.set_index('date', inplace = True)
 
 df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
                                         'df_cleaned_prices.csv'),
                           parse_dates = ['date'])
 df_prices_cl.set_index('date', inplace = True)
 
-# FILTER DATA
-# exclude stations with insufficient (quality) price data
+# basic station filter (geo scope or insufficient obs.)
 df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
                                (df_station_stats['nb_valid'] < 90))]
 ls_keep_ids = list(set(df_filter.index).intersection(\
@@ -106,11 +100,10 @@ ls_drop_ids = list(set(df_prices_ttc.columns).difference(set(ls_keep_ids)))
 df_prices_ttc[ls_drop_ids] = np.nan
 df_prices_ht[ls_drop_ids] = np.nan
 # highway stations may not be in df_prices_cl (no pbm here)
-ls_drop_ids_nhw =\
-  list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
-df_prices_cl[ls_drop_ids_nhw] = np.nan
-# restrict df_info
-df_info = df_info.ix[ls_keep_ids]
+ls_drop_ids_cl = list(set(df_prices_cl.columns).difference(set(ls_keep_ids)))
+df_prices_cl[ls_drop_ids_cl] = np.nan
+#df_info = df_info.ix[ls_keep_ids]
+#df_station_stats = df_station_stats.ix[ls_keep_ids]
 
 # DF PAIRS
 ls_dtype_temp = ['id', 'ci_ardt_1']
@@ -121,6 +114,15 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
+# basic pair filter (insufficient obs.)
+df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
+                      (df_pairs['nb_ctd_both'] < 90))]
+
+# todo? harmonize pct i.e. * 100
+
+# LISTS FOR DISPLAY
+lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
+lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 
 # DF RANK REVERSALS
 df_rr = pd.read_csv(os.path.join(path_dir_built_dis_csv,
@@ -156,32 +158,37 @@ df_macro = df_macro[[u'Brent',
                      u'Retail avg excl. taxes - Others']]
 df_macro['Brent'] = df_macro['Brent'].fillna(method = 'bfill')
 
-# #######################
-# TEMPORAL RANK REVERSALS
-# #######################
+# #############
+# PREPARE DATA
+# #############
 
-# RESTRICT CATEGORY (EXCLUDE MC)
-df_pairs_bu = df_pairs.copy()
-df_pairs = df_pairs[df_pairs['cat'] == 'all']
+# RESTRICT CATEGORY: PRICES AND MARGIN CHGE
+df_pairs_all = df_pairs.copy()
+price_cat = 'no_mc' # 'residuals_no_mc'
+print(u'Prices used : {:s}'.format(price_cat))
+df_pairs = df_pairs[df_pairs['cat'] == price_cat].copy()
 
-# REFINE CATEGORIES
-# - distinguish discounter among non sup
-# - interested in discounter vs discounter and discounter vs. sup
+# robustness check with idf: 1 km max
+ls_dense_dpts = [75, 92, 93, 94]
+df_pairs = df_pairs[~((((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
+                        (df_pairs['dpt_2'].isin(ls_dense_dpts))) &\
+                       (df_pairs['distance'] > 1)))]
 
-# based on brand_last
-ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
-for i in (1, 2):
-  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
-               'group_type_last_{:d}'.format(i)] = 'DIS'
-  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
-               'group_type_{:d}'.format(i)] = 'DIS'
-df_info.loc[df_info['brand_last'].isin(ls_discounter),
-             'group_type_last'] = 'DIS'
-df_info.loc[df_info['brand_last'].isin(ls_discounter),
-             'group_type'] = 'DIS'
+## robustness check keep closest competitor
+#df_pairs.sort(['id_1', 'distance'], ascending = True, inplace = True)
+#df_pairs.drop_duplicates('id_1', inplace = True, take_last = False)
+# could also collect closest for each id_2 and filter further
+# - id_1 can have closer competitor as an id_2
+# - duplicates in id_2 (that can be solved also but drops too much)
+#df_pairs.sort(['id_2', 'distance'], ascending = True, inplace = True)
+#df_pairs.drop_duplicates('id_2', inplace = True, take_last = False)
+## - too many drops: end ids always listed as id_2 disappear... etc.
+
+### robustness check: rr>20 == 0
+#df_pairs = df_pairs[(df_pairs['rr>20'] == 0)]
+#df_pairs = df_pairs[(df_pairs['mean_rr_len'] <= 21)]
 
 # COMPETITORS VS. SAME GROUP
-
 df_pair_same =\
   df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
            (df_pairs['group_last_1'] == df_pairs['group_last_2'])].copy()
@@ -190,106 +197,82 @@ df_pair_comp =\
            (df_pairs['group_last_1'] != df_pairs['group_last_2'])].copy()
 
 # DIFFERENTIATED VS. NON DIFFERENTIATED
-
 diff_bound = 0.01
-df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
-df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
-df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
-df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
+df_pair_same_nd = df_pair_same[df_pair_same['abs_mean_spread'] <= diff_bound]
+df_pair_same_d  = df_pair_same[df_pair_same['abs_mean_spread'] > diff_bound]
+df_pair_comp_nd = df_pair_comp[df_pair_comp['abs_mean_spread'] <= diff_bound]
+df_pair_comp_d  = df_pair_comp[df_pair_comp['abs_mean_spread'] > diff_bound]
 
-# COMP SUP VS. NON SUP
-
-df_pair_sup = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
-                           (df_pair_comp['group_type_2'] == 'SUP')]
-df_pair_nsup = df_pair_comp[(df_pair_comp['group_type_1'] != 'SUP') &\
-                            (df_pair_comp['group_type_2'] != 'SUP')]
-df_pair_sup_nd = df_pair_sup[(df_pair_sup['mean_spread'].abs() <= diff_bound)]
-df_pair_nsup_nd = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() <= diff_bound)]
-
-# ALTERNATIVE
-
-dict_pair_all = {'any' : df_pair_comp}
-
-dict_pair_all['sup'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
-                                   (df_pair_comp['group_type_2'] == 'SUP')]
-
-dict_pair_all['oil_ind'] =\
-    df_pair_comp[(df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
-                 (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))]
-
-dict_pair_all['dis'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'DIS') &\
-                                   (df_pair_comp['group_type_2'] == 'DIS')]
-
-dict_pair_all['sup_dis'] = df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
-                                       (df_pair_comp['group_type_2'] == 'DIS')) |
-                                      ((df_pair_comp['group_type_1'] == 'DIS') &\
-                                       (df_pair_comp['group_type_2'] == 'SUP'))]
-
-dict_pair_all['oil_sup'] =\
-    df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
-                  (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))) |
-                 ((df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
-                  (df_pair_comp['group_type_2'] == 'SUP'))]
-
-dict_pair_nd = {}
-for df_type_title, df_type_pairs in dict_pair_all.items():
-  dict_pair_nd[df_type_title] =\
-      df_type_pairs[df_type_pairs['abs_mean_spread'] <= diff_bound].copy()
-
-# LISTS FOR DISPLAY
-
-lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
-lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
-
-dir_graphs = 'bw'
-str_ylabel = 'Price (euro/liter)'
-
+# DICT OF DFS
+# pairs without spread restriction
+# (keep pairs with group change in any)
+dict_pair_comp = {'any' : df_pair_comp}
+for k in df_pair_comp['pair_type'].unique():
+  dict_pair_comp[k] = df_pair_comp[df_pair_comp['pair_type'] == k].copy()
+# low spread pairs
+dict_pair_comp_nd = {}
+for df_temp_title, df_temp in dict_pair_comp.items():
+  dict_pair_comp_nd[df_temp_title] =\
+      df_temp[df_temp['abs_mean_spread'] <= diff_bound].copy()
 
 # ##########
 # STATS DES
 # ##########
 
-ls_loop_df_ppd_regs = [('All', dict_pair_all['any']),
-                       ('Sup', dict_pair_all['sup']),
-                       ('Nd All', dict_pair_nd['any']),
-                       ('Nd Oil Ind', dict_pair_nd['oil_ind']),
-                       ('Nd Sup', dict_pair_nd['sup']),
-                       ('Sup Dis', dict_pair_all['sup_dis']),
-                       ('Nd Sup Dis', dict_pair_nd['sup_dis']),
-                       ('Oil Ind', dict_pair_all['oil_ind'])]
+# todo: max rr length with naive measure (to include first and last)
+
+ls_loop_pair_disp = [('All', dict_pair_comp['any']),
+                     ('Sup', dict_pair_comp['sup']),
+                     ('Oil&Ind', dict_pair_comp['oil&ind']),
+                     ('Dis', dict_pair_comp['dis']),
+                     ('Sup Dis', dict_pair_comp['sup_dis']),
+                     ('Nd All', dict_pair_comp_nd['any']),
+                     ('Nd Sup', dict_pair_comp_nd['sup']),
+                     ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
+                     ('Nd Dis', dict_pair_comp_nd['dis']),
+                     ('Nd Sup Dis', dict_pair_comp_nd['sup_dis'])]
+
+ls_se_temp = []
+for temp_title, df_temp_title in ls_loop_pair_disp:
+  ls_se_temp.append(df_temp_title['nb_rr'].describe())
+df_mean_rr_len = pd.concat(ls_se_temp,
+                           axis = 1,
+                           keys = [x[0] for x in ls_loop_pair_disp])
+print()
+print('Overview mean_rr_len by category:')
+print(df_mean_rr_len.to_string())
+
+print()
+print('Overview mean_rr_len for all non differentiated pairs:')
+ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.90]
+print(df_pair_comp_nd['nb_rr'].describe(percentiles = ls_pctiles))
+
+print()
+print('Check pairs with high nb_rr:')
+lsdt = ['id_1', 'id_2', 'pair_type', 'brand_last_1', 'brand_last_2',
+        'mean_rr_len', 'pct_rr', 'nb_rr']
+df_pair_comp.sort('nb_rr', ascending = False, inplace = True)
+print(df_pair_comp[lsdt][0:50].to_string())
 
 # ##########
 # GRAPHS
 # ##########
 
-#for df_prices in [df_prices_ttc.ix[:'2011-12'], df_prices_ttc.ix['2014-01':'2014-04']]:
-#  ax1 = df_prices['22190001'].plot()
-#  for day_date, day_dow in zip(df_prices.index, df_prices.index.dayofweek):
-#    # increase on 5, decrease on 1: higher price on week end
-#    if (day_dow == 5): # 0: MO, 1: TU, 5: SA, 6: SU
-#      ld = ax1.axvline(x=day_date, lw=0.6, ls='-', c='g')
-#  plt.show()
+#formatter = DateFormatter('%b-%d')
 
-#print(len(df_dis[(df_dis['pm_2'] >= nb_lim) & (df_dis['pm_3'] >= nb_lim) &\
-#                 (df_dis['pk_2'] >= nb_lim) & (df_dis['pk_3'] >= nb_lim)]))
+df_prices_1 = df_prices_ttc.ix[:'2013-04'].copy()
+df_prices_2 = df_prices_ttc.ix['2013-05':].copy()
 
-formatter = DateFormatter('%b-%d')
+path_graphs_hnr = os.path.join(path_dir_built_dis_graphs,
+                               'high_nb_rr')
 
-df_prices_1 = df_prices_ttc.ix['2011-10-03':'2012-04-02'].copy()
-df_prices_2 = df_prices_ttc.ix['2013-12-30':'2014-06-30'].copy()
-#df_prices_1 = df_prices_ttc.ix['2011-10-03':'2012-01-02'].copy()
-#df_prices_2 = df_prices_ttc.ix['2013-12-30':'2014-03-31'].copy()
-
-path_graphs_dpd = os.path.join(path_dir_built_dis_graphs,
-                               'dynamic_price_dispersion')
-
-for title, df_temp in ls_loop_df_ppd_regs[3:5]:
-  path_graphs_dpd_temp = os.path.join(path_graphs_dpd,
+for title, df_temp in ls_loop_pair_disp[0:1]:
+  path_graphs_hnr_temp = os.path.join(path_graphs_hnr,
                                       title)
-  if not os.path.exists(path_graphs_dpd_temp):
-    os.makedirs(path_graphs_dpd_temp)
+  if not os.path.exists(path_graphs_hnr_temp):
+    os.makedirs(path_graphs_hnr_temp)
   df_temp.sort('nb_rr', ascending = False, inplace = True)
-  for row_i, row in df_temp[0:50].iterrows():
+  for row_i, row in df_temp[0:20].iterrows():
     #fig = plt.figure()
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
     #fig.subplots_adjust(top=0.88)
@@ -311,22 +294,23 @@ for title, df_temp in ls_loop_df_ppd_regs[3:5]:
     ax1.xaxis.set_ticks_position('bottom')
     ax1.get_yaxis().set_tick_params(which='both', direction='out')
     ax1.get_xaxis().set_tick_params(which='both', direction='out')
-    #plt.ylabel(str_ylabel)
-    ax1.set_xlabel('2011')
-    ax1.xaxis.set_major_formatter(formatter)
-    #ax1.xaxis.grid(True)
-    mondays1 = WeekdayLocator(MONDAY)
-    ax1.xaxis.set_major_locator(mondays1)
+    #ax1.set_xlabel('2011')
+    #ax1.xaxis.set_major_formatter(formatter)
+    ##ax1.xaxis.grid(True)
+    #mondays1 = WeekdayLocator(MONDAY)
+    #ax1.xaxis.set_major_locator(mondays1)
     ax1.grid(True, which = 'major')
 
     #ax2 = fig.add_subplot(2,1,2)
     #df_prices_2[id_station].plot(ax=ax2, c = 'g')
-    ax2.plot(df_prices_2.index,
-             df_prices_2[row['id_1']].values,
-             c = 'g')
-    ax2.plot(df_prices_2.index,
-             df_prices_2[row['id_2']].values,
-             c = 'b')
+    l21 = ax2.plot(df_prices_2.index,
+                   df_prices_2[row['id_1']].values,
+                   label = '{:s} {:s}'.format(row['id_1'], row['brand_last_1']),
+                   c = 'g')
+    l22 = ax2.plot(df_prices_2.index,
+                   df_prices_2[row['id_2']].values,
+                   label = '{:s} {:s}'.format(row['id_2'], row['brand_last_2']),
+                   c = 'b')
     #for day_date, day_dow in zip(df_prices_2.index, df_prices_2.index.dayofweek):
     #  ld = ax2.axvline(x=day_date, lw=1, ls='--', c='g')
     #handles, labels = ax2.get_legend_handles_labels()
@@ -335,82 +319,84 @@ for title, df_temp in ls_loop_df_ppd_regs[3:5]:
     ax2.xaxis.set_ticks_position('bottom')
     ax2.get_yaxis().set_tick_params(which='both', direction='out')
     ax2.get_xaxis().set_tick_params(which='both', direction='out')
-    #plt.ylabel(str_ylabel)
-    ax2.set_xlabel('2014')
-    ax2.xaxis.set_major_formatter(formatter)
-    #ax2.xaxis.grid(True)
-    mondays2 = WeekdayLocator(MONDAY)
-    ax2.xaxis.set_major_locator(mondays2)
+    #ax2.set_xlabel('2014')
+    #ax2.xaxis.set_major_formatter(formatter)
+    ##ax2.xaxis.grid(True)
+    #mondays2 = WeekdayLocator(MONDAY)
+    #ax2.xaxis.set_major_locator(mondays2)
     ax2.grid(True, which = 'major')
+    lns = l21 + l22
+    labs = [l.get_label() for l in lns]
+    ax2.legend(lns, labs, bbox_to_anchor = (0.0, -0.15), ncol = 2, loc = 2)
     
-    fig.suptitle(u'{:s} {:s} - {:s} {:s}'.format(row['id_1'],
-                                                 df_info.ix[row['id_1']]['brand_last'],
-                                                 row['id_2'],
-                                                 df_info.ix[row['id_2']]['brand_last']),
-                 x = 0.01,
-                 y = 0.04, # y = 0.99
-                 horizontalalignment = 'left')
+    #fig.suptitle(u'{:s} {:s} - {:s} {:s}'.format(row['id_1'],
+    #                                             df_info.ix[row['id_1']]['brand_last'],
+    #                                             row['id_2'],
+    #                                             df_info.ix[row['id_2']]['brand_last']),
+    #             x = 0.01,
+    #             y = 0.04, # y = 0.99
+    #             horizontalalignment = 'left')
     fig.tight_layout()
-    plt.subplots_adjust(bottom=0.10) # top = 0.90
+    plt.subplots_adjust(bottom=0.15) # top = 0.90
     # plt.show()
-    plt.savefig(os.path.join(path_graphs_dpd_temp,
+    plt.savefig(os.path.join(path_graphs_hnr_temp,
                              u'{:.2f}_{:s}_{:s}.png'.format(row['pct_rr'],
                                                             row['id_1'],
                                                             row['id_2'])),
                 dpi = 200)
     plt.close()
 
-## Inspect
-
-df_sup = dict_pair_nd['sup']
-df_oi = dict_pair_nd['oil_ind']
-
-lsd_rr = ['id_1', 'id_2', 'pct_rr', 'nb_rr', 'mean_rr_len',
-          'mean_spread', 'mean_abs_spread', 'pct_same']
-
-print()
-print(df_sup[lsd_rr][0:100].to_string())
-
-print()
-print(df_oi[lsd_rr][0:100].to_string())
-
-
-# ##########
-# BACKUP
-# ##########
-
-#df_sub_hrr = df_pair_comp[df_pair_comp['nb_rr'] >=\
-#                            df_pair_comp['nb_rr'].quantile(0.95)].copy()
-#df_sub_hrr.sort('nb_rr', ascending = False, inplace = True)
-#print(df_sub_hrr[0:20][['pct_rr', 'nb_rr', 'id_1', 'id_2', 'brand_0_1', 'brand_0_2']].to_string())
+### Inspect
 #
-#id_1, id_2 = '31520003', '31650002'
+#df_sup = dict_pair_nd['sup']
+#df_oi = dict_pair_nd['oil_ind']
 #
-#fig = plt.figure()
-#ax1 = fig.add_subplot(111)
-## restrict period
-#df_prices = df_prices_ttc.ix['2014-01':'2014-03'].copy()
-## plot prices
-#df_prices[[id_1, id_2]].plot(ax=ax1)
-#df_prices.mean(1).plot(c = 'k', ls = '-', label = 'National average')
-## plot days
-#for day_date, day_dow in zip(df_prices.index, df_prices.index.dayofweek):
-#  # increase on 5, decrease on 1: higher price on week end
-#  if (day_dow == 5): # 0: MO, 1: TU, 5: SA, 6: SU
-#    ld = ax1.axvline(x=day_date, lw=0.6, ls='-', c='g')
-#  elif (day_dow == 1):
-#    ld = ax1.axvline(x=day_date, lw=0.6, ls='--', c='g')
-#handles, labels = ax1.get_legend_handles_labels()
-#labels = [df_info.ix[id_1]['brand_0'],
-#          df_info.ix[id_2]['brand_0'],
-#          'National average']
-#ax1.legend(handles, labels, loc = 1)
-#ax1.xaxis.grid(True)
-#ax1.yaxis.set_ticks_position('left')
-#ax1.xaxis.set_ticks_position('bottom')
-#ax1.get_yaxis().set_tick_params(which='both', direction='out')
-#ax1.get_xaxis().set_tick_params(which='both', direction='out')
-#plt.ylabel(str_ylabel)
-#plt.show()
-
-# more generally
+#lsd_rr = ['id_1', 'id_2', 'pct_rr', 'nb_rr', 'mean_rr_len',
+#          'mean_spread', 'mean_abs_spread', 'pct_same']
+#
+#print()
+#print(df_sup[lsd_rr][0:100].to_string())
+#
+#print()
+#print(df_oi[lsd_rr][0:100].to_string())
+#
+#
+## ##########
+## BACKUP
+## ##########
+#
+##df_sub_hrr = df_pair_comp[df_pair_comp['nb_rr'] >=\
+##                            df_pair_comp['nb_rr'].quantile(0.95)].copy()
+##df_sub_hrr.sort('nb_rr', ascending = False, inplace = True)
+##print(df_sub_hrr[0:20][['pct_rr', 'nb_rr', 'id_1', 'id_2', 'brand_0_1', 'brand_0_2']].to_string())
+##
+##id_1, id_2 = '31520003', '31650002'
+##
+##fig = plt.figure()
+##ax1 = fig.add_subplot(111)
+### restrict period
+##df_prices = df_prices_ttc.ix['2014-01':'2014-03'].copy()
+### plot prices
+##df_prices[[id_1, id_2]].plot(ax=ax1)
+##df_prices.mean(1).plot(c = 'k', ls = '-', label = 'National average')
+### plot days
+##for day_date, day_dow in zip(df_prices.index, df_prices.index.dayofweek):
+##  # increase on 5, decrease on 1: higher price on week end
+##  if (day_dow == 5): # 0: MO, 1: TU, 5: SA, 6: SU
+##    ld = ax1.axvline(x=day_date, lw=0.6, ls='-', c='g')
+##  elif (day_dow == 1):
+##    ld = ax1.axvline(x=day_date, lw=0.6, ls='--', c='g')
+##handles, labels = ax1.get_legend_handles_labels()
+##labels = [df_info.ix[id_1]['brand_0'],
+##          df_info.ix[id_2]['brand_0'],
+##          'National average']
+##ax1.legend(handles, labels, loc = 1)
+##ax1.xaxis.grid(True)
+##ax1.yaxis.set_ticks_position('left')
+##ax1.xaxis.set_ticks_position('bottom')
+##ax1.get_yaxis().set_tick_params(which='both', direction='out')
+##ax1.get_xaxis().set_tick_params(which='both', direction='out')
+##plt.ylabel(str_ylabel)
+##plt.show()
+#
+## more generally

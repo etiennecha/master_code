@@ -177,6 +177,15 @@ df_brands['brand_last'] =\
 df_brands['group_last'] = df_brands['brand_last'].apply(lambda x: dict_groups[x])
 df_brands['group_type_last'] = df_brands['brand_last'].apply(lambda x: dict_std_brands[x][2])
 
+# exception for ESSO_EXPRESS (backward)
+ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
+df_brands.loc[df_brands['brand_last'].isin(ls_discounter),
+             'group_type_last'] = 'DIS'
+df_brands.loc[df_brands['brand_0'].isin(ls_discounter),
+             'group_type'] = 'DIS'
+df_brands.loc[df_brands['brand_last'] == 'ESSO_EXPRESS',
+             'group_type'] = 'DIS'
+
 # #######################
 # BUILD DF BRAND ACTIVITY
 # #######################

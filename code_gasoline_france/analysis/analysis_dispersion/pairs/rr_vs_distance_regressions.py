@@ -73,29 +73,22 @@ df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
                           parse_dates = ['date'])
 df_prices_cl.set_index('date', inplace = True)
 
-# FILTER DATA
-# exclude stations with insufficient (quality) price data
+# basic station filter (geo scope or insufficient obs.)
 df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
                                (df_station_stats['nb_valid'] < 90))]
 ls_keep_ids = list(set(df_filter.index).intersection(\
                      set(df_info[(df_info['highway'] != 1) &\
-                                 (df_info['reg'] != 'Corse')].index)))
-#df_info = df_info.ix[ls_keep_ids]
-#df_station_stats = df_station_stats.ix[ls_keep_ids]
-#df_prices_ttc = df_prices_ttc[ls_keep_ids]
-#df_prices_ht = df_prices_ht[ls_keep_ids]
-#df_prices_cl = df_prices_cl[ls_keep_ids]
-
+                                 (df_info['reg'] != 'corse')].index)))
 ls_drop_ids = list(set(df_prices_ttc.columns).difference(set(ls_keep_ids)))
 df_prices_ttc[ls_drop_ids] = np.nan
 df_prices_ht[ls_drop_ids] = np.nan
 # highway stations may not be in df_prices_cl (no pbm here)
-ls_drop_ids_nhw =\
-  list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
-df_prices_cl[ls_drop_ids_nhw] = np.nan
+ls_drop_ids_cl = list(set(df_prices_cl.columns).difference(set(ls_keep_ids)))
+df_prices_cl[ls_drop_ids_cl] = np.nan
+#df_info = df_info.ix[ls_keep_ids]
+#df_station_stats = df_station_stats.ix[ls_keep_ids]
 
 # DF PAIRS
-
 ls_dtype_temp = ['id', 'ci_ardt_1']
 dict_dtype = dict([('%s_1' %x, str) for x in ls_dtype_temp] +\
                   [('%s_2' %x, str) for x in ls_dtype_temp])
@@ -104,37 +97,47 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
+# basic pair filter (insufficient obs.)
 df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
                       (df_pairs['nb_ctd_both'] < 90))]
 
-# Create same corner variables
-df_pairs['sc_500'] = 0
-df_pairs.loc[df_pairs['distance'] <= 0.5, 'sc_500'] = 1
-df_pairs['sc_750'] = 0
-df_pairs.loc[df_pairs['distance'] <= 0.75, 'sc_750'] = 1
-df_pairs['sc_1000'] = 0
-df_pairs.loc[df_pairs['distance'] <= 1, 'sc_1000'] = 1
+# todo? harmonize pct i.e. * 100
 
-# RESTRICT CATEGORY
+# LISTS FOR DISPLAY
+lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
+lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 
-cat = 'no_mc' # 'residuals'
+# #############
+# PREPARE DATA
+# #############
+
+# RESTRICT CATEGORY: PRICES AND MARGIN CHGE
 df_pairs_all = df_pairs.copy()
-df_pairs = df_pairs[df_pairs['cat'] == cat].copy()
+price_cat = 'no_mc' # 'residuals_no_mc'
+print(u'Prices used : {:s}'.format(price_cat))
+df_pairs = df_pairs[df_pairs['cat'] == price_cat].copy()
 
-# REFINE CATEGORIES
-# - distinguish discounter among non sup
-# - interested in discounter vs discounter and discounter vs. sup
+# robustness check with idf: 1 km max
+ls_dense_dpts = [75, 92, 93, 94]
+df_pairs = df_pairs[~((((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
+                        (df_pairs['dpt_2'].isin(ls_dense_dpts))) &\
+                       (df_pairs['distance'] > 1)))]
 
-# based on brand_last
-ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
-for i in (1, 2):
-  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
-               'group_type_last_{:d}'.format(i)] = 'DIS'
-  df_pairs.loc[df_pairs['brand_last_{:d}'.format(i)].isin(ls_discounter),
-               'group_type_{:d}'.format(i)] = 'DIS'
+## robustness check keep closest competitor
+#df_pairs.sort(['id_1', 'distance'], ascending = True, inplace = True)
+#df_pairs.drop_duplicates('id_1', inplace = True, take_last = False)
+# could also collect closest for each id_2 and filter further
+# - id_1 can have closer competitor as an id_2
+# - duplicates in id_2 (that can be solved also but drops too much)
+#df_pairs.sort(['id_2', 'distance'], ascending = True, inplace = True)
+#df_pairs.drop_duplicates('id_2', inplace = True, take_last = False)
+## - too many drops: end ids always listed as id_2 disappear... etc.
+
+### robustness check: rr>20 == 0
+#df_pairs = df_pairs[(df_pairs['rr>20'] == 0)]
+#df_pairs = df_pairs[(df_pairs['mean_rr_len'] <= 21)]
 
 # COMPETITORS VS. SAME GROUP
-
 df_pair_same =\
   df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
            (df_pairs['group_last_1'] == df_pairs['group_last_2'])].copy()
@@ -143,56 +146,31 @@ df_pair_comp =\
            (df_pairs['group_last_1'] != df_pairs['group_last_2'])].copy()
 
 # DIFFERENTIATED VS. NON DIFFERENTIATED
-
 diff_bound = 0.01
-df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
-df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
-df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
-df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
+df_pair_same_nd = df_pair_same[df_pair_same['abs_mean_spread'] <= diff_bound]
+df_pair_same_d  = df_pair_same[df_pair_same['abs_mean_spread'] > diff_bound]
+df_pair_comp_nd = df_pair_comp[df_pair_comp['abs_mean_spread'] <= diff_bound]
+df_pair_comp_d  = df_pair_comp[df_pair_comp['abs_mean_spread'] > diff_bound]
 
-# COMP SUP VS. NON SUP
+# DICT OF DFS
+# pairs without spread restriction
+# (keep pairs with group change in any)
+dict_pair_comp = {'any' : df_pair_comp}
+for k in df_pair_comp['pair_type'].unique():
+  dict_pair_comp[k] = df_pair_comp[df_pair_comp['pair_type'] == k]
+# low spread pairs
+dict_pair_comp_nd = {}
+for df_temp_title, df_temp in dict_pair_comp.items():
+  dict_pair_comp_nd[df_temp_title] =\
+      df_temp[df_temp['abs_mean_spread'] <= diff_bound]
 
-df_pair_sup = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
-                           (df_pair_comp['group_type_2'] == 'SUP')]
-df_pair_nsup = df_pair_comp[(df_pair_comp['group_type_1'] != 'SUP') &\
-                            (df_pair_comp['group_type_2'] != 'SUP')]
-df_pair_sup_nd = df_pair_sup[(df_pair_sup['mean_spread'].abs() <= diff_bound)]
-df_pair_nsup_nd = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() <= diff_bound)]
-
-# ALTERNATIVE
-
-dict_pair_all = {'any' : df_pair_comp}
-
-dict_pair_all['sup'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
-                                   (df_pair_comp['group_type_2'] == 'SUP')]
-
-dict_pair_all['oil_ind'] =\
-    df_pair_comp[(df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
-                 (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))]
-
-dict_pair_all['dis'] = df_pair_comp[(df_pair_comp['group_type_1'] == 'DIS') &\
-                                   (df_pair_comp['group_type_2'] == 'DIS')]
-
-dict_pair_all['sup_dis'] = df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
-                                       (df_pair_comp['group_type_2'] == 'DIS')) |
-                                      ((df_pair_comp['group_type_1'] == 'DIS') &\
-                                       (df_pair_comp['group_type_2'] == 'SUP'))]
-
-dict_pair_all['oil_sup'] =\
-    df_pair_comp[((df_pair_comp['group_type_1'] == 'SUP') &\
-                  (df_pair_comp['group_type_2'].isin(['OIL', 'INDEPENDENT']))) |
-                 ((df_pair_comp['group_type_1'].isin(['OIL', 'INDEPENDENT'])) &\
-                  (df_pair_comp['group_type_2'] == 'SUP'))]
-
-dict_pair_nd = {}
-for df_type_title, df_type_pairs in dict_pair_all.items():
-  dict_pair_nd[df_type_title] =\
-      df_type_pairs[df_type_pairs['abs_mean_spread'] <= diff_bound].copy()
-
-# LISTS FOR DISPLAY
-
-lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
-lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
+# CREATE SAME CORNER VARIABLES
+df_pairs['sc_500'] = 0
+df_pairs.loc[df_pairs['distance'] <= 0.5, 'sc_500'] = 1
+df_pairs['sc_750'] = 0
+df_pairs.loc[df_pairs['distance'] <= 0.75, 'sc_750'] = 1
+df_pairs['sc_1000'] = 0
+df_pairs.loc[df_pairs['distance'] <= 1, 'sc_1000'] = 1
 
 # ##################
 # REGRESSION
@@ -225,7 +203,7 @@ ls_quantiles = [0.25, 0.5, 0.75, 0.90]
 
 # Output data to csv to run quantile regressions in R
 df_pair_comp.to_csv(os.path.join(path_dir_built_dis_csv,
-                                 'df_pair_comp_{:s}.csv'.format(cat)),
+                                 'df_pair_comp_{:s}.csv'.format(price_cat)),
                     float_format= '%.4f',
                     encoding = 'utf-8',
                     index = False)
@@ -256,22 +234,14 @@ def format_ls_reg_fits_to_df(ls_tup_reg_fit, ls_var_names):
                              index = ls_index)
   return df_reg_fits
 
-#ls_loop_df_ppd_regs = [['All pairs', df_pair_comp],
-#                       ['Non differentiated', df_pair_comp_nd],
-#                       ['Differentiated', df_pair_comp_d],
-#                       ['Supermarkets', df_pair_sup],
-#                       ['Non supermarkets', df_pair_nsup],
-#                       ['Sups - No diff', df_pair_sup_nd],
-#                       ['Nsups - No diff', df_pair_nsup_nd]]
-
-ls_loop_df_ppd_regs = [('All', dict_pair_all['any']),
-                       ('Sup', dict_pair_all['sup']),
-                       ('Nd All', dict_pair_nd['any']),
-                       ('Nd Oil Ind', dict_pair_nd['oil_ind']),
-                       ('Nd Sup', dict_pair_nd['sup']),
-                       ('Sup Dis', dict_pair_all['sup_dis']),
-                       ('Nd Sup Dis', dict_pair_nd['sup_dis']),
-                       ('Oil Ind', dict_pair_all['oil_ind'])]
+ls_loop_df_ppd_regs = [('All', dict_pair_comp['any']),
+                       ('Sup', dict_pair_comp['sup']),
+                       ('Nd All', dict_pair_comp_nd['any']),
+                       ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
+                       ('Nd Sup', dict_pair_comp_nd['sup']),
+                       ('Sup Dis', dict_pair_comp['sup_dis']),
+                       ('Nd Sup Dis', dict_pair_comp_nd['sup_dis']),
+                       ('Oil&Ind', dict_pair_comp['oil&ind'])]
 
 # Some issues with current implementation of quantreg => R
 # Work with dist 1000 until Oil Ind...

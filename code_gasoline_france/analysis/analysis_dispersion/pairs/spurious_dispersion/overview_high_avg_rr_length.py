@@ -6,10 +6,8 @@ import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
-from generic_competition import *
-from statsmodels.distributions.empirical_distribution import ECDF
-from scipy.stats import ks_2samp
-import time
+from matplotlib.dates import DateFormatter
+from matplotlib.dates import MONDAY
 
 path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
@@ -23,12 +21,29 @@ path_dir_built_dis = os.path.join(path_data,
                                   u'data_gasoline',
                                   u'data_built',
                                   u'data_dispersion')
-path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
-path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
+path_dir_built_dis_json = os.path.join(path_dir_built_dis, 'data_json')
+path_dir_built_dis_csv = os.path.join(path_dir_built_dis, 'data_csv')
+path_dir_built_dis_graphs = os.path.join(path_dir_built_dis, 'data_graphs')
 
-pd.set_option('float_format', '{:,.2f}'.format)
+path_dir_built_other = os.path.join(path_data,
+                                    u'data_gasoline',
+                                    u'data_built',
+                                    u'data_other')
+path_dir_built_other_csv = os.path.join(path_dir_built_other, 'data_csv')
+
+pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
+
+from pylab import *
+rcParams['figure.figsize'] = 16, 6
+
+## french date format
+#import locale
+#locale.setlocale(locale.LC_ALL, 'fra_fra')
+
+#dir_graphs = 'bw'
+str_ylabel = 'Price (euro/liter)'
 
 # ################
 # LOAD DATA
@@ -118,15 +133,37 @@ df_rr.set_index('date', inplace = True)
 df_rr = df_rr.T
 df_rr.index = [tuple(x.split('-')) for x in df_rr.index]
 
-# ##################
-# FILTER DATA
-# ##################
+# DF QUOTATIONS (WHOLESALE GAS PRICES)
 
-# keep pairs with margin change to allow overview of total access chge impact
+df_quotations = pd.read_csv(os.path.join(path_dir_built_other_csv,
+                                   'df_quotations.csv'),
+                                 encoding = 'utf-8',
+                                 parse_dates = ['date'])
+df_quotations.set_index('date', inplace = True)
+
+# DF MACRO TRENDS
+
+ls_sup_ids = df_info[df_info['group_type'] == 'SUP'].index
+ls_other_ids = df_info[df_info['group_type'] != 'SUP'].index
+df_quotations['UFIP Brent R5 EL'] = df_quotations['UFIP Brent R5 EB'] / 158.987
+df_macro = pd.DataFrame(df_prices_ht.mean(1).values,
+                        columns = [u'Retail avg excl. taxes'],
+                        index = df_prices_ht.index)
+df_macro['Brent'] = df_quotations['UFIP Brent R5 EL']
+df_macro[u'Retail avg excl. taxes - Supermarkets'] = df_prices_ht[ls_sup_ids].mean(1)
+df_macro[u'Retail avg excl. taxes - Others'] = df_prices_ht[ls_other_ids].mean(1)
+df_macro = df_macro[[u'Brent',
+                     u'Retail avg excl. taxes',
+                     u'Retail avg excl. taxes - Supermarkets',
+                     u'Retail avg excl. taxes - Others']]
+df_macro['Brent'] = df_macro['Brent'].fillna(method = 'bfill')
+
+# #############
+# PREPARE DATA
+# #############
 
 # RESTRICT CATEGORY: PRICES AND MARGIN CHGE
 df_pairs_all = df_pairs.copy()
-# price_cat = 'all' # to have impact of total access with margin chges
 price_cat = 'no_mc' # 'residuals_no_mc'
 print(u'Prices used : {:s}'.format(price_cat))
 df_pairs = df_pairs[df_pairs['cat'] == price_cat].copy()
@@ -171,90 +208,110 @@ df_pair_comp_d  = df_pair_comp[df_pair_comp['abs_mean_spread'] > diff_bound]
 # (keep pairs with group change in any)
 dict_pair_comp = {'any' : df_pair_comp}
 for k in df_pair_comp['pair_type'].unique():
-  dict_pair_comp[k] = df_pair_comp[df_pair_comp['pair_type'] == k]
+  dict_pair_comp[k] = df_pair_comp[df_pair_comp['pair_type'] == k].copy()
 # low spread pairs
 dict_pair_comp_nd = {}
 for df_temp_title, df_temp in dict_pair_comp.items():
   dict_pair_comp_nd[df_temp_title] =\
-      df_temp[df_temp['abs_mean_spread'] <= diff_bound]
+      df_temp[df_temp['abs_mean_spread'] <= diff_bound].copy()
 
-# FOCUS ON COMPETITOR PAIRS
-df_ppd = df_pair_comp.copy()
-df_ppd['tup_ids'] = df_ppd.apply(lambda row: (row['id_1'], row['id_2']),
-                                 axis = 1)
+# ##########
+# STATS DES
+# ##########
 
-# PAIRS W/ TOTAL ACCESS
-df_ppd_ta = df_ppd[(df_ppd['brand_last_1'] == 'TOTAL_ACCESS') |
-                   (df_ppd['brand_last_2'] == 'TOTAL_ACCESS')]
-df_ppd_nota = df_ppd[(df_ppd['brand_last_1'] != 'TOTAL_ACCESS') &
-                     (df_ppd['brand_last_2'] != 'TOTAL_ACCESS')]
-# Price spread restriction (not total access)
-df_ppd_nota_nd = df_ppd_nota[df_ppd_nota['abs_mean_spread'] <= diff_bound]
-df_ppd_nota_d = df_ppd_nota[df_ppd_nota['abs_mean_spread'] >  diff_bound]
+# todo: max rr length with naive measure (to include first and last)
 
-## ####################
-## DF PAIR PD TEMPORAL
-## ####################
-
-# Select pair subsamples
-df_rr = df_rr.ix[df_ppd['tup_ids'].values]
-df_rr_ta = df_rr.ix[df_ppd_ta['tup_ids'].values]
-df_rr_nota = df_rr.ix[df_ppd_nota['tup_ids'].values]
-df_rr_nd = df_rr.ix[df_ppd_nota_nd['tup_ids'].values] # ta excluded
-
-zero = np.float64(1e-10)
-ls_df_rrs_su = []
-for df_rrs_temp in [df_rr, df_rr_ta, df_rr_nota, df_rr_nd]:
-  se_nb_valid = df_rrs_temp.apply(lambda x: (~pd.isnull(x)).sum())
-  # se_nb_valid = se_nb_valid.astype(float)
-  se_nb_valid[se_nb_valid == 0] = np.nan
-  se_nb_rr    = df_rrs_temp.apply(lambda x: (np.abs(x) > zero).sum())
-  # se_nb_rr = se_nb_rr.astype(float)
-  se_nb_rr[se_nb_rr == 0] = np.nan
-  se_avg_rr   = df_rrs_temp.apply(lambda x: np.abs(x[np.abs(x) > zero]).mean())
-  se_std_rr   = df_rrs_temp.apply(lambda x: np.abs(x[np.abs(x) > zero]).std())
-  se_med_rr   = df_rrs_temp.apply(lambda x: np.abs(x[np.abs(x) > zero]).median())
-  df_rrs_su_temp = pd.DataFrame({'se_nb_valid' : se_nb_valid,
-                                 'se_nb_rr'    : se_nb_rr,
-                                 'se_avg_rr'   : se_avg_rr,
-                                 'se_std_rr'   : se_std_rr,
-                                 'se_med_rr'   : se_med_rr})
-  df_rrs_su_temp['pct_rr'] = df_rrs_su_temp['se_nb_rr'] / df_rrs_su_temp['se_nb_valid']
-  ls_df_rrs_su.append(df_rrs_su_temp) 
+ls_loop_pair_disp = [('All', dict_pair_comp['any']),
+                     ('Sup', dict_pair_comp['sup']),
+                     ('Oil&Ind', dict_pair_comp['oil&ind']),
+                     ('Dis', dict_pair_comp['dis']),
+                     ('Sup Dis', dict_pair_comp['sup_dis']),
+                     ('Nd All', dict_pair_comp_nd['any']),
+                     ('Nd Sup', dict_pair_comp_nd['sup']),
+                     ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
+                     ('Nd Dis', dict_pair_comp_nd['dis']),
+                     ('Nd Sup Dis', dict_pair_comp_nd['sup_dis'])]
 
 print()
-print(u'Overview pct rank reversals - No differentiation')
-print(ls_df_rrs_su[-1].describe())
+print('Nb of gas stations with mean_rr_len >= 20:',
+      len(df_pair_comp[df_pair_comp['mean_rr_len'] >= 20]))
 
-plt.rcParams['figure.figsize'] = 16, 6
-ls_df_rrs_su[-1]['pct_rr'].plot()
-plt.title('Overview pct rank reversals - No differentiation')
-plt.show()
-
-# Merge: to be improved? (more dataframes potentially?)
-df_rrs_su_all = pd.merge(ls_df_rrs_su[0], ls_df_rrs_su[1],\
-                         right_index = True, left_index = True, suffixes=('', '_ta'))
-df_rrs_su_all = pd.merge(df_rrs_su_all, ls_df_rrs_su[2],\
-                         right_index = True, left_index = True, suffixes=('', '_nota'))
-df_rrs_su_all = pd.merge(df_rrs_su_all, ls_df_rrs_su[3],\
-                         right_index = True, left_index = True, suffixes=('', '_nodiff'))
-
-df_rrs_su_all[df_rrs_su_all['pct_rr_nota'] == np.inf] = np.nan
+ls_se_temp = []
+for temp_title, df_temp_title in ls_loop_pair_disp:
+  ls_se_temp.append(df_temp_title['mean_rr_len'].describe())
+df_mean_rr_len = pd.concat(ls_se_temp,
+                           axis = 1,
+                           keys = [x[0] for x in ls_loop_pair_disp])
 print()
-print('Overview pct rank reversals (excluding Total Access)')
-print(df_rrs_su_all['pct_rr_nota'].describe())
-print('Argmax (day):', df_rrs_su_all['pct_rr_nota'].argmax())
+print('Overview mean_rr_len by category:')
+print(df_mean_rr_len.to_string())
 
-df_rrs_su_all[df_rrs_su_all['pct_rr_nodiff'] == np.inf] = np.nan
 print()
-print('Overview pct rank reversals (No differentiation (nor TA))')
-print(df_rrs_su_all['pct_rr_nodiff'].describe())
+print('Overview mean_rr_len for all non differentiated pairs:')
+ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.90]
+print(df_pair_comp_nd['mean_rr_len'].describe(percentiles = ls_pctiles))
 
-plt.rcParams['figure.figsize'] = 16, 6
-ax = df_rrs_su_all[['pct_rr', 'pct_rr_ta', 'pct_rr_nota', 'pct_rr_nodiff']].plot()
-handles, labels = ax.get_legend_handles_labels()
-labels = ['All', 'Total Access', 'All but Total Access', 'No differentiation']
-ax.legend(handles, labels)
-plt.title('Overview pct rank reversals')
-plt.tight_layout()
-plt.show()
+print()
+print('Check pairs with mean_rr_len >= 20:')
+lsdt = ['id_1', 'id_2', 'pair_type', 'brand_last_1', 'brand_last_2',
+        'mean_rr_len', 'pct_rr']
+print(df_pair_comp[df_pair_comp['mean_rr_len'] >= 20][lsdt].to_string())
+
+
+# todo:
+# exclude ids based on successive price policy changes:
+# - 64000013 (nice for graph)
+# - 6300015 (long missing period... id reconciliation?)
+# - one (?) among 78310005 and 78990009
+# - one (?) among 78370001 and 78760003 (TA)
+# - one (?) among 71100015 and 71100019
+# - one (?) among 31170002 and 31770003 (TA)
+
+# ##########
+# GRAPHS
+# ##########
+
+path_graphs_hmrl = os.path.join(path_dir_built_dis_graphs,
+                                'high_mean_rr_length')
+
+for title, df_temp in ls_loop_pair_disp:
+  path_graphs_hmrl_temp = os.path.join(path_graphs_hmrl,
+                                      title)
+  if not os.path.exists(path_graphs_hmrl_temp):
+    os.makedirs(path_graphs_hmrl_temp)
+  df_temp.sort('mean_rr_len', ascending = False, inplace = True)
+  for row_i, row in df_temp[0:20].iterrows():
+    fig = plt.figure()
+    ax = fig.add_subplot(1,1,1)
+    l1 = ax.plot(df_prices_ttc.index,
+                 df_prices_ttc[row['id_1']].values,
+                 c = 'b', ls = '-', alpha = 1,
+                 label = '%s gas station' %(df_info.ix[row['id_1']]['brand_0']))
+    l2 = ax.plot(df_prices_ttc.index,
+                 df_prices_ttc[row['id_2']].values,
+                 c = 'g', ls = '-', alpha = 0.5,
+                 label = '%s gas station' %(df_info.ix[row['id_2']]['brand_0']))
+    l3 = ax.plot(df_prices_ttc.index, df_prices_ttc.mean(1).values,
+                 c = 'k', ls = '--', alpha = 0.8,
+                 label = 'National average')
+    lns = l1 + l2 + l3
+    labs = [l.get_label() for l in lns]
+    ax.legend(lns, labs, loc=0)
+    ax.grid()
+    # Show ticks only on left and bottom axis, out of graph
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+    ax.get_yaxis().set_tick_params(which='both', direction='out')
+    ax.get_xaxis().set_tick_params(which='both', direction='out')
+    plt.ylabel(str_ylabel)
+    plt.tight_layout()
+    #plt.show()
+    plt.savefig(os.path.join(path_graphs_hmrl_temp,
+                             u'{:.2f}_{:s}_{:s}.png'.format(row['mean_rr_len'],
+                                                            row['id_1'],
+                                                            row['id_2'])),
+                dpi = 200)
+    plt.close()
+
+#lsd_rr = ['id_1', 'id_2', 'pct_rr', 'nb_rr', 'mean_rr_len',
+#          'mean_spread', 'mean_abs_spread', 'pct_same']
