@@ -283,11 +283,11 @@ for title, df_temp in ls_loop_pair_disp[0:3]:
     l1 = ax.plot(df_prices_ttc.index,
                  df_prices_ttc[row['id_1']].values,
                  c = 'b', ls = '-', alpha = 1,
-                 label = '%s gas station' %(df_info.ix[row['id_1']]['brand_0']))
+                 label = '%s gas station' %(df_info.ix[row['id_1']]['brand_last']))
     l2 = ax.plot(df_prices_ttc.index,
                  df_prices_ttc[row['id_2']].values,
                  c = 'g', ls = '-', alpha = 0.5,
-                 label = '%s gas station' %(df_info.ix[row['id_2']]['brand_0']))
+                 label = '%s gas station' %(df_info.ix[row['id_2']]['brand_last']))
     l3 = ax.plot(df_prices_ttc.index, df_prices_ttc.mean(1).values,
                  c = 'k', ls = '--', alpha = 0.8,
                  label = 'National average')

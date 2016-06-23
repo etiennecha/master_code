@@ -6,6 +6,8 @@ import add_to_path
 from add_to_path import path_data
 from generic_master_price import *
 from generic_master_info import *
+from matplotlib.dates import DateFormatter
+from matplotlib.dates import SA
 
 path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
@@ -255,7 +257,7 @@ df_sub_ta_2 = df_sub_ta[df_sub_ta['mean_rr_len'] >=\
                           df_sub_ta['mean_rr_len'].quantile(0.95)]
 
 id_1, id_2 = df_sub_ta_2[['id_1', 'id_2']].iloc[2]
-id_1, id_2 = '11200002', '11200005'
+id_1, id_2 = '83140003', '83190004'
 print(df_sub_ta_2[(df_sub_ta_2['id_1'] == id_1) &\
                   (df_sub_ta_2['id_2'] == id_2)][['brand_last_1',
                                                   'brand_last_2',
@@ -269,12 +271,12 @@ ax1 = fig.add_subplot(111)
 l1 = ax1.plot(df_prices_ttc.index,
               df_prices_ttc[id_1].values,
               c = 'k', ls = '-', alpha = 0.5, # lw = 1, marker = '+', markevery=5,
-              label = '%s gas station' %(df_info.ix[id_1]['brand_0']))
+              label = '%s gas station' %(df_info.ix[id_1]['brand_last']))
 l2 = ax1.plot(df_prices_ttc.index, df_prices_ttc[id_2].values,
-              c = 'k', ls = '--', alpha = 1,
-              label = '%s gas station' %(df_info.ix[id_2]['brand_0']))
+              c = 'k', ls = '-', alpha = 1,
+              label = '%s gas station' %(df_info.ix[id_2]['brand_last']))
 l3 = ax1.plot(df_prices_ttc.index, df_prices_ttc.mean(1).values,
-              c = 'k', ls = '-',
+              c = 'k', ls = '--', alpha = 1,
               label = 'National average')
 lns = l1 + l2 + l3
 labs = [l.get_label() for l in lns]
@@ -300,115 +302,97 @@ plt.close()
 # TEMPORAL PRICE DISC: SPURIOUS RR
 # ################################
 
+formatter = DateFormatter('%b-%d')
+
 df_sub_hrr = df_pair_comp[df_pair_comp['nb_rr'] >=\
                             df_pair_comp['nb_rr'].quantile(0.95)].copy()
 df_sub_hrr.sort('nb_rr', ascending = False, inplace = True)
 print(df_sub_hrr[0:20][['pct_rr', 'nb_rr', 'id_1', 'id_2', 'brand_0_1', 'brand_0_2']].to_string())
 
 id_1, id_2 = '31520003', '31650002'
+# restrict period
+df_prices = df_prices_ttc.ix['2014-01-05':'2014-03-30'].copy()
 
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
-# restrict period
-df_prices = df_prices_ttc.ix['2014-01':'2014-03'].copy()
 # plot prices
-df_prices[[id_1, id_2]].plot(ax=ax1)
-df_prices.mean(1).plot(c = 'k', ls = '-', label = 'National average')
-# plot days
-for day_date, day_dow in zip(df_prices.index, df_prices.index.dayofweek):
-  # increase on 5, decrease on 1: higher price on week end
-  if (day_dow == 5): # 0: MO, 1: TU, 5: SA, 6: SU
-    ld = ax1.axvline(x=day_date, lw=0.6, ls='-', c='g')
-  elif (day_dow == 1):
-    ld = ax1.axvline(x=day_date, lw=0.6, ls='--', c='g')
-handles, labels = ax1.get_legend_handles_labels()
-labels = [df_info.ix[id_1]['brand_0'],
-          df_info.ix[id_2]['brand_0'],
-          'National average']
-ax1.legend(handles, labels, loc = 1)
-ax1.xaxis.grid(True)
+ax1.plot(df_prices.index,
+         df_prices[id_1].values,
+         c = 'k', ls = '-', alpha = 0.5, 
+         label = '%s gas station' %(df_info.ix[id_1]['brand_last']))
+ax1.plot(df_prices.index,
+         df_prices[id_2].values,
+         c = 'k', ls = '-', alpha = 1,
+         label = '%s gas station' %(df_info.ix[id_2]['brand_last']))
+#ax1.plot(df_prices.index,
+#         df_prices.mean(1),
+#         c = 'k', ls = '--', alpha = 1,
+#         label = 'National average')
+
+## plot days
+#for day_date, day_dow in zip(df_prices.index, df_prices.index.dayofweek):
+#  # increase on 5, decrease on 1: higher price on week end
+#  if (day_dow == 5): # 0: MO, 1: TU, 5: SA, 6: SU
+#    ld = ax1.axvline(x=day_date, lw=0.6, ls='-', c='g')
+#  elif (day_dow == 1):
+#    ld = ax1.axvline(x=day_date, lw=0.6, ls='--', c='g')
+
+ax1.set_xlabel('2014')
+ax1.xaxis.set_major_formatter(formatter)
+#ax1.xaxis.grid(True)
+sa1 = WeekdayLocator(SA)
+ax1.xaxis.set_major_locator(sa1)
+ax1.grid(True, which = 'major')
+#ax1.xaxis.grid(True)
+
 ax1.yaxis.set_ticks_position('left')
 ax1.xaxis.set_ticks_position('bottom')
 ax1.get_yaxis().set_tick_params(which='both', direction='out')
 ax1.get_xaxis().set_tick_params(which='both', direction='out')
+
 plt.ylabel(str_ylabel)
+
+handles, labels = ax1.get_legend_handles_labels()
+ax1.legend(handles, labels, loc = 1)
 plt.show()
 
-# more generally
+# ################################
+# NORMAL RR
+# ################################
 
-df_station_promo = pd.merge(df_info,
-                            df_station_promo,
-                            left_index = True,
-                            right_index = True,
-                            how = 'left')
-
-for df_prices in [df_prices_ttc.ix[:'2011-12'], df_prices_ttc.ix['2014-01':'2014-04']]:
-  ax1 = df_prices['22190001'].plot()
-  for day_date, day_dow in zip(df_prices.index, df_prices.index.dayofweek):
-    # increase on 5, decrease on 1: higher price on week end
-    if (day_dow == 5): # 0: MO, 1: TU, 5: SA, 6: SU
-      ld = ax1.axvline(x=day_date, lw=0.6, ls='-', c='g')
+for id_1, id_2 in [['37520001', '37700001'],
+                   ['69007002', '69100018'],
+                   ['90000009', '90800001'],
+                   ['86100005', '86100012'],
+                   ['6200021',  '6200022']]:
+  # restrict period
+  df_prices = df_prices_ttc.ix['2014-01':'2014-06'].copy()
+  
+  fig = plt.figure()
+  ax1 = fig.add_subplot(111)
+  # plot prices
+  ax1.plot(df_prices.index,
+           df_prices[id_1].values,
+           c = 'k', ls = '-', alpha = 0.5, 
+           label = '%s gas station' %(df_info.ix[id_1]['brand_last']))
+  ax1.plot(df_prices.index,
+           df_prices[id_2].values,
+           c = 'k', ls = '-', alpha = 1,
+           label = '%s gas station' %(df_info.ix[id_2]['brand_last']))
+  #ax1.plot(df_prices.index,
+  #         df_prices.mean(1),
+  #         c = 'k', ls = '--', alpha = 1,
+  #         label = 'National average')
+  
+  ax1.grid(True, which = 'both')
+  
+  ax1.yaxis.set_ticks_position('left')
+  ax1.xaxis.set_ticks_position('bottom')
+  ax1.get_yaxis().set_tick_params(which='both', direction='out')
+  ax1.get_xaxis().set_tick_params(which='both', direction='out')
+  
+  plt.ylabel(str_ylabel)
+  
+  handles, labels = ax1.get_legend_handles_labels()
+  ax1.legend(handles, labels, loc = 1)
   plt.show()
-
-lsdp = ['pm_{:d}'.format(i) for i in range(0, 7)] +\
-        ['pk_{:d}'.format(i) for i in range(0, 7)]
-
-df_high = df_station_promo[df_station_promo['group_type_last'].isin(['OIL', 'IND'])].copy()
-df_sup = df_station_promo[df_station_promo['group_type_last'].isin(['SUP'])].copy()
-df_dis = df_station_promo[df_station_promo['group_type_last'].isin(['DIS'])].copy()
-
-dict_df_temp = {'high' : df_high,
-                'sup'  : df_sup,
-                'dis'  : df_dis}
-
-ls_rows_temp = []
-for i in range(5, 16):
-  ls_rows_temp.append([len(df_temp[df_temp[lsdp].max(1) >= i])\
-                         for title, df_temp in dict_df_temp.items()])
-df_promo_su = pd.DataFrame(ls_rows_temp,
-                           index = range(5, 16),
-                           columns = dict_df_temp.keys())
-
-print(df_promo_su.to_string())
-print(df_promo_su / pd.Series([len(df_high), len(df_dis), len(df_sup)],
-                              index = ['high', 'dis', 'sup']))
-
-# CHECK PATTERNS OF PROMOTIONS / SURGES
-
-for title, df_temp in dict_df_temp.items():
-  df_temp.sort('nb_promo', ascending = False, inplace = True)
-  print()
-  print(title)
-  print()
-  print(df_temp[['brand_last', 'nb_promo'] + lsdp][0:30].to_string())
-  print()
-  print(df_temp[['brand_last', 'nb_promo'] + lsdp].describe().to_string())
-  print()
-  print(df_temp[lsdp].apply(lambda x: len(x[x >= 10]), axis = 0))
-  # most common paterns
-  # - high: promo in 1 (low still)
-  # - dis:  promo in 2-3 and peak in 2 and 3 (lesser extent) => same?
-
-  # - promo in 4 only one day?
-  # - promo in 5 and 6 (supermarkets)
-  # - peak in 5 and 6 (supermarkets)
-  # - peak in 1 and 2 (all?)
-  # - peak in 1
-
-nb_lim = 8
-print(len(df_sup[(df_sup['pm_5'] >= nb_lim) & (df_sup['pm_6'] >= nb_lim)]))
-print(len(df_sup[(df_sup['pk_5'] >= nb_lim) & (df_sup['pk_6'] >= nb_lim)]))
-print(len(df_sup[(df_sup['pk_1'] >= nb_lim) & (df_sup['pk_2'] >= nb_lim)]))
-
-print(df_sup[(df_sup['pm_5'] >= nb_lim) & (df_sup['pm_6'] >= nb_lim)]\
-            [['brand_last', 'nb_promo'] + lsdp].to_string())
-
-print(df_sup[(df_sup['pk_5'] >= nb_lim) & (df_sup['pk_6'] >= nb_lim)]\
-            [['brand_last', 'nb_promo'] + lsdp].to_string())
-
-print(df_sup[(df_sup['pk_1'] >= nb_lim) & (df_sup['pk_2'] >= nb_lim)]\
-            [['brand_last', 'nb_promo'] + lsdp].to_string())
-
-
-#print(len(df_dis[(df_dis['pm_2'] >= nb_lim) & (df_dis['pm_3'] >= nb_lim) &\
-#                 (df_dis['pk_2'] >= nb_lim) & (df_dis['pk_3'] >= nb_lim)]))

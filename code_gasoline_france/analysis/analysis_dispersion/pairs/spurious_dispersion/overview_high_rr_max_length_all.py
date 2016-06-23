@@ -164,7 +164,7 @@ df_macro['Brent'] = df_macro['Brent'].fillna(method = 'bfill')
 
 # RESTRICT CATEGORY: PRICES AND MARGIN CHGE
 df_pairs_all = df_pairs.copy()
-price_cat = 'no_mc' # 'residuals_no_mc'
+price_cat = 'all' # 'residuals_no_mc'
 print(u'Prices used : {:s}'.format(price_cat))
 df_pairs = df_pairs[df_pairs['cat'] == price_cat].copy()
 
@@ -219,7 +219,7 @@ for df_temp_title, df_temp in dict_pair_comp.items():
 # STATS DES
 # ##########
 
-col = 'nb_rr'
+col = 'nrr_max'
 lsdt = ['id_1', 'id_2', 'pair_type',
         'brand_last_1', 'brand_last_2',
         'pct_rr', 'mean_rr_len'] + [col]
@@ -255,149 +255,60 @@ print('Check pairs with highest val:')
 df_pair_comp.sort(col, ascending = False, inplace = True)
 print(df_pair_comp[lsdt][0:50].to_string())
 
+# todo:
+# exclude ids based on successive price policy changes:
+# - 64000013 (nice for graph)
+# - 6300015 (long missing period... id reconciliation?)
+# - one (?) among 78310005 and 78990009
+# - one (?) among 78370001 and 78760003 (TA)
+# - one (?) among 71100015 and 71100019
+# - one (?) among 31170002 and 31770003 (TA)
+
 # ##########
 # GRAPHS
 # ##########
 
-#formatter = DateFormatter('%b-%d')
-
-df_prices_1 = df_prices_ttc.ix[:'2013-04'].copy()
-df_prices_2 = df_prices_ttc.ix['2013-05':].copy()
-
-path_graphs_hnr = os.path.join(path_dir_built_dis_graphs,
-                               'high_{:s}'.format(col))
+path_graphs_hmrl = os.path.join(path_dir_built_dis_graphs,
+                                'high_max_rr_length_all')
 
 for title, df_temp in ls_loop_pair_disp[0:3]:
-  path_graphs_hnr_temp = os.path.join(path_graphs_hnr,
+  path_graphs_hmrl_temp = os.path.join(path_graphs_hmrl,
                                       title)
-  if not os.path.exists(path_graphs_hnr_temp):
-    os.makedirs(path_graphs_hnr_temp)
-  df_temp.sort(col, ascending = False, inplace = True)
+  if not os.path.exists(path_graphs_hmrl_temp):
+    os.makedirs(path_graphs_hmrl_temp)
+  df_temp.sort('nrr_max', ascending = False, inplace = True)
   for row_i, row in df_temp[0:30].iterrows():
-    #fig = plt.figure()
-    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
-    #fig.subplots_adjust(top=0.88)
-    # fig.subplots_adjust(vspace=10)
-   
-    #ax1 = fig.add_subplot(2,1,1)
-    #df_prices_1[id_station].plot(ax=ax1, c = 'g')
-    ax1.plot(df_prices_1.index,
-             df_prices_1[row['id_1']].values,
-             c = 'g')
-    ax1.plot(df_prices_1.index,
-             df_prices_1[row['id_2']].values,
-             c = 'b')
-    #for day_date, day_dow in zip(df_prices_1.index, df_prices_1.index.dayofweek):
-    #  ld = ax1.axvline(x=day_date, lw=1, ls='--', c='g')
-    #handles, labels = ax1.get_legend_handles_labels()
-    #ax1.legend(handles, labels, loc = 1)
-    ax1.yaxis.set_ticks_position('left')
-    ax1.xaxis.set_ticks_position('bottom')
-    ax1.get_yaxis().set_tick_params(which='both', direction='out')
-    ax1.get_xaxis().set_tick_params(which='both', direction='out')
-    #ax1.set_xlabel('2011')
-    #ax1.xaxis.set_major_formatter(formatter)
-    ##ax1.xaxis.grid(True)
-    #mondays1 = WeekdayLocator(MONDAY)
-    #ax1.xaxis.set_major_locator(mondays1)
-    ax1.grid(True)
-
-    #ax2 = fig.add_subplot(2,1,2)
-    #df_prices_2[id_station].plot(ax=ax2, c = 'g')
-    l21 = ax2.plot(df_prices_2.index,
-                   df_prices_2[row['id_1']].values,
-                   label = '{:s} {:s}'.format(row['id_1'], row['brand_last_1']),
-                   c = 'g')
-    l22 = ax2.plot(df_prices_2.index,
-                   df_prices_2[row['id_2']].values,
-                   label = '{:s} {:s}'.format(row['id_2'], row['brand_last_2']),
-                   c = 'b')
-    #for day_date, day_dow in zip(df_prices_2.index, df_prices_2.index.dayofweek):
-    #  ld = ax2.axvline(x=day_date, lw=1, ls='--', c='g')
-    #handles, labels = ax2.get_legend_handles_labels()
-    #ax2.legend(handles, labels, loc = 1)
-    ax2.yaxis.set_ticks_position('left')
-    ax2.xaxis.set_ticks_position('bottom')
-    ax2.get_yaxis().set_tick_params(which='both', direction='out')
-    ax2.get_xaxis().set_tick_params(which='both', direction='out')
-    #ax2.set_xlabel('2014')
-    #ax2.xaxis.set_major_formatter(formatter)
-    ##ax2.xaxis.grid(True)
-    #mondays2 = WeekdayLocator(MONDAY)
-    #ax2.xaxis.set_major_locator(mondays2)
-    ax2.grid(True)
-    lns = l21 + l22
+    fig = plt.figure()
+    ax = fig.add_subplot(1,1,1)
+    l1 = ax.plot(df_prices_ttc.index,
+                 df_prices_ttc[row['id_1']].values,
+                 c = 'b', ls = '-', alpha = 1,
+                 label = '%s gas station' %(df_info.ix[row['id_1']]['brand_last']))
+    l2 = ax.plot(df_prices_ttc.index,
+                 df_prices_ttc[row['id_2']].values,
+                 c = 'g', ls = '-', alpha = 0.5,
+                 label = '%s gas station' %(df_info.ix[row['id_2']]['brand_last']))
+    l3 = ax.plot(df_prices_ttc.index, df_prices_ttc.mean(1).values,
+                 c = 'k', ls = '--', alpha = 0.8,
+                 label = 'National average')
+    lns = l1 + l2 + l3
     labs = [l.get_label() for l in lns]
-    ax2.legend(lns, labs, bbox_to_anchor = (-0.007, -0.15), ncol = 2, loc = 2)
-    
-    #fig.suptitle(u'{:s} {:s} - {:s} {:s}'.format(row['id_1'],
-    #                                             df_info.ix[row['id_1']]['brand_last'],
-    #                                             row['id_2'],
-    #                                             df_info.ix[row['id_2']]['brand_last']),
-    #             x = 0.01,
-    #             y = 0.04, # y = 0.99
-    #             horizontalalignment = 'left')
-    fig.tight_layout()
-    plt.subplots_adjust(bottom=0.15) # top = 0.90
-    # plt.show()
-    plt.savefig(os.path.join(path_graphs_hnr_temp,
+    ax.legend(lns, labs, loc=0)
+    ax.grid()
+    # Show ticks only on left and bottom axis, out of graph
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+    ax.get_yaxis().set_tick_params(which='both', direction='out')
+    ax.get_xaxis().set_tick_params(which='both', direction='out')
+    plt.ylabel(str_ylabel)
+    plt.tight_layout()
+    #plt.show()
+    plt.savefig(os.path.join(path_graphs_hmrl_temp,
                              u'{:.2f}_{:s}_{:s}.png'.format(row[col],
                                                             row['id_1'],
                                                             row['id_2'])),
                 dpi = 200)
     plt.close()
 
-### Inspect
-#
-#df_sup = dict_pair_nd['sup']
-#df_oi = dict_pair_nd['oil_ind']
-#
 #lsd_rr = ['id_1', 'id_2', 'pct_rr', 'nb_rr', 'mean_rr_len',
 #          'mean_spread', 'mean_abs_spread', 'pct_same']
-#
-#print()
-#print(df_sup[lsd_rr][0:100].to_string())
-#
-#print()
-#print(df_oi[lsd_rr][0:100].to_string())
-#
-#
-## ##########
-## BACKUP
-## ##########
-#
-##df_sub_hrr = df_pair_comp[df_pair_comp['nb_rr'] >=\
-##                            df_pair_comp['nb_rr'].quantile(0.95)].copy()
-##df_sub_hrr.sort('nb_rr', ascending = False, inplace = True)
-##print(df_sub_hrr[0:20][['pct_rr', 'nb_rr', 'id_1', 'id_2', 'brand_0_1', 'brand_0_2']].to_string())
-##
-##id_1, id_2 = '31520003', '31650002'
-##
-##fig = plt.figure()
-##ax1 = fig.add_subplot(111)
-### restrict period
-##df_prices = df_prices_ttc.ix['2014-01':'2014-03'].copy()
-### plot prices
-##df_prices[[id_1, id_2]].plot(ax=ax1)
-##df_prices.mean(1).plot(c = 'k', ls = '-', label = 'National average')
-### plot days
-##for day_date, day_dow in zip(df_prices.index, df_prices.index.dayofweek):
-##  # increase on 5, decrease on 1: higher price on week end
-##  if (day_dow == 5): # 0: MO, 1: TU, 5: SA, 6: SU
-##    ld = ax1.axvline(x=day_date, lw=0.6, ls='-', c='g')
-##  elif (day_dow == 1):
-##    ld = ax1.axvline(x=day_date, lw=0.6, ls='--', c='g')
-##handles, labels = ax1.get_legend_handles_labels()
-##labels = [df_info.ix[id_1]['brand_0'],
-##          df_info.ix[id_2]['brand_0'],
-##          'National average']
-##ax1.legend(handles, labels, loc = 1)
-##ax1.xaxis.grid(True)
-##ax1.yaxis.set_ticks_position('left')
-##ax1.xaxis.set_ticks_position('bottom')
-##ax1.get_yaxis().set_tick_params(which='both', direction='out')
-##ax1.get_xaxis().set_tick_params(which='both', direction='out')
-##plt.ylabel(str_ylabel)
-##plt.show()
-#
-## more generally

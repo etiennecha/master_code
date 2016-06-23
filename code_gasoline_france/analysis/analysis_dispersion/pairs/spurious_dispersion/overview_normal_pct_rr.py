@@ -219,7 +219,7 @@ for df_temp_title, df_temp in dict_pair_comp.items():
 # STATS DES
 # ##########
 
-col = 'nb_rr'
+col = 'pct_rr'
 lsdt = ['id_1', 'id_2', 'pair_type',
         'brand_last_1', 'brand_last_2',
         'pct_rr', 'mean_rr_len'] + [col]
@@ -265,15 +265,16 @@ df_prices_1 = df_prices_ttc.ix[:'2013-04'].copy()
 df_prices_2 = df_prices_ttc.ix['2013-05':].copy()
 
 path_graphs_hnr = os.path.join(path_dir_built_dis_graphs,
-                               'high_{:s}'.format(col))
+                               'normal_{:s}'.format(col))
 
-for title, df_temp in ls_loop_pair_disp[0:3]:
+for title, df_temp in ls_loop_pair_disp[5:8]:
   path_graphs_hnr_temp = os.path.join(path_graphs_hnr,
                                       title)
   if not os.path.exists(path_graphs_hnr_temp):
     os.makedirs(path_graphs_hnr_temp)
   df_temp.sort(col, ascending = False, inplace = True)
-  for row_i, row in df_temp[0:30].iterrows():
+  df_temp = df_temp[df_temp['pct_rr'] <= 0.25] # arbitrary lim
+  for row_i, row in df_temp[0:50].iterrows():
     #fig = plt.figure()
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
     #fig.subplots_adjust(top=0.88)
