@@ -97,9 +97,10 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
-# basic pair filter (insufficient obs.)
-df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
-                      (df_pairs['nb_ctd_both'] < 90))]
+# basic pair filter (insufficient obs, biased rr measure)
+df_pairs = df_pairs[(~((df_pairs['nb_spread'] < 90) &\
+                       (df_pairs['nb_ctd_both'] < 90))) &
+                    (~(df_pairs['nrr_max'] > 60))]
 
 # todo? harmonize pct i.e. * 100
 
@@ -117,11 +118,11 @@ price_cat = 'no_mc' # 'residuals_no_mc'
 print(u'Prices used : {:s}'.format(price_cat))
 df_pairs = df_pairs[df_pairs['cat'] == price_cat].copy()
 
-# robustness check with idf: 1 km max
-ls_dense_dpts = [75, 92, 93, 94]
-df_pairs = df_pairs[~((((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
-                        (df_pairs['dpt_2'].isin(ls_dense_dpts))) &\
-                       (df_pairs['distance'] > 1)))]
+## robustness check with idf: 1 km max
+#ls_dense_dpts = [75, 92, 93, 94]
+#df_pairs = df_pairs[~((((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
+#                        (df_pairs['dpt_2'].isin(ls_dense_dpts))) &\
+#                       (df_pairs['distance'] > 1)))]
 
 ## robustness check keep closest competitor
 #df_pairs.sort(['id_1', 'distance'], ascending = True, inplace = True)
@@ -183,6 +184,7 @@ ls_dist_ols_formulas = ['abs_mean_spread ~ distance',
                         'std_spread ~ distance']
 
 dist_reg = 1000
+col_sc = 'sc_{:d}'.format(dist_reg)
 
 ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d}'.format(dist_reg),
                       'mean_abs_spread ~ sc_{:d}'.format(dist_reg),
@@ -251,27 +253,28 @@ for df_ppd_title, df_ppd_reg in ls_loop_df_ppd_regs:
   #df_ppd_reg.loc[df_ppd_reg['pct_rr'] == 0, 'pct_rr'] = 0.0001
   #df_ppd_reg.loc[df_ppd_reg['distance'] == 0, 'distance'] = 0.0001
   print()
-  print(df_ppd_title)
+  print(u'{:s} (Nb obs: {:d})'.format(df_ppd_title, len(df_ppd_reg)))
+  print('Nb same corner:  {:d}'.format(len(df_ppd_reg[df_ppd_reg[col_sc] == 1])))
   # Simple ols
   ls_dis_ols_fits = [(str_formula,
                      smf.ols(formula = str_formula, data = df_ppd_reg).fit())\
                        for str_formula in ls_sc_ols_formulas]
-  df_dis_ols_res = format_ls_reg_fits_to_df(ls_dis_ols_fits, ['sc_{:d}'.format(dist_reg)])
+  df_dis_ols_res = format_ls_reg_fits_to_df(ls_dis_ols_fits, [col_sc])
   print()
   print(df_dis_ols_res.to_string())
   # QRs rank reversals
   ls_rr_qr_fits  = [('rr_sc_Q{:.2f}'.format(quantile),
-                     smf.quantreg('pct_rr~sc_{:d}'.format(dist_reg),
+                     smf.quantreg('pct_rr~{:s}'.format(col_sc),
                                   data = df_ppd_reg).fit(quantile))\
                        for quantile in ls_quantiles]
-  df_rr_qr_fits = format_ls_reg_fits_to_df(ls_rr_qr_fits, ['sc_{:d}'.format(dist_reg)])
+  df_rr_qr_fits = format_ls_reg_fits_to_df(ls_rr_qr_fits, [col_sc])
   print()
   print(df_rr_qr_fits.to_string())
   # QRs standard deviation
   ls_std_qr_fits  = [('std_sc_Q{:.2f}'.format(quantile),
-                       smf.quantreg('std_spread~sc_{:d}'.format(dist_reg),
+                      smf.quantreg('std_spread~{:s}'.format(col_sc),
                                     data = df_ppd_reg).fit(quantile))\
                          for quantile in ls_quantiles]
-  df_std_qr_fits = format_ls_reg_fits_to_df(ls_std_qr_fits, ['sc_{:d}'.format(dist_reg)])
+  df_std_qr_fits = format_ls_reg_fits_to_df(ls_std_qr_fits, [col_sc])
   print()
   print(df_std_qr_fits.to_string())

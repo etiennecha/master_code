@@ -271,10 +271,10 @@ ax1 = fig.add_subplot(111)
 l1 = ax1.plot(df_prices_ttc.index,
               df_prices_ttc[id_1].values,
               c = 'k', ls = '-', alpha = 0.5, # lw = 1, marker = '+', markevery=5,
-              label = '%s gas station' %(df_info.ix[id_1]['brand_last']))
+              label = '{:s}'.format(df_info.ix[id_1]['brand_last']))
 l2 = ax1.plot(df_prices_ttc.index, df_prices_ttc[id_2].values,
               c = 'k', ls = '-', alpha = 1,
-              label = '%s gas station' %(df_info.ix[id_2]['brand_last']))
+              label = '{:s}'.format(df_info.ix[id_2]['brand_last']))
 l3 = ax1.plot(df_prices_ttc.index, df_prices_ttc.mean(1).values,
               c = 'k', ls = '--', alpha = 1,
               label = 'National average')
@@ -319,11 +319,11 @@ ax1 = fig.add_subplot(111)
 ax1.plot(df_prices.index,
          df_prices[id_1].values,
          c = 'k', ls = '-', alpha = 0.5, 
-         label = '%s gas station' %(df_info.ix[id_1]['brand_last']))
+         label = '{:s}'.format(df_info.ix[id_1]['brand_last']))
 ax1.plot(df_prices.index,
          df_prices[id_2].values,
          c = 'k', ls = '-', alpha = 1,
-         label = '%s gas station' %(df_info.ix[id_2]['brand_last']))
+         label = '{:s}'.format(df_info.ix[id_2]['brand_last']))
 #ax1.plot(df_prices.index,
 #         df_prices.mean(1),
 #         c = 'k', ls = '--', alpha = 1,
@@ -354,7 +354,12 @@ plt.ylabel(str_ylabel)
 
 handles, labels = ax1.get_legend_handles_labels()
 ax1.legend(handles, labels, loc = 1)
-plt.show()
+plt.savefig(os.path.join(path_dir_built_dis_graphs,
+                         dir_graphs,
+                         'example_spurious_rr_dynamic_price_discrimination.png'),
+            bbox_inches='tight')
+plt.close()
+#plt.show()
 
 # ################################
 # NORMAL RR
@@ -374,11 +379,11 @@ for id_1, id_2 in [['37520001', '37700001'],
   ax1.plot(df_prices.index,
            df_prices[id_1].values,
            c = 'k', ls = '-', alpha = 0.5, 
-           label = '%s gas station' %(df_info.ix[id_1]['brand_last']))
+           label = '{:s}'.format(df_info.ix[id_1]['brand_last']))
   ax1.plot(df_prices.index,
            df_prices[id_2].values,
            c = 'k', ls = '-', alpha = 1,
-           label = '%s gas station' %(df_info.ix[id_2]['brand_last']))
+           label = '{:s}'.format(df_info.ix[id_2]['brand_last']))
   #ax1.plot(df_prices.index,
   #         df_prices.mean(1),
   #         c = 'k', ls = '--', alpha = 1,
@@ -395,4 +400,9 @@ for id_1, id_2 in [['37520001', '37700001'],
   
   handles, labels = ax1.get_legend_handles_labels()
   ax1.legend(handles, labels, loc = 1)
-  plt.show()
+  
+  plt.savefig(os.path.join(path_dir_built_dis_graphs,
+                           dir_graphs,
+                           'example_rr_{:s}_{:s}.png'.format(id_1, id_2)),
+              bbox_inches='tight')
+  #plt.show()
