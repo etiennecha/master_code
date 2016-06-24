@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import *
 import os, sys
@@ -91,7 +92,7 @@ ls_comp_files = ['df_store_prospect_comp_HS_v_all_10km.csv',
                  'df_store_prospect_comp_HS_v_all_20km.csv',
                  'df_store_prospect_comp_HS_v_all_1025km.csv']
 df_comp = pd.read_csv(os.path.join(path_built_lsa_comp_csv,
-                                   ls_comp_files[1]),
+                                   ls_comp_files[2]),
                       dtype = {'id_lsa' : str},
                       encoding = 'utf-8')
 
@@ -174,18 +175,22 @@ df_stores = pd.merge(df_stores,
                      how = 'left',
                      on = 'store_id')
 
-# Avoid error msg on condition number
-df_stores['surface'] = df_stores['surface'].apply(lambda x: x/1000.0)
-
 # Create dummy high hhi
 df_stores['dum_high_hhi'] = 0
-df_stores.loc[df_stores['hhi'] >= 0.3, 'dum_high_hhi'] = 1
+df_stores.loc[df_stores['hhi'] >= 0.25, 'dum_high_hhi'] = 1
+df_stores['hhi'] = df_stores['hhi'] * 100
 
 # Build log variables
 for col in ['price', 'surface', 'hhi', 'ac_hhi',
             'med_rev_uu', 'med_rev_au',
             'pop_cont_10', 'pop_ac_10km', 'pop_ac_20km']:
   df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
+
+# Avoid error msg on condition number
+df_stores['surface'] = df_stores['surface'].apply(lambda x: x/1000.0)
+df_stores['med_rev_au'] = df_stores['med_rev_au'].apply(lambda x: x/1000.0)
+df_stores['med_rev_uu'] = df_stores['med_rev_uu'].apply(lambda x: x/1000.0)
+df_stores['hhi'] = df_stores['hhi'] 
 
 df_stores = df_stores[~(df_stores['qlmc_chain'].isin(['SUPERMARCHE MATCH',
                                                       'ATAC',
@@ -212,54 +217,71 @@ df_qlmc_competitors = pd.read_csv(os.path.join(path_built_csv,
 # INSPECT DATA
 # #########################
 
-ls_exclude_chains = ['CARREFOUR MARKET',
-                     'CASINO',
-                     'SIMPLY MARKET']
-df_stores = df_stores[~df_stores['qlmc_chain'].isin(ls_exclude_chains)]
+df_stores = df_stores[~df_stores['region'].isin(['Corse'])]
 df_stores = df_stores[df_stores['surface'] >= 2.5]
 
-print()
-print(u'Inspect corr of main explanatory vars by chain:')
-print(df_stores[['surface', 'hhi', 'med_rev_au', 'pop_cont_10']].corr())
+#ls_exclude_chains = ['CARREFOUR MARKET',
+#                     'CASINO',
+#                     'SIMPLY MARKET']
+ls_exclude_chains = [] # ['GEANT']
+df_stores = df_stores[~df_stores['qlmc_chain'].isin(ls_exclude_chains)]
+
+ls_ev = ['surface', 'hhi', 'dum_high_hhi', 'med_rev_au', 'ln_pop_cont_10']
 
 print()
 print(u'Inspect main explanatory vars by chain:')
-for var in ['surface', 'hhi', 'med_rev_au', 'pop_cont_10']:
+for ev in ls_ev:
   print()
-  print(df_stores[[var, 'qlmc_chain']][df_stores['surface'] >= 2.5]\
-                 .groupby('qlmc_chain').describe()[var].unstack().T.to_string())
- 
+  print(ev)
+  print(df_stores[[ev, 'qlmc_chain']].groupby('qlmc_chain').describe()[ev].unstack().to_string())
+
+print()
+print(u'Inspect corr of main explanatory vars by chain:')
+print(df_stores[ls_ev].corr())
+
+print()
+print(u'Su explanatory vars mean by chain:')
+print(pd.pivot_table(df_stores, values = ls_ev, index = 'qlmc_chain', aggfunc = 'mean'))
+
+print()
+print(u'Su explanatory vars std by chain:')
+print(pd.pivot_table(df_stores, values = ls_ev, index = 'qlmc_chain', aggfunc = 'std'))
+
+print()
 print(u'Inspect hhi by region:')
-print(df_stores[['hhi', 'region']][df_stores['surface'] >= 2.5]\
-               .groupby('region').describe()['hhi'].unstack().to_string())
+print(df_stores[['hhi', 'region']].groupby('region').describe()['hhi'].unstack().to_string())
 
 # #########################
 # REG PRICE ON STORES CHARS
 # #########################
 
 res_a = smf.ols("ln_price ~ C(qlmc_chain, Treatment(reference='LECLERC')) + " +\
-                "surface + dum_high_hhi + ln_med_rev_au + ln_pop_cont_10",
+                "surface + dum_high_hhi + ln_pop_cont_10 + C(region)",
                 data = df_stores).fit()
 print(res_a.summary())
 
-res_b = smf.ols("ln_price ~ surface + dum_high_hhi + ln_med_rev_au + ln_pop_cont_10",
+res_b = smf.ols("ln_price ~ C(qlmc_chain, Treatment(reference='LECLERC')) + " +\
+                "surface + dum_high_hhi + ln_med_rev_au + ln_pop_cont_10 + C(region)",
                 data = df_stores).fit()
 print(res_b.summary())
 
 res_c = smf.ols("ln_price ~ C(qlmc_chain, Treatment(reference='LECLERC')) + " +\
-                "surface + hhi + ln_med_rev_au + ln_pop_cont_10 + "\
-                "d_paca + d_ra + d_co + d_idf",
+                "surface + hhi + ln_pop_cont_10 + C(region)",
                 data = df_stores).fit()
 print(res_c.summary())
 
 res_d = smf.ols("ln_price ~ C(qlmc_chain, Treatment(reference='LECLERC')) + " +\
-                "surface + ln_med_rev_au + ln_pop_cont_10 + "\
-                "d_paca + d_ra + d_co + d_idf*hhi",
+                "surface + hhi + ln_med_rev_au + ln_pop_cont_10 + C(region)",
                 data = df_stores).fit()
 print(res_d.summary())
 
-res_d = smf.ols("ln_price ~ surface + dum_high_hhi + ln_med_rev_au + ln_pop_cont_10 + d_idf",
-                data = df_stores[df_stores['store_chain'] == 'AUCHAN']).fit()
+res_e = smf.ols("ln_price ~ surface + dum_high_hhi + ln_med_rev_au + ln_pop_cont_10 + C(region)",
+                data = df_stores).fit()
+print(res_e.summary())
+
+res_f = smf.ols("ln_price ~ surface + hhi + ln_med_rev_au + ln_pop_cont_10 + C(region)",
+                data = df_stores).fit()
+print(res_e.summary())
 
 # #################################
 # REG LECLERC PRICE ON STORES CHARS
