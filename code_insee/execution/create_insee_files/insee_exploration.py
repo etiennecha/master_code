@@ -149,6 +149,32 @@ ls_logement_select_columns = [u'CODGEO', u'LIBGEO',
                               u'P10_RP_VOIT1P', 'P10_RP_VOIT1', 'P10_RP_VOIT2P']
 df_logement = df_logement[ls_logement_select_columns] 
 
+# #######################
+# REVENUS FISCAUX 2010
+
+path_xls_revenus = os.path.join(path_dir_communes,
+                                'Revenus_fiscaux',
+                                'base-cc-rev-fisc-loc-menage-10.xls')
+
+wb_revenus = xlrd.open_workbook(path_xls_revenus)
+print 'Sheets in file', wb_revenus.sheet_names()
+
+sh_revenus_com = wb_revenus.sheet_by_name(u'REVME_COM')
+ls_columns = sh_revenus_com.row_values(5)
+ls_rows = [sh_revenus_com.row_values(i) for i in range(6, sh_revenus_com.nrows)]
+df_revenus_com = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+
+sh_revenus_arm = wb_revenus.sheet_by_name(u'REVME_ARM')
+ls_columns = sh_revenus_arm.row_values(5)
+ls_rows = [sh_revenus_arm.row_values(i) for i in range(6, sh_revenus_arm.nrows)]
+df_revenus_arm = pd.DataFrame(ls_rows, columns = ls_columns, dtype = str)
+
+df_revenus = pd.concat([df_revenus_com, df_revenus_arm], ignore_index = True)
+ls_revenus_select_columns = [u'CODGEO', u'MENFIS10', u'PMENFIS10', u'MENIMP10',
+                             u'QUAR1UC10', u'QUAR2UC10', u'QUAR3UC10', u'RDUC10',
+                             u'PTSA10', u'PPEN10', u'PBEN10', u'PAUT10']
+df_revenus = df_revenus[ls_revenus_select_columns] 
+
 # #################################### 
 # 1E/ Merge INSEE communes dataframes
 
@@ -158,8 +184,13 @@ print '\n', df_population.info()
 print '\n', df_logement.info()
 del(df_au['LIBGEO'], df_population['LIBGEO'], df_logement['LIBGEO'])
 df_insee = pd.merge(df_uu, df_au, on = 'CODGEO')
-df_insee = pd.merge(df_insee, df_population, on = 'CODGEO')
-df_insee = pd.merge(df_insee, df_logement, on = 'CODGEO') 
+df_insee = pd.merge(df_insee, df_population, on = 'CODGEO', how = 'left')
+df_insee = pd.merge(df_insee, df_logement, on = 'CODGEO', how = 'left')
+
+lsd_revenus = ['CODGEO', 'MENFIS10', 'PMENFIS10', 'MENIMP10', 
+               'QUAR1UC10', 'QUAR2UC10', 'QUAR3UC10',
+               'RDUC10', 'PTSA10', 'PPEN10', 'PBEN10', 'PAUT10']
+df_insee = pd.merge(df_insee, df_revenus[lsd_revenus], on = 'CODGEO', how = 'left')
 
 print '\nInsee extract:'
 print df_insee.info()

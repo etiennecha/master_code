@@ -207,14 +207,8 @@ df_uu_agg = pd.merge(df_revenus_uu,
                      left_index = True,
                      right_index = True)
 
-# specific additions (could do before?)
-df_uu_agg['NB_COMUU'] = df_uu_info['NB_COM']
-df_uu_agg['TAILLEUU'] = df_uu_info['TAILLE']
-df_uu_agg['TYPEUU'] = df_uu_info['TYPE']
-
-df_uu_info.set_index('UU2010', inplace = True)
-
 # todo: check missing UU... mainly DOMTOM: all info avail included??
+df_uu_info.set_index('UU2010', inplace = True)
 ls_disp_info = ['LIBUU2010', 'NB_COM', 'TAILLE', 'TYPE', 'POP_MUN_2007']
 df_uu_agg_final = pd.merge(df_uu_info[ls_disp_info],
                            df_uu_agg,

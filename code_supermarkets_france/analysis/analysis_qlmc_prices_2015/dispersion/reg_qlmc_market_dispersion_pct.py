@@ -65,6 +65,22 @@ df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'utf-8')
 
+# LOAD FEs
+price_col = 'ln_price'
+df_fes = pd.read_csv(os.path.join(path_built_csv,
+                     'df_res_{:s}_fes.csv'.format(price_col)),
+                     encoding = 'utf-8')
+# add price (store fes)
+df_store_fes = df_fes[df_fes['name'].str.startswith('C(store_id)')].copy()
+df_store_fes['store_id'] = df_store_fes['name'].apply(\
+                             lambda x: x.replace('C(store_id)', '').strip())
+df_store_fes['price'] = (df_store_fes['coeff'] + 1) * 100
+
+df_stores = pd.merge(df_stores,
+                     df_store_fes[['store_id', 'price']],
+                     how = 'left',
+                     on = 'store_id')
+
 # LOAD COMPETITION
 ls_comp_files = ['df_store_prospect_comp_HS_v_all_10km.csv',
                  'df_store_prospect_comp_HS_v_all_20km.csv',
@@ -110,6 +126,17 @@ df_insee_areas = pd.merge(df_insee_areas,
                           left_on = 'UU2010',
                           right_on = 'UU2010')
 
+# add area comp info
+title_area, code_area = 'AU', 'AU2010'
+df_uu_comp = pd.read_csv(os.path.join(path_built_lsa_csv,
+                                      '201407_competition',
+                                      'df_area_{:s}.csv'.format(title_area)),
+                         encoding = 'utf-8')
+df_insee_areas = pd.merge(df_insee_areas,
+                          df_uu_comp,
+                          left_on = code_area,
+                          right_on = code_area)
+
 # MERGE DATA
 df_lsa = pd.merge(df_lsa,
                   df_comp,
@@ -120,9 +147,14 @@ df_lsa = pd.merge(df_lsa,
                   df_demand,
                   on = 'id_lsa',
                   how = 'left')
+               
+ls_ia_cols = ['STATUT_2010',
+              'med_rev_au', 'med_rev_uu', 'area_hhi',
+              'area_cl_comp_m', 'area_cl_comp_s',
+              'area_pop_by_store_surface', 'area_pop_by_store_nb', 'area_nb_stores']
 
 df_lsa = pd.merge(df_lsa,
-                  df_insee_areas[['CODGEO', 'med_rev_au', 'med_rev_uu']],
+                  df_insee_areas[['CODGEO'] + ls_ia_cols],
                   left_on = 'c_insee',
                   right_on = 'CODGEO',
                   how = 'left')
@@ -134,7 +166,7 @@ ls_lsa_cols = ['id_lsa',
                'nb_emplois'] +\
                list(df_comp.columns[1:]) +\
                list(df_demand.columns[1:]) +\
-               ['med_rev_au', 'med_rev_uu']
+               ls_ia_cols
 
 df_stores = pd.merge(df_stores,
                      df_lsa[ls_lsa_cols],
@@ -203,11 +235,11 @@ print(df_disp[['nb_stores', 'ac_hhi', 'hhi',
                'ln_pop_cont_10', 'ln_pop_cont_12',
                'ln_med_rev_au', 'ln_med_rev_uu']].corr().to_string())
 
-res_std = smf.ols('std ~ ac_hhi + ln_pop_cont_10 + ln_med_rev_au',
+res_std = smf.ols('std ~ ac_hhi + area_pop_by_store_surface + C(STATUT_2010)',
                   data = df_disp).fit()
 print(res_std.summary())
 
-res_range = smf.ols('range ~ ac_hhi + ln_pop_cont_10 + ln_med_rev_au',
+res_range = smf.ols('range ~ ac_hhi + ln_pop_cont_10 + C(STATUT_2010)',
                     data = df_disp).fit()
 print(res_range.summary())
 

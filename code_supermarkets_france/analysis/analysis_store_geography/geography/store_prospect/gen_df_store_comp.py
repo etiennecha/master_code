@@ -48,6 +48,7 @@ lsd0 = [u'enseigne',
 ls_h_and_s = [[['H'], ['H'], 25, 'H_v_H'],
               [['H'], ['H', 'X', 'S'], 25, 'H_v_all'],
               [['S'], ['H', 'X', 'S'], 10, 'S_v_all'],
+              [['X'], ['H', 'X', 'S'], 10, 'X_v_all'],
               [['H', 'S'], ['H', 'X', 'S'], 10, 'HS_v_all_10km'],
               [['H', 'S'], ['H', 'X', 'S'], 20, 'HS_v_all_20km']]
 
@@ -160,7 +161,19 @@ df_hs_1025[['id_lsa'] + ls_comp_cols]\
           float_format ='%.3f',
           index = False)
 
-# Caution: dist_cl_groupe for small groups: very high
+df_hsx_1025 = pd.concat([df_hs_1025,
+                         dict_df_comp['X_v_all']],
+                         axis = 0)
+
+df_hsx_1025[['id_lsa'] + ls_comp_cols]\
+  .to_csv(os.path.join(path_built_csv,
+                       '201407_competition',
+                       'df_store_prospect_comp_HSX_v_all_1025km.csv'),
+          encoding = 'utf-8',
+          float_format ='%.3f',
+          index = False)
+
+  # Caution: dist_cl_groupe for small groups: very high
 # Remedy(?): erase if Groupe != Groupe_Alt
 
 ## Caution: None is ignored by groupby

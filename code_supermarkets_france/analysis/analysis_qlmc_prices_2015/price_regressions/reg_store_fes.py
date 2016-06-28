@@ -287,6 +287,9 @@ print(res_e.summary())
 # REG LECLERC PRICE ON STORES CHARS
 # #################################
 
+print()
+print(u'Regs with Leclerc stores only')
+
 df_lec = df_stores[df_stores['store_chain'] == 'LECLERC'].copy()
 df_lec.set_index('store_id', inplace = True)
 

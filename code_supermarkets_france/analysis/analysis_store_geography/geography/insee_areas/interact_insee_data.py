@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from functions_generic_qlmc import *
@@ -49,6 +50,16 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv,
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'utf-8')
 
+# LSA Comp
+df_lsa_comp = pd.read_csv(os.path.join(path_built_csv,
+                                       '201407_competition',
+                                       'df_store_prospect_comp_HS_v_all_1025km.csv'),
+                          encoding = 'utf-8')
+df_lsa = pd.merge(df_lsa,
+                  df_lsa_comp[['id_lsa', 'dist_cl_comp', 'dist_cl_groupe']],
+                  how = 'left',
+                  on = 'id_lsa')
+
 # INSEE DATA
 
 # Mapping of municipality codes to insee areas codes
@@ -59,12 +70,14 @@ df_insee_areas = pd.read_csv(os.path.join(path_insee_extracts,
 df_au_agg = pd.read_csv(os.path.join(path_insee_extracts,
                                      u'df_au_agg_final.csv'),
                         encoding = 'UTF-8')
-# AU2010 read as str (some contains letters)
 
 df_uu_agg = pd.read_csv(os.path.join(path_insee_extracts,
                                      u'df_uu_agg_final.csv'),
                         encoding = 'UTF-8')
-# UU2010 read as str (some contains letters)
+
+#df_bv_agg = pd.read_csv(os.path.join(path_insee_extracts,
+#                                     u'df_bv_agg_final.csv'),
+#                        encoding = 'UTF-8')
 
 # Socio demographic data on insee areas
 df_com = pd.read_csv(os.path.join(path_insee_extracts,
@@ -88,194 +101,147 @@ df_lsa = pd.merge(df_lsa,
                   right_on = 'CODGEO',
                   how = 'left')
 
-# ##########################
-# ANALYSIS AT COMMUNE LEVEL
-# ##########################
-
 pd.set_option('float_format', '{:10,.0f}'.format)
-
-# Why not here ? Right superf?
-df_com['POPDENSITY10'] = df_com['P10_POP'] / df_com['SUPERF'].astype(float)
-# No data on revenue... generate proper commune file
-
-# COMMUNES WITH NO STORE
-print u"\nNb of communes in Metro France: " +\
-      u"{:5d}".format(len(df_com))
-print u"\nPop in Metro France (2010): " +\
-      u"{:12,.0f}".format(df_com['P10_POP'].sum())
-
-se_com_vc = df_lsa['c_insee'].value_counts()
-df_com.set_index('CODGEO', inplace = True)
-df_com['Nb GS'] = se_com_vc
-print u"\nNb of communes with a store: " +\
-      u"{:5d}".format(len(df_com[~pd.isnull(df_com['Nb GS'])]))
-
-pop_tot = df_com['P10_POP'].sum()
-pop_nostore = df_com['P10_POP'][pd.isnull(df_com['Nb GS'])].sum()
-print u'\nPercentage of French citizens (2010) with no store on "Commune": ' +\
-      u"{:2.2f}".format(pop_nostore / pop_tot * 100)
-
-df_com.sort('P10_POP', ascending=False, inplace=True)
 
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-# Pop and Pop by Grocery Store
-df_com['P10_POP'] = df_com['P10_POP'] / 1000.0
-df_com['Pop by GS'] = df_com['P10_POP'] / df_com['Nb GS']
+# ##################
+# PREPARE INSEE DATA
+# ##################
 
-# Surface and Pop by m2
-df_com['Surface'] = df_lsa[['c_insee', 'surface']].\
-                      groupby('c_insee')['surface'].sum()
-df_com['Surface'] = df_com['Surface'] / 1000.0
-
-df_com['Pop by surf'] = df_com['P10_POP'] / df_com['Surface']
-
-df_com.rename(columns = {'P10_POP' : 'Pop',
-                         'LIBGEO':   'Area',
-                         'SUPERF' : 'Size',
-                         'POPDENSITY10' : 'Pop density'},
-              inplace = True)
-
-dict_formatters = {'Pop' : format_float_int,
-                   'Pop by GS' : format_float_float,
-                   'Surf' : format_float_int,
-                   'Pop by surf' : format_float_float}
-
-print u'\nTop 20 Communes in terms of inhabitants'
-
-ls_disp_com = ['Area', 'Pop', 'Size', 'Pop density',
-               'Nb GS', 'Pop by GS', 'Surface', 'Pop by surf']
-print df_com[ls_disp_com]\
-        [~pd.isnull(df_com['Pop'])][0:20].to_latex(index = False,
-                                                   index_names = False,
-                                                   formatters = dict_formatters)
-
-# ##########################
-# ANALYSIS AT AU LEVEL
-# ##########################
+# AU
 
 # Get rid of non geo areas
 df_au_agg = df_au_agg[~df_au_agg['AU2010'].isin(['000', '997', '998'])]
-
+# Get rid of DOM TOM
+df_au_agg = df_au_agg[~df_au_agg['AU2010'].str.slice(0, -1).isin(['9A', '9B', '9C',
+                                                                  '9D', '9E', '9F'])]
+# Rename some AUs
 dict_rename_libau = {u'Marseille - Aix-en-Provence' : u'Marseille - Aix',
                      u'(partie française)' : u'(fr)',
                      u'Clermont-Ferrand' : u'Clermont-Fer.'}
-
 def rename_field(some_str, dict_rename):
   for k,v in dict_rename.items():
     some_str = some_str.replace(k,v).strip()
   return some_str
-
-
-# NB STORES BY AU IN A GIVEN PERIOD
-df_au_agg.set_index('AU2010', inplace = True)
-se_au_vc = df_lsa['AU2010'].value_counts()
-df_au_agg['Nb GS'] = se_au_vc
-
-# RENAME AU2010 FOR OUTPUT
 df_au_agg['LIBAU2010'] = df_au_agg['LIBAU2010'].apply(\
                            lambda x: rename_field(x, dict_rename_libau))
 
-# Pop and Pop by Grocery Store
-df_au_agg['P10_POP'] = df_au_agg['P10_POP'] / 1000.0
-df_au_agg['Pop by GS'] = df_au_agg['P10_POP'] / df_au_agg['Nb GS']
-
-# Surface and Pop by m2
-df_au_agg['Surface'] = df_lsa[['AU2010', 'surface']].\
-                         groupby('AU2010')['surface'].sum()
-df_au_agg['Surface'] = df_au_agg['Surface'] / 1000.0
-
-df_au_agg['Pop by surf'] = df_au_agg['P10_POP'] / df_au_agg['Surface']
-
-df_au_agg['QUAR2UC10'] = df_au_agg['QUAR2UC10'] / 1000
-
-df_au_agg.rename(columns = {'P10_POP' : 'Pop',
-                            'LIBAU2010': 'Area',
-                            'SUPERF' : 'Size',
-                            'POPDENSITY10': 'Pop density',
-                            'QUAR2UC10' : 'Med rev'}, inplace = True)
-
-ls_disp_au = ['Area', 'Pop', 'Size', 'Pop density', 'Med rev',
-              'Nb GS', 'Pop by GS', 'Surface', 'Pop by surf']
-
-dict_formatters.update({'Med rev' : format_float_float})
-
-print u'\nTop 20 Aires Urbaines in terms of inhabitants'
-print df_au_agg[ls_disp_au][0:20].to_latex(index = False,
-                                           index_names = False,
-                                           formatters = dict_formatters)
-
-## Nb stores vs. population (# stores by head decreasing in population density?)
-## exclude paris (+ todo: check with exclusion of au internationales)
-#plt.scatter(df_au_agg['P10_POP'][df_au_agg['AU2010']!='001'],
-#            df_au_agg['nb_stores'][df_au_agg['AU2010']!='001'])
-#plt.show()
-
-## Store density vs. pop density (# stores by head decreasing in population density?)
-#plt.scatter(df_au_agg['POPDENSITY10'][df_au_agg['AU2010']!='001'],
-#            df_au_agg['pop_by_store'][df_au_agg['AU2010']!='001'])
-#plt.show()
-
-# ##########################
-# ANALYSIS AT UU LEVEL
-# ##########################
+# UU
 
 # Get rid of non geo areas
 df_uu_agg = df_uu_agg[~df_uu_agg['LIBUU2010'].str.contains(u'Communes rurales')]
-
-# Same except: 'AU2010' / 'UU2010', 'LIBAU2010' / 'LIBUU2010'
-# Also need to sort and drop nan
-df_uu_agg.sort('P10_POP', ascending = False, inplace = True)
-df_uu_agg = df_uu_agg[~pd.isnull(df_uu_agg['P10_POP'])]
-
-# NB STORES BY UU IN A GIVEN PERIOD
-df_uu_agg.set_index('UU2010', inplace = True)
-se_uu_vc = df_lsa['UU2010'].value_counts()
-df_uu_agg['Nb GS'] = se_uu_vc
-
-# RENAME AU2010 FOR OUTPUT
+# Get rid of DOM TOM
+df_uu_agg = df_uu_agg[~df_uu_agg['UU2010'].str.slice(0, -3).isin(['9A', '9B', '9C',
+                                                                  '9D', '9E', '9F'])]
+# Rename some UUs
 df_uu_agg['LIBUU2010'] = df_uu_agg['LIBUU2010'].apply(\
                            lambda x: rename_field(x, dict_rename_libau))
 
-# Pop and Pop by Grocery Store
-df_uu_agg['P10_POP'] = df_uu_agg['P10_POP'] / 1000.0
-df_uu_agg['Pop by GS'] = df_uu_agg['P10_POP'] / df_uu_agg['Nb GS']
+# loop (make sure no conflicts)
+# df_com    : CODGEO
+# df_au_agg : AU2010
+# df_uu_agg : UU2010
 
-# Surface and Pop by m2
-df_uu_agg['Surface'] = df_lsa[['UU2010', 'surface']].\
-                    groupby('UU2010')['surface'].sum()
-df_uu_agg['Surface'] = df_uu_agg['Surface'] / 1000.0
+dict_df_areas = {}
 
-df_uu_agg['Pop by surf'] = df_uu_agg['P10_POP'] / df_uu_agg['Surface']
+for title_area, code_area, df_area in [['com', 'CODGEO', df_com],
+                                       ['UU',  'UU2010', df_uu_agg],
+                                       ['AU',  'AU2010', df_au_agg]]:
 
-df_uu_agg['QUAR2UC10'] = df_uu_agg['QUAR2UC10'] / 1000
+  df_area.rename(columns = {'P10_POP' : 'area_pop',
+                           'SUPERF' : 'area_surface',
+                           'QUAR1UC10': 'area_quar1_rev',
+                           'QUAR2UC10': 'area_med_rev',
+                           'QUAR3UC10': 'area_quar3_rev',
+                           'P10_MEN' :  'area_nb_hh', # nb households
+                           'P10_RP_VOIT1P' : 'area_nb_mot_hh', # nb households with a car or more
+                           'LIBGEO':   'area_label',
+                           'LIBAU2010' : 'area_label',
+                           'LIBUU2010' : 'area_label'},
+                inplace = True)
 
-df_uu_agg.rename(columns = {'P10_POP' : 'Pop',
-                            'LIBUU2010': 'Area',
-                            'SUPERF' : 'Size',
-                            'POPDENSITY10': 'Pop density',
-                            'QUAR2UC10' : 'Med rev'}, inplace = True)
+  df_area.drop(['MENFIS10', 'PMENFIS10', 'MENIMP10',
+                'RDUC10', 'PTSA10', 'PBEN10', 'PPEN10', 'PAUT10',
+                'P10_LOG', 'P10_PMEN',
+                'P10_RP_VOIT1', 'P10_RP_VOIT2P', 'POPDENSITY10'],
+               axis = 1,
+               inplace = True)
 
-ls_disp_uu = ['Area', 'Pop', 'Size', 'Pop density', 'Med rev',
-              'Nb GS', 'Pop by GS', 'Surface', 'Pop by surf']
+  df_area['area_pop_density'] = df_area['area_pop'] / df_area['area_surface'].astype(float)
+  
+  # Nb stores in area
+  se_area_vc = df_lsa[code_area].value_counts()
+  df_area.set_index(code_area, inplace = True)
+  df_area['area_nb_stores'] = se_area_vc
+  
+  # Pop by store nb
+  df_area['area_pop_by_store_nb'] = df_area['area_pop'] / df_area['area_nb_stores']
+  
+  # Pop by store surface (nb inhab by squared meter)
+  df_area['area_store_surface'] = df_lsa[[code_area, 'surface']].\
+                                   groupby(code_area)['surface'].sum()
+  df_area['area_pop_by_store_surface'] = df_area['area_pop'] / df_area['area_store_surface']
+  
+  # Replace nan by 0 for nb stores (now only to avoid inf in area_pop_by_store_nb)
+  df_area['area_nb_stores'].fillna(0, inplace = True)
+  
+  # Avg dist to closest competitor
+  df_area['area_cl_comp_m'] = df_lsa[[code_area, 'dist_cl_comp']].\
+                                groupby(code_area)['dist_cl_comp'].mean()
+  df_area['area_cl_comp_s'] = df_lsa[[code_area, 'dist_cl_comp']].\
+                                groupby(code_area)['dist_cl_comp'].std()
 
-dict_formatters.update({'Med rev' : format_float_float})
+  # HHI
+  df_surfaces = pd.pivot_table(df_lsa,
+                               index = code_area,
+                               columns = 'groupe',
+                               values = 'surface',
+                               aggfunc = 'sum')
+  df_ms = df_surfaces.apply(lambda x: x/df_surfaces.sum(1))
+  se_hhi = df_ms.apply(lambda x: (x**2).sum(), axis = 1)
+  df_area['area_hhi'] = se_hhi
+  
+  df_area.sort('area_pop', ascending = False, inplace = True)
+  dict_df_areas[title_area] = df_area
 
-print u'\nTop 20 Unites Urbaines in terms of inhabitants'
-print df_uu_agg[ls_disp_uu][0:20].to_latex(index = False,
-                                           index_names = False,
-                                           formatters = dict_formatters)
+# ##################
+# STATS DES
+# ##################
 
-# Nb stores vs. population (# stores by head decreasing in population density?)
-# exclude paris (+ todo: check with exclusion of au internationales)
-df_uu_disp = df_uu_agg[(~df_uu_agg.index.isin(['00851'])) &\
-                       (df_uu_agg['Nb GS'] > 0)]
-plt.scatter(df_uu_disp['Pop'], df_uu_disp['Nb GS'])
-plt.show()
+dict_formatters = {'area_pop_by_store_surface' : format_float_float,
+                   'area_cl_comp_m' : format_float_float,
+                   'area_cl_comp_s' : format_float_float,
+                   'area_hhi' : format_float_float}
 
-# Store density vs. pop density (# stores by head decreasing in population density?)
-df_au_disp = df_au_agg[(~df_au_agg.index.isin(['001'])) &\
-                       (df_au_agg['Nb GS'] > 0)]
-plt.scatter(df_au_disp['Pop'], df_au_disp['Nb GS'])
-plt.show()
+lsd = ['area_label', 'area_pop', 'area_med_rev', 'area_pop_density',
+       'area_nb_stores', 'area_pop_by_store_nb', 'area_pop_by_store_surface',
+       'area_cl_comp_m', 'area_cl_comp_s', 'area_hhi']
+
+for title_area in ['com', 'AU', 'UU']:
+  print()
+  print(title_area)
+  df_area = dict_df_areas[title_area]
+  print('Total pop in areas: {:.0f}'.format(df_area['area_pop'].sum()))
+  print('Total pop in areas w/o store: {:.0f}'.format(\
+           df_area['area_pop'][df_area['area_nb_stores'] == 0].sum()))
+
+  print()
+  print('Overview of largest areas:')
+  print(df_area[0:20][lsd].to_string(formatters = dict_formatters))
+ 
+  print()
+  print('Overview of largest areas:')
+  print(df_area[['area_surface', 'area_nb_stores'] + lsd]\
+          .describe().to_string(formatters = dict_formatters))
+
+  df_area.to_csv(os.path.join(path_built_csv,
+                              '201407_competition',
+                              'df_area_{:s}.csv'.format(title_area)),
+                 encoding = 'utf-8',
+                 float_format ='%.3f')
+
+df_com = dict_df_areas['com']
+df_uu = dict_df_areas['UU']
+df_au = dict_df_areas['AU']

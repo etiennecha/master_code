@@ -37,7 +37,7 @@ df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
                                   encoding = 'utf-8')
 
 df_prices['price_res'] = df_prices['price'] - df_prices['price_hat']
-price_col = 'price_res'
+price_col = 'price' # price_res
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
