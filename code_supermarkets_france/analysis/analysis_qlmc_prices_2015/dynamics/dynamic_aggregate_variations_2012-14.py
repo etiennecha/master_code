@@ -177,6 +177,21 @@ df_ic = pd.merge(df_mp_2012,
 #  df_brand_2014 = df_mp_2014[df_mp_2014['product'].str.contains(brand, case = False)].copy()
 #  df_brand_2014.sort('mean', ascending = False, inplace = True)
 #  print(df_brand_2014.to_string())
+#
+## EXCEL OUTPUT FOR MANUAL MATCHING
+#df_mp_2012.to_csv(os.path.join(path_built_200712_excel,
+#                               'df_2012_prods_for_manual_matching.csv'),
+#                               index = False,
+#                               encoding = 'latin-1',
+#                               sep = ';',
+#                               quoting = 3) # no impact, cannot have trailing 0s
+#
+#df_mp_2014.to_csv(os.path.join(path_built_200712_excel,
+#                               'df_2014_prods_for_manual_matching.csv'),
+#                               index = False,
+#                               encoding = 'latin-1',
+#                               sep = ';',
+#                               quoting = 3) # no impact, cannot have trailing 0s
 
 # ############################
 # COMPARE 2012 TO 2014
@@ -231,10 +246,16 @@ for chain in df_mcp_comp['store_chain'].unique():
   print()
   print(chain)
   df_chain_comp = df_mcp_comp[df_mcp_comp['store_chain'] == chain]
-  print(df_chain_comp.describe())
-  print((df_chain_comp['mean_14'].sum() / df_chain_comp['mean_12'].sum() - 1) * 100)
+  print(df_chain_comp.describe().to_string())
+  print()
+  basket_price_12 = df_chain_comp['mean_12'].sum()
+  basket_price_14 = df_chain_comp['mean_14'].sum()
+  agg_var = ((basket_price_14 / basket_price_12) - 1) * 100
+  print('Aggregate variation ({:.2f} => {:.2f}): {:.2f}%'.format(\
+         basket_price_12, basket_price_14, agg_var))
 
-df_chain_comp = df_mcp_comp[df_mcp_comp['store_chain'] == 'LECLERC'].copy()
-df_chain_comp.sort('var', ascending = True, inplace = True)
-print()
-print(df_chain_comp.to_string())
+## Check price variations for LECLERC
+#df_chain_comp = df_mcp_comp[df_mcp_comp['store_chain'] == 'LECLERC'].copy()
+#df_chain_comp.sort('var', ascending = True, inplace = True)
+#print()
+#print(df_chain_comp.to_string())

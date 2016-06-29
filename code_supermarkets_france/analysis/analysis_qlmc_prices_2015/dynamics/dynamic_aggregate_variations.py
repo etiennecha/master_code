@@ -119,6 +119,8 @@ for chain in ls_scs:
   ls_rows_02.append((chain, nb_prods, agg_chge))
 df_02 = pd.DataFrame(ls_rows_02,
                      columns = ['store_chain', 'nb_prods', 'var'])
+print()
+print(u'Var 2014/05 - 2015/03')
 print(df_02.to_string())
 
 
@@ -144,4 +146,6 @@ for chain in ls_scs_12:
   ls_rows_12.append((chain, nb_prods, agg_chge))
 df_12 = pd.DataFrame(ls_rows_12,
                      columns = ['store_chain', 'nb_prods', 'var'])
+print()
+print(u'Var 2014/09 - 2015/03')
 print(df_12.to_string())
