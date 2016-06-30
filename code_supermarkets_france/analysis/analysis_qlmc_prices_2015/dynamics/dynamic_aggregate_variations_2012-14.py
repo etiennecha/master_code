@@ -74,20 +74,20 @@ df_qlmc_1415 = pd.read_csv(os.path.join(path_built_201415_csv,
                                     'id_lsa' : str},
                            encoding = 'utf-8')
 
-#ls_tup_pers = [('0', '1'), ('1', '2'), ('0', '2')]
-#for tup_per in ls_tup_pers:
-#  df_qlmc_1415['pct_var_{:s}{:s}'.format(*tup_per)] =\
-#    df_qlmc_1415['price_{:s}'.format(tup_per[1])] /\
-#      df_qlmc_1415['price_{:s}'.format(tup_per[0])] - 1
-#
-#ls_pct_var_cols = ['pct_var_{:s}{:s}'.format(*tup_per)\
-#                      for tup_per in ls_tup_pers]
-#
-#for chain in ['LECLERC', 'GEANT CASINO', 'CARREFOUR']:
-#  print()
-#  print(chain)
-#  print(df_qlmc_1415[df_qlmc_1415['store_chain'] == chain]\
-#                    [ls_pct_var_cols].describe().to_string())
+# drop suspect price variations
+ls_tup_pers = [('0', '1'), ('1', '2'), ('0', '2')]
+for tup_per in ls_tup_pers:
+  df_qlmc_1415['pct_var_{:s}{:s}'.format(*tup_per)] =\
+    (df_qlmc_1415['price_{:s}'.format(tup_per[1])] /\
+      df_qlmc_1415['price_{:s}'.format(tup_per[0])] - 1) * 100
+df_qlmc_1415 = df_qlmc_1415[(~((df_qlmc_1415['pct_var_01'] >= 100) &\
+                               (df_qlmc_1415['pct_var_02'].isnull()))) &\
+                            (~((df_qlmc_1415['pct_var_01'] >= 100) &\
+                               (df_qlmc_1415['pct_var_02'] <= 100))) &\
+                            (~(df_qlmc_1415['pct_var_12'] >= 100))]
+df_qlmc_1415.drop(['pct_var_01', 'pct_var_12', 'pct_var_02'],
+                  axis = 1,
+                  inplace = True)
 
 # All periods observed? 670 stores with 158 to 1599 obs
 df_full = df_qlmc_1415[(~df_qlmc_1415['price_0'].isnull()) &\

@@ -33,6 +33,7 @@ df_qlmc = pd.read_csv(os.path.join(path_built_201415_csv,
                                'id_lsa' : str},
                       encoding = 'utf-8')
 
+
 df_comp_pairs = pd.read_csv(os.path.join(path_built_201415_csv,
                                          'df_comp_store_pairs.csv'),
                             dtype = {'id_lsa_0' : str,
@@ -41,11 +42,25 @@ df_comp_pairs = pd.read_csv(os.path.join(path_built_201415_csv,
 
 df_comp_pairs = df_comp_pairs[df_comp_pairs['dist'] <= 10]
 
+# ############################################
+# VARIATIONS OF STORE PRODUCT PRICES BY CHAIN
+# ############################################
+
+# All obs are pooled within each period by chain (no average)
+
+print(u'Distrs of store/product variations over time')
 ls_tup_pers = [('0', '1'), ('1', '2'), ('0', '2')]
 for tup_per in ls_tup_pers:
   df_qlmc['pct_var_{:s}{:s}'.format(*tup_per)] =\
-    df_qlmc['price_{:s}'.format(tup_per[1])] /\
-      df_qlmc['price_{:s}'.format(tup_per[0])] - 1
+    (df_qlmc['price_{:s}'.format(tup_per[1])] /\
+      df_qlmc['price_{:s}'.format(tup_per[0])] - 1) * 100
+
+# drop suspect price variations
+df_qlmc = df_qlmc[(~((df_qlmc['pct_var_01'] >= 100) &\
+                     (df_qlmc['pct_var_02'].isnull()))) &\
+                  (~((df_qlmc['pct_var_01'] >= 100) &\
+                     (df_qlmc['pct_var_02'] <= 100))) &\
+                  (~(df_qlmc['pct_var_12'] >= 100))]
 
 ls_pct_var_cols = ['pct_var_{:s}{:s}'.format(*tup_per)\
                       for tup_per in ls_tup_pers]
@@ -70,9 +85,9 @@ df_02 = df_qlmc[(~df_qlmc['price_0'].isnull()) &\
 # print(df_02[df_02['store_chain'] == 'INTERMARCHE']['pct_var_02'].describe())
 # print(df_full[df_full['pct_var_01'] > 1].to_string())
 
-# #########################
-# MAY 2014 vs. MARCH 2015
-# #########################
+# #########################################
+# VARIATIONS OF PRODUCT MEAN PRICE BY CHAIN
+# #########################################
 
 # - Classical Method: compare avg chain prices across periods
 # - Can restrict products to avoid comp effects
@@ -149,3 +164,27 @@ df_12 = pd.DataFrame(ls_rows_12,
 print()
 print(u'Var 2014/09 - 2015/03')
 print(df_12.to_string())
+
+# #################################
+# VARIATIONS BY STORE (BY CHAIN?)
+# #################################
+
+# Average price by period/chain/product
+ls_prod_cols = ['ean'] # ['section', 'family' , 'product']j
+ls_col_gb = ['store_chain', 'store_name']
+
+price_inds = (0, 1)
+df_temp = df_qlmc[(~df_qlmc['price_{:d}'.format(price_inds[0])].isnull()) &\
+                  (~df_qlmc['price_{:d}'.format(price_inds[1])].isnull())]
+gbcs = df_temp.groupby(ls_col_gb)
+def comp_var(df):
+  return (df['price_{:d}'.format(price_inds[1])].sum() /\
+            df['price_{:d}'.format(price_inds[0])].sum() - 1) * 100
+df_cs = gbcs.apply(comp_var)
+df_cs = df_cs.reset_index(drop = False)
+df_su_cs = df_cs.groupby('store_chain').agg('describe').unstack()
+
+#df_scp = df_mcp[(~df_mcp['mean'].isnull()) &\
+#                (df_mcp['len'] >= 20)]
+#df_mcp.reset_index(drop = False, inplace = True)
+#dict_df_mcp[price_col] = df_mcp

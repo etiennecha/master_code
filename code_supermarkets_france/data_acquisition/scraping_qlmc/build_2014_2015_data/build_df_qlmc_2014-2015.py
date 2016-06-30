@@ -85,7 +85,7 @@ for df_qlmc in ls_df_qlmc:
 # For 2014 pdf data: 
 # - drop all lines if one ean for several prods: ambiguous for 2015 match
 # - drop all lines if several ean for one prod: ambiguous for 2015 match
-# - neglect risk that both could happend at the same time
+# - neglect risk that both could happen at the same time
 
 # Clearly: something wrong with ean of new products in 201409
 # Keep only products for which ean/product already known in 201405
@@ -207,15 +207,17 @@ df_qlmc_all.rename(columns = {'price' : 'price_0',
                    inplace = True)
 
 # add store and product info
+# inner eliminates right prods of 2014 but with no prod/section/family
+
 df_qlmc_all = pd.merge(df_qlmc_all,
                        df_prod_all,
                        on = 'ean',
-                       how = 'left')
+                       how = 'outer')
 
 df_qlmc_all = pd.merge(df_qlmc_all,
                        df_stores_all,
                        on = 'id_lsa',
-                       how = 'left')
+                       how = 'outer')
 
 df_qlmc_all = df_qlmc_all[['id_lsa', 'store_name', 'store_chain',
                            'ean', 'section', 'family', 'product',
