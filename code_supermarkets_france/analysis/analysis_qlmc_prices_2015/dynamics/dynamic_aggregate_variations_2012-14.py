@@ -221,6 +221,8 @@ df_mcp_2012.loc[df_mcp_2012['store_chain_alt'] == 'CHAMPION',
                 'store_chain_alt'] = 'CARREFOUR MARKET'
 df_mcp_2012.loc[df_mcp_2012['store_chain_alt'] == 'GEANT',
                 'store_chain_alt'] = 'GEANT CASINO'
+df_mcp_2012.loc[df_mcp_2012['store_chain_alt'] == 'SYSTEME U',
+                'store_chain_alt'] = 'SUPER U'
 df_mcp_2012.rename(columns = {'store_chain_alt' : 'store_chain'}, inplace = True)
 
 ls_prod_cols_14 = ['ean', 'section', 'family', 'product']

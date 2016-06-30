@@ -131,8 +131,10 @@ df_su_0 = pd.pivot_table(df_stores,
                          index = ['store_chain', 'type'],
                          values = ls_cols,
                          aggfunc = dict_aggfunc).astype(int)
+print()
 print(df_su_0.to_string())
 
+print()
 df_su_1 = pd.pivot_table(df_stores,
                          index = ['store_chain'],
                          values = ls_cols,
