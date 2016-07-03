@@ -138,7 +138,6 @@ print()
 print(u'Var 2014/05 - 2015/03')
 print(df_02.to_string())
 
-
 ls_scs_12 = ['LECLERC',
              'CARREFOUR',
              'CARREFOUR MARKET',

@@ -10,26 +10,28 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+path_built = os.path.join(path_data,
+                          'data_supermarkets',
+                          'data_built',
+                          'data_qlmc_2015')
+path_built_csv = os.path.join(path_built, 'data_csv_201503')
+path_built_csv_1415 = os.path.join(path_built, 'data_csv_2014-2015')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 # #######################
-# LOAD DF QLMC
+# LOAD DATA
 # #######################
 
-# LOAD DF PRICES
+# DF PRICES (MARCH 2015)
+
 df_prices = pd.read_csv(os.path.join(path_built_csv,
                                      'df_prices.csv'),
                         encoding = 'utf-8')
-
 # store chain harmonization per qlmc
+# does not chge much to include only super-u or hyper-u
 ls_replace_chains = [['HYPER CASINO', 'CASINO'],
                      ['HYPER U', 'SUPER U'],
                      ['U EXPRESS', 'SUPER U'],
@@ -37,22 +39,34 @@ ls_replace_chains = [['HYPER CASINO', 'CASINO'],
 for old_chain, new_chain in ls_replace_chains:
   df_prices.loc[df_prices['store_chain'] == old_chain,
                 'store_chain'] = new_chain
-# does not chge much to include only super-u or hyper-u
 
-# adhoc fixes
-ls_suspicious_prods = [u'VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
-df_prices = df_prices[~df_prices['product'].isin(ls_suspicious_prods)]
-df_prices['product'] =\
-  df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
+# DF QLMC 2014
 
-df_qlmc = df_prices
+df_qlmc_201405 = pd.read_csv(os.path.join(path_built_csv_1415,
+                                          'df_qlmc_201405.csv'),
+                             dtype = {'ean' : str},
+                             encoding = 'utf-8')
 
-ls_prod_cols = ['section', 'family', 'product']
+df_qlmc_201409 = pd.read_csv(os.path.join(path_built_csv_1415,
+                                          'df_qlmc_201409.csv'),
+                             dtype = {'ean' : str},
+                             encoding = 'utf-8')
 
-# Robustness check: 2000 most detained products only
-se_prod_vc = df_prices[ls_prod_cols].groupby(ls_prod_cols).agg(len)
-ls_keep_products = [x[-1] for x in list(se_prod_vc[0:3000].index)]
-df_qlmc = df_qlmc[df_qlmc[ls_prod_cols[-1]].isin(ls_keep_products)]
+# DEFINE DF QLMC
+
+#df_qlmc = df_prices 
+#ls_prod_cols = ['section', 'family', 'product']
+#ls_store_id_cols = ['store_id']
+
+# Robustness check with 2014 (May or September)
+df_qlmc = df_qlmc_201405 # df_qlmc_201409
+ls_prod_cols = ['ean', 'product'] # check if 1 to 1 (?)
+ls_store_id_cols = ['id_lsa', 'store_name']
+
+## Robustness check: 2000 most detained products only
+#se_prod_vc = df_qlmc[ls_prod_cols].groupby(ls_prod_cols).agg(len)
+#ls_keep_products = [x[-1] for x in list(se_prod_vc[0:3000].index)]
+#df_qlmc = df_qlmc[df_qlmc[ls_prod_cols[-1]].isin(ls_keep_products)]
 
 # #############################################
 # PRICE DISTRIBUTION PER CHAIN FOR TOP PRODUCTS
@@ -61,7 +75,7 @@ df_qlmc = df_qlmc[df_qlmc[ls_prod_cols[-1]].isin(ls_keep_products)]
 PD = PriceDispersion()
 
 nb_obs_min = 20 # Product must be observed at X stores at least
-pct_min = 0.33 # Ref price is share by X% of stores only (else no ref)
+pct_min = 0  # 0.33 # Ref price is share by X% of stores only (else no ref)
 
 ls_loop_scs = ['AUCHAN',
                'CARREFOUR',
@@ -89,8 +103,8 @@ for store_chain in ls_loop_scs:
   print(store_chain)
   # Build df with product most common prices
   df_sub = df_qlmc[(df_qlmc['store_chain'] == store_chain)]
-  df_sub_products =  df_sub[['section', 'family', 'product', 'price']]\
-                       .groupby(['section', 'family', 'product'])\
+  df_sub_products =  df_sub[ls_prod_cols + ['price']]\
+                       .groupby(ls_prod_cols)\
                        .agg([len,
                              'mean',
                              PD.kurtosis,
@@ -152,8 +166,8 @@ for store_chain in ls_loop_scs:
     df_sub.loc[(df_sub['price_1_fq'] <= pct_min),
                'ref_price'] = 'no_ref'
     
-    df_ref = pd.pivot_table(data = df_sub[['store_id', 'ref_price']],
-                            index = 'store_id',
+    df_ref = pd.pivot_table(data = df_sub[ls_store_id_cols + ['ref_price']],
+                            index = ls_store_id_cols,
                             columns = 'ref_price',
                             aggfunc = len,
                             fill_value = 0).astype(int)
@@ -231,22 +245,22 @@ for x in ['nb_prods_by_store', 'nb_stores_by_prod', 'no_ref', 'freq_prods', 'fre
 
 # check ITM and LECLERC: freq_stores == 1 !!! which ones?
 
-df_chain_store_su = dict_df_chain_store_desc['SUPER U'].copy()
-df_chain_store_su.sort('price_1', ascending = False, inplace = True)
+#df_chain_store_su = dict_df_chain_store_desc['SUPER U'].copy()
+#df_chain_store_su.sort('price_1', ascending = False, inplace = True)
 
-# ##############################################
-# CHECK PRODUCT WITH TOP CONCENTRATION BY CHAIN
-# #############################################
-
-print()
-print(u'-'*60)
-print(u'Inspace products with most concentrated prices per chain')
-for chain in dict_df_chain_product_stats.keys():
-  df_chain = dict_df_chain_product_stats[chain].copy()
-  print()
-  print(chain)
-  df_chain.sort('price_1_fq', ascending = False, inplace = True)
-  print(df_chain[0:20].to_string())
+## ##############################################
+## CHECK PRODUCT WITH TOP CONCENTRATION BY CHAIN
+## #############################################
+#
+#print()
+#print(u'-'*60)
+#print(u'Inspace products with most concentrated prices per chain')
+#for chain in dict_df_chain_product_stats.keys():
+#  df_chain = dict_df_chain_product_stats[chain].copy()
+#  print()
+#  print(chain)
+#  df_chain.sort('price_1_fq', ascending = False, inplace = True)
+#  print(df_chain[0:20].to_string())
 
 # ############################################
 # COMPARE LECLERC AND GEANT CASINO REF PRICES
@@ -278,6 +292,9 @@ print(df_compa[lsd_compa].describe().to_string())
 print()
 print(df_compa[df_compa['price_1_fq_lec'] >= 0.33][lsd_compa].describe().to_string())
 
+print()
+print('Nb prods with same price', len(df_compa[df_compa['diff'] == 0]))
+
 # ############################################
 # OUTPUT
 # ############################################
@@ -297,14 +314,14 @@ for chain in dict_df_chain_store_desc.keys():
 df_chain_stores = pd.concat(ls_df_chain_stores)
 df_chain_stores.reset_index(drop = False, inplace = True)
 
-df_chain_products.to_csv(os.path.join(path_built_csv,
-                                     'df_chain_product_price_freq.csv'),
-                        encoding = 'utf-8',
-                        float_format='%.3f',
-                        index = False)
-
-df_chain_stores.to_csv(os.path.join(path_built_csv,
-                                     'df_chain_store_price_freq.csv'),
-                        encoding = 'utf-8',
-                        float_format='%.3f',
-                        index = False)
+#df_chain_products.to_csv(os.path.join(path_built_csv,
+#                                     'df_chain_product_price_freq.csv'),
+#                        encoding = 'utf-8',
+#                        float_format='%.3f',
+#                        index = False)
+#
+#df_chain_stores.to_csv(os.path.join(path_built_csv,
+#                                     'df_chain_store_price_freq.csv'),
+#                        encoding = 'utf-8',
+#                        float_format='%.3f',
+#                        index = False)

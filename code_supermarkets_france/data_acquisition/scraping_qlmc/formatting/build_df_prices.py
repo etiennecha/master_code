@@ -188,11 +188,19 @@ df_prices.drop_duplicates(['store_id', 'section', 'family', 'product'],
 #df_products.sort('nb_obs', ascending = False, inplace = True)
 #print df_products['nb_obs'].describe()
 
-## Drop unique instance of product listed under two family/sections
+# Drop unique instance of product listed under two family/sections
 df_prices = df_prices[~((df_prices['family'] == u'Traiteur') &\
                         (df_prices['product'] == u"DANIEL DESSAINT CRÊPES " +\
                                                  u"MOELLEUSE SUCRÉES X8 400G " +\
                                                  u"DANIEL DESSAINT"))]
+
+# Drop product(s) with weird prices (from future investigations)
+ls_suspicious_prods = [u'VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
+df_prices = df_prices[~df_prices['product'].isin(ls_suspicious_prods)]
+
+# Adhoc text fix
+df_prices['product'] =\
+  df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
 
 df_prices.to_csv(os.path.join(path_csv,
                               'df_prices.csv'),
