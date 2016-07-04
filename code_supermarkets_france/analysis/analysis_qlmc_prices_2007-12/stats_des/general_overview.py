@@ -20,10 +20,11 @@ path_built_csv = os.path.join(path_built,
 # LOAD DF QLMC
 # #######################
 
+dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
+                      dtype = {'id_lsa' : str},
                       parse_dates = ['date'],
-                      dayfirst = True,
                       encoding = 'utf-8')
 
 # ################

@@ -35,10 +35,12 @@ pd.set_option('float_format', '{:,.3f}'.format)
 # LOAD DATA
 # ############
 
+dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
                       dtype = {'id_lsa' : str},
                       parse_dates = ['date'],
+                      date_parser = dateparse,
                       encoding = 'utf-8')
 
 # RESTRICT TO ONE PERIOD

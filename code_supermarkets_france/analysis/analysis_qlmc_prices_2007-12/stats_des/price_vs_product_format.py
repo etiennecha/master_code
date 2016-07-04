@@ -23,10 +23,11 @@ path_built_csv = os.path.join(path_built,
 # LOAD DATA
 #############
 
+dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
                       parse_dates = ['date'],
-                      dayfirst = True,
+                      date_parser = dateparse,
                       encoding = 'utf-8')
 
 # Fix Store_Chain for prelim stats des

@@ -267,6 +267,8 @@ print(dict_df_chain_stat['pct_draws'].T.to_string())
 # CHECK RR VS TIME
 
 df_repro_2 = pd.merge(df_qlmc_comparisons[['lec_id', 'comp_id',
+                                           'dist',
+                                           'gg_dist_val',
                                            'gg_dur_val']],
                       df_repro_compa,
                       on = ['lec_id', 'comp_id'],
@@ -276,3 +278,6 @@ chain = 'AUCHAN'
 df_chain = df_repro_2[(df_repro_2['comp_chain'] == 'AUCHAN') &\
                       (df_repro_2['gg_dur_val'] <= 20)]
 df_chain.plot(kind = 'scatter', x = 'gg_dur_val', y = 'rr')
+
+# Pos correlation between distance and rr not very convincing
+# May be due to Leclerc => check with all pairs

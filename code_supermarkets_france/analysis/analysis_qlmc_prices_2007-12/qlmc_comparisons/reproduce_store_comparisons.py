@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import *
 import os, sys
@@ -32,8 +33,12 @@ path_built_csv_lsa = os.path.join(path_built_lsa,
 # LOAD DATA
 # ##############
 
+dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')
 df_qlmc = pd.read_csv(os.path.join(path_built_csv,
                                    'df_qlmc.csv'),
+                      dtype = {'id_lsa' : str},
+                      parse_dates = ['date'],
+                      date_parser = dateparse,
                       encoding = 'utf-8')
 
 # harmonize store chains according to qlmc
@@ -92,8 +97,8 @@ ls_df_repro_compa = []
 for i in range(0, 13):
 
   # Restrict to period
-  print ''
-  print 'Period {:d}'.format(i)
+  print()
+  print('Period {:d}'.format(i))
   df_qlmc_per = df_qlmc[df_qlmc['period'] == i]
   # Costly to search by store_id within df_prices
   # hence first split df_prices in chain dataframes
@@ -162,29 +167,36 @@ for i in range(0, 13):
                                            'nb_draws',
                                            'pct_compa',
                                            'mean_compa'])
-  print u'Time for loop', timeit.default_timer() - start
+  print(u'Time for loop', timeit.default_timer() - start)
   ls_df_repro_compa.append(df_repro_compa)
 
-df_compa_all_periods = pd.concat(ls_df_repro_compa,
+df_compa = pd.concat(ls_df_repro_compa,
                                  axis = 0,
                                  ignore_index = True)
 
-df_compa_all_periods['rr'] = df_compa_all_periods['nb_comp_wins'] /\
-                               df_compa_all_periods['nb_obs'] * 100
+df_compa['pct_draws'] = df_compa['nb_draws'] /\
+                          df_compa['nb_obs'].astype(float) * 100
 
-df_compa_all_periods.loc[df_compa_all_periods['nb_comp_wins'] >\
-                     df_compa_all_periods['nb_lec_wins'],
-                   'rr'] = df_compa_all_periods['nb_lec_wins'] /\
-                                   df_compa_all_periods['nb_obs'] * 100
+df_compa['pct_rr'] = df_compa['nb_comp_wins'] /\
+                   df_compa['nb_obs'] * 100
 
-df_compa_all_periods.loc[df_compa_all_periods['nb_obs'] == 0,
-                         'rr'] = np.nan
+df_compa.loc[df_compa['nb_comp_wins'] > df_compa['nb_lec_wins'],
+             'pct_rr'] = df_compa['nb_lec_wins'] / df_compa['nb_obs'] * 100
 
-df_compa_all_periods.sort('pct_compa', inplace = True)
-print df_compa_all_periods[0:30].to_string()
+df_compa.loc[df_compa['nb_obs'] == 0, 'pct_rr'] = np.nan
+
+df_compa.sort('pct_compa', inplace = True)
+
+print()
+print('Overview compas (all periods):')
+print(df_compa.describe().to_string())
+
+print()
+print('Inspect some comparisons')
+print(df_compa[0:10].to_string())
 
 # pbm: id is not unique store identifier => add and use id_lsa?
-df_compa_all_periods[df_compa_all_periods['pct_compa'] < 0]['lec_id'].value_counts()
+df_compa[df_compa['pct_compa'] < 0]['lec_id'].value_counts()
 
 ## ##############
 ## STATS DES
@@ -192,19 +204,8 @@ df_compa_all_periods[df_compa_all_periods['pct_compa'] < 0]['lec_id'].value_coun
 #
 #ls_pctiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
 #
-#print u'\nDescribe pct_compa:'
-#print df_repro_compa['pct_compa'].describe(percentiles = ls_pctiles)
-#
-#df_repro_compa['rr'] = df_repro_compa['nb_comp_wins'] /\
-#                         df_repro_compa['nb_obs'] * 100
-#
-#df_repro_compa.loc[df_repro_compa['nb_comp_wins'] >\
-#                     df_repro_compa['nb_lec_wins'],
-#                   'rr'] = df_repro_compa['nb_lec_wins'] /\
-#                             df_repro_compa['nb_obs'] * 100
-#
 #import matplotlib.pyplot as plt
-#df_repro_compa.plot(kind = 'scatter', x = 'pct_compa', y = 'rr')
+#df_compa.plot(kind = 'scatter', x = 'pct_compa', y = 'rr')
 #plt.show()
 #
 ## todo:

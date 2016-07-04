@@ -222,6 +222,15 @@ for tup_chain in ls_tup_chains:
         len(df_tc_compa[df_tc_compa['compa_pct_o'] == 0]) /\
             float(len(df_tc_compa)) * 100))
 
+df_repro_compa['pct_rr'] = df_repro_compa['pct_win_A']
+df_repro_compa.loc[df_repro_compa['pct_win_A'] > df_repro_compa['pct_win_B'],
+                   'pct_rr'] = df_repro_compa['pct_win_B']
+
+df_repro_compa['d_le_5km'] = 0
+df_repro_compa.loc[df_repro_compa['dist'] <= 5, 'd_le_5km'] = 1
+print(smf.ols('pct_rr ~ d_le_5km',
+              data = df_repro_compa[(df_repro_compa['compa_pct'].abs() <= 2)]).fit().summary())
+
 # ###################
 # REG RR ON DISTANCE
 # ###################
