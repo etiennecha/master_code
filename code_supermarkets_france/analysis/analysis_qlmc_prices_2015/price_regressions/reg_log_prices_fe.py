@@ -55,10 +55,6 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
 
 df_qlmc = df_prices.copy()
 
-# Exclude problematic prod (todo: move)
-ls_suspicious_prods = ['VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
-df_qlmc = df_qlmc[~df_qlmc['product'].isin(ls_suspicious_prods)]
-
 # Avoid error msg on condition number
 df_qlmc['ln_price'] = np.log(df_qlmc['price'])
 

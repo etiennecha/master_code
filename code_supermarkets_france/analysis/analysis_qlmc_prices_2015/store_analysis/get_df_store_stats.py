@@ -228,7 +228,7 @@ print()
 print('Store FEs by chain')
 df_su_store_fes = df_stores[['store_price', 'qlmc_chain']].groupby('qlmc_chain')\
                                               .describe().unstack()
-print(df_su_store_fes.ix[ls_some_chains].to_string())
+print(df_su_store_fes.ix[ls_some_chains].to_string(float_format = format_float_int))
 
 print()
 print('Dispersion by chain')

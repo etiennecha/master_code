@@ -64,7 +64,7 @@ The French grocery store chain Leclerc operates a price comparison website which
 
 Since the seminal paper of \cite{STI61}, a large literature has investigated the link between "consumer ignorance" and price dispersion i.e. the persistence over time of different prices for a homogeneous good in a given market. Following \cite{VAR80}, a rich theoretical paradigm has emerged in which price dispersion results from price randomization by sellers in equilibrium. Empirical research, on the other hand, has long been hampered by a scarcity of relevant panel data. For instance, \cite{LAC02} used CPI data of four grocery store products sold in Israel over four years. Dynamic price dispersion was observed in the form of sellers frequently changing quartiles in the price distribution over months at the national level. Data were yet not rich enough to observe price dispersion within local markets. \cite{TAP11} have overcome this limitation with retail gasoline data. Studying pairs of competing gas stations, they observe that the distance separating gas stations, used as a proxy for consumer information, is positively correlated with rank reversals (i.e. changes in the price ranking of the two gas stations over time). They also investigate price dispersion at the market level and argue that their findings are globally consistent with \cite{VAR80}
 
-The present paper adapts the tools used \cite{TAP11} to analyse dispersion in retail grocery store prices and thus elaborate on \cite{LAC02} observations. Using rich price data collected from a comparison website, it documents static and dynamic price dispersion between French retail grocery stores. The first part of the paper provides a description of the data through a review of the methodology used by the website to compare prices. 
+The present paper adapts the tools used \cite{TAP11} to analyse dispersion in retail grocery store prices and thus elaborate on \cite{LAC02} observations. Using rich price data collected from a comparison website, it documents static and dynamic price dispersion between French retail grocery stores. The first part of the paper provides a description of the data through a review of the methodology used by the website to compare prices.
 
 \section{Price comparison on Quiestlemoinscher.com}
 
@@ -100,54 +100,6 @@ This section provides an overview of the data collected from the website in 2015
 
 A total number of 575 Leclerc stores were found to be listed on the website. The comparison of each store with its respective selection of competitors yielded 2,390 pairs of stores, involving 1,815 unique Leclerc competitors (the number of pairs is larger since a store can be listed as a competitor of several Leclerc stores). Data were missing for 14 Leclerc stores and 51 Leclerc competitors. This implies that among competitors of the 561 Leclerc stores for which price data have been collected, 36 out of 1811 are missing ($\le 2 \%$).
 
-Table~\ref{tab:qlmc_chain_repr} provides an overview of store coverage for the ten national chains compared on Qlmc. Coverage is high and rather close to coverage in the full qlmc sample for chains which are characterized by large store surfaces: Auchan, Carrefour, Cora, Geant and Leclerc. This can be explained by the fact that Leclerc is present across all regions and operates rather large stores. Regarding chains with smaller store formats, coverage is lower in percentage and also generally with respect to the full qlmc sample (e.g. 22\% for Casino vs. 39\% claimed by the website). Two natural explanations are the fact that stores from these chains are generally less likely to be considered relevant local competitors for Leclerc stores, and the slower development of "drive" within smaller stores (which make price collection less costly).
-
-Table~\ref{tab:qlmc_comp} provides an overview of competition according to qlmc comparisons (the website does not claim to be comprehensive). On average, a Leclerc store is compared with 5 competitors, and over 50\% over Leclerc stores are compared with a store located within 2 km. The furthest competitor is generally within 30 km (15 km for almost half of them), except for 28 stores. For 14 Leclerc stores, the closest listed store if over 10 km away. No store meets these two criteria, hence it does not seem obvious that the lack or omission of nearby competitors led to include stores beyond reasonable distance. For instance, the Leclerc outlet which has the furthest competitor in the data (67 km) is listed with 7 competitors, of which 5 are located within 30 km.
-
-\subsection{Products}
-
-Price records obtained from the website include all products used in each store level comparison. As a consequence, there are 12,318 unique products in the data as of March 2015. Table~\ref{tab:qlmc_sections} provides an overview of the relative weights of each section in terms of product number and value. The five largest sections, regardless of the criterion, are Fresh products, Health and Beauty, Savoury Grocery, Sweet Grocery and Drinks. Families within each sections are detailed in table~\ref{tab:qlmc_families}. Drinks and Health and Beauty products tend to have a larger value than other categories', so that they account for a significantly higher share in terms of value than product count.
-
-\subsection{Chain and store level comparisons}
-
-Results for chain level comparisons performed according to the methodology described in the website documentation are reported in table~\ref{tab:qlmc_chain_comparisons}. Despite the fact that data collected differ from these used by Qlmc, results remain consistent, and are shown to be relatively robust to manipulations in product choice. Geant Casino is the second cheapest chain as of March 2015, only 1.5\% more expensive than Leclerc (1.8\% according to Qlmc). Dropping the 20\% products which weigh in most favorably for Leclerc reduces the comparison result to 0.4\%.
-
-\subsection{Comparison history}
-
-Collected data can be used to compare prices across periods and therefore to explain part of the changes recorded in successive chain price comparisons displayed by the website. Inflation between two successive periods is computed by comparing the sum of average prices of all products available over the two periods. Variations can then multiplied to obtain statistics over longer periods.
-
-Leclerc prices between May 2007 and May 2012 have increased by 1.13\% (average annual increase of 0.25\%). Until May 2011, other chain display similarly low variations. This translates in a relative status quo in chain comparison results. Geant Casino is then the most expensive chain (+6\% to +10\%vs. Leclerc), followed by Cora and Carrefour Market (+5\%). Auchan, Carrefour, Geant Casino, Intermarche and Systeme U display rather similar price levels (+3-4\%).
-After May 2011, most chains display a progressive loss in competitivess as compared to Leclerc. A remarkable exception is Geant Casino which, after a peak at +13.8\% vs. Leclerc in September 2012, becomes increasingly price competitive from May 2013 on. Carrefour appears to be willing to match this progression in 2014, and then to give up in 2015. As a consequence, while Geant Casino was the most expensive chain at the beginning of the period studied, it is the closest competitor of Leclerc in terms of price level as of March 2015 (+1.3\% vs. Leclerc, to be compared with +12.2\% in March 2013).
-Intra-chains comparisons between May 2014 and March 2015 suggest that the relative loss in price competitiveness of Carrefour actually results from a mild change in prices by Carrefour (-1.4\%) constrasting with significant cuts implemented by other chains (e.g. -4.3\% for Auchan, -5.1\% for Leclerc, -5.2\% for Intermarche). Geant Casino achieves its unprecedented level of price competitiveness through an 8.5\% decrease.
-
-\section{Measuring and accounting for price dispersion}
-
-Since its creation in 2007, Qlmc prominently displays aggregate comparisons with its major national competitors. On the one hand, such information may be considered relevant by consumers willing to adopt a rule of thumb which weighs the cost/time of transportation with prices and products expected to be offered in a store of a given chain. On the other hand, without being deceptive per se, such comparisons could simply reflect differences in store characteristics such as location, size, market competitiveness etc. In order to address this issue, this section first investigates price dispersion within chains, and then discusses the possibility to account for prices through observed store and market characteristics.
-
-\subsection{Static price dispersion}
-
-French supermarket chains are known not to implement uniform national pricing policies. Empirical investigations however reveal different degrees of price dispersion within chains. Geant Casino, in particular, stands out in terms of price concentration. On average, a product is sold at the very same price in 91\% of its stores, and a store has 80\% of its products which follow a "standard" price (a product is considered to have a standard price whenever its most common price is set by 50\% or more of the stores). In terms of product price concentration, the closest followers are Systeme U and Leclerc (respective 39\% and 38\% on average). Leclerc distinguishes itself by having also a relatively strong concentration at the store level. At the median Leclerc store, 38\% products follow "standard" prices (17\% for Systeme U).
-
-Of all comparisons between chains exhibiting similar price levels, the Leclerc vs. Geant Casino comparison is the most stable across stores, and within stores across products. Table~\ref{tab:static_compa_15km} shows that among 215 pairs, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the pairs.
-
-Todo: add regression results and comments
-
-\subsection{Dynamic price dispersion}
-
-Descriptives statics of dynamic price dispersion are reported in Table~\ref{tab:dynamic_compa_15km}. Among 114 store comparisons involving a Leclerc and a Geant Casino, 4.4\% are won by a different store in the two periods. On average, 21.2\% of products taken into account in the comparison changed order between the two periods i.e were strictly cheaper at Leclerc in first period and became strictly cheaper at Geant Casino in second period or the reverse.
-
-Todo: add regression results and comments
-
-\newpage
-
-\bibliography{references}
-
-\newpage
-
-\appendix
-
-\section{Store data}
-
 \begin{table}[H]
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
@@ -181,6 +133,8 @@ Todo: add regression results and comments
 \end{threeparttable}
 \end{table}
 
+Table~\ref{tab:qlmc_chain_repr} provides an overview of store coverage for the ten national chains compared on Qlmc. Coverage is high and rather close to coverage in the full qlmc sample for chains which are characterized by large store surfaces: Auchan, Carrefour, Cora, Geant and Leclerc. This can be explained by the fact that Leclerc is present across all regions and operates rather large stores. Regarding chains with smaller store formats, coverage is lower in percentage and also generally with respect to the full qlmc sample (e.g. 22\% for Casino vs. 39\% claimed by the website). Two natural explanations are the fact that stores from these chains are generally less likely to be considered relevant local competitors for Leclerc stores, and the slower development of "drive" within smaller stores (which make price collection less costly).
+
 \begin{table}[H]
 \renewcommand{\arraystretch}{0.7}% Tighter
 \caption{Overview of competition around the 575 Leclerc stores in Qlmc}\label{tab:qlmc_comp}
@@ -205,9 +159,11 @@ Max   &  12.0 &  21.1 &  67.0 &  28.6 &    28.5 \\
 \end{tabular}
 \end{table}
 
-\newpage
+Table~\ref{tab:qlmc_comp} provides an overview of competition according to qlmc comparisons (the website does not claim to be comprehensive). On average, a Leclerc store is compared with 5 competitors, and over 50\% over Leclerc stores are compared with a store located within 2 km. The furthest competitor is generally within 30 km (15 km for almost half of them), except for 28 stores. For 14 Leclerc stores, the closest listed store if over 10 km away. No store meets these two criteria, hence it does not seem obvious that the lack or omission of nearby competitors led to include stores beyond reasonable distance. For instance, the Leclerc outlet which has the furthest competitor in the data (67 km) is listed with 7 competitors, of which 5 are located within 30 km.
 
-\section{Product data}
+\subsection{Products}
+
+Price records obtained from the website include all products used in each store level comparison. As a consequence, there are 12,318 unique products in the data as of March 2015. Table~\ref{tab:qlmc_sections} provides an overview of the relative weights of each section in terms of product number and value. The five largest sections, regardless of the criterion, are Fresh products, Health and Beauty, Savoury Grocery, Sweet Grocery and Drinks. Families within each sections are detailed in table~\ref{tab:qlmc_families}. Drinks and Health and Beauty products tend to have larger values than products from other categories, so that they account for a significantly higher share in terms of value than product count.
 
 \begin{table}[H]
 \renewcommand{\arraystretch}{0.7}% Tighter
@@ -238,39 +194,15 @@ Max   &  12.0 &  21.1 &  67.0 &  28.6 &    28.5 \\
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
-\renewcommand{\arraystretch}{0.8}% Tighter
-\caption{Overview of product families within sections}\label{tab:qlmc_families}
-\small
-\begin{tabularx}{\linewidth}{l >{\setlength{\baselineskip}{0.75\baselineskip}}X}
-%\begin{tabular}{p{0.3\linewidth}p{0.7\linewidth}}
-\toprule
-\toprule
-    Section & Families \\
-    \midrule
-    Baby and dietetic food (573) & Baby food (418); Dietetic products (155) \\
-    Drinks (1,233) & Beer and Spirits (443); Fizzy drinks and Cola (244); Water (176); Juices and Smoothies (110); Squash and Cordial (101); Wine, Champagne and Cider (159) \\
-    Fresh products (2,595) & Butter and Cream (199); Meat (490); Cheese (491); Milk and eggs (150); Fish (98); Delicatessen (660); Yoghurts and Chilled Desserts (507) \\
-    Frozen food (368) & Ice cream and Frozen yoghurt (101); Frozen vegetables and fries (91); Frozen pizzas, pies and ready meals (128); Frozen Meat and Fish (48) \\
-    Health and Beauty (2,127) & Kitchen Roll and Tissues (86); Oral care (169); Feminine care and Baby changing (138); Drugstore (97); Haircare (558); Face and body skincare (951); Men toiletries (128) \\
-    Home and textile (308) & DIY and Car (9); Kitchen and dining room (50); Home Office (171); Batteries, lightbulbs and plugs (54) \\
-    Household (679) & Air fresheners and insect killers (118); Laundry (124); Cloths, Gloves and Scourers (45); Cleaning (225); Dishwashing (64); Specialist laundry and Washing machine cleaner (103) \\
-    Pets (239) & Cat and dog food (233); Litter (6) \\
-    Savoury grocery (2,032) & Snacks (214); Condiments and Spices (609); Canned goods (406); Precooked dishes (205); Pasta, Rice and Flour (328); Soups (270) \\
-    Sweet grocery (2,099) & Biscuits (294); Coffee and Tea (368); Chocolates ans sweets (450); Desserts, Sugar and Sweeteners (318); Breakfast (453); Cakes (215) \\
-    Vegetables and fruits (65) & Fruits (65) \\
-\bottomrule
-\bottomrule
-\end{tabularx}
-%\end{tabular}
-\end{table}
+\subsection{Chain and store level comparisons}
 
-\section{Comparison data}
+Results for chain level comparisons performed according to the website metholodgy are reported in table~\ref{tab:qlmc_chain_comparisons}. Despite the fact that data collected differ from these used by Qlmc, results are very similar, and are found to be relatively robust to variations in included products. Geant Casino is the second cheapest chain as of March 2015, only 1.5\% more expensive than Leclerc (1.8\% according to Qlmc). Dropping the 20\% products which weigh in most favorably for Leclerc reduces the comparison result to 0.4\%.
 
 \begin{table}[H]
+\caption{Comparisons at the chain level}
+\label{tab:qlmc_chain_comparisons}
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Comparisons at the chain level}\label{tab:qlmc_chain_comparisons}
 \small
 \begin{tabular}{l|rr|rr|rrrr}
 \toprule
@@ -297,10 +229,13 @@ Max   &  12.0 &  21.1 &  67.0 &  28.6 &    28.5 \\
 \end{threeparttable}
 \end{table}
 
+Results for store level comparisons performed according to the website metholodgy are reported in table~\ref{tab:qlmc_store_comparisons}. The website lists 99 comparisons between a Leclerc and a Geant Casino. On average, the Geant Casino is found to be 1.8\% more expensive than its Leclerc competitor.  In some cases, Geant Casino is cheaper than Leclerc. A Geant Casino is indeed found to be 0.6\% less expensive than its Leclerc competitor. In general, national level comparisons appear to be relatively meaningful considering the distributions of store level comparisons.
+
 \begin{table}[H]
+\caption{Comparisons between Leclerc stores and their competitors by chain}
+\label{tab:qlmc_store_comparisons}
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Comparisons between Leclerc stores and their competitors by chain}\label{tab:qlmc_store_comparisons}
 \small
 \begin{tabular}{lr|rrrrrrr}
 \toprule
@@ -327,14 +262,29 @@ Max   &  12.0 &  21.1 &  67.0 &  28.6 &    28.5 \\
 \end{threeparttable}
 \end{table}
 
-\newpage
+\subsection{Comparison history}
 
-\section{Chain pricing policies}
+Collected data can be used to compare prices across periods and therefore to explain part of the changes recorded in successive chain price comparisons displayed by the website. Inflation between two successive periods is computed by comparing the sum of average prices of all products available over the two periods. Variations can then multiplied to obtain statistics over longer periods.
+
+Leclerc prices between May 2007 and May 2012 have increased by 1.13\% (average annual increase of 0.25\%). Until May 2011, other chain display similarly low variations. This translates in a relative status quo in chain comparison results. Geant Casino is then the most expensive chain (+6\% to +10\%vs. Leclerc), followed by Cora and Carrefour Market (+5\%). Auchan, Carrefour, Geant Casino, Intermarche and Systeme U display rather similar price levels (+3-4\%).
+After May 2011, most chains display a progressive loss in competitivess as compared to Leclerc. A remarkable exception is Geant Casino which, after a peak at +13.8\% vs. Leclerc in September 2012, becomes increasingly price competitive from May 2013 on. Carrefour appears to be willing to match this progression in 2014, and then to give up in 2015. As a consequence, while Geant Casino was the most expensive chain at the beginning of the period studied, it is the closest competitor of Leclerc in terms of price level as of March 2015 (+1.3\% vs. Leclerc, to be compared with +12.2\% in March 2013).
+Intra-chains comparisons between May 2014 and March 2015 suggest that the relative loss in price competitiveness of Carrefour actually results from a mild change in prices by Carrefour (-1.4\%) constrasting with significant cuts implemented by other chains (e.g. -4.3\% for Auchan, -5.1\% for Leclerc, -5.2\% for Intermarche). Geant Casino achieves its unprecedented level of price competitiveness through an 8.5\% decrease.
+
+\section{Price dispersion}
+
+Since its creation in 2007, Qlmc prominently displays aggregate comparisons with its major national competitors. On the one hand, such information may be considered relevant by consumers willing to adopt a rule of thumb which weighs the cost/time of transportation with prices and products expected to be offered in a store of a given chain. On the other hand, without being deceptive per se, such comparisons could simply reflect differences in store characteristics such as location, size, market competitiveness etc. In order to address this issue, this section first investigates price dispersion within chains, and then discusses the possibility to account for prices through observed store and market characteristics.
+
+\subsection{Chain level pricing policies}
+
+French supermarket chains are known not to generally follow uniform national pricing policies. Empirical investigations however reveal various degrees of uniformity at the chain level. Table~\ref{tab:qlmc_prod_freq} reports the frequency of the mode (most common price) of each product at the chain level. Geant Casino stands out in terms of price consistency. On average, a product is sold at the very same price in 89\% of the chain stores. This implies that a random basket of goods has the very same price in two Geant Casino stores, even if located in different regions, with a relatively high probability. The closest followers are Systeme U and Leclerc, for which the frequency of the common price for respectively 39\% and 38\% on average).
+
+From a store prospect, a Geant Casino has 80\% of its products which follow a "standard" chain price (a product is considered to have a standard price whenever its most common price is set by 50\% or more of the stores). In terms of product price concentration, Leclerc distinguishes itself by having also a relatively strong concentration at the store level. At the median Leclerc store, 38\% products follow "standard" prices (17\% for Systeme U).
 
 \begin{table}[H]
+\caption{Distribution of the frequency of the mode (most common price) per product}
+\label{tab:qlmc_prod_freq}
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Distribution of the frequencies of the most common price per product}\label{tab:qlmc_prod_freq}
 \small
 \begin{tabular}{lrrrrrrrr}
 \toprule
@@ -361,36 +311,21 @@ Systeme U          & 1,077 &  0.39 & 0.12 & 0.09 & 0.32 & 0.37 & 0.44 & 0.91 \\
 \end{threeparttable}
 \end{table}
 
-\begin{table}[H]
-\begin{threeparttable}
-\renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Distribution of the frequencies of "standard" prices per store}\label{tab:qlmc_store_freq_50}
-\small
-\begin{tabular}{lrrrrrrrr}
-\toprule
-\toprule
-{}                &  Nb &  Mean &  Std &  Min &  Q25 &  Q50 &  Q75 &  Max \\
-\midrule
-Auchan            & 107 &  0.01 & 0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 \\
-Carrefour         & 146 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.09 & 0.13 \\
-Carrefour Market  & 223 &  0.12 & 0.05 & 0.00 & 0.10 & 0.13 & 0.15 & 0.21 \\
-Geant Casino      &  91 &  0.80 & 0.23 & 0.06 & 0.70 & 0.94 & 0.96 & 0.98 \\
-Casino            &  74 &  0.04 & 0.02 & 0.01 & 0.03 & 0.05 & 0.06 & 0.09 \\
-Cora              &  54 &  0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 & 0.02 \\
-Intermarche       & 513 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.10 & 0.17 \\
-Leclerc           & 552 &  0.28 & 0.12 & 0.01 & 0.19 & 0.31 & 0.38 & 0.51 \\
-Systeme U         & 409 &  0.08 & 0.05 & 0.00 & 0.04 & 0.06 & 0.12 & 0.17 \\
-\bottomrule
-\bottomrule
-\end{tabular}
-\begin{tablenotes}
-      \small
-      \item A price is considered "standard" if it is shared by 50\% of the chain stores or more. On average, a Leclerc store sells 28\% of its products at a "standard" price.
-\end{tablenotes}
-\end{threeparttable}
-\end{table}
+\subsection{Store price levels}
 
-\section{Rank reversals}
+In order to study the relation between price level, price dispersion, and market characteristics, we need to build measures of store price levels and store price dispersion. This is achieved by running the following regression:
+\begin{align*}
+\text{log }P_{ij} = \text{Product}_i + \text{Store}_j + \epsilon_{ij}
+\end{align*}
+where $\text{Product}_i$ is a product effect and $\text{Store}_j$ is a store effect. The coefficient $\text{Product}_i$ associated with a dummy variable equal to $1$ for products carried by store $i$ provides information regarding the price level of store $i$ compared to a reference store. The residual variation $\epsilon_{ij}$ is approximately equal to the percentage deviation of a store's price from the geometric mean price in the reference group. The residuals average to zero for each product and each store, but a measure such as the standard deviation of residuals for a given store provides a proxy for price dispersion at the store level.
+
+Todo: add summary tables, explain how store was picked (in order to have results than can be compared to comparison results)
+
+Todo: regression tables (price level + price dispersion), argue HHI variables, revenue, pop... (compare with Turolla)
+
+\subsection{Pair price dispersion}
+
+Of all comparisons between chains exhibiting similar price levels, the Leclerc vs. Geant Casino comparison is the most stable across stores, and within stores across products. Table~\ref{tab:static_compa_15km} shows that among 215 pairs, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the pairs.
 
 \begin{table}[H]
 \begin{threeparttable}
@@ -419,6 +354,81 @@ Systeme U         & 409 &  0.08 & 0.05 & 0.00 & 0.04 & 0.06 & 0.12 & 0.17 \\
 \begin{tablenotes}
       \small
       \item Among 215 pairs of Leclerc and Geant Casino competitors, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the pairs. On average, a Leclerc sells 61.8\% of products strictly cheaper than its Geant Casino competitor. Regardless of whether Leclerc or Geant Casino wins the overall comparison, on average, the loser i.e. most expensive store is strictly cheaper on 20.4\% of products.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+Todo: add regression results and comments
+
+\subsection{Market price dispersion}
+
+Descriptives statics of dynamic price dispersion are reported in Table~\ref{tab:dynamic_compa_15km}. Among 114 store comparisons involving a Leclerc and a Geant Casino, 4.4\% are won by a different store in the two periods. On average, 21.2\% of products taken into account in the comparison changed order between the two periods i.e were strictly cheaper at Leclerc in first period and became strictly cheaper at Geant Casino in second period or the reverse.
+
+Todo: add regression results and comments
+
+\newpage
+
+\bibliography{references}
+
+\newpage
+
+\appendix
+
+\section{Additional descriptive statistics}
+
+\begin{table}[H]
+\renewcommand{\arraystretch}{0.8}% Tighter
+\caption{Overview of product families within sections}\label{tab:qlmc_families}
+\small
+\begin{tabularx}{\linewidth}{l >{\setlength{\baselineskip}{0.75\baselineskip}}X}
+%\begin{tabular}{p{0.3\linewidth}p{0.7\linewidth}}
+\toprule
+\toprule
+    Section & Families \\
+    \midrule
+    Baby and dietetic food (573) & Baby food (418); Dietetic products (155) \\
+    Drinks (1,233) & Beer and Spirits (443); Fizzy drinks and Cola (244); Water (176); Juices and Smoothies (110); Squash and Cordial (101); Wine, Champagne and Cider (159) \\
+    Fresh products (2,595) & Butter and Cream (199); Meat (490); Cheese (491); Milk and eggs (150); Fish (98); Delicatessen (660); Yoghurts and Chilled Desserts (507) \\
+    Frozen food (368) & Ice cream and Frozen yoghurt (101); Frozen vegetables and fries (91); Frozen pizzas, pies and ready meals (128); Frozen Meat and Fish (48) \\
+    Health and Beauty (2,127) & Kitchen Roll and Tissues (86); Oral care (169); Feminine care and Baby changing (138); Drugstore (97); Haircare (558); Face and body skincare (951); Men toiletries (128) \\
+    Home and textile (308) & DIY and Car (9); Kitchen and dining room (50); Home Office (171); Batteries, lightbulbs and plugs (54) \\
+    Household (679) & Air fresheners and insect killers (118); Laundry (124); Cloths, Gloves and Scourers (45); Cleaning (225); Dishwashing (64); Specialist laundry and Washing machine cleaner (103) \\
+    Pets (239) & Cat and dog food (233); Litter (6) \\
+    Savoury grocery (2,032) & Snacks (214); Condiments and Spices (609); Canned goods (406); Precooked dishes (205); Pasta, Rice and Flour (328); Soups (270) \\
+    Sweet grocery (2,099) & Biscuits (294); Coffee and Tea (368); Chocolates ans sweets (450); Desserts, Sugar and Sweeteners (318); Breakfast (453); Cakes (215) \\
+    Vegetables and fruits (65) & Fruits (65) \\
+\bottomrule
+\bottomrule
+\end{tabularx}
+%\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{Distribution of the frequencies of "standard" prices per store}
+\label{tab:qlmc_store_freq_50}
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\small
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\toprule
+{}                &  Nb &  Mean &  Std &  Min &  Q25 &  Q50 &  Q75 &  Max \\
+\midrule
+Auchan            & 107 &  0.01 & 0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 \\
+Carrefour         & 146 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.09 & 0.13 \\
+Carrefour Market  & 223 &  0.12 & 0.05 & 0.00 & 0.10 & 0.13 & 0.15 & 0.21 \\
+Geant Casino      &  91 &  0.80 & 0.23 & 0.06 & 0.70 & 0.94 & 0.96 & 0.98 \\
+Casino            &  74 &  0.04 & 0.02 & 0.01 & 0.03 & 0.05 & 0.06 & 0.09 \\
+Cora              &  54 &  0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 & 0.02 \\
+Intermarche       & 513 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.10 & 0.17 \\
+Leclerc           & 552 &  0.28 & 0.12 & 0.01 & 0.19 & 0.31 & 0.38 & 0.51 \\
+Systeme U         & 409 &  0.08 & 0.05 & 0.00 & 0.04 & 0.06 & 0.12 & 0.17 \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item A price is considered "standard" if it is shared by 50\% of the chain stores or more. On average, a Leclerc store sells 28\% of its products at a "standard" price.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -454,4 +464,4 @@ Systeme U         & 409 &  0.08 & 0.05 & 0.00 & 0.04 & 0.06 & 0.12 & 0.17 \\
 \end{threeparttable}
 \end{table}
 
-\end{document}
+\end{document} 
