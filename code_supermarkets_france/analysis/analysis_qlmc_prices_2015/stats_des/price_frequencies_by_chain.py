@@ -63,10 +63,10 @@ df_qlmc = df_qlmc_201405 # df_qlmc_201409
 ls_prod_cols = ['ean', 'product'] # check if 1 to 1 (?)
 ls_store_id_cols = ['id_lsa', 'store_name']
 
-## Robustness check: 2000 most detained products only
-#se_prod_vc = df_qlmc[ls_prod_cols].groupby(ls_prod_cols).agg(len)
-#ls_keep_products = [x[-1] for x in list(se_prod_vc[0:3000].index)]
-#df_qlmc = df_qlmc[df_qlmc[ls_prod_cols[-1]].isin(ls_keep_products)]
+# Robustness check: 2000 most detained products only
+se_prod_vc = df_qlmc[ls_prod_cols].groupby(ls_prod_cols).agg(len)
+ls_keep_products = [x[-1] for x in list(se_prod_vc[0:3000].index)]
+df_qlmc = df_qlmc[df_qlmc[ls_prod_cols[-1]].isin(ls_keep_products)]
 
 # #############################################
 # PRICE DISTRIBUTION PER CHAIN FOR TOP PRODUCTS
@@ -74,8 +74,8 @@ ls_store_id_cols = ['id_lsa', 'store_name']
 
 PD = PriceDispersion()
 
-nb_obs_min = 20 # Product must be observed at X stores at least
-pct_min = 0  # 0.33 # Ref price is share by X% of stores only (else no ref)
+nb_obs_min = 40 # Product must be observed at X stores at least
+pct_min = 0  # 0/33/50  Ref price is share by X% of stores only (else no ref)
 
 ls_loop_scs = ['AUCHAN',
                'CARREFOUR',
@@ -115,6 +115,8 @@ for store_chain in ls_loop_scs:
                              PD.price_2_fq])['price']
   df_sub_products.columns = [col.replace('PD.', '') for col in df_sub_products.columns]
   df_sub_products.rename(columns = {'len': 'nb_obs'}, inplace = True)
+  df_sub_products['price_1_fq'] = df_sub_products['price_1_fq'] * 100
+  df_sub_products['price_2_fq'] = df_sub_products['price_2_fq'] * 100
   df_sub_products['price_12_fq'] =\
     df_sub_products[['price_1_fq', 'price_2_fq']].sum(axis = 1)
   # Pbm with kurtosis and skew: div by 0 (only one price)
@@ -135,7 +137,10 @@ for store_chain in ls_loop_scs:
   if len(df_enough_obs) >= 100:
     print()
     print(u'Overview at product level')
-    print(df_enough_obs.describe().to_string())
+    print(df_enough_obs.describe()\
+                       .to_string(formatters={'price_1_fq' : format_float_int,
+                                              'price_2_fq' : format_float_int,
+                                              'price_12_fq' : format_float_int}))
     
     df_enough_obs_desc = df_enough_obs.describe()
     dict_ls_se_desc['nb_stores_by_prod'].append(df_enough_obs_desc['nb_obs'])
@@ -146,8 +151,9 @@ for store_chain in ls_loop_scs:
             nb_obs_min,
             len(df_enough_obs)))
     
-    print(u'Nb prod w/ >= {:d} obs and ref price (33%+): {:d} ({:.0f}%)'.format(\
+    print(u'Nb prod w/ >= {:d} obs and ref price ({:.0f}%+): {:d} ({:.0f}%)'.format(\
             nb_obs_min,
+            pct_min,
             len(df_ref_price), 
             len(df_ref_price) / float(len(df_enough_obs)) * 100))
     
@@ -173,7 +179,7 @@ for store_chain in ls_loop_scs:
                             fill_value = 0).astype(int)
     
     try:
-      df_ref_pct = df_ref.apply(lambda x: x / x.sum(), axis = 1)
+      df_ref_pct = df_ref.apply(lambda x: x / x.sum() * 100, axis = 1)
       df_ref_pct['nb_obs'] = df_ref.sum(axis = 1).astype(int)
       if 'no_ref' not in df_ref_pct.columns:
         df_ref_pct['no_ref'] = 0
@@ -186,7 +192,11 @@ for store_chain in ls_loop_scs:
                         'no_ref',
                         'diff',
                         'price_1',
-                        'price_2']].describe())
+                        'price_2']].describe()\
+                                   .to_string(formatters={'price_1' : format_float_int,
+                                                          'price_2' : format_float_int,
+                                                          'no_ref' : format_float_int,
+                                                          'diff' : format_float_int}))
 
       df_ref_pct_desc = df_ref_pct.describe()
       dict_ls_se_desc['nb_prods_by_store'].append(df_ref_pct_desc['nb_obs'])
@@ -235,7 +245,7 @@ lsd_su = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max']
 for x in ['nb_prods_by_store', 'nb_stores_by_prod', 'no_ref', 'freq_prods', 'freq_stores']:
   print()
   print(x)
-  print(dict_df_desc[x].ix[lsd_su].T.to_string(float_format = '{:,.2f}'.format))
+  print(dict_df_desc[x].ix[lsd_su].T.to_string(float_format = '{:,.0f}'.format))
 
 #print()
 #print('Check price stats by chain at store level')

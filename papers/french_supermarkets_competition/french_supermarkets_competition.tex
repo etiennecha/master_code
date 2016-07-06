@@ -278,8 +278,6 @@ Since its creation in 2007, Qlmc prominently displays aggregate comparisons with
 
 French supermarket chains are known not to generally follow uniform national pricing policies. Empirical investigations however reveal various degrees of uniformity at the chain level. Table~\ref{tab:qlmc_prod_freq} reports the frequency of the mode (most common price) of each product at the chain level. Geant Casino stands out in terms of price consistency. On average, a product is sold at the very same price in 89\% of the chain stores. This implies that a random basket of goods has the very same price in two Geant Casino stores, even if located in different regions, with a relatively high probability. The closest followers are Systeme U and Leclerc, for which the frequency of the common price for respectively 39\% and 38\% on average).
 
-From a store prospect, a Geant Casino has 80\% of its products which follow a "standard" chain price (a product is considered to have a standard price whenever its most common price is set by 50\% or more of the stores). In terms of product price concentration, Leclerc distinguishes itself by having also a relatively strong concentration at the store level. At the median Leclerc store, 38\% products follow "standard" prices (17\% for Systeme U).
-
 \begin{table}[H]
 \caption{Distribution of the frequency of the mode (most common price) per product}
 \label{tab:qlmc_prod_freq}
@@ -311,13 +309,17 @@ Systeme U          & 1,077 &  0.39 & 0.12 & 0.09 & 0.32 & 0.37 & 0.44 & 0.91 \\
 \end{threeparttable}
 \end{table}
 
+From a store prospect, a Geant Casino has 80\% of its products which follow a "standard" chain price (a product is considered to have a standard price whenever its most common price is set by 50\% or more of the stores). In terms of product price concentration, Leclerc distinguishes itself by having also a relatively strong concentration at the store level. At the median Leclerc store, 38\% products follow "standard" prices (17\% for Systeme U).
+
+
+
 \subsection{Store price levels}
 
 In order to study the relation between price level, price dispersion, and market characteristics, we need to build measures of store price levels and store price dispersion. This is achieved by running the following regression:
 \begin{align*}
 \text{log }P_{ij} = \text{Product}_i + \text{Store}_j + \epsilon_{ij}
 \end{align*}
-where $\text{Product}_i$ is a product effect and $\text{Store}_j$ is a store effect. The coefficient $\text{Product}_i$ associated with a dummy variable equal to $1$ for products carried by store $i$ provides information regarding the price level of store $i$ compared to a reference store. The residual variation $\epsilon_{ij}$ is approximately equal to the percentage deviation of a store's price from the geometric mean price in the reference group. The residuals average to zero for each product and each store, but a measure such as the standard deviation of residuals for a given store provides a proxy for price dispersion at the store level.
+where $\text{Product}_i$ is a product effect and $\text{Store}_j$ is a store effect. The coefficient $\text{Product}_i$ associated with a dummy variable equal to $1$ for products carried by store $i$ provides information regarding the price level of store $i$ compared to a reference store. The residual variation $\epsilon_{ij}$ can be interpreted as the percentage deviation of a store product price from its expected geometric mean. The average of the residuals is approximately null for each product and each store. The standard deviation of residuals for a given store provides a proxy for price dispersion at the store levels.
 
 Todo: add summary tables, explain how store was picked (in order to have results than can be compared to comparison results)
 
