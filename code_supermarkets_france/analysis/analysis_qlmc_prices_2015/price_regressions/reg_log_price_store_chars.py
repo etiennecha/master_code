@@ -32,29 +32,22 @@ path_built_lsa_csv = os.path.join(path_data,
                                   'data_lsa',
                                   'data_csv')
 
-path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv,
-                                       '201407_competition')
-
-path_insee_extracts = os.path.join(path_data,
-                                   'data_insee',
-                                   'data_extracts')
-
 # #############
 # LOAD DATA
 # #############
 
-# LOAD PRICES
+# DF PRICES
 df_prices = pd.read_csv(os.path.join(path_built_csv,
                                      'df_prices.csv'),
                         encoding = 'utf-8')
 
-# LOAD QLMC STORE DATA
+# QLMC STORE DATA
 df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'),
                         dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 
-# HARMONZATION OF CHAINS
+# harmonize chains
 ls_ls_enseigne_lsa_to_qlmc = [[['CENTRE E.LECLERC'], 'LECLERC'],
                               [['GEANT CASINO'], 'GEANT'],
                               [['HYPER CASINO'], 'CASINO'],
@@ -72,7 +65,7 @@ for ls_enseigne_lsa_to_qlmc in ls_ls_enseigne_lsa_to_qlmc:
   df_stores.loc[df_stores['store_chain'].isin(ls_enseigne_lsa_to_qlmc[0]),
               'qlmc_chain'] = ls_enseigne_lsa_to_qlmc[1]
 
-# LOAD LSA STORE DATA
+# LSA STORE DATA
 df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
                                   'df_lsa_active_hsx.csv'),
                      dtype = {u'id_lsa' : str,
@@ -86,79 +79,24 @@ df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'utf-8')
 
-# LOAD COMPETITION
-ls_comp_files = ['df_store_prospect_comp_HS_v_all_10km.csv',
-                 'df_store_prospect_comp_HS_v_all_20km.csv',
-                 'df_store_prospect_comp_HS_v_all_1025km.csv']
-df_comp = pd.read_csv(os.path.join(path_built_lsa_comp_csv,
-                                   ls_comp_files[0]),
-                      dtype = {'id_lsa' : str},
-                      encoding = 'utf-8')
+# ADD STORE CHARS
 
-# LOAD DEMAND
-df_demand = pd.read_csv(os.path.join(path_built_lsa_comp_csv,
-                                     'df_store_prospect_demand.csv'),
-                        dtype = {'id_lsa' : str},
-                        encoding = 'utf-8')
+df_store_markets = pd.read_csv(os.path.join(path_built_lsa_csv,
+                                            '201407_competition',
+                                            'df_store_market_chars.csv'),
+                               dtype = {'id_lsa' : str},
+                               encoding = 'utf-8')
 
-# LOAD REVENUE (would be better to dedicate a script)
-df_insee_areas = pd.read_csv(os.path.join(path_insee_extracts,
-                                          u'df_insee_areas.csv'),
-                             encoding = 'UTF-8')
+ls_lsa_cols = ['type_alt', 'region', 'surface',
+               'nb_caisses', 'nb_pompes', 'drive']
 
-## add municipality revenue
-#df_com = pd.read_csv(os.path.join(path_insee_extracts,
-#                                  'data_insee_extract.csv'),
-#                     encoding = 'UTF-8')
-
-# add AU revenue
-df_au_agg = pd.read_csv(os.path.join(path_insee_extracts,
-                                     u'df_au_agg_final.csv'),
-                        encoding = 'UTF-8')
-df_au_agg['med_rev_au'] = df_au_agg['QUAR2UC10']
-df_insee_areas = pd.merge(df_insee_areas,
-                          df_au_agg[['AU2010', 'med_rev_au']],
-                          left_on = 'AU2010',
-                          right_on = 'AU2010')
-
-# add UU revenue
-df_uu_agg = pd.read_csv(os.path.join(path_insee_extracts,
-                                     u'df_uu_agg_final.csv'),
-                        encoding = 'UTF-8')
-df_uu_agg['med_rev_uu'] = df_uu_agg['QUAR2UC10']
-df_insee_areas = pd.merge(df_insee_areas,
-                          df_uu_agg[['UU2010', 'med_rev_uu']],
-                          left_on = 'UU2010',
-                          right_on = 'UU2010')
-
-# MERGE DATA
-df_lsa = pd.merge(df_lsa,
-                  df_comp,
-                  on = 'id_lsa',
-                  how = 'left')
-
-df_lsa = pd.merge(df_lsa,
-                  df_demand,
-                  on = 'id_lsa',
-                  how = 'left')
-
-df_lsa = pd.merge(df_lsa,
-                  df_insee_areas[['CODGEO', 'med_rev_au', 'med_rev_uu']],
-                  left_on = 'c_insee',
-                  right_on = 'CODGEO',
-                  how = 'left')
-
-ls_lsa_cols = ['id_lsa',
-               'region', # robustness check: exclude Ile-de-France
-               'surface',
-               'nb_caisses',
-               'nb_emplois'] +\
-               list(df_comp.columns[1:]) +\
-               list(df_demand.columns[1:]) +\
-               ['med_rev_au', 'med_rev_uu']
+df_store_chars = pd.merge(df_lsa[['id_lsa'] + ls_lsa_cols],
+                          df_store_markets,
+                          on = 'id_lsa',
+                          how = 'left')
 
 df_stores = pd.merge(df_stores,
-                     df_lsa[ls_lsa_cols],
+                     df_store_chars,
                      on = 'id_lsa',
                      how = 'left')
 
@@ -175,22 +113,19 @@ df_qlmc['surface'] = df_qlmc['surface'].apply(lambda x: x/1000.0)
 #df_qlmc['hhi'] = df_qlmc['hhi'] * 10000
 
 # Build log variables
-for col in ['price', 'surface', 'hhi', 'ac_hhi',
-            'med_rev_uu', 'med_rev_au',
-            'pop_cont_10', 'pop_ac_10km', 'pop_ac_20km']:
+for col in ['price', 'surface', '1025km_hhi', '1025km_ac_hhi',
+            'AU_med_rev', 'UU_med_rev', 'CO_med_rev',
+            '10_pop', '1025km_ac_pop', '20km_ac_pop']:
   df_qlmc['ln_{:s}'.format(col)] = np.log(df_qlmc[col])
 
 # Create dummy high hhi
 df_qlmc['dum_high_hhi'] = 0
-df_qlmc.loc[df_qlmc['hhi'] >= 0.20, 'dum_high_hhi'] = 1
+df_qlmc.loc[df_qlmc['1025km_hhi'] >= 0.20, 'dum_high_hhi'] = 1
 
 # Filter out some observations...
 
 # Exclude Ile-de-France as robustness check
 df_qlmc = df_qlmc[df_qlmc['region'] != u'Ile-de-France']
-
-ls_suspicious_prods = ['VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
-df_qlmc = df_qlmc[~df_qlmc['product'].isin(ls_suspicious_prods)]
 
 # drop chain(s) with too few stores
 df_qlmc = df_qlmc[~(df_qlmc['qlmc_chain'].isin(['SUPERMARCHE MATCH',
@@ -270,8 +205,19 @@ df_qlmc['nb_prod_obs'] =\
 # REGRESSION: PATSY DUMMIES
 # #########################
 
-price_col = 'ln_price'
+# CAUTION: REQUIRE RECENT VERSION OF PANDAS / PATSY
+# else index of bounds
 
+price_col = 'ln_price'
+v_revenue = 'ln_AU_med_rev'
+v_surface = 'surface'
+v_hhi = '1025km_hhi'
+v_pop = 'ln_10_pop'
+
+for var in [price_col, v_revenue, v_surface, v_hhi, v_pop]:
+  df_qlmc = df_qlmc[~df_qlmc[var].isnull()]
+
+df_qlmc.index = range(len(df_qlmc))
 # create df to convert to sparse (use df_qlmc.index: not 0 to nobs)
 df_i = pd.DataFrame('intercept',
                     columns = ['col'],
@@ -295,7 +241,7 @@ df_2.set_index('col', append = True, inplace = True)
 
 # add variables which are not dummies: need to append multiindex df
 ls_df_3 = []
-for var in ['surface', 'hhi', 'ln_med_rev_au', 'ln_pop_cont_10']:
+for var in [v_surface, v_hhi, v_revenue, v_pop]:
   df_3 = pd.DataFrame(df_qlmc[var].values,
                       columns = ['val'],
                       index = df_qlmc.index)
@@ -333,3 +279,5 @@ df_qlmc['yhat'] = y_hat
 df_qlmc['residual'] = df_qlmc[price_col] - df_qlmc['yhat'] 
 rsquare = 1 - ((df_qlmc[price_col] - df_qlmc['yhat'])**2).sum() /\
                 ((df_qlmc[price_col] - df_qlmc[price_col].mean())**2).sum()
+
+# df_reg[df_reg['name'] == v_hhi]

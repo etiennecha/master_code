@@ -50,7 +50,7 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv,
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'utf-8')
 
-# LSA Comp
+# LSA Comp (file with closest comp and closest same group)
 df_lsa_comp = pd.read_csv(os.path.join(path_built_csv,
                                        '201407_competition',
                                        'df_store_prospect_comp_HS_v_all_1025km.csv'),
@@ -110,6 +110,11 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # PREPARE INSEE DATA
 # ##################
 
+# COM
+
+# Drop AU and UU labels to avoid conflicts with AU and UU files
+df_com.drop(['LIBAU2010', 'LIBUU2010'], axis = 1, inplace = True)
+
 # AU
 
 # Get rid of non geo areas
@@ -139,14 +144,16 @@ df_uu_agg = df_uu_agg[~df_uu_agg['UU2010'].str.slice(0, -3).isin(['9A', '9B', '9
 df_uu_agg['LIBUU2010'] = df_uu_agg['LIBUU2010'].apply(\
                            lambda x: rename_field(x, dict_rename_libau))
 
-# loop (make sure no conflicts)
+
+
+# Loop (make sure no conflicts)
 # df_com    : CODGEO
 # df_au_agg : AU2010
 # df_uu_agg : UU2010
 
 dict_df_areas = {}
 
-for title_area, code_area, df_area in [['com', 'CODGEO', df_com],
+for title_area, code_area, df_area in [['CO', 'CODGEO', df_com],
                                        ['UU',  'UU2010', df_uu_agg],
                                        ['AU',  'AU2010', df_au_agg]]:
 
@@ -156,16 +163,17 @@ for title_area, code_area, df_area in [['com', 'CODGEO', df_com],
                            'QUAR2UC10': 'area_med_rev',
                            'QUAR3UC10': 'area_quar3_rev',
                            'P10_MEN' :  'area_nb_hh', # nb households
-                           'P10_RP_VOIT1P' : 'area_nb_mot_hh', # nb households with a car or more
+                           'P10_RP_VOIT1P' : 'area_nb_mot_hh', # nb households with one car+
                            'LIBGEO':   'area_label',
                            'LIBAU2010' : 'area_label',
                            'LIBUU2010' : 'area_label'},
                 inplace = True)
-
-  df_area.drop(['MENFIS10', 'PMENFIS10', 'MENIMP10',
-                'RDUC10', 'PTSA10', 'PBEN10', 'PPEN10', 'PAUT10',
-                'P10_LOG', 'P10_PMEN',
-                'P10_RP_VOIT1', 'P10_RP_VOIT2P', 'POPDENSITY10'],
+  
+  ls_drop_cols = ['MENFIS10', 'PMENFIS10', 'MENIMP10',
+                  'RDUC10', 'PTSA10', 'PBEN10', 'PPEN10', 'PAUT10'
+                  'P10_LOG', 'P10_PMEN',
+                  'P10_RP_VOIT1', 'P10_RP_VOIT2P', 'POPDENSITY10']
+  df_area.drop([x for x in ls_drop_cols if x in df_area.columns],
                axis = 1,
                inplace = True)
 
@@ -201,7 +209,11 @@ for title_area, code_area, df_area in [['com', 'CODGEO', df_com],
                                aggfunc = 'sum')
   df_ms = df_surfaces.apply(lambda x: x/df_surfaces.sum(1))
   se_hhi = df_ms.apply(lambda x: (x**2).sum(), axis = 1)
-  df_area['area_hhi'] = se_hhi
+  df_area['area_hhi'] = se_hhi * 10000
+  df_area['area_cr_1'] = df_surfaces.max(1) / df_surfaces.sum(1) * 100
+  df_area['area_gr_1'] = df_surfaces.T.idxmax()
+  df_area['area_nb_gr_1'] = df_surfaces.apply(lambda row: len(row[row == row.max()]),
+                                              axis = 1)
   
   df_area.sort('area_pop', ascending = False, inplace = True)
   dict_df_areas[title_area] = df_area
@@ -215,11 +227,30 @@ dict_formatters = {'area_pop_by_store_surface' : format_float_float,
                    'area_cl_comp_s' : format_float_float,
                    'area_hhi' : format_float_float}
 
-lsd = ['area_label', 'area_pop', 'area_med_rev', 'area_pop_density',
-       'area_nb_stores', 'area_pop_by_store_nb', 'area_pop_by_store_surface',
+lsd = ['area_label', 'area_pop', 'area_surface',
+       'area_med_rev', 'area_pop_density',
+       'area_nb_stores', 'area_pop_by_store_nb',
+       'area_pop_by_store_surface',
        'area_cl_comp_m', 'area_cl_comp_s', 'area_hhi']
 
-for title_area in ['com', 'AU', 'UU']:
+ls_sub_cols = ['label',
+               'med_rev',
+               'pop',
+               'nb_stores',
+               'store_surface',
+               'nb_hh',
+               'nb_mot_hh',
+               'hhi',
+               'cr_1',
+               'gr_1',
+               'nb_gr_1']
+
+df_all = df_insee_areas.copy()
+df_all.drop(['POP_MUN_2007'], axis = 1, inplace = True)
+
+for title_area, code_area in [['CO', 'CODGEO'],
+                              ['AU', 'AU2010'],
+                              ['UU', 'UU2010']]:
   print()
   print(title_area)
   df_area = dict_df_areas[title_area]
@@ -228,20 +259,40 @@ for title_area in ['com', 'AU', 'UU']:
            df_area['area_pop'][df_area['area_nb_stores'] == 0].sum()))
 
   print()
-  print('Overview of largest areas:')
+  print('Display largest areas:')
   print(df_area[0:20][lsd].to_string(formatters = dict_formatters))
  
   print()
-  print('Overview of largest areas:')
+  print('Overview of areas:')
   print(df_area[['area_surface', 'area_nb_stores'] + lsd]\
           .describe().to_string(formatters = dict_formatters))
-
+  
+  # OUTPUT AREA FILE
   df_area.to_csv(os.path.join(path_built_csv,
                               '201407_competition',
                               'df_area_{:s}.csv'.format(title_area)),
                  encoding = 'utf-8',
                  float_format ='%.3f')
 
-df_com = dict_df_areas['com']
-df_uu = dict_df_areas['UU']
-df_au = dict_df_areas['AU']
+  # PREPARE FOR MERGER IN ONE FILE
+  df_area.columns = [x.replace('area', title_area) for x in df_area.columns]
+  df_area.reset_index(inplace = True, drop = False)
+  
+  ls_sub_cols_area = ['{:s}_{:s}'.format(title_area, x)\
+                        for x in ls_sub_cols]
+  df_all = pd.merge(df_all,
+                    df_area[[code_area] + ls_sub_cols_area],
+                    on = code_area,
+                    how = 'left')
+
+# OUTPUT FILE WITH ALL INSEE MARKETS
+df_all.to_csv(os.path.join(path_built_csv,
+                           '201407_competition',
+                           'df_insee_markets.csv'),
+              encoding = 'utf-8',
+              float_format ='%.3f',
+              index = False)
+
+#df_co = dict_df_areas['CO']
+#df_uu = dict_df_areas['UU']
+#df_au = dict_df_areas['AU']

@@ -45,6 +45,8 @@ path_insee_extracts = os.path.join(path_data,
 df_prices = pd.read_csv(os.path.join(path_built_csv,
                                      'df_res_ln_prices.csv'),
                         encoding = 'utf-8')
+df_prices['log_pd'] = np.log(df_price['price'] /\
+                               df_price.groupby('product')['price'].transform('mean'))
 
 # LOAD QLMC STORE DATA
 df_stores = pd.read_csv(os.path.join(path_built_csv,
@@ -212,7 +214,6 @@ df_stores['store_dispersion'] = se_store_disp
 # INVESTIGATE LECLERC
 # ####################
 
-
 ls_some_chains = ['LECLERC',
                   'INTERMARCHE', # +7.0%
                   'SYSTEME U', # +6.7% for both hyper and super
@@ -244,7 +245,9 @@ for chain in ls_some_chains:
   print(smf.ols('store_price ~ store_dispersion + hhi + C(region) + surface',
                 data = df_chain).fit().summary())
 
-# INSPECT GEANT CASINO
+# ###################################################
+# INSPECT RELATION BETWEEN PRICE LEVEL AND DISPERSION
+# ###################################################
 
 for chain in ['GEANT CASINO', 'AUCHAN', 'CARREFOUR', 'LECLERC']:
   df_stores[df_stores['store_chain'] == chain].plot(kind = 'scatter',

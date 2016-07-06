@@ -188,9 +188,6 @@ df_qlmc.loc[df_qlmc['hhi'] >= 0.20, 'dum_high_hhi'] = 1
 # Exclude Ile-de-France as robustness check
 df_qlmc = df_qlmc[df_qlmc['region'] != u'Ile-de-France']
 
-ls_suspicious_prods = ['VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
-df_qlmc = df_qlmc[~df_qlmc['product'].isin(ls_suspicious_prods)]
-
 # drop chain(s) with too few stores
 df_qlmc = df_qlmc[~(df_qlmc['qlmc_chain'].isin(['SUPERMARCHE MATCH',
                                                 'ATAC',
@@ -220,9 +217,6 @@ df_qlmc = df_qlmc[~(df_qlmc['qlmc_chain'].isin(['SUPERMARCHE MATCH',
                                                 'MIGROS',
                                                 'RECORD',
                                                 'G 20']))]
-
-ls_suspicious_prods = ['VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
-df_qlmc = df_qlmc[~df_qlmc['product'].isin(ls_suspicious_prods)]
 
 ## keep only if products observed w/in at least 1000 stores (or more: memory..)
 #df_qlmc['nb_prod_obs'] =\
