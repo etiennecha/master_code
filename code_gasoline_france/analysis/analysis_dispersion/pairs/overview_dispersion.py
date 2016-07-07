@@ -309,3 +309,40 @@ print('Inspect abs mc_spread == 0.010:')
 print(df_pairs[(df_pairs['mc_spread'] == 0.010) | (df_pairs['mc_spread'] == -0.010)]
               [['distance', 'abs_mean_spread',
                 'pct_rr', 'freq_mc_spread', 'pct_same']].describe())
+
+# LEADERSHIP TEST
+df_pairs['leader_pval'] = np.nan
+df_pairs['leader_pval'] = df_pairs[(~df_pairs['nb_1_lead'].isnull()) &\
+                                   (~df_pairs['nb_2_lead'].isnull())].apply(\
+                            lambda x: scipy.stats.binom_test(x[['nb_1_lead',
+                                                                'nb_2_lead']].values,
+                                                             p = 0.5),
+                            axis = 1)
+
+lsd_ld = ['pct_same', 'nb_same', 'nb_chge_to_same', 'nb_1_lead', 'nb_2_lead', 'leader_pval']
+
+print()
+print(u'Inspect leaders:')
+print(df_pairs[lsd_ld][df_pairs['leader_pval'] <= 0.05][0:20].to_string())
+
+print()
+print(u'Types of pairs with leaders (todo: pct?)')
+print(df_pairs['pair_type'].value_counts())
+
+print()
+df_pairs['leader_brand'] = np.nan
+df_pairs.loc[(df_pairs['leader_pval'] <= 0.05) &\
+             (df_pairs['nb_1_lead'] > df_pairs['nb_2_lead']),
+             'leader_brand'] = df_pairs['brand_last_1']
+                      
+df_pairs.loc[(df_pairs['leader_pval'] <= 0.05) &\
+             (df_pairs['nb_1_lead'] < df_pairs['nb_2_lead']),
+             'leader_brand'] = df_pairs['brand_last_2']
+
+# todo: leader brand only of stations which have:
+# - no leader
+# - not engaged in tough competition
+
+print()
+print(u'Inspect leader brands')
+print(df_pairs['leader_brand'].value_counts())

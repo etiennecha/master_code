@@ -45,8 +45,8 @@ path_insee_extracts = os.path.join(path_data,
 df_prices = pd.read_csv(os.path.join(path_built_csv,
                                      'df_res_ln_prices.csv'),
                         encoding = 'utf-8')
-df_prices['log_pd'] = np.log(df_price['price'] /\
-                               df_price.groupby('product')['price'].transform('mean'))
+df_prices['log_pd'] = np.log(df_prices['price'] /\
+                               df_prices.groupby('product')['price'].transform('mean'))
 
 # LOAD QLMC STORE DATA
 df_stores = pd.read_csv(os.path.join(path_built_csv,
