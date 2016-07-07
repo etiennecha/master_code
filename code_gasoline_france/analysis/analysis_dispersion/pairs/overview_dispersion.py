@@ -346,3 +346,80 @@ df_pairs.loc[(df_pairs['leader_pval'] <= 0.05) &\
 print()
 print(u'Inspect leader brands')
 print(df_pairs['leader_brand'].value_counts())
+
+# impose close price comp: pct_same 0.33 or 0.50
+df_close_comp = df_pairs[df_pairs['pct_same'] >= 0.33].copy()
+
+## check what is mutually exclusive
+
+# absolute leader: leading, not led, not uncertain
+# leader_led: leading, led
+# leader_uncertain: leading, uncertain
+# relative leader: leading
+
+ls_close_comp = list(set(\
+  df_close_comp['id_1'].values.tolist() +\
+  df_close_comp['id_2'].values.tolist()))
+
+ls_rel_leader = list(set(\
+  df_close_comp['id_1'][(df_close_comp['leader_pval'] <= 0.05) &\
+                        (df_pairs['nb_1_lead'] > df_pairs['nb_2_lead'])].values.tolist() +\
+  df_close_comp['id_2'][(df_close_comp['leader_pval'] <= 0.05) &\
+                        (df_pairs['nb_1_lead'] < df_pairs['nb_2_lead'])].values.tolist()))
+
+ls_rel_led = list(set(\
+  df_close_comp['id_1'][(df_close_comp['leader_pval'] <= 0.05) &\
+                        (df_pairs['nb_1_lead'] < df_pairs['nb_2_lead'])].values.tolist() +\
+  df_close_comp['id_2'][(df_close_comp['leader_pval'] <= 0.05) &\
+                        (df_pairs['nb_1_lead'] > df_pairs['nb_2_lead'])].values.tolist()))
+
+ls_rel_unc = list(set(\
+  df_close_comp['id_1'][(df_close_comp['leader_pval'] > 0.05)].values.tolist() +\
+  df_close_comp['id_2'][(df_close_comp['leader_pval'] > 0.05)].values.tolist()))
+
+ls_abs_leader = list(set(ls_rel_leader).difference(set(ls_rel_led))\
+                                       .difference(set(ls_rel_unc)))
+
+ls_leader_led = list(set(ls_rel_leader).intersection(set(ls_rel_led)))
+
+ls_leader_unc = list(set(ls_rel_leader).intersection(set(ls_rel_unc)))
+
+# absolute led: led, not leading, not uncertain
+# relative led: led
+
+ls_abs_led = list(set(ls_rel_led).difference(set(ls_rel_leader))\
+                                 .difference(set(ls_rel_unc)))
+
+# absolute uncertain: uncertain, not leading, not led
+# relative uncertain: uncertain
+
+ls_abs_unc = list(set(ls_rel_unc).difference(set(ls_rel_leader))\
+                                 .difference(set(ls_rel_led)))
+
+ls_close_comp_su = [['close_comp', ls_close_comp],
+                    ['abs_leader', ls_abs_leader],
+                    ['abs_led', ls_abs_led],
+                    ['abs_unc', ls_abs_unc],
+                    ['rel_leader', ls_rel_leader],
+                    ['rel_led', ls_rel_led],
+                    ['rel_unc', ls_rel_unc],
+                    ['leader_unc', ls_leader_unc]]
+
+ls_se_leader = []
+for title_temp, ls_ids_temp in ls_close_comp_su:
+  ls_se_leader.append(df_info.ix[ls_ids_temp]['brand_last'].value_counts())
+
+df_leader_brands = pd.concat([df_info['brand_last'].value_counts()] + ls_se_leader,
+                             axis = 1,
+                             keys =['nb_stations'] + [x[0] for x in ls_close_comp_su])
+
+df_leader_brands = df_leader_brands[df_leader_brands['nb_stations'] >= 30]
+df_leader_brands = df_leader_brands.fillna(0)
+
+df_leader_brands_pct =\
+  df_leader_brands.apply(lambda x: x / df_leader_brands['nb_stations'] * 100)
+df_leader_brands_pct['nb_stations'] = df_leader_brands['nb_stations']
+
+df_leader_brands_pct.sort('close_comp', ascending = False, inplace = True)
+
+print df_leader_brands_pct.to_string()
