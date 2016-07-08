@@ -348,7 +348,7 @@ print(u'Inspect leader brands')
 print(df_pairs['leader_brand'].value_counts())
 
 # impose close price comp: pct_same 0.33 or 0.50
-df_close_comp = df_pairs[df_pairs['pct_same'] >= 0.33].copy()
+df_close_comp = df_pairs[df_pairs['pct_same'] >= 0.4].copy()
 
 ## check what is mutually exclusive
 
@@ -422,4 +422,4 @@ df_leader_brands_pct['nb_stations'] = df_leader_brands['nb_stations']
 
 df_leader_brands_pct.sort('close_comp', ascending = False, inplace = True)
 
-print df_leader_brands_pct.to_string()
+print(df_leader_brands_pct.to_string())
