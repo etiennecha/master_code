@@ -82,7 +82,7 @@ for i, row in enumerate(ls_rows):
     print ''
     print ls_raw_rows[i-1]
     print ls_raw_rows[i]
-    #break
+    break
 
 # One item only: can belong to normal (i.e. 8 item) line for which fields too long
 # idea: use string position (with ls_raw_rows) to find field to which it belongs
