@@ -13,21 +13,35 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+path_built_2015 = os.path.join(path_data,
+                               'data_supermarkets',
+                               'data_built',
+                               'data_qlmc_2015')
 
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+path_built_201503_csv =  os.path.join(path_built_2015,
+                                      'data_csv_201503')
+
+path_built_201415_csv = os.path.join(path_built_2015,
+                                     'data_csv_2014-2015')
+
+#df_prices = pd.read_csv(os.path.join(path_built_201503_csv,
+#                                     'df_prices.csv'),
+#                        encoding = 'utf-8')
+#ls_prod_cols = ['section', 'family', 'product']
+#store_col = 'store_id'
+
+ls_qlmc_1415_files = ['df_qlmc_201405.csv',
+                      'df_qlmc_201409.csv',
+                      'df_qlmc_201503.csv']
+
+df_prices = pd.read_csv(os.path.join(path_built_201415_csv,
+                                     ls_qlmc_1415_files[2]),
                         encoding = 'utf-8')
+#ls_prod_cols = ['ean', 'product']
+#store_col = 'store_name'
 
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'))
-
-df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
-                                               'df_qlmc_competitors.csv'))
+ls_prod_cols = ['section', 'family', 'product']
+store_col = 'store_id'
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
@@ -48,7 +62,7 @@ for old_chain, new_chain in ls_replace_chains:
                 'store_chain'] = new_chain
 
 # Average price by product / chain
-ls_col_gb = ['store_chain', 'section', 'family', 'product', 'price']
+ls_col_gb = ['store_chain'] + ls_prod_cols + ['price']
 df_chain_prod_prices = df_prices.groupby(ls_col_gb[:-1]).agg([len, np.mean])['price']
 #df_chain_prod_prices.reset_index(level = 'store_chain', drop = False, inplace = True)
 
@@ -63,7 +77,8 @@ ls_some_chains = ['INTERMARCHE', # +7.0%
                   'GEANT CASINO', #+1.8% (only Geant? also Hyper?)
                   'CASINO',  # +16.7%
                   'SIMPLY MARKET'] # +12.9%
-ls_compare_chains = [['LECLERC', chain] for chain in ls_some_chains]
+ls_compare_chains = [['LECLERC', chain] for chain in ls_some_chains\
+                                        if chain in df_prices['store_chain'].unique()]
 ls_res = []
 for chain_a, chain_b in ls_compare_chains:
   # chain_a, chain_b = 'LECLERC', 'HYPER U
@@ -99,13 +114,14 @@ for chain_a, chain_b in ls_compare_chains:
   
   # Save both nb stores of chain b and res
   nb_stores = len(df_prices[df_prices['store_chain'] ==\
-                                chain_b]['store_id'].unique())
+                                chain_b][store_col].drop_duplicates())
   nb_prods = len(df_duel_sub)
   pct_a_wins = len(df_duel_sub[df_duel_sub['diff'] > 10e-4]) / float(nb_prods)
   pct_b_wins = len(df_duel_sub[df_duel_sub['diff'] < -10e-4]) / float(nb_prods)
   pct_draws = len(df_duel_sub[df_duel_sub['diff'].abs() <= 10e-4]) / float(nb_prods)
   # Save both nb stores of chain b and res
-  ls_res.append([nb_stores,
+  ls_res.append([chain_b,
+                 nb_stores,
                  res,
                  nb_prods,
                  pct_a_wins,
@@ -152,18 +168,19 @@ df_recap.set_index('Chain', inplace = True)
 
 # Merge with my results
 df_res = pd.DataFrame(ls_res,
-                      index = ls_some_chains,
-                      columns = ['Nb stores (my data)',
+                      columns = ['Chain',
+                                 'Nb stores (my data)',
                                  'vs. LEC (my data)',
                                  'Nb prods',
                                  'Pct Leclerc wins',
                                  'Pct Competitor wins',
                                  'Pct draws'])
+df_res.set_index('Chain', inplace = True)
 df_res.rename(index = {'SUPER U' : 'SYSTEME U'}, inplace = True)
 df_res['vs. LEC (my data)'].apply(lambda x: u'{:.1f}%'.format(x))
 df_res.loc[u'LECLERC', u'Nb stores (my data)'] =\
               len(df_prices[df_prices['store_chain'] ==\
-                                'LECLERC']['store_id'].unique())
+                                'LECLERC'][store_col].drop_duplicates())
 
 df_recap = pd.merge(df_recap,
                     df_res,
