@@ -106,9 +106,10 @@ df_2 = pd.concat([df_i, df_0, df_1], axis = 0)
 # a priori can simply drop row if there is an intercept (mat row created)
 df_2['val'] = 1
 ref_prod =  df_qlmc['product'].sort_values().iloc[0]
-ref_chain = "centre-e-leclerc-les-angles" # df_qlmc['store_id'].sort_values().iloc[0]
-ls_refs = ['C(product) ' + ref_prod,
-           'C(store_id) ' + ref_chain]
+ref_chain = "centre-e-leclerc-osny" # df_qlmc['store_id'].sort_values().iloc[0]
+
+ls_refs = [u'C(product) ' + ref_prod,
+           u'C(store_id) ' + ref_chain]
 for ref in ls_refs:
   df_2 = df_2[~(df_2['col'] == ref)]
 df_2.set_index('col', append = True, inplace = True)
