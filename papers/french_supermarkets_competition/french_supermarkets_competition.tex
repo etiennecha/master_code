@@ -311,7 +311,7 @@ From a store prospect, a Geant Casino has 80\% of its products which follow a "s
 
 \begin{table}[H]
 \caption{Distribution of the frequencies of "standard" prices per store}
-\label{tab:qlmc_store_freq_50}
+\label{tab:qlmc_store_freq}
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
 \small
@@ -345,13 +345,17 @@ In order to study the relation between price level, price dispersion, and market
 \begin{align*}
 \text{log }P_{ij} = \text{Product}_i + \text{Store}_j + \epsilon_{ij}
 \end{align*}
-where $\text{Product}_i$ is a product effect and $\text{Store}_j$ is a store effect. The coefficient $\text{Product}_i$ associated with a dummy variable equal to $1$ for products carried by store $i$ provides information regarding the price level of store $i$ compared to a reference store. The residual variation $\epsilon_{ij}$ can be interpreted as the percentage deviation of a store product price from its expected geometric mean. The average of the residuals is approximately null for each product and each store. Measures of price dispersion at the store level can be obtained with the residuals, for instance by considering their standard deviation.
+where $\text{Product}_i$ is a product effect and $\text{Store}_j$ is a store effect. The coefficient $\text{Product}_i$ associated with a dummy variable equal to $1$ for products carried by store $i$ provides information regarding the price level of store $i$ compared to a reference store. The residual variation $\epsilon_{ij}$ can be interpreted as the percentage deviation of a store product price from its expected geometric mean. The average of the residuals is approximately null for each product and each store. Price dispersion is approximated at the store level by computing the standard deviation of the residuals. As a robustness check, the regression is also run successively for each supermarket chain so that the estimates of product fixed effects are chain specific. This specification is supported by table~\ref{tab:qlmc_prod_freq} and table~\ref{tab:qlmc_store_freq} as they reveal significant degrees of price homogeneity within chains. These can be seen to be relatively consistent with price dispersion measured through the standard deviation of price residuals.
 
-Todo: add summary tables, explain how store was picked (in order to have results than can be compared to comparison results)
+Local market characteristics are found to account for a minor share of the variance in store indexes. In particular, Leclerc does not appear to be significantly less price competitive relative to competitors once one tries to capture the competitiveness of the local market, the size and revenue of the population and the surface of the store. The affiliation of a store appears to be a strong determinant of its overall price level, which is consistent with the relative strong intra-chain price concentration previously obtained and other studies on retail chain prices. \cite{HOS08} and \cite{CHA16} observe similar results with gas station prices respectively in the US and in France (even though gas station chains do not follow uniform pricing policies).
 
-Todo: regression tables (price level + price dispersion), argue HHI variables, revenue, pop... (compare with Turolla)
+ADD REGRESSION RESULTS
 
+Price dispersion measured at the store level is found to be strongly correlated with the store price level.
+ 
 \subsection{Pair price dispersion}
+
+Price dispersion is investigated at the pair level, based on the idea introduced in \cite{TAP11} that distance between sellers can be used as a proxy for consumer information. Pairs of competitors which are separated by a very low distance can indeed be expected to compete fiercely, so that they constitute a population in which the "law of one price" is the most likely to hold. On the other hand, a larger distance is likely to be tantamount to poorer consumer information, namely a competition setting which could be described by a model of search. A common feature of such models is the absence of pure strategy equilibria. In the single product case, mixed strategy equilibria have traditionally been given a dynamic interpretation, corresponding to the changes in ranks that can be observed among sellers over time. In the multi-product case, ADD REF have shown that sellers can randomize on each product (either in a way that simply replicates the single product case, or in a way that involves a correlation between a seller's prices).
 
 Of all comparisons between chains exhibiting similar price levels, the Leclerc vs. Geant Casino comparison is the most stable across stores, and within stores across products. Table~\ref{tab:static_compa_15km} shows that among 215 pairs, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the pairs.
 
@@ -419,11 +423,15 @@ Descriptives statics of dynamic price dispersion are reported in Table~\ref{tab:
 \end{threeparttable}
 \end{table}
 
-Todo: add regression results and comments
+ADD REGRESSION RESULTS
+
+ADD COMMENTS
 
 \subsection{Market price dispersion}
 
-Todo: add regression results and comments
+ADD DESCRIPTIVE STATISTICS
+
+ADD COMMENTS
 
 \newpage
 

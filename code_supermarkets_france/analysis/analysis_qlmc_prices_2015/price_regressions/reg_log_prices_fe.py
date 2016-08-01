@@ -58,23 +58,23 @@ df_qlmc = df_prices.copy()
 # Avoid error msg on condition number
 df_qlmc['ln_price'] = np.log(df_qlmc['price'])
 
-## Refine data
-#
-## keep only if products observed w/in at least 1000 stores (or more: memory..)
-#df_qlmc['nb_prod_obs'] =\
-#  df_qlmc.groupby('product')['product'].transform(len).astype(int)
-#df_qlmc = df_qlmc[df_qlmc['nb_prod_obs'] >= 2000]
-#
-## keep only stores w/ at least 400 products
-#df_qlmc['nb_store_obs'] =\
-# df_qlmc.groupby('store_id')['store_id'].transform(len).astype(int)
-#df_qlmc = df_qlmc[df_qlmc['nb_store_obs'] >= 400]
-#
-## count product obs again
-#df_qlmc['nb_prod_obs'] =\
-#  df_qlmc.groupby('product')['product'].transform(len).astype(int)
-#
-#print df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe()
+# REFINE DATA
+
+# keep only if products observed w/in at least 100 stores (or more: memory..)
+df_qlmc['nb_prod_obs'] =\
+  df_qlmc.groupby('product')['product'].transform(len).astype(int)
+df_qlmc = df_qlmc[df_qlmc['nb_prod_obs'] >= 100]
+
+# keep only stores w/ at least 100 products
+df_qlmc['nb_store_obs'] =\
+ df_qlmc.groupby('store_id')['store_id'].transform(len).astype(int)
+df_qlmc = df_qlmc[df_qlmc['nb_store_obs'] >= 100]
+
+# count product obs again
+df_qlmc['nb_prod_obs'] =\
+  df_qlmc.groupby('product')['product'].transform(len).astype(int)
+
+print df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe()
 
 # ############
 # REGRESSIONS
@@ -107,8 +107,10 @@ df_2 = pd.concat([df_i, df_0, df_1], axis = 0)
 # a priori can simply drop row if there is an intercept (mat row created)
 df_2['val'] = 1
 ref_prod =  df_qlmc['product'].sort_values().iloc[0]
+
+ref_store = u'centre-e-leclerc-limoges'
+#ref_store = u'centre-e-leclerc-amilly' # amboise not bad
 #ref_store = u'centre-e-leclerc-lanester'
-ref_store = u'centre-e-leclerc-amilly' # amboise not bad
 #ref_store = u'centre-e-leclerc-andrezieux-boutheon' # u'centre-e-leclerc-les-angles'
 #ref_store = df_qlmc['store_id'].sort_values().iloc[0]
 
@@ -163,7 +165,11 @@ else:
 
 # Check leclerc
 df_lec = df_reg[df_reg['name'].str.contains(u'C\(store_id\) centre-e-leclerc')].copy()
-print(df_lec[0:100].to_string())
+df_lec.sort(['coeff'], ascending = True, inplace = True)
+print(df_lec[0:150].to_string())
+
+df_lec['price_ind'] = (df_lec['coeff'] + 1) * 100
+print(df_lec[~df_lec['coeff'].isnull()]['coeff'].describe())
 
 # ######
 # OUTPUT

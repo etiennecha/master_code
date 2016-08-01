@@ -124,10 +124,13 @@ df_stores = pd.merge(df_stores,
                      how = 'left',
                      on = 'store_id')
 
+# add price dispersion (std dev of store residuals)
+
 # Build log variables
 for col in ['price', 'surface',
             '1025km_hhi', '1025km_ac_hhi',
-            'UU_med_rev', 'AU_med_rev',
+            'UU_med_rev', 'AU_med_rev', 'CO_med_rev',
+            'AU_pop', 'UU_pop', 'CO_pop',
             '10_pop', '10km_ac_pop', '20km_ac_pop']:
   df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
 
@@ -141,6 +144,8 @@ df_stores['hhi'] = df_stores['1025km_hhi']
 df_stores['dum_high_hhi'] = 0
 df_stores.loc[df_stores['hhi'] >= 0.25, 'dum_high_hhi'] = 1
 df_stores['hhi'] = df_stores['hhi'] * 100
+
+df_stores['dpt'] = df_stores['c_insee'].str.slice(stop = 2)
 
 df_stores = df_stores[~(df_stores['qlmc_chain'].isin(['SUPERMARCHE MATCH',
                                                       'ATAC',
@@ -163,16 +168,10 @@ df_qlmc_competitors = pd.read_csv(os.path.join(path_built_csv,
                                                'df_qlmc_competitors_final.csv'),
                                   encoding = 'utf-8')
 
-# #########################
-# INSPECT DATA
-# #########################
+# FILTER STORES
 
 df_stores = df_stores[~df_stores['region'].isin(['Corse'])]
 df_stores = df_stores[df_stores['surface'] >= 2.5]
-
-# Avoid error msg on condition number
-df_stores['surface'] = df_stores['surface'].apply(lambda x: x/1000.0)
-df_stores['dpt'] = df_stores['c_insee'].str.slice(stop = 2)
 
 # ADD STORE PRICE FREQUENCIES
 df_chain_store_price_fq = pd.read_csv(os.path.join(path_built_csv,
@@ -212,11 +211,13 @@ se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
 #se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
 #                                              .agg(lambda x: x.abs().mean())
 df_stores.set_index('store_id', inplace = True)
-df_stores['store_dispersion'] = se_store_disp
+df_stores['store_dispersion'] = se_store_disp * 100
 
-# ####################
-# INVESTIGATE LECLERC
-# ####################
+# ####################################
+# STATS DES: STORE FES AND DISPERSION
+# ####################################
+
+# can regress 'coeff' (percentage... so essentially ln(homogeneous price)
 
 ls_some_chains = ['LECLERC',
                   'INTERMARCHE', # +7.0%
@@ -229,18 +230,40 @@ ls_some_chains = ['LECLERC',
                   'CASINO',  # +16.7%
                   'SIMPLY MARKET'] # +12.9%
 
+ls_some_chains.sort()
+
 print()
 print('Store FEs by chain')
 df_su_store_fes = df_stores[['store_price', 'qlmc_chain']].groupby('qlmc_chain')\
                                               .describe().unstack()
 print(df_su_store_fes.ix[ls_some_chains].to_string(float_format = format_float_int))
+print(df_stores['store_price'].describe().to_string(float_format = format_float_int))
 
+pd.set_option('float_format', '{:,.1f}'.format)
 print()
 print('Dispersion by chain')
 df_su_disp = df_stores[['store_dispersion', 'qlmc_chain']].groupby('qlmc_chain')\
                                                           .describe().unstack()
 print(df_su_disp.ix[ls_some_chains].to_string())
+print(df_stores['store_dispersion'].describe().to_string())
 
+# REG OF STORE PRICE - NAIVE BRAND
+print(smf.ols("store_price ~ C(qlmc_chain, Treatment('LECLERC'))",
+              data = df_stores[df_stores['dist_cl_comp'] <= 5]).fit().summary())
+
+# REG OF STORE PRICE - BRAND FULL CONTROL
+print(smf.ols("store_price ~ C(qlmc_chain, Treatment('LECLERC'))" +\
+              " + C(region) + hhi + ln_10_pop + surface",
+              data = df_stores[df_stores['dist_cl_comp'] <= 5]).fit().summary())
+
+# REG OF STORE PRICE - NAIVE NO BRAND
+print(smf.ols("store_price ~ C(region) + hhi + ln_10_pop + ln_CO_med_rev + surface",
+              data = df_stores[df_stores['dist_cl_comp'] <= 5]).fit().summary())
+
+# REG OF STORE PRICE
+
+
+pd.set_option('float_format', '{:,.2f}'.format)
 for chain in ls_some_chains:
   print()
   print(chain)
@@ -249,20 +272,25 @@ for chain in ls_some_chains:
   print(smf.ols('store_price ~ store_dispersion + hhi + C(region) + surface',
                 data = df_chain).fit().summary())
 
-# ###################################################
-# INSPECT RELATION BETWEEN PRICE LEVEL AND DISPERSION
-# ###################################################
+# todo: drop if dist_cl_comp too high (outliers) ?
+## print(df_stores[df_stores['dist_cl_comp'] >= 5]['dist_cl_comp'].to_string())
+# df_stores = df_stores[df_stores['dist_cl_comp'] <= 5]
+## check that no mistake in dist_cl_comp... seem low
 
-for chain in ['GEANT CASINO', 'AUCHAN', 'CARREFOUR', 'LECLERC']:
-  df_stores[df_stores['store_chain'] == chain].plot(kind = 'scatter',
-                                                    x = 'store_price',
-                                                    y = 'store_dispersion')
-  plt.title(chain)
-  plt.show()
-
-lsdo = ['store_name', 'store_price', 'store_dispersion',
-        'price_1', 'price_2', 'surface', 'region']
-
-# some outliers with low price
-print(df_stores[(df_stores['store_chain'] == 'GEANT CASINO') &\
-                (df_stores['store_price'] <= 96.5)][lsdo].to_string())
+## ###################################################
+## INSPECT RELATION BETWEEN PRICE LEVEL AND DISPERSION
+## ###################################################
+#
+#for chain in ['GEANT CASINO', 'AUCHAN', 'CARREFOUR', 'LECLERC']:
+#  df_stores[df_stores['store_chain'] == chain].plot(kind = 'scatter',
+#                                                    x = 'store_price',
+#                                                    y = 'store_dispersion')
+#  plt.title(chain)
+#  plt.show()
+#
+#lsdo = ['store_name', 'store_price', 'store_dispersion',
+#        'price_1', 'price_2', 'surface', 'region']
+#
+## some outliers with low price
+#print(df_stores[(df_stores['store_chain'] == 'GEANT CASINO') &\
+#                (df_stores['store_price'] <= 96.5)][lsdo].to_string())
