@@ -63,7 +63,7 @@ df_qlmc['ln_price'] = np.log(df_qlmc['price'])
 ## keep only if products observed w/in at least 1000 stores (or more: memory..)
 #df_qlmc['nb_prod_obs'] =\
 #  df_qlmc.groupby('product')['product'].transform(len).astype(int)
-#df_qlmc = df_qlmc[df_qlmc['nb_prod_obs'] >= 1000]
+#df_qlmc = df_qlmc[df_qlmc['nb_prod_obs'] >= 2000]
 #
 ## keep only stores w/ at least 400 products
 #df_qlmc['nb_store_obs'] =\
@@ -80,36 +80,41 @@ df_qlmc['ln_price'] = np.log(df_qlmc['price'])
 # REGRESSIONS
 # ############
 
+#df_qlmc = df_qlmc[df_qlmc['store_chain'] == 'LECLERC']
+
 ## test get_dummies /w sparse option (requires pandas => 0.16.1)
 #df_test = pd.get_dummies(df_qlmc,
 #                         columns = ['product', 'qlmc_chain'],
 #                         prefix = ['product', 'qlmc_chain'],
 #                         sparse = True)
 
-# create df to convert to sparse (need index: 0 to n obs)
-df_i = pd.DataFrame('intercept', columns = ['col'], index = df_qlmc.index)
-df_i.index.name = 'row'
-
 df_0 = df_qlmc[['product']].copy()
-df_0['product'] = 'C(product) ' + df_0['product']
+df_0['product'] = u'C(product) ' + df_0['product']
 df_0.index.name = 'row'
 df_0.rename(columns = {'product': 'col'}, inplace = True)
 
 df_1 = df_qlmc[['store_id']].copy()
-df_1['store_id'] = 'C(store_id) ' + df_1['store_id']
+df_1['store_id'] = u'C(store_id) ' + df_1['store_id']
 df_1.index.name = 'row'
 df_1.rename(columns = {'store_id': 'col'}, inplace = True)
 
+# create df to convert to sparse (need index: 0 to n obs)
+df_i = pd.DataFrame('intercept', columns = ['col'], index = df_qlmc.index)
+df_i.index.name = 'row'
 df_2 = pd.concat([df_i, df_0, df_1], axis = 0)
 
 # omit one category for each categorical variable (reference)
 # a priori can simply drop row if there is an intercept (mat row created)
 df_2['val'] = 1
 ref_prod =  df_qlmc['product'].sort_values().iloc[0]
-ref_chain = "centre-e-leclerc-osny" # df_qlmc['store_id'].sort_values().iloc[0]
+#ref_store = u'centre-e-leclerc-lanester'
+ref_store = u'centre-e-leclerc-amilly' # amboise not bad
+#ref_store = u'centre-e-leclerc-andrezieux-boutheon' # u'centre-e-leclerc-les-angles'
+#ref_store = df_qlmc['store_id'].sort_values().iloc[0]
 
+#ls_refs = [u'C(store_id) ' + ref_store]
 ls_refs = [u'C(product) ' + ref_prod,
-           u'C(store_id) ' + ref_chain]
+           u'C(store_id) ' + ref_store]
 for ref in ls_refs:
   df_2 = df_2[~(df_2['col'] == ref)]
 df_2.set_index('col', append = True, inplace = True)
@@ -156,6 +161,10 @@ else:
 #print('SS of residuals for price:',
 #      ((df_qlmc['price'] - df_qlmc['price_hat'])**2).sum())
 
+# Check leclerc
+df_lec = df_reg[df_reg['name'].str.contains(u'C\(store_id\) centre-e-leclerc')].copy()
+print(df_lec[0:100].to_string())
+
 # ######
 # OUTPUT
 # ######
@@ -173,6 +182,7 @@ df_reg.to_csv(os.path.join(path_built_csv,
               encoding = 'utf-8',
               float_format='%.3f',
               index = False)
+
 
 ## ###############
 ## BU PATSY SYNTAX
