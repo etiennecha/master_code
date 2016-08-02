@@ -81,106 +81,46 @@ df_stores = pd.merge(df_stores,
                      how = 'left',
                      on = 'store_id')
 
-# LOAD COMPETITION
-ls_comp_files = ['df_store_prospect_comp_HS_v_all_10km.csv',
-                 'df_store_prospect_comp_HS_v_all_20km.csv',
-                 'df_store_prospect_comp_HS_v_all_1025km.csv']
-df_comp = pd.read_csv(os.path.join(path_built_lsa_comp_csv,
-                                   ls_comp_files[1]),
-                      dtype = {'id_lsa' : str},
-                      encoding = 'utf-8')
+# ADD STORE CHARS
 
-# LOAD DEMAND
-df_demand = pd.read_csv(os.path.join(path_built_lsa_comp_csv,
-                                     'df_store_prospect_demand.csv'),
-                        dtype = {'id_lsa' : str},
-                        encoding = 'utf-8')
+df_store_markets = pd.read_csv(os.path.join(path_built_lsa_csv,
+                                            '201407_competition',
+                                            'df_store_market_chars.csv'),
+                               dtype = {'id_lsa' : str},
+                               encoding = 'utf-8')
 
-# LOAD REVENUE (would be better to dedicate a script)
-df_insee_areas = pd.read_csv(os.path.join(path_insee_extracts,
-                                          u'df_insee_areas.csv'),
-                             encoding = 'UTF-8')
+ls_lsa_cols = ['type_alt', 'region', 'surface',
+               'nb_caisses', 'nb_pompes', 'drive']
 
-## add municipality revenue
-#df_com = pd.read_csv(os.path.join(path_insee_extracts,
-#                                  'data_insee_extract.csv'),
-#                     encoding = 'UTF-8')
-
-# add AU revenue
-df_au_agg = pd.read_csv(os.path.join(path_insee_extracts,
-                                     u'df_au_agg_final.csv'),
-                        encoding = 'UTF-8')
-df_au_agg['med_rev_au'] = df_au_agg['QUAR2UC10']
-df_insee_areas = pd.merge(df_insee_areas,
-                          df_au_agg[['AU2010', 'med_rev_au']],
-                          left_on = 'AU2010',
-                          right_on = 'AU2010')
-
-# add UU revenue
-df_uu_agg = pd.read_csv(os.path.join(path_insee_extracts,
-                                     u'df_uu_agg_final.csv'),
-                        encoding = 'UTF-8')
-df_uu_agg['med_rev_uu'] = df_uu_agg['QUAR2UC10']
-df_insee_areas = pd.merge(df_insee_areas,
-                          df_uu_agg[['UU2010', 'med_rev_uu']],
-                          left_on = 'UU2010',
-                          right_on = 'UU2010')
-
-# add area comp info
-title_area, code_area = 'AU', 'AU2010'
-df_uu_comp = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                      '201407_competition',
-                                      'df_area_{:s}.csv'.format(title_area)),
-                         encoding = 'utf-8')
-df_insee_areas = pd.merge(df_insee_areas,
-                          df_uu_comp,
-                          left_on = code_area,
-                          right_on = code_area)
-
-# MERGE DATA
-df_lsa = pd.merge(df_lsa,
-                  df_comp,
-                  on = 'id_lsa',
-                  how = 'left')
-
-df_lsa = pd.merge(df_lsa,
-                  df_demand,
-                  on = 'id_lsa',
-                  how = 'left')
-               
-ls_ia_cols = ['STATUT_2010',
-              'med_rev_au', 'med_rev_uu', 'area_hhi',
-              'area_cl_comp_m', 'area_cl_comp_s',
-              'area_pop_by_store_surface', 'area_pop_by_store_nb', 'area_nb_stores']
-
-df_lsa = pd.merge(df_lsa,
-                  df_insee_areas[['CODGEO'] + ls_ia_cols],
-                  left_on = 'c_insee',
-                  right_on = 'CODGEO',
-                  how = 'left')
-
-ls_lsa_cols = ['id_lsa',
-               'region', # robustness check: exclude Ile-de-France
-               'surface',
-               'nb_caisses',
-               'nb_emplois'] +\
-               list(df_comp.columns[1:]) +\
-               list(df_demand.columns[1:]) +\
-               ls_ia_cols
+df_store_chars = pd.merge(df_lsa[['id_lsa'] + ls_lsa_cols],
+                          df_store_markets,
+                          on = 'id_lsa',
+                          how = 'left')
 
 df_stores = pd.merge(df_stores,
-                     df_lsa[ls_lsa_cols],
+                     df_store_chars,
                      on = 'id_lsa',
                      how = 'left')
 
-for col in ['surface', 'hhi', 'ac_hhi',
-            'med_rev_uu', 'med_rev_au',
-            'pop_cont_10', 'pop_cont_8', 'pop_cont_12',
-            'pop_ac_10km', 'pop_ac_20km']:
-  df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
+df_stores['surface'] = df_stores['surface'].apply(lambda x: x/1000.0)
 
-##  need to center first... still high multicolinearity
-# df_stores['ac_hhi_2'] = df_stores['ac_hhi']**2
+#df_prices.drop('store_chain', axis = 1, inplace = True)
+#df_qlmc = pd.merge(df_prices,
+#                   df_stores,
+#                   on = ['store_id'],
+#                   how = 'left')
+#
+## Avoid error msg on condition number
+##df_qlmc['ac_hhi'] = df_qlmc['ac_hhi'] * 10000
+##df_qlmc['hhi'] = df_qlmc['hhi'] * 10000
+
+# Build log variables
+for col in ['price', 'surface', 'hhi_1025km', 'ac_hhi_1025km',
+            'AU_med_rev', 'UU_med_rev', 'CO_med_rev',
+            'pop_cont_10', 'pop_cont_12',
+            'pop_ac_1025km', 'pop_ac_20km']:
+#  df_qlmc['ln_{:s}'.format(col)] = np.log(df_qlmc[col])
+  df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
 
 # LOAD MARKET DISPERSION
 price_col = 'lpd' # or 'price' for log price dev to mean of raw prices
@@ -202,7 +142,6 @@ for price_col in ['lpd', 'price']: # 'price'
 df_disp_agg_res = dict_df_disp['disp_agg_lpd']
 df_disp_res = dict_df_disp['disp_lpd']
 
-
 # ##############
 # REGRESSIONS
 # ##############
@@ -214,13 +153,17 @@ df_disp = pd.merge(df_disp_agg_res,
                    on = 'store_id',
                    how = 'left')
 
+df_disp['ac_nb_comp'] = df_disp['ac_nb_comp_10km']
+df_disp['hhi'] = df_disp['hhi_10km']
+df_disp['ac_hhi'] = df_disp['ac_hhi_10km']
+
 # high hhi values in Corsica so get rid of it
 df_disp = df_disp[~df_disp['region'].isin(['Corse'])]
 # if exclude 'Pays de la Loire', 'Poitou-Charentes', 'Bretagne' (low dispersion)
 # hhi has positive role
 
 df_disp.sort('std', ascending = True, inplace = True)
-lsd = ['store_id', 'std', 'range', 'nb_stores', 'ac_nb_stores', 'hhi', 'region']
+lsd = ['store_id', 'std', 'range', 'nb_stores', 'hhi', 'region']
 print()
 print(df_disp[lsd][:20].to_string())
 print(df_disp[lsd][-20:].to_string())
@@ -233,13 +176,13 @@ plt.show()
 
 print(df_disp[['nb_stores', 'ac_hhi', 'hhi',
                'ln_pop_cont_10', 'ln_pop_cont_12',
-               'ln_med_rev_au', 'ln_med_rev_uu']].corr().to_string())
+               'ln_AU_med_rev', 'ln_UU_med_rev']].corr().to_string())
 
-res_std = smf.ols('std ~ ac_hhi + area_pop_by_store_surface + C(STATUT_2010)',
+res_std = smf.ols('std ~ ac_hhi + C(STATUT_2010) + ac_nb_comp', # nb_stores
                   data = df_disp).fit()
 print(res_std.summary())
 
-res_range = smf.ols('range ~ ac_hhi + ln_pop_cont_10 + C(STATUT_2010)',
+res_range = smf.ols('range ~ ac_hhi + ln_pop_cont_10 + C(STATUT_2010) + ac_nb_comp', # nb_stores
                     data = df_disp).fit()
 print(res_range.summary())
 

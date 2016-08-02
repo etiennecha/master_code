@@ -54,8 +54,11 @@ ls_comp_files = [['10km', 'df_store_prospect_comp_HS_v_all_10km.csv'],
                  ['20km', 'df_store_prospect_comp_HS_v_all_20km.csv'],
                  ['1025km', 'df_store_prospect_comp_HS_v_all_1025km.csv']]
 
-ls_sub_comp_cols = [
-                    'ac_group_share', 'group_share', 'ac_hhi', 'hhi']
+ls_sub_comp_cols = ['ac_nb_comp',
+                    'ac_group_share',
+                    'group_share',
+                    'ac_hhi',
+                    'hhi']
 
 dict_df_comp = {}
 for comp_title, comp_file_name in ls_comp_files:
@@ -64,7 +67,7 @@ for comp_title, comp_file_name in ls_comp_files:
                                      comp_file_name),
                         dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
-  ls_sub_comp_cols_2 = ['{:s}_{:s}'.format(comp_title, x) for x in ls_sub_comp_cols]
+  ls_sub_comp_cols_2 = ['{:s}_{:s}'.format(x, comp_title) for x in ls_sub_comp_cols]
   dict_repl = dict(zip(ls_sub_comp_cols,
                        ls_sub_comp_cols_2))
   df_comp.rename(columns = dict_repl,
@@ -92,15 +95,15 @@ df_demand = pd.read_csv(os.path.join(path_built_csv,
                         dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 
-# temp?
-df_demand.rename(columns = {'pop_ac_10km' : '10km_ac_pop',
-                            'pop_ac_20km' : '20km_ac_pop',  
-                            'pop_ac_25km' : '25km_ac_pop',
-                            'pop_ac_1025km' : '1025km_ac_pop',
-                            'pop_cont_8'  : '8_pop',
-                            'pop_cont_10' : '10_pop',
-                            'pop_cont_12' : '12_pop'},
-                 inplace = True)
+## temp?
+#df_demand.rename(columns = {'pop_ac_10km'   : '10km_ac_pop',
+#                            'pop_ac_20km'   : '20km_ac_pop',  
+#                            'pop_ac_25km'   : '25km_ac_pop',
+#                            'pop_ac_1025km' : '1025km_ac_pop',
+#                            'pop_cont_8'    : '8_pop',
+#                            'pop_cont_10'   : '10_pop',
+#                            'pop_cont_12'   : '12_pop'},
+#                 inplace = True)
 
 # MARKETS: INSEE AREAS
 df_insee_markets = pd.read_csv(os.path.join(path_built_csv,
