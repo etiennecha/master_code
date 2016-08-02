@@ -34,7 +34,7 @@ ls_qlmc_dates = ['201405',
                  '201409',
                  '201503']
 
-date_str = ls_qlmc_dates[1]
+date_str = ls_qlmc_dates[0]
 
 df_prices = pd.read_csv(os.path.join(path_built_201415_csv,
                                      'df_qlmc_{:s}.csv'.format(date_str)),

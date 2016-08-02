@@ -18,8 +18,10 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 path_built_csv = os.path.join(path_data,
                               'data_supermarkets',
                               'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+                              'data_qlmc_2015')
+
+path_built_201503_csv = os.path.join(path_built_csv, 'data_csv_201503')
+path_built_201415_csv = os.path.join(path_built_csv, 'data_csv_2014-2015')
 
 path_built_lsa_csv = os.path.join(path_data,
                                   'data_supermarkets',
@@ -33,11 +35,11 @@ pd.set_option('float_format', '{:,.2f}'.format)
 # LOAD DATA
 # #############
 
-df_prices = pd.read_csv(os.path.join(path_built_csv,
+df_prices = pd.read_csv(os.path.join(path_built_201503_csv,
                                      'df_prices.csv'),
                         encoding = 'utf-8')
 
-df_stores = pd.read_csv(os.path.join(path_built_csv,
+df_stores = pd.read_csv(os.path.join(path_built_201503_csv,
                                      'df_stores_final.csv'),
                         dtype = {'id_lsa' : str,
                                  'c_insee' : str},
@@ -48,7 +50,7 @@ df_qlmc = pd.merge(df_prices,
                    on = 'store_id',
                    how = 'left')
 
-df_comp_pairs = pd.read_csv(os.path.join(path_built_csv,
+df_comp_pairs = pd.read_csv(os.path.join(path_built_201415_csv,
                                          'df_comp_store_pairs.csv'),
                             dtype = {'id_lsa_0' : str,
                                      'id_lsa_1' : str},
@@ -77,9 +79,8 @@ ls_tup_chains = [('LECLERC', 'GEANT CASINO'),
                  ('AUCHAN', 'SUPER U'),
                  ('INTERMARCHE', 'SUPER U')]
   
-ls_copy_cols = ['id_lsa', 'store_id',
-                'store_chain', 'store_municipality',
-                'enseigne_alt', 'groupe']
+ls_copy_cols = ['id_lsa', 'store_name',
+                'store_chain', 'enseigne_alt', 'groupe']
 
 ls_df_cp = []
 for tup_chains in ls_tup_chains:
@@ -162,8 +163,8 @@ for sc_0, sc_1 in ls_tup_chains:
           compa_winner = 'draw'
         ls_rows_compa.append((row['id_lsa_A'],
                               row['id_lsa_B'],
-                              row['store_id_A'],
-                              row['store_id_B'],
+                              row['store_name_A'],
+                              row['store_name_B'],
                               row['store_chain_A'],
                               row['store_chain_B'],
                               row['dist'],
@@ -182,8 +183,8 @@ for sc_0, sc_1 in ls_tup_chains:
 df_repro_compa = pd.DataFrame(ls_rows_compa,
                               columns = ['id_lsa_A',
                                          'id_lsa_B',
-                                         'store_id_A',
-                                         'store_id_B',
+                                         'store_name_A',
+                                         'store_name_B',
                                          'store_chain_A',
                                          'store_chain_B',
                                          'dist',

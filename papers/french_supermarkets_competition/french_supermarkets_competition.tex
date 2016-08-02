@@ -352,7 +352,7 @@ Local market characteristics are found to account for a minor share of the varia
 ADD REGRESSION RESULTS
 
 Price dispersion measured at the store level is found to be strongly correlated with the store price level.
- 
+
 \subsection{Pair price dispersion}
 
 Price dispersion is investigated at the pair level, based on the idea introduced in \cite{TAP11} that distance between sellers can be used as a proxy for consumer information. Pairs of competitors which are separated by a very low distance can indeed be expected to compete fiercely, so that they constitute a population in which the "law of one price" is the most likely to hold. On the other hand, a larger distance is likely to be tantamount to poorer consumer information, namely a competition setting which could be described by a model of search. A common feature of such models is the absence of pure strategy equilibria. In the single product case, mixed strategy equilibria have traditionally been given a dynamic interpretation, corresponding to the changes in ranks that can be observed among sellers over time. In the multi-product case, ADD REF have shown that sellers can randomize on each product (either in a way that simply replicates the single product case, or in a way that involves a correlation between a seller's prices).
@@ -429,9 +429,15 @@ ADD COMMENTS
 
 \subsection{Market price dispersion}
 
-ADD DESCRIPTIVE STATISTICS
+While in the single product case, the main source of complexity attached to measuring market dispersion is the definition of markets, the presence of several products, in particular when their number is large as is the case with supermarkets, raises another major methodological issue. Absent quantity data, product choice is bound to be largely data dependent, and thus exposes results to various biases. Also, differentiation cannot be ignored by focusing on non differentiated pairs such as with competitor pair analysis, hence results are necessarily sensitive to potential misspecifications and must therefore be interpreted with great care.
 
-ADD COMMENTS
+The first approach followed in the paper consists in adopting markets as defined by the price comparison website. They are consequently all centered around one Leclerc store, and contain not other Leclerc store. Robustness checks are run to evaluate the impact of two potential issues: the absence of some supermarkets in the price data, and the presence of overlapping markets whenever two Leclerc are too close to each other. The first issue is addressed by narrowing the analysis to markets where virtually all active supermarkets are observed, and the second by considering that two Leclerc can be active in the same market, and alternatively by dropping overlapping markets. The second approach simply consists in considering radiuses around Leclerc stores as is standard in the literature. This typically excludes some competitors listed by Qlmc (and may include others?).
+
+All products for which prices are available at 2/3 or more of observed supermarkets are taken into account in the analysis. Markets for which less than 100 products satisfy this criterion are dropped. Measures of price dispersion are computed both with raw prices and price residuals. Figures obtained with raw prices are likely to overestimate consumer search related price dispersion since price comparison results suggest that persistent price differences (across products and time) are non negligible. The method used to compute price residuals implies that the expected value of a large enough basket should be similar for each store in the market. As a consequence, price dispersion can be evaluated either by considering the distribution of all price residuals, or by studying separately each product distributions (which can then be aggregated to obtain a measure of price dispersion at the market level).
+
+We investigate how market price dispersion varies with the number of sellers or the intensity of competition captured by HHI. We also investigate the link between market price dispersion and an index of market prices. The market index is built by considering how expensive each store operating in a given market is in comparison to all stores affiliated to the same chain. Alternatively, store surfaces are taken into account to weight prices indexes in the computation.
+
+ADD DESCRIPTIVE STATISTICS
 
 \newpage
 
