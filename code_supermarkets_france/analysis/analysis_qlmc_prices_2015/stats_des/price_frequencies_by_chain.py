@@ -54,14 +54,14 @@ df_qlmc_201409 = pd.read_csv(os.path.join(path_built_csv_1415,
 
 # DEFINE DF QLMC
 
-#df_qlmc = df_prices 
-#ls_prod_cols = ['section', 'family', 'product']
-#ls_store_id_cols = ['store_id']
+df_qlmc = df_prices 
+ls_prod_cols = ['section', 'family', 'product']
+ls_store_id_cols = ['store_id']
 
-# Robustness check with 2014 (May or September)
-df_qlmc = df_qlmc_201405 # df_qlmc_201409
-ls_prod_cols = ['ean', 'product'] # check if 1 to 1 (?)
-ls_store_id_cols = ['id_lsa', 'store_name']
+## Robustness check with 2014 (May or September)
+#df_qlmc = df_qlmc_201405 # df_qlmc_201409
+#ls_prod_cols = ['ean', 'product'] # check if 1 to 1 (?)
+#ls_store_id_cols = ['id_lsa', 'store_name']
 
 # Robustness check: 2000 most detained products only
 se_prod_vc = df_qlmc[ls_prod_cols].groupby(ls_prod_cols).agg(len)

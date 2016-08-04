@@ -274,7 +274,7 @@ Since its creation in 2007, Qlmc prominently displays aggregate comparisons with
 
 \subsection{Chain level pricing policies}
 
-French supermarket chains are known not to generally follow uniform national pricing policies. Empirical investigations however reveal various degrees of uniformity at the chain level. Table~\ref{tab:qlmc_prod_freq} reports the frequency of the mode (most common price) of each product at the chain level. Geant Casino stands out in terms of price consistency. On average, a product is sold at the very same price in 89\% of the chain stores. This implies that a random basket of goods has a relatively high probability to have the very same price in two Geant Casino stores, even if both are located in different regions. The closest followers are Systeme U and Leclerc, for which the mode accounts for 39\% and 38\% of price observations on average.
+French supermarket chains are known not to generally follow uniform national pricing policies. Empirical investigations however reveal various degrees of uniformity at the chain level. Table~\ref{tab:qlmc_prod_freq} reports the frequency of the mode (most common price) of each product at the chain level. Geant Casino stands out in terms of product price homogeneity. On average, a product is sold at the very same price in 89\% of the chain stores. This implies that a random basket of goods has a relatively high probability to have the very same price in two Geant Casino stores, even if both are located far apart from each each other. The closest followers are Systeme U and Leclerc, for which the mode accounts for 39\% and 38\% of price observations on average.
 
 \begin{table}[H]
 \caption{Distribution of the frequency of the mode (most common price) per product}
@@ -287,15 +287,15 @@ French supermarket chains are known not to generally follow uniform national pri
 \toprule
 {}                 &  Nb &  Mean &  Std &  Min &  Q25 &  Q50 &  Q75 &  Max \\
 \midrule
-Auchan             &   416 &  0.19 & 0.11 & 0.05 & 0.12 & 0.16 & 0.22 & 0.63 \\
-Carrefour          &   319 &  0.29 & 0.17 & 0.07 & 0.17 & 0.23 & 0.36 & 0.87 \\
-Carrefour Market   &   777 &  0.33 & 0.19 & 0.11 & 0.20 & 0.26 & 0.42 & 1.00 \\
-Geant Casino       &   417 &  0.89 & 0.10 & 0.45 & 0.83 & 0.91 & 0.97 & 1.00 \\
-Casino             &   157 &  0.37 & 0.15 & 0.06 & 0.29 & 0.33 & 0.44 & 0.86 \\
-Cora               &   364 &  0.20 & 0.11 & 0.06 & 0.14 & 0.17 & 0.23 & 0.90 \\
-Intermarche        & 1,326 &  0.25 & 0.19 & 0.05 & 0.13 & 0.18 & 0.29 & 0.97 \\
-Leclerc            & 1,788 &  0.38 & 0.23 & 0.03 & 0.14 & 0.38 & 0.59 & 0.95 \\
-Systeme U          & 1,077 &  0.39 & 0.12 & 0.09 & 0.32 & 0.37 & 0.44 & 0.91 \\
+Auchan & 416   & 19    & 11    & 5     & 12    & 16    & 22    & 63 \\
+Carrefour & 319   & 29    & 17    & 7     & 17    & 23    & 36    & 87 \\
+Carrefour Market & 777   & 33    & 19    & 11    & 20    & 26    & 42    & 100 \\
+Geant Casino & 417   & 89    & 10    & 45    & 83    & 91    & 97    & 100 \\
+Casino & 157   & 37    & 15    & 6     & 29    & 33    & 44    & 86 \\
+Cora  & 364   & 20    & 11    & 6     & 14    & 17    & 23    & 90 \\
+Intermarche & 1,326 & 25    & 19    & 5     & 13    & 18    & 29    & 97 \\
+Leclerc & 1,788 & 38    & 23    & 3     & 14    & 38    & 59    & 95 \\
+Super U & 1,077 & 39    & 12    & 9     & 32    & 37    & 44    & 91 \\
 \bottomrule
 \bottomrule
 %\multicolumn{9}{p{0.8\textwidth}}{\footnotesize Reading note: On average, 38\% of all Leclerc stores set the very same price for a given product.}
@@ -307,7 +307,7 @@ Systeme U          & 1,077 &  0.39 & 0.12 & 0.09 & 0.32 & 0.37 & 0.44 & 0.91 \\
 \end{threeparttable}
 \end{table}
 
-From a store prospect, a Geant Casino has 80\% of its products which follow a "standard" chain price (a product is considered to have a standard price whenever its most common price is set by 50\% or more of the stores). In terms of product price concentration, Leclerc distinguishes itself by having also a relatively strong concentration at the store level. At the median Leclerc store, 38\% products follow "standard" prices (17\% for Systeme U).
+Intra-brand price heterogeneity can also investigated from a store prospect. Table~\ref{tab:qlmc_store_freq} accounts for the percentage of products carried by each store the price of which is found to be equal to the mode of the observed chain prices. The average Geant Casino store appears to follow a standard chain price for approximately 80\% of its products. The median is 94\% while is the min is 6\% hence it appears that a limiter number of stores depart significantly from standard prices while price uniformity is the rule for the bulk of the store chains. Leclerc also exhibits a relatively strong concentration at the store level.
 
 \begin{table}[H]
 \caption{Distribution of the frequencies of "standard" prices per store}
@@ -320,24 +320,26 @@ From a store prospect, a Geant Casino has 80\% of its products which follow a "s
 \toprule
 {}                &  Nb &  Mean &  Std &  Min &  Q25 &  Q50 &  Q75 &  Max \\
 \midrule
-Auchan            & 107 &  0.01 & 0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 \\
-Carrefour         & 146 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.09 & 0.13 \\
-Carrefour Market  & 223 &  0.12 & 0.05 & 0.00 & 0.10 & 0.13 & 0.15 & 0.21 \\
-Geant Casino      &  91 &  0.80 & 0.23 & 0.06 & 0.70 & 0.94 & 0.96 & 0.98 \\
-Casino            &  74 &  0.04 & 0.02 & 0.01 & 0.03 & 0.05 & 0.06 & 0.09 \\
-Cora              &  54 &  0.01 & 0.00 & 0.00 & 0.01 & 0.01 & 0.02 & 0.02 \\
-Intermarche       & 513 &  0.07 & 0.03 & 0.00 & 0.05 & 0.08 & 0.10 & 0.17 \\
-Leclerc           & 552 &  0.28 & 0.12 & 0.01 & 0.19 & 0.31 & 0.38 & 0.51 \\
-Systeme U         & 409 &  0.08 & 0.05 & 0.00 & 0.04 & 0.06 & 0.12 & 0.17 \\
+Auchan & 107   & 14    & 7     & 2     & 9     & 13    & 18    & 37 \\
+Carrefour & 146   & 28    & 15    & 0     & 19    & 28    & 36    & 67 \\
+Carrefour Market & 223   & 32    & 16    & 0     & 19    & 32    & 45    & 60 \\
+Geant Casino & 91    & 81    & 23    & 6     & 71    & 94    & 96    & 98 \\
+Casino & 74    & 16    & 11    & 2     & 7     & 13    & 27    & 49 \\
+Cora  & 54    & 13    & 8     & 1     & 6     & 14    & 18    & 29 \\
+Intermarche & 513   & 24    & 11    & 0     & 15    & 24    & 32    & 50 \\
+Leclerc & 552   & 44    & 18    & 4     & 31    & 47    & 58    & 80 \\
+Super U & 409   & 35    & 37    & 0     & 6     & 11    & 83    & 98 \\
 \bottomrule
 \bottomrule
 \end{tabular}
 \begin{tablenotes}
       \small
-      \item A price is considered "standard" if it is shared by 50\% of the chain stores or more. On average, a Leclerc store sells 28\% of its products at a "standard" price.
+      \item On average, the prices of 44\% of the products carried by a Leclerc store are equal to the most common prices observed at Leclerc stores.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
+
+From a methodological point a view, it must be noted that the maximum values observed at the store level must be interpreted with caution, as the mode can result from a few stores always setting the same price. The analysis can be refined by discarding price modes which are not followed by a large enough proportion of the chain stores. Robustness checks performed with thresholds of 33\% and 50\% confirm that Geant Casino and Leclerc stand out in terms of price concentration.
 
 \subsection{Store price levels and dispersion}
 
