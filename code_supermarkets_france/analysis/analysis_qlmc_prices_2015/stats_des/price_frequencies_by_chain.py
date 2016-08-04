@@ -54,6 +54,7 @@ df_qlmc_201409 = pd.read_csv(os.path.join(path_built_csv_1415,
 
 # DEFINE DF QLMC
 
+# Analysis for March 2015
 df_qlmc = df_prices 
 ls_prod_cols = ['section', 'family', 'product']
 ls_store_id_cols = ['store_id']
@@ -74,10 +75,12 @@ df_qlmc = df_qlmc[df_qlmc[ls_prod_cols[-1]].isin(ls_keep_products)]
 
 PD = PriceDispersion()
 
-nb_obs_min = 40 # Product must be observed at X stores at least
+nb_obs_min = 20 # Product must be observed at X stores at least
 pct_min = 0  # 0/33/50  Ref price is share by X% of stores only (else no ref)
 
-ls_loop_scs = ['AUCHAN',
+ls_loop_scs = ['ALDI',
+               'LIDL',
+               'AUCHAN',
                'CARREFOUR',
                'CARREFOUR MARKET',
                'GEANT CASINO',
