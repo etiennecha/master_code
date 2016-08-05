@@ -120,9 +120,9 @@ for chain_a, chain_b in ls_compare_chains:
   nb_stores = len(df_prices[df_prices['store_chain'] ==\
                                 chain_b][store_col].drop_duplicates())
   nb_prods = len(df_duel_sub)
-  pct_a_wins = len(df_duel_sub[df_duel_sub['diff'] > 10e-4]) / float(nb_prods) * 100
-  pct_b_wins = len(df_duel_sub[df_duel_sub['diff'] < -10e-4]) / float(nb_prods) * 100
-  pct_draws = len(df_duel_sub[df_duel_sub['diff'].abs() <= 10e-4]) / float(nb_prods) * 100
+  pct_a_wins = len(df_duel_sub[df_duel_sub['diff'] > 10e-3]) / float(nb_prods) * 100
+  pct_b_wins = len(df_duel_sub[df_duel_sub['diff'] < -10e-3]) / float(nb_prods) * 100
+  pct_draws = len(df_duel_sub[df_duel_sub['diff'].abs() <= 10e-3]) / float(nb_prods) * 100
   # Save both nb stores of chain b and res
   ls_res.append([chain_b,
                  nb_stores,
