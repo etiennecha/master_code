@@ -43,7 +43,7 @@ with open(os.path.join(path_api_keys, 'key_google_api.txt'), 'r') as f:
 # LOAD DATA
 # ##########
 
-# Need to have build df_qlmc_competitors alread
+# Need to have build df_qlmc_competitors already
 # Need to have df_stores including lsa_id (best gps coordinates)
 
 df_qlmc_competitors = pd.read_csv(os.path.join(path_built_csv,
