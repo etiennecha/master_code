@@ -7,9 +7,11 @@ from add_to_path import *
 import os, sys
 import numpy as np
 import pandas as pd
+import timeit
 from functions_generic_qlmc import *
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -231,14 +233,30 @@ df_repro_compa['pct_rr'] = df_repro_compa['pct_win_A']
 df_repro_compa.loc[df_repro_compa['pct_win_A'] > df_repro_compa['pct_win_B'],
                    'pct_rr'] = df_repro_compa['pct_win_B']
 
-df_repro_compa['d_le_5km'] = 0
-df_repro_compa.loc[df_repro_compa['dist'] <= 5, 'd_le_5km'] = 1
-print(smf.ols('pct_rr ~ d_le_5km',
-              data = df_repro_compa[(df_repro_compa['compa_pct'].abs() <= 2)]).fit().summary())
-
 # ###################
 # REG RR ON DISTANCE
 # ###################
+
+print(df_repro_compa[['dist', 'gg_dist', 'gg_dur']].describe())
+
+for dist in [5, 10]:
+  df_repro_compa['d_le_{:d}km'.format(dist)] = 0
+  df_repro_compa.loc[df_repro_compa['dist'] <= dist,
+                     'd_le_{:d}km'.format(dist)] = 1
+
+df_repro_compa['d_gg_dist_le_5km'] = np.nan
+df_repro_compa.loc[~df_repro_compa['gg_dist'].isnull(),
+                   'd_gg_dist_le_5km'] = 0
+df_repro_compa.loc[df_repro_compa['gg_dist'] <= 5, 'd_gg_dist_le_5km'] = 1
+
+df_repro_compa['d_gg_dur_le_10'] = np.nan
+df_repro_compa.loc[~df_repro_compa['gg_dur'].isnull(),
+                   'd_gg_dur_le_10'] = 0
+df_repro_compa.loc[df_repro_compa['gg_dur'] <= 10, 'd_gg_dur_le_10'] = 1
+
+print(smf.ols('pct_rr ~ d_le_5km',
+              data = df_repro_compa[(df_repro_compa['compa_pct'].abs() <= 2)]).fit().summary())
+
 
 # see if relation between rank reversals and distance
 # control by tup chain (concat)
