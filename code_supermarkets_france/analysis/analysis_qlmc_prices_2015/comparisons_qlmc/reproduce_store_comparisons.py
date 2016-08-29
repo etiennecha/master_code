@@ -274,10 +274,20 @@ df_repro_2 = pd.merge(df_qlmc_comparisons[['lec_id', 'comp_id',
                       on = ['lec_id', 'comp_id'],
                       how = 'left')
 
+print()
+print(df_repro_2[['lec_id', 'gg_dur_val']].groupby('lec_id')\
+                                          .agg('describe')\
+                                          .unstack()\
+                                          .describe(percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]))
+
+df_repro_2[df_repro_2['dist'] <= 30].plot(kind = 'scatter', x = 'dist', y = 'gg_dur_val')
+plt.show()
+
 chain = 'AUCHAN'
 df_chain = df_repro_2[(df_repro_2['comp_chain'] == 'AUCHAN') &\
                       (df_repro_2['gg_dur_val'] <= 20)]
 df_chain.plot(kind = 'scatter', x = 'gg_dur_val', y = 'rr')
+plt.show()
 
 # Pos correlation between distance and rr not very convincing
 # May be due to Leclerc => check with all pairs

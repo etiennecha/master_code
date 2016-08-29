@@ -72,7 +72,7 @@ Since the seminal paper of \cite{STI61}, a large literature has investigated the
 
 \cite{LAC02} studies price dispersion with CPI data of four grocery store products sold in Israel over four years. Dynamic price dispersion is documented in the form of sellers frequently changing quartiles in the price distribution over months at the national level. Data are yet not rich enough to observe price dispersion within local markets.
 
-\cite{ZHA06} investigates the relation between price dispersion, measured through the coefficient of variation, with consumer search costs, competition intensity, and consumer heterogeneity. A positive correlation with dispersion is found for each of these elements. Data consist in a scanner panel covering 23 product categories of 6 supermarkets within a surburban area of Chicago from June 1991 to Junz 1993. The analysis focuses on the largest 10 brands in terms of market share within each product category. 
+\cite{ZHA06} investigates the relation between price dispersion, measured through the coefficient of variation, with consumer search costs, competition intensity, and consumer heterogeneity. A positive correlation with dispersion is found for each of these elements. Data consist in a scanner panel covering 23 product categories of 6 supermarkets within a surburban area of Chicago from June 1991 to Junz 1993. The analysis focuses on the largest 10 brands in terms of market share within each product category.
 
 Product categories are narrow enough (e.g. Butter, Coffee) for products within categories to be considered as alternatives for a given consumer. Price dispersion related to product size and brand diversity can then be quantified. The unit price of a given product (as defined by brand and quality) is found to generally decrease with size, while significant heterogeneity across intrabrand price dispersion is measured, meaning that brands exhibit different levels of differentiation.
 
@@ -94,9 +94,9 @@ As of 2015, the French retailing industry was dominated by six firms, which acco
 
 The creation of the comparison website quiestlemoinscher (thereafter "Qlmc") is part of a long term strategy of the group Leclerc to prove the competitiveness of its prices. Soon after the launch in May 2006, Carrefour filed a complaint about the lack of transparency and potential biases in comparisons. The website was forced to close by a court decision. An updated version of the website was released on November 2006 and has since then remained in operation. Legal proceedings nervetheless continued until the rejection by the court of cassation of Carrefour's claims in January 2010. A major merit of the legal action undertaken by Carrefour is its consequence for the transparency, namely the release of well identified store product price data. The following section provides an overview of the methodology of the comparison website, two crucial aspects of which are competitor and product choice. Data collected from the website are use to replicate its comparison results. The website was explored in March 2015, with a view to find the best way to extract price data. The only feasible solution appeared to successively crawl comparisons between Leclerc stores and each of their competitors. This implies that obtained data differ from the price database used by Qlmc to establish comparisons performed at the national level with competing supermarket chains.
 
-\subsection{Competitors}
+\subsection{Stores and competition}
 
-Until 2013, the website only offered comparisons between Leclerc and its competitors at the chain level. For each competing chain, prices were collected at a sample of store expected to be representative of the store network. Broad constraints were thus imposed on store location and size, while exact store choice was claimed to be random. From 2013 on, the development of the "drive" concept in France has allowed the comparison website to cover far more stores, and thus to start displaying store level comparisons. The concept of "drive" implies that consumers are offered the opportunity to shop online from a physical store (at the same prices) and collect their purchases whenever it suits them. The collection of prices can then be achieved efficiently on the internet, as opposed to costly physical store visits. As of March 2015, Qlmc claimed to cover 60\% of the stores of the 10 supermarket chains compared (44\% in August 2013).
+Until 2013, the website only offered comparisons between Leclerc and competitors at the chain level. For each competing chain, prices were collected at a sample of stores meant to be representative of the store network. Some constraints were thus imposed on store location and size, while exact store choice was claimed to be random. From 2013 on, the development of the "drive" concept in France has allowed the comparison website to cover far more stores, and thus to start displaying store level comparisons. The concept of "drive" implies that consumers are offered the opportunity to shop online from a physical store (at the same prices) and collect their purchases whenever it suits them. The collection of prices can then be achieved efficiently on the internet, as opposed to costly physical store visits. As of March 2015, Qlmc claimed to cover 60\% of the stores of the 10 supermarket chains compared (44\% in August 2013).
 
 Regarding store level comparisons, the website states that each Leclerc is compared with a selection of its most relevant competitors within 30 km, based on Leclerc managers' expertise. The website also indicates that stores whose surface is smaller than 1,000 $m^2$ are excluded, as well as stores belonging to chains which are deemed to be too differentiated (e.g. discounters). Finally, Leclerc stores are not included among potential competitors. A total number of 575 Leclerc stores were found to be listed on the website in March 2015. The comparison of each store with its respective selection of competitors yielded 2,390 pairs of stores, involving 1,815 unique Leclerc competitors (the number of pairs is larger since a store can be listed as a competitor of several Leclerc stores). Data were missing for 14 Leclerc stores and 51 Leclerc competitors. This implies that among competitors of the 561 Leclerc stores for which price data have been collected, 36 out of 1811 are missing ($\le 2 \%$).
 
@@ -161,7 +161,7 @@ Max   &  12.0 &  21.1 &  67.0 &  28.6 &    28.5 \\
 
 Table~\ref{tab:qlmc_comp} provides an overview of competition according to qlmc comparisons (the website does not claim to be comprehensive). On average, a Leclerc store is compared with 5 competitors, and over 50\% over Leclerc stores are compared with a store located within 2 km. The furthest competitor is generally within 30 km (15 km for almost half of them), except for 28 stores. For 14 Leclerc stores, the closest listed store if over 10 km away. No store meets these two criteria, hence it does not seem obvious that the lack or omission of nearby competitors led to include stores beyond reasonable distance. For instance, the Leclerc outlet which has the furthest competitor in the data (67 km) is listed with 7 competitors, of which 5 are located within 30 km.
 
-\subsection{Products and methodology}
+\subsection{Products and comparison methodology}
 
 As of March 2015, only national brand products are covered by the website. Products are identified at the bar code level. There are seven food product categories: meat and fish, vegetables and fruits, bakery, fresh food, frozen food, savoury grocery, sweet grocery, baby food and drinks. Non food products are split in four categories: health and beauty, household, pets and home and textile. Products are further classified within product families. Regarding chain comparisons, the number of products covered within each family is determined by the volume of national hypermarket and supermarket sales, with a global objective of 3,000 products. Within each family, products are chosen based on the national hypermarket and supermarket detention rate. Products whose detention rate is below 30\% (i.e. products referenced by less than 30\% of the stores) are dropped. This led to a total of 2,461 national brand product references covered for March 2015 (2,510 in August 2013). As regards store level comparisons, all products found at both stores are used in comparisons.
 
@@ -174,7 +174,7 @@ Price records obtained from the website include all products used in each store 
 \begin{tabular}{lrr|rr|rr}
 \toprule
 \toprule
-& \multicolumn{2}{c}{All products} & \multicolumn{2}{c|}{$\ge$ 500 obs} & \multicolumn{2}{c|}{$\ge$ 700 obs} \\
+& \multicolumn{2}{c|}{All products} & \multicolumn{2}{c|}{$\ge$ 500 obs} & \multicolumn{2}{c}{$\ge$ 700 obs} \\
 & Nb \% & Value \% & Nb \% & Value \% & Nb \% & Value \% \\
 \midrule
     Baby and dietetic food & 4.7   & 4.3   & 3.9   & 3.0   & 3.3   & 2.4 \\
@@ -200,7 +200,7 @@ The comparison of Leclerc with its competitors follows two simple steps. First, 
 \begin{align*}
 \frac{\sum\limits_{i} P_{iC} - \sum\limits_{i} P_{iL}}{\sum\limits_{i} P_{iL}}
 \end{align*}
-where $i$ refers to all products in the baskets, $P_{iC}$ and $P_{iL}$ respectively stand for the average price of product $i$ for the competing chain ($C$) and for Leclerc ($L$). The comparison between two stores is very similar except that it uses store prices instead of average chain prices.
+where $i$ refers to all products in the baskets, $P_{iC}$ and $P_{iL}$ respectively stand for the average price of product $i$ for the competing chain ($C$) and for Leclerc ($L$). The comparison between two stores is similar except that it uses store prices instead of average chain prices.
 
 \subsection{Price comparison results}
 
@@ -265,14 +265,43 @@ Results for store level comparisons performed according to the website metholodg
 \end{tabular}
 \begin{tablenotes}
       \small
-      \item Pairs are required to include 400 products or more. There are 118 comparisons between a Leclerc store and an Auchan store. On average, an Auchan store is 6.5\% more expensive than its Leclerc competitor.
+      \item Pairs were kept only when at least 400 products were available for comparison. There are 118 comparisons between a Leclerc store and an Auchan store. On average, an Auchan store is 6.5\% more expensive than its Leclerc competitor.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
 
-\subsection{Comparison history}
+\subsection{Comparison dynamics}
 
-Price records can be used to compute variations in chain prices across periods, which allows to gain some understanding regarding the evolution in price comparison results observed over time. The methodology is the very same as the one used to compare two chains in a given period, except that the comparison involves all the product prices of one chain for which an average price can be computed in the two periods of interest. Variations can then be chained to obtain statistics over longer periods. Indeed, product turnover generally does not allow meaningful direct comparisons between non successive price records.
+Price records can be used to compute variations in chain prices across periods, which allows to gain some understanding regarding the evolution in price comparison results displayed by the website over time. A price comparison (following the website methodology) is performed with all products of one chain for which an average price can be computed in two successive periods. Variations can be chained to obtain statistics over longer periods. Indeed, product turnover generally does not allow meaningful direct comparisons between non successive price records. Table~\ref{tab:qlmc_store_comparisons} provides an overview of the evolution in chain prices between 2007 and 2015.
+
+\begin{table}[H]
+\caption{Chain price indices from 2007 to 2015 (base 100: Leclerc in March 2015)}
+\label{tab:qlmc_comparison_history}
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+  \small
+    \begin{tabular}{rrrrrrrr}
+    \toprule
+    \toprule
+    Date & Auchan & Carrefour & Cora  & Geant & Intermarche & Leclerc & Systeme U \\
+    \midrule
+    05/2007 & 113   & 116   & 118   & 117   & 115   & 110   & 115 \\
+    04/2008 & 117   & 119   & 121   & na    & 117   & 113   & 118 \\
+    04/2009 & 116   & 114   & 118   & 123   & 116   & 112   & 116 \\
+    04/2010 & 116   & 116   & 120   & 122   & 116   & 112   & 116 \\
+    05/2011 & 119   & 117   & 118   & 121   & 115   & 112   & 116 \\
+    06/2012 & 116   & 116   & 122   & 125   & 118   & 111   & 116 \\
+    05/2014 & 111   & 109   & 120   & 110   & 118   & 105   & 114 \\
+    03/2015 & 106   & 108   & 109   & 102   & 107   & 100   & 105 \\
+    \bottomrule
+    \bottomrule
+    \end{tabular}
+\begin{tablenotes}
+      \small
+      \item Leclerc price indices were computed by comparing Leclerc prices between successive available price records. Competing chain indices were computed by comparison with Leclerc prices within each period.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
 
 Leclerc prices between May 2007 and May 2012 have increased by 1.13\% (average annual increase of 0.25\%). Until May 2011, other chain display similarly low variations. This translates in a relative status quo in chain comparison results. Geant Casino is then the most expensive chain relative to Leclerc (from +6\% to +10\%), followed by Cora and Carrefour Market (+5\%). Auchan, Carrefour, Geant Casino, Intermarche and Systeme U display rather similar price levels (+3\% to +4\%). After May 2011, most chains exhibit a progressive loss in competitivess as compared to Leclerc. Geant Casino, however, constitutes a remarkable exception. After a peak in September 2012 (13.8\% more expensive than Leclerc), the chain becomes increasingly price competitive from May 2013 on. As of March 2015, Geant Casino is the closest competitor of Leclerc in terms of price level (+1.3\% vs. Leclerc), while it was actually the most expensive chain at the beginning of the period, and was still 12.2\% more expensive than Leclerc as of March 2013. The history of comparisons also reveals that Carrefour, after a progressive increase in price competitiveness in the second half of 2013 and the first half of 2014 (+2.6\% vs. Leclerc in September 2014), catches up abruptly with other comparable chains (Auchan, Intermarche and Systeme U) in March 2015 which are between 6\% and 7\% more expensive than Leclerc.
 
@@ -282,11 +311,11 @@ Overall, the history of comparisons reveals that beyond some stability at both e
 
 \section{Price dispersion}
 
-Since its creation in 2007, Qlmc prominently displays aggregate comparisons with its major national competitors. On the one hand, such information may be considered relevant by consumers willing to adopt a rule of thumb which weighs the cost/time of transportation with prices and products expected to be offered in a store of a given chain. On the other hand, without being deceptive per se, such comparisons could simply reflect differences in store characteristics such as location, size, market competitiveness etc. In order to address this issue, this section first investigates price dispersion within chains, and then discusses the possibility to account for prices through observed store and market characteristics.
+Since its creation in 2007, Qlmc prominently displays aggregate comparisons with its major national competitors. On the one hand, such information may be considered relevant by consumers willing to adopt a rule of thumb which weighs the cost/time of transportation with prices and products expected to be offered in a store of a given chain. On the other hand, without being deceptive per se, such comparisons could simply reflect differences in store characteristics such as location, size, market competitiveness etc. In order to address this issue, this section first investigates price dispersion within chains, and then discusses the possibility to account for prices through observed store and market characteristics. Price dispersion is then investigated, first from a national prospect, then from a local prospect by focusing on competitor pairs or markets.
 
 \subsection{Chain level pricing policies}
 
-French supermarket chains are known not to generally follow uniform national pricing policies. Empirical investigations however reveal various degrees of uniformity at the chain level. Table~\ref{tab:qlmc_prod_freq} reports the frequency of the mode (most common price) of each product at the chain level. Geant Casino stands out in terms of product price homogeneity. On average, a product is sold at the very same price in 89\% of the chain stores. This implies that a random basket of goods has a relatively high probability to have the very same price in two Geant Casino stores, even if both are located far apart from each each other. The closest followers are Systeme U and Leclerc, for which the mode accounts for 39\% and 38\% of price observations on average.
+Even though French supermarket chains generally do not follow uniform national pricing policies, empirical investigations reveal various degrees of uniformity at the chain level. Table~\ref{tab:qlmc_prod_freq} details the frequency of the mode (most common price) of each product within each supermarket chain listed on the price comparison website. Geant Casino stands out in terms of product price homogeneity. On average, a product is sold at the very same price in 89\% of the chain stores. This implies that a random basket of goods has a relatively high probability to have the very same price in two Geant Casino stores, even if both are located far apart from each each other. The closest followers are Systeme U and Leclerc, for which the mode accounts for 39\% and 38\% of price observations on average.
 
 \begin{table}[H]
 \caption{Distribution of the frequency of the mode (most common price) per product}
@@ -353,7 +382,7 @@ Super U & 409   & 35    & 37    & 0     & 6     & 11    & 83    & 98 \\
 
 From a methodological point a view, it must be noted that the maximum values observed at the store level must be interpreted with caution. Absent standard national product prices, product price modes typically result from a few stores setting the same prices. The analysis can be refined by discarding price modes which are not followed by a large enough proportion of all chain stores. Robustness checks performed with thresholds of 33\% and 50\% confirm that Geant Casino and Leclerc stand out in terms of price concentration.
 
-This analysis has been performed for each period of available price records. Results are similar across periods except for Geant Casino. In June 2012, the last observed period preceding its sharp increase in price competitiveness, the average product price mode accounts for 32\% of observations. This is to be compared with 82\% in May 2014. The increase in price competitiveness has thus been accompanied by a large price uniformization. Such a shock, having apparently affected a large number of markets across France in an essentially undifferentiated way, opens interesting research prospects. With quantity data, it would allow an approach similar to \cite{ALL16b} which combines a standard econometric analysis (differences in differences) with a structural approach, contributing to address the criticisms levelled by \cite{ANG10} against the empirical Industrial Organization literature\footnote{\cite{ANG10} criticize the overwhelming use of structural approaches as they generally require strong hypotheses. They call for more evidence relying on "simple, transparent empirical methods that trace a shorter route from facts to findings".}.
+This analysis was replicated for each period of available price records. Results are similar across periods except for Geant Casino. In June 2012, the last observed period preceding its sharp increase in price competitiveness, the average product price mode accounts for 32\% of observations. This is to be compared with 82\% in May 2014. The increase in price competitiveness has thus been accompanied by a large price uniformization. Such a shock, having apparently affected a large number of markets across France in an essentially undifferentiated way, opens interesting research prospects. With quantity data, it would allow an approach similar to \cite{ALL16b} which combines a standard econometric analysis (differences in differences) with a structural approach, contributing to address the criticisms levelled by \cite{ANG10} against the empirical Industrial Organization literature\footnote{\cite{ANG10} criticize the overwhelming use of structural approaches as they generally require strong hypotheses. They call for more evidence relying on "simple, transparent empirical methods that trace a shorter route from facts to findings".}.
 
 \subsection{Store price levels and dispersion}
 

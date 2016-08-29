@@ -149,7 +149,7 @@ else:
                   [None])
 
 # Query Google Direction for dist and duration
-for i, res in enumerate(ls_res[0:5000]):
+for i, res in enumerate(ls_res[0:7500]):
   if (not res[6]) or (res[6]['status'] == 'OVER_QUERY_LIMIT'):
     try:
       origin = ' '.join([str(x) for x in res[2:4]])
@@ -211,11 +211,13 @@ df_sub = df_comp_pairs[~df_comp_pairs['gg_dur_val'].isnull()]
 
 print('Nb non null dur gg info', len(df_sub))
 
+print()
 print('Stats des distance')
 print(df_sub[['dist', 'gg_dist_val', 'gg_dur_val']].describe())
 
-print('Corr distance proxies')
-print(df_sub[['dist', 'gg_dist_val', 'gg_dur_val']].describe())
+print()
+print('Correlation in distance proxies')
+print(df_sub[['dist', 'gg_dist_val', 'gg_dur_val']].corr())
 
 df_sub.plot(kind = 'scatter', x = 'dist', y = 'gg_dist_val')
 plt.show()

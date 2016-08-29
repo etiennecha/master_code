@@ -133,45 +133,51 @@ df_overview['dtb'] = 0
 for brand in ls_top_brands:
   df_overview.loc[df_overview['product'].str.contains(brand, case = False), 'dtb'] = 1
 
-print()
-print(smf.ols('cv ~ C(section) + mean + dtp', data = df_overview).fit().summary())
+# FILTER OUT PRODUCTS FOR WHICH TOO FEW CHAINS
+df_sub = df_overview[df_overview['ch_count'] >= 4].copy()
 
-print()
-print(smf.ols('price_1_fq ~ C(section) + mean + dtp', data = df_overview).fit().summary())
+# a few outliers based on std (car batteries)
+df_sub = df_sub[df_sub['std'] <= 2]
 
-print()
-print('Overview top purchased (likely) products:')
-print(df_overview[df_overview['dtp'] == 1].to_string())
+df_sub.plot(kind = 'scatter', x = 'mean', y = 'std')
+df_sub.plot(kind = 'scatter', x = 'mean', y = 'cv')
 
-df_overview.drop(['dtp', 'dtb'], axis = 1, inplace = True)
-for var, ascending in [('cv', True),
-                       ('cv', False),
-                       ('price_1_fq', True),
-                       ('price_1_fq', False)]:
+for ch_count in [4, 8]:
   print()
-  print('Overview products with higher or lowest {:s}:'.format(var))
-  df_overview.sort(var, ascending = ascending, inplace = True)
-  print(df_overview[0:20].to_string(index = False))
-
-# todo: check if enough chains represented when price_1_fq low
-# todo: check product with only Bledina as name??? (+ short names?)
-
-print(df_overview[df_overview['ch_count'] >= 4].describe().to_string())
-
-print(df_overview[df_overview['ch_count'] >= 8].describe().to_string())
+  print(df_sub[df_sub['ch_count'] >= ch_count].describe().to_string())
 
 #df_prices[df_prices['product'] == u'TOTAL ACTIVA 5000 DIESEL 15W40']\
 #  [['store_chain', 'price']].groupby('store_chain').agg('describe').unstack()
 
-df_sub = df_overview[df_overview['ch_count'] >= 4].copy()
-df_sub[df_sub['std'] <= 2].plot(kind = 'scatter', x = 'mean', y = 'std')
-df_sub[df_sub['std'] <= 2].plot(kind = 'scatter', x = 'mean', y = 'cv')
+## FILTER OUT CATEGORIES WITH TOO FEW PRODUCTS
+#df_sub = df_sub[~df_sub['section'].isin([u'Bazar et textile',
+#                                         u'Fruits et Légumes'])]
 
-df_sub = df_sub[~df_sub['section'].isin([u'Bazar et textile',
-                                         u'Fruits et Légumes'])]
+# todo: check if enough chains represented when price_1_fq low
+# todo: check product with only Bledina as name??? (+ short names?)
 
-print(smf.ols('std ~ mean + C(section)',
-              data = df_sub[df_sub['std'] <= 2]).fit().summary())
+print()
+print(df_sub[['mean', 'section']].groupby('section').agg('describe').unstack())
 
-print(smf.ols('cv ~ mean + C(section)',
-              data = df_sub[df_sub['std'] <= 2]).fit().summary())
+print()
+print(smf.ols('std ~ C(section) + mean + dtp', data = df_sub).fit().summary())
+
+print()
+print(smf.ols('cv ~ C(section) + mean + dtp', data = df_sub).fit().summary())
+
+print()
+print(smf.ols('price_1_fq ~ C(section) + mean + dtp', data = df_sub).fit().summary())
+
+#print()
+#print('Overview top purchased (likely) products:')
+#print(df_sub[df_sub['dtp'] == 1].to_string())
+#
+#df_sub.drop(['dtp', 'dtb'], axis = 1, inplace = True)
+#for var, ascending in [('cv', True),
+#                       ('cv', False),
+#                       ('price_1_fq', True),
+#                       ('price_1_fq', False)]:
+#  print()
+#  print('Overview products with higher or lowest {:s}:'.format(var))
+#  df_sub.sort(var, ascending = ascending, inplace = True)
+#  print(df_sub[0:20].to_string(index = False))

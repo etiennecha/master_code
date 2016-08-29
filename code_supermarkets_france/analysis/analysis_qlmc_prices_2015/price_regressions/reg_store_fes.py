@@ -204,29 +204,35 @@ print(df_stores[['hhi', 'region']].groupby('region').describe()['hhi'].unstack()
 res_a = smf.ols("ln_price ~ C(qlmc_chain, Treatment(reference='LECLERC')) + " +\
                 "surface + dum_high_hhi + ln_10_pop + C(region)",
                 data = df_stores).fit()
+print()
 print(res_a.summary())
 
 res_b = smf.ols("ln_price ~ C(qlmc_chain, Treatment(reference='LECLERC')) + " +\
                 "surface + dum_high_hhi + ln_AU_med_rev + ln_10_pop + C(region)",
                 data = df_stores).fit()
+print()
 print(res_b.summary())
 
 res_c = smf.ols("ln_price ~ C(qlmc_chain, Treatment(reference='LECLERC')) + " +\
                 "surface + hhi + ln_10_pop + C(region)",
                 data = df_stores).fit()
+print()
 print(res_c.summary())
 
 res_d = smf.ols("ln_price ~ C(qlmc_chain, Treatment(reference='LECLERC')) + " +\
                 "surface + hhi + ln_AU_med_rev + ln_10_pop + C(region)",
                 data = df_stores).fit()
+print()
 print(res_d.summary())
 
 res_e = smf.ols("ln_price ~ surface + dum_high_hhi + ln_AU_med_rev + ln_10_pop + C(region)",
                 data = df_stores).fit()
+print()
 print(res_e.summary())
 
 res_f = smf.ols("ln_price ~ surface + hhi + ln_AU_med_rev + ln_10_pop + C(region)",
                 data = df_stores).fit()
+print()
 print(res_e.summary())
 
 # #################################

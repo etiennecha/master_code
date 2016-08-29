@@ -200,7 +200,7 @@ df_stores = pd.merge(df_stores,
                      on = 'store_id',
                      how = 'left')
 
-# ADD STORE DISPERSION
+# ADD STORE DISPERSIOhttp://www.cairn.info/publications-de-Chamayou-%C3%89tienne--658272.htmN
 df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 
 # robustness: reject residuals if beyond 40%
@@ -237,6 +237,7 @@ print('Store FEs by chain')
 df_su_store_fes = df_stores[['store_price', 'qlmc_chain']].groupby('qlmc_chain')\
                                               .describe().unstack()
 print(df_su_store_fes.ix[ls_some_chains].to_string(float_format = format_float_int))
+print()
 print(df_stores['store_price'].describe().to_string(float_format = format_float_int))
 
 pd.set_option('float_format', '{:,.1f}'.format)
@@ -245,9 +246,11 @@ print('Dispersion by chain')
 df_su_disp = df_stores[['store_dispersion', 'qlmc_chain']].groupby('qlmc_chain')\
                                                           .describe().unstack()
 print(df_su_disp.ix[ls_some_chains].to_string())
+print()
 print(df_stores['store_dispersion'].describe().to_string())
 
 # REG OF STORE PRICE - NAIVE BRAND
+print()
 print(smf.ols("store_price ~ C(qlmc_chain, Treatment('LECLERC'))",
               data = df_stores[df_stores['dist_cl_comp'] <= 5]).fit().summary())
 
@@ -261,7 +264,6 @@ print(smf.ols("store_price ~ C(region) + hhi + ln_10_pop + ln_CO_med_rev + surfa
               data = df_stores[df_stores['dist_cl_comp'] <= 5]).fit().summary())
 
 # REG OF STORE PRICE
-
 
 pd.set_option('float_format', '{:,.2f}'.format)
 for chain in ls_some_chains:
