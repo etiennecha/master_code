@@ -44,6 +44,14 @@ for old_chain, new_chain in ls_replace_chains:
   df_prices.loc[df_prices['store_chain'] == old_chain,
                 'store_chain'] = new_chain
 
+# drop small chains
+ls_drop_chains = [u'SIMPLY MARKET',
+                  u'SUPERMARCHE MATCH',
+                  u'ATAC',
+                  u'MIGROS',
+                  u'RECORD']
+df_prices = df_prices[~df_prices['store_chain'].isin(ls_drop_chains)]
+
 # adhoc fixes
 ls_suspicious_prods = [u'VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
 df_prices = df_prices[~df_prices['product'].isin(ls_suspicious_prods)]
@@ -68,6 +76,9 @@ df_desc['iq_rg'] = df_desc['75%'] - df_desc['25%']
 df_desc['iq_pct'] = df_desc['75%'] / df_desc['25%']
 df_desc.drop(['25%', '75%'], axis = 1, inplace = True)
 df_desc['count'] = df_desc['count'].astype(int)
+
+df_desc['ch_count'] = df_prices[ls_prod_cols + ['store_chain']].groupby(ls_prod_cols)\
+                                                               .agg(lambda x: len(x.unique()))
 
 # Most common prices (and kurtosis / skew)
 df_freq = df_prices[ls_prod_cols + ['price']]\
@@ -144,3 +155,23 @@ for var, ascending in [('cv', True),
 
 # todo: check if enough chains represented when price_1_fq low
 # todo: check product with only Bledina as name??? (+ short names?)
+
+print(df_overview[df_overview['ch_count'] >= 4].describe().to_string())
+
+print(df_overview[df_overview['ch_count'] >= 8].describe().to_string())
+
+#df_prices[df_prices['product'] == u'TOTAL ACTIVA 5000 DIESEL 15W40']\
+#  [['store_chain', 'price']].groupby('store_chain').agg('describe').unstack()
+
+df_sub = df_overview[df_overview['ch_count'] >= 4].copy()
+df_sub[df_sub['std'] <= 2].plot(kind = 'scatter', x = 'mean', y = 'std')
+df_sub[df_sub['std'] <= 2].plot(kind = 'scatter', x = 'mean', y = 'cv')
+
+df_sub = df_sub[~df_sub['section'].isin([u'Bazar et textile',
+                                         u'Fruits et Légumes'])]
+
+print(smf.ols('std ~ mean + C(section)',
+              data = df_sub[df_sub['std'] <= 2]).fit().summary())
+
+print(smf.ols('cv ~ mean + C(section)',
+              data = df_sub[df_sub['std'] <= 2]).fit().summary())
