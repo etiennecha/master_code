@@ -237,26 +237,34 @@ df_repro_compa.loc[df_repro_compa['pct_win_A'] > df_repro_compa['pct_win_B'],
 # REG RR ON DISTANCE
 # ###################
 
+print()
 print(df_repro_compa[['dist', 'gg_dist', 'gg_dur']].describe())
 
 for dist in [5, 10]:
-  df_repro_compa['d_le_{:d}km'.format(dist)] = 0
-  df_repro_compa.loc[df_repro_compa['dist'] <= dist,
-                     'd_le_{:d}km'.format(dist)] = 1
+  for dist_col in ['dist', 'gg_dist', 'gg_dur']:
+    df_repro_compa['d_{:s}_{:d}'.format(dist_col, dist)] = np.nan
+    df_repro_compa['d_{:s}_{:d}'.format(dist_col, dist)] = 0
+    df_repro_compa.loc[df_repro_compa[dist_col] <= dist,
+                       'd_{:s}_{:d}'.format(dist_col, dist)] = 1
 
-df_repro_compa['d_gg_dist_le_5km'] = np.nan
-df_repro_compa.loc[~df_repro_compa['gg_dist'].isnull(),
-                   'd_gg_dist_le_5km'] = 0
-df_repro_compa.loc[df_repro_compa['gg_dist'] <= 5, 'd_gg_dist_le_5km'] = 1
+#df_repro_compa['d_gg_dist_le_5km'] = np.nan
+#df_repro_compa.loc[~df_repro_compa['gg_dist'].isnull(),
+#                   'd_gg_dist_le_5km'] = 0
+#df_repro_compa.loc[df_repro_compa['gg_dist'] <= 5, 'd_gg_dist_le_5km'] = 1
+#
+#df_repro_compa['d_gg_dur_le_10'] = np.nan
+#df_repro_compa.loc[~df_repro_compa['gg_dur'].isnull(),
+#                   'd_gg_dur_le_10'] = 0
+#df_repro_compa.loc[df_repro_compa['gg_dur'] <= 10, 'd_gg_dur_le_10'] = 1
 
-df_repro_compa['d_gg_dur_le_10'] = np.nan
-df_repro_compa.loc[~df_repro_compa['gg_dur'].isnull(),
-                   'd_gg_dur_le_10'] = 0
-df_repro_compa.loc[df_repro_compa['gg_dur'] <= 10, 'd_gg_dur_le_10'] = 1
-
-print(smf.ols('pct_rr ~ d_le_5km',
+print()
+print(smf.ols('pct_rr ~ d_dist_5',
               data = df_repro_compa[(df_repro_compa['compa_pct'].abs() <= 2)]).fit().summary())
 
+for quantile in [0.25, 0.5, 0.7501, 0.75]:
+  print()
+  print(quantile)
+  print(smf.quantreg('pct_rr~d_dist_5', data = df_repro_compa).fit(quantile).summary())
 
 # see if relation between rank reversals and distance
 # control by tup chain (concat)
