@@ -76,13 +76,13 @@ df_prices = df_prices[df_prices['store_chain'].isin(['LECLERC', 'AUCHAN'])]
 se_nb_store_obs = df_prices.groupby('store_id')['store_id'].agg(len)
 se_nb_store_obs.sort(ascending = False, inplace = True)
 #df_prices = df_prices[df_prices['product'].isin(list(se_nb_store_obs[0:200].index))]
-ls_keep_stores = list(se_nb_store_obs[se_nb_store_obs.index.str.contains('leclerc')][0:30].index) +\
-                  list(se_nb_store_obs[se_nb_store_obs.index.str.contains('auchan')][0:30].index) 
+ls_keep_stores = list(se_nb_store_obs[se_nb_store_obs.index.str.contains('leclerc')][0:10].index) +\
+                  list(se_nb_store_obs[se_nb_store_obs.index.str.contains('auchan')][0:10].index) 
 df_prices = df_prices[df_prices['store_id'].isin(ls_keep_stores)]
 
 se_nb_prod_obs = df_prices.groupby('product')['product'].agg(len)
 se_nb_prod_obs.sort(ascending = False, inplace = True)
-df_prices = df_prices[df_prices['product'].isin(list(se_nb_prod_obs[0:200].index))]
+df_prices = df_prices[df_prices['product'].isin(list(se_nb_prod_obs[0:10].index))]
 
 # sort on alphabetical order to have same ref group with smf.ols (could fail)
 df_prices.sort(['store_id', 'product'], ascending = True, inplace = True)
@@ -225,8 +225,12 @@ df_2['val'] = 1
 #ref_store_id = 'centre-e-leclerc-trie-chateau' 
 #ref_product = df_qlmc.iloc[0]['product']
 
-ls_refs = [u'C(product) ' + ref_product,
-           u'C(store_id) ' + ref_store_id]
+ref_product = u'FITNESS C\xc9R\xc9ALES FITNESS CHOCOLAT NESTL\xc9 375G'
+
+#ls_refs = [u'C(product) ' + ref_product]
+ls_refs = [u'C(store_id) ' + ref_store_id]
+#ls_refs = [u'C(product) ' + ref_product,
+#           u'C(store_id) ' + ref_store_id]
 for ref in ls_refs:
   df_2 = df_2[~(df_2['col'] == ref)]
 df_2.set_index('col', append = True, inplace = True)
@@ -244,7 +248,7 @@ param_names = columns
 
 res = scipy.sparse.linalg.lsqr(A,
                                y,
-                               iter_lim = 100,
+                               iter_lim = 200,
                                calc_var = True)
 param_values = res[0]
 nb_freedom_degrees = len(df_qlmc) - len(res[0])
@@ -257,3 +261,6 @@ df_reg['tstat'] = df_reg['coeff'] / df_reg['bse']
 
 print()
 print(df_reg[df_reg['name'].str.contains(u'C\(store_id\)')][0:60].to_string())
+
+yhat_alt = A * res[0]
+df_qlmc['yhat_alt'] = yhat_alt

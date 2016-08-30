@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
+from __future__ import print_function
 import add_to_path
 from add_to_path import path_data
 from functions_generic_qlmc import *
@@ -149,7 +150,7 @@ else:
                   [None])
 
 # Query Google Direction for dist and duration
-for i, res in enumerate(ls_res[0:7500]):
+for i, res in enumerate(ls_res[0:10000]):
   if (not res[6]) or (res[6]['status'] == 'OVER_QUERY_LIMIT'):
     try:
       origin = ' '.join([str(x) for x in res[2:4]])
@@ -159,7 +160,7 @@ for i, res in enumerate(ls_res[0:7500]):
                                 destination)
     except:
       gg = None
-      print u'Pbm with', ls_res[0:6]
+      print(u'Pbm with', ls_res[0:6])
     # over write list while looping: bof bof
     ls_res[i][6] = gg
 enc_json(ls_res,
@@ -221,3 +222,28 @@ print(df_sub[['dist', 'gg_dist_val', 'gg_dur_val']].corr())
 
 df_sub.plot(kind = 'scatter', x = 'dist', y = 'gg_dist_val')
 plt.show()
+
+# 2 criterias
+crit_km = 10
+crit_mn = 20
+
+nb_within_mn = len(df_comp_pairs[(df_comp_pairs['gg_dur_val'] <= crit_mn)])
+pct_in = len(df_comp_pairs[(df_comp_pairs['gg_dur_val'] <= crit_mn) &\
+                           (df_comp_pairs['dist'] <= crit_km)]) / float(nb_within_mn)
+pct_out = len(df_comp_pairs[(df_comp_pairs['gg_dur_val'] <= crit_mn) &\
+                            (df_comp_pairs['dist'] > crit_km)]) / float(nb_within_mn)
+print()
+print('Nb within (mn):', nb_within_mn)
+print('Within km (of within mn): {:.2f}'.format(pct_in))
+print('Outside km (of within mn): {:.2f}'.format(pct_out))
+
+nb_within_km = len(df_comp_pairs[(~df_comp_pairs['gg_dur_val'].isnull()) &\
+                                 (df_comp_pairs['dist'] <= crit_km)])
+pct_in_2 = len(df_comp_pairs[(df_comp_pairs['gg_dur_val'] <= crit_mn) &\
+                             (df_comp_pairs['dist'] <= crit_km)]) / float(nb_within_km)
+pct_out_2 = len(df_comp_pairs[(df_comp_pairs['gg_dur_val'] > crit_mn) &\
+                              (df_comp_pairs['dist'] <= crit_km)]) / float(nb_within_km)
+print()
+print('Nb within (km):', nb_within_km)
+print('Within mn (of within km): {:.2f}'.format(pct_in_2))
+print('Outside km (of within km): {:.2f}'.format(pct_out_2))

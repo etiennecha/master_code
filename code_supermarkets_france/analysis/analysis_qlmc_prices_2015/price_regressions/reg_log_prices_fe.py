@@ -45,13 +45,36 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                         encoding = 'utf-8')
 
 ## Rename chains to have similar chains as on qlmc
-#ls_replace_chains = [['HYPER U', 'SUPER U'],
-#                     ['U EXPRESS', 'SUPER U'],
+#ls_replace_chains = [['HYPER U', 'SYSTEME U'],
+#                     ['U EXPRESS', 'SYSTEME U'],
+#                     ['SUPER U', 'SYSTEME U'],
 #                     ['HYPER CASINO', 'CASINO'],
 #                     ["LES HALLES D'AUCHAN", 'AUCHAN']]
 #for old_chain, new_chain in ls_replace_chains:
 #  df_prices.loc[df_prices['store_chain'] == old_chain,
 #                'store_chain'] = new_chain
+
+# Drop (weird) products and fix problematic names:
+# should not start with numeric + quote issues?
+ls_drop_products = [u'TOTAL ACTIVA 7000 10W40',
+                    u'TOTAL ACTIVA 7000 DIESEL 10W40',
+                    u'TOTAL ACTIVA 5000 15W40',
+                    u'TOTAL ACTIVA 5000 DIESEL 15W40',
+                    u'BLEDINA']
+#                    u'"MAPED AGRAFEUSE HALF STRIP ""UNIVERSAL"" METAL 24/6 26/6 + 400 AGRAFES"']
+df_prices = df_prices[~df_prices['product'].isin(ls_drop_products)]
+
+# Drop " once and for all
+df_prices['product'] = df_prices['product'].str.replace('"', '')
+
+# Add prefix if starts with numeric (reversed after regression)
+se_prods = df_prices['product'].drop_duplicates()
+ls_rename_prods =\
+  [x for i in range(9)\
+     for x in se_prods[se_prods.str.startswith('{:d}'.format(i))].tolist()]
+for prod in ls_rename_prods:
+  df_prices.loc[df_prices['product'] == u'{:s}'.format(prod),
+                'product'] = u'STR_{:s}'.format(prod)
 
 df_qlmc = df_prices.copy()
 
@@ -114,9 +137,9 @@ ref_store = u'centre-e-leclerc-limoges'
 #ref_store = u'centre-e-leclerc-andrezieux-boutheon' # u'centre-e-leclerc-les-angles'
 #ref_store = df_qlmc['store_id'].sort_values().iloc[0]
 
-#ls_refs = [u'C(store_id) ' + ref_store]
-ls_refs = [u'C(product) ' + ref_prod,
-           u'C(store_id) ' + ref_store]
+ls_refs = [u'C(store_id) ' + ref_store]
+#ls_refs = [u'C(product) ' + ref_prod,
+#           u'C(store_id) ' + ref_store]
 for ref in ls_refs:
   df_2 = df_2[~(df_2['col'] == ref)]
 df_2.set_index('col', append = True, inplace = True)
