@@ -128,17 +128,17 @@ df_stores = pd.merge(df_stores,
 
 # Build log variables
 for col in ['price', 'surface',
-            '1025km_hhi', '1025km_ac_hhi',
+            'hhi_1025km', 'ac_hhi_1025km',
             'UU_med_rev', 'AU_med_rev', 'CO_med_rev',
             'AU_pop', 'UU_pop', 'CO_pop',
-            '10_pop', '10km_ac_pop', '20km_ac_pop']:
+            'pop_cont_10', 'pop_ac_10km', 'pop_ac_20km']:
   df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
 
 # Avoid error msg on condition number
 df_stores['surface'] = df_stores['surface'].apply(lambda x: x/1000.0)
 df_stores['AU_med_rev'] = df_stores['AU_med_rev'].apply(lambda x: x/1000.0)
 df_stores['UU_med_rev'] = df_stores['UU_med_rev'].apply(lambda x: x/1000.0)
-df_stores['hhi'] = df_stores['1025km_hhi'] 
+df_stores['hhi'] = df_stores['hhi_1025km'] 
 
 # Create dummy high hhi
 df_stores['dum_high_hhi'] = 0
@@ -213,6 +213,11 @@ se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
 df_stores.set_index('store_id', inplace = True)
 df_stores['store_dispersion'] = se_store_disp * 100
 
+# RESTRICTION
+df_stores_bu = df_stores.copy()
+df_stores = df_stores[df_stores['dist_cl_comp'] <= 5]
+df_stores_nolg = df_stores[~df_stores['store_chain'].isin(['LECLERC', 'GEANT CASINO'])]
+
 # ####################################
 # STATS DES: STORE FES AND DISPERSION
 # ####################################
@@ -249,31 +254,82 @@ print(df_su_disp.ix[ls_some_chains].to_string())
 print()
 print(df_stores['store_dispersion'].describe().to_string())
 
-# REG OF STORE PRICE - NAIVE BRAND
+ls_expl_vars = ['surface', 'hhi', 'ln_pop_cont_10', 'ln_CO_med_rev']
+str_expl_vars = " + ".join(ls_expl_vars)
+
 print()
-print(smf.ols("store_price ~ C(qlmc_chain, Treatment('LECLERC'))",
-              data = df_stores[df_stores['dist_cl_comp'] <= 5]).fit().summary())
+print(df_stores[ls_expl_vars].corr())
 
-# REG OF STORE PRICE - BRAND FULL CONTROL
-print(smf.ols("store_price ~ C(qlmc_chain, Treatment('LECLERC'))" +\
-              " + C(region) + hhi + ln_10_pop + surface",
-              data = df_stores[df_stores['dist_cl_comp'] <= 5]).fit().summary())
+# Regs to run:
+# - compa replications: store chains only
+# - compa fully controlled: store chains, regions and store vars
+# - store vars
+# - store vars + regions (useful?)
 
-# REG OF STORE PRICE - NAIVE NO BRAND
-print(smf.ols("store_price ~ C(region) + hhi + ln_10_pop + ln_CO_med_rev + surface",
-              data = df_stores[df_stores['dist_cl_comp'] <= 5]).fit().summary())
+# REG OF STORE PRICE - NAIVE BRAND
+ls_formulas = ["store_price ~ C(qlmc_chain, Treatment('LECLERC'))",
+               "store_price ~ C(qlmc_chain, Treatment('LECLERC'))" +\
+                            " + {:s} + C(region)".format(str_expl_vars),
+               "store_price ~ {:s}".format(str_expl_vars),
+               "store_price ~ {:s} +  C(region)".format(str_expl_vars)]
 
-# REG OF STORE PRICE
+ls_res = [smf.ols(formula, data = df_stores).fit() for formula in ls_formulas]
+
+from statsmodels.iolib.summary2 import summary_col
+#print(summary_col(ls_res,
+#                  stars=True,
+#                  float_format='%0.2f'))
+
+print(summary_col(ls_res,
+                  stars=True,
+                  float_format='%0.2f',
+                  model_names=['(0)', '(1)', '(2)', '(3)'],
+                  info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                             'R2':lambda x: "{:.2f}".format(x.rsquared)}))
+
+# REG OF STORE PRICES BY CHAIN
+
+ls_big_chains = ['LECLERC',
+                 'GEANT CASINO',
+                 'INTERMARCHE',
+                 'SYSTEME U',
+                 'AUCHAN',
+                 'CARREFOUR']
 
 pd.set_option('float_format', '{:,.2f}'.format)
-for chain in ls_some_chains:
+ls_reg_bc, ls_reg_bc_wd = [], []
+ls_reg_bc_disp, ls_reg_bc_disp_wp = [], []
+for chain in ls_big_chains:
+  print(u'-'*30)
   print()
   print(chain)
   df_chain = df_stores[df_stores['qlmc_chain'] == chain]
+  print()
   print(df_chain[['store_price', 'store_dispersion', 'hhi']].corr())
-  print(smf.ols('store_price ~ store_dispersion + hhi + C(region) + surface',
-                data = df_chain).fit().summary())
+  print()
+  print(df_chain[ls_expl_vars].corr())
+  ls_reg_bc.append(\
+    smf.ols("store_price ~ {:s}".format(str_expl_vars),
+            data = df_chain).fit())
+  ls_reg_bc_wd.append(\
+    smf.ols("store_price ~ {:s} + store_dispersion".format(str_expl_vars),
+            data = df_chain).fit())
+  ls_reg_bc_disp.append(\
+    smf.ols("store_dispersion ~ {:s}".format(str_expl_vars),
+            data = df_chain).fit())
+  ls_reg_bc_disp_wp.append(\
+    smf.ols("store_dispersion ~ {:s} + store_price".format(str_expl_vars),
+            data = df_chain).fit())
 
+for ls_reg in [ls_reg_bc, ls_reg_bc_wd, ls_reg_bc_disp, ls_reg_bc_disp_wp]:
+  print()
+  print(summary_col(ls_reg,
+                    stars=True,
+                    float_format='%0.2f',
+                    model_names=ls_big_chains,
+                    info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                               'R2':lambda x: "{:.2f}".format(x.rsquared)}))
+ 
 # todo: drop if dist_cl_comp too high (outliers) ?
 ## print(df_stores[df_stores['dist_cl_comp'] >= 5]['dist_cl_comp'].to_string())
 # df_stores = df_stores[df_stores['dist_cl_comp'] <= 5]
