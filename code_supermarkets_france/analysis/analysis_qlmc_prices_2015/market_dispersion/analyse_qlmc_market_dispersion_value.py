@@ -26,6 +26,8 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
                                      'df_res_ln_prices.csv'),
                         encoding = 'utf-8')
 
+df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
+
 df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'),
                         dtype = {'id_lsa' : str,
@@ -35,9 +37,6 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
                                                'df_qlmc_competitors.csv'),
                                   encoding = 'utf-8')
-
-df_prices['price_res'] = df_prices['price'] - df_prices['price_hat']
-price_col = 'price' # price_res
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
@@ -52,9 +51,12 @@ for i, row in df_qlmc_comparisons.iterrows():
     dict_markets.setdefault(row['lec_id'], []).append(row['comp_id'])
 
 merge_option = 'inner' # or 'outer'
-# pbm with outer for now
-# cheapest store cannot be cheapest on products it does not carry
+# pbms with outer for now:
+# - aggregate stats are wrong (nan prices)
+# - cheapest store cannot be cheapest on products it does not carry
 # ok to check robustness of cheapest being sometimes most expensive etc.
+
+price_col, res_col = 'price', 'res'
 
 # see if quick enough without using dict_chain_dfs
 ls_df_markets = []
@@ -63,6 +65,9 @@ for lec_id, ls_comp_id in dict_markets.items():
     df_market = dict_chain_dfs['LECLERC']\
                     [dict_chain_dfs['LECLERC']['store_id'] == lec_id]\
                          [['section', 'family', 'product', price_col]]
+    df_market_res = dict_chain_dfs['LECLERC']\
+                        [dict_chain_dfs['LECLERC']['store_id'] == lec_id]\
+                             [['section', 'family', 'product', res_col]]
     for comp_id in ls_comp_id:
       store_chain = df_stores[df_stores['store_id'] == comp_id]['store_chain'].iloc[0]
       df_comp = dict_chain_dfs[store_chain]\
@@ -72,26 +77,36 @@ for lec_id, ls_comp_id in dict_markets.items():
                            on = ['section', 'family', 'product'],
                            suffixes = ('', '_{:s}'.format(comp_id)),
                            how = merge_option)
+      df_market_res = pd.merge(df_market,
+                               df_comp[['section', 'family', 'product', res_col]],
+                               on = ['section', 'family', 'product'],
+                               suffixes = ('', '_{:s}'.format(comp_id)),
+                               how = merge_option)
     # do before?
-    df_market.set_index(['section', 'family', 'product'], inplace = True)
-    df_market.rename(columns = {price_col : '{:s}_{:s}'.format(price_col, lec_id)},
+    ls_df_market = []
+    for df_temp, temp_col in [[df_market, price_col],
+                              [df_market_res, res_col]]:
+      df_temp.set_index(['section', 'family', 'product'], inplace = True)
+      df_temp.rename(columns = {temp_col : '{:s}_{:s}'.format(temp_col, lec_id)},
                      inplace = True)
-    df_market.columns = [x[6:] for x in df_market.columns] # get rid of 'price_'
-    # if outer merge: keep only products carried by 67% stores or more
-    if merge_option == 'outer':
-      nb_stores = len(df_market.columns)
-      df_market = df_market[df_market.count(1) >= nb_stores * 0.67]
-    # df not saved if empty else pbm with next loop
-    if len(df_market) != 0:
-      ls_df_markets.append(df_market)
+      df_temp.columns = [x[len(temp_col) + 1:] for x in df_temp.columns] # get rid of 'price_'
+      # if outer merge: keep only products carried by 67% stores or more
+      if merge_option == 'outer':
+        nb_stores = len(df_temp.columns)
+        df_temp = df_temp[df_temp.count(1) >= nb_stores * 0.67]
+      # df not saved if empty else pbm with next loop
+      if len(df_temp) != 0:
+        ls_df_market.append(df_temp)
+    if len(ls_df_market) == 2:
+      ls_df_markets.append(ls_df_market)
 
 ls_market_rows = []
-for df_market in ls_df_markets:
+for df_market, df_market_res in ls_df_markets:
   
-  # Aggregate stats: basket with all products
+  # Aggregate stats: basket with all products (pbm if nan prices...)
   nb_stores = len(df_market.columns)
   nb_prods = len(df_market) # check enough products
-  agg_sum = df_market.sum() # dispersion in total sum
+  agg_sum = df_market.sum() # dispersion in total sum (incorrect if nan prices)
   ls_cols_ascending = agg_sum.sort(ascending = True, inplace = False).index.tolist()
   ls_cols_descending = agg_sum.sort(ascending = False, inplace = False).index.tolist()
   agg_range = agg_sum.max() - agg_sum.min()
@@ -108,7 +123,13 @@ for df_market in ls_df_markets:
   df_market['gfs_pct'] = df_market['gfs'] / df_market[ls_cols].mean(1)
   df_market['std'] = df_market[ls_cols].std(1)
   df_market['cv'] = df_market[ls_cols].std(1) / df_market[ls_cols].mean(1)
-  
+ 
+  # Dispersion by product
+  ls_cols_res = df_market_res.columns # keep cuz gona add columns
+  df_market_res['range'] = df_market_res[ls_cols].max(1) - df_market_res[ls_cols].min(1)
+  df_market_res['gfs'] = df_market_res[ls_cols].mean(1) - df_market_res[ls_cols].min(1)
+  df_market_res['std'] = df_market_res[ls_cols].std(1)
+
   #print()
   #print('Product dispersion summary stats')
   #print(df_market[['mean', 'range', 'range_pct', 'gfs', 'gfs_pct', 'std', 'cv']].describe())
@@ -141,6 +162,9 @@ for df_market in ls_df_markets:
                          df_market['gfs_pct'].mean(),
                          df_market['std'].mean(),
                          df_market['cv'].mean(),
+                         df_market_res['range'].mean(),
+                         df_market_res['gfs'].mean(),
+                         df_market_res['std'].mean(),
                          se_cheapest_vc.index[0],
                          se_cheapest_vc.iloc[0],
                          se_priciest_vc.index[0],
@@ -155,7 +179,10 @@ lsd1 = ['agg_range_pct',
         'gfs',
         'gfs_pct',
         'std',
-        'cv']
+        'cv',
+        'range_res',
+        'gfs_res',
+        'cv_res']
 
 lsd2 = ['cheapest_ct_id',
         'cheapest_ct_pct',

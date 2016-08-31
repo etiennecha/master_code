@@ -200,7 +200,7 @@ df_stores = pd.merge(df_stores,
                      on = 'store_id',
                      how = 'left')
 
-# ADD STORE DISPERSIOhttp://www.cairn.info/publications-de-Chamayou-%C3%89tienne--658272.htmN
+# ADD STORE DISPERSION
 df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 
 # robustness: reject residuals if beyond 40%
@@ -218,9 +218,9 @@ df_stores_bu = df_stores.copy()
 df_stores = df_stores[df_stores['dist_cl_comp'] <= 5]
 df_stores_nolg = df_stores[~df_stores['store_chain'].isin(['LECLERC', 'GEANT CASINO'])]
 
-# ####################################
-# STATS DES: STORE FES AND DISPERSION
-# ####################################
+# #########
+# STATS DES
+# #########
 
 # can regress 'coeff' (percentage... so essentially ln(homogeneous price)
 
@@ -254,11 +254,39 @@ print(df_su_disp.ix[ls_some_chains].to_string())
 print()
 print(df_stores['store_dispersion'].describe().to_string())
 
-ls_expl_vars = ['surface', 'hhi', 'ln_pop_cont_10', 'ln_CO_med_rev']
-str_expl_vars = " + ".join(ls_expl_vars)
+ls_ev = ['surface', 'hhi', 'ln_pop_cont_10', 'ln_CO_med_rev']
+str_ev = " + ".join(ls_ev)
 
 print()
-print(df_stores[ls_expl_vars].corr())
+print(u'Inspect main explanatory vars by chain:')
+for ev in ls_ev:
+  print()
+  print(ev)
+  print(df_stores[[ev, 'qlmc_chain']].groupby('qlmc_chain').describe()[ev].unstack().to_string())
+
+print()
+print(u'Inspect corr of main explanatory vars by chain:')
+print(df_stores[ls_ev].corr())
+
+print()
+print(u'Su explanatory vars mean by chain:')
+print(pd.pivot_table(df_stores,
+                     values = ls_ev,
+                     index = 'qlmc_chain',
+                     aggfunc = 'mean'))
+
+print()
+print(u'Su explanatory vars std by chain:')
+print(pd.pivot_table(df_stores,
+                     values = ls_ev,
+                     index = 'qlmc_chain',
+                     aggfunc = 'std'))
+
+print()
+print(u'Inspect hhi by region:')
+print(df_stores[['hhi', 'region']].groupby('region').describe()['hhi'].unstack().to_string())
+print()
+print(df_stores[ls_ev].corr())
 
 # Regs to run:
 # - compa replications: store chains only
@@ -269,9 +297,9 @@ print(df_stores[ls_expl_vars].corr())
 # REG OF STORE PRICE - NAIVE BRAND
 ls_formulas = ["store_price ~ C(qlmc_chain, Treatment('LECLERC'))",
                "store_price ~ C(qlmc_chain, Treatment('LECLERC'))" +\
-                            " + {:s} + C(region)".format(str_expl_vars),
-               "store_price ~ {:s}".format(str_expl_vars),
-               "store_price ~ {:s} +  C(region)".format(str_expl_vars)]
+                            " + {:s} + C(region)".format(str_ev),
+               "store_price ~ {:s}".format(str_ev),
+               "store_price ~ {:s} +  C(region)".format(str_ev)]
 
 ls_res = [smf.ols(formula, data = df_stores).fit() for formula in ls_formulas]
 
@@ -307,18 +335,18 @@ for chain in ls_big_chains:
   print()
   print(df_chain[['store_price', 'store_dispersion', 'hhi']].corr())
   print()
-  print(df_chain[ls_expl_vars].corr())
+  print(df_chain[ls_ev].corr())
   ls_reg_bc.append(\
-    smf.ols("store_price ~ {:s}".format(str_expl_vars),
+    smf.ols("store_price ~ {:s}".format(str_ev),
             data = df_chain).fit())
   ls_reg_bc_wd.append(\
-    smf.ols("store_price ~ {:s} + store_dispersion".format(str_expl_vars),
+    smf.ols("store_price ~ {:s} + store_dispersion".format(str_ev),
             data = df_chain).fit())
   ls_reg_bc_disp.append(\
-    smf.ols("store_dispersion ~ {:s}".format(str_expl_vars),
+    smf.ols("store_dispersion ~ {:s}".format(str_ev),
             data = df_chain).fit())
   ls_reg_bc_disp_wp.append(\
-    smf.ols("store_dispersion ~ {:s} + store_price".format(str_expl_vars),
+    smf.ols("store_dispersion ~ {:s} + store_price".format(str_ev),
             data = df_chain).fit())
 
 for ls_reg in [ls_reg_bc, ls_reg_bc_wd, ls_reg_bc_disp, ls_reg_bc_disp_wp]:
@@ -352,3 +380,39 @@ for ls_reg in [ls_reg_bc, ls_reg_bc_wd, ls_reg_bc_disp, ls_reg_bc_disp_wp]:
 ## some outliers with low price
 #print(df_stores[(df_stores['store_chain'] == 'GEANT CASINO') &\
 #                (df_stores['store_price'] <= 96.5)][lsdo].to_string())
+
+## #################################
+## REG LECLERC PRICE ON STORES CHARS
+## #################################
+#
+#print()
+#print(u'Regs with Leclerc stores only')
+#
+#df_lec = df_stores[df_stores['store_chain'] == 'LECLERC'].copy()
+#df_lec.set_index('store_id', inplace = True)
+#
+#dict_df_lec_dist = {}
+#for var in ['dist', 'gg_dist_val', 'gg_dur_val']:
+#  df_lec_dist = df_qlmc_competitors[['lec_id', var]]\
+#                                   .groupby(['lec_id'])\
+#                                   .describe()[var].unstack()
+#  dict_df_lec_dist[var] = df_lec_dist
+#
+#df_lec['nb_comp'] = df_lec_dist['count']
+#df_lec['comp_min_dur'] = df_lec_dist['min']
+#df_lec['d_close_comp'] = 0
+#df_lec.loc[df_lec['comp_min_dur'] <= 3, 'd_close_comp'] = 1
+#
+#ls_geant_comp = df_qlmc_competitors[df_qlmc_competitors['comp_chain'] ==\
+#                                      'GEANT CASINO']['lec_id'].unique().tolist()
+#
+#df_lec['comp_geant'] = 0
+#df_lec.loc[df_lec.index.isin(ls_geant_comp), 'comp_geant'] = 1
+#
+#res_l = smf.ols("ln_price ~ surface + comp_min_dur + comp_geant + d_idf",
+#                data = df_lec[df_lec['region'] != 'Corse']).fit()
+#print(res_l.summary())
+#
+#res_m = smf.ols("ln_price ~ surface + nb_comp + comp_geant + d_idf",
+#                data = df_lec[df_lec['region'] != 'Corse']).fit()
+#print(res_m.summary())

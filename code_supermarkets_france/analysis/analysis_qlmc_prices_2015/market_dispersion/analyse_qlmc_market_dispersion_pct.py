@@ -44,7 +44,7 @@ dict_df_disp = {}
 
 # price: log price deviation to mean (raw prices)
 # lpd: epsilon from regression with store and product FEs
-for price_col in ['price', 'lpd']:
+for price_col in ['price_res', 'lpd']:
   
   print()
   print(price_col)
@@ -222,22 +222,23 @@ for price_col in ['price', 'lpd']:
   # then: check link between price level and price dispersion
   # also with nb stores (w/ real number?)
   
-  # Save df of aggregate market dispersion stats
-  lsdo = ['store_id'] + list(lsdf)
-  df_su[lsdo].to_csv(os.path.join(path_built_csv,
-                                  'df_qlmc_dispersion_agg_{:s}.csv'.format(price_col)),
-                     encoding = 'utf-8',
-                     float_format='%.4f',
-                     index = False)
+  ## Save df of aggregate market dispersion stats
+  #lsdo = ['store_id'] + list(lsdf)
+  #df_su[lsdo].to_csv(os.path.join(path_built_csv,
+  #                                'df_qlmc_dispersion_agg_{:s}.csv'.format(price_col)),
+  #                   encoding = 'utf-8',
+  #                   float_format='%.4f',
+  #                   index = False)
 
-  # Save df of all market product dispersion stats
   df_disp = pd.concat(ls_df_market_disp)
   df_disp.reset_index(drop = False, inplace = True)
-  df_disp.to_csv(os.path.join(path_built_csv,
-                              'df_qlmc_dispersion_{:s}.csv'.format(price_col)),
-                 encoding = 'utf-8',
-                 float_format='%.4f',
-                 index = False)
+  
+  ## Save df of all market product dispersion stats
+  #df_disp.to_csv(os.path.join(path_built_csv,
+  #                            'df_qlmc_dispersion_{:s}.csv'.format(price_col)),
+  #               encoding = 'utf-8',
+  #               float_format='%.4f',
+  #               index = False)
 
   # temp save
   dict_df_su[price_col] = df_su
