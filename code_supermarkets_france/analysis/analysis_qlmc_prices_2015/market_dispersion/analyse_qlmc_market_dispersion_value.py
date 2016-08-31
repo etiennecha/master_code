@@ -28,6 +28,8 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
 
 df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 
+# todo: harmonize store_chain to match with df_prices
+
 df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'),
                         dtype = {'id_lsa' : str,
