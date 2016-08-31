@@ -224,7 +224,7 @@ print('Desc mean table')
 print(df_sub[ls_desc_cols + ['section']].groupby('section')\
                                         .agg('mean').to_string())
 
-print('Desc std table')
+print('Desc mean table')
 print(df_sub[ls_desc_cols + ['section']].groupby('section')\
                                         .agg('std').to_string())
 
