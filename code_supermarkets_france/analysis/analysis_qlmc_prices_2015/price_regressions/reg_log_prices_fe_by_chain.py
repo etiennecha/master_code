@@ -102,7 +102,7 @@ df_qlmc = df_qlmc[df_qlmc['nb_store_obs'] >= 100]
 df_qlmc['nb_prod_obs'] =\
   df_qlmc.groupby('product')['product'].transform(len).astype(int)
 
-print df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe()
+print(df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe())
 
 # ############
 # REGRESSIONS
@@ -119,7 +119,8 @@ ls_big_chains = ['AUCHAN',
                  'INTERMARCHE',
                  'LECLERC',
                  'SIMPLY MARKET',
-                 'SYSTEME U']
+                 'SYSTEME U',
+                 'SIMPLY MARKET']
 
 ls_df_qlmc = []
 for chain in ls_big_chains:
@@ -152,7 +153,7 @@ for chain in ls_big_chains:
   df_2['val'] = 1
   ref_prod =  df_qlmc['product'].sort_values().iloc[0]
   ref_store = df_qlmc['store_id'].sort_values().iloc[0]
-  print chain, ref_prod, ref_store
+  print(chain, ref_prod, ref_store)
   
   #ref_store = u'centre-e-leclerc-amilly' # amboise not bad
   #ref_store = u'centre-e-leclerc-lanester'

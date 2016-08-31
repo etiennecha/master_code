@@ -98,7 +98,7 @@ df_qlmc = df_qlmc[df_qlmc['nb_store_obs'] >= 100]
 df_qlmc['nb_prod_obs'] =\
   df_qlmc.groupby('product')['product'].transform(len).astype(int)
 
-print df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe()
+print(df_qlmc[['nb_prod_obs', 'nb_store_obs']].describe())
 
 # ############
 # REGRESSIONS

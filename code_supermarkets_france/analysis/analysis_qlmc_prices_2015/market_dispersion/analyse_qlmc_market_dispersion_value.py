@@ -23,7 +23,7 @@ path_built_csv = os.path.join(path_data,
                               'data_csv_201503')
 
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_res_ln_prices.csv'),
+                                     'df_res_ln_prices_by_chain.csv'),
                         encoding = 'utf-8')
 
 df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
@@ -33,6 +33,23 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                         dtype = {'id_lsa' : str,
                                  'c_insee' : str},
                         encoding = 'utf-8')
+# add store fes
+df_fes = pd.read_csv(os.path.join(path_built_csv,
+                                  'df_res_ln_price_fes.csv'),
+                     encoding = 'utf-8')
+# add price (store fes)
+df_store_fes = df_fes[df_fes['name'].str.startswith('C(store_id)')].copy()
+df_store_fes['store_id'] = df_store_fes['name'].apply(\
+                             lambda x: x.replace('C(store_id)', '').strip())
+df_store_fes['price'] = (df_store_fes['coeff'] + 1) * 100
+
+df_stores = pd.merge(df_stores,
+                     df_store_fes[['store_id', 'price']],
+                     how = 'left',
+                     on = 'store_id')
+
+df_stores['price_rel'] = df_stores[['store_chain', 'price']].groupby('store_chain')\
+                                                               .transform(lambda x: x / x.mean())
 
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
                                                'df_qlmc_competitors.csv'),
@@ -77,7 +94,7 @@ for lec_id, ls_comp_id in dict_markets.items():
                            on = ['section', 'family', 'product'],
                            suffixes = ('', '_{:s}'.format(comp_id)),
                            how = merge_option)
-      df_market_res = pd.merge(df_market,
+      df_market_res = pd.merge(df_market_res,
                                df_comp[['section', 'family', 'product', res_col]],
                                on = ['section', 'family', 'product'],
                                suffixes = ('', '_{:s}'.format(comp_id)),
@@ -150,6 +167,10 @@ for df_market, df_market_res in ls_df_markets:
     se_cheapest_2_vc.ix[se_priciest_vc.index[0]] = 0.0
   if se_cheapest_vc.index[0] not in se_priciest_2_vc.index:
     se_priciest_2_vc.ix[se_cheapest_vc.index[0]] = 0.0
+
+  # Index of market price
+  market_price, market_price_2 = df_stores[df_stores['store_id'].isin(ls_cols)]\
+                                          [['price', 'price_rel']].mean()
   
   ls_market_rows.append([df_market.columns[0],
                          nb_stores,
@@ -165,6 +186,8 @@ for df_market, df_market_res in ls_df_markets:
                          df_market_res['range'].mean(),
                          df_market_res['gfs'].mean(),
                          df_market_res['std'].mean(),
+                         market_price,
+                         market_price_2,
                          se_cheapest_vc.index[0],
                          se_cheapest_vc.iloc[0],
                          se_priciest_vc.index[0],
@@ -182,7 +205,9 @@ lsd1 = ['agg_range_pct',
         'cv',
         'range_res',
         'gfs_res',
-        'cv_res']
+        'std_res',
+        'market_price',
+        'market_price_2']
 
 lsd2 = ['cheapest_ct_id',
         'cheapest_ct_pct',
@@ -221,7 +246,7 @@ print('Markets with high dispersion')
 # inspect extreme priciest_ch_pct markets
 print(df_su[df_su['priciest_ch_pct'] >= 0.33][lsdf].to_string())
 
-for df_market in ls_df_markets:
+for df_market, df_market_res in ls_df_markets:
   if df_market.columns[0] == 'centre-e-leclerc-loudun':
     break
 # print(df_market[df_market['cheapest_2'] != df_market['cheapest']][0:40].to_string())
