@@ -219,6 +219,8 @@ print(summary_col(ls_res,
 # nb prods / price / std / cv / res std / iq / iq res ?
 ls_desc_cols = ['mean', 'std', 'cv', 'std_res', 'iq_rg', 'iq_rg_res']
 
+pd.set_option('float_format', '{:,.3f}'.format)
+
 print()
 print('Desc mean table')
 print(df_sub[ls_desc_cols + ['section']].groupby('section')\

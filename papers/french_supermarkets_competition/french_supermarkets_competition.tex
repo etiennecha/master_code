@@ -387,16 +387,163 @@ This analysis was replicated for each period of available price records. Results
 \subsection{Store price levels and dispersion}
 
 In order to study the relation between price level, price dispersion, and market characteristics, we need to build measures of store price levels and store price dispersion. This is achieved by running the following regression:
-\begin{align*}
+\begin{align}
 \text{log }P_{ij} = \text{Product}_i + \text{Store}_j + \epsilon_{ij}
-\end{align*}
-where $\text{Product}_i$ is a product effect and $\text{Store}_j$ is a store effect. The coefficient $\text{Product}_i$ associated with a dummy variable equal to $1$ for products carried by store $i$ provides information regarding the price level of store $i$ compared to a reference store. The residual variation $\epsilon_{ij}$ can be interpreted as the percentage deviation of a store product price from its expected geometric mean. The average of the residuals is approximately null for each product and each store. Price dispersion is approximated at the store level by computing the standard deviation of the residuals. As a robustness check, the regression is also run successively for each supermarket chain so that the estimates of product fixed effects are chain specific. This specification is supported by table~\ref{tab:qlmc_prod_freq} and table~\ref{tab:qlmc_store_freq} as they reveal significant degrees of price homogeneity within chains. These can be seen to be relatively consistent with price dispersion measured through the standard deviation of price residuals.
+\label{reg_product_prices}
+\end{align}
+where $\text{Product}_i$ is a product effect and $\text{Store}_j$ is a store effect. The coefficient $\text{Product}_i$ associated with a dummy variable equal to $1$ for products carried by store $i$ provides information regarding the price level of store $i$ compared to a reference store. The residual variation $\epsilon_{ij}$ can be interpreted as the percentage deviation of a store product price from its expected geometric mean. The average of the residuals is approximately null for each product and each store. Price dispersion is approximated at the store level by computing the standard deviation of the residuals. As a robustness check, the regression is also run successively for each supermarket chain so that the estimates of product fixed effects are chain specific. This specification is supported by Table~\ref{tab:qlmc_prod_freq} and Table~\ref{tab:qlmc_store_freq} as they reveal significant degrees of price homogeneity within chains. These can be seen to be relatively consistent with price dispersion measured through the standard deviation of price residuals.
 
-Local market characteristics are found to account for a minor share of the variance in store indexes. In particular, Leclerc does not appear to be significantly less price competitive relative to competitors once one tries to capture the competitiveness of the local market, the size and revenue of the population and the surface of the store. The affiliation of a store appears to be a strong determinant of its overall price level, which is consistent with the relative strong intra-chain price concentration previously obtained and other studies on retail chain prices. \cite{HOS08} and \cite{CHA16} observe similar results with gas station prices respectively in the US and in France (even though gas station chains do not follow uniform pricing policies).
+The store fixed effects estimated with specification~\ref{reg_product_prices} can be used to compute national store prices indexes. Formally, $(\text{Store}_j + 1) * 100$ yields a price index for Store $j$ with base 100 for the store used as a reference store in the estimation. Distributions by chain are reported in Table~\ref{tab:store_price_indexes} and can be seen to be consistent with results from comparisons following the website methodology.
 
-ADD REGRESSION RESULTS
+\begin{table}[H]
+\caption{Distribution of store price indexes by chain}
+\label{tab:store_price_indexes}
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\small
+    \begin{tabular}{lrrrrrrrr}
+    \toprule
+    \toprule
+          & Nb    & Avg   & Std.  & Min   & Q25   & Q50   & Q75   & Max \\
+    \midrule
+    \multicolumn{1}{l}{Auchan} & 112   & 107   & 4     & 102   & 104   & 106   & 109   & 120 \\
+    \multicolumn{1}{l}{Carrefour} & 165   & 108   & 5     & 95    & 106   & 109   & 110   & 128 \\
+    \multicolumn{1}{l}{Carrefour market} & 85    & 113   & 2     & 108   & 112   & 113   & 114   & 118 \\
+    \multicolumn{1}{l}{Casino} & 24    & 115   & 5     & 100   & 115   & 116   & 118   & 123 \\
+    \multicolumn{1}{l}{Cora} & 54    & 110   & 2     & 104   & 109   & 110   & 111   & 116 \\
+    \multicolumn{1}{l}{Geant Casino} & 88    & 101   & 2     & 100   & 100   & 100   & 100   & 105 \\
+    \multicolumn{1}{l}{Intermarche} & 184   & 107   & 2     & 102   & 106   & 107   & 108   & 114 \\
+    \multicolumn{1}{l}{Leclerc} & 513   & 100   & 1     & 93    & 100   & 100   & 101   & 106 \\
+    \multicolumn{1}{l}{Simply market} & 9     & 112   & 3     & 108   & 109   & 111   & 115   & 116 \\
+    \multicolumn{1}{l}{Systeme U} & 222   & 105   & 4     & 99    & 103   & 104   & 108   & 117 \\
+    \midrule
+    All   & 1456  & 105   & 5     & 93    & 101   & 103   & 109   & 128 \\
+    \bottomrule
+    \bottomrule
+    \end{tabular}
+\begin{tablenotes}
+      \small
+      \item Base 100: Leclerc in Limoges, used as reference store in the estimation of Equation~\ref{reg_product_prices}.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
 
-Price dispersion measured at the store level is found to be strongly correlated with the store price level.
+These indexes are used to investigate the extent to which the heterogeneity in (aggregate) store prices may reflect store characteristics, as well as socio-economic and competition contexts. The following regression is estimated for this purpose:
+
+\begin{align}
+\text{Store price index} = \text{Surface} + \text{HHI} + \text{Population revenue}+ \text{Population size}+ \epsilon
+\label{reg_store_indexes}
+\end{align}
+where Surface is the store surface, HHI is computed by considering store surface as a proxy for store sales and discounting market shares by the distance to each competitor (each store is considered to be the center of a market for which a HHI is measured), population revenue is the median household revenue taken at the municipality level, and population size a sum of nearby municipality population sizes weighted by distance. Results are reported in Table~\label{tab:reg_store_price_indexes}.
+
+\begin{table}[H]
+\caption{Distribution of store price indexes by chain}
+\label{tab:reg_store_price_indexes}
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\toprule
+                                                        & (0)       & (1)      & (2)       & (3)        \\
+\midrule
+Intercept                                               & 100.33*** & 98.95*** & 108.95*** & 103.02***  \\
+                                                        & (0.12)    & (4.50)   & (8.08)    & (8.53)     \\
+Auchan                                                  & 6.72***   & 7.07***  &           &            \\
+                                                        & (0.29)    & (0.30)   &           &            \\
+Carrefour Market                                        &            \\
+                                                        & (0.33)    & (0.31)   &           &            \\
+Carrefour                                               & 7.94***   & 8.21***  &           &            \\
+                                                        & (0.25)    & (0.26)   &           &            \\
+Casino                                                  & 14.95***  & 14.05*** &           &            \\
+                                                        & (0.59)    & (0.55)   &           &            \\
+Cora                                                    & 9.72***   & 9.82***  &           &            \\
+                                                        & (0.40)    & (0.40)   &           &            \\
+Geant Casino                                            & 0.72**    & 0.95***  &           &            \\
+                                                        & (0.32)    & (0.31)   &           &            \\
+Intermarche                                             & 6.78***   & 6.50***  &           &            \\
+                                                        & (0.24)    & (0.23)   &           &            \\
+Simply Market                                           & 11.28***  & 10.14*** &           &            \\
+                                                        & (0.94)    & (0.88)   &           &            \\
+Systeme U                                               & 5.08***   & 5.42***  &           &            \\
+                                                        & (0.23)    & (0.22)   &           &            \\
+HHI                                                     &           & 0.01     & -0.03     & 0.03       \\
+                                                        &           & (0.02)   & (0.03)    & (0.04)     \\
+Surface                                                 &           & -0.17*** & -0.11***  & -0.15***   \\
+                                                        &           & (0.03)   & (0.04)    & (0.04)     \\
+Population revenue                                      &           & 0.06     & -1.35     & -0.32      \\
+                                                        &           & (0.46)   & (0.84)    & (0.87)     \\
+Population size                                         &           & 0.22**   & 0.89***   & 0.52**     \\
+                                                        &           & (0.11)   & (0.14)    & (0.21)     \\
+\midrule
+R2                                                      & 0.70      & 0.75     & 0.03      & 0.09       \\
+N                                                       & 1,426     & 1,426    & 1,426     & 1,426      \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item Columns (1) and (3) include dummies to control for regional specificities, the coefficients of which are not reported. Standard errors in parentheses. * p<.1, ** p<.05, ***p<.01.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+Store and market characteristics are found to account for a small share of the variance in store indexes. In particular, Leclerc does not appear to be significantly less price competitive relative to competitors once the size of its stors and their location is taken into account. The affiliation of a store appears to be a strong determinant of its overall price level, which is consistent with the relative strong intra-chain price concentration previously obtained and other studies on retail chain prices. \cite{HOS08} and \cite{CHA16} observe similar results with gas station prices respectively in the US and in France (even though gas station chains do not follow uniform pricing policies).
+
+\subsection{National level dispersion}
+
+Product price dispersion is measured at the national level, with a view to get some measure of potential heterogeneity among products. Given previous observations on chain pricing policies, only products where X observations are available from at least X different supermarket chains are taken into account. For lack of precise product characteristics and information on sales, product section and families are used to investigate differences in observed product price dispersion. Table~\label{tab:reg_nat_dispersion} reports the results of the regression:
+
+\begin{align}
+\text{Product dispersion} = \text{Product average price} + \text{Product section} + \epsilon
+\label{reg_store_indexes}
+\end{align}
+
+Standard deviation and the spread between Q75 and Q25 can be seen to significantly increase with the value of the product. Coefficient of variation is found to slightly overcorrect this increase, as well as the specification used to compute price residuals.
+
+\begin{table}[H]
+\caption{Regressions of product price dispersion measured at the national level}
+\label{tab:reg_nat_dispersion}
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\begin{tabular}{lrrrrr}
+\toprule
+\toprule
+Prices                                   & Raw       & Raw       &  Res.     & Raw       & Res.       \\
+Dispersion measure                       & Std       & CV        &  Std      & Q75-Q25   & Q75-Q25    \\
+\midrule
+Intercept                                & 0.063***  & 0.080***  & 0.046***  & 0.090***  & 0.046***   \\
+                                         & (0.005)   & (0.002)   & (0.001)   & (0.011)   & (0.002)    \\
+Price                                    & 0.045***  & -0.002*** & -0.001*** & 0.054***  & -0.001***  \\
+                                         & (0.000)   & (0.000)   & (0.000)   & (0.001)   & (0.000)    \\
+Pets                                     & -0.006    & -0.010*** & -0.004*   & 0.028     & -0.002     \\
+                                         & (0.009)   & (0.003)   & (0.002)   & (0.018)   & (0.004)    \\
+Drinks                                   & -0.030*** & -0.007*** & 0.005***  & -0.042*** & 0.008***   \\
+                                         & (0.006)   & (0.002)   & (0.002)   & (0.013)   & (0.003)    \\
+Savoury grocery                          & -0.020*** & -0.005*** & 0.003*    & -0.033*** & 0.006**    \\
+                                         & (0.006)   & (0.002)   & (0.001)   & (0.012)   & (0.003)    \\
+Sweet grocery                            & -0.005    & -0.002    & 0.005***  & -0.007    & 0.012***   \\
+                                         & (0.006)   & (0.002)   & (0.001)   & (0.012)   & (0.003)    \\
+Fresh food                               & -0.018*** & -0.009*** & 0.008***  & -0.038*** & 0.010***   \\
+                                         & (0.006)   & (0.002)   & (0.001)   & (0.012)   & (0.003)    \\
+Health and Beauty                        & 0.029***  & 0.002     & 0.007***  & 0.029**   & 0.010***   \\
+                                         & (0.006)   & (0.002)   & (0.002)   & (0.012)   & (0.003)    \\
+Household                                & 0.024***  & 0.001     & 0.008***  & 0.020     & 0.014***   \\
+                                         & (0.007)   & (0.002)   & (0.002)   & (0.014)   & (0.003)    \\
+Frozen food                              & 0.020**   & -0.000    & 0.010***  & 0.006     & 0.013***   \\
+                                         & (0.008)   & (0.003)   & (0.002)   & (0.016)   & (0.004)    \\
+\midrule
+R2                                       & 0.72      & 0.08      & 0.05      & 0.49      & 0.02       \\
+N                                        & 4,190     & 4,190     & 4,190     & 4,190     & 4,190       \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item Reference product category is Baby food. Standard errors in parentheses. * p<.1, ** p<.05, ***p<.01.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
 
 \subsection{Pair price dispersion}
 
@@ -440,8 +587,8 @@ Descriptives statics of dynamic price dispersion are reported in Table~\ref{tab:
 \begin{table}[H]
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Dynamic store level comparisons (15 km - 100 obs min)
-}\label{tab:dynamic_compa_15km}
+\caption{Dynamic store level comparisons (15 km - 100 obs min)}
+\label{tab:dynamic_compa_15km}
 \small
 \begin{tabular}{llrrr}
 \toprule
@@ -521,5 +668,35 @@ ADD DESCRIPTIVE STATISTICS
 %\end{tabular}
 \end{table}
 
+\begin{table}[H]
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Overview of average product dispersion by category at the national level}
+\label{tab:stats_nat_pro}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+\toprule
+Price                     & Raw   & Raw   & Raw   & Res   & Raw   & Res \\
+Dispersion measure        & Mean  & Std   & CV    & Std   & Q75-Q25 & Q75-Q25 \\
+\midrule
+    Baby food & 2.09 (1.12) & 0.16 (0.10) & 0.08 (0.02) & 0.04 (0.02) & 0.20 (0.14) & 0.04 (0.03) \\
+    Pets  & 4.14 (2.49) & 0.24 (0.14) & 0.06 (0.02) & 0.04 (0.01) & 0.34 (0.21) & 0.04 (0.02) \\
+    Drinks & 4.97 (5.60) & 0.25 (0.24) & 0.06 (0.02) & 0.05 (0.02) & 0.31 (0.35) & 0.05 (0.02) \\
+    Savoury grocery & 1.73 (0.87) & 0.12 (0.07) & 0.07 (0.02) & 0.05 (0.02) & 0.15 (0.11) & 0.05 (0.03) \\
+    Sweet grocery & 2.24 (1.03) & 0.16 (0.08) & 0.07 (0.03) & 0.05 (0.02) & 0.20 (0.15) & 0.06 (0.04) \\
+    Fresh & 2.29 (1.04) & 0.15 (0.07) & 0.07 (0.02) & 0.05 (0.01) & 0.17 (0.12) & 0.05 (0.03) \\
+    Health and Beauty & 3.06 (1.65) & 0.23 (0.14) & 0.08 (0.02) & 0.05 (0.02) & 0.28 (0.21) & 0.05 (0.03) \\
+    Household & 3.63 (2.45) & 0.25 (0.16) & 0.07 (0.02) & 0.05 (0.01) & 0.30 (0.22) & 0.06 (0.02) \\
+    Frozen food & 3.50 (1.64) & 0.24 (0.10) & 0.07 (0.02) & 0.05 (0.01) & 0.28 (0.17) & 0.06 (0.03) \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item First column is the mean product price (in euros) of all products within each category. All other columns are measures of dispersion. Standard error in parentheses.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
 
 \end{document} 
