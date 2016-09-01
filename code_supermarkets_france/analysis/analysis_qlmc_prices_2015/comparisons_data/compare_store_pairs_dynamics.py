@@ -170,6 +170,7 @@ ls_tup_chains = [('LECLERC', 'GEANT CASINO'),
                  ('AUCHAN', 'SUPER U'),
                  ('INTERMARCHE', 'SUPER U')]
 
+ls_df_cc = []
 for tup_chains in ls_tup_chains:
   
   print()
@@ -253,3 +254,5 @@ for tup_chains in ls_tup_chains:
   print(u'Pct rr agg: {:.2f}'.format(nb_rr_agg / float(len(df_cc)) * 100))
   print(u'Pct draw agg: {:.2f}'.format(nb_draw_agg / float(len(df_cc)) * 100))
   print(u'Pct some draw agg: {:.2f}'.format(nb_some_draw_agg / float(len(df_cc)) *100))
+  
+  ls_df_cc.append(df_cc)

@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from statsmodels.iolib.summary2 import summary_col
 import matplotlib.pyplot as plt
 
 pd.set_option('float_format', '{:,.3f}'.format)
@@ -303,7 +304,6 @@ ls_formulas = ["store_price ~ C(qlmc_chain, Treatment('LECLERC'))",
 
 ls_res = [smf.ols(formula, data = df_stores).fit() for formula in ls_formulas]
 
-from statsmodels.iolib.summary2 import summary_col
 #print(summary_col(ls_res,
 #                  stars=True,
 #                  float_format='%0.2f'))

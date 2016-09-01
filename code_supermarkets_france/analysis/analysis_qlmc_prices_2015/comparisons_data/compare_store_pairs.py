@@ -11,6 +11,7 @@ import timeit
 from functions_generic_qlmc import *
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from statsmodels.iolib.summary2 import summary_col
 import matplotlib.pyplot as plt
 
 pd.set_option('float_format', '{:,.2f}'.format)
@@ -47,6 +48,52 @@ df_stores = pd.read_csv(os.path.join(path_built_201503_csv,
                                  'c_insee' : str},
                         encoding = 'utf-8')
 
+df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
+                                  'df_lsa_active_hsx.csv'),
+                     dtype = {u'id_lsa' : str,
+                              u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
+                     encoding = 'utf-8')
+
+df_store_markets = pd.read_csv(os.path.join(path_built_lsa_csv,
+                                            '201407_competition',
+                                            'df_store_market_chars.csv'),
+                               dtype = {'id_lsa' : str},
+                               encoding = 'utf-8')
+
+ls_lsa_cols = ['type_alt', 'region', 'surface',
+               'nb_caisses', 'nb_pompes', 'drive']
+
+df_store_chars = pd.merge(df_lsa[['id_lsa'] + ls_lsa_cols],
+                          df_store_markets,
+                          on = 'id_lsa',
+                          how = 'left')
+
+df_stores = pd.merge(df_stores,
+                     df_store_chars,
+                     on = 'id_lsa',
+                     how = 'left')
+
+for col in ['surface',
+            'hhi_1025km', 'ac_hhi_1025km',
+            'UU_med_rev', 'AU_med_rev', 'CO_med_rev',
+            'AU_pop', 'UU_pop', 'CO_pop',
+            'pop_cont_10', 'pop_ac_10km', 'pop_ac_20km']:
+  df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
+
+# avoid error msg on condition number (regressions)
+df_stores['surface'] = df_stores['surface'].apply(lambda x: x/1000.0)
+df_stores['AU_med_rev'] = df_stores['AU_med_rev'].apply(lambda x: x/1000.0)
+df_stores['UU_med_rev'] = df_stores['UU_med_rev'].apply(lambda x: x/1000.0)
+df_stores['hhi'] = df_stores['hhi_1025km'] 
+
+# add id_lsa only (to be used later)
 df_qlmc = pd.merge(df_prices,
                    df_stores[['store_id', 'id_lsa']],
                    on = 'store_id',
@@ -240,31 +287,67 @@ df_repro_compa.loc[df_repro_compa['pct_win_A'] > df_repro_compa['pct_win_B'],
 print()
 print(df_repro_compa[['dist', 'gg_dist', 'gg_dur']].describe())
 
-for dist in [5, 10]:
+for dist in [5, 10, 12]:
   for dist_col in ['dist', 'gg_dist', 'gg_dur']:
     df_repro_compa['d_{:s}_{:d}'.format(dist_col, dist)] = np.nan
-    df_repro_compa['d_{:s}_{:d}'.format(dist_col, dist)] = 0
     df_repro_compa.loc[df_repro_compa[dist_col] <= dist,
                        'd_{:s}_{:d}'.format(dist_col, dist)] = 1
+    df_repro_compa.loc[df_repro_compa[dist_col] > dist,
+                       'd_{:s}_{:d}'.format(dist_col, dist)] = 0
 
-#df_repro_compa['d_gg_dist_le_5km'] = np.nan
-#df_repro_compa.loc[~df_repro_compa['gg_dist'].isnull(),
-#                   'd_gg_dist_le_5km'] = 0
-#df_repro_compa.loc[df_repro_compa['gg_dist'] <= 5, 'd_gg_dist_le_5km'] = 1
-#
-#df_repro_compa['d_gg_dur_le_10'] = np.nan
-#df_repro_compa.loc[~df_repro_compa['gg_dur'].isnull(),
-#                   'd_gg_dur_le_10'] = 0
-#df_repro_compa.loc[df_repro_compa['gg_dur'] <= 10, 'd_gg_dur_le_10'] = 1
+df_compa = df_repro_compa[(df_repro_compa['compa_pct'].abs() <= 2)]
 
-print()
-print(smf.ols('pct_rr ~ d_dist_5',
-              data = df_repro_compa[(df_repro_compa['compa_pct'].abs() <= 2)]).fit().summary())
+# ADD VARS FOR CONTROLS
+ls_ev = ['hhi', 'ln_pop_cont_10', 'ln_CO_med_rev', 'region']
+str_ev = " + ".join(ls_ev)
+df_compa_ctrl = pd.merge(df_compa,
+                         df_stores[['id_lsa'] + ls_ev],
+                         left_on = 'id_lsa_A',
+                         right_on = 'id_lsa',
+                         how = 'left')
 
-for quantile in [0.25, 0.5, 0.7501, 0.75]:
+for d_dist in ['d_dist_5', 'd_gg_dur_12']:
+  
   print()
-  print(quantile)
-  print(smf.quantreg('pct_rr~d_dist_5', data = df_repro_compa).fit(quantile).summary())
+  print(u'-'*30)
+  print(u'Variable for close distance:', d_dist)
+  
+  # NO CONTROL
+  print()
+  print(smf.ols('pct_rr ~ {:s}'.format(d_dist),
+                data = df_compa).fit().summary())
+  
+  ls_res = []
+  ls_quantiles = [0.25, 0.5, 0.75] # use 0.7501 if issue
+  for quantile in ls_quantiles:
+    #print()
+    #print(quantile)
+    #print(smf.quantreg('pct_rr~d_dist_5', data = df_repro_compa).fit(quantile).summary())
+    ls_res.append(smf.quantreg('pct_rr ~ {:s}'.format(d_dist),
+                               data = df_compa[~df_compa[d_dist].isnull()]).fit(quantile))
+  
+  print(summary_col(ls_res,
+                    stars=True,
+                    float_format='%0.2f',
+                    model_names=[u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
+                    info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                               'R2':lambda x: "{:.2f}".format(x.rsquared)}))
+  
+  # WITH CONTROLS
+  print()
+  print(smf.ols('pct_rr ~ {:s}'.format(d_dist, str_ev),
+                data = df_compa_ctrl).fit().summary())
+  
+  ls_res_ctrl =[smf.quantreg('pct_rr ~ {:s} + {:s}'.format(d_dist, str_ev),
+                             data = df_compa_ctrl[~df_compa_ctrl[d_dist].isnull()]).fit(quantile)\
+                  for quantile in ls_quantiles]
+  
+  print(summary_col(ls_res_ctrl,
+                    stars=True,
+                    float_format='%0.2f',
+                    model_names=[u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
+                    info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                               'R2':lambda x: "{:.2f}".format(x.rsquared)}))
 
 # see if relation between rank reversals and distance
 # control by tup chain (concat)

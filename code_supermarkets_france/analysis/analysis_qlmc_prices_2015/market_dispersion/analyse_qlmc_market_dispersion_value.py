@@ -27,14 +27,24 @@ df_prices = pd.read_csv(os.path.join(path_built_csv,
                         encoding = 'utf-8')
 
 df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
-
-# todo: harmonize store_chain to match with df_prices
+# res: epsilon from regression with store and product FEs
 
 df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'),
                         dtype = {'id_lsa' : str,
                                  'c_insee' : str},
                         encoding = 'utf-8')
+
+# harmonize store_chain to match with df_prices
+ls_replace_chains = [['HYPER U', 'SYSTEME U'],
+                     ['U EXPRESS', 'SYSTEME U'],
+                     ['SUPER U', 'SYSTEME U'],
+                     ['HYPER CASINO', 'CASINO'],
+                     ["LES HALLES D'AUCHAN", 'AUCHAN']]
+for old_chain, new_chain in ls_replace_chains:
+  df_stores.loc[df_stores['store_chain'] == old_chain,
+                'store_chain'] = new_chain
+
 # add store fes
 df_fes = pd.read_csv(os.path.join(path_built_csv,
                                   'df_res_ln_price_fes.csv'),
@@ -61,6 +71,10 @@ df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
 # hence first split df_prices in chain dataframes
 dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
                     for chain in df_prices['store_chain'].unique()}
+
+# ###############
+# DEFINE MARKETS
+# ###############
 
 ls_keep_stores = df_prices['store_id'].unique()
 dict_markets = {}
@@ -143,7 +157,7 @@ for df_market, df_market_res in ls_df_markets:
   df_market['std'] = df_market[ls_cols].std(1)
   df_market['cv'] = df_market[ls_cols].std(1) / df_market[ls_cols].mean(1)
  
-  # Dispersion by product
+  # Dispersion by product with price residuals
   ls_cols_res = df_market_res.columns # keep cuz gona add columns
   df_market_res['range'] = df_market_res[ls_cols].max(1) - df_market_res[ls_cols].min(1)
   df_market_res['gfs'] = df_market_res[ls_cols].mean(1) - df_market_res[ls_cols].min(1)
