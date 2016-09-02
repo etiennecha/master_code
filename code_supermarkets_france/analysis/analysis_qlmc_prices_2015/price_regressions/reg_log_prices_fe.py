@@ -45,15 +45,15 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                                      'df_stores_final.csv'),
                         encoding = 'utf-8')
 
-## Rename chains to have similar chains as on qlmc
-#ls_replace_chains = [['HYPER U', 'SYSTEME U'],
-#                     ['U EXPRESS', 'SYSTEME U'],
-#                     ['SUPER U', 'SYSTEME U'],
-#                     ['HYPER CASINO', 'CASINO'],
-#                     ["LES HALLES D'AUCHAN", 'AUCHAN']]
-#for old_chain, new_chain in ls_replace_chains:
-#  df_prices.loc[df_prices['store_chain'] == old_chain,
-#                'store_chain'] = new_chain
+# Rename chains to have similar chains as on qlmc
+ls_replace_chains = [['HYPER U', 'SYSTEME U'],
+                     ['U EXPRESS', 'SYSTEME U'],
+                     ['SUPER U', 'SYSTEME U'],
+                     ['HYPER CASINO', 'CASINO'],
+                     ["LES HALLES D'AUCHAN", 'AUCHAN']]
+for old_chain, new_chain in ls_replace_chains:
+  df_prices.loc[df_prices['store_chain'] == old_chain,
+                'store_chain'] = new_chain
 
 # Drop (weird) products and fix problematic names:
 # should not start with numeric + quote issues?
