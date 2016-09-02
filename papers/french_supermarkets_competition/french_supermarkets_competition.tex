@@ -45,7 +45,7 @@
 
 \textbf{Abstract:}
 
-The French grocery store chain Leclerc operates a price comparison website which allows to compare each of its stores with some local competitors, and performs chain comparisons at the national level. This papers uses price data collected from the comparison website to investigate static and dynamic price dispersion across French grocery stores. Although chains are found to largely determine store pricing policies, chain level comparisons are often of little informative value given heterogeneity observed at the store level. Furthermore, store comparison results tend to be sensitive to available product sets and vary significantly over time. Findings therefore suggest that static and dynamic price dispersion makes accurate price comparisons very costly for consumers.
+The French grocery store chain Leclerc operates a price comparison website which allows to compare each of its stores with some local competitors, and performs chain comparisons at the national level. This papers uses price data collected from the comparison website to investigate static and dynamic price dispersion across French grocery stores. Although chains are found to largely determine store pricing policies, chain level comparisons are often of little informative value given heterogeneity observed at the store level. Furthermore, store comparison results tend to be sensitive to available product sets and vary significantly over time. Findings therefore suggest that price comparisons are made very costly by static and dynamic price dispersion.
 
 \strut
 
@@ -72,11 +72,7 @@ Since the seminal paper of \cite{STI61}, a large literature has investigated the
 
 \cite{LAC02} studies price dispersion with CPI data of four grocery store products sold in Israel over four years. Dynamic price dispersion is documented in the form of sellers frequently changing quartiles in the price distribution over months at the national level. Data are yet not rich enough to observe price dispersion within local markets.
 
-\cite{ZHA06} investigates the relation between price dispersion, measured through the coefficient of variation, with consumer search costs, competition intensity, and consumer heterogeneity. A positive correlation with dispersion is found for each of these elements. Data consist in a scanner panel covering 23 product categories of 6 supermarkets within a surburban area of Chicago from June 1991 to Junz 1993. The analysis focuses on the largest 10 brands in terms of market share within each product category.
-
-Product categories are narrow enough (e.g. Butter, Coffee) for products within categories to be considered as alternatives for a given consumer. Price dispersion related to product size and brand diversity can then be quantified. The unit price of a given product (as defined by brand and quality) is found to generally decrease with size, while significant heterogeneity across intrabrand price dispersion is measured, meaning that brands exhibit different levels of differentiation.
-
-The paper uses the frequency of store visits and the frequency of product category or brand purchases as proxies for search costs. Intensity of competition varies due to a store entry in the market over the studied period. Higher industry concentration is expected to lead to lower price dispersion. Consumer heterogeneity is measured through the coefficients of variation in various consumer demographic variables. Lower variability is expected to involve a lower role of price discrimination hence lower dispersion.
+\cite{ZHA06} investigates the relation between price dispersion, measured through the coefficient of variation, with consumer search costs, competition intensity, and consumer heterogeneity. A positive correlation with dispersion is found for each of these elements. Data consist in a scanner panel covering 23 product categories of 6 supermarkets within a surburban area of Chicago from June 1991 to Junz 1993. The analysis focuses on the largest 10 brands in terms of market share within each product category. Product categories are narrow enough (e.g. Butter, Coffee) for products within categories to be considered as alternatives for a given consumer. Price dispersion related to product size and brand diversity can then be quantified. The unit price of a given product (as defined by brand and quality) is found to generally decrease with size, while significant heterogeneity across intra brand price dispersion is measured, meaning that brands exhibit different levels of differentiation. The paper uses the frequency of store visits and the frequency of product category or brand purchases as proxies for search costs. Intensity of competition varies due to a store entry in the market over the studied period. Higher industry concentration is expected and found to lead to lower price dispersion. Consumer heterogeneity is measured through the coefficients of variation in various consumer demographic variables. Lower variability is expected and empirically observed to involve a lower role of price discrimination hence lower dispersion.
 
 \cite{TAP11}, with retail gasoline price data, analyse price spreads of pairs of competitors based on the distance which separate them. They remark that the price ranking between two competitors tends to be noisier when distance increases, namely when consumer search costs are more likely to relax competition and therefore to create the tension between rent extraction and undercutting that leads to a mixed strategy equilibrium in \cite{VAR80}.
 
@@ -86,7 +82,7 @@ The paper uses the frequency of store visits and the frequency of product catego
 
 In a theoretical paper, \cite{ALL16a} investigate the consequences of spatial discrimination and uniform pricing strategies on mergers. They show that when one retailer implements uniform pricing, the anticompetitive effects of a merger can affect consumers in markets not directly affect by the merger.
 
-Using rich price data collected from a comparison website, this paper documents static and dynamic price dispersion in the French supermarket industry. The first part of the paper provides a description of the data and reviews the methodology used by the comparison website from which they are extracted. The second part discusses the relevance of chain comparisons and investigate price dispersion at the store and market level. Chain affiliation is found to be a strong determinant of prices, while market characteristics account for a small share of price variations. Leclerc and Geant Casino, the cheapest chains as of March 2015, exhibit highest degrees of price uniformity compared to other chains. Whenever the average price difference across products between two competing stores is small enough, the result of the price comparison largely depends on product choice. TODO: result description.
+Using rich price data collected from a comparison website, this paper documents static and dynamic price dispersion in the French supermarket industry. The first part of the paper provides a description of the data and reviews the methodology used by the comparison website from which they are extracted. The second part discusses the relevance of chain comparisons and investigate price dispersion at the store and market level. Chain affiliation is found to be a strong determinant of prices, while market characteristics account for a small share of price variations. Two chains are observed to be significantly cheaper than others as of March 2015. They are also characterized by high degrees of price uniformity compared to other chains. Whenever the average price difference across products between two competing stores is small enough, the result of the price comparison largely depends on product choice. (Todo: finish result summary + take aways)
 
 \section{Price comparison on quiestlemoinscher.com}
 
@@ -161,11 +157,43 @@ Max   &  12.0 &  21.1 &  67.0 &  28.6 &    28.5 \\
 
 Table~\ref{tab:qlmc_comp} provides an overview of competition according to qlmc comparisons (the website does not claim to be comprehensive). On average, a Leclerc store is compared with 5 competitors, and over 50\% over Leclerc stores are compared with a store located within 2 km. The furthest competitor is generally within 30 km (15 km for almost half of them), except for 28 stores. For 14 Leclerc stores, the closest listed store if over 10 km away. No store meets these two criteria, hence it does not seem obvious that the lack or omission of nearby competitors led to include stores beyond reasonable distance. For instance, the Leclerc outlet which has the furthest competitor in the data (67 km) is listed with 7 competitors, of which 5 are located within 30 km.
 
+\cite{BIS13} define catchment areas by radiuses (i.e. distances as the crow flies), following \cite{BAR06} and the method then employed by competitor authorities. As they do not have exact store locations, they center catchment areas on cities. They use the Herfindahl-Hirschman index (HHI) as a measure of local market centration, and approximate market shares by selling areas. Store turnover is indeed unknown, but expected to be strongly correlated with size (They also argue that a HHI based on size may be a better indicator in their specific case). The distance used in displayed estimations is 10km, while robustness checks are performed with 2.5, 5 and 20km.
+
+\cite{ALL16a} also compute HHI based on store size and use a 10km radius for supermarkets and a 20km radius for hypermarkets, which they deem to be relatively high. They note than in the case of the merger they investigate, the French competition authority considered that consumers were willing to drive 15 to 30 minutes to reach a hypermarket, and 10 to 15 minutes to a smaller supermarket or a discount store. Estimations displayed take into account all hypermarkets within a 20km radius, and all other stores within 10 km. Robustness checks are performed with 30km/15km and 10km/5km distances.
+
 \subsection{Products and comparison methodology}
 
 As of March 2015, only national brand products are covered by the website. Products are identified at the bar code level. There are seven food product categories: meat and fish, vegetables and fruits, bakery, fresh food, frozen food, savoury grocery, sweet grocery, baby food and drinks. Non food products are split in four categories: health and beauty, household, pets and home and textile. Products are further classified within product families. Regarding chain comparisons, the number of products covered within each family is determined by the volume of national hypermarket and supermarket sales, with a global objective of 3,000 products. Within each family, products are chosen based on the national hypermarket and supermarket detention rate. Products whose detention rate is below 30\% (i.e. products referenced by less than 30\% of the stores) are dropped. This led to a total of 2,461 national brand product references covered for March 2015 (2,510 in August 2013). As regards store level comparisons, all products found at both stores are used in comparisons.
 
-Price records obtained from the website include all products used in each store level comparison. As a consequence, there are 12,318 unique products in the data as of March 2015. Table~\ref{tab:qlmc_sections} provides an overview of the relative weights of each section in terms of product number and value. The five largest sections, regardless of the criterion, are Fresh products, Health and Beauty, Savoury Grocery, Sweet Grocery and Drinks. Families within each sections are detailed in table~\ref{tab:qlmc_families}. Drinks and Health and Beauty products tend to have larger values than products from other categories, so that they account for a significantly higher share in terms of value than product count.
+\begin{table}[H]
+\renewcommand{\arraystretch}{0.8}% Tighter
+\caption{Overview of product families within sections}
+\label{tab:qlmc_families}
+\small
+\begin{tabularx}{\linewidth}{l >{\setlength{\baselineskip}{0.75\baselineskip}}X}
+%\begin{tabular}{p{0.3\linewidth}p{0.7\linewidth}}
+\toprule
+\toprule
+    Section & Families \\
+    \midrule
+    Baby and dietetic food (573) & Baby food (418); Dietetic products (155) \\
+    Drinks (1,233) & Beer and Spirits (443); Fizzy drinks and Cola (244); Water (176); Juices and Smoothies (110); Squash and Cordial (101); Wine, Champagne and Cider (159) \\
+    Fresh products (2,595) & Butter and Cream (199); Meat (490); Cheese (491); Milk and eggs (150); Fish (98); Delicatessen (660); Yoghurts and Chilled Desserts (507) \\
+    Frozen food (368) & Ice cream and Frozen yoghurt (101); Frozen vegetables and fries (91); Frozen pizzas, pies and ready meals (128); Frozen Meat and Fish (48) \\
+    Health and Beauty (2,127) & Kitchen Roll and Tissues (86); Oral care (169); Feminine care and Baby changing (138); Drugstore (97); Haircare (558); Face and body skincare (951); Men toiletries (128) \\
+    Home and textile (308) & DIY and Car (9); Kitchen and dining room (50); Home Office (171); Batteries, lightbulbs and plugs (54) \\
+    Household (679) & Air fresheners and insect killers (118); Laundry (124); Cloths, Gloves and Scourers (45); Cleaning (225); Dishwashing (64); Specialist laundry and Washing machine cleaner (103) \\
+    Pets (239) & Cat and dog food (233); Litter (6) \\
+    Savoury grocery (2,032) & Snacks (214); Condiments and Spices (609); Canned goods (406); Precooked dishes (205); Pasta, Rice and Flour (328); Soups (270) \\
+    Sweet grocery (2,099) & Biscuits (294); Coffee and Tea (368); Chocolates ans sweets (450); Desserts, Sugar and Sweeteners (318); Breakfast (453); Cakes (215) \\
+    Vegetables and fruits (65) & Fruits (65) \\
+\bottomrule
+\bottomrule
+\end{tabularx}
+%\end{tabular}
+\end{table}
+
+Price records obtained from the website include all products used in each store level comparison. As a consequence, there are 12,318 unique products in the data as of March 2015. Table~\ref{tab:qlmc_sections} provides an overview of the relative weights of each section in terms of product number and value. The five largest sections, regardless of the criterion, are Fresh products, Health and Beauty, Savoury Grocery, Sweet Grocery and Drinks. Families within each sections are detailed in Table~\ref{tab:qlmc_families}. Drinks and Health and Beauty products tend to have larger values than products from other categories, so that they account for a significantly higher share in terms of value than product count.
 
 \begin{table}[H]
 \renewcommand{\arraystretch}{0.7}% Tighter
@@ -434,7 +462,7 @@ These indexes are used to investigate the extent to which the heterogeneity in (
 \text{Store price index} = \text{Surface} + \text{HHI} + \text{Population revenue}+ \text{Population size}+ \epsilon
 \label{reg_store_indexes}
 \end{align}
-where Surface is the store surface, HHI is computed by considering store surface as a proxy for store sales and discounting market shares by the distance to each competitor (each store is considered to be the center of a market for which a HHI is measured), population revenue is the median household revenue taken at the municipality level, and population size a sum of nearby municipality population sizes weighted by distance. Results are reported in Table~\label{tab:reg_store_price_indexes}.
+where Surface is the store surface, HHI is computed by considering store surface as a proxy for store sales and discounting market shares by the distance to each competitor (each store is considered to be the center of a market for which a HHI is measured), population revenue is the median household revenue taken at the municipality level, and population size a sum of nearby municipality population sizes weighted by distance. Results are reported in Table~\ref{tab:reg_store_price_indexes}.
 
 \begin{table}[H]
 \caption{Distribution of store price indexes by chain}
@@ -488,14 +516,47 @@ N                                                       & 1,426     & 1,426    &
 \end{threeparttable}
 \end{table}
 
-Store and market characteristics are found to account for a small share of the variance in store indexes. In particular, Leclerc does not appear to be significantly less price competitive relative to competitors once the size of its stors and their location is taken into account. The affiliation of a store appears to be a strong determinant of its overall price level, which is consistent with the relative strong intra-chain price concentration previously obtained and other studies on retail chain prices. \cite{HOS08} and \cite{CHA16} observe similar results with gas station prices respectively in the US and in France (even though gas station chains do not follow uniform pricing policies).
+Store and market characteristics are found to account for a small share of the variance in store indexes. In particular, Leclerc does not appear to be significantly less price competitive relative to competitors once the size of its stores and their location is taken into account. The affiliation of a store appears to be a strong determinant of its overall price level, which is consistent with the relative strong intra-chain price concentration previously obtained and other studies on retail chain prices. \cite{HOS08} and \cite{CHA16} observe similar results with gas station prices respectively in the US and in France (even though gas station chains do not follow uniform pricing policies).
 
 \subsection{National level dispersion}
 
-Product price dispersion is measured at the national level, with a view to get some measure of potential heterogeneity among products. Given previous observations on chain pricing policies, only products where X observations are available from at least X different supermarket chains are taken into account. For lack of precise product characteristics and information on sales, product section and families are used to investigate differences in observed product price dispersion. Table~\label{tab:reg_nat_dispersion} reports the results of the regression:
+Product price dispersion is measured at the national level, with a view to get some measure of potential heterogeneity among products. Given previous observations on chain pricing policies, only products where X observations are available from at least X different supermarket chains are taken into account. Indeed a product for which prices would be available only within chains which are characterized by significant price uniformity would be likely to be spuriously found to have highly concentrated prices. Product mean price, section and families are used to investigate variations in observed product price dispersion.
+
+\begin{table}[H]
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Overview of average product dispersion by category at the national level}
+\label{tab:stats_nat_dispersion}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+\toprule
+Price                     & Raw   & Raw   & Raw   & Res   & Raw   & Res \\
+Dispersion measure        & Mean  & Std   & CV    & Std   & Q75-Q25 & Q75-Q25 \\
+\midrule
+    Baby food & 2.09 (1.12) & 0.16 (0.10) & 0.08 (0.02) & 0.04 (0.02) & 0.20 (0.14) & 0.04 (0.03) \\
+    Pets  & 4.14 (2.49) & 0.24 (0.14) & 0.06 (0.02) & 0.04 (0.01) & 0.34 (0.21) & 0.04 (0.02) \\
+    Drinks & 4.97 (5.60) & 0.25 (0.24) & 0.06 (0.02) & 0.05 (0.02) & 0.31 (0.35) & 0.05 (0.02) \\
+    Savoury grocery & 1.73 (0.87) & 0.12 (0.07) & 0.07 (0.02) & 0.05 (0.02) & 0.15 (0.11) & 0.05 (0.03) \\
+    Sweet grocery & 2.24 (1.03) & 0.16 (0.08) & 0.07 (0.03) & 0.05 (0.02) & 0.20 (0.15) & 0.06 (0.04) \\
+    Fresh & 2.29 (1.04) & 0.15 (0.07) & 0.07 (0.02) & 0.05 (0.01) & 0.17 (0.12) & 0.05 (0.03) \\
+    Health and Beauty & 3.06 (1.65) & 0.23 (0.14) & 0.08 (0.02) & 0.05 (0.02) & 0.28 (0.21) & 0.05 (0.03) \\
+    Household & 3.63 (2.45) & 0.25 (0.16) & 0.07 (0.02) & 0.05 (0.01) & 0.30 (0.22) & 0.06 (0.02) \\
+    Frozen food & 3.50 (1.64) & 0.24 (0.10) & 0.07 (0.02) & 0.05 (0.01) & 0.28 (0.17) & 0.06 (0.03) \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item First column is the mean product price (in euros) of all products within each category. All other columns are measures of dispersion. Standard error in parentheses.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+Table~\ref{tab:stats_nat_dispersion} provides an overview of average product price and dispersion measures by store section, while Table~\ref{tab:reg_nat_dispersion} reports the results of the regression:
 
 \begin{align}
-\text{Product dispersion} = \text{Product average price} + \text{Product section} + \epsilon
+\text{Product dispersion} = \text{Product mean price} + \text{Product store section} + \epsilon
 \label{reg_store_indexes}
 \end{align}
 
@@ -547,9 +608,14 @@ N                                        & 4,190     & 4,190     & 4,190     & 4
 
 \subsection{Pair price dispersion}
 
-Price dispersion is investigated at the pair level, based on the idea introduced in \cite{TAP11} that distance between sellers can be used as a proxy for consumer information. Pairs of competitors which are separated by a very low distance can indeed be expected to compete fiercely, so that they constitute a population in which the "law of one price" is the most likely to hold. On the other hand, a larger distance is likely to be tantamount to poorer consumer information, namely a competition setting which could be described by a model of search. A common feature of such models is the absence of pure strategy equilibria. In the single product case, mixed strategy equilibria have traditionally been given a dynamic interpretation, corresponding to the changes in ranks that can be observed among sellers over time. In the multi-product case, ADD REF have shown that sellers can randomize on each product (either in a way that simply replicates the single product case, or in a way that involves a correlation between a seller's prices).
+Price dispersion is investigated at the pair level, based on the idea introduced in \cite{TAP11} that distance between sellers can be used as a proxy for consumer information. Pairs of competitors which are separated by a very low distance can indeed be expected to compete fiercely, so that they constitute a population in which the "law of one price" is the most likely to hold. On the other hand, a larger distance is likely to be tantamount to poorer consumer information, namely a competition setting which could be described by a model of search. A common feature of such models is the absence of pure strategy equilibria. In the single product case, mixed strategy equilibria have traditionally been given a dynamic interpretation, corresponding to the changes in ranks that can be observed among sellers over time. In the multi-product case, \cite{MCA95} have shown that sellers can randomize on each product, either in a way that simply replicates the single product case (i.e. \cite{VAR80}), or in a way that involves a correlation between a seller's prices). \cite{TAP11} remarks than rank reversals, namely changes in the ranking of competing retailer prices, are to be expected whenever a significant distance between sellers is likely to generate search costs. On the other hand, when two retailers operate very close from each other, the "law of one price" is more likely to hold i.e. one can expect price alignment to be the norm. \cite{TAP11} measures rank reversals as the number of days during which the generally cheapest store is found to be more expensive. In this paper, rank reversals is measured over products. Formally, considering the prices $p_{il}$ and $p_{jl}$ of two supermarkets $i$ and $j$ over $l \in L$ days, such that $\sum_{l=1}^{L} \mathbbm{1}_{p_{jl} > p_{il}} \ge \sum_{l=1}^{L} \mathbbm{1}_{p_{il} > p_{jl}}$ is more frequent than the converse, the rank reversals statistic writes:
 
-Of all comparisons between chains exhibiting similar price levels, the Leclerc vs. Geant Casino comparison is the most stable across stores, and within stores across products. Table~\ref{tab:static_compa_15km} shows that among 215 pairs, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the pairs.
+\begin{align}
+r_{ij} = \frac{1}{L} \sum_{t=1}^{L} \mathbbm{1}_{p_{il} > p_{jl}}
+\label{formula_rr_static}
+\end{align}
+
+Higher rank reversals are expected for pairs which are separated by a higher distance. Importantly, store differentiation leads to spuriously record low rank reversals. This issue is addressed by considering only pairs which are found to exhibit small aggregate price differences, and by running quantile regressions as in \cite{TAP11}.
 
 \begin{table}[H]
 \begin{threeparttable}
@@ -581,6 +647,17 @@ Of all comparisons between chains exhibiting similar price levels, the Leclerc v
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
+
+Table~\ref{tab:static_compa_15km} provides an overview of rank reversals measured by formula~\ref{formula_rr_static}. Of all comparisons between chains exhibiting similar price levels, the Leclerc vs. Geant Casino confrontation is the most stable across competitor pairs, and within pairs across products. Over 215 pairs of competing stores, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the store confrontations. On average, regardless of the affiliation of the cheapest store in the Leclerc vs. Geant Casino confrontation, the most expensive store is cheaper on 20.4\% of the products available at both stores. In order to test the link between distance, taken as a proxy for consumer search cost, and rank reversals, the following regression is run:
+
+\begin{equation}
+\text{r}_{ij}= \beta_0 + \beta_1 \mathbbm{1}{\text{Short distance}_{ij}} + X_{ij} + \epsilon_{ij}
+\end{equation}
+where $\text{Short distance}$ is a dummy which is defined to have value 1 when stores are relatively close to each other. In a first specification, distance as the crow flies is used, with a threshold of 5 km for the dummy variable. Only pairs separated by less than 10 km are included in the regression. The second specification uses distances in minutes computed by Google. The threshold is 12 minutes and pairs are only kept when the driving distance is below 20 minutes. Though 12 minutes may sound to be a relatively long trip criterion are roughly equivalent on aggregate.
+
+AGG REG RESULTS + COMMENTS
+
+Regression results provide support for a positive relation between separating distance and rank reversals.
 
 Descriptives statics of dynamic price dispersion are reported in Table~\ref{tab:dynamic_compa_15km}. Among 114 store comparisons involving a Leclerc and a Geant Casino, 4.4\% are won by a different store in the two periods. On average, 21.2\% of products taken into account in the comparison changed order between the two periods i.e were strictly cheaper at Leclerc in first period and became strictly cheaper at Geant Casino in second period or the reverse.
 
@@ -615,10 +692,6 @@ Descriptives statics of dynamic price dispersion are reported in Table~\ref{tab:
 \end{threeparttable}
 \end{table}
 
-ADD REGRESSION RESULTS
-
-ADD COMMENTS
-
 \subsection{Market price dispersion}
 
 While in the single product case, the main source of complexity attached to measuring market dispersion is the definition of markets, the presence of several products, in particular when their number is large as is the case with supermarkets, raises another major methodological issue. Absent quantity data, product choice is bound to be largely data dependent, and thus exposes results to various biases. Also, differentiation cannot be ignored by focusing on non differentiated pairs such as with competitor pair analysis, hence results are necessarily sensitive to potential misspecifications and must therefore be interpreted with great care.
@@ -629,7 +702,11 @@ All products for which prices are available at 2/3 or more of observed supermark
 
 We investigate how market price dispersion varies with the number of sellers or the intensity of competition captured by HHI. We also investigate the link between market price dispersion and an index of market prices. The market index is built by considering how expensive each store operating in a given market is in comparison to all stores affiliated to the same chain. Alternatively, store surfaces are taken into account to weight prices indexes in the computation.
 
-ADD DESCRIPTIVE STATISTICS
+ADD REG RESULTS + COMMENTS
+
+\section{Conclusion}
+
+Analysing competition between French supermarkets from different prospects leads to mixed conclusions regarding the competitiveness of the market. On the one hand, the presence of a "maverick" firm and the recent downward change of pricing strategy of a large supermarket chain in France suggest a significant degree of competitive pressure and a trend favorable to consumers. Meanwhile, evidence of price dispersion reveals that consumers generally face high search costs when it comes to comparing prices at supermarkets, and heterogeneity in supermarket price levels is not easily explained by proxies for competition intensity and socio-demographic variables. Observed shocks in pricing strategies in the recent period, if used to analyse consumer purchases (home scanner data) should allow to gain a better understanding of the role of competition.
 
 \newpage
 
@@ -637,66 +714,8 @@ ADD DESCRIPTIVE STATISTICS
 
 \newpage
 
-\appendix
+% \appendix
 
-\section{Additional descriptive statistics}
-
-\begin{table}[H]
-\renewcommand{\arraystretch}{0.8}% Tighter
-\caption{Overview of product families within sections}\label{tab:qlmc_families}
-\small
-\begin{tabularx}{\linewidth}{l >{\setlength{\baselineskip}{0.75\baselineskip}}X}
-%\begin{tabular}{p{0.3\linewidth}p{0.7\linewidth}}
-\toprule
-\toprule
-    Section & Families \\
-    \midrule
-    Baby and dietetic food (573) & Baby food (418); Dietetic products (155) \\
-    Drinks (1,233) & Beer and Spirits (443); Fizzy drinks and Cola (244); Water (176); Juices and Smoothies (110); Squash and Cordial (101); Wine, Champagne and Cider (159) \\
-    Fresh products (2,595) & Butter and Cream (199); Meat (490); Cheese (491); Milk and eggs (150); Fish (98); Delicatessen (660); Yoghurts and Chilled Desserts (507) \\
-    Frozen food (368) & Ice cream and Frozen yoghurt (101); Frozen vegetables and fries (91); Frozen pizzas, pies and ready meals (128); Frozen Meat and Fish (48) \\
-    Health and Beauty (2,127) & Kitchen Roll and Tissues (86); Oral care (169); Feminine care and Baby changing (138); Drugstore (97); Haircare (558); Face and body skincare (951); Men toiletries (128) \\
-    Home and textile (308) & DIY and Car (9); Kitchen and dining room (50); Home Office (171); Batteries, lightbulbs and plugs (54) \\
-    Household (679) & Air fresheners and insect killers (118); Laundry (124); Cloths, Gloves and Scourers (45); Cleaning (225); Dishwashing (64); Specialist laundry and Washing machine cleaner (103) \\
-    Pets (239) & Cat and dog food (233); Litter (6) \\
-    Savoury grocery (2,032) & Snacks (214); Condiments and Spices (609); Canned goods (406); Precooked dishes (205); Pasta, Rice and Flour (328); Soups (270) \\
-    Sweet grocery (2,099) & Biscuits (294); Coffee and Tea (368); Chocolates ans sweets (450); Desserts, Sugar and Sweeteners (318); Breakfast (453); Cakes (215) \\
-    Vegetables and fruits (65) & Fruits (65) \\
-\bottomrule
-\bottomrule
-\end{tabularx}
-%\end{tabular}
-\end{table}
-
-\begin{table}[H]
-\begin{threeparttable}
-\renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Overview of average product dispersion by category at the national level}
-\label{tab:stats_nat_pro}
-\small
-\begin{tabular}{lrrrrrr}
-\toprule
-\toprule
-Price                     & Raw   & Raw   & Raw   & Res   & Raw   & Res \\
-Dispersion measure        & Mean  & Std   & CV    & Std   & Q75-Q25 & Q75-Q25 \\
-\midrule
-    Baby food & 2.09 (1.12) & 0.16 (0.10) & 0.08 (0.02) & 0.04 (0.02) & 0.20 (0.14) & 0.04 (0.03) \\
-    Pets  & 4.14 (2.49) & 0.24 (0.14) & 0.06 (0.02) & 0.04 (0.01) & 0.34 (0.21) & 0.04 (0.02) \\
-    Drinks & 4.97 (5.60) & 0.25 (0.24) & 0.06 (0.02) & 0.05 (0.02) & 0.31 (0.35) & 0.05 (0.02) \\
-    Savoury grocery & 1.73 (0.87) & 0.12 (0.07) & 0.07 (0.02) & 0.05 (0.02) & 0.15 (0.11) & 0.05 (0.03) \\
-    Sweet grocery & 2.24 (1.03) & 0.16 (0.08) & 0.07 (0.03) & 0.05 (0.02) & 0.20 (0.15) & 0.06 (0.04) \\
-    Fresh & 2.29 (1.04) & 0.15 (0.07) & 0.07 (0.02) & 0.05 (0.01) & 0.17 (0.12) & 0.05 (0.03) \\
-    Health and Beauty & 3.06 (1.65) & 0.23 (0.14) & 0.08 (0.02) & 0.05 (0.02) & 0.28 (0.21) & 0.05 (0.03) \\
-    Household & 3.63 (2.45) & 0.25 (0.16) & 0.07 (0.02) & 0.05 (0.01) & 0.30 (0.22) & 0.06 (0.02) \\
-    Frozen food & 3.50 (1.64) & 0.24 (0.10) & 0.07 (0.02) & 0.05 (0.01) & 0.28 (0.17) & 0.06 (0.03) \\
-\bottomrule
-\bottomrule
-\end{tabular}
-\begin{tablenotes}
-      \small
-      \item First column is the mean product price (in euros) of all products within each category. All other columns are measures of dispersion. Standard error in parentheses.
-\end{tablenotes}
-\end{threeparttable}
-\end{table}
+% \section{Additional descriptive statistics}
 
 \end{document} 

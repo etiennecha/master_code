@@ -280,10 +280,7 @@ df_repro_compa['pct_rr'] = df_repro_compa['pct_win_A']
 df_repro_compa.loc[df_repro_compa['pct_win_A'] > df_repro_compa['pct_win_B'],
                    'pct_rr'] = df_repro_compa['pct_win_B']
 
-# ###################
-# REG RR ON DISTANCE
-# ###################
-
+# ENRICH DISTANCE VARIABLES
 print()
 print(df_repro_compa[['dist', 'gg_dist', 'gg_dur']].describe())
 
@@ -295,27 +292,49 @@ for dist in [5, 10, 12]:
     df_repro_compa.loc[df_repro_compa[dist_col] > dist,
                        'd_{:s}_{:d}'.format(dist_col, dist)] = 0
 
-df_compa = df_repro_compa[(df_repro_compa['compa_pct'].abs() <= 2)]
-
-# ADD VARS FOR CONTROLS
-ls_ev = ['hhi', 'ln_pop_cont_10', 'ln_CO_med_rev', 'region']
+# ADD CONTROL VARIABLES
+ls_ev = ['hhi', 'ln_pop_cont_10', 'ln_CO_med_rev']
 str_ev = " + ".join(ls_ev)
-df_compa_ctrl = pd.merge(df_compa,
+df_compa_ctrl = pd.merge(df_repro_compa,
                          df_stores[['id_lsa'] + ls_ev],
                          left_on = 'id_lsa_A',
                          right_on = 'id_lsa',
                          how = 'left')
 
-for d_dist in ['d_dist_5', 'd_gg_dur_12']:
+## ADD VARIABLE FOR PAIR CHAINS (CONTROL)
+#df_compa_ctrl['pair_chains'] =\
+#  df_compa_ctrl['store_chain_A'] + ' - ' + df_compa_ctrl['store_chain_B']
+#ls_ev += ['pair_chains']
+#str_ev += u" + C(pair_chains, Treatment('CARREFOUR - AUCHAN'))"
+
+# #########
+# OUTPUT
+# #########
+
+
+# ###############
+# REGRESSIONS
+# ###############
+
+## Keep only pairs which are not too differentiated (done in loop)
+#df_compa = df_compa_ctrl[(df_compa_ctrl['compa_pct'].abs() <= 3)]
+
+dict_res = {}
+for d_dist, dist_var, dist_max in [['d_dist_5', 'dist', 10],
+                                   ['d_gg_dur_12', 'gg_dur', 20]]:
+  # filter: not too differentiated, not too far
+  df_compa = df_compa_ctrl[(df_compa_ctrl['compa_pct'].abs() <= 2) &\
+                           (df_compa_ctrl[dist_var] <= dist_max)]
   
   print()
   print(u'-'*30)
   print(u'Variable for close distance:', d_dist)
   
   # NO CONTROL
+  ols_res = smf.ols('pct_rr ~ {:s}'.format(d_dist),
+                    data = df_compa).fit()
   print()
-  print(smf.ols('pct_rr ~ {:s}'.format(d_dist),
-                data = df_compa).fit().summary())
+  print(ols_res.summary())
   
   ls_res = []
   ls_quantiles = [0.25, 0.5, 0.75] # use 0.7501 if issue
@@ -334,12 +353,13 @@ for d_dist in ['d_dist_5', 'd_gg_dur_12']:
                                'R2':lambda x: "{:.2f}".format(x.rsquared)}))
   
   # WITH CONTROLS
+  ols_res_ctrl = smf.ols('pct_rr ~ {:s} + {:s}'.format(d_dist, str_ev),
+                           data = df_compa).fit()
   print()
-  print(smf.ols('pct_rr ~ {:s}'.format(d_dist, str_ev),
-                data = df_compa_ctrl).fit().summary())
+  print(ols_res_ctrl.summary())
   
   ls_res_ctrl =[smf.quantreg('pct_rr ~ {:s} + {:s}'.format(d_dist, str_ev),
-                             data = df_compa_ctrl[~df_compa_ctrl[d_dist].isnull()]).fit(quantile)\
+                             data = df_compa[~df_compa[d_dist].isnull()]).fit(quantile)\
                   for quantile in ls_quantiles]
   
   print(summary_col(ls_res_ctrl,
@@ -348,6 +368,8 @@ for d_dist in ['d_dist_5', 'd_gg_dur_12']:
                     model_names=[u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
                     info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                                'R2':lambda x: "{:.2f}".format(x.rsquared)}))
+
+  dict_res[d_dist] = [ols_res, ls_res, ols_res_ctrl, ls_res_ctrl]
 
 # see if relation between rank reversals and distance
 # control by tup chain (concat)

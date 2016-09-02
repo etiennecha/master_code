@@ -141,7 +141,7 @@ for lec_id, ls_comp_id in dict_markets.items():
 
 ls_market_rows = []
 ls_df_market_disp = []
-for df_market in ls_df_markets:
+for df_market, df_market_res in ls_df_markets:
   
   # Aggregate stats: basket with all products
   nb_stores = len(df_market.columns)
@@ -154,8 +154,8 @@ for df_market in ls_df_markets:
   agg_gfs = agg_sum.mean() - agg_sum.min()
   agg_gfs_pct = agg_gfs / agg_sum.mean()
   
+  ls_cols = df_market.columns # keep cuz gona add columns
   ## Compute log price deviation to market for each store / product
-  #ls_cols = df_market.columns # keep cuz gona add columns
   #if price_col != 'lpd':
   #  ls_lpd_cols = []
   #  for col in ls_cols:
@@ -280,7 +280,7 @@ print(df_su[(df_su['nb_prods'] >= 100) &\
 ## inspect extreme priciest_ch_pct markets
 #print(df_su[df_su['priciest_ch_pct'] >= 0.33][lsdf].to_string())
 
-for df_market in ls_df_markets:
+for df_market, df_market_res in ls_df_markets:
   if df_market.columns[0] == 'centre-e-leclerc-loudun':
     break
 # print(df_market[df_market['cheapest_2'] != df_market['cheapest']][0:40].to_string())
