@@ -72,25 +72,13 @@ The complexity and diversity of observed price patterns have led to question com
 
 \cite{LEW08} reconciles the two previous approaches by using station level fixed-effects to control for differentiation, and investigating the relationship between price dispersion and local market characteristics. Data include price records of 327 gas stations in the San Diego area on each Monday in 2000 and 2001 (91 weeks). The paper finds a negative relationship between seller density and price dispersion, in line \cite{BAR04}, and refine this result by introducing a distinction between high-brand groups, composed by premium branded stations, and low-brand groups, which include discount brand and unbranded stations. The relationship between the density of low-brand sellers and price dispersion is found to be negative, while high-brand sellers have a weakly positive or insignificant impact. \cite{LEW08} however observes that a more localized measure of dispersion can lead to find a positive relationship between density and price dispersion, which suggests a complex relationship between seller heterogeneity and price dispersion.
 
-Finally, \cite{TAP11} make two significant contributions to the literature. They introduce a formal test regarding the relationship between price dispersion and consumer search, using distance between competing gas stations as a proxy for consumer information, and then use price dispersion measured at the market level to investigate the relationship between price dispersion and market characteristics.
+Finally, \cite{TAP11} make two significant contributions to the literature. Working with US daily gas station prices spanning one year and a half, they introduce a formal test regarding the relationship between price dispersion and consumer search, using distance between competing gas stations as a proxy for consumer information, and then use price dispersion measured at the market level to investigate the relationship between price dispersion and market characteristics.
 
-The following paper elaborates on the methodology used by \cite{TAP11}. A remarkable specificity exhibited by the French market is the presence of significant static price dispersion, with supermarket gas stations setting prices generally 8 to 10 euro cents per liter cheaper than oil company and independent gas stations. Findings support a connection between consumer search and price dispersion. Among pairs of competing stations, price dispersion is indeed found to significantly increase with distance separating gas stations, namely a measure of information imperfection. Price dispersion is higher when competitors are both independent or oil company gas stations than when they are operated by supermarkets. This suggests that supermarkets generally address a well informed, thus more price sensitive demand, justifying the lower observed markups. At the market level, price dispersion is found to increase with the number of competitors and decrease with price.
+The following paper approaches price dispersion from a gas station, competitor pair and market prospect, offering methodological insights on the pros and cons of each method. A remarkable specificity exhibited by the French market is the presence of significant static price dispersion, with supermarket gas stations setting prices generally 8 to 10 euro cents per liter cheaper than oil company and independent gas stations. Findings support a connection between consumer search and price dispersion. Among pairs of competing stations, price dispersion is indeed found to significantly increase with distance separating gas stations, namely a measure of information imperfection. Price dispersion is higher when competitors are both independent or oil company gas stations than when they are operated by supermarkets. This suggests that supermarkets generally address a well informed, thus more price sensitive demand, justifying the lower observed markups. At the market level, price dispersion is found to increase with the number of competitors and decrease with price.
 
 A major contribution of the consumer search literature was made by \cite{VAR80} through the modeling of price dispersion as a result of mixed pricing strategies. According to the paper, price dispersion thereby obtained can be interpreted as "temporal" price dispersion, typically in the form of "sales". This provides a rationale for rank reversals i.e. a seller being either cheaper or more expensive than a competitor, both with positive probabilities.
 
 The dynamic interpretation of the model is not unambiguous however. In the model, firms are ex-ante indifferent between all prices in the support of the equilibrium price distribution (also holds in terms of randomization over utilities). Ex-post, indifference obviously no more exists. The cheapest firm attracts shoppers but would be better off increasing its price to (almost) match the second cheapest price. Other firms would rather increase their price to consumers' reservation price, or try to undercut the cheapest firm. In the retail gasoline market, while it may not be possible for firms to change prices on too frequent a basis, periods of significant oil price variations reveal that gas stations can adjust prices on a daily basis. If one admits that gas stations play according to \cite{VAR80} on a given day, it is thus not clear why sellers would wish to keep prices unchanged the following day, in contradiction with observed price rigidities. A possible explanation may be that firms refrain from changing prices too often for fear of triggering more search by consumers and thus more intense competition. Whether this can be obtained in a fully competitive setting  or would require some kind of collusion (possibly at the retail chain level or at the local level) remains an open question.
-
-\cite{TAP11} study price dispersion with daily prices of gas stations within four states in the US over one year and a half. In order to test the relation between consumer information and price dispersion, they rely on the assumption that distance between sellers is likely to reflect consumer information. Indeed, when gas stations are located in the same street, a higher share of consumers is likely to perfectly observe prices than when gas stations are located further away from each other. When the share of uninformed consumers becomes negligible, sellers can be expected to compete a la Betrand (or Hotelling) and prices should essentially match cost fluctuation except for some frictions. On the other hand, if information is imperfect, persistent dispersion can be expected to arise following the intuition exposed in \cite{VAR80}.
-
-\cite{TAP11} measure temporal price dispersion between two stations as the probability that the gas station which is in general cheaper (in terms of day count) turns out to be more expensive. Formally, considering the prices $p_{it}$ and $p_{jt}$ of two stations $i$ and $j$ over $T_{ij}$ days, such that $p_{it} \ge p_{ij}$ is observed most of the time, the rank reversals statistic writes:
-\begin{align*}
-r_{ij} = \frac{1}{T_{ij}} \sum_{t=1}^{T_{ij}} \mathbbm{1}_{p_{jt} > p_{it}}
-\end{align*}
-Alternatively, in order to check the robustness of results to the influence of persistent price differences between gas stations, they use standard deviation of price differences to account for pair prices dispersion:
-\begin{align*}
-\sigma_{ij} = \sqrt{\frac{1}{T_{ij}} \sum_{t=1}^{T_{ij}} [s_{ijt} - \bar{s}_{ij}]^2}
-\end{align*}
-They find temporal price dispersion to be positively correlated with distance, which is all the more convincing as close gas stations tend to be exhibit lower persistent price differences. Regressions of various measures accounting for price dispersion on marginal costs and the number of firms in the market (built by considering circles of varying radiuses) yields results consistent with the extension of \cite{VAR80} proposed by the paper (resp. negative and positive impacts).
 
 \section{The French retail gasoline market}
 
@@ -115,11 +103,11 @@ Since 2007, French gasoline retailers are required by law to keep prices updated
 } are exempted from this obligation hence c.10,000 gas stations are observed out of an estimated total number of 12,000 retailers%
 \footnote{A 2012 governmental report on the French retail gasoline market notes that "nobody knows precisely the number of gas stations operating in the markets". Two other comparison websites, carbeo.com and zagaz.com, were created in 2005 and 2006, relying on user provided information. Zagaz has stuck to its "crowdsourcing" philosophy until 2014, while Carbeo started purchasing licences from the government in 2009. In 2012, the governmental body in charge of town and country planning worked with Zagaz data to study the French retail gas station network.%
 }.
-Significant limitations of the governmental comparison website include the fact that users have never been provided a way to report errors such as wrong or out of date prices or wrong gas station locations, and that price comparison functionalities have always remained very poor: e.g. one cannot view prices for a given highway, nor the rivals of a given gas station on a map. As a consequence, it does not seem far-fetched to suspect that the creation of this website was actually detrimental to consumer information, as it diverted drivers from other comparison websites such as Zagaz at a time when they crucially needed to grow their user base.
+Significant limitations of the governmental comparison website include the fact that users have never been provided a way to report errors such as wrong or out of date prices or wrong gas station locations, and that price comparison functionalities have always remained relatively poor: e.g. one cannot view prices for a given highway, nor the rivals of a given gas station on a map. As a consequence, the creation of this website may have actually been detrimental to consumer information, as it diverted drivers from other comparison websites such as Zagaz at a time when they crucially needed to grow their user base.
 
 \subsection{Descriptive statistics}
 
-Prices and brand changes were collected from prix-carburants.gouv.fr on a daily basis between September 4, 2011 and December 4, 2014, hence a period of about 3 years, interrupted by some gaps related to data acquisition issues (Figure~\ref{fig:brent_and_diesel}) . Over this period, prices of 10,180 gas stations (after duplicate reconciliations) were recorded, of which 437 were located on highways, 124 on the island of Corsica, and 402 were found to have insufficient or suspicious price data. The analysis was thus performed with a total number of 9,217 gas stations. Due to the fact that price observations are not always available (gas station maintenance, probable mistakes, stations which are not required by law to keep prices posted), there is actually an average of 7,895 prices observed on a daily basis. On average, c. 1,500 gas stations (c. 18\% of gas stations observed and retained) change prices within a day. The average gas station changes price a little less than every week.
+Prices and brand changes were collected from prix-carburants.gouv.fr on a daily basis between September 4, 2011 and December 4, 2014, hence a period of about 3 years, interrupted by some gaps related to data acquisition issues (Figure~\ref{fig:brent_and_diesel}). Over this period, prices of 10,180 gas stations (after duplicate reconciliations) were recorded, of which 437 were located on highways, 124 on the island of Corsica, and 402 were found to have insufficient or suspicious price data. The analysis was thus performed with a total number of 9,217 gas stations. Due to the fact that price observations are not always available (gas station maintenance, probable mistakes, stations which are not required by law to keep prices posted), there is actually an average of 7,895 prices observed on a daily basis. On average, c. 1,500 gas stations (c. 18\% of gas stations observed and retained) change prices within a day. The average gas station changes price a little less than every week.
 
 \begin{figure}[H]
     \caption{Daily Brent and French diesel retail prices}
@@ -128,17 +116,135 @@ Prices and brand changes were collected from prix-carburants.gouv.fr on a daily 
 \label{fig:brent_and_diesel}
 \end{figure}
 
-Table~\ref{tab:station_chains} provides an overview of retailer chains and prices on the last day of the period studied. Except for two discount chains operated by oil companies, supermarket gas stations are found to set prices significantly lower than these of oil company and independent gas stations. Within supermarket groups, chain appear to provide a somewhat more detailed signal. For instance, the average gas station operated by a Carrefour (hypermarket) has a diesel price of 1.15 euros per liter vs. 1.18 for a Carrefour market (large supermarket) and 1.20 for a Carrefour contact (small supermarkets, often located in city centers). The average difference with a Total gas station thus varies from 12 to 7 euro cents per liter depending on the chain within the Carrefour group. These observations are essentially robust to the considered day. A noteworthy change is the creation by Total S.A. of a new chain, Total Access, with a view to expand its discount offer. As a consequence, the previous discount chain of Total S.A., Elf, disappears over the period and is replaced by Total Access. The new discount chain also includes c. 300 former Total stations for a which the conversion operation is accompanied by a significant change in pricing policy. The impact of this operation is studied in a companion paper, \cite{CHA16}.
+Table~\ref{tab:station_chains} provides an overview of retailer chains and prices on the last day of the period studied. Except for two discount chains operated by oil companies, supermarket gas stations are found to set prices significantly lower than these of oil company and independent gas stations. Among supermarket gas stations, chain affiliation typically conveys additional information regarding price levels. For instance, the average gas station operated by a Carrefour store (hypermarket), has a diesel price of 1.15 euros per liter vs. 1.18 for a "Carrefour market" (large supermarket) and 1.20 for a Carrefour contact (small supermarkets, often located in city centers). The average difference with a Total gas station thus varies depending on exact chain affiliation within the Carrefour group. A noteworthy change in gas station affiliations over the period is the creation by Total S.A. of a new chain, Total Access, with a view to expand its discount offer. As a consequence, the previous discount chain of Total S.A., Elf, disappears and is replaced by Total Access. The new discount chain also includes c. 300 former Total stations for which the rebranding is accompanied by a significant change in pricing policy. The impact of this operation is studied in a companion paper, \cite{CHA16}, which also contains regressions investigating to which extent gas station mark ups are explained by the socio-demographic characteristics and competitiveness of their market, as well as by gas station characteristics, such as the presence of a shop or the opening hours. Results are consistent with \cite{HOS08} which find that chain affiliation is a very strong price predictor, while competition variables tend to return insignificant estimates. All these observations have been verified to be robust to the considered day or period.
 
-Table~\ref{tab:station_stats_des} contains some information about the heterogeneity observed between gas stations. Supermarket gas stations change prices on a more frequent basis than others, even though the value of changes does not appear to differ significantly. Their closest rival is generally further (2.6 vs. 1.8 km), and the number of nearby competitors higher (2.5 vs. 4.1 competitors). The location of gas stations also accounts for significant heterogeneity. Gas stations within and around Paris tend to change prices for frequently, with smaller variations, and are closer to their closest rival than average.
+\begin{table}[H]
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.8} % too large by default...
+\caption{Overview of retailer chains (last day of the period)}
+\label{tab:station_chains}
+    \begin{tabular}{llrrrrr}
+    \hline
+		\hline
+          &       & \multicolumn{5}{c}{Prices (euro cents) on 2014/12/04} \\
+    Type  & Chain & Count & Mean  & Std   & Q75/Q25 & Q90/Q10 \\
+		\hline
+    \textbf{Supermarkets} &       & \textbf{4,967} &       &       &       &  \\
+    Large & Carrefour & 201   & 1.15  & 0.03  & 1.02  & 1.05 \\
+    Large & Auchan & 118   & 1.16  & 0.03  & 1.02  & 1.05 \\
+    Large & Cora  & 111   & 1.18  & 0.04  & 1.04  & 1.08 \\
+    Large & Geant Casino & 97    & 1.16  & 0.02  & 1.03  & 1.04 \\
+    Large and medium & Intermarche & 1,391 & 1.17  & 0.03  & 1.03  & 1.06 \\
+    Large and medium & Systeme U & 771   & 1.16  & 0.03  & 1.03  & 1.06 \\
+    Large and medium & Leclerc & 585   & 1.15  & 0.02  & 1.03  & 1.06 \\
+    Small & Carrefour market & 717   & 1.18  & 0.03  & 1.03  & 1.05 \\
+    Small & Carrefour contact & 233   & 1.20  & 0.03  & 1.03  & 1.05 \\
+    Small & Simply (Auchan) & 222   & 1.20  & 0.03  & 1.04  & 1.07 \\
+    Small & Casino & 200   & 1.21  & 0.03  & 1.03  & 1.06 \\
+    Small & Intermarche contact & 112   & 1.20  & 0.03  & 1.04  & 1.07 \\
+    Other supermarkets &       & 209   &       &       &       &  \\
+		\hline
+    \textbf{Oil and independent} &       & \textbf{3,770} &       &       &       &  \\
+    Oil   & Total & 1,283 & 1.27  & 0.03  & 1.03  & 1.07 \\
+    Oil   & Elan (Total) & 233   & 1.32  & 0.04  & 1.05  & 1.08 \\
+    Oil   & Agip  & 116   & 1.25  & 0.03  & 1.02  & 1.06 \\
+    Oil (Independent) & BP    & 275   & 1.26  & 0.04  & 1.03  & 1.07 \\
+    Oil (Independent) & Esso  & 147   & 1.27  & 0.05  & 1.05  & 1.11 \\
+    Independent & Avia  & 376   & 1.27  & 0.05  & 1.03  & 1.07 \\
+    Independent & Dyneff & 55    & 1.26  & 0.04  & 1.05  & 1.07 \\
+    Oil - discount & Total access & 616   & 1.16  & 0.03  & 1.02  & 1.04 \\
+    Oil (Independent) - discount & Esso express & 318   & 1.16  & 0.02  & 1.02  & 1.04 \\
+    Other independent &       & 351   &       &       &       &  \\
+		\hline
+    \textbf{Total} &       & \textbf{8,737} &       &       &       &  \\
+    \hline
+		\hline
+\end{tabular}
+\begin{tablenotes}
+			\small
+			\item Sub-classification of type for supermarkets is meant to reflect what consumers can infer from chain name (as provided on the price comparison website).
+      \item Gas stations are considered independent when they are neither operated by a supermarket nor part of a chain operated by an oil company. BP and Esso (including Esso Express) gas stations  have an intermediary status: they have been sold to third-party companies with a supply agreement and the right to exploit the brand name.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
 
-Regardless of the specifications used to account for gas station and local market characteristics, chains (or types reported in Table~\ref{tab:station_chains}) retain a major predictive power on price. Indeed, despite differences reported between supermarket gas stations and others in Table~\ref{tab:station_stats_des}, more than half non supermarket gas stations are located within 1.4 km from a gas station operated by a supermarket, hence local market characteristics are not systematically different.
+Table~\ref{tab:station_stats_des} provides an overview of gas station characteristics and pricing behaviors depending on whether they belong to a supermarket chain or not, and on whether they are located in Paris region, namely Ile de France, or not. Supermarket gas stations change prices on a more frequent basis than others, even though the value of implemented price changes does not appear to differ significantly. Their closest rival is generally further (2.6 vs. 1.8 km), and the number of nearby competitors is higher (2.5 vs. 4.1 competitors). The location of gas stations also accounts for some heterogeneity in market characteristics and price setting behaviors. Gas stations within and around Paris tend to change prices for frequently, with smaller variations, and are closer to their closest rival than average.
 
-\section{Price dispersion and consumer information}
+\begin{table}[H]
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.8} % too large by default...
+\caption{Station-level summary statistics}
+\label{tab:station_stats_des}
+\begin{tabular}{lr|rr|rr}
+    \hline
+    \hline
+		{}          & All   & Super-   & Others & Paris  & Others \\
+    {}          &       & markets  &        & region & \\
+    \hline
+    Nb stations &       &       &       &       &  \\
+    All periods & 9,217 & 5,055  & 4,162  & 918   & 8,299 \\
+    Nb daily observations (avg) & 7,896  & 4,400  & 3,496  & 776   & 7,119 \\
+		\hline
+    Competition &       &       &       &       &  \\
+    Distance (km) to closest rival & 2.3  & 2.6  & 1.8  & 1.2  & 2.4 \\
+    Nb of rivals within 3 km       & 3.2  & 2.5  & 4.1  & 6.9  & 2.8 \\
+    Nb of rivals within 5 km       & 6.6  & 4.9  & 8.6  & 17.8 & 5.3 \\
+    \hline
+    Price and Markup (euro per liter) &       &       &       &       &  \\
+    Price after tax            & 1.37  & 1.33  & 1.4   & 1.38  & 1.36 \\
+    Price excl. Tax            & 0.71  & 0.68  & 0.74  & 0.72  & 0.70 \\
+    Markup over wholesale cost & 0.10  & 0.08  & 0.13  & 0.11  & 0.10 \\
+    \hline
+    Retail price variations (euro cents per liter) &       &       &       &       &  \\
+    Daily price change probability & 0.17  & 0.18  & 0.15  & 0.21  & 0.16 \\
+    Average price increase         & 1.30   & 1.29  & 1.31  & 1.05  & 1.33 \\
+    Average price decrease         & 1.47   & 1.48  & 1.46  & 1.18  & 1.50 \\
+    \hline
+    \hline
+\end{tabular}
+\begin{tablenotes}
+			\small
+      \item Price statistics are obtained by i) computing the average for each station over time ii) taking the average over stations. Costs of transportation and distribution are to be subtracted from the markup, leading to a net margin generally estimated at c. 1 euro cent per liter.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
 
-A database is built in which observations are pairs of stations assumed to compete within the same market. In the following analysis, distance as the crow flies is used with an upper distance limit of 3km (figures are provided for a limit of 5km in appendix). This results in a database describing price competition between 12,264 pairs of rival gas stations (respectively 25,007 pairs with 5km).
+Despite the heterogeneity reported between supermarket gas stations and others in Table~\ref{tab:station_stats_des}, more than half non supermarket gas stations are located within 1.4 km from a gas station operated by a supermarket, hence local market characteristics do not always differ significantly between gas stations
 
-The treatment of persistent differences in average prices is a sensitive issue in the empirical analysis of dispersion. It has been frequently addressed in the literature by working with price residuals i.e. after controlling for seller (and occasionally time) fixed effects. However, beyond the practical errors inherent to the statistical treatment, this approach is only valid to the extent that static price dispersion mirrors heterogeneity in offered utility, common to all consumers. In the case of French gasoline retailers, the relatively low predictive power of observed seller characteristics regarding prices does not offer strong support for this hypothesis. As a consequence, the analysis focuses on pairs of gas stations which are found to operate at similar price levels over the studied period. This leads to distinguish pairs of supermarket competitors, on the one hand, and pairs of oil company and independent gas stations on the other hand.
+\begin{figure}[H]
+\centering
+\caption{Histograms of station price changes}
+\begin{subfigure}{.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{graphs/hist_station_price_chge_proba.png}
+\caption[short]{Station daily price change probabilities}
+\label{fig:hist_station_price_chge_proba}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{graphs/hist_station_mean_price_chge.png}
+\caption[short]{Station average price variations}
+\label{fig:hist_station_mean_price_chge}
+\end{subfigure}
+\end{figure}
+
+
+\section{Price dispersion from a competitor pair prospect}
+
+In order to test the relevance of the link between price dispersion and consumer search, \cite{TAP11} examine pairs of competing gas stations, arguing that distance between sellers is a good proxy for consumer information. Indeed, when gas stations are located very close to each other, a higher share of consumers is likely to perfectly observe prices than when gas stations are separated by a higher distance. If the share of uninformed consumers is negligible, sellers can be expected to compete a la Betrand (or Hotelling) and prices should essentially match cost fluctuations. On the other hand, if information is imperfect, dynamic dispersion can be expected to arise following the intuition exposed in \cite{VAR80}.
+
+\cite{TAP11} measure temporal price dispersion between two stations as the probability that the gas station which is in general cheaper (in terms of day count) turns out to be more expensive. Formally, considering the prices $p_{it}$ and $p_{jt}$ of two stations $i$ and $j$ over $T_{ij}$ days, such that $p_{it} \ge p_{jt}$ is observed most of the time, the rank reversals statistic writes:
+\begin{align*}
+r_{ij} = \frac{1}{T_{ij}} \sum_{t=1}^{T_{ij}} \mathbbm{1}_{p_{jt} > p_{it}}
+\end{align*}
+Alternatively, in order to check the robustness of results to the influence of persistent price differences between gas stations, they use standard deviation of price differences to account for pair prices dispersion:
+\begin{align*}
+\sigma_{ij} = \sqrt{\frac{1}{T_{ij}} \sum_{t=1}^{T_{ij}} [s_{ijt} - \bar{s}_{ij}]^2}
+\end{align*}
+
+Rank reversals and standard deviation are computed for all pairs of competing gas stations in France with an upper distance limit (as the crow flies) of 3 km (figures are provided for a limit of 5km in appendix). This yields a database describing price competition between 12,264 pairs of rival gas stations (respectively 25,007 pairs with 5km).
+
+The treatment of persistent differences in average prices is a sensitive issue in the empirical analysis of dispersion. It has been frequently addressed in the literature by working with price residuals i.e. after controlling for seller (and occasionally time) fixed effects. However, beyond the practical errors inherent to the statistical treatment, this approach is only valid to the extent that static price dispersion mirrors heterogeneity in offered utility, common to all consumers. In the case of French gasoline retailers, the relatively low predictive power of observed seller characteristics does not offer strong support for this hypothesis. As a consequence, the analysis focuses on pairs of gas stations which are found to operate at similar price levels over the studied period. Practically, this implies that virtually all pair observations can be classified either as low price (supermarket and oil company discount gas stations) or high price (other oil company gas stations and independent).
 
 \begin{figure}[H]
 \centering
@@ -157,6 +263,14 @@ The treatment of persistent differences in average prices is a sensitive issue i
 \end{figure}
 
 Figure~\ref{fig:pct_reversed_pairs} displays the percentage of pairs of gas stations whose price rank is reversed on each day of the period studied. Among pairs of gas stations built with a maximum distance of 3km, the percentage of reversed pairs fluctuates between 5.4\% and 15.3\%  (mean 8.1\%). The "No differentiation" series results from a focus on pairs which exhibit an average price difference below 2c/l. Among these pairs, the minimum percentage of reversed pairs fluctuates between 13.8\% and 29.3\% (mean 19.5\%). From a consumer viewpoint, this translates in one chance in five to pay the highest price upon patronizing among two competitors of similar price level the one which is cheaper most of the time.
+
+A clear ranking of empirical distribution functions of rank reversals can be observed among pairs of gas stations depending on distances (Figure~\ref{tab:ecdf_rr_distance}). This is consistent with the idea that nearby gas stations compete in a (virtually) complete information setting, in which there is no reason to expect rank reversals. Conversely, distance can create an information issue for other pairs, preventing the existence of an equilibrium in pure strategy. A formal test, proposed by \cite{TAP11}, consists in regressing measures of price dispersion on a dummy variable which identifies competitor pairs for which a low separating distance implies low search costs. Denoting $r_{ij}$ the rank reversals between gas stations $i$ and $j$, $\mathbbm{1}{\text{Corner}_{ij}}$ an indicator for whether the stations are at the same corner, and $X_{ij}$ other control variables, the regression writes:
+
+\begin{equation}
+\text{P}_{it}= \beta_0 + \beta_1 \mathbbm{1}{\text{Corner}_{ij}} + X_{ij} + \epsilon_{ij}
+\end{equation}
+
+Results (Table~\ref{tab:regs_pairs}) support the hypothesis that limited consumer information is linked to price dispersion. Among supermarkets, competitors are often found to set the very same price, which, given the relatively low prices and absence of evidence of collusion, suggests fierce price competition. Daily price records allow to uncover a number of situations in which one gas station appears to act as a leader.
 
 \begin{table}[H]
 \renewcommand{\arraystretch}{0.8} % too large by default...
@@ -185,14 +299,6 @@ Oil \& Ind        & $r_{ij}$   & -0.033^{*}  & -0.057^{**} & -0.039^{*}  & -0.02
 \end{tabular}%
 \label{tab:regs_pairs}
 \end{table}
-
-A clear ranking of empirical distribution functions of rank reversals can be observed among pairs of gas stations depending on distances (Figure~\ref{tab:ecdf_rr_distance}). This is consistent with the idea that nearby gas stations compete in a (virtually) complete information setting, in which there is no reason to expect rank reversals. Conversely, distance can create an information issue for other pairs, preventing the existence of an equilibrium in pure strategy. A formal test, proposed by \cite{TAP11}, consists in regressing measures of price dispersion on a dummy variable which identifies competitor pairs for which a low separating distance implies low search costs. Denoting $r_{ij}$ the rank reversals between gas stations $i$ and $j$, $\mathbbm{1}{\text{Corner}_{ij}}$ an indicator for whether the stations are at the same corner, and $X_{ij}$ other control variables, the regression writes:
-
-\begin{equation}
-\text{P}_{it}= \beta_0 + \beta_1 \mathbbm{1}{\text{Corner}_{ij}} + X_{ij} + \epsilon_{ij}
-\end{equation}
-
-Results (Table~\ref{tab:regs_pairs}) support the hypothesis that limited consumer information is linked to price dispersion. Among supermarkets, competitors are often found to set the very same price, which, given the relatively low prices and absence of evidence of collusion, suggests fierce price competition. Daily price records allow to uncover a number of situations in which one gas station appears to act as a leader.
 
 \section{Market price dispersion}
 
@@ -274,7 +380,6 @@ N     & \multicolumn{1}{c}{8,647} & \multicolumn{1}{c}{8,647} & \multicolumn{1}{
 
 Regression results in Table~\ref{tab:station_price_support_regs} confirm the fact that dispersion is positively associated with the number of competitors for high price gas stations. It is yet not true regarding low price gas stations.
 
-
 \section{Conclusion}
 
 This paper expands the methodology of \cite{TAP11} to measure and analyse price dispersion in the French retail gasoline market, taking into account the presence of significant differentiation and potential segmentation. Rank reversals are generally found to be less frequent for pairs gas stations separated by a short distance i.e. competitors whose prices are easy to compare for consumers. This result supports the hypothesis of a connection between consumer information and price dispersion. Pairs of competitors which operate at low prices exhibit less rank reversals than those which sell at higher prices, and many are actually observed to set the very same price on a regular basis. Conversely, among high price gas stations, all pairs tend to be characterized by significant static and/or dynamic price dispersion.
@@ -291,113 +396,9 @@ At the market level, price dispersion is found to increase with the number of co
 
 \section{Descriptive statistics}
 
-\begin{table}[H]
-\begin{threeparttable}
-\renewcommand{\arraystretch}{0.8} % too large by default...
-\caption{Overview of retailer chains (last day of the period)}
-\label{tab:station_chains}
-    \begin{tabular}{llrrrrr}
-    \hline
-		\hline
-          &       & \multicolumn{5}{c}{Prices (euro cents) on 2014/12/04} \\
-    Type  & Chain & Count & Mean  & Std   & Q75/Q25 & Q90/Q10 \\
-		\hline
-    \textbf{Supermarkets} &       & \textbf{4,967} &       &       &       &  \\
-    Large & Carrefour & 201   & 1.15  & 0.03  & 1.02  & 1.05 \\
-    Large & Auchan & 118   & 1.16  & 0.03  & 1.02  & 1.05 \\
-    Large & Cora  & 111   & 1.18  & 0.04  & 1.04  & 1.08 \\
-    Large & Geant Casino & 97    & 1.16  & 0.02  & 1.03  & 1.04 \\
-    Large and medium & Intermarche & 1,391 & 1.17  & 0.03  & 1.03  & 1.06 \\
-    Large and medium & Systeme U & 771   & 1.16  & 0.03  & 1.03  & 1.06 \\
-    Large and medium & Leclerc & 585   & 1.15  & 0.02  & 1.03  & 1.06 \\
-    Small & Carrefour market & 717   & 1.18  & 0.03  & 1.03  & 1.05 \\
-    Small & Carrefour contact & 233   & 1.20  & 0.03  & 1.03  & 1.05 \\
-    Small & Simply (Auchan) & 222   & 1.20  & 0.03  & 1.04  & 1.07 \\
-    Small & Casino & 200   & 1.21  & 0.03  & 1.03  & 1.06 \\
-    Small & Intermarche contact & 112   & 1.20  & 0.03  & 1.04  & 1.07 \\
-    Other supermarkets &       & 209   &       &       &       &  \\
-		\hline
-    \textbf{Oil and independent} &       & \textbf{3,770} &       &       &       &  \\
-    Oil   & Total & 1,283 & 1.27  & 0.03  & 1.03  & 1.07 \\
-    Oil   & Elan (Total) & 233   & 1.32  & 0.04  & 1.05  & 1.08 \\
-    Oil   & Agip  & 116   & 1.25  & 0.03  & 1.02  & 1.06 \\
-    Oil (Independent) & BP    & 275   & 1.26  & 0.04  & 1.03  & 1.07 \\
-    Oil (Independent) & Esso  & 147   & 1.27  & 0.05  & 1.05  & 1.11 \\
-    Independent & Avia  & 376   & 1.27  & 0.05  & 1.03  & 1.07 \\
-    Independent & Dyneff & 55    & 1.26  & 0.04  & 1.05  & 1.07 \\
-    Oil - discount & Total access & 616   & 1.16  & 0.03  & 1.02  & 1.04 \\
-    Oil (Independent) - discount & Esso express & 318   & 1.16  & 0.02  & 1.02  & 1.04 \\
-    Other independent &       & 351   &       &       &       &  \\
-		\hline
-    \textbf{Total} &       & \textbf{8,737} &       &       &       &  \\
-    \hline
-		\hline
-\end{tabular}
-\begin{tablenotes}
-			\small
-			\item Sub-classification of type for supermarkets is meant to reflect what consumers can infer from chain name (as provided on the price comparison website).
-      \item Gas stations are considered independent when they are neither operated by a supermarket nor part of a chain operated by an oil company. BP and Esso (including Esso Express) gas stations  have an intermediary status: they have been sold to third-party companies with a supply agreement and the right to exploit the brand name.
-\end{tablenotes}
-\end{threeparttable}
-\end{table}
+
 
 \newpage
-
-\begin{table}[H]
-\begin{threeparttable}
-\renewcommand{\arraystretch}{0.8} % too large by default...
-\caption{Station-level summary statistics}
-\label{tab:station_stats_des}
-\begin{tabular}{lr|rr|rr}
-    \hline
-    \hline
-		{}          & All   & Super-   & Others & Paris  & Others \\
-    {}          &       & markets  &        & region & \\
-    \hline
-    Nb stations &       &       &       &       &  \\
-    All periods & 9,217 & 5,055  & 4,162  & 918   & 8,299 \\
-    Nb daily observations (avg) & 7,896  & 4,400  & 3,496  & 776   & 7,119 \\
-		\hline
-    Competition &       &       &       &       &  \\
-    Distance (km) to closest rival & 2.3  & 2.6  & 1.8  & 1.2  & 2.4 \\
-    Nb of rivals within 3 km       & 3.2  & 2.5  & 4.1  & 6.9  & 2.8 \\
-    Nb of rivals within 5 km       & 6.6  & 4.9  & 8.6  & 17.8 & 5.3 \\
-    \hline
-    Price and Markup (euro per liter) &       &       &       &       &  \\
-    Price after tax            & 1.37  & 1.33  & 1.4   & 1.38  & 1.36 \\
-    Price excl. Tax            & 0.71  & 0.68  & 0.74  & 0.72  & 0.70 \\
-    Markup over wholesale cost & 0.10  & 0.08  & 0.13  & 0.11  & 0.10 \\
-    \hline
-    Retail price variations (euro cents per liter) &       &       &       &       &  \\
-    Daily price change probability & 0.17  & 0.18  & 0.15  & 0.21  & 0.16 \\
-    Average price increase         & 1.30   & 1.29  & 1.31  & 1.05  & 1.33 \\
-    Average price decrease         & 1.47   & 1.48  & 1.46  & 1.18  & 1.50 \\
-    \hline
-    \hline
-\end{tabular}
-\begin{tablenotes}
-			\small
-      \item Price statistics are obtained by i) computing the average for each station over time ii) taking the average over stations. Costs of transportation and distribution are to be subtracted from the markup, leading to a net margin generally estimated at c. 1 euro cent per liter.
-\end{tablenotes}
-\end{threeparttable}
-\end{table}
-
-\begin{figure}[H]
-\centering
-\caption{Histograms of station price changes}
-\begin{subfigure}{.49\textwidth}
-\centering
-\includegraphics[width=\textwidth]{graphs/hist_station_price_chge_proba.png}
-\caption[short]{Station daily price change probabilities}
-\label{fig:hist_station_price_chge_proba}
-\end{subfigure}
-\begin{subfigure}{.49\textwidth}
-\centering
-\includegraphics[width=\textwidth]{graphs/hist_station_mean_price_chge.png}
-\caption[short]{Station average price variations}
-\label{fig:hist_station_mean_price_chge}
-\end{subfigure}
-\end{figure}
 
 \section{Rank reversals}
 

@@ -150,7 +150,7 @@ else:
                   [None])
 
 # Query Google Direction for dist and duration
-for i, res in enumerate(ls_res[0:17000]):
+for i, res in enumerate(ls_res[0:20000]):
   if (not res[6]) or (res[6]['status'] == 'OVER_QUERY_LIMIT'):
     try:
       origin = ' '.join([str(x) for x in res[2:4]])

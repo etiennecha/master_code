@@ -240,3 +240,14 @@ res_chains_c_alt = smf.ols('price_at ~ brand' +\
                             data = df_sub[(df_sub['idf'] == 0) &\
                                           (df_sub['paca'] == 0)]).fit()
 print(res_chains_c_alt.summary())
+
+## WELSH T TEST OF EQUALITY OF MEAN
+#from scipy import stats
+#print(stats.ttest_ind(df_info[(df_info['brand'] == 'CARREFOUR_CONTACT') &\
+#                              (~df_info['price_at'].isnull())]['price_at'].values,
+#                      df_info[(df_info['brand'] == 'CARREFOUR_MARKET')  &\
+#                              (~df_info['price_at'].isnull())]['price_at'].values,
+#                      equal_var = False))
+
+## strongly rejects CARREFOUR == CARREFOUR MARKET or C CONTACT == C MARKET
+## does not reject ESSO EXPRESS == TOTAL ACCESS
