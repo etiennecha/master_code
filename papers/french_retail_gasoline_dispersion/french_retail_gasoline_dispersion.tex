@@ -244,7 +244,54 @@ Alternatively, in order to check the robustness of results to the influence of p
 
 Rank reversals and standard deviation are computed for all pairs of competing gas stations in France with an upper distance limit (as the crow flies) of 3 km (figures are provided for a limit of 5km in appendix). This yields a database describing price competition between 12,264 pairs of rival gas stations (respectively 25,007 pairs with 5km).
 
+\begin{table}[H]
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.8} % too large by default...
+\caption{Pair rank reversals}
+\label{tab:stats_pair_rank_reversals}
+\begin{tabular}{lrrrrr}
+\hline
+\hline
+      & Nb.   & \multicolumn{2}{c}{Price spread} & \% Rank   & \% Same\\
+\cmidrule(l{2pt}r{2pt}){3-4}
+      & pairs & Abs. avg.  & Std. dev.           & reversals & price \\
+\hline
+\textbf{$d_{ij} \le  3 km$} &       &       &       &       &  \\
+\hline
+\multicolumn{2}{l}{\textbf{No price spread restriction}}  &       &       &       &  \\
+All types & 12,298 & 5.1   & 1.6   & 8.3   & 7.7 \\
+Supermarket pairs & 2,331 & 1.0   & 1.3   & 13.7  & 26.6 \\
+Oil/independent pairs & 1,126 & 2.7   & 1.9   & 14.9  & 2.9 \\
+Discounter pairs & 200   & 0.4   & 1.1   & 28.3  & 13.0 \\
+Discounter vs. supermarket pairs & 1,484 & 0.9   & 1.3   & 18.9  & 12.5 \\
+\hline
+\multicolumn{2}{l}{\textbf{Price spread $\le$ 1 cent per liter}}   &       &       &       &  \\
+All types & 3,429 & 0.4   & 1.2   & 22.4  & 24.5 \\
+Supermarket pairs & 1,524 & 0.4   & 1.1   & 16.9  & 37.9 \\
+Oil and independent pairs & 286   & 0.5   & 1.8   & 35.3  & 5.8 \\
+Discounter pairs & 176   & 0.3   & 1.0   & 30.0  & 13.9 \\
+Discounter vs. supermarket pairs & 1,034 & 0.5   & 1.2   & 22.9  & 16.0 \\
+\hline
+\hline
+\end{tabular}
+\begin{tablenotes}
+			\small
+      \item Except for the first column, all figures are averages of statistics computed at the pair level. As regards the price spread, the absolute value of the average (Abs. avg.) accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), and the standard deviation (Std. dev.) measures dispersion around the long term price difference (0 if both gas stations always set the same price).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
 The treatment of persistent differences in average prices is a sensitive issue in the empirical analysis of dispersion. It has been frequently addressed in the literature by working with price residuals i.e. after controlling for seller (and occasionally time) fixed effects. However, beyond the practical errors inherent to the statistical treatment, this approach is only valid to the extent that static price dispersion mirrors heterogeneity in offered utility, common to all consumers. In the case of French gasoline retailers, the relatively low predictive power of observed seller characteristics does not offer strong support for this hypothesis. As a consequence, the analysis focuses on pairs of gas stations which are found to operate at similar price levels over the studied period. Practically, this implies that virtually all pair observations can be classified either as low price (supermarket and oil company discount gas stations) or high price (other oil company gas stations and independent).
+
+\begin{figure}[H]
+    \caption{Percentage of rank reversals among pairs}
+    \label{fig:pct_reversed_pairs}
+	\centering
+		\includegraphics[width=\textwidth]{graphs/macro_rank_reversals_le_1c.png}
+    \floatfoot{Series represent for each day the percentage of pairs observed where the usual price order is not respected (reversed rank). No differentiation implies that pairs exhibit an average price difference below 1c/l.}
+\end{figure}
+
+Figure~\ref{fig:pct_reversed_pairs} displays the percentage of pairs of gas stations whose price rank is reversed on each day of the period studied. Among pairs of gas stations built with a maximum distance of 3km, the percentage of reversed pairs fluctuates between 5.4\% and 15.3\%  (mean 8.1\%). The "No differentiation" series results from a focus on pairs which exhibit an average price difference below 2c/l. Among these pairs, the minimum percentage of reversed pairs fluctuates between 13.8\% and 29.3\% (mean 19.5\%). From a consumer viewpoint, this translates in one chance in five to pay the highest price upon patronizing among two competitors of similar price level the one which is cheaper most of the time.
 
 \begin{figure}[H]
 \centering
@@ -261,8 +308,6 @@ The treatment of persistent differences in average prices is a sensitive issue i
 \caption[short]{Pair average price spread $\le$ 1 cent/litre}
 \end{subfigure}
 \end{figure}
-
-Figure~\ref{fig:pct_reversed_pairs} displays the percentage of pairs of gas stations whose price rank is reversed on each day of the period studied. Among pairs of gas stations built with a maximum distance of 3km, the percentage of reversed pairs fluctuates between 5.4\% and 15.3\%  (mean 8.1\%). The "No differentiation" series results from a focus on pairs which exhibit an average price difference below 2c/l. Among these pairs, the minimum percentage of reversed pairs fluctuates between 13.8\% and 29.3\% (mean 19.5\%). From a consumer viewpoint, this translates in one chance in five to pay the highest price upon patronizing among two competitors of similar price level the one which is cheaper most of the time.
 
 A clear ranking of empirical distribution functions of rank reversals can be observed among pairs of gas stations depending on distances (Figure~\ref{tab:ecdf_rr_distance}). This is consistent with the idea that nearby gas stations compete in a (virtually) complete information setting, in which there is no reason to expect rank reversals. Conversely, distance can create an information issue for other pairs, preventing the existence of an equilibrium in pure strategy. A formal test, proposed by \cite{TAP11}, consists in regressing measures of price dispersion on a dummy variable which identifies competitor pairs for which a low separating distance implies low search costs. Denoting $r_{ij}$ the rank reversals between gas stations $i$ and $j$, $\mathbbm{1}{\text{Corner}_{ij}}$ an indicator for whether the stations are at the same corner, and $X_{ij}$ other control variables, the regression writes:
 
@@ -312,6 +357,35 @@ Two treatments of differentiation are contemplated. In a first approach, all gas
 
 Table~\ref{tab:stats_des_markets} reports descriptive statistics of price dispersion at the market level. All measures of price dispersion can be seen to drop significantly when residual prices are used and under the market segmentation scenario. For instance, under the simple 3 km radius market definition, gains from search, are estimated to be 1.25 euro cents per liter with residual prices while they were 3.93 euro cents per liter with raw prices. Under segmentation, dispersion is higher within "high price" gas station markets (2.90 vs. 0.97 euro cents per liter gains from search with raw prices). The variations observed between dispersion measures computed with raw and residual prices confirm than "high price" gas stations tend to be more differentiated than "low price" gas stations.
 
+\begin{table}[H]
+  \caption{Market-level summary statistics}
+\begin{tabular}{lrrrrrrrr}
+\hline
+\hline
+      & \multicolumn{2}{c}{3km}    & \multicolumn{2}{c}{3km}       & \multicolumn{2}{c}{3km}        & \multicolumn{2}{c}{Non-} \\
+      & \multicolumn{2}{c}{all}    & \multicolumn{2}{c}{low price} & \multicolumn{2}{c}{high price} & \multicolumn{2}{c}{overlapping} \\
+\hline
+Nb sellers & 5.99  & (3.36) & 3.81  & (1.13) & 5.66  & (3.41) & 4.36  & (2.06) \\
+Nb sellers observed & 5.74  & (3.22) & 3.70  & (1.13) & 5.32  & (3.20) & 4.18  & (2.04) \\
+\hline
+\multicolumn{3}{l}{Raw prices (euro cents per liter)}          &       &       &       &       &       &  \\
+Range & 9.70  & (4.54) & 2.24  & (1.97) & 6.04  & (3.82) & 8.61  & (4.61) \\
+Standard deviation & 3.80  & (1.71) & 0.92  & (0.80) & 2.21  & (1.23) & 3.65  & (1.96) \\
+Gain from search & 3.93  & (2.27) & 0.97  & (0.88) & 2.90  & (1.74) & 3.39  & (2.07) \\
+\hline
+\multicolumn{3}{l}{Residual prices (euro cents per liter)}      &       &       &       &       &       &  \\
+Range & 2.50  & (1.75) & 1.60  & (1.37) & 2.91  & (1.86) & 2.01  & (1.55) \\
+Standard deviation & 0.88  & (0.57) & 0.64  & (0.55) & 1.01  & (0.61) & 0.79  & (0.59) \\
+Gain from search & 1.25  & (0.95) & 0.80  & (0.72) & 1.39  & (1.01) & 1.01  & (0.84) \\
+\hline
+Nb markets & \multicolumn{2}{c}{5,501} & \multicolumn{2}{c}{1,604} & \multicolumn{2}{c}{883} & \multicolumn{2}{c}{604} \\
+Nb obs     & \multicolumn{2}{c}{5,852,850} & \multicolumn{2}{c}{1,709,055} & \multicolumn{2}{c}{918,581} & \multicolumn{2}{c}{641,314} \\
+\hline
+\hline
+\end{tabular}
+\label{tab:stats_des_markets}
+\end{table}
+
 The results of regressions of measured price dispersion on the number of firms and cost are reported in Table~\ref{tab:regs_markets}. Formally, with $PriceDispersion_{tj}$ a mesure of price dispersion on market $j$ at date $t$, $MC_t$ a measure of the marginal cost (wholesale diesel) on date $t$, $N_j$ the number of gas stations on market $j$, and $\mathbbm{1}{\text{HighPrice}_{j}}$ an indicator for whether the market is composed by high price gas stations (Oil and independent as opposed to Supermarkets and discounters), the regression writes:
 
 \begin{equation}
@@ -348,9 +422,31 @@ N           & \multicolumn{2}{c}{1,074,894} & \multicolumn{2}{c}{1,074,894} & \m
 \label{tab:regs_markets}
 \end{table}
 
-Given the richness of price data, price dispersion can also be measured at the gas station level, using each residual price distribution. Measures of price dispersion thereby obtained are reported in Table~\ref{tab:station_price_support_stats_des}. Price distributions of low price gas station tend exhibit smaller standard deviations but fatter tails than these of high price gas stations. They are often left-skewed which reflects the use of occasional promotions, often implemented at the chain level. Conversely, no systematic skew is observed for high price gas stations.
+Given the richness of price data, price dispersion can also be measured at the gas station level, using each residual price distribution. Measures of price dispersion thereby obtained are reported in Table~\ref{tab:station_price_support_stats_des}. 
 
-\begin{table}[!h]
+\begin{table}[H]
+  \caption{Gas station residual price distributions}
+	\label{tab:station_price_support_stats_des}
+\begin{tabular}{rrrrr}
+\hline
+\hline
+      & \multicolumn{2}{c}{Low price} & \multicolumn{2}{c}{High price} \\
+\hline
+Nb stations & \multicolumn{2}{c}{5,603} & \multicolumn{2}{c}{3,044} \\
+Std   & 1.10  & (0.33) & 1.26  & (0.47) \\
+Kurtosis & 2.51  & (3.92) & 0.80  & (2.30) \\
+Skewness & -0.38 & (0.91) & 0.13  & (0.66) \\
+Range & 7.52  & (2.16) & 7.12  & (2.25) \\
+Trimmed range 5\% & 4.27  & (1.36) & 4.83  & (1.80) \\
+Trimmed range 10\% & 3.42  & (1.11) & 4.02  & (1.54) \\
+\hline
+\hline
+\end{tabular}
+\end{table}
+
+Price distributions of low price gas station tend exhibit smaller standard deviations but fatter tails than these of high price gas stations. They are often left-skewed which reflects the use of occasional promotions, often implemented at the chain level. Conversely, no systematic skew is observed for high price gas stations.
+
+\begin{table}[H]
 %\renewcommand{\arraystretch}{0.8} % too large by default...
 \caption{Regressions of gas station price residual distributions}
 \label{tab:station_price_support_regs}
@@ -394,43 +490,19 @@ At the market level, price dispersion is found to increase with the number of co
 
 \appendix
 
-\section{Descriptive statistics}
-
-
-
 \newpage
-
-\section{Rank reversals}
 
 \begin{table}[H]
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.8} % too large by default...
-\caption{Pair rank reversals}
-\label{tab:stats_pair_rank_reversals}
+\caption{Pair rank reversals (5km upper limit)}
+\label{tab:stats_pair_rank_reversals_5km}
 \begin{tabular}{lrrrrr}
 \hline
 \hline
       & Nb.   & \multicolumn{2}{c}{Price spread} & \% Rank   & \% Same\\
 \cmidrule(l{2pt}r{2pt}){3-4}
       & pairs & Abs. avg.  & Std. dev.           & reversals & price \\
-\hline
-\textbf{$d_{ij} \le  3 km$} &       &       &       &       &  \\
-\hline
-\multicolumn{2}{l}{\textbf{No price spread restriction}}  &       &       &       &  \\
-All types & 12,298 & 5.1   & 1.6   & 8.3   & 7.7 \\
-Supermarket pairs & 2,331 & 1.0   & 1.3   & 13.7  & 26.6 \\
-Oil/independent pairs & 1,126 & 2.7   & 1.9   & 14.9  & 2.9 \\
-Discounter pairs & 200   & 0.4   & 1.1   & 28.3  & 13.0 \\
-Discounter vs. supermarket pairs & 1,484 & 0.9   & 1.3   & 18.9  & 12.5 \\
-\hline
-\multicolumn{2}{l}{\textbf{Price spread $\le$ 1 cent per liter}}   &       &       &       &  \\
-All types & 3,429 & 0.4   & 1.2   & 22.4  & 24.5 \\
-Supermarket pairs & 1,524 & 0.4   & 1.1   & 16.9  & 37.9 \\
-Oil and independent pairs & 286   & 0.5   & 1.8   & 35.3  & 5.8 \\
-Discounter pairs & 176   & 0.3   & 1.0   & 30.0  & 13.9 \\
-Discounter vs. supermarket pairs & 1,034 & 0.5   & 1.2   & 22.9  & 16.0 \\
-\hline
-\textbf{$d_{ij} \le  5 km$} &       &       &       &       &  \\
 \hline
 \multicolumn{2}{l}{\textbf{No price spread restriction}}   &       &       &       &  \\
 All types & 25,076 & 5.2   & 1.7   & 8.5   & 6.0 \\
@@ -453,67 +525,6 @@ Discounter vs. supermarket pairs & 2,003 & 0.5   & 1.2   & 25.0  & 13.6 \\
       \item Except for the first column, all figures are averages of statistics computed at the pair level. As regards the price spread, the absolute value of the average (Abs. avg.) accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), and the standard deviation (Std. dev.) measures dispersion around the long term price difference (0 if both gas stations always set the same price).
 \end{tablenotes}
 \end{threeparttable}
-\end{table}
-
-\begin{figure}[H]
-    \caption{Percentage of rank reversals among pairs}
-    \label{fig:pct_reversed_pairs}
-	\centering
-		\includegraphics[width=\textwidth]{graphs/macro_rank_reversals_le_1c.png}
-    \floatfoot{Series represent for each day the percentage of pairs observed where the usual price order is not respected (reversed rank). No differentiation implies that pairs exhibit an average price difference below 1c/l.}
-\end{figure}
-
-\section{Market price dispersion}
-
-\begin{table}[H]
-  \caption{Market-level summary statistics}
-\begin{tabular}{lrrrrrrrr}
-\hline
-\hline
-      & \multicolumn{2}{c}{3km}    & \multicolumn{2}{c}{3km}       & \multicolumn{2}{c}{3km}        & \multicolumn{2}{c}{Non-} \\
-      & \multicolumn{2}{c}{all}    & \multicolumn{2}{c}{low price} & \multicolumn{2}{c}{high price} & \multicolumn{2}{c}{overlapping} \\
-\hline
-Nb sellers & 5.99  & (3.36) & 3.81  & (1.13) & 5.66  & (3.41) & 4.36  & (2.06) \\
-Nb sellers observed & 5.74  & (3.22) & 3.70  & (1.13) & 5.32  & (3.20) & 4.18  & (2.04) \\
-\hline
-\multicolumn{3}{l}{Raw prices (euro cents per liter)}          &       &       &       &       &       &  \\
-Range & 9.70  & (4.54) & 2.24  & (1.97) & 6.04  & (3.82) & 8.61  & (4.61) \\
-Standard deviation & 3.80  & (1.71) & 0.92  & (0.80) & 2.21  & (1.23) & 3.65  & (1.96) \\
-Gain from search & 3.93  & (2.27) & 0.97  & (0.88) & 2.90  & (1.74) & 3.39  & (2.07) \\
-\hline
-\multicolumn{3}{l}{Residual prices (euro cents per liter)}      &       &       &       &       &       &  \\
-Range & 2.50  & (1.75) & 1.60  & (1.37) & 2.91  & (1.86) & 2.01  & (1.55) \\
-Standard deviation & 0.88  & (0.57) & 0.64  & (0.55) & 1.01  & (0.61) & 0.79  & (0.59) \\
-Gain from search & 1.25  & (0.95) & 0.80  & (0.72) & 1.39  & (1.01) & 1.01  & (0.84) \\
-\hline
-Nb markets & \multicolumn{2}{c}{5,501} & \multicolumn{2}{c}{1,604} & \multicolumn{2}{c}{883} & \multicolumn{2}{c}{604} \\
-Nb obs     & \multicolumn{2}{c}{5,852,850} & \multicolumn{2}{c}{1,709,055} & \multicolumn{2}{c}{918,581} & \multicolumn{2}{c}{641,314} \\
-\hline
-\hline
-\end{tabular}
-\label{tab:stats_des_markets}
-\end{table}
-
-\section{Gas station price distributions}
-
-\begin{table}[H]
-  \caption{Gas station residual price distributions}
-	\label{tab:station_price_support_stats_des}
-\begin{tabular}{rrrrr}
-\hline
-\hline
-      & \multicolumn{2}{c}{Low price} & \multicolumn{2}{c}{High price} \\
-\hline
-Nb stations & \multicolumn{2}{c}{5,603} & \multicolumn{2}{c}{3,044} \\
-Std   & 1.10  & (0.33) & 1.26  & (0.47) \\
-Kurtosis & 2.51  & (3.92) & 0.80  & (2.30) \\
-Skewness & -0.38 & (0.91) & 0.13  & (0.66) \\
-Range & 7.52  & (2.16) & 7.12  & (2.25) \\
-Trimmed range 5\% & 4.27  & (1.36) & 4.83  & (1.80) \\
-Trimmed range 10\% & 3.42  & (1.11) & 4.02  & (1.54) \\
-\hline
-\hline
-\end{tabular}
 \end{table}
 
 \section{Sources of rank reversals}
