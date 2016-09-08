@@ -228,7 +228,6 @@ Despite the heterogeneity reported between supermarket gas stations and others i
 \end{subfigure}
 \end{figure}
 
-
 \section{Price dispersion from a competitor pair prospect}
 
 In order to test the relevance of the link between price dispersion and consumer search, \cite{TAP11} examine pairs of competing gas stations, arguing that distance between sellers is a good proxy for consumer information. Indeed, when gas stations are located very close to each other, a higher share of consumers is likely to perfectly observe prices than when gas stations are separated by a higher distance. If the share of uninformed consumers is negligible, sellers can be expected to compete a la Betrand (or Hotelling) and prices should essentially match cost fluctuations. On the other hand, if information is imperfect, dynamic dispersion can be expected to arise following the intuition exposed in \cite{VAR80}.
@@ -242,7 +241,29 @@ Alternatively, in order to check the robustness of results to the influence of p
 \sigma_{ij} = \sqrt{\frac{1}{T_{ij}} \sum_{t=1}^{T_{ij}} [s_{ijt} - \bar{s}_{ij}]^2}
 \end{align*}
 
-Rank reversals and standard deviation are computed for all pairs of competing gas stations in France with an upper distance limit (as the crow flies) of 3 km (figures are provided for a limit of 5km in appendix). This yields a database describing price competition between 12,264 pairs of rival gas stations (respectively 25,007 pairs with 5km).
+The treatment of persistent differences in average prices is a sensitive issue in the empirical analysis of dispersion. It has been frequently addressed in the literature by working with price residuals i.e. after controlling for seller (and occasionally time) fixed effects. However, beyond the practical errors inherent to the statistical treatment, this approach is only valid to the extent that static price dispersion mirrors heterogeneity in offered utility, common to all consumers. In the case of French gasoline retailers, the relatively low predictive power of observed seller characteristics does not offer strong support for this hypothesis. As a consequence, the analysis focuses on pairs of gas stations which are found to operate at similar price levels over the studied period. Practically, this implies that virtually all pair observations can be classified either as low price (supermarket and oil company discount gas stations) or high price (other oil company gas stations and independent).
+
+French data provide several examples of high rank reversal unrelated to consumer lack of information. The conversion by Total S.A. of about c. 300 Total gas stations to its discount brand, Total Access, generates many such observations. Indeed, the conversion is generally accompanied by a decrease in prices of c. 10 euro cents per liter, which has been found to trigger very moderate adjustments by competitors (\cite{CHA16}). A converted Total gas station can thus often be observed to be consistently more expensive than its competitor(s) at the beginning of the period, and then cheaper once the conversion has occurred. Figure ~\ref{fig:rr_total_access} provides an example for which rank is measured to be reversed 47\% of the time.
+
+\begin{figure}[H]
+    \caption{Daily Brent and French diesel retail prices}
+	\centering
+		\includegraphics[width=\textwidth]{graphs/example_spurious_rr_total_access.png}
+\label{fig:rr_total_access}
+\end{figure}
+
+More generally, such an issue may arise whenever a shock affects a gas station differently from the way it affects its closest competitors, so that relative competitive advantages change over time. In order to reduce the potential influence of this issue, gas stations which are found to implement a significant change in pricing policy over the period are excluded, and various constraints are imposed on the maximum length of rank reversals or their number to check the robustness of results.
+
+Descriptive statistics performed at the gas station level have also shown that a few gas stations appeared to implement dynamic price discrimination. In order to detect such practices, the number and regularity of successive inverse price changes were measured for each gas station. The most commonly observed pattern is a surge in prices during weekends. Such a pricing policy, whenever it is implemented unilaterally by a gas station in one market, can generate rank reversals which are unrelated to the use of mixed strategies. Figure~\ref{fig:rr_dynamic_price_discrimination} provides an illustration of this phenomenon. Since only a handful of gas stations are concerned, dynamic price discrimination does not have a significant impact on the present analysis.
+
+\begin{figure}[H]
+    \caption{Daily Brent and French diesel retail prices}
+	\centering
+		\includegraphics[width=\textwidth]{graphs/example_spurious_rr_dynamic_price_discrimination.png}
+\label{fig:rr_dynamic_price_discrimination}
+\end{figure}
+
+Rank reversals and standard deviation are computed for all pairs of competing gas stations in France with an upper distance limit (as the crow flies) of 3 km (figures are provided for a limit of 5km in appendix). This yields a database describing price competition between 12,298 pairs of rival gas stations (respectively 25,076 pairs with 5km).
 
 \begin{table}[H]
 \begin{threeparttable}
@@ -281,7 +302,7 @@ Discounter vs. supermarket pairs & 1,034 & 0.5   & 1.2   & 22.9  & 16.0 \\
 \end{threeparttable}
 \end{table}
 
-The treatment of persistent differences in average prices is a sensitive issue in the empirical analysis of dispersion. It has been frequently addressed in the literature by working with price residuals i.e. after controlling for seller (and occasionally time) fixed effects. However, beyond the practical errors inherent to the statistical treatment, this approach is only valid to the extent that static price dispersion mirrors heterogeneity in offered utility, common to all consumers. In the case of French gasoline retailers, the relatively low predictive power of observed seller characteristics does not offer strong support for this hypothesis. As a consequence, the analysis focuses on pairs of gas stations which are found to operate at similar price levels over the studied period. Practically, this implies that virtually all pair observations can be classified either as low price (supermarket and oil company discount gas stations) or high price (other oil company gas stations and independent).
+Figure~\ref{fig:pct_reversed_pairs} displays the percentage of pairs of gas stations whose price rank is reversed on each day of the period studied. Among pairs of gas stations built with a maximum distance of 3km, the percentage of reversed pairs fluctuates between 5.4\% and 15.3\%  (mean 8.1\%). The "No differentiation" series results from a focus on pairs which exhibit an average price difference below 2c/l. Among these pairs, the minimum percentage of reversed pairs fluctuates between 13.8\% and 29.3\% (mean 19.5\%). From a consumer viewpoint, this translates in one chance in five to pay the highest price upon patronizing among two competitors of similar price level the one which is cheaper most of the time.
 
 \begin{figure}[H]
     \caption{Percentage of rank reversals among pairs}
@@ -291,7 +312,7 @@ The treatment of persistent differences in average prices is a sensitive issue i
     \floatfoot{Series represent for each day the percentage of pairs observed where the usual price order is not respected (reversed rank). No differentiation implies that pairs exhibit an average price difference below 1c/l.}
 \end{figure}
 
-Figure~\ref{fig:pct_reversed_pairs} displays the percentage of pairs of gas stations whose price rank is reversed on each day of the period studied. Among pairs of gas stations built with a maximum distance of 3km, the percentage of reversed pairs fluctuates between 5.4\% and 15.3\%  (mean 8.1\%). The "No differentiation" series results from a focus on pairs which exhibit an average price difference below 2c/l. Among these pairs, the minimum percentage of reversed pairs fluctuates between 13.8\% and 29.3\% (mean 19.5\%). From a consumer viewpoint, this translates in one chance in five to pay the highest price upon patronizing among two competitors of similar price level the one which is cheaper most of the time.
+A clear ranking of empirical distribution functions of rank reversals can be observed among pairs of gas stations depending on distances (Figure~\ref{tab:ecdf_rr_distance}). This is consistent with the idea that nearby gas stations compete in a (virtually) complete information setting, in which there is no reason to expect rank reversals. Conversely, distance can create an information issue for other pairs, preventing the existence of an equilibrium in pure strategy. 
 
 \begin{figure}[H]
 \centering
@@ -309,7 +330,7 @@ Figure~\ref{fig:pct_reversed_pairs} displays the percentage of pairs of gas stat
 \end{subfigure}
 \end{figure}
 
-A clear ranking of empirical distribution functions of rank reversals can be observed among pairs of gas stations depending on distances (Figure~\ref{tab:ecdf_rr_distance}). This is consistent with the idea that nearby gas stations compete in a (virtually) complete information setting, in which there is no reason to expect rank reversals. Conversely, distance can create an information issue for other pairs, preventing the existence of an equilibrium in pure strategy. A formal test, proposed by \cite{TAP11}, consists in regressing measures of price dispersion on a dummy variable which identifies competitor pairs for which a low separating distance implies low search costs. Denoting $r_{ij}$ the rank reversals between gas stations $i$ and $j$, $\mathbbm{1}{\text{Corner}_{ij}}$ an indicator for whether the stations are at the same corner, and $X_{ij}$ other control variables, the regression writes:
+A formal test, proposed by \cite{TAP11}, consists in regressing measures of price dispersion on a dummy variable which identifies competitor pairs for which a low separating distance implies low search costs. Denoting $r_{ij}$ the rank reversals between gas stations $i$ and $j$, $\mathbbm{1}{\text{Corner}_{ij}}$ an indicator for whether the stations are at the same corner, and $X_{ij}$ other control variables, the regression writes:
 
 \begin{equation}
 \text{P}_{it}= \beta_0 + \beta_1 \mathbbm{1}{\text{Corner}_{ij}} + X_{ij} + \epsilon_{ij}
@@ -484,6 +505,7 @@ At the market level, price dispersion is found to increase with the number of co
 
 
 \newpage
+
 \bibliography{references}
 
 \newpage
@@ -491,6 +513,8 @@ At the market level, price dispersion is found to increase with the number of co
 \appendix
 
 \newpage
+
+\section{Robustness checks}
 
 \begin{table}[H]
 \begin{threeparttable}
@@ -526,29 +550,5 @@ Discounter vs. supermarket pairs & 2,003 & 0.5   & 1.2   & 25.0  & 13.6 \\
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
-
-\section{Sources of rank reversals}
-
-Data provide several examples of high rank reversal statistics unrelated to consumer lack of information. The conversion by Total S.A. of about c. 300 Total gas stations to its discount brand, Total Access, generates many observations with meaninglessly high rank reversals. Indeed, the conversion is generally accompanied by a decrease in prices of c. 10 euro cents per liter, which has been found to trigger very moderate adjustments by competitors (\cite{CHA16}). A converted Total gas station can thus often be observed to be consistently more expensive than its competitor(s) at the beginning of the period, and then cheaper once the conversion has occurred. Figure ~\ref{fig:rr_total_access} provides an example for which rank is measured to be reversed 47\% of the time.
-
-\begin{figure}[H]
-    \caption{Daily Brent and French diesel retail prices}
-	\centering
-		\includegraphics[width=\textwidth]{graphs/example_spurious_rr_total_access.png}
-\label{fig:rr_total_access}
-\end{figure}
-
-More generally, such an issue may arise whenever a shock affects a gas station differently from the way it affects its closest competitors, so that relative competitive advantages change over time. In order to reduce the potential influence of this issue, gas stations which are found to implement a significant change in pricing policy over the period are excluded, and various constraints are imposed on the maximum length of rank reversals or their number to check the robustness of results.
-
-Descriptive statistics performed at the gas station level have also shown that a few gas stations appeared to implement dynamic price discrimination. In order to detect such practices, the number and regularity of successive inverse price changes were measured for each gas station. The most commonly observed pattern is a surge in prices during weekends. Such a pricing policy, whenever it is implemented unilaterally by a gas station in one market, can generate rank reversals which are unrelated to the use of mixed strategies. Figure~\ref{fig:rr_dynamic_price_discrimination} provides an illustration of this phenomenon. Since only a handful of gas stations are concerned, dynamic price discrimination does not have a significant impact on the present analysis.
-
-\begin{figure}[H]
-    \caption{Daily Brent and French diesel retail prices}
-	\centering
-		\includegraphics[width=\textwidth]{graphs/example_spurious_rr_dynamic_price_discrimination.png}
-\label{fig:rr_dynamic_price_discrimination}
-\end{figure}
-
-Finally, several papers have documented the existence of Edgeworth cycles on retail gasoline markets. The relatively low frequency of price changes, and the symmetry in positive and negative price variation distributions suggest that such cycles are unlikely to play a significant role on the French retail gasoline market.
 
 \end{document} 

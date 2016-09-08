@@ -51,23 +51,23 @@ def convert_from_ign(x_l_93_ign, y_l_93_ign):
 
 df_lsa = pd.read_csv(os.path.join(path_built_csv,
                                   'df_lsa_active.csv'),
-                     dtype = {u'C_INSEE' : str,
-                              u'C_INSEE_Ardt' : str,
-                              u'C_Postal' : str,
-                              u'SIREN' : str,
-                              u'NIC' : str,
-                              u'SIRET' : str},
-                     parse_dates = [u'Date_Ouv', u'Date_Fer', u'Date_Reouv',
-                                    u'Date_Chg_Enseigne', u'Date_Chg_Surface'],
+                     dtype = {u'c_insee' : str,
+                              u'c_insee_ardt' : str,
+                              u'c_postal' : str,
+                              u'c_siren' : str,
+                              u'c_nic' : str,
+                              u'c_siret' : str},
+                     parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                    u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'UTF-8')
 
-df_lsa = df_lsa[(~pd.isnull(df_lsa['Latitude'])) &\
-                (~pd.isnull(df_lsa['Longitude']))].copy()
+df_lsa = df_lsa[(~pd.isnull(df_lsa['latitude'])) &\
+                (~pd.isnull(df_lsa['longitude']))].copy()
 
-lsd0 = [u'Enseigne',
-        u'Adresse1',
-        u'C_Postal',
-        u'Ville'] #, u'Latitude', u'Longitude']
+lsd0 = [u'enseigne',
+        u'adresse1',
+        u'c_postal',
+        u'ville'] #, u'Latitude', u'Longitude']
 
 # ###############
 # LOAD COMMUNES
@@ -162,8 +162,8 @@ df_com.set_index('code_insee', inplace = True)
 # todo: refine by querying dist/travel time from osrm server
 
 # Municipalities around a given store
-df_com['lat_store'] = df_lsa.loc[df_lsa['Ident'] == 49, 'Latitude'].iloc[0]
-df_com['lng_store'] = df_lsa.loc[df_lsa['Ident'] == 49, 'Longitude'].iloc[0]
+df_com['lat_store'] = df_lsa.loc[df_lsa['id_lsa'] == 49, 'latitude'].iloc[0]
+df_com['lng_store'] = df_lsa.loc[df_lsa['id_lsa'] == 49, 'longitude'].iloc[0]
 # print df_com[['lat_store', 'lng_store']][0:10].to_string()
 df_com['dist'] = compute_distance_ar(df_com['lat_store'].values,
                                      df_com['lng_store'].values,
@@ -176,7 +176,7 @@ print u'\nMunicipalities within 30km {:d}'.format(\
 dict_res = {}
 for row_i, row in df_com[df_com['dist'] <= 30].iterrows():
   ls_gps = list(row[['lat_store', 'lng_store', 'lat_cl', 'lng_cl']].values)
-  query = 'http://www.server.com:5000/viaroute?'+\
+  query = 'http://localhost:5000/viaroute?'+\
           'loc={:f},{:f}&loc={:f},{:f}'.format(*ls_gps)
   try:
     # print query
@@ -223,22 +223,22 @@ df_com_sub.to_csv(os.path.join(path_built_csv,
 #plt.show()
 
 # Stores around a given store
-df_lsa['lat_store'] = df_lsa.loc[df_lsa['Ident'] == 49, 'Latitude'].iloc[0]
-df_lsa['lng_store'] = df_lsa.loc[df_lsa['Ident'] == 49, 'Longitude'].iloc[0]
+df_lsa['lat_store'] = df_lsa.loc[df_lsa['id_lsa'] == 49, 'latitude'].iloc[0]
+df_lsa['lng_store'] = df_lsa.loc[df_lsa['id_lsa'] == 49, 'longitude'].iloc[0]
 # print df_com[['lat_store', 'lng_store']][0:10].to_string()
 df_lsa['dist'] = compute_distance_ar(df_lsa['lat_store'].values,
                                      df_lsa['lng_store'].values,
-                                     df_lsa['Latitude'].values,
-                                     df_lsa['Longitude'].values)
+                                     df_lsa['latitude'].values,
+                                     df_lsa['longitude'].values)
 print u'\nStores within 30km {:d}'.format(\
-        len(df_lsa[(df_lsa['dist'] < 30) & (df_lsa['Ident'] != 49)]))
+        len(df_lsa[(df_lsa['dist'] < 30) & (df_lsa['id_lsa'] != 49)]))
 
 # row = df_com[df_com['dist'] < 30].iloc[0]
-df_lsa_sub = df_lsa[(df_lsa['dist'] < 30) & (df_lsa['Ident'] != 49)].copy()
+df_lsa_sub = df_lsa[(df_lsa['dist'] < 30) & (df_lsa['id_lsa'] != 49)].copy()
 dict_res = {}
 for row_i, row in df_lsa_sub.iterrows():
-  ls_gps = list(row[['lat_store', 'lng_store', 'Latitude', 'Longitude']].values)
-  query = 'http://www.server.com:5000/viaroute?'+\
+  ls_gps = list(row[['lat_store', 'lng_store', 'latitude', 'longitude']].values)
+  query = 'http://localhost:5000/viaroute?'+\
           'loc={:f},{:f}&loc={:f},{:f}'.format(*ls_gps)
   try:
     # print query
@@ -271,7 +271,9 @@ df_lsa_sub['dist_osrm'] = df_lsa_sub['dist_osrm'] / 1000.0 # m to km
 #print df_com_sub[0:20].to_string()
 print df_lsa_sub[['dist', 'dist_osrm', 'time_osrm']].describe()
 
-df_lsa_sub.to_csv(os.path.join(path_dir_built_csv,
+print df_lsa_sub.iloc[-1].to_string()
+
+df_lsa_sub.to_csv(os.path.join(path_built_csv,
                                '201407_competition',
                                'df_km_vs_time_comp_ex.csv'),
                   encoding = 'utf-8',

@@ -109,6 +109,24 @@ df_pairs = df_pairs[(~((df_pairs['nb_spread'] < 90) &\
 lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
 lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 
+# CREATE SAME CORNER VARIABLES
+df_pairs['sc_500'] = 0
+df_pairs.loc[df_pairs['distance'] <= 0.5, 'sc_500'] = 1
+df_pairs['sc_750'] = 0
+df_pairs.loc[df_pairs['distance'] <= 0.75, 'sc_750'] = 1
+df_pairs['sc_1000'] = 0
+df_pairs.loc[df_pairs['distance'] <= 1, 'sc_1000'] = 1
+
+# SPREAD IN CENT (ONLY IF USED)
+for spread_var in ['mean_spread',
+                   'mean_abs_spread', 'abs_mean_spread',
+                   'std_spread', 'std_abs_spread']:
+  df_pairs[spread_var] = df_pairs[spread_var] * 100
+
+for pct_var in ['pct_to_same_maxu', 'pct_to_same_maxl',
+                'pct_to_same_min', 'pct_rr']:
+  df_pairs[pct_var] = df_pairs[pct_var] * 100
+
 # #############
 # PREPARE DATA
 # #############
@@ -148,11 +166,6 @@ df_pair_comp =\
            (df_pairs['group_last_1'] != df_pairs['group_last_2'])].copy()
 
 # DIFFERENTIATED VS. NON DIFFERENTIATED
-diff_bound = 0.01
-df_pair_same_nd = df_pair_same[df_pair_same['abs_mean_spread'] <= diff_bound]
-df_pair_same_d  = df_pair_same[df_pair_same['abs_mean_spread'] > diff_bound]
-df_pair_comp_nd = df_pair_comp[df_pair_comp['abs_mean_spread'] <= diff_bound]
-df_pair_comp_d  = df_pair_comp[df_pair_comp['abs_mean_spread'] > diff_bound]
 
 # DICT OF DFS
 # pairs without spread restriction
@@ -160,19 +173,16 @@ df_pair_comp_d  = df_pair_comp[df_pair_comp['abs_mean_spread'] > diff_bound]
 dict_pair_comp = {'any' : df_pair_comp}
 for k in df_pair_comp['pair_type'].unique():
   dict_pair_comp[k] = df_pair_comp[df_pair_comp['pair_type'] == k]
-# low spread pairs
+# add sup sup&dis cat
+dict_pair_comp['sup&dis'] = pd.concat([dict_pair_comp['sup'],
+                                       dict_pair_comp['dis'],
+                                       dict_pair_comp['sup_dis']])
+# Low spread pairs (limit on average long term price difference)
+diff_bound = 2.0 # euro cents
 dict_pair_comp_nd = {}
 for df_temp_title, df_temp in dict_pair_comp.items():
   dict_pair_comp_nd[df_temp_title] =\
       df_temp[df_temp['abs_mean_spread'] <= diff_bound]
-
-# CREATE SAME CORNER VARIABLES
-df_pairs['sc_500'] = 0
-df_pairs.loc[df_pairs['distance'] <= 0.5, 'sc_500'] = 1
-df_pairs['sc_750'] = 0
-df_pairs.loc[df_pairs['distance'] <= 0.75, 'sc_750'] = 1
-df_pairs['sc_1000'] = 0
-df_pairs.loc[df_pairs['distance'] <= 1, 'sc_1000'] = 1
 
 # ##################
 # REGRESSION
@@ -184,7 +194,7 @@ ls_dist_ols_formulas = ['abs_mean_spread ~ distance',
                         'pct_rr ~ distance',
                         'std_spread ~ distance']
 
-dist_reg = 1000
+dist_reg = 500
 col_sc = 'sc_{:d}'.format(dist_reg)
 
 ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d}'.format(dist_reg),
@@ -193,7 +203,7 @@ ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d}'.format(dist_reg),
                       'std_spread ~ sc_{:d}'.format(dist_reg)]
 
 # from statsmodels.regression.quantile_regression import QuantReg
-ls_quantiles = [0.25, 0.5, 0.75, 0.90]
+ls_quantiles = [0.2501, 0.501, 0.7501, 0.9001]
 
 #mod = smf.quantreg('pct_rr~distance', df_ppd_reg[~pd.isnull(df_ppd_reg['pct_rr'])])
 #res = mod.fit(q=.5)
@@ -219,32 +229,19 @@ df_pair_comp.to_csv(os.path.join(path_dir_built_dis_csv,
 # - provide general reg stats to output
 # - create dataframe with one row per reg: index is specification or part of it?
 
-def format_ls_reg_fits_to_df(ls_tup_reg_fit, ls_var_names):
-  ls_var_attrs = ['params', 'bse', 'tvalues', 'pvalues']
-  ls_reg_attrs = [] #['nobs', 'rsquared', 'rsquared_adj']
-  ls_tup_vars = [(var_name, var_attr) for var_attr in ls_var_attrs\
-                      for var_name in ls_var_names]
-  ls_index, ls_rows = [], []
-  for reg_title, reg_fit in ls_tup_reg_fit:
-    ls_var_stats = [getattr(reg_fit, var_attr).ix[var_name]\
-                      for (var_name, var_attr) in ls_tup_vars]
-    ls_reg_stats = [getattr(reg_fit, reg_attr) for reg_attr in ls_reg_attrs]
-    ls_rows.append(ls_reg_stats + ls_var_stats)
-    ls_index.append(reg_title)
-  df_reg_fits = pd.DataFrame(ls_rows,
-                             columns = ls_reg_attrs +\
-                                       ['_'.join(x) for x in ls_tup_vars],
-                             index = ls_index)
-  return df_reg_fits
+#ls_loop_df_ppd_regs = [('All', dict_pair_comp['any']),
+#                       ('Sup', dict_pair_comp['sup']),
+#                       ('Nd All', dict_pair_comp_nd['any']),
+#                       ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
+#                       ('Nd Sup', dict_pair_comp_nd['sup']),
+#                       ('Sup Dis', dict_pair_comp['sup_dis']),
+#                       ('Nd Sup Dis', dict_pair_comp_nd['sup_dis']),
+#                       ('Oil&Ind', dict_pair_comp['oil&ind'])]
 
-ls_loop_df_ppd_regs = [('All', dict_pair_comp['any']),
-                       ('Sup', dict_pair_comp['sup']),
-                       ('Nd All', dict_pair_comp_nd['any']),
+ls_loop_df_ppd_regs = [('Nd All', dict_pair_comp_nd['any']),
                        ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
                        ('Nd Sup', dict_pair_comp_nd['sup']),
-                       ('Sup Dis', dict_pair_comp['sup_dis']),
-                       ('Nd Sup Dis', dict_pair_comp_nd['sup_dis']),
-                       ('Oil&Ind', dict_pair_comp['oil&ind'])]
+                       ('Nd Sup&Dis', dict_pair_comp_nd['sup&dis'])]
 
 # Some issues with current implementation of quantreg => R
 # Work with dist 1000 until Oil Ind...
@@ -254,35 +251,48 @@ for df_ppd_title, df_ppd_reg in ls_loop_df_ppd_regs:
   #df_ppd_reg.loc[df_ppd_reg['pct_rr'] == 0, 'pct_rr'] = 0.0001
   #df_ppd_reg.loc[df_ppd_reg['distance'] == 0, 'distance'] = 0.0001
   print()
-  print(u'{:s} (Nb obs: {:d})'.format(df_ppd_title, len(df_ppd_reg)))
-  print('Nb same corner:  {:d}'.format(len(df_ppd_reg[df_ppd_reg[col_sc] == 1])))
+  print(u'-'*30)
+  print()
+  print(u'{:s} ({:d} pairs)'.format(df_ppd_title, len(df_ppd_reg)))
+  print(u'Pct same corner: {:3.1f}%'.format(len(df_ppd_reg[df_ppd_reg[col_sc] == 1]) /\
+                                       float(len(df_ppd_reg)) * 100))
   # Simple ols
   ls_dis_ols_fits = [(str_formula,
                      smf.ols(formula = str_formula, data = df_ppd_reg).fit())\
                        for str_formula in ls_sc_ols_formulas]
-  df_dis_ols_res = format_ls_reg_fits_to_df(ls_dis_ols_fits, [col_sc])
-  print()
-  print(df_dis_ols_res.to_string())
+  #df_dis_ols_res = format_ls_reg_fits_to_df(ls_dis_ols_fits, [col_sc])
+  #print()
+  #print(df_dis_ols_res.to_string())
   # QRs rank reversals
   ls_rr_qr_fits  = [('rr_sc_Q{:.2f}'.format(quantile),
                      smf.quantreg('pct_rr~{:s}'.format(col_sc),
                                   data = df_ppd_reg).fit(quantile))\
                        for quantile in ls_quantiles]
-  df_rr_qr_fits = format_ls_reg_fits_to_df(ls_rr_qr_fits, [col_sc])
-  print()
-  print(df_rr_qr_fits.to_string())
+  #df_rr_qr_fits = format_ls_reg_fits_to_df(ls_rr_qr_fits, [col_sc])
+  #print()
+  #print(df_rr_qr_fits.to_string())
   # QRs standard deviation
   ls_std_qr_fits  = [('std_sc_Q{:.2f}'.format(quantile),
                       smf.quantreg('std_spread~{:s}'.format(col_sc),
                                     data = df_ppd_reg).fit(quantile))\
                          for quantile in ls_quantiles]
-  df_std_qr_fits = format_ls_reg_fits_to_df(ls_std_qr_fits, [col_sc])
-  print()
-  print(df_std_qr_fits.to_string())
+  #df_std_qr_fits = format_ls_reg_fits_to_df(ls_std_qr_fits, [col_sc])
+  #print()
+  #print(df_std_qr_fits.to_string())
 
-print(summary_col(ls_std_qr_fits,
-                  stars=True,
-                  float_format='%0.2f',
-                  model_names=[u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
-                  info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
-                             'R2':lambda x: "{:.2f}".format(x.rsquared)}))
+  su_rr = summary_col([x[1] for x in ls_rr_qr_fits],
+                       stars=True,
+                       float_format='%0.2f',
+                       model_names=[u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
+                       info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                                  'R2':lambda x: "{:.2f}".format(x.rsquared)})
+  
+  su_std = summary_col([x[1] for x in ls_std_qr_fits],
+                       stars=True,
+                       float_format='%0.2f',
+                       model_names=[u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
+                       info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                                  'R2':lambda x: "{:.2f}".format(x.rsquared)})
+
+  print(su_rr)
+  print(su_std)
