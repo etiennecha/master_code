@@ -24,7 +24,7 @@ path_dir_built_dis = os.path.join(path_data,
 path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
 path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.1f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.3f}'.format(x)
 
@@ -104,16 +104,66 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
-df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
-                      (df_pairs['nb_ctd_both'] < 90))]
+# basic pair filter (insufficient obs, biased rr measure)
+df_pairs = df_pairs[(~((df_pairs['nb_spread'] < 90) &\
+                       (df_pairs['nb_ctd_both'] < 90))) &
+                    (~(df_pairs['nrr_max'] > 60))]
 
-# RESTRICT CATEGORY
+# todo? harmonize pct i.e. * 100
 
+# LISTS FOR DISPLAY
+lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
+lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
+
+# CREATE SAME CORNER VARIABLES
+df_pairs['sc_500'] = 0
+df_pairs.loc[df_pairs['distance'] <= 0.5, 'sc_500'] = 1
+df_pairs['sc_750'] = 0
+df_pairs.loc[df_pairs['distance'] <= 0.75, 'sc_750'] = 1
+df_pairs['sc_1000'] = 0
+df_pairs.loc[df_pairs['distance'] <= 1, 'sc_1000'] = 1
+
+# SPREAD IN CENT (ONLY IF USED)
+for spread_var in ['mean_spread',
+                   'mean_abs_spread', 'abs_mean_spread',
+                   'std_spread', 'std_abs_spread']:
+  df_pairs[spread_var] = df_pairs[spread_var] * 100
+
+for pct_var in ['pct_to_same_maxu', 'pct_to_same_maxl',
+                'pct_to_same_min', 'pct_same', 'pct_rr']:
+  df_pairs[pct_var] = df_pairs[pct_var] * 100
+
+# #############
+# PREPARE DATA
+# #############
+
+# RESTRICT CATEGORY: PRICES AND MARGIN CHGE
 df_pairs_all = df_pairs.copy()
-df_pairs = df_pairs[df_pairs['cat'] == 'residuals_no_mc'].copy()
+price_cat = 'no_mc' # 'residuals_no_mc'
+print(u'Prices used : {:s}'.format(price_cat))
+df_pairs = df_pairs[df_pairs['cat'] == price_cat].copy()
+
+## robustness check with idf: 1 km max
+#ls_dense_dpts = [75, 92, 93, 94]
+#df_pairs = df_pairs[~((((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
+#                        (df_pairs['dpt_2'].isin(ls_dense_dpts))) &\
+#                       (df_pairs['distance'] > 1)))]
+
+## robustness check keep closest competitor
+#df_pairs.sort(['id_1', 'distance'], ascending = True, inplace = True)
+#df_pairs.drop_duplicates('id_1', inplace = True, take_last = False)
+# could also collect closest for each id_2 and filter further
+# - id_1 can have closer competitor as an id_2
+# - duplicates in id_2 (that can be solved also but drops too much)
+#df_pairs.sort(['id_2', 'distance'], ascending = True, inplace = True)
+#df_pairs.drop_duplicates('id_2', inplace = True, take_last = False)
+## - too many drops: end ids always listed as id_2 disappear... etc.
+
+### robustness check: rr>20 == 0
+#df_pairs = df_pairs[(df_pairs['rr>20'] == 0)]
+#df_pairs = df_pairs[(df_pairs['mean_rr_len'] <= 21)]
 
 # COMPETITORS VS. SAME GROUP
-
 df_pair_same =\
   df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
            (df_pairs['group_last_1'] == df_pairs['group_last_2'])].copy()
@@ -123,27 +173,22 @@ df_pair_comp =\
 
 # DIFFERENTIATED VS. NON DIFFERENTIATED
 
-diff_bound = 0.02
-df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
-df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
-df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
-df_pair_comp_d  = df_pair_comp[df_pair_comp['mean_spread'].abs() > diff_bound]
-
-# COMP SUP VS. NON SUP
-
-df_pair_sup = df_pair_comp[(df_pair_comp['group_type_1'] == 'SUP') &\
-                           (df_pair_comp['group_type_2'] == 'SUP')]
-df_pair_nsup = df_pair_comp[(df_pair_comp['group_type_1'] != 'SUP') &\
-                            (df_pair_comp['group_type_2'] != 'SUP')]
-df_pair_sup_nd = df_pair_sup[(df_pair_sup['mean_spread'].abs() <= diff_bound)]
-df_pair_nsup_nd = df_pair_nsup[(df_pair_nsup['mean_spread'].abs() <= diff_bound)]
-
-# LISTS FOR DISPLAY
-
-lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
-lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
-
-# todo: harmonize pct i.e. * 100
+# DICT OF DFS
+# pairs without spread restriction
+# (keep pairs with group change in any)
+dict_pair_comp = {'any' : df_pair_comp}
+for k in df_pair_comp['pair_type'].unique():
+  dict_pair_comp[k] = df_pair_comp[df_pair_comp['pair_type'] == k]
+# add sup sup&dis cat
+dict_pair_comp['sup&dis'] = pd.concat([dict_pair_comp['sup'],
+                                       dict_pair_comp['dis'],
+                                       dict_pair_comp['sup_dis']])
+# Low spread pairs (limit on average long term price difference)
+diff_bound = 1.0 # euro cents
+dict_pair_comp_nd = {}
+for df_temp_title, df_temp in dict_pair_comp.items():
+  dict_pair_comp_nd[df_temp_title] =\
+      df_temp[df_temp['abs_mean_spread'] <= diff_bound]
 
 # ##########
 # STATS DESC
@@ -153,26 +198,37 @@ lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
 # - diff_bound set to 0.01 and 0.02 (differentiation)
 # - df_pairs['cat'] : 'no_mc' (raw _prices) and 'residuals_no_mc' (price residuals)
 
-ls_var_desc = ['distance', 'abs_mean_spread', 'pct_same', 'pct_rr']
+ls_var_desc = ['distance', 'abs_mean_spread', 'std_spread', 'pct_same', 'pct_rr']
 
-ls_loop_pair_disp = [('All', df_pair_comp),
-                     ('Sup', df_pair_sup),
-                     ('Non Sup', df_pair_nsup),
-                     ('No diff.', df_pair_comp_nd),
-                     ('Diff', df_pair_comp_d),
-                     ('Sup No diff', df_pair_sup_nd),
-                     ('Non Sup no diff', df_pair_nsup_nd)]
+ls_loop_pair_disp = [('All', dict_pair_comp['any']),
+                     ('Oil&Ind', dict_pair_comp['oil&ind']),
+                     ('Sup&Dis', dict_pair_comp['sup&dis']),
+                     ('Sup', dict_pair_comp['sup']),
+                     ('Sup vs. Dis', dict_pair_comp['sup_dis']),
+                     ('Dis', dict_pair_comp['sup_dis']),
+                     ('Nd All', dict_pair_comp_nd['any']),
+                     ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
+                     ('Nd Sup&Dis', dict_pair_comp_nd['sup&dis']),
+                     ('Nd Sup', dict_pair_comp_nd['sup']),
+                     ('Nd Sup vs. Dis', dict_pair_comp_nd['sup_dis']),
+                     ('Nd Dis', dict_pair_comp['dis'])]
 
 for dist_lim in [1, 3, 5]:
   print()
+  print(u'-'*50)
+  print()
+  print('Distance {:2.1f} km'.format(dist_lim))
   print('Overview of pair dispersion w/ max distance {:d}'.format(dist_lim))
-  ls_se_desc, ls_nb_obs = [], []
-  for title, df_pair_disp in ls_loop_pair_disp:
-    df_pair_disp_sub = df_pair_disp[df_pair_disp['distance'] <= dist_lim]
-    ls_se_desc.append(df_pair_disp_sub[ls_var_desc].mean())
-    ls_nb_obs.append(len(df_pair_disp_sub))
-  df_desc_pair_disp = pd.concat(ls_se_desc,
-                                axis = 1,
-                                keys = [x[0] for x in ls_loop_pair_disp])
-  df_desc_pair_disp.ix['nb_obs'] = ls_nb_obs
-  print(df_desc_pair_disp.ix[['nb_obs'] + ls_var_desc[1:]].to_string())
+  for stat in ['mean', 'std']:
+    print()
+    print(stat)
+    ls_se_desc, ls_nb_obs = [], []
+    for title, df_pair_disp in ls_loop_pair_disp:
+      df_pair_disp_sub = df_pair_disp[df_pair_disp['distance'] <= dist_lim]
+      ls_se_desc.append(df_pair_disp_sub[ls_var_desc].describe().ix[stat])
+      ls_nb_obs.append(len(df_pair_disp_sub))
+    df_desc_pair_disp = pd.concat(ls_se_desc,
+                                  axis = 1,
+                                  keys = [x[0] for x in ls_loop_pair_disp])
+    df_desc_pair_disp.ix['nb_obs'] = ls_nb_obs
+    print(df_desc_pair_disp.ix[['nb_obs'] + ls_var_desc[1:]].T.to_string())

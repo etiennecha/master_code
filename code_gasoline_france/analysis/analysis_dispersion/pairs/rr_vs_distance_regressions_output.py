@@ -178,7 +178,7 @@ dict_pair_comp['sup&dis'] = pd.concat([dict_pair_comp['sup'],
                                        dict_pair_comp['dis'],
                                        dict_pair_comp['sup_dis']])
 # Low spread pairs (limit on average long term price difference)
-diff_bound = 2.0 # euro cents
+diff_bound = 1.0 # euro cents
 dict_pair_comp_nd = {}
 for df_temp_title, df_temp in dict_pair_comp.items():
   dict_pair_comp_nd[df_temp_title] =\
@@ -189,18 +189,17 @@ for df_temp_title, df_temp in dict_pair_comp.items():
 # ##################
 
 # REGRESSION FORMULAS AND PARAMETERS
-ls_dist_ols_formulas = ['abs_mean_spread ~ distance',
-                        'mean_abs_spread ~ distance',
-                        'pct_rr ~ distance',
-                        'std_spread ~ distance']
 
 dist_reg = 1000
 col_sc = 'sc_{:d}'.format(dist_reg)
 
-ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d}'.format(dist_reg),
-                      'mean_abs_spread ~ sc_{:d}'.format(dist_reg),
-                      'pct_rr ~ sc_{:d}'.format(dist_reg),
-                      'std_spread ~ sc_{:d}'.format(dist_reg)]
+#ls_ctrls = ['C(reg_1)']
+#str_ctrls = u'+ {:s}'.format(u' + '.join(ls_ctrls))
+str_ctrls = u''
+
+ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d} {:s}'.format(dist_reg, str_ctrls),
+                      'pct_rr ~ sc_{:d} {:s}'.format(dist_reg, str_ctrls),
+                      'std_spread ~ sc_{:d} {:}'.format(dist_reg, str_ctrls)]
 
 # from statsmodels.regression.quantile_regression import QuantReg
 ls_quantiles = [0.2501, 0.501, 0.7501, 0.9001]
@@ -211,7 +210,6 @@ ls_quantiles = [0.2501, 0.501, 0.7501, 0.9001]
 ## Following: need to add constant to make it equivalent
 #res_alt = QuantReg(df_ppd_reg['pct_rr_nozero'], df_ppd_reg['sc_500']).fit(0.5)
 # So far: need to add "resid[resid == 0] = .000001" in quantreg line 171-3 to have it run
-
 # check => https://groups.google.com/forum/?hl=fr#!topic/pystatsmodels/XnXu_k1h-gc
 
 # Output data to csv to run quantile regressions in R
@@ -229,23 +227,16 @@ df_pair_comp.to_csv(os.path.join(path_dir_built_dis_csv,
 # - provide general reg stats to output
 # - create dataframe with one row per reg: index is specification or part of it?
 
-#ls_loop_df_ppd_regs = [('All', dict_pair_comp['any']),
-#                       ('Sup', dict_pair_comp['sup']),
-#                       ('Nd All', dict_pair_comp_nd['any']),
-#                       ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
-#                       ('Nd Sup', dict_pair_comp_nd['sup']),
-#                       ('Sup Dis', dict_pair_comp['sup_dis']),
-#                       ('Nd Sup Dis', dict_pair_comp_nd['sup_dis']),
-#                       ('Oil&Ind', dict_pair_comp['oil&ind'])]
-
 ls_loop_df_ppd_regs = [('Nd All', dict_pair_comp_nd['any']),
                        ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
+                       ('Nd Sup&Dis', dict_pair_comp_nd['sup&dis']),
                        ('Nd Sup', dict_pair_comp_nd['sup']),
-                       ('Nd Sup&Dis', dict_pair_comp_nd['sup&dis'])]
+                       ('Nd Sup vs. Dis', dict_pair_comp_nd['sup_dis'])]
 
 # Some issues with current implementation of quantreg => R
 # Work with dist 1000 until Oil Ind...
 
+ls_res = []
 for df_ppd_title, df_ppd_reg in ls_loop_df_ppd_regs:
   df_ppd_reg = df_ppd_reg[(df_ppd_reg['distance'] <= 3)].copy()
   #df_ppd_reg.loc[df_ppd_reg['pct_rr'] == 0, 'pct_rr'] = 0.0001
@@ -253,46 +244,57 @@ for df_ppd_title, df_ppd_reg in ls_loop_df_ppd_regs:
   print()
   print(u'-'*30)
   print()
-  print(u'{:s} ({:d} pairs)'.format(df_ppd_title, len(df_ppd_reg)))
-  print(u'Pct same corner: {:3.1f}%'.format(len(df_ppd_reg[df_ppd_reg[col_sc] == 1]) /\
-                                       float(len(df_ppd_reg)) * 100))
+  nb_pairs = len(df_ppd_reg)
+  pct_close = len(df_ppd_reg[df_ppd_reg[col_sc] == 1]) / float(len(df_ppd_reg)) * 100
+  print(u'{:s} ({:d} pairs)'.format(df_ppd_title, nb_pairs))
+  print(u'Pct same corner: {:3.1f}%'.format(pct_close))
+  
   # Simple ols
   ls_dis_ols_fits = [(str_formula,
-                     smf.ols(formula = str_formula, data = df_ppd_reg).fit())\
-                       for str_formula in ls_sc_ols_formulas]
-  #df_dis_ols_res = format_ls_reg_fits_to_df(ls_dis_ols_fits, [col_sc])
-  #print()
-  #print(df_dis_ols_res.to_string())
+                      smf.ols(formula = str_formula, data = df_ppd_reg).fit())\
+                        for str_formula in ls_sc_ols_formulas]
+  
   # QRs rank reversals
   ls_rr_qr_fits  = [('rr_sc_Q{:.2f}'.format(quantile),
-                     smf.quantreg('pct_rr~{:s}'.format(col_sc),
+                     smf.quantreg('pct_rr~{:s} {:s}'.format(col_sc, str_ctrls),
                                   data = df_ppd_reg).fit(quantile))\
                        for quantile in ls_quantiles]
-  #df_rr_qr_fits = format_ls_reg_fits_to_df(ls_rr_qr_fits, [col_sc])
-  #print()
-  #print(df_rr_qr_fits.to_string())
+  
   # QRs standard deviation
   ls_std_qr_fits  = [('std_sc_Q{:.2f}'.format(quantile),
-                      smf.quantreg('std_spread~{:s}'.format(col_sc),
+                      smf.quantreg('std_spread~{:s} {:s}'.format(col_sc, str_ctrls),
                                     data = df_ppd_reg).fit(quantile))\
                          for quantile in ls_quantiles]
-  #df_std_qr_fits = format_ls_reg_fits_to_df(ls_std_qr_fits, [col_sc])
-  #print()
-  #print(df_std_qr_fits.to_string())
 
-  su_rr = summary_col([x[1] for x in ls_rr_qr_fits],
-                       stars=True,
-                       float_format='%0.2f',
-                       model_names=[u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
-                       info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
-                                  'R2':lambda x: "{:.2f}".format(x.rsquared)})
+  # Prepare for output: OLS & QRs
+  ls_rr_op = [ls_dis_ols_fits[1][1]] + [x[1] for x in ls_rr_qr_fits]
+  ls_std_op = [ls_dis_ols_fits[2][1]] + [x[1] for x in ls_std_qr_fits]
+  ls_model_names = ['OLS'] + [u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles]
+
+  su_rr = summary_col(ls_rr_op,
+                      model_names=ls_model_names,
+                      stars=True,
+                      float_format='%0.2f',
+                      info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                                 'R2':lambda x: "{:.2f}".format(x.rsquared)})
   
-  su_std = summary_col([x[1] for x in ls_std_qr_fits],
-                       stars=True,
+  su_std = summary_col(ls_std_op,
+                       model_names= ls_model_names,
                        float_format='%0.2f',
-                       model_names=[u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
+                       stars=True,
                        info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                                   'R2':lambda x: "{:.2f}".format(x.rsquared)})
+  ls_res.append([df_ppd_title, nb_pairs, pct_close, su_rr, su_std])
 
+for [df_ppd_title, nb_pairs, pct_close, su_rr, su_std] in ls_res:
+  print()
+  print(u'-'*50)
+  print()
+  print(u'{:s} ({:d} pairs)'.format(df_ppd_title, nb_pairs).upper())
+  print(u'Pct same corner: {:3.1f}%'.format(pct_close).upper())
+  print()
+  print('Rank reversals:')
   print(su_rr)
+  print()
+  print('Std. of price spread:')
   print(su_std)
