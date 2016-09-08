@@ -194,7 +194,7 @@ ls_dist_ols_formulas = ['abs_mean_spread ~ distance',
                         'pct_rr ~ distance',
                         'std_spread ~ distance']
 
-dist_reg = 500
+dist_reg = 1000
 col_sc = 'sc_{:d}'.format(dist_reg)
 
 ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d}'.format(dist_reg),
