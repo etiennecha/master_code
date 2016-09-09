@@ -139,6 +139,7 @@ df_info['type_last'] = 'HIGH'
 df_info.loc[(df_info['brand_last'].isin(ls_discounter)) |\
             (df_info['group_type_last'] == 'SUP'),
             'type_last'] = 'LOW'
+
 df_info['type'] = 'HIGH'
 df_info.loc[(df_info['brand_0'].isin(ls_discounter)) |\
             (df_info['brand_last'] == 'ESSO_EXPRESS') |\
@@ -278,11 +279,16 @@ for price_type in ['LOW', 'HIGH']:
   print(price_type)
   print(df_disp[ls_disp_cols][df_disp['type'] == price_type].describe().to_string())
 
-ls_ls_idpt_vars = [['nb_c_3km * C(type)'],
+# merge oil and ind
+df_disp.loc[df_disp['group_type'] == 'IND',
+            'group_type'] = 'OIL'
+
+ls_ls_idpt_vars = [['nb_c_3km + C(group_type)'],
+                   ['nb_c_3km + C(group_type) + C(reg)'],
                    #['dist_c * C(type)'],
                    #['dist_c * C(type)', 'C(reg)'],
                    #['dist_c * C(type)', 'C(reg)'],
-                   ['nb_c_3km * C(type)', 'C(reg):C(type)']]
+                   ['nb_c_3km:C(group_type)', 'C(group_type)', 'C(reg)']]
 
 for ls_idpt_vars in ls_ls_idpt_vars:
   #print()

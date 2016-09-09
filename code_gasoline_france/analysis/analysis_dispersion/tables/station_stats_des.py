@@ -112,9 +112,21 @@ df_cost.fillna(axis = 'index',
                inplace = True)
 df_cost.ix['2011-09-04'] = df_cost.ix['2011-09-05']
 
-# DF STATION PRICE
+# QUICK PRICE OVERWRITE FOR TOTAL ACCESS
+df_overwrite = df_info[(df_info['brand_last'] == 'TOTAL_ACCESS') &\
+                              (~df_info['brand_0'].isin(['ELF', 'TOTAL_ACCESS']))]
 
-str_date = '2011-09-04'
+# keep in memory (for nb station count)
+df_prices_ttc_bu = df_prices_ttc.copy()
+df_prices_ht_bu = df_prices_ht.copy()
+
+for id_station, row in df_overwrite.iterrows():
+  df_prices_ttc.loc[:row['day_1'], id_station] = np.nan
+  df_prices_ht.loc[:row['day_1'], id_station] = np.nan
+
+# DF STATION PRICE (compute mean prices)
+
+str_date = '2011-09-04' # not used here
 df_station_price = pd.DataFrame(df_prices_ttc.ix[str_date].values,
                                 index = df_prices_ttc.columns,
                                 columns = ['Price after tax'])
@@ -129,21 +141,32 @@ df_station_mprice['Price before tax'] = df_prices_ht.mean(0)
 df_station_mprice['Markup'] = (df_prices_ht.subtract(df_cost['UFIP RT Diesel R5 EL'],
                                                      axis = 'index')).mean(0)
 
+# Restore for nb station count
+df_prices_ttc = df_prices_ttc_bu
+df_prices_ht = df_prices_ht_bu
+
 # ##########
 # STATS DES
 # ##########
 
+# pbm: Total Access not discount at beg of period biases Prices
+# need to overwrite prices
+
 ls_ids_sup = df_info[df_info['group_type_last'] == 'SUP'].index
+ls_ids_dis = df_info[df_info['group_type_last'] == 'DIS'].index
+ls_ids_oilind = df_info[df_info['group_type_last'].isin(['OIL', 'IND'])].index
 ls_ids_nsup = df_info[df_info['group_type_last'] != 'SUP'].index
 ls_ids_idf = df_info[df_info['reg'] == 'Ile-de-France'].index
 ls_ids_nidf = df_info[df_info['reg'] != 'Ile-de-France'].index
 ls_ids_fra = df_info.index
 
-ls_loop_groups = [('Supermarkets', ls_ids_sup),
-                  ('Others', ls_ids_nsup),
+ls_loop_groups = [('France', ls_ids_fra),
+                  ('Oil & Independent', ls_ids_oilind),
+                  ('Oil Discount', ls_ids_dis),
+                  ('Supermarkets', ls_ids_sup),
+                  #('Others', ls_ids_nsup),
                   ('Paris region', ls_ids_idf),
-                  ('Non Paris region', ls_ids_nidf),
-                  ('France', ls_ids_fra)]
+                  ('Non Paris region', ls_ids_nidf)]
 
 ls_cols_price = ['Price after tax', 'Price before tax', 'Markup']
 ls_cols_comp = ['nb_c_1km', 'nb_c_3km', 'nb_c_5km', 'dist_c']
@@ -153,45 +176,63 @@ ls_loop_topics = [('Price', df_station_mprice, ls_cols_price),
                   ('Competition', df_comp, ls_cols_comp),
                   ('Rigidity', df_station_stats, ls_cols_rigidity)]
 
-dict_df_topics = {}
-for topic_title, df_topic, ls_cols_topic in ls_loop_topics:
-  ls_titles_desc_temp, ls_se_desc_temp = [], []
-  for group_title, ls_ids_group in ls_loop_groups:
-    se_desc_temp = df_topic.ix[ls_ids_group][ls_cols_topic].mean()
-    ls_se_desc_temp.append(se_desc_temp)
-    ls_titles_desc_temp.append(group_title)
-  df_topic_desc = pd.concat(ls_se_desc_temp,
-                            axis = 1,
-                            keys = ls_titles_desc_temp)
-  dict_df_topics[topic_title] = df_topic_desc
+ls_order_rows = ['Nb stations (total)',
+                 'Nb stations (observed)',
+                 'Price after tax',
+                 'Price before tax',
+                 'Markup',
+                 'Daily price change probability',
+                 'Mean positive price change (cent)',
+                 'Mean negative price change (cent)',
+                 'Nb of rivals within 1 km',
+                 'Nb of rivals within 3 km',
+                 'Nb of rivals within 5 km',
+                 'Distance to closest rival']
 
-df_desc = pd.concat([dict_df_topics['Price'],
-                     dict_df_topics['Competition'],
-                     dict_df_topics['Rigidity']])
+for stat in ['mean', 'std']:
 
-df_desc.ix['avg_pos_chge'] = df_desc.ix['avg_pos_chge'] * 100
-df_desc.ix['avg_neg_chge'] = df_desc.ix['avg_neg_chge'] * 100
-
-df_desc.rename(index = {'nb_c_1km' : 'Nb of rivals within 1 km',
-                        'nb_c_3km' : 'Nb of rivals within 3 km',
-                        'nb_c_5km' : 'Nb of rivals within 5 km',
-                        'dist_c'   : 'Distance to closest rival',
-                        'pct_chge' : 'Daily price change probability',
-                        'avg_pos_chge' : 'Mean positive price change (cent)',
-                        'avg_neg_chge' : 'Mean negative price change (cent)'},
-               inplace = True)
-
-df_desc.ix['Nb stations (total)'] =\
-  [len(ls_ids_group) for group_title, ls_ids_group in ls_loop_groups]
-
-df_desc.ix['Nb stations (observed)'] =\
-  [df_prices_ttc[ls_ids_group].count(1).mean()\
-     for group_title, ls_ids_group in ls_loop_groups]
-
-ls_cols_desc_tex = ['France', 'Supermarkets', 'Others', 'Paris region', 'Non Paris region']
-
-print()
-print(df_desc[ls_cols_desc_tex].to_string())
-
-print()
-print(df_desc[ls_cols_desc_tex].to_latex())
+  print()
+  print(stat)
+  dict_df_topics = {}
+  for topic_title, df_topic, ls_cols_topic in ls_loop_topics:
+    ls_titles_desc_temp, ls_se_desc_temp = [], []
+    for group_title, ls_ids_group in ls_loop_groups:
+      se_desc_temp = df_topic.ix[ls_ids_group][ls_cols_topic].describe().ix[stat]
+      ls_se_desc_temp.append(se_desc_temp)
+      ls_titles_desc_temp.append(group_title)
+    df_topic_desc = pd.concat(ls_se_desc_temp,
+                              axis = 1,
+                              keys = ls_titles_desc_temp)
+    dict_df_topics[topic_title] = df_topic_desc
+  
+  df_desc = pd.concat([dict_df_topics['Price'],
+                       dict_df_topics['Competition'],
+                       dict_df_topics['Rigidity']])
+  
+  df_desc.ix['avg_pos_chge'] = df_desc.ix['avg_pos_chge'] * 100
+  df_desc.ix['avg_neg_chge'] = df_desc.ix['avg_neg_chge'] * 100
+  
+  df_desc.rename(index = {'nb_c_1km' : 'Nb of rivals within 1 km',
+                          'nb_c_3km' : 'Nb of rivals within 3 km',
+                          'nb_c_5km' : 'Nb of rivals within 5 km',
+                          'dist_c'   : 'Distance to closest rival',
+                          'pct_chge' : 'Daily price change probability',
+                          'avg_pos_chge' : 'Mean positive price change (cent)',
+                          'avg_neg_chge' : 'Mean negative price change (cent)'},
+                 inplace = True)
+  
+  df_desc.ix['Nb stations (total)'] =\
+    [len(ls_ids_group) for group_title, ls_ids_group in ls_loop_groups]
+  
+  # need to exclude missing obs days for std computation
+  df_desc.ix['Nb stations (observed)'] =\
+    [df_prices_ttc[ls_ids_group].count(1)[df_prices_ttc[ls_ids_group].count(1) != 0]\
+       .describe().ix[stat] for group_title, ls_ids_group in ls_loop_groups]
+  
+  ls_cols_desc_tex = [x[0] for x in ls_loop_groups]
+  
+  print()
+  print(df_desc[ls_cols_desc_tex].ix[ls_order_rows].to_string())
+  
+  #print()
+  #print(df_desc[ls_cols_desc_tex].ix[ls_order_rows].to_latex())

@@ -173,9 +173,10 @@ for group_type in df_sub['group_type'].unique():
 # temp: overwrite ELF for table (fragile but else overwritten due to nb_brand)
 df_sub.loc[df_sub['brand'] == 'OTHER_DIS', 'brand'] = 'TOTAL_ACCESS'
 
-# temp: set small OIL to IND (group_type too => for agg stat on remainder)
+# temp: set small OIL & IND to INDEPENDANT (group_type too => for agg stat on remainder)
 df_sub.loc[df_sub['brand'] == 'OTHER_OIL', 'group_type'] = 'IND'
-df_sub.loc[df_sub['brand'] == 'OTHER_OIL', 'brand'] = 'OTHER_IND'
+df_sub.loc[df_sub['brand'] == 'OTHER_OIL', 'brand'] = 'INDEPENDANT'
+df_sub.loc[df_sub['brand'] == 'OTHER_IND', 'brand'] = 'INDEPENDANT'
 
 # #######################
 # STATS DES: CHAIN PRICES
@@ -207,7 +208,8 @@ print(u'Aggregate:')
 ls_group_types = [['OIL', 'IND'],
                   ['HYP', 'SUP', 'DIS'],
                   ['HYP', 'SUP'],
-                  ['DIS']]
+                  ['DIS'],
+                  ['OIL', 'IND', 'HYP', 'SUP', 'DIS']]
 
 ls_se_gt, ls_gt_title = [], []
 for group_types in ls_group_types:

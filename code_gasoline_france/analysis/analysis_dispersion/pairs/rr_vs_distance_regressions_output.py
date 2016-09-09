@@ -137,11 +137,10 @@ price_cat = 'no_mc' # 'residuals_no_mc'
 print(u'Prices used : {:s}'.format(price_cat))
 df_pairs = df_pairs[df_pairs['cat'] == price_cat].copy()
 
-## robustness check with idf: 1 km max
+## robustness check (exclude idf)
 #ls_dense_dpts = [75, 92, 93, 94]
-#df_pairs = df_pairs[~((((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
-#                        (df_pairs['dpt_2'].isin(ls_dense_dpts))) &\
-#                       (df_pairs['distance'] > 1)))]
+#df_pairs = df_pairs[~(((df_pairs['dpt_1'].isin(ls_dense_dpts)) |\
+#                       (df_pairs['dpt_2'].isin(ls_dense_dpts))))]
 
 ## robustness check keep closest competitor
 #df_pairs.sort(['id_1', 'distance'], ascending = True, inplace = True)
@@ -178,7 +177,7 @@ dict_pair_comp['sup&dis'] = pd.concat([dict_pair_comp['sup'],
                                        dict_pair_comp['dis'],
                                        dict_pair_comp['sup_dis']])
 # Low spread pairs (limit on average long term price difference)
-diff_bound = 1.0 # euro cents
+diff_bound = 2.0 # euro cents
 dict_pair_comp_nd = {}
 for df_temp_title, df_temp in dict_pair_comp.items():
   dict_pair_comp_nd[df_temp_title] =\
@@ -193,8 +192,8 @@ for df_temp_title, df_temp in dict_pair_comp.items():
 dist_reg = 1000
 col_sc = 'sc_{:d}'.format(dist_reg)
 
-#ls_ctrls = ['C(reg_1)']
-#str_ctrls = u'+ {:s}'.format(u' + '.join(ls_ctrls))
+ls_ctrls = ['C(reg_1)']
+str_ctrls = u'+ {:s}'.format(u' + '.join(ls_ctrls))
 str_ctrls = u''
 
 ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d} {:s}'.format(dist_reg, str_ctrls),
@@ -231,7 +230,8 @@ ls_loop_df_ppd_regs = [('Nd All', dict_pair_comp_nd['any']),
                        ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
                        ('Nd Sup&Dis', dict_pair_comp_nd['sup&dis']),
                        ('Nd Sup', dict_pair_comp_nd['sup']),
-                       ('Nd Sup vs. Dis', dict_pair_comp_nd['sup_dis'])]
+                       ('Nd Sup vs. Dis', dict_pair_comp_nd['sup_dis']),
+                       ('Nd Dis', dict_pair_comp_nd['dis'])]
 
 # Some issues with current implementation of quantreg => R
 # Work with dist 1000 until Oil Ind...

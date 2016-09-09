@@ -198,20 +198,20 @@ for df_temp_title, df_temp in dict_pair_comp.items():
 # - diff_bound set to 0.01 and 0.02 (differentiation)
 # - df_pairs['cat'] : 'no_mc' (raw _prices) and 'residuals_no_mc' (price residuals)
 
-ls_var_desc = ['distance', 'abs_mean_spread', 'std_spread', 'pct_same', 'pct_rr']
+ls_var_desc = ['distance', 'pct_rr', 'pct_same', 'abs_mean_spread', 'std_spread']
 
 ls_loop_pair_disp = [('All', dict_pair_comp['any']),
                      ('Oil&Ind', dict_pair_comp['oil&ind']),
                      ('Sup&Dis', dict_pair_comp['sup&dis']),
                      ('Sup', dict_pair_comp['sup']),
+                     ('Dis', dict_pair_comp['dis']),
                      ('Sup vs. Dis', dict_pair_comp['sup_dis']),
-                     ('Dis', dict_pair_comp['sup_dis']),
                      ('Nd All', dict_pair_comp_nd['any']),
                      ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
                      ('Nd Sup&Dis', dict_pair_comp_nd['sup&dis']),
                      ('Nd Sup', dict_pair_comp_nd['sup']),
-                     ('Nd Sup vs. Dis', dict_pair_comp_nd['sup_dis']),
-                     ('Nd Dis', dict_pair_comp['dis'])]
+                     ('Nd Dis', dict_pair_comp_nd['dis']),
+                     ('Nd Sup vs. Dis', dict_pair_comp_nd['sup_dis'])]
 
 for dist_lim in [1, 3, 5]:
   print()

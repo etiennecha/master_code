@@ -121,44 +121,53 @@ Table~\ref{tab:station_chains} provides an overview of retailer chains and price
 \begin{table}[H]
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.8} % too large by default...
-\caption{Overview of retailer chains (last day of the period)}
+\caption{Overview of gas station prices by chain on 2014/12/04 (last day)}
 \label{tab:station_chains}
-    \begin{tabular}{llrrrrr}
-    \hline
-		\hline
-          &       & \multicolumn{5}{c}{Prices (euro cents) on 2014/12/04} \\
-    Type  & Chain & Count & Mean  & Std   & Q75/Q25 & Q90/Q10 \\
-		\hline
-    \textbf{Supermarkets} &       & \textbf{4,967} &       &       &       &  \\
-    Large & Carrefour & 201   & 1.15  & 0.03  & 1.02  & 1.05 \\
-    Large & Auchan & 118   & 1.16  & 0.03  & 1.02  & 1.05 \\
-    Large & Cora  & 111   & 1.18  & 0.04  & 1.04  & 1.08 \\
-    Large & Geant Casino & 97    & 1.16  & 0.02  & 1.03  & 1.04 \\
-    Large and medium & Intermarche & 1,391 & 1.17  & 0.03  & 1.03  & 1.06 \\
-    Large and medium & Systeme U & 771   & 1.16  & 0.03  & 1.03  & 1.06 \\
-    Large and medium & Leclerc & 585   & 1.15  & 0.02  & 1.03  & 1.06 \\
-    Small & Carrefour market & 717   & 1.18  & 0.03  & 1.03  & 1.05 \\
-    Small & Carrefour contact & 233   & 1.20  & 0.03  & 1.03  & 1.05 \\
-    Small & Simply (Auchan) & 222   & 1.20  & 0.03  & 1.04  & 1.07 \\
-    Small & Casino & 200   & 1.21  & 0.03  & 1.03  & 1.06 \\
-    Small & Intermarche contact & 112   & 1.20  & 0.03  & 1.04  & 1.07 \\
-    Other supermarkets &       & 209   &       &       &       &  \\
-		\hline
-    \textbf{Oil and independent} &       & \textbf{3,770} &       &       &       &  \\
-    Oil   & Total & 1,283 & 1.27  & 0.03  & 1.03  & 1.07 \\
-    Oil   & Elan (Total) & 233   & 1.32  & 0.04  & 1.05  & 1.08 \\
-    Oil   & Agip  & 116   & 1.25  & 0.03  & 1.02  & 1.06 \\
-    Oil (Independent) & BP    & 275   & 1.26  & 0.04  & 1.03  & 1.07 \\
-    Oil (Independent) & Esso  & 147   & 1.27  & 0.05  & 1.05  & 1.11 \\
-    Independent & Avia  & 376   & 1.27  & 0.05  & 1.03  & 1.07 \\
-    Independent & Dyneff & 55    & 1.26  & 0.04  & 1.05  & 1.07 \\
-    Oil - discount & Total access & 616   & 1.16  & 0.03  & 1.02  & 1.04 \\
-    Oil (Independent) - discount & Esso express & 318   & 1.16  & 0.02  & 1.02  & 1.04 \\
-    Other independent &       & 351   &       &       &       &  \\
-		\hline
-    \textbf{Total} &       & \textbf{8,737} &       &       &       &  \\
-    \hline
-		\hline
+    \begin{tabular}{lrrrrr}
+    \toprule
+    \toprule
+          &       &       & \multicolumn{3}{c}{Prices (euro cents)} \\
+    Type  & \multicolumn{1}{l}{Chain} & Count & Mean (Std) & Q75/Q25 & Q90/Q10 \\
+    \midrule
+    \textbf{Oil \& Independent} &       &       &       &       &  \\
+    Oil   & \multicolumn{1}{l}{Total} & 1 281 & 1.27 (0.03) & 1.03  & 1.07 \\
+    Oil   & \multicolumn{1}{l}{Elan (Total)} & 233   & 1.32 (0.04) & 1.05  & 1.08 \\
+    Oil   & \multicolumn{1}{l}{Agip} & 116   & 1.25 (0.03) & 1.02  & 1.06 \\
+    Oil  & \multicolumn{1}{l}{BP} & 262   & 1.26 (0.04) & 1.03  & 1.07 \\
+    Oil  & \multicolumn{1}{l}{Esso} & 144   & 1.27 (0.05) & 1.05  & 1.11 \\
+    Independent & \multicolumn{1}{l}{Avia} & 375   & 1.27 (0.05) & 1.03  & 1.07 \\
+    Independent & \multicolumn{1}{l}{Dyneff} & 55    & 1.26 (0.04) & 1.05  & 1.07 \\
+    Independent & \multicolumn{1}{l}{Other} & 360   & 1.24 (0.06) & 1.07  & 1.12 \\
+    \midrule
+    Total - Oil and Independent &       & 2 826 & 1.27 (0.04) & 1.04  & 1.08 \\
+    \midrule
+    \textbf{Oil discount} &       &       &       &       &  \\
+    Oil discount & \multicolumn{1}{l}{Total access} & 621   & 1.16 (0.02) & 1.02  & 1.04 \\
+    Oil discount & \multicolumn{1}{l}{Esso express} & 318   & 1.16 (0.02) & 1.02  & 1.04 \\
+    \midrule
+    Total - Oil Discount &       & 939   & 1.16 (0.02) & 1.02  & 1.04 \\
+    \midrule
+    \textbf{Supermarkets} &       &       &       &       &  \\
+    Large & \multicolumn{1}{l}{Carrefour} & 200   & 1.15 (0.02) & 1.02  & 1.05 \\
+    Large & \multicolumn{1}{l}{Auchan} & 118   & 1.16 (0.03) & 1.02  & 1.05 \\
+    Large & \multicolumn{1}{l}{Cora} & 111   & 1.18 (0.04) & 1.04  & 1.08 \\
+    Large & \multicolumn{1}{l}{Geant Casino} & 97    & 1.16 (0.02) & 1.03  & 1.04 \\
+    Large and medium & \multicolumn{1}{l}{Intermarche} & 1 389 & 1.17 (0.03) & 1.03  & 1.06 \\
+    Large and medium & \multicolumn{1}{l}{Systeme U} & 770   & 1.16 (0.03) & 1.03  & 1.06 \\
+    Large and medium & \multicolumn{1}{l}{Leclerc} & 585   & 1.15 (0.02) & 1.03  & 1.06 \\
+    Medium and small & \multicolumn{1}{l}{Carrefour market} & 716   & 1.18 (0.03) & 1.03  & 1.05 \\
+    Small & \multicolumn{1}{l}{Carrefour contact} & 233   & 1.20 (0.03) & 1.03  & 1.05 \\
+    Small & \multicolumn{1}{l}{Simply (Auchan)} & 222   & 1.20 (0.03) & 1.04  & 1.07 \\
+    Small & \multicolumn{1}{l}{Casino} & 200   & 1.21 (0.03) & 1.03  & 1.06 \\
+    Small & \multicolumn{1}{l}{Intermarche contact} & 112   & 1.20 (0.03) & 1.04  & 1.07 \\
+    Other & \multicolumn{1}{l}{Other} & 209   & 1.20 (0.04) & 1.05  & 1.08 \\
+    \midrule
+    Total - Supermarkets &       & 4 962 & 1.17 (0.03) & 1.04  & 1.07 \\
+    \midrule
+    \textbf{Total - All} &       & 8 727 & 1.20 (0.06) & 1.07 & 1.12 \\
+    \bottomrule
+
+    \bottomrule
 \end{tabular}
 \begin{tablenotes}
 			\small
@@ -175,32 +184,32 @@ Table~\ref{tab:station_stats_des} provides an overview of gas station characteri
 \renewcommand{\arraystretch}{0.8} % too large by default...
 \caption{Station-level summary statistics}
 \label{tab:station_stats_des}
-\begin{tabular}{lr|rr|rr}
-    \hline
-    \hline
-		{}          & All   & Super-   & Others & Paris  & Others \\
-    {}          &       & markets  &        & region & \\
-    \hline
-    Nb stations &       &       &       &       &  \\
-    All periods & 9,217 & 5,055  & 4,162  & 918   & 8,299 \\
-    Nb daily observations (avg) & 7,896  & 4,400  & 3,496  & 776   & 7,119 \\
-		\hline
-    Competition &       &       &       &       &  \\
-    Distance (km) to closest rival & 2.3  & 2.6  & 1.8  & 1.2  & 2.4 \\
-    Nb of rivals within 3 km       & 3.2  & 2.5  & 4.1  & 6.9  & 2.8 \\
-    Nb of rivals within 5 km       & 6.6  & 4.9  & 8.6  & 17.8 & 5.3 \\
-    \hline
-    Price and Markup (euro per liter) &       &       &       &       &  \\
-    Price after tax            & 1.37  & 1.33  & 1.4   & 1.38  & 1.36 \\
-    Price excl. Tax            & 0.71  & 0.68  & 0.74  & 0.72  & 0.70 \\
-    Markup over wholesale cost & 0.10  & 0.08  & 0.13  & 0.11  & 0.10 \\
-    \hline
-    Retail price variations (euro cents per liter) &       &       &       &       &  \\
-    Daily price change probability & 0.17  & 0.18  & 0.15  & 0.21  & 0.16 \\
-    Average price increase         & 1.30   & 1.29  & 1.31  & 1.05  & 1.33 \\
-    Average price decrease         & 1.47   & 1.48  & 1.46  & 1.18  & 1.50 \\
-    \hline
-    \hline
+    \begin{tabular}{lrrrr}
+    \toprule
+    \toprule
+          & \multicolumn{1}{c}{Oil \& Ind} & \multicolumn{1}{c}{Oil discount} & \multicolumn{1}{c}{Supermarkets} & \multicolumn{1}{c}{All} \\
+    \midrule
+    Nb stations &       &       &       &  \\
+    All periods & \multicolumn{1}{c}{3 177} & \multicolumn{1}{c}{985} & \multicolumn{1}{c}{5 055} & \multicolumn{1}{c}{9 217} \\
+    Nb daily observations & \multicolumn{1}{c}{2 632 (134)} & \multicolumn{1}{c}{863 (9)} & \multicolumn{1}{c}{4 400 (55)} & \multicolumn{1}{c}{7 896 (122)} \\
+    \midrule
+    Price and Markup (euro / litre) &       &       &       &  \\
+    Price after tax & 1.42 (0.04) & 1.31 (0.02) & 1.33 (0.02) & 1.36 (0.05) \\
+    Price excl. Tax & 0.75 (0.03) & 0.66 (0.02) & 0.68 (0.02) & 0.70 (0.04) \\
+    Markup over wholesale cost & 0.15 (0.03) & 0.07 (0.01) & 0.08 (0.01) & 0.10 (0.04) \\
+    \midrule
+    Price changes (euro cent / litre) &       &       &       &  \\
+    Daily price change probability & 0.11 (0.05) & 0.29 (0.07) & 0.18 (0.10) & 0.17 (0.10) \\
+    Avg. price increase & 1.49 (0.50) & 0.74 (0.20) & 1.29 (0.45) & 1.30 (0.50) \\
+    Avg. price decrease & 1.67 (0.63) & 0.79 (0.22) & 1.48 (0.58) & 1.47 (0.62) \\
+    \midrule
+    Rivals &       &       &       &  \\
+    Nb within 1 km & 0.77 (0.94) & 0.94 (0.98) & 0.55 (0.82) & 0.67 (0.89) \\
+    Nb within 3 km & 3.76 (4.05) & 5.18 (3.68) & 2.51 (2.92) & 3.23 (3.54) \\
+    Nb within 5 km & 7.92 (9.59) & 11.01 (8.77) & 4.89 (6.23) & 6.59 (8.09) \\
+    Distance to closest & 1.95 (2.67) & 1.08 (1.03) & 2.64 (3.18) & 2.23 (2.89) \\
+   \bottomrule
+   \bottomrule
 \end{tabular}
 \begin{tablenotes}
 			\small
@@ -266,36 +275,35 @@ Rank reversals and standard deviation are computed for all pairs of competing ga
 \begin{table}[H]
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.8} % too large by default...
-\caption{Pair rank reversals}
+\caption{Overview of pairs (distance $\le$ 3 km)}
 \label{tab:stats_pair_rank_reversals}
-\begin{tabular}{lrrrrr}
-\hline
-\hline
-      & Nb.   & \multicolumn{2}{c}{Price spread} & \% Rank   & \% Same\\
-\cmidrule(l{2pt}r{2pt}){3-4}
-      & pairs & Abs. avg.  & Std. dev.           & reversals & price \\
-\hline
-\textbf{$d_{ij} \le  3 km$} &       &       &       &       &  \\
-\hline
-\multicolumn{2}{l}{\textbf{No price spread restriction}}  &       &       &       &  \\
-All types & 12,298 & 5.1   & 1.6   & 8.3   & 7.7 \\
-Supermarket pairs & 2,331 & 1.0   & 1.3   & 13.7  & 26.6 \\
-Oil/independent pairs & 1,126 & 2.7   & 1.9   & 14.9  & 2.9 \\
-Discounter pairs & 200   & 0.4   & 1.1   & 28.3  & 13.0 \\
-Discounter vs. supermarket pairs & 1,484 & 0.9   & 1.3   & 18.9  & 12.5 \\
-\hline
-\multicolumn{2}{l}{\textbf{Price spread $\le$ 1 cent per liter}}   &       &       &       &  \\
-All types & 3,429 & 0.4   & 1.2   & 22.4  & 24.5 \\
-Supermarket pairs & 1,524 & 0.4   & 1.1   & 16.9  & 37.9 \\
-Oil and independent pairs & 286   & 0.5   & 1.8   & 35.3  & 5.8 \\
-Discounter pairs & 176   & 0.3   & 1.0   & 30.0  & 13.9 \\
-Discounter vs. supermarket pairs & 1,034 & 0.5   & 1.2   & 22.9  & 16.0 \\
-\hline
-\hline
+    \begin{tabular}{lrrrrr}
+    \toprule
+    \toprule
+          & \multicolumn{1}{c}{Nb} & \multicolumn{1}{c}{Rank} & \multicolumn{1}{c}{Same} & \multicolumn{2}{c}{Price spread} \\
+          & \multicolumn{1}{c}{pairs} & \multicolumn{1}{c}{reversals (\%)} & \multicolumn{1}{c}{price (\%)} & \multicolumn{1}{c}{Mean} & \multicolumn{1}{c}{Std} \\
+    \midrule
+    No price spread restriction &       &       &       &       &  \\
+    All types & 11 754 & 7.1 (10.8) & 7.8 (17.0) & 5.3 (4.3) & 1.6 (0.6) \\
+    Oil \& Ind & 1 679 & 10.5 (12.0) & 3.9 (9.0) & 3.2 (2.6) & 1.9 (0.6) \\
+    Supermarkets \& Discounters & 3 706 & 15.4 (11.3) & 21.7 (23.6) & 1.0 (1.0) & 1.3 (0.5) \\
+    Supermarkets & 2 232 & 12.9 (10.3) & 27.3 (27.6) & 1.0 (1.1) & 1.3 (0.5) \\
+    Discounters & 157   & 28.2 (9.5) & 13.6 (6.5) & 0.4 (0.4) & 1.1 (0.3) \\
+    Supermarkets vs. discounters & 1 317 & 18.1 (11.4) & 13.1 (11.7) & 1.0 (0.9) & 1.3 (0.5) \\
+    \midrule
+    Price spread $\le$ 1 cent per liter &       &       &       &       &  \\
+    All types & 1 928 & 20.3 (11.8) & 27.4 (24.6) & 0.4 (0.3) & 1.1 (0.4) \\
+    Oil \& Ind & 297   & 29.0 (10.5) & 12.1 (17.0) & 0.5 (0.3) & 1.6 (0.4) \\
+    Supermarkets \& Discounters & 1 423 & 19.0 (11.5) & 30.2 (24.9) & 0.4 (0.3) & 1.1 (0.4) \\
+    Supermarkets & 1 404 & 15.9 (10.8) & 40.0 (17.3) & 0.3 (0.3) & 1.1 (0.4) \\
+    Discounters & 140   & 30.0 (8.2) & 14.4 (6.4) & 0.3 (0.2) & 1.0 (0.3) \\
+    Supermarkets vs. discounters & 879   & 22.2 (10.9) & 17.1 (11.9) & 0.5 (0.3) & 1.1 (0.3) \\
+    \bottomrule
+    \bottomrule
 \end{tabular}
 \begin{tablenotes}
 			\small
-      \item Except for the first column, all figures are averages of statistics computed at the pair level. As regards the price spread, the absolute value of the average (Abs. avg.) accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), and the standard deviation (Std. dev.) measures dispersion around the long term price difference (0 if both gas stations always set the same price).
+      \item Except for the first column, all figures are averages of statistics computed at the pair level (standard errors in parentheses). As regards the price spread, the average accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), and the standard deviation measures dispersion around the long term price difference (0 if both gas stations always set the same price).
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -337,31 +345,46 @@ A formal test, proposed by \cite{TAP11}, consists in regressing measures of pric
 Results (Table~\ref{tab:regs_pairs}) support the hypothesis that limited consumer information is linked to price dispersion. Among supermarkets, competitors are often found to set the very same price, which, given the relatively low prices and absence of evidence of collusion, suggests fierce price competition. Daily price records allow to uncover a number of situations in which one gas station appears to act as a leader.
 
 \begin{table}[H]
+\begin{threeparttable}
 \renewcommand{\arraystretch}{0.8} % too large by default...
-\centering
 \caption{Regressions of pair price dispersion}
-\begin{tabular}{ll.....} %{lrrrrrr}
-\hline
-\hline
-                  & Dependent  &             & \multicolumn{4}{c}{Quantile regressions} \\
-                  & Variable   & \multicolumn{1}{c}{OLS}   & \multicolumn{1}{c}{25\%}  & \multicolumn{1}{c}{50\%}  & \multicolumn{1}{c}{75\%}  & \multicolumn{1}{c}{90\%} \\
-\hline
-All pairs         & $r_{ij}$   & -0.035^{**} & -0.030^{**} & -0.047^{**} & -0.043^{**} & -0.033^{**} \\
-(N = 3,345)       &            & [6.57]      & [4.01]      & [5.12]      & [5.34]      & [4.45]      \\
-                  & $std_{ij}$ & -0.001^{**} & -0.001^{**} & -0.001^{**} & -0.001^{**} & -0.002^{**} \\
-                  &            & [4.73]      & [3.09]      & [3.53]      & [3.52]      & [2.75]      \\
-Supermarkets      & $r_{ij}$   & -0.026^{**} & -0.016^{*}  & -0.027^{**} & -0.043^{**} & -0.036^{*}  \\
-(N = 1,488)       &            & [3.73]      & [2.56]      & [2.77]      & [2.78]      & [2.34]      \\
-                  & $std_{ij}$ & -0.000^{}   & -0.000^{}   & -0.000^{}   & 0.000^{}    & -0.000^{}   \\
-                  &            & [1.01]      & [0.71]      & [1.04]      & [0.25]      & [0.54]      \\
-Oil \& Ind        & $r_{ij}$   & -0.033^{*}  & -0.057^{**} & -0.039^{*}  & -0.02^{}    & 0.017^{}    \\
-(N = 277)         &            & [2.60]      & [2.73]      & [2.17]      & [1.29]      & [1.16]      \\
-                  & $std_{ij}$ & -0.003^{**} & -0.003^{**} & -0.003^{**} & -0.001^{}   & -0.002^{}   \\
-                  &            & [3.48]      & [3.85]      & [3.76]      & [1.04]      & [1.02]      \\
-\hline
-\hline
-\end{tabular}%
 \label{tab:regs_pairs}
+\begin{tabular}{llrrrrr} %{lrrrrrr}
+\toprule
+\toprule
+          & \multicolumn{1}{l}{Dependent} &       & \multicolumn{4}{c}{Quantile regressions} \\
+          & \multicolumn{1}{l}{Variable} & OLS   & 25\%  & 50\%  & 75\%  & 90\% \\
+\midrule
+    \multicolumn{1}{l}{All pairs} & \multicolumn{1}{l}{$r_{ij}$} & -2.28*** & -1.70*** & -3.60*** & -2.70*** & -2.10*** \\
+    \multicolumn{1}{l}{(N =  2 928)} &       & (0.25) & (0.32) & (0.42) & (0.39) & (0.39) \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.04** & -0.05*** & -0.03 & -0.02 & -0.01 \\
+          &       & (0.02) & (0.02) & (0.02) & (0.03) & (0.04) \\
+\midrule
+    \multicolumn{1}{l}{Oil \& Ind} & \multicolumn{1}{l}{$r_{ij}$} & -3.29** & -3.80** & -3.00* & -1.90 & -0.50 \\
+    \multicolumn{1}{l}{ (N = 297)} &       & (1.34) & (1.82) & (1.74) & (1.84) & (1.84) \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.22*** & -0.25*** & -0.21*** & -0.17* & -0.1 \\
+          &       & (0.05) & (0.06) & (0.06) & (0.09) & (0.12) \\
+\midrule
+    \multicolumn{1}{l}{Supermarkets} & \multicolumn{1}{l}{$r_{ij}$} & -2.12*** & -1.40** & -2.50*** & -2.30 & -1.90 \\
+    \multicolumn{1}{l}{ (N = 1 404)} &       & (0.68) & (0.60) & (0.91) & (1.41) & (1.60) \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.01 & -0.02 & -0.01 & 0.04  & -0.02 \\
+          &       & (0.02) & (0.03) & (0.03) & (0.04) & (0.05) \\
+\midrule
+    \multicolumn{1}{l}{Discounters} & \multicolumn{1}{l}{$r_{ij}$} & -2.29 & -2.80 & -1.10 & -3.10** & -2.80*** \\
+    \multicolumn{1}{l}{ (N = 140)} &       & (1.69) & (2.96) & (2.44) & (2.15) & (2.23) \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.28*** & -0.19*** & -0.24*** & -0.38*** & -0.52*** \\
+          &       & (0.06) & (0.07) & (0.08) & (0.08) & (0.10) \\
+\midrule
+    \multicolumn{1}{l}{Supermarkets vs. Discounters} & \multicolumn{1}{l}{$r_{ij}$} & -2.70*** & -3.40** & -2.80** & -2.60** & -4.30*** \\
+    \multicolumn{1}{l}{(N = 879)} &       & (0.91) & (1.49) & (1.34) & (1.32) & (1.31) \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.02 & -0.05* & -0.03 & -0.00 & 0.02 \\
+          &       & (0.03) & (0.03) & (0.03) & (0.04) & (0.07) \\
+\bottomrule
+\bottomrule
+\end{tabular}
+%\begin{tablenotes}
+%\end{tablenotes}
+\end{threeparttable}
 \end{table}
 
 \section{Market price dispersion}
