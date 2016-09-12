@@ -74,7 +74,7 @@ set_keep_ids = set(df_prices_ttc.columns).intersection(set(df_info.index))
 df_prices_ht = df_prices_ht[list(set_keep_ids)]
 df_prices_ttc = df_prices_ttc[list(set_keep_ids)]
 
-# Chose before or after tax
+# Choose before or after tax
 df_prices = df_prices_ttc
 
 ## Set to nan stations with too few prices
@@ -223,3 +223,8 @@ df_test = pd.concat([se_final_day_fe, se_mean_price],
 
 ## STD PARAMETERS
 #res[-1][-10:] * res[3]**2 / (sparse_mat_id_dates.shape[0] - len(res[0]))
+
+# CHECK RESULTS
+se_res_mean = df_prices_cl.mean(0)
+# check high mean res: gas station with very low price count
+print(len(se_res_mean[se_res_mean.abs() >= 0.01]))

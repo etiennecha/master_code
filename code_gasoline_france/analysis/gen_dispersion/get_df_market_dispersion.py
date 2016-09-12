@@ -126,16 +126,18 @@ df_cost.set_index('date', inplace = True)
 
 # GEN LOW PRICE AND HIGH PRICE MARKETS
 
-## pbm with chging discounters btw...
-## (check with describe / hist if ok over time...)
-#df_info.loc['17240001', 'brand_last'] = 'TOTAL_ACCESS'
-## temp fix ... todo check 95230007
-#ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
-#df_info.loc[df_info['brand_last'].isin(ls_discounter),
-#             'group_type_last'] = 'DIS'
-#df_info.loc[df_info['brand_0'].isin(ls_discounter),
-#             'group_type'] = 'DIS'
-## should exclude margin chge stations?
+# GEN LOW PRICE AND HIGH PRICE MARKETS
+# pbm with chging discounters btw...
+# (check with describe / hist if ok over time...)
+# GEN LOW PRICE AND HIGH PRICE MARKETS
+# todo check 95230007
+ls_discounter = ['ELF', 'ESSO_EXPRESS', 'TOTAL_ACCESS']
+df_info.loc[df_info['brand_last'].isin(ls_discounter),
+             'group_type_last'] = 'DIS'
+df_info.loc[(df_info['brand_0'].isin(ls_discounter)) |\
+            (df_info['brand_last'] == 'ESSO_EXPRESS'),
+             'group_type'] = 'DIS'
+# should exclude margin chge stations?
 
 df_info['price_cat_last'] = 'HIGH'
 df_info.loc[(df_info['group_type_last'].isin(['SUP', 'DIS'])),

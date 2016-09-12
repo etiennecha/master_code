@@ -178,23 +178,8 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
                    ('Low_3km_Residuals', df_prices_cl, dict_markets['Low_3km']),
                    ('High_3km_Residuals', df_prices_cl, dict_markets['High_3km'])]
 
-## Can avoid generating markets every time
-#dict_df_mds = {}
-#for title, df_prices, ls_markets_temp in ls_loop_markets:
-#  dict_df_mds[title] =\
-#    pd.read_csv(os.path.join(path_dir_built_dis_csv,
-#                             'df_market_dispersion_{:s}.csv'.format(title)),
-#                encoding = 'utf-8',
-#                parse_dates = ['date'],
-#                dtype = {'id' : str})
-#df_md = dict_df_mds[ls_loop_markets[5][0]].copy()
-
 # paper regressions: 0, 1, 6, 7
 # todo: before and after govt intervention?
-
-# #############
-# LOAD DATA
-# #############
 
 dict_df_md = {}
 ls_titles, dict_stats_des = [], {}
@@ -219,6 +204,16 @@ for x in [0, 1, 3, 4, 6, 7, 8, 9, 10, 11]:
   
   dict_df_md[title] = df_md
 
+# DROP MARKETS WITH MARGIN CHGE (CENTER OR IN)
+margin_chge_bound = 0.03
+ls_ids_margin_chge =\
+  df_margin_chge[df_margin_chge['value'].abs() >= margin_chge_bound].index
+dict_ls_comp_3km = {x : [y[0] for y in ls_y if y[1] <= 3]\
+                        for x, ls_y in dict_ls_comp.items()}
+ls_drop_3km = [x for x, ls_y in dict_ls_comp_3km.items()\
+                 if set(ls_y).intersection(set(ls_ids_margin_chge))]
+ls_drop_3km = list(set(ls_drop_3km).union(ls_ids_margin_chge))
+
 # ###############
 # STATS DES
 # ###############
@@ -236,6 +231,8 @@ ls_titles, ls_se_mean, ls_se_std, = [], [], []
 for x in [0, 1, 3, 4, 6, 7, 8, 9, 10, 11]:
   title = ls_loop_markets[x][0]
   df_md = dict_df_md[title]
+  # drop if margin chge around
+  df_md = df_md[~df_md['id'].isin(ls_drop_3km)]
   nb_obs = len(df_md)
   se_mean = df_md[lsd_agg[2:]].mean()
   se_mean.ix['Nb obs'] = nb_obs
