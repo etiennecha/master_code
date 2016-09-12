@@ -267,6 +267,8 @@ dict_stats_des = {}
 for x in [0, 1, 3, 4, 6, 7, 8, 9, 10, 11]:
   title = ls_loop_markets[x][0]
   df_md = dict_df_md[title]
+  # drop if margin chge around
+  df_md = df_md[~df_md['id'].isin(ls_drop_3km)]
   # Stats des: groupby id to compute mean/std for each
   df_md_mean = df_md.groupby('id').agg('mean')
   ## Not taking market first: keep df_md
