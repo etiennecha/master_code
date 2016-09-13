@@ -8,6 +8,7 @@ from generic_master_price import *
 from generic_master_info import *
 from generic_competition import *
 import time
+from statsmodels.iolib.summary2 import summary_col
 
 path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
@@ -206,7 +207,8 @@ df_prices_cl2 = df_prices_cl2.apply(lambda row: row - row.mean(), axis = 0)
 # #########################
 
 #df_prices = df_prices_cl2 * 100
-df_prices = df_prices_cl * 100
+#df_prices = df_prices_cl * 100
+df_prices = df_prices_ttc * 100
 
 ## Robustness check: use price only upon change
 #df_chges = df_prices_ttc - df_prices_ttc.shift(1)
@@ -283,67 +285,84 @@ for price_type in ['LOW', 'HIGH']:
 df_disp.loc[df_disp['group_type'] == 'IND',
             'group_type'] = 'OIL'
 
-ls_ls_idpt_vars = [['nb_c_3km + C(group_type)'],
-                   ['nb_c_3km + C(group_type) + C(reg)'],
-                   #['dist_c * C(type)'],
-                   #['dist_c * C(type)', 'C(reg)'],
-                   #['dist_c * C(type)', 'C(reg)'],
-                   ['nb_c_3km:C(group_type)', 'C(group_type)', 'C(reg)']]
+# get rid of obs with high nb comp count
+df_disp = df_disp[df_disp['nb_c_3km'] <= 10]
 
-for ls_idpt_vars in ls_ls_idpt_vars:
-  #print()
-  #print(smf.ols('std ~ ' + '+'.join(ls_idpt_vars),
-  #      data = df_disp).fit().summary())
-  #print()
-  #print(smf.ols('range_1 ~' + '+'.join(ls_idpt_vars),
-  #      data = df_disp).fit().summary())
+ls_ls_regs_0 = [[df_disp, ['nb_c_3km + C(group_type)']],
+                [df_disp, ['nb_c_3km + C(group_type) + C(reg)']],
+                #[df_disp, ['dist_c * C(type)']],
+                #[df_disp, ['dist_c * C(type)', 'C(reg)']],
+                #[df_disp, ['dist_c * C(type)', 'C(reg)']],
+                [df_disp, ['nb_c_3km:C(group_type)', 'C(group_type)', 'C(reg)']]]
+              
+
+ls_ls_regs_1 = [[df_disp[df_disp['group_type'] == 'DIS'], ['nb_c_3km', 'C(reg)']],
+                [df_disp[df_disp['group_type'] == 'OIL'], ['nb_c_3km', 'C(reg)']],
+                [df_disp[df_disp['group_type'] == 'SUP'], ['nb_c_3km', 'C(reg)']]]
+
+for ls_ls_regs in [ls_ls_regs_0, ls_ls_regs_1]:
+  ls_res = []
+  ls_names = []
+  for df_temp, ls_idpt_vars in ls_ls_regs:
+    #print()
+    #print(smf.ols('std ~ ' + '+'.join(ls_idpt_vars),
+    #      data = df_disp).fit().summary())
+    #print()
+    #print(smf.ols('range_1 ~' + '+'.join(ls_idpt_vars),
+    #      data = df_disp).fit().summary())
+    
+    for idpt_var in ['std', 'range_1']:
+      res = smf.ols('{:s} ~ {:s}'.format(idpt_var, '+'.join(ls_idpt_vars)),
+                    data = df_temp).fit(cov_type='cluster',
+                                        cov_kwds={'groups': df_temp['reg']})
+      ls_res.append(res)
+      ls_names.append(idpt_var)
   
-  print()
-  print(smf.ols('std ~ ' + '+'.join(ls_idpt_vars),
-        data = df_disp).fit(cov_type='cluster',
-                            cov_kwds={'groups': df_disp['reg']}).summary())
-  print()
-  print(smf.ols('range_1 ~ ' + '+'.join(ls_idpt_vars),
-        data = df_disp).fit(cov_type='cluster',
-                            cov_kwds={'groups': df_disp['reg']}).summary())
+  su = summary_col(ls_res,
+                   model_names = ls_names,
+                   stars=True,
+                   float_format='%0.2f',
+                   info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                              'R2':lambda x: "{:.2f}".format(x.rsquared)})
+  print(su)
 
 # scipy.stats.mstats.normaltest(ls_se_prices[0][~ls_se_prices[0].isnull()])
 
-from scipy.stats import norm
-se_prices = df_prices[df_prices.columns[1]]
-se_prices = se_prices[~se_prices.isnull()]
-mu, std = norm.fit(se_prices)
-bins = plt.hist(se_prices.values, bins=25, normed=True, alpha=0.6, color='g')
-xmin, xmax = plt.xlim()
-x = np.linspace(xmin, xmax, 100)
-p = norm.pdf(x, mu, std)
-plt.plot(x, p, 'k', linewidth=2)
-plt.show()
-
-## Data issues?
-#print()
-#print('Inspect possible data issues')
-#print(df_disp[df_disp['range_0'] >= 20]\
-#             [['brand_0', 'brand_last', 'range_0', 'std_0']].to_string())
+#from scipy.stats import norm
+#se_prices = df_prices[df_prices.columns[1]]
+#se_prices = se_prices[~se_prices.isnull()]
+#mu, std = norm.fit(se_prices)
+#bins = plt.hist(se_prices.values, bins=25, normed=True, alpha=0.6, color='g')
+#xmin, xmax = plt.xlim()
+#x = np.linspace(xmin, xmax, 100)
+#p = norm.pdf(x, mu, std)
+#plt.plot(x, p, 'k', linewidth=2)
+#plt.show()
 #
-## Inspect first and last change for all prices
-#df_chge = df_prices_ttc - df_prices_ttc.shift(1)
-#df_chge[df_chge.abs() <= 1e-5] = np.nan
-#df_chge.fillna(method = 'backfill', axis = 0, inplace = True)
-#df_chge.fillna(method = 'ffill', axis = 0, inplace = True)
-#print(df_chge.ix[-1][df_chge.ix[-1].abs() >= 0.1]) # a few to fix
-#print(df_chge.ix[0][df_chge.ix[0].abs() >= 0.1]) # no pbm
-## issue otherwise
-#se_test = df_chge.apply(lambda row: 1 if len(row[row.abs() > 0.15])> 0 else 0, axis = 0)
-#print(se_test[se_test != 0])
-
-set_low_ids = set_low_ids.intersection(set(df_prices_ttc.columns))
-set_high_ids = set_high_ids.intersection(set(df_prices_ttc.columns))
-ax = df_prices_ttc[list(set_low_ids)].ix['2013-06-01'].plot(kind = 'hist',
-                                                            bins = 50,
-                                                            alpha = 0.5)
-df_prices_ttc[list(set_high_ids)].ix['2013-06-01'].plot(kind = 'hist',
-                                                        bins = 50,
-                                                        alpha = 0.5,
-                                                        ax=ax)
-plt.show()
+### Data issues?
+##print()
+##print('Inspect possible data issues')
+##print(df_disp[df_disp['range_0'] >= 20]\
+##             [['brand_0', 'brand_last', 'range_0', 'std_0']].to_string())
+##
+### Inspect first and last change for all prices
+##df_chge = df_prices_ttc - df_prices_ttc.shift(1)
+##df_chge[df_chge.abs() <= 1e-5] = np.nan
+##df_chge.fillna(method = 'backfill', axis = 0, inplace = True)
+##df_chge.fillna(method = 'ffill', axis = 0, inplace = True)
+##print(df_chge.ix[-1][df_chge.ix[-1].abs() >= 0.1]) # a few to fix
+##print(df_chge.ix[0][df_chge.ix[0].abs() >= 0.1]) # no pbm
+### issue otherwise
+##se_test = df_chge.apply(lambda row: 1 if len(row[row.abs() > 0.15])> 0 else 0, axis = 0)
+##print(se_test[se_test != 0])
+#
+#set_low_ids = set_low_ids.intersection(set(df_prices_ttc.columns))
+#set_high_ids = set_high_ids.intersection(set(df_prices_ttc.columns))
+#ax = df_prices_ttc[list(set_low_ids)].ix['2013-06-01'].plot(kind = 'hist',
+#                                                            bins = 50,
+#                                                            alpha = 0.5)
+#df_prices_ttc[list(set_high_ids)].ix['2013-06-01'].plot(kind = 'hist',
+#                                                        bins = 50,
+#                                                        alpha = 0.5,
+#                                                        ax=ax)
+#plt.show()

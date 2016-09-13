@@ -177,6 +177,16 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
                    ('Low_3km_Residuals', df_prices_cl, dict_markets['Low_3km']),
                    ('High_3km_Residuals', df_prices_cl, dict_markets['High_3km'])]
 
+# DROP MARKETS WITH MARGIN CHGE (CENTER OR IN)
+margin_chge_bound = 0.03
+ls_ids_margin_chge =\
+  df_margin_chge[df_margin_chge['value'].abs() >= margin_chge_bound].index
+dict_ls_comp_3km = {x : [y[0] for y in ls_y if y[1] <= 3]\
+                        for x, ls_y in dict_ls_comp.items()}
+ls_drop_3km = [x for x, ls_y in dict_ls_comp_3km.items()\
+                 if set(ls_y).intersection(set(ls_ids_margin_chge))]
+ls_drop_3km = list(set(ls_drop_3km).union(ls_ids_margin_chge))
+
 # interest: 0, 1, 6, 7, 8, 9 (or 10, 11?)
 # keep for output:
 # - reg with 3 km high and low - raw
@@ -192,11 +202,14 @@ for market_def in ls_loop_markets[6:]:
                       parse_dates = ['date'],
                       dtype = {'id' : str})
 
-  ## Restrict to one or two day(s) per week: robustness checks
-  #df_md.set_index('date', inplace = True)
-  #df_md['dow'] = df_md.index.dayofweek
-  #df_md.reset_index(drop = False, inplace = True)
-  #df_md = df_md[(df_md['dow'] == 2) |(df_md['dow'] == 4)] # Friday
+  # Restrict to one or two day(s) per week: robustness checks
+  df_md.set_index('date', inplace = True)
+  df_md['dow'] = df_md.index.dayofweek
+  df_md.reset_index(drop = False, inplace = True)
+  df_md = df_md[(df_md['dow'] == 2) | (df_md['dow'] == 4)] # Friday
+  
+  # drop if margin chge around
+  df_md = df_md[~df_md['id'].isin(ls_drop_3km)]
   
   # need to get rid of nan to be able to cluster
   df_md = df_md[~df_md['cost'].isnull()]
@@ -217,39 +230,52 @@ dict_df_regs['3km_lh_raw'] = pd.concat([dict_df_mds['Low_3km'],
 dict_df_regs['3km_lh_res'] = pd.concat([dict_df_mds['Low_3km_Residuals'],
                                         dict_df_mds['High_3km_Residuals']])
 
-df_md = dict_df_regs['no_overlap_res']
-#df_md = df_md[df_md['nb_comp'] >= 4]
+# robustness checks for nb_comp
+dict_df_regs['3km_l_res'] = dict_df_mds['Low_3km_Residuals'].copy()
+dict_df_regs['3km_h_res'] = dict_df_mds['High_3km_Residuals'].copy()
+dict_df_regs['3km_l_res'].drop('d_high', axis = 1, inplace = True)
+dict_df_regs['3km_h_res'].drop('d_high', axis = 1, inplace = True)
 
-# loop on each period
-ls_res, ls_names = [], []
-for title_temp, df_temp in [['All', df_md],
-                            ['Before', df_md[df_md['date'] <= '2012-07-01']],
-                            ['After', df_md[df_md['date'] >= '2013-02-01']]]:
+for str_df in ['no_overlap_res', '3km_lh_raw', '3km_lh_res', '3km_l_res', '3km_h_res']:
+
+  df_md = dict_df_regs[str_df]
+  #df_md = dict_df_regs['no_overlap_res']
+  #df_md = df_md[df_md['nb_comp'] >= 4]
+  
+  # loop on each period
+  ls_res, ls_names = [], []
+  for title_temp, df_temp in [['All', df_md],
+                              ['Before', df_md[df_md['date'] <= '2012-07-01']],
+                              ['After', df_md[df_md['date'] >= '2013-02-01']]]:
+    #print()
+    #print('-'*60)
+    #print(title_temp)
+    #print()
+    for disp_stat in ['range', 'std']:
+      formula = '{:s} ~ cost + nb_comp'.format(disp_stat)
+      if 'd_high' in df_temp.columns:
+        formula = formula + '+ d_high'
+        #formula = formula + ' * C(d_high)'
+      res = smf.ols(formula, data = df_temp).fit()
+      res = res.get_robustcov_results(cov_type = 'cluster',
+                                      groups = df_temp[['int_id', 'int_date']].values,
+                                      use_correction = True)
+      #print()
+      #print(disp_stat)
+      #print(res.summary())
+      ls_res.append(res)
+      ls_names.append(title_temp[0:2] + '-' + disp_stat)
+  
+  su = summary_col(ls_res,
+                   model_names=ls_names,
+                   stars=True,
+                   float_format='%0.2f',
+                   info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                              'R2':lambda x: "{:.2f}".format(x.rsquared)})
+
   print()
-  print('-'*60)
-  print(title_temp)
-  print()
-  for disp_stat in ['range', 'std']:
-    print()
-    print(disp_stat)
-    formula = '{:s} ~ cost + nb_comp'.format(disp_stat)
-    if 'd_high' in df_temp.columns:
-      formula = formula + ' + d_high'
-    res = smf.ols(formula, data = df_temp).fit()
-    res = res.get_robustcov_results(cov_type = 'cluster',
-                                    groups = df_temp[['int_id', 'int_date']].values,
-                                    use_correction = True)
-    print(res.summary())
-    ls_res.append(res)
-    ls_names.append(title_temp[0:2] + '-' + disp_stat)
-
-su = summary_col(ls_res,
-                 model_names=ls_names,
-                 stars=True,
-                 float_format='%0.2f',
-                 info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
-                            'R2':lambda x: "{:.2f}".format(x.rsquared)})
-
+  print(str_df)
+  print(su)
 
 # toco: check if loss of signif. on cost using friday only due to insuff vars in cost?
 # todo: check if there are markets with supermarkets / no supermarkets?

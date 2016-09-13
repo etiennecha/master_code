@@ -77,10 +77,9 @@ df_price_stats.set_index('id_station', inplace = True)
 # MATCHING ZAGAZ
 
 df_matching_zagaz = pd.read_csv(os.path.join(path_dir_built_zagaz_csv,
-                                             'df_zagaz_stations_match_1.csv'),
-                                dtype = {'zag_id' : str,
-                                         'gov_id' : str,
-                                         'ci' : str},
+                                             'df_zagaz_matching_final.csv'),
+                                dtype = {'id_station' : str,
+                                         'zag_id' : str},
                                 encoding = 'utf-8')
 
 # ZAGAZ INFO
@@ -98,6 +97,30 @@ df_zagaz_info.set_index('id_zagaz', inplace = True)
 #df_zagaz_info['lat'] = df_zagaz_info['lat'].str.replace('-', '').astype(float)
 #df_zagaz_info['lng'] = df_zagaz_info['lng'].str.replace('-', '').astype(float)
 
+dict_types = {'SUP' : ['MOUSQUETAIRES',
+                       'CARREFOUR',
+                       'SYSTEME U',
+                       'LECLERC', 
+                       'AUCHAN',
+                       'CASINO',
+                       'CORA',
+                       'COLRUYT'],
+              'OIL': ['TOTAL',
+                      'ESSO',
+                      'BP',
+                      'AGIP',
+                      'SHELL'],
+              'IND' : ['AVIA',
+                       'DYNEFF']}
+
+# df_zagaz_info[df_zagaz_info['group_2012'].isnull()]['brand_std_2012'].value_counts()
+# df_zagaz_info[df_zagaz_info['group_2013'].isnull()]['brand_std_2013'].value_counts()
+# todo: add IND and DIS (not all TA in 2013 but do the best...)
+
+# todo: add type & investigate if pairs have same type (support segmentation?)
+# todo: check by user: many reporting only SUP & DIS?
+# pbm with TOTAL ACCESS... would require to check over time (but got ESSO EXPRESS?)
+
 # ZAGAZ USER DATA
 
 df_zagaz_users = pd.read_csv(os.path.join(path_dir_built_zagaz_csv,
@@ -111,14 +134,32 @@ df_zagaz_reports = pd.read_csv(os.path.join(path_dir_built_zagaz_csv,
 
 # ADD ZAGAZ INFO TO GOV INFO
 
-lsdzm = ['gov_id', 'zag_id',
-         'zag_street', 'zag_city',
-         'zag_br', 'zag_lat', 'zag_lng']
+df_matching_zagaz = pd.merge(df_matching_zagaz,
+                             df_zagaz_info[['street',
+                                            'municipality',
+                                            'brand_std_2012',
+                                            'brand_std_2013',
+                                            'lat', 'lng']],
+                             left_on = 'zag_id',
+                             right_index = True,
+                             how = 'left')
+
+df_matching_zagaz.rename(columns = {'street' : 'zag_street',
+                                    'municipality': 'zag_municipality',
+                                    'brand_std_2012' : 'zag_brand_2012',
+                                    'brand_std_2013' : 'zag_brand_2013',
+                                    'lat' : 'zag_lat',
+                                    'lng' : 'zag_lng'}, inplace = True)
+
+lsdzm = ['id_station', 'zag_id',
+         'zag_street', 'zag_municipality',
+         'zag_brand_2012', 'zag_brand_2013',
+         'zag_lat', 'zag_lng']
 
 df_info = pd.merge(df_info,
                    df_matching_zagaz[lsdzm],
                    left_index = True,
-                   right_on = 'gov_id',
+                   right_on = 'id_station',
                    how = 'left')
 
 df_info = df_info[df_info['highway'] != 1]
@@ -227,31 +268,36 @@ df_rest = df_pairs[((df_pairs['group_2012_1'] == df_pairs['group_2012_2']) |
 
 print()
 print(u'Overview of pair distances:')
-df_comp_temp = df_comp[df_comp['nb_users'] >= 5]
 
-min_dist, max_dist = 5, 10
-print('Less than {:d}: {:.0f}%'.format(\
-         min_dist,
-         len(df_comp_temp[df_comp_temp['dist'] <= min_dist]) /\
-         float(len(df_comp_temp)) * 100))
+for nb_users in range(5, 11):
+  print()
+  print('Nb users required for comp:', nb_users)
+  df_comp_temp = df_comp[df_comp['nb_users'] >= nb_users]
+  print('Nb pairs:', len(df_comp_temp))
+  
+  min_dist, max_dist = 3, 5
+  print('Less than {:d}: {:.0f}%'.format(\
+           min_dist,
+           len(df_comp_temp[df_comp_temp['dist'] <= min_dist]) /\
+           float(len(df_comp_temp)) * 100))
+  
+  print('Between {:d} and {:d}: {:.0f}%'.format(\
+           min_dist,
+           max_dist,
+           len(df_comp_temp[(df_comp_temp['dist'] > min_dist) &\
+                            (df_comp_temp['dist'] <= max_dist)]) /\
+           float(len(df_comp_temp))* 100))
+  
+  print('Above {:d}: {:.0f}%'.format(\
+           max_dist,
+           len(df_comp_temp[df_comp_temp['dist'] > max_dist]) /\
+           float(len(df_comp_temp)) * 100))
 
-print('Between {:d} and {:d}: {:.0f}%'.format(\
-         min_dist,
-         max_dist,
-         len(df_comp_temp[(df_comp_temp['dist'] > min_dist) &\
-                          (df_comp_temp['dist'] <= max_dist)]) /\
-         float(len(df_comp_temp))* 100))
-
-print('Above {:d}: {:.0f}%'.format(\
-         max_dist,
-         len(df_comp_temp[df_comp_temp['dist'] > max_dist]) /\
-         float(len(df_comp_temp)) * 100))
-
-# Play with networkx
-import networkx as nx
-g = nx.Graph()
-g.add_edges_from(df_comp[['id_zag_1', 'id_zag_2']].values.tolist())
-# find (connected) subgraphs
-d = nx.connected_component_subgraphs(g)
-for sg in d[0:10]:
-  print(len(sg.nodes()))
+## Play with networkx
+#import networkx as nx
+#g = nx.Graph()
+#g.add_edges_from(df_comp[['id_zag_1', 'id_zag_2']].values.tolist())
+## find (connected) subgraphs
+#d = nx.connected_component_subgraphs(g)
+#for sg in d[0:10]:
+#  print(len(sg.nodes()))
