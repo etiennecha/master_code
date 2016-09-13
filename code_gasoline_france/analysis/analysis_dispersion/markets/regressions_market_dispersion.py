@@ -221,35 +221,44 @@ for title_temp, df_temp in [['All', df_md],
   print('Range')
   res_range = smf.ols('range ~ cost + nb_comp + trend',
                  data = df_temp).fit()
+  res_range = res_range.get_robustcov_results(cov_type = 'cluster',
+                                              groups = df_temp[['int_id', 'int_date']].values,
+                                              use_correction = True)
   print(res_range.summary())
-  cov2g_range =\
-    sm.stats.sandwich_covariance.cov_cluster_2groups(res_range,
-                                                     df_temp['int_id'],
-                                                     group2 = df_temp['int_date'])
-  var_range = np.sqrt(np.diagonal(cov2g_range[0]))
-  tval_range = (res_range.params / var_range).values
-  pval_range = scipy.stats.t.sf(np.abs(tval_range), res_range.nobs - 1)*2
-  # todo: check computation of p values
-  print('var  : ' + ' '.join(['{:7.4f};'.format(x) for x in var_range]))
-  print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_range]))
-  print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_range]))
+
+  #cov2g_range =\
+  #  sm.stats.sandwich_covariance.cov_cluster_2groups(res_range,
+  #                                                   df_temp['int_id'],
+  #                                                   group2 = df_temp['int_date'])
+  #var_range = np.sqrt(np.diagonal(cov2g_range[0]))
+  #tval_range = (res_range.params / var_range).values
+  #pval_range = scipy.stats.t.sf(np.abs(tval_range), res_range.nobs - 1)*2
+  ## todo: check computation of p values
+  #print('var  : ' + ' '.join(['{:7.4f};'.format(x) for x in var_range]))
+  #print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_range]))
+  #print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_range]))
   
   print()
   print('Std')
   res_std = smf.ols('std ~ cost + nb_comp + trend',
                  data = df_temp).fit()
+  res_std = res_std.get_robustcov_results(cov_type = 'cluster',
+                                          groups = df_temp[['int_id', 'int_date']].values,
+                                          use_correction = True)
   print(res_std.summary())
-  cov2g_std =\
-    sm.stats.sandwich_covariance.cov_cluster_2groups(res_std,
-                                                     df_temp['int_id'],
-                                                     group2 = df_temp['int_date'])
-  var_std = np.sqrt(np.diagonal(cov2g_std[0]))
-  tval_std = (res_std.params / var_std).values
-  pval_std = scipy.stats.t.sf(np.abs(tval_std), res_std.nobs - 1)*2
-  # todo: check computation of p values
-  print('var  : ' +  ' '.join(['{:7.4f};'.format(x) for x in var_std]))
-  print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_std]))
-  print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_std]))
+  
+  #cov2g_std =\
+  #  sm.stats.sandwich_covariance.cov_cluster_2groups(res_std,
+  #                                                   df_temp['int_id'],
+  #                                                   group2 = df_temp['int_date'])
+  #var_std = np.sqrt(np.diagonal(cov2g_std[0]))
+  #tval_std = (res_std.params / var_std).values
+  #pval_std = scipy.stats.t.sf(np.abs(tval_std), res_std.nobs - 1)*2
+  ## todo: check computation of p values
+  #print('var  : ' +  ' '.join(['{:7.4f};'.format(x) for x in var_std]))
+  #print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_std]))
+  #print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_std]))
+
 
 # toco: check if loss of signif. on cost using friday only due to insuff vars in cost?
 # todo: check if there are markets with supermarkets / no supermarkets?

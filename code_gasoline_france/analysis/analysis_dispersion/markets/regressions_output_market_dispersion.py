@@ -8,6 +8,7 @@ from generic_master_price import *
 from generic_master_info import *
 from generic_competition import *
 import time
+from statsmodels.iolib.summary2 import summary_col
 
 path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
@@ -220,6 +221,7 @@ df_md = dict_df_regs['no_overlap_res']
 #df_md = df_md[df_md['nb_comp'] >= 4]
 
 # loop on each period
+ls_res, ls_names = [], []
 for title_temp, df_temp in [['All', df_md],
                             ['Before', df_md[df_md['date'] <= '2012-07-01']],
                             ['After', df_md[df_md['date'] >= '2013-02-01']]]:
@@ -234,38 +236,40 @@ for title_temp, df_temp in [['All', df_md],
     if 'd_high' in df_temp.columns:
       formula = formula + ' + d_high'
     res = smf.ols(formula, data = df_temp).fit()
+    res = res.get_robustcov_results(cov_type = 'cluster',
+                                    groups = df_temp[['int_id', 'int_date']].values,
+                                    use_correction = True)
     print(res.summary())
-    cov2g =\
-      sm.stats.sandwich_covariance.cov_cluster_2groups(res,
-                                                       df_temp['int_id'],
-                                                       group2 = df_temp['int_date'])
-    var = np.sqrt(np.diagonal(cov2g[0]))
-    tval = (res.params / var).values
-    pval = scipy.stats.t.sf(np.abs(tval), res.nobs - 1)*2
-    # todo: check computation of p values
-    print('var  : ' + ' '.join(['{:7.4f};'.format(x) for x in var]))
-    print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval]))
-    print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval]))
+    ls_res.append(res)
+    ls_names.append(title_temp[0:2] + '-' + disp_stat)
+
+su = summary_col(ls_res,
+                 model_names=ls_names,
+                 stars=True,
+                 float_format='%0.2f',
+                 info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                            'R2':lambda x: "{:.2f}".format(x.rsquared)})
+
 
 # toco: check if loss of signif. on cost using friday only due to insuff vars in cost?
 # todo: check if there are markets with supermarkets / no supermarkets?
 
-# Simulations: range and std increase in nb firms for same distribution?
-for i in range(10):
-  print()
-  nb_markets = 10000
-  df_sim = pd.DataFrame(np.random.normal(0, 0.01, (10000, 10)))
-  df_sim['nb_sellers'] = 3
-  for i in range(3, 11):
-    df_sim.loc[nb_markets/10*(i-1)+1:, 'nb_sellers'] = i
-  df_sim['range'] = df_sim.apply(lambda row: row[:int(row['nb_sellers'])].max() -\
-                                             row[:int(row['nb_sellers'])].min(),
-                                 axis = 1)
-  df_sim['std'] = df_sim.apply(lambda row: row[:int(row['nb_sellers'])].std(ddof = 1.5),
-                               axis = 1)
-
-  print(smf.ols('std ~ nb_sellers', df_sim).fit().summary())
-  for i in range(3, 11):
-  	print(df_sim[df_sim['nb_sellers'] == i]['std'].mean())
-
-# degree of freedom of 1.3 seems to decrease the bias
+## Simulations: range and std increase in nb firms for same distribution?
+#for i in range(10):
+#  print()
+#  nb_markets = 10000
+#  df_sim = pd.DataFrame(np.random.normal(0, 0.01, (10000, 10)))
+#  df_sim['nb_sellers'] = 3
+#  for i in range(3, 11):
+#    df_sim.loc[nb_markets/10*(i-1)+1:, 'nb_sellers'] = i
+#  df_sim['range'] = df_sim.apply(lambda row: row[:int(row['nb_sellers'])].max() -\
+#                                             row[:int(row['nb_sellers'])].min(),
+#                                 axis = 1)
+#  df_sim['std'] = df_sim.apply(lambda row: row[:int(row['nb_sellers'])].std(ddof = 1.5),
+#                               axis = 1)
+#
+#  print(smf.ols('std ~ nb_sellers', df_sim).fit().summary())
+#  for i in range(3, 11):
+#  	print(df_sim[df_sim['nb_sellers'] == i]['std'].mean())
+#
+## degree of freedom of 1.3 seems to decrease the bias
