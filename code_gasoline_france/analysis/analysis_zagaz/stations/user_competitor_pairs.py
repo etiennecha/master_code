@@ -117,6 +117,26 @@ dict_types = {'SUP' : ['MOUSQUETAIRES',
 # df_zagaz_info[df_zagaz_info['group_2013'].isnull()]['brand_std_2013'].value_counts()
 # todo: add IND and DIS (not all TA in 2013 but do the best...)
 
+dict_brand_types = {'INDEPENDANT' : 'IND',
+                    'VITO' : 'IND',
+                    'BRETECHE' : 'IND',
+                    'MAXIMARCHE': 'SUP',
+                    'DIA': 'SUP',
+                    'COOP' : 'SUP',
+                    'TOTAL_ACCESS' : 'DIS',
+                    'ESSO_EXPRESS' : 'DIS'}
+
+for year in ['2012', '2013']:
+  df_zagaz_info['type_{:s}'.format(year)] = 'IND'
+  for sta_type, ls_sta_groups in dict_types.items():
+    df_zagaz_info.loc[\
+      df_zagaz_info['group_{:s}'.format(year)].isin(ls_sta_groups),
+      'type_{:s}'.format(year)] = sta_type
+  for sta_brand, sta_type in dict_brand_types.items():
+    df_zagaz_info.loc[\
+      df_zagaz_info['brand_std_{:s}'.format(year)] == sta_brand,
+      'type_{:s}'.format(year)] = sta_type
+
 # todo: add type & investigate if pairs have same type (support segmentation?)
 # todo: check by user: many reporting only SUP & DIS?
 # pbm with TOTAL ACCESS... would require to check over time (but got ESSO EXPRESS?)
@@ -218,6 +238,7 @@ df_pairs = pd.DataFrame(ls_rows_pairs,
                                    'nb_users'])
 
 ls_temp_cols = ['group_2012', 'group_2013',
+                'type_2012', 'type_2013',
                 'street', 'municipality', 'ci',
                 'lat', 'lng', 'highway']
 for extension in [1, 2]:
@@ -266,6 +287,9 @@ df_rest = df_pairs[((df_pairs['group_2012_1'] == df_pairs['group_2012_2']) |
 # STATS DES
 # ##############
 
+ls_low = ['SUP', 'DIS']
+ls_high = ['OIL', 'IND']
+
 print()
 print(u'Overview of pair distances:')
 
@@ -293,6 +317,13 @@ for nb_users in range(5, 11):
            len(df_comp_temp[df_comp_temp['dist'] > max_dist]) /\
            float(len(df_comp_temp)) * 100))
 
+  for ls_types in [ls_low, ls_high]:
+    nb_types = len(df_comp_temp[(df_comp_temp['type_2013_1']).isin(ls_types) &\
+                                (df_comp_temp['type_2013_2']).isin(ls_types)])
+    str_types = '-'.join(ls_types)
+    print('{:s}: {:2.0f}%'.format(str_types,
+                                  float(nb_types) / len(df_comp_temp) * 100))
+
 ## Play with networkx
 #import networkx as nx
 #g = nx.Graph()
@@ -301,3 +332,5 @@ for nb_users in range(5, 11):
 #d = nx.connected_component_subgraphs(g)
 #for sg in d[0:10]:
 #  print(len(sg.nodes()))
+
+
