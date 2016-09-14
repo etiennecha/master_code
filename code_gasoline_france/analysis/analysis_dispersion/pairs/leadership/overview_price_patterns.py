@@ -24,9 +24,9 @@ path_dir_built_dis = os.path.join(path_data,
 path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
 path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.1f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.3f}'.format(x)
+format_float_float = lambda x: '{:10,.1f}'.format(x)
 
 # ################
 # LOAD DATA
@@ -111,6 +111,17 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
+# SPREAD IN CENT
+for spread_var in ['mean_spread',
+                   'mean_abs_spread', 'abs_mean_spread',
+                   'std_spread', 'std_abs_spread',
+                   'mc_spread', 'smc_spread']:
+  df_pairs[spread_var] = df_pairs[spread_var] * 100
+
+for pct_var in ['pct_to_same_maxu', 'pct_to_same_maxl',
+                'pct_to_same_min', 'pct_same', 'pct_rr']:
+  df_pairs[pct_var] = df_pairs[pct_var] * 100
+
 # RESTRICT CATEGORY
 
 df_pairs_all = df_pairs.copy()
@@ -162,7 +173,7 @@ df_pair_comp =\
 
 # DIFFERENTIATED VS. NON DIFFERENTIATED
 
-diff_bound = 0.01
+diff_bound = 1.0
 df_pair_same_nd = df_pair_same[df_pair_same['mean_spread'].abs() <= diff_bound]
 df_pair_same_d  = df_pair_same[df_pair_same['mean_spread'].abs() > diff_bound]
 df_pair_comp_nd = df_pair_comp[df_pair_comp['mean_spread'].abs() <= diff_bound]
@@ -208,6 +219,7 @@ dict_pair_nd = {}
 for df_type_title, df_type_pairs in dict_pair_all.items():
   dict_pair_nd[df_type_title] =\
       df_type_pairs[df_type_pairs['abs_mean_spread'] <= diff_bound].copy()
+
 
 # LISTS FOR DISPLAY
 
@@ -414,7 +426,7 @@ dict_pair_nd['oil_ind'].plot(kind = 'scatter', x = 'pct_rr', y  = 'pct_same')
 plt.show()
 
 # pct_same >= 0.2 is relatively high: not suspect => 0.3 ... rather leadership story
-print(dict_pair_nd['oil_ind'][dict_pair_nd['oil_ind']['pct_same'] >= 0.3][lsdt].to_string())
+print(dict_pair_nd['oil_ind'][dict_pair_nd['oil_ind']['pct_same'] >= 30.0][lsdt].to_string())
 
 # can generalize to same spread (todo: create graphs and stress period of same spread)
 print(dict_pair_all['oil_ind'][dict_pair_all['oil_ind']['freq_mc_spread'] >= 30][lsdt2].to_string())
@@ -428,24 +440,27 @@ print(dict_pair_all['oil_ind'][dict_pair_all['oil_ind']['freq_mc_spread'] >= 30]
 ## Inspect high
 #print(dict_pair_nd['sup'][dict_pair_nd['sup']['pct_same'] >= 0.9][lsdt].to_string())
 
-df_pair_sup = dict_pair_nd['sup'].copy()
+#df_pair_sup = dict_pair_nd['sup'].copy()
+#
+### add leadership (could do it for all df, not always meaningful of course)
+##df_pair_sup['leader_brand'] = df_pair_sup['brand_last_1']
+##df_pair_sup.loc[df_pair_sup['nb_2_lead'] > df_pair_sup['nb_1_lead'],
+##                  'leader_brand'] = df_pair_sup['brand_last_2']
+##df_pair_sup['follower_brand'] = df_pair_sup['brand_last_1']
+##df_pair_sup.loc[df_pair_sup['nb_2_lead'] < df_pair_sup['nb_1_lead'],
+##                  'leader_brand'] = df_pair_sup['brand_last_2']
+#
+#df_pair_ss = dict_pair_nd['sup'][dict_pair_nd['sup']['pct_same'] >= 0.33].copy()
+#df_pair_ss.sort('pct_sim_same', ascending = True, inplace = True)
 
-## add leadership (could do it for all df, not always meaningful of course)
-#df_pair_sup['leader_brand'] = df_pair_sup['brand_last_1']
-#df_pair_sup.loc[df_pair_sup['nb_2_lead'] > df_pair_sup['nb_1_lead'],
-#                  'leader_brand'] = df_pair_sup['brand_last_2']
-#df_pair_sup['follower_brand'] = df_pair_sup['brand_last_1']
-#df_pair_sup.loc[df_pair_sup['nb_2_lead'] < df_pair_sup['nb_1_lead'],
-#                  'leader_brand'] = df_pair_sup['brand_last_2']
-
-df_pair_ss = dict_pair_nd['sup'][dict_pair_nd['sup']['pct_same'] >= 0.33].copy()
+df_pair_ss = dict_pair_nd['any'].copy()
 df_pair_ss.sort('pct_sim_same', ascending = True, inplace = True)
 
 ls_ss_ids = list(set(df_pair_ss[['id_1', 'id_2']].values.flatten()))
 se_ss_brands = df_info.ix[ls_ss_ids]['brand_last'].value_counts()
 se_brands = df_info['brand_last'].value_counts()
 se_ss_share = se_ss_brands  / se_brands[se_brands > 10]
-se_ss_share = se_ss_share[~se_ss_share.isnull()]
+se_ss_share = se_ss_share[~se_ss_share.isnull()] * 100
 se_ss_share.sort(ascending = False)
 
 print()
@@ -455,43 +470,42 @@ print(se_ss_share.to_string())
 df_pair_ss_ld = df_pair_ss[(df_pair_ss['pct_sim_same'] <= 60) &\
                            (df_pair_ss['pct_to_same_maxl'] >= (3 * df_pair_ss['pct_to_same_min']))]
 
+# DEFINE LEADER SET
 ls_leader_ids = df_pair_ss_ld[df_pair_ss_ld['nb_2_lead'] >\
                                 df_pair_ss_ld['nb_1_lead']]['id_2'].values.tolist() +\
                 df_pair_ss_ld[df_pair_ss_ld['nb_1_lead'] >\
                                 df_pair_ss_ld['nb_2_lead']]['id_1'].values.tolist()
 ls_leader_ids = list(set(ls_leader_ids))
 
-print()
-print(u'Overview leader by brand')
-print(df_info.ix[ls_leader_ids]['brand_last'].value_counts())
-se_leader_share = df_info.ix[ls_leader_ids]['brand_last'].value_counts()  / se_brands[se_brands > 10]
-se_leader_share = se_leader_share[~se_leader_share.isnull()]
-se_leader_share.sort(ascending = False)
-print()
-print(se_leader_share.to_string())
-
+# DEFINE FOLLOWER SET
 ls_follower_ids = df_pair_ss_ld[df_pair_ss_ld['nb_2_lead'] >\
                                   df_pair_ss_ld['nb_1_lead']]['id_1'].values.tolist() +\
                   df_pair_ss_ld[df_pair_ss_ld['nb_1_lead'] >\
                                   df_pair_ss_ld['nb_2_lead']]['id_2'].values.tolist()
 ls_follower_ids = list(set(ls_follower_ids))
 
-print()
-print(u'Overview follower by brand')
-print(df_info.ix[ls_follower_ids]['brand_last'].value_counts())
-se_follower_share = df_info.ix[ls_follower_ids]['brand_last'].value_counts()  / se_brands[se_brands > 10]
-se_follower_share = se_follower_share[~se_follower_share.isnull()]
-se_follower_share.sort(ascending = False)
-print()
-print(se_follower_share.to_string())
+# DEFINE BOTH
+# stores which are both leader and follower
+ls_both_ids = set(ls_follower_ids).intersection(set(ls_leader_ids))
 
-# Ambiguity: stores which are both leader and follower
-ls_amb = set(ls_follower_ids).intersection(set(ls_leader_ids))
-
+# DEFINE UNSURE
 df_pair_ss_uns = df_pair_ss[(df_pair_ss['pct_sim_same'] <= 50) &\
                             (df_pair_ss['pct_to_same_maxl'] < (3 * df_pair_ss['pct_to_same_min']))]
 ls_ss_uns_ids = list(set(df_pair_ss_uns[['id_1', 'id_2']].values.flatten()))
 
-print()
-print(u'Overview no leader / unsure about leader?')
-print(df_info.ix[ls_ss_uns_ids]['brand_last'].value_counts())
+for role, ls_role_ids in [['leader', ls_leader_ids],
+                          ['follower', ls_follower_ids],
+                          ['both', ls_both_ids],
+                          ['unsure', ls_ss_uns_ids]]:
+  print()
+  print(u'Overview {:s} by brand'.format(role))
+  se_role_nb = df_info.ix[ls_role_ids]['brand_last'].value_counts()
+  se_role_share = se_role_nb  / se_brands * 100
+  df_role = pd.concat([se_brands,
+                       se_role_nb,
+                       se_role_share],
+                      axis = 1,
+                      keys = ['nb_tot', 'nb_{:s}'.format(role), 'pct'])
+  df_role.sort('pct', ascending = False, inplace = True)
+  print(df_role[(df_role['nb_{:s}'.format(role)] >= 5) |\
+                (df_role['nb_tot'] >= 100)].to_string())

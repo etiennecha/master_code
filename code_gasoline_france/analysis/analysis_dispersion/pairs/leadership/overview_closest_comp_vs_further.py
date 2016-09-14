@@ -120,7 +120,6 @@ df_pairs = df_pairs[df_pairs['cat'] == 'no_mc'].copy()
 # BUILD CLOSEST SAME / COMPETITORS
 # ################################
 
-
 # LOOP TO FIND (id, dist, stat except for two first)
 # - closest comp
 # - closest non comp

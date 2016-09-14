@@ -109,8 +109,6 @@ df_pairs = df_pairs[(~((df_pairs['nb_spread'] < 90) &\
                        (df_pairs['nb_ctd_both'] < 90))) &
                     (~(df_pairs['nrr_max'] > 60))]
 
-# todo? harmonize pct i.e. * 100
-
 # LISTS FOR DISPLAY
 lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
 lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
@@ -170,8 +168,6 @@ df_pair_same =\
 df_pair_comp =\
   df_pairs[(df_pairs['group_1'] != df_pairs['group_2']) &\
            (df_pairs['group_last_1'] != df_pairs['group_last_2'])].copy()
-
-# DIFFERENTIATED VS. NON DIFFERENTIATED
 
 # DICT OF DFS
 # pairs without spread restriction
