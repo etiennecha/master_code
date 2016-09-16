@@ -30,13 +30,6 @@ path_dir_built = os.path.join(path_data,
 path_dir_built_csv = os.path.join(path_dir_built, u'data_csv')
 path_dir_built_json = os.path.join(path_dir_built, u'data_json')
 
-path_dir_built_dis = os.path.join(path_data,
-                                  u'data_gasoline',
-                                  u'data_built',
-                                  u'data_dispersion')
-path_dir_built_dis_csv = os.path.join(path_dir_built_dis, u'data_csv')
-path_dir_built_dis_json = os.path.join(path_dir_built_dis, u'data_json')
-
 pd.set_option('float_format', '{:10,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
@@ -72,11 +65,7 @@ df_info.set_index('id_station', inplace = True)
 #                               encoding = 'utf-8',
 #                               dtype = {'id_station' : str})
 #df_margin_chge.set_index('id_station', inplace = True)
-#
-## PAIR FINAL (does not contain gps)
-#df_pair_disp = pd.read_csv(os.path.join(path_dir_built_dis_csv,
-#                                       'df_pair_final.csv'),
-#                           encoding = 'utf-8')
+
 
 # CLOSE PAIRS
 ls_close_pairs = dec_json(os.path.join(path_dir_built_json,
@@ -133,20 +122,22 @@ df_pairs = pd.merge(df_close_pairs,
 df_pairs['osrm_time'] = df_pairs['osrm_time'] / 60.0 # sec to minutes
 df_pairs['osrm_dist'] = df_pairs['osrm_dist'] / 1000.0 # m to km
 
+print()
 print(df_pairs[~df_pairs['osrm_dist'].isnull()]\
               [['dist', 'osrm_dist', 'osrm_time']].describe())
+
+print()
 print(df_pairs[['dist', 'osrm_dist', 'osrm_time']].describe())
 
 # INSPECT POINTS FOR WHICH ROUTING ALWAYS FAILS
 
-print(df_pairs[df_pairs['osrm_dist'].isnull()]['id_1'].value_counts()[0:10])
-for x in df_pairs[df_pairs['osrm_dist'].isnull()]['id_1'].value_counts()[0:10]:
-  print(u"{:3.3f} {:3.3f}".format(*df_info.ix[x][['lat', 'lng']].values))
+print()
+for x, y in df_pairs[df_pairs['osrm_dist'].isnull()]['id_1'].value_counts()[0:10].iteritems():
+  print(u"{:s} {:3d} ".format(x, y) +\
+        u"{:3.3f} {:6.3f}".format(*df_info.ix[x][['lat', 'lng']].values))
 
-## weird time
-# len(df_pairs[(df_pairs['osrm_time'] >= 20)])
-
-## corner cases (first ok... second wrong gps likely)
+## very large osrm_dist/time... vs short dist (ok: mountain, water...)
+#print(len(df_pairs[(df_pairs['osrm_time'] >= 20)]))
 #print(df_pairs[(df_pairs['osrm_time'] >= 20) &\
 #               (df_pairs['dist'] <= 4)].to_string())
 
