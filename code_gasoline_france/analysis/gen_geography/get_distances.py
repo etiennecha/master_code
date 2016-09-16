@@ -121,7 +121,8 @@ for id_station in ls_ids:
 dict_ls_close = {k: sorted(v, key=lambda tup: tup[1]) for k,v in dict_ls_close.items()}
 
 # takes more time to store (load?) than to build (cur. 353Mo)
-df_distances.to_csv(os.path.join(path_dir_built_csv, 'df_distances.csv'),
+df_distances.to_csv(os.path.join(path_dir_built_csv,
+                                 'df_distances.csv'),
                     index_label = 'id_station',
                     float_format= '%.2f',
                     encoding = 'utf-8')

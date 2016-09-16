@@ -100,8 +100,12 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               dtype = dict_dtype)
 
 # basic pair filter (insufficient obs.)
-df_pairs = df_pairs[~((df_pairs['nb_spread'] < 90) &\
-                      (df_pairs['nb_ctd_both'] < 90))]
+df_pairs = df_pairs[(~((df_pairs['nb_spread'] < 90) &\
+                       (df_pairs['nb_ctd_both'] < 90))) &
+                    (~(df_pairs['nrr_max'] > 60))]
+
+## filter on distance: 5 km
+#df_pairs = df_pairs[df_pairs['distance'] <= 5]
 
 # todo? harmonize pct i.e. * 100
 

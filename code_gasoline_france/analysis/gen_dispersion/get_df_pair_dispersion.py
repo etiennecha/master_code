@@ -120,7 +120,7 @@ df_prices_cl[ls_drop_ids_nhw] = np.nan
 # ######################
 
 # Need to consider both raw prices and residuals
-km_bound = 5 # extend to 10 for robustness checks?
+km_bound = 10 # extend to 10 for robustness checks?
 margin_chge_bound = 0.03
 ls_pairs = ls_close_pairs
 
@@ -135,7 +135,7 @@ ls_pairs = ls_close_pairs
 
 df_prices = df_prices_ttc
 ls_pairs = ls_close_pairs
-km_bound = 5
+km_bound = 10
 margin_chge_bound = 0.03
 
 ls_keep_pairs = [(indiv_id, other_id, distance)\
@@ -310,11 +310,13 @@ df_pairs_rr.to_csv(os.path.join(path_dir_built_dis_csv,
                    float_format= '%.3f',
                    index = False)
 
-for cat, df_rr_cat in dict_df_rr.items():
-  df_rr_cat.to_csv(os.path.join(path_dir_built_dis_csv,
-                            'df_rank_reversals_{:s}.csv'.format(cat)),
-                   float_format= '%.4f',
-                   encoding = 'utf-8')
+## lengthy (and quite heavy) to store => only with 5 km
+#for cat, df_rr_cat in dict_df_rr.items():
+#  df_rr_cat.to_csv(os.path.join(path_dir_built_dis_csv,
+#                            'df_rank_reversals_{:s}.csv'.format(cat)),
+#                   float_format= '%.4f',
+#                   encoding = 'utf-8')
+#
 
 # JSON
 

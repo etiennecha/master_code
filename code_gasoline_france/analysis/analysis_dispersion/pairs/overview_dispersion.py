@@ -107,6 +107,9 @@ df_pairs = df_pairs[(~((df_pairs['nb_spread'] < 90) &\
                        (df_pairs['nb_ctd_both'] < 90))) &
                     (~(df_pairs['nrr_max'] > 60))]
 
+## filter on distance: 5 km
+#df_pairs = df_pairs[df_pairs['distance'] <= 5]
+
 # LISTS FOR DISPLAY
 lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
 lsd_rr = ['rr_1', 'rr_2', 'rr_3', 'rr_4', 'rr_5', '5<rr<=20', 'rr>20']
@@ -186,27 +189,27 @@ for df_temp_title, df_temp in dict_pair_comp.items():
 print()
 print(u'Overview of pair stats depending on distance (low diff):')
 
-ls_col_overview = ['mean_abs_spread',
-                   'freq_mc_spread',
+ls_col_overview = ['abs_mean_spread',
+                   'std_spread',
+                   'pct_rr',
                    'pct_same',
-                   'pct_rr']
+                   'freq_mc_spread']
 
-ls_distances = [5, 4, 3, 2, 1, 0.5]
+ls_distances = [10, 5, 4, 3, 2, 1, 0.5]
 
-df_pair_temp = dict_pair_comp_nd['any']
+df_pair_temp = dict_pair_comp_nd['any'].copy()
 
 dict_df_dist_desc = {}
-print()
 for col in ls_col_overview:
   ls_se_temp = []
   for distance in ls_distances:
-    ls_se_temp.append(df_pair_comp[df_pair_comp['distance'] <= distance]\
+    ls_se_temp.append(df_pair_temp[df_pair_temp['distance'] <= distance]\
                                   [col].describe())
   df_desc_temp = pd.concat(ls_se_temp, axis = 1, keys = ls_distances)
   dict_df_dist_desc[col] = df_desc_temp
 
   print()
-  print(u'Overview of {:s} frequency for various max mean spread:'.format(col))
+  print(u'{:s} (various distances):'.format(col))
   print(df_desc_temp.T.to_string(formatters = {'count' : format_float_int}))
 
 # OVERVIEW OF PAIR STATS DEPENDING ON STATIC DIFFERENTIATION
@@ -214,26 +217,27 @@ for col in ls_col_overview:
 print()
 print(u'Overview of pair stats depending on static differentiation:')
 
-ls_col_overview = ['mean_abs_spread',
-                   'freq_mc_spread',
+ls_col_overview = ['abs_mean_spread',
+                   'std_spread',
+                   'pct_rr',
                    'pct_same',
-                   'pct_rr']
+                   'freq_mc_spread']
 
-ls_abs_mean_spread = [1.0, 0.5, 2.2,  0.1, 0.05, 0.02]
+ls_abs_mean_spread = [1.0, 0.5, 0.2,  0.1, 0.05, 0.02]
 
-df_pair_temp = df_pair_comp[(df_pair_comp['distance'] <= 3)]
+df_pair_temp = dict_pair_comp['any'].copy()
 
 dict_df_diff_desc = {}
 for col in ls_col_overview:
   ls_se_temp = []
   for ams in ls_abs_mean_spread:
-    ls_se_temp.append(df_pair_comp[(df_pair_comp['abs_mean_spread'] <= ams)]\
+    ls_se_temp.append(df_pair_temp[(df_pair_temp['abs_mean_spread'] <= ams)]\
                                   [col].describe())
   df_desc_temp = pd.concat(ls_se_temp, axis = 1, keys = ls_abs_mean_spread)
   dict_df_diff_desc[col] = df_desc_temp
   
   print()
-  print(u'Overview of {:s} frequency for various max mean spread:'.format(col))
+  print(u'{:s} (various max mean spread):'.format(col))
   print(df_desc_temp.T.to_string(formatters = {'count' : format_float_int}))
 
 # #######################
@@ -247,7 +251,8 @@ print(u'Overview of pair stats by gas station types:')
 # - diff_bound set to 0.01 and 0.02 (differentiation)
 # - df_pairs['cat'] : 'no_mc' (raw _prices) and 'residuals_no_mc' (price residuals)
 
-ls_var_desc = ['distance', 'abs_mean_spread', 'std_spread', 'pct_rr', 'pct_same']
+ls_var_desc = ['distance', 'abs_mean_spread', 'std_spread',
+               'pct_rr', 'pct_same', 'freq_mc_spread']
 
 ls_loop_pair_disp = [('All', dict_pair_comp['any']),
                      ('Oil&Ind', dict_pair_comp['oil&ind']),
@@ -263,7 +268,7 @@ ls_loop_pair_disp = [('All', dict_pair_comp['any']),
                      ('Nd Sup_Dis', dict_pair_comp_nd['sup_dis'])]
 
 pd.set_option('float_format', '{:,.1f}'.format)
-for dist_lim in [5, 3, 1, 0.5]:
+for dist_lim in [10, 5, 3, 1, 0.5]:
   print()
   print('Overview of pair dispersion w/ max distance {:.1f}'.format(dist_lim))
   ls_se_desc, ls_nb_obs = [], []
@@ -282,7 +287,7 @@ for dist_lim in [5, 3, 1, 0.5]:
 # Nb ids covered for each distance
 print()
 print('Nb ids covered depending on distance:')
-for dist_lim in [0.5, 1, 3, 5]:
+for dist_lim in [0.5, 1, 3, 5, 10]:
   df_temp = df_pair_comp[df_pair_comp['distance'] <= dist_lim]
   ls_ids = set(df_temp['id_1'].values.tolist() +\
                  df_temp['id_2'].values.tolist())
@@ -336,6 +341,16 @@ df_pairs['leader_pval'] = df_pairs[(~df_pairs['nb_1_lead'].isnull()) &\
                                                              p = 0.5),
                             axis = 1)
 
+## add a measure of whether this is significant (vs total nb of changes?)
+## ... requires scipy 0.18 to test proba of success greater (or code it)
+#df_pairs['same_pval'] = np.nan
+#df_pairs['same_pval'] = df_pairs[(~df_pairs['nb_spread'].isnull())].apply(\
+#                            lambda x: scipy.stats.binom_test(x['nb_same'],
+#                                                             x['nb_spread'],
+#                                                             p = 0.1,
+#                                                             alternative = 'greater'),
+#                            axis = 1)
+
 lsd_ld = ['pct_same', 'nb_same', 'nb_chge_to_same', 'nb_1_lead', 'nb_2_lead', 'leader_pval']
 
 print()
@@ -344,7 +359,7 @@ print(df_pairs[lsd_ld][df_pairs['leader_pval'] <= 0.05][0:20].to_string())
 
 print()
 print(u'Types of pairs with leaders (todo: pct?)')
-print(df_pairs['pair_type'].value_counts())
+print(df_pairs[df_pairs['leader_pval'] <= 0.05]['pair_type'].value_counts())
 
 print()
 df_pairs['leader_brand'] = np.nan
@@ -362,7 +377,7 @@ df_pairs.loc[(df_pairs['leader_pval'] <= 0.05) &\
 
 print()
 print(u'Inspect leader brands')
-print(df_pairs['leader_brand'].value_counts())
+print(df_pairs['leader_brand'].value_counts()[0:10])
 
 # impose close price comp: pct_same 0.33 or 0.50
 df_close_comp = df_pairs[df_pairs['pct_same'] >= 40].copy()
@@ -439,4 +454,5 @@ df_leader_brands_pct['nb_stations'] = df_leader_brands['nb_stations']
 
 df_leader_brands_pct.sort('close_comp', ascending = False, inplace = True)
 
+print()
 print(df_leader_brands_pct.to_string())

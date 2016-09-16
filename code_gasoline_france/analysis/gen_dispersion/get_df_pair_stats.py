@@ -120,7 +120,7 @@ df_prices_cl[ls_drop_ids_nhw] = np.nan
 # ##########################
 
 # Pair stats make sense only with raw prices (price change dates etc.)
-km_bound = 5 # extend to 10 for robustness checks?
+km_bound = 10 # extend to 10 for robustness checks?
 margin_chge_bound = 0.03
 ls_pairs = ls_close_pairs
 df_prices = df_prices_ttc

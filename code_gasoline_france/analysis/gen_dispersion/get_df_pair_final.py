@@ -202,9 +202,9 @@ df_pairs = pd.concat([v for k,v in dict_df_pairs.items()])
 # #################
 
 # DROP PAIRS WITH INSUFFICIENT DATA
-print(u'\nNb observations to be filtered out for lack of data: {:.0f}'.format(\
-      len(df_pairs[~((df_pairs['nb_spread'] < 90) &\
-                     (df_pairs['nb_ctd_both'] < 90))])))
+print(u'Nb observations to be filtered out for lack of data: {:.0f}'.format(\
+      len(df_pairs[(df_pairs['nb_spread'] < 90) |\
+                   (df_pairs['nb_ctd_both'] < 90)])))
 
 #df_pairs = df_pairs[(df_pairs['nb_spread'] >= 90) &\
 #                    (df_pairs['nb_ctd_both'] >= 90)]
