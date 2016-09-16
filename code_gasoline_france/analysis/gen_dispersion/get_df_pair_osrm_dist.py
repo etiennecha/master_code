@@ -59,28 +59,28 @@ df_info = pd.read_csv(os.path.join(path_dir_built_csv,
                                'dpt' : str})
 df_info.set_index('id_station', inplace = True)
 
-# DF STATION STATS
-df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
-                                            'df_station_stats.csv'),
-                               encoding = 'utf-8',
-                               dtype = {'id_station' : str})
-df_station_stats.set_index('id_station', inplace = True)
-
-# DF MARGIN CHGE
-df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
-                                          'df_margin_chge.csv'),
-                               encoding = 'utf-8',
-                               dtype = {'id_station' : str})
-df_margin_chge.set_index('id_station', inplace = True)
+## DF STATION STATS
+#df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
+#                                            'df_station_stats.csv'),
+#                               encoding = 'utf-8',
+#                               dtype = {'id_station' : str})
+#df_station_stats.set_index('id_station', inplace = True)
+#
+## DF MARGIN CHGE
+#df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
+#                                          'df_margin_chge.csv'),
+#                               encoding = 'utf-8',
+#                               dtype = {'id_station' : str})
+#df_margin_chge.set_index('id_station', inplace = True)
+#
+## PAIR FINAL (does not contain gps)
+#df_pair_disp = pd.read_csv(os.path.join(path_dir_built_dis_csv,
+#                                       'df_pair_final.csv'),
+#                           encoding = 'utf-8')
 
 # CLOSE PAIRS
 ls_close_pairs = dec_json(os.path.join(path_dir_built_json,
                                        'ls_close_pairs.json'))
-
-# PAIR FINAL (does not contain gps)
-df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
-                                    'df_pair_final.csv'),
-                       encoding = 'utf-8')
 
 # DF CLOSE PAIRS
 df_close_pairs = pd.DataFrame(ls_close_pairs,
@@ -95,66 +95,67 @@ for i in range(1, 3):
                                         for x in ['lat', 'lng']},
                         inplace = True)
 
-ls_res = []
-for row_i, row in df_close_pairs.iterrows():
-  ls_gps = list(row[['lat_1', 'lng_1', 'lat_2', 'lng_2']].values)
-  query = 'http://localhost:5000/viaroute?'+\
-          'loc={:f},{:f}&loc={:f},{:f}'.format(*ls_gps)
-  try:
-    # print query
-    response = urllib2.urlopen(query)
-    content = response.read()
-    osrm_resp = json.loads(content)
-    # pprint.pprint(osrm_resp)
-    # print osrm_resp['route_summary']
-    ls_res.append([row['id_1'], row['id_2'], osrm_resp['route_summary']])
-  except:
-    print('Query failed:', query)
+#ls_res = []
+#for row_i, row in df_close_pairs.iterrows():
+#  ls_gps = list(row[['lat_1', 'lng_1', 'lat_2', 'lng_2']].values)
+#  query = 'http://localhost:5000/viaroute?'+\
+#          'loc={:f},{:f}&loc={:f},{:f}'.format(*ls_gps)
+#  try:
+#    # print query
+#    response = urllib2.urlopen(query)
+#    content = response.read()
+#    osrm_resp = json.loads(content)
+#    # pprint.pprint(osrm_resp)
+#    # print osrm_resp['route_summary']
+#    ls_res.append([row['id_1'], row['id_2'], osrm_resp['route_summary']])
+#  except:
+#    print('Query failed:', query)
+#enc_json(ls_res,
+#         os.path.join(path_dir_built_json,
+#                      'ls_close_pairs_osrm.json'))
 
-enc_json(ls_res,
-         os.path.join(path_dir_built_json,
-                      'ls_close_pairs_osrm.json'))
+ls_res = dec_json(os.path.join(path_dir_built_json,
+                               'ls_close_pairs_osrm.json'))
 
-#df_com_sub.to_csv(os.path.join(path_built_csv,
-#                               '201407_competition',
-#                               'df_km_vs_time_mun_ex.csv'),
-#                  encoding = 'utf-8',
-#                  float_format = '%.3f',
-#                  index_label = 'code_insee')
+ls_osrm_dist = [[x[0], x[1], x[2]['total_distance'], x[2]['total_time']]\
+                  for x in ls_res]
 
-## Check results
-#ls_rows_res = []
-#for k,v in dict_res.items():
-#  ls_rows_res.append([k, v['total_distance'], v['total_time']])
-#df_res = pd.DataFrame(ls_rows_res, columns = ['ind_com', 'dist_osrm', 'time_osrm'])
-##print df_res[['dist_osrm', 'time_osrm']].describe()
-#df_res.set_index('ind_com', inplace = True)
-#
-## Merge back
-#df_com_sub = df_com[df_com['dist'] <= 30].copy()
-#df_com_sub = pd.merge(df_com_sub[['com_surf', 'commune', 'pop', 'dist']],
-#                      df_res,
-#                      left_index = True,
-#                      right_index = True,
-#                      how = 'left')
-#df_com_sub.sort('dist', inplace = True)
-#df_com_sub['time_osrm'] = df_com_sub['time_osrm'] / 60.0 # sec to minutes
-#df_com_sub['dist_osrm'] = df_com_sub['dist_osrm'] / 1000.0 # m to km
-##print df_com_sub[0:20].to_string()
-#print df_com_sub[['dist', 'dist_osrm', 'time_osrm']].describe()
+df_osrm = pd.DataFrame(ls_osrm_dist, columns = ['id_1',
+                                                'id_2',
+                                                'osrm_dist',
+                                                'osrm_time'])
+
+df_pairs = pd.merge(df_close_pairs,
+                    df_osrm,
+                    on = ['id_1', 'id_2'],
+                    how = 'left')
+
+df_pairs['osrm_time'] = df_pairs['osrm_time'] / 60.0 # sec to minutes
+df_pairs['osrm_dist'] = df_pairs['osrm_dist'] / 1000.0 # m to km
+
+print(df_pairs[~df_pairs['osrm_dist'].isnull()]\
+              [['dist', 'osrm_dist', 'osrm_time']].describe())
+print(df_pairs[['dist', 'osrm_dist', 'osrm_time']].describe())
+
+# INSPECT POINTS FOR WHICH ROUTING ALWAYS FAILS
+
+print(df_pairs[df_pairs['osrm_dist'].isnull()]['id_1'].value_counts()[0:10])
+for x in df_pairs[df_pairs['osrm_dist'].isnull()]['id_1'].value_counts()[0:10]:
+  print(u"{:3.3f} {:3.3f}".format(*df_info.ix[x][['lat', 'lng']].values))
+
+## weird time
+# len(df_pairs[(df_pairs['osrm_time'] >= 20)])
+
+## corner cases (first ok... second wrong gps likely)
+#print(df_pairs[(df_pairs['osrm_time'] >= 20) &\
+#               (df_pairs['dist'] <= 4)].to_string())
 
 # #########
 # OUTPUT
 # #########
 
-#df_com_sub.to_csv(os.path.join(path_built_csv,
-#                               '201407_competition',
-#                               'df_km_vs_time_mun_ex.csv'),
-#                  encoding = 'utf-8',
-#                  float_format = '%.3f',
-#                  index_label = 'code_insee')
-
-#plt.scatter(df_com_sub['dist'].values, df_com_sub['dist_osrm'].values)
-#plt.show()
-#plt.scatter(df_com_sub['dist'].values, df_com_sub['time_osrm'].values)
-#plt.show()
+#df_pairs.to_csv(os.path.join(path_dir_built_csv,
+#                             'df_osrm_dist.csv'),
+#                encoding = 'utf-8',
+#                float_format = '%.3f',
+#                index = False)
