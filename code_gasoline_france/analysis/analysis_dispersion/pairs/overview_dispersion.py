@@ -53,6 +53,13 @@ df_station_stats = pd.read_csv(os.path.join(path_dir_built_csv,
                                dtype = {'id_station' : str})
 df_station_stats.set_index('id_station', inplace = True)
 
+# DF MARGIN CHGE
+df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
+                                          'df_margin_chge.csv'),
+                               encoding = 'utf-8',
+                               dtype = {'id_station' : str})
+df_margin_chge.set_index('id_station', inplace = True)
+
 # CLOSE STATIONS
 dict_ls_close = dec_json(os.path.join(path_dir_built_json,
                                       'dict_ls_close.json'))
@@ -358,8 +365,14 @@ print(u'Inspect leaders:')
 print(df_pairs[lsd_ld][df_pairs['leader_pval'] <= 0.05][0:20].to_string())
 
 print()
-print(u'Types of pairs with leaders (todo: pct?)')
+print(u'Types of pairs with leaders:')
 print(df_pairs[df_pairs['leader_pval'] <= 0.05]['pair_type'].value_counts())
+
+print()
+print(u'Types of pairs with leaders (pct):')
+print(df_pairs[df_pairs['leader_pval'] <= 0.05]['pair_type'].value_counts() /\
+        df_pairs['pair_type'].value_counts()* 100)
+
 
 print()
 df_pairs['leader_brand'] = np.nan
@@ -428,6 +441,10 @@ ls_abs_led = list(set(ls_rel_led).difference(set(ls_rel_leader))\
 ls_abs_unc = list(set(ls_rel_unc).difference(set(ls_rel_leader))\
                                  .difference(set(ls_rel_led)))
 
+# take into account fact that many total access are dropped (margin chge)
+ls_drop_ids = df_margin_chge[df_margin_chge['value'].abs() >= 0.03].index
+df_info = df_info[~df_info.index.isin(ls_drop_ids)]
+
 ls_close_comp_su = [['close_comp', ls_close_comp],
                     ['abs_leader', ls_abs_leader],
                     ['abs_led', ls_abs_led],
@@ -456,3 +473,4 @@ df_leader_brands_pct.sort('close_comp', ascending = False, inplace = True)
 
 print()
 print(df_leader_brands_pct.to_string())
+
