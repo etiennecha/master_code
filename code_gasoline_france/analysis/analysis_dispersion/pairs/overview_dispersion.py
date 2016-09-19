@@ -259,7 +259,8 @@ print(u'Overview of pair stats by gas station types:')
 # - df_pairs['cat'] : 'no_mc' (raw _prices) and 'residuals_no_mc' (price residuals)
 
 ls_var_desc = ['distance', 'abs_mean_spread', 'std_spread',
-               'pct_rr', 'pct_same', 'freq_mc_spread']
+               'pct_rr', 'pct_same', 'freq_mc_spread',
+               'mean_rr_len']
 
 ls_loop_pair_disp = [('All', dict_pair_comp['any']),
                      ('Oil&Ind', dict_pair_comp['oil&ind']),
@@ -393,7 +394,7 @@ print(u'Inspect leader brands')
 print(df_pairs['leader_brand'].value_counts()[0:10])
 
 # impose close price comp: pct_same 0.33 or 0.50
-df_close_comp = df_pairs[df_pairs['pct_same'] >= 40].copy()
+df_close_comp = df_pairs[df_pairs['pct_same'] >= 20].copy()
 
 ## check what is mutually exclusive
 
