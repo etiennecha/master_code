@@ -286,19 +286,19 @@ Rank reversals and standard deviation are computed for all pairs of competing ga
     \midrule
     No price spread restriction &       &       &       &       &  \\
     All types & 11 754 & 7.1 (10.8) & 7.8 (17.0) & 5.3 (4.3) & 1.6 (0.6) \\
-    Oil \& Ind & 1 679 & 10.5 (12.0) & 3.9  (9.0) & 3.2 (2.6) & 1.9 (0.6) \\
-    Supermarkets \& Discounters & 3 706 & 15.4 (11.3) & 21.7 (23.6) & 1.0 (1.0) & 1.3 (0.5) \\
-    - Supermarkets & 2 232 & 12.9 (10.3) & 27.3 (27.6) & 1.0 (1.1) & 1.3 (0.5) \\
-    - Discounters & 157   & 28.2 (9.5) & 13.6 (6.5) & 0.4 (0.4) & 1.1 (0.3) \\
-    - Supermarkets vs. discounters & 1 317 & 18.1 (11.4) & 13.1 (11.7) & 1.0 (0.9) & 1.3 (0.5) \\
+    - Oil \& Ind & 1 679 & 10.5 (12.0) & 3.9 \phantom{0}(9.0) & 3.2 (2.6) & 1.9 (0.6) \\
+    - Supermarkets \& Discounters & 3 706 & 15.4 (11.3) & 21.7 (23.6) & 1.0 (1.0) & 1.3 (0.5) \\
+    \hspace*{4mm} - Supermarkets & 2 232 & 12.9 (10.3) & 27.3 (27.6) & 1.0 (1.1) & 1.3 (0.5) \\
+    \hspace*{4mm} - Discounters & 157   & 28.2 \phantom{0}(9.5) & 13.6 \phantom{0}(6.5) & 0.4 (0.4) & 1.1 (0.3) \\
+    \hspace*{4mm} - Supermarkets vs. discounters & 1 317 & 18.1 (11.4) & 13.1 (11.7) & 1.0 (0.9) & 1.3 (0.5) \\
     \midrule
     Price spread $\le$ 1 cent per liter &       &       &       &       &  \\
     All types & 1 928 & 20.3 (11.8) & 27.4 (24.6) & 0.4 (0.3) & 1.1 (0.4) \\
-    Oil \& Ind & 297   & 29.0 (10.5) & 12.1 (17.0) & 0.5 (0.3) & 1.6 (0.4) \\
-    Supermarkets \& Discounters & 1 423 & 19.0 (11.5) & 30.2 (24.9) & 0.4 (0.3) & 1.1 (0.4) \\
-    - Supermarkets & 1 404 & 15.9 (10.8) & 40.0 (17.3) & 0.3 (0.3) & 1.1 (0.4) \\
-    - Discounters & 140   & 30.0 (8.2) & 14.4 (6.4) & 0.3 (0.2) & 1.0 (0.3) \\
-    - Supermarkets vs. discounters & 879   & 22.2 (10.9) & 17.1 (11.9) & 0.5 (0.3) & 1.1 (0.3) \\
+    - Oil \& Ind & 297   & 29.0 (10.5) & 12.1 (17.0) & 0.5 (0.3) & 1.6 (0.4) \\
+    - Supermarkets \& Discounters & 1 423 & 19.0 (11.5) & 30.2 (24.9) & 0.4 (0.3) & 1.1 (0.4) \\
+    \hspace*{4mm} - Supermarkets & 1 404 & 15.9 (10.8) & 40.0 (17.3) & 0.3 (0.3) & 1.1 (0.4) \\
+    \hspace*{4mm} - Discounters & 140   & 30.0 \phantom{0}(8.2) & 14.4 \phantom{0}(6.4) & 0.3 (0.2) & 1.0 (0.3) \\
+    \hspace*{4mm} - Supermarkets vs. discounters & 879   & 22.2 (10.9) & 17.1 (11.9) & 0.5 (0.3) & 1.1 (0.3) \\
     \bottomrule
     \bottomrule
 \end{tabular}
@@ -388,7 +388,9 @@ Results (Table~\ref{tab:regs_pairs}) support the hypothesis that limited consume
 \end{threeparttable}
 \end{table}
 
-Pairs involving supermarkets and discounters typically display large percentages of similar prices over time. Observations of strong price alinement raise the question of convergence to equilibrium and potential collusion. In order to gain some understanding of price dynamics, for each pair, we count the number of times each gas station matches its competitors' price. A binomial test of equality often leads to reject the hypothesis that both gas station are equally likely to match the other's price. On a technical note, it must me noted that with daily price records, it is often the case that competitors with similar price levels simultaneously set the same price on a given day. Such observations are not taken into account in our approach.
+Pairs involving supermarkets and discounters typically display large percentages of similar prices over time. Observations of strong price alinement raise the question of convergence to equilibrium and potential collusion. In order to capture the potential existence of leadership in price dynamics, for all pairs, we count the number of times each seller matches its competitors' price (formally the number of time seller $i$ matches seller $j$'s price writes $\#\{p_{it} = p_{jt} \text{ with } p_{it-1} \neq p_{jt-1} \text{ and } p_{jt} = p_{jt-1}$\}). The hypothesis that each gas station is equally likely to match its competitor price is tested through a binomial test of the equality of the two figures (i.e. seller $i$ matches $j$ and the converse). Whenever the equality hypothesis is rejected, the gas station which displays the higher figure is considered as a leader, and the other as a follower. It must me noted that with daily price records, competitors are often observed to simultaneously adopt the same price on a given day. Such observations are not taken into account in the previously mentioned test, with an importance consequence. The hypothesis of equality of likelihood to adopt the other's price can indeed be accepted either because gas stations actually never set the same prices, or because they always do so at the same time. In order to distinguish these two cases, we adopt a threshold regarding the percentage of days on which both gas stations set the same price. Below this threshold, pairs of competitors are assumed to either be significantly differentiated and/or to be best described by a competition model which does not yield a symmetric price equilibrium. Above this threshold, competitors are expected to either be engaged in relatively tough price competition, or to coordinate on prices.
+
+Information can then be aggregated for each gas station in order to distinguish which have at least one competitor with similar prices, and among those to see whether some appear to rather act as leaders or followers. A gas station is labeled as a relative leader (follower) when it is found to lead (follow) in at least one observation. Further, all gas stations which belong to a pair in which no leader can be identified are labelled as uncertain. Importantly, these three labels are not mutually exclusive: a gas station can be found to act as a leader in one pair, a follower in another, and to neither leader nor follower in a third. An obvious shortcoming of this approach is that when a gas station A systematically matches the prices of a competitor B to the extent that no leader can be identified, if a seller C loosely follows B, both A and B will be labelled as relative leaders in their comparison with C. Finally, an absolute leader (follower) is then a seller which belongs to the set of relative leaders, but not to the sets of relative followers (leaders) and uncertain. Gas station which are only part of pairs for which no leader can identified are labelled as absolutely uncertain.
 
 \section{Market price dispersion}
 
@@ -556,19 +558,19 @@ Regarding the fit between \cite{VAR80} and the data, it is worth noting that an 
     \midrule
     No price spread restriction &       &       &       &       &  \\
     All types & 23 824 & 7.1 (11.0) & 6.1 (14.5) & 5.4 (4.3) & 1.7 (0.6) \\
-    Oil \& Ind & 3 780 & 9.6 (11.5) & 3.0 (7.4) & 3.4 (2.6) & 1.9 (0.6) \\
-    Supermarkets \& Discounters & 7 244 & 16.1 (11.8) & 17.4 (21.2) & 1.1 (1.1) & 1.3 (0.5) \\
-    - Supermarkets & 4 292 & 13.7 (10.9) & 21.9 (25.3) & 1.1 (1.2) & 1.4 (0.5) \\
-    - Discounters & 296   & 27.5 (10.6) & 11.3 (6.4) & 0.5 (0.6) & 1.2 (0.3) \\
-    - Supermarkets vs. discounters & 2 656 & 18.7 (11.9) & 10.8 (10.5) & 1.0 (0.9) & 1.4 (0.5) \\
+    - Oil \& Ind & 3 780 & 9.6 (11.5) & 3.0 \phantom{0}(7.4) & 3.4 (2.6) & 1.9 (0.6) \\
+    - Supermarkets \& Discounters & 7 244 & 16.1 (11.8) & 17.4 (21.2) & 1.1 (1.1) & 1.3 (0.5) \\
+    \hspace*{4mm} - Supermarkets & 4 292 & 13.7 (10.9) & 21.9 (25.3) & 1.1 (1.2) & 1.4 (0.5) \\
+    \hspace*{4mm} -  Discounters & 296   & 27.5 (10.6) & 11.3 \phantom{0}(6.4) & 0.5 (0.6) & 1.2 (0.3) \\
+    \hspace*{4mm} -  Supermarkets vs. discounters & 2 656 & 18.7 (11.9) & 10.8 (10.5) & 1.0 (0.9) & 1.4 (0.5) \\
     \midrule
     Price spread <= 1 cent per liter &       &       &       &       &  \\
     All types & 5 257 & 22.1 (11.9) & 23.4 (22.8) & 0.4 (0.3) & 1.2 (0.4) \\
-    Oil \& Ind & 530   & 19.8 (10.0) & 10.4 (15.4) & 0.6 (0.3) & 1.6 (0.4) \\
-    Supermarkets \& Discounters & 4 365 & 20.9 (11.8) & 25.8 (23.3) & 0.4 (0.3) & 1.1 (0.4) \\
-    - Supermarkets & 2 493 & 17.9 (11.4) & 34.3 (26.5) & 0.4 (0.3) & 1.1 (0.4) \\
-    - Discounters & 241   & 30.8 (8.2) & 12.6 (6.2) & 0.3 (0.3) & 1.1 (0.3) \\
-    - Supermarkets vs. discounters & 1 631 & 24.0 (11.1) & 14.8 (11.0) & 0.5 (0.3) & 1.1 (0.3) \\
+    - Oil \& Ind & 530   & 19.8 (10.0) & 10.4 (15.4) & 0.6 (0.3) & 1.6 (0.4) \\
+    - Supermarkets \& Discounters & 4 365 & 20.9 (11.8) & 25.8 (23.3) & 0.4 (0.3) & 1.1 (0.4) \\
+    \hspace*{4mm} - Supermarkets & 2 493 & 17.9 (11.4) & 34.3 (26.5) & 0.4 (0.3) & 1.1 (0.4) \\
+    \hspace*{4mm} - Discounters & 241   & 30.8 \phantom{0}(8.2) & 12.6 \phantom{0}(6.2) & 0.3 (0.3) & 1.1 (0.3) \\
+    \hspace*{4mm} - Supermarkets vs. discounters & 1 631 & 24.0 (11.1) & 14.8 (11.0) & 0.5 (0.3) & 1.1 (0.3) \\
     \bottomrule
     \bottomrule
 \end{tabular}

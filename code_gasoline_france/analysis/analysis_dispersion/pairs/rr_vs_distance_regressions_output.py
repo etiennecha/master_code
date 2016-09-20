@@ -198,7 +198,8 @@ str_ctrls = u''
 
 ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d} {:s}'.format(dist_reg, str_ctrls),
                       'pct_rr ~ sc_{:d} {:s}'.format(dist_reg, str_ctrls),
-                      'std_spread ~ sc_{:d} {:}'.format(dist_reg, str_ctrls)]
+                      'std_spread ~ sc_{:d} {:}'.format(dist_reg, str_ctrls),
+                      'pct_same ~ sc_{:d} {:s}'.format(dist_reg, str_ctrls)]
 
 # from statsmodels.regression.quantile_regression import QuantReg
 ls_quantiles = [0.2501, 0.501, 0.7501, 0.9001]
@@ -265,10 +266,18 @@ for df_ppd_title, df_ppd_reg in ls_loop_df_ppd_regs:
                       smf.quantreg('std_spread~{:s} {:s}'.format(col_sc, str_ctrls),
                                     data = df_ppd_reg).fit(quantile))\
                          for quantile in ls_quantiles]
+  
+  # QRs same
+  ls_same_qr_fits  = [('pct_same_Q{:.2f}'.format(quantile),
+                       smf.quantreg('pct_same~{:s} {:s}'.format(col_sc, str_ctrls),
+                                     data = df_ppd_reg).fit(quantile))\
+                          for quantile in ls_quantiles]
 
   # Prepare for output: OLS & QRs
   ls_rr_op = [ls_dis_ols_fits[1][1]] + [x[1] for x in ls_rr_qr_fits]
   ls_std_op = [ls_dis_ols_fits[2][1]] + [x[1] for x in ls_std_qr_fits]
+  ls_same_op = [ls_dis_ols_fits[3][1]] + [x[1] for x in ls_same_qr_fits]
+
   ls_model_names = ['OLS'] + [u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles]
 
   su_rr = summary_col(ls_rr_op,
@@ -284,17 +293,30 @@ for df_ppd_title, df_ppd_reg in ls_loop_df_ppd_regs:
                        stars=True,
                        info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                                   'R2':lambda x: "{:.2f}".format(x.rsquared)})
-  ls_res.append([df_ppd_title, nb_pairs, pct_close, su_rr, su_std])
 
-for [df_ppd_title, nb_pairs, pct_close, su_rr, su_std] in ls_res:
+  su_same = summary_col(ls_same_op,
+                        model_names= ls_model_names,
+                        float_format='%0.2f',
+                        stars=True,
+                        info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                                   'R2':lambda x: "{:.2f}".format(x.rsquared)})
+
+
+
+  ls_res.append([df_ppd_title, nb_pairs, pct_close, su_rr, su_std, su_same])
+
+for [df_ppd_title, nb_pairs, pct_close, su_rr, su_std, su_same] in ls_res:
   print()
   print(u'-'*50)
   print()
   print(u'{:s} ({:d} pairs)'.format(df_ppd_title, nb_pairs).upper())
   print(u'Pct same corner: {:3.1f}%'.format(pct_close).upper())
   print()
-  print('Rank reversals:')
+  print('Pct rank reversals:')
   print(su_rr)
   print()
   print('Std. of price spread:')
   print(su_std)
+  print()
+  print('Pct same:')
+  print(su_same)
