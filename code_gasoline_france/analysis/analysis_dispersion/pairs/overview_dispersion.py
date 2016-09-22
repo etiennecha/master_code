@@ -60,9 +60,17 @@ df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
                                dtype = {'id_station' : str})
 df_margin_chge.set_index('id_station', inplace = True)
 
-# CLOSE STATIONS
-dict_ls_close = dec_json(os.path.join(path_dir_built_json,
-                                      'dict_ls_close.json'))
+# DF COMP
+
+df_comp = pd.read_csv(os.path.join(path_dir_built_csv,
+                                   'df_comp.csv'),
+                               encoding = 'utf-8',
+                               dtype = {'id_station' : str})
+df_comp.set_index('id_station', inplace = True)
+
+## CLOSE STATIONS
+#dict_ls_close = dec_json(os.path.join(path_dir_built_json,
+#                                      'dict_ls_close.json'))
 
 # DF PRICES
 df_prices_ttc = pd.read_csv(os.path.join(path_dir_built_csv,
@@ -80,25 +88,25 @@ df_prices_cl = pd.read_csv(os.path.join(path_dir_built_csv,
                           parse_dates = ['date'])
 df_prices_cl.set_index('date', inplace = True)
 
-# basic station filter (geo scope or insufficient obs.)
+# FILTER DATA
+# exclude stations with insufficient (quality) price data
+
+df_pbms = df_station_stats[(df_station_stats['pct_chge'] < 0.03) |\
+                           (df_station_stats['nb_valid'] < 90)]
+print(u'Nb with insufficient/pbmatic price data: {:d}'.format(len(df_pbms)))
+
 df_filter = df_station_stats[~((df_station_stats['pct_chge'] < 0.03) |\
                                (df_station_stats['nb_valid'] < 90))]
 ls_keep_ids = list(set(df_filter.index).intersection(\
                      set(df_info[(df_info['highway'] != 1) &\
-                                 (df_info['reg'] != 'corse')].index)))
-#df_info = df_info.ix[ls_keep_ids]
-#df_station_stats = df_station_stats.ix[ls_keep_ids]
-#df_prices_ttc = df_prices_ttc[ls_keep_ids]
-#df_prices_ht = df_prices_ht[ls_keep_ids]
-#df_prices_cl = df_prices_cl[ls_keep_ids]
+                                 (df_info['reg'] != 'Corse')].index)))
+df_prices_ht = df_prices_ht[ls_keep_ids]
+df_prices_ttc = df_prices_ttc[ls_keep_ids]
+df_info = df_info.ix[ls_keep_ids]
+df_station_stats = df_station_stats.ix[ls_keep_ids]
+df_comp = df_comp.ix[ls_keep_ids]
 
-ls_drop_ids = list(set(df_prices_ttc.columns).difference(set(ls_keep_ids)))
-df_prices_ttc[ls_drop_ids] = np.nan
-df_prices_ht[ls_drop_ids] = np.nan
-# highway stations may not be in df_prices_cl (no pbm here)
-ls_drop_ids_nhw =\
-  list(set(ls_drop_ids).difference(set(df_info[df_info['highway'] == 1].index)))
-df_prices_cl[ls_drop_ids_nhw] = np.nan
+print(u'Nb of stations after all filters: {:d}'.format(len(df_info)))
 
 # DF PAIRS
 ls_dtype_temp = ['id', 'ci_ardt_1']
@@ -131,6 +139,45 @@ for spread_var in ['mean_spread',
 for pct_var in ['pct_to_same_maxu', 'pct_to_same_maxl',
                 'pct_to_same_min', 'pct_same', 'pct_rr']:
   df_pairs[pct_var] = df_pairs[pct_var] * 100
+
+# REFINE GROUP TYPE
+# beginning: ELF + need to use future info
+# (todo: add TA with no detected margin chge?)
+df_info.loc[((df_info['brand_0'] == 'ELF') |\
+             (df_info['brand_last'] == 'ESSO_EXPRESS')),
+            'group_type'] = 'DIS'
+df_info.loc[(df_info['brand_last'].isin(['ELF',
+                                         'ESSO_EXPRESS',
+                                         'TOTAL_ACCESS'])),
+            'group_type_last'] = 'DIS'
+# Further GMS refining
+ls_hypers = ['AUCHAN', 'CARREFOUR', 'GEANT', 'LECLERC', 'CORA',
+             'INTERMARCHE', 'SYSTEMEU']
+df_info.loc[(df_info['brand_0'].isin(ls_hypers)),
+            'group_type'] = 'HYP'
+df_info.loc[(df_info['brand_last'].isin(ls_hypers)),
+            'group_type_last'] = 'HYP'
+
+# DEAL WITH OTHER
+str_be = 'last' # '_0'
+df_info['brand'] = df_info['brand_{:s}'.format(str_be)]
+df_info['group_type'] = df_info['group_type_{:s}'.format(str_be)]
+
+df_info['nb_brand'] = df_info[['brand', 'group_type']].groupby('brand')\
+                                      .transform(len)
+
+for group_type in df_info['group_type'].unique():
+  df_info.loc[(df_info['nb_brand'] <= 50) &\
+             (df_info['group_type'] == group_type),
+             'brand'] = 'OTHER_{:s}'.format(group_type)
+
+# temp: overwrite ELF for table (fragile but else overwritten due to nb_brand)
+df_info.loc[df_info['brand'] == 'OTHER_DIS', 'brand'] = 'TOTAL_ACCESS'
+
+# temp: set small OIL & IND to INDEPENDANT (group_type too => for agg stat on remainder)
+df_info.loc[df_info['brand'] == 'OTHER_OIL', 'group_type'] = 'IND'
+df_info.loc[df_info['brand'] == 'OTHER_OIL', 'brand'] = 'INDEPENDANT'
+df_info.loc[df_info['brand'] == 'OTHER_IND', 'brand'] = 'INDEPENDANT'
 
 # #############
 # PREPARE DATA
@@ -394,8 +441,8 @@ print(u'Inspect leader brands')
 print(df_pairs['leader_brand'].value_counts()[0:10])
 
 ## impose close price comp: pct_same 0.33 or 0.50
-#df_close_comp = df_pairs[df_pairs['pct_same'] >= 20].copy()
-df_close_comp = df_pairs
+df_close_comp = df_pairs[df_pairs['pct_same'] >= 20].copy()
+#df_close_comp = df_pairs
 
 ## check what is mutually exclusive
 
@@ -453,18 +500,30 @@ ls_close_comp_su = [['close_comp', ls_close_comp],
                     ['abs_unc', ls_abs_unc],
                     ['rel_leader', ls_rel_leader],
                     ['rel_led', ls_rel_led],
-                    ['rel_unc', ls_rel_unc],
-                    ['leader_unc', ls_leader_unc]]
+                    ['rel_unc', ls_rel_unc]]
+#                    ['leader_unc', ls_leader_unc]]
+
+ls_station_ind_cols = ['group_type', 'brand']
 
 ls_se_leader = []
 for title_temp, ls_ids_temp in ls_close_comp_su:
-  ls_se_leader.append(df_info.ix[ls_ids_temp]['brand_last'].value_counts())
+  ls_se_leader.append(df_info.ix[ls_ids_temp]\
+                                [ls_station_ind_cols].groupby(ls_station_ind_cols).agg(len))
 
-df_leader_brands = pd.concat([df_info['brand_last'].value_counts()] + ls_se_leader,
-                             axis = 1,
-                             keys =['nb_stations'] + [x[0] for x in ls_close_comp_su])
+df_leader_brands =\
+  pd.concat([df_info[ls_station_ind_cols].groupby(ls_station_ind_cols).agg(len)] + ls_se_leader,
+            axis = 1,
+            keys = ['nb_stations'] + [x[0] for x in ls_close_comp_su])
 
-df_leader_brands = df_leader_brands[df_leader_brands['nb_stations'] >= 30]
+#ls_se_leader = []
+#for title_temp, ls_ids_temp in ls_close_comp_su:
+#  ls_se_leader.append(df_info.ix[ls_ids_temp]['brand_last'].value_counts())
+#
+#df_leader_brands = pd.concat([df_info['brand_last'].value_counts()] + ls_se_leader,
+#                             axis = 1,
+#                             keys = ['nb_stations'] + [x[0] for x in ls_close_comp_su])
+
+#df_leader_brands = df_leader_brands[df_leader_brands['nb_stations'] >= 30]
 df_leader_brands = df_leader_brands.fillna(0)
 
 df_leader_brands_pct =\
@@ -473,5 +532,35 @@ df_leader_brands_pct['nb_stations'] = df_leader_brands['nb_stations']
 
 df_leader_brands_pct.sort('nb_stations', ascending = False, inplace = True)
 
+#df_leader_brands_pct = df_leader_brands_pct.sortlevel()
+
 print()
 print(df_leader_brands_pct.to_string())
+
+# caution: need to be exhaustive...
+ls_station_reind = [['OIL', 'TOTAL'],
+                    ['OIL', 'ELAN'],
+                    ['OIL', 'AGIP'],
+                    ['OIL', 'BP'],
+                    ['OIL', 'ESSO'],
+                    ['IND', 'AVIA'],
+                    ['IND', 'DYNEFF'],
+                    ['IND', 'INDEPENDANT'],
+                    ['DIS', 'TOTAL_ACCESS'],
+                    ['DIS', 'ESSO_EXPRESS'],
+                    ['HYP', 'CARREFOUR'],
+                    ['HYP', 'AUCHAN'],
+                    ['HYP', 'CORA'],
+                    ['HYP', 'GEANT'],
+                    ['HYP', 'INTERMARCHE'],
+                    ['HYP', 'SYSTEMEU'],
+                    ['HYP', 'LECLERC'],
+                    ['SUP', 'CARREFOUR_MARKET'],
+                    ['SUP', 'CARREFOUR_CONTACT'],
+                    ['SUP', 'SIMPLY'],
+                    ['SUP', 'CASINO'],
+                    ['SUP', 'INTERMARCHE_CONTACT'],
+                    ['SUP', 'OTHER_SUP']]
+
+print(df_leader_brands_pct.reindex([tuple(x) for x in ls_station_reind])\
+        .to_string(float_format = '{:.0f}'.format))
