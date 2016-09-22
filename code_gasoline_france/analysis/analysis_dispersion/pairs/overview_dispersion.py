@@ -441,8 +441,13 @@ print(u'Inspect leader brands')
 print(df_pairs['leader_brand'].value_counts()[0:10])
 
 ## impose close price comp: pct_same 0.33 or 0.50
-df_close_comp = df_pairs[df_pairs['pct_same'] >= 20].copy()
+
 #df_close_comp = df_pairs
+#df_close_comp = df_pairs[df_pairs['pct_same'] >= 30].copy()
+#df_close_comp = df_pairs[(df_pairs['pct_same'] >= 30) |\
+#                         (df_pairs['leader_pval'] <= 0.05)].copy()
+df_close_comp = df_pairs[(df_pairs['abs_mean_spread'] <= 1.0) &\
+                         (df_pairs['pct_same'] >= 30)]
 
 ## check what is mutually exclusive
 
