@@ -368,7 +368,12 @@ for dist_lim in [0.5, 1, 3, 5, 10]:
 #plt.imshow(heatmap.T, extent=extent, origin = 'lower', aspect = 'auto')
 #plt.show()
 
+# ##############
 # ALIGNED PRICES
+# ##############
+
+df_pairs = df_pair_comp[df_pair_comp['distance'] <= 5].copy()
+
 print()
 print(u'Nb aligned prices i.e. pct_same >= 33%:',\
       len(df_pairs[(df_pairs['pct_same'] >= 33.0)])) # todo: harmonize pct i.e. * 100
@@ -442,12 +447,12 @@ print(df_pairs['leader_brand'].value_counts()[0:10])
 
 ## impose close price comp: pct_same 0.33 or 0.50
 
-#df_close_comp = df_pairs
-#df_close_comp = df_pairs[df_pairs['pct_same'] >= 30].copy()
+df_close_comp = df_pairs[(df_pairs['pct_same'] >= 20)].copy()
+
 #df_close_comp = df_pairs[(df_pairs['pct_same'] >= 30) |\
 #                         (df_pairs['leader_pval'] <= 0.05)].copy()
-df_close_comp = df_pairs[(df_pairs['abs_mean_spread'] <= 1.0) &\
-                         (df_pairs['pct_same'] >= 30)]
+#df_close_comp = df_pairs[(df_pairs['abs_mean_spread'] <= 1.0) &\
+#                         (df_pairs['pct_same'] >= 30)]
 
 ## check what is mutually exclusive
 
@@ -538,9 +543,8 @@ df_leader_brands_pct['nb_stations'] = df_leader_brands['nb_stations']
 df_leader_brands_pct.sort('nb_stations', ascending = False, inplace = True)
 
 #df_leader_brands_pct = df_leader_brands_pct.sortlevel()
-
-print()
-print(df_leader_brands_pct.to_string())
+#print()
+#print(df_leader_brands_pct.to_string())
 
 # caution: need to be exhaustive...
 ls_station_reind = [['OIL', 'TOTAL'],
@@ -567,5 +571,13 @@ ls_station_reind = [['OIL', 'TOTAL'],
                     ['SUP', 'INTERMARCHE_CONTACT'],
                     ['SUP', 'OTHER_SUP']]
 
-print(df_leader_brands_pct.reindex([tuple(x) for x in ls_station_reind])\
-        .to_string(float_format = '{:.0f}'.format))
+df_leader_brands_pct = df_leader_brands_pct.reindex([tuple(x) for x in ls_station_reind])
+print(df_leader_brands_pct.to_string(float_format = '{:.0f}'.format))
+
+df_leader_brands_pct.to_csv(os.path.join(path_dir_built_dis_csv,
+                                         'df_temp.csv'),
+                               index = True,
+                               encoding = 'latin-1',
+                               sep = ';',
+                               escapechar = '\\',
+                               quoting = 1) 
