@@ -447,7 +447,7 @@ print(df_pairs['leader_brand'].value_counts()[0:10])
 
 ## impose close price comp: pct_same 0.33 or 0.50
 
-df_close_comp = df_pairs[(df_pairs['pct_same'] >= 20)].copy()
+df_close_comp = df_pairs[(df_pairs['pct_same'] >= 30)].copy()
 
 #df_close_comp = df_pairs[(df_pairs['pct_same'] >= 30) |\
 #                         (df_pairs['leader_pval'] <= 0.05)].copy()
@@ -505,12 +505,12 @@ ls_drop_ids = df_margin_chge[df_margin_chge['value'].abs() >= 0.03].index
 df_info = df_info[~df_info.index.isin(ls_drop_ids)]
 
 ls_close_comp_su = [['close_comp', ls_close_comp],
-                    ['abs_leader', ls_abs_leader],
-                    ['abs_led', ls_abs_led],
-                    ['abs_unc', ls_abs_unc],
                     ['rel_leader', ls_rel_leader],
+                    ['abs_leader', ls_abs_leader],
                     ['rel_led', ls_rel_led],
-                    ['rel_unc', ls_rel_unc]]
+                    ['abs_led', ls_abs_led],
+                    ['rel_unc', ls_rel_unc],
+                    ['abs_unc', ls_abs_unc]]
 #                    ['leader_unc', ls_leader_unc]]
 
 ls_station_ind_cols = ['group_type', 'brand']
