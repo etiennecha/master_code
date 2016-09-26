@@ -182,15 +182,17 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
 # todo: before and after govt intervention?
 
 dict_df_md = {}
-ls_titles, dict_stats_des = [], {}
+dict_stats_des = [], {}
 for x in [0, 1, 3, 4, 6, 7, 8, 9, 10, 11]:
   title = ls_loop_markets[x][0]
-  ls_titles.append(title)
   df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
                                    'df_market_dispersion_{:s}.csv'.format(title)),
                       encoding = 'utf-8',
                       parse_dates = ['date'],
                       dtype = {'id' : str})
+  
+  ## Check if restrict date
+  #df_md = df_md[df_md['date'] >= '2013-02-01']
   
   ## Restrict to one day per week: robustness checks
   #df_md.set_index('date', inplace = True)
@@ -226,10 +228,12 @@ lsd_agg = ['Nb obs',
            'std',
            'gfs']
 
+ls_loop_markets_sub = ls_loop_markets[0:2] + ls_loop_markets[6:]
+
 # Stats des by market def / price (general)
 ls_titles, ls_se_mean, ls_se_std, = [], [], []
-for x in [0, 1, 3, 4, 6, 7, 8, 9, 10, 11]:
-  title = ls_loop_markets[x][0]
+for market_def in ls_loop_markets_sub:
+  title = market_def[0]
   df_md = dict_df_md[title]
   # drop if margin chge around
   df_md = df_md[~df_md['id'].isin(ls_drop_3km)]
@@ -264,8 +268,8 @@ print(df_std.ix[lsd_agg].to_string())
 
 ls_titles_2 = []
 dict_stats_des = {}
-for x in [0, 1, 3, 4, 6, 7, 8, 9, 10, 11]:
-  title = ls_loop_markets[x][0]
+for market_def in ls_loop_markets_sub:
+  title = market_def[0]
   df_md = dict_df_md[title]
   # drop if margin chge around
   df_md = df_md[~df_md['id'].isin(ls_drop_3km)]

@@ -194,7 +194,7 @@ ls_drop_3km = list(set(ls_drop_3km).union(ls_ids_margin_chge))
 # - reg with stable markets - res
 
 dict_df_mds = {}
-for market_def in ls_loop_markets[6:]:
+for market_def in ls_loop_markets[1:2] + ls_loop_markets[6:]:
   title = market_def[0]
   df_md = pd.read_csv(os.path.join(path_dir_built_dis_csv,
                                    'df_market_dispersion_{:s}.csv'.format(title)),
@@ -224,7 +224,9 @@ for market_def in ls_loop_markets[6:]:
     df_md['d_high'] = 1
   dict_df_mds[title] = df_md
 
-dict_df_regs = {'no_overlap_res' : dict_df_mds['Stable_Markets_Residuals']}
+dict_df_regs = {'all_res' : dict_df_mds['3km_Residuals'],
+                'no_overlap_res' : dict_df_mds['Stable_Markets_Residuals']}
+                
 dict_df_regs['3km_lh_raw'] = pd.concat([dict_df_mds['Low_3km'],
                                         dict_df_mds['High_3km']])
 dict_df_regs['3km_lh_res'] = pd.concat([dict_df_mds['Low_3km_Residuals'],
@@ -236,7 +238,12 @@ dict_df_regs['3km_h_res'] = dict_df_mds['High_3km_Residuals'].copy()
 dict_df_regs['3km_l_res'].drop('d_high', axis = 1, inplace = True)
 dict_df_regs['3km_h_res'].drop('d_high', axis = 1, inplace = True)
 
-for str_df in ['no_overlap_res', '3km_lh_raw', '3km_lh_res', '3km_l_res', '3km_h_res']:
+for str_df in ['all_res',
+               'no_overlap_res',
+               #'3km_lh_raw',
+               #'3km_lh_res',
+               '3km_l_res',
+               '3km_h_res']:
 
   df_md = dict_df_regs[str_df]
   #df_md = dict_df_regs['no_overlap_res']
@@ -255,7 +262,7 @@ for str_df in ['no_overlap_res', '3km_lh_raw', '3km_lh_res', '3km_l_res', '3km_h
       formula = '{:s} ~ cost + nb_comp'.format(disp_stat)
       if 'd_high' in df_temp.columns:
         formula = formula + '+ d_high'
-        #formula = formula + ' * C(d_high)'
+        # formula = formula + ' : C(d_high)'
       res = smf.ols(formula, data = df_temp).fit()
       res = res.get_robustcov_results(cov_type = 'cluster',
                                       groups = df_temp[['int_id', 'int_date']].values,

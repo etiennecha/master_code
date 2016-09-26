@@ -8,6 +8,7 @@ from generic_master_price import *
 from generic_master_info import *
 from generic_competition import *
 import time
+from statsmodels.iolib.summary2 import summary_col
 
 path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
@@ -201,6 +202,16 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
                    ('Low_3km_Residuals', df_prices_cl, dict_markets['Low_3km']),
                    ('High_3km_Residuals', df_prices_cl, dict_markets['High_3km'])]
 
+# DROP MARKETS WITH MARGIN CHGE (CENTER OR IN)
+margin_chge_bound = 0.03
+ls_ids_margin_chge =\
+  df_margin_chge[df_margin_chge['value'].abs() >= margin_chge_bound].index
+dict_ls_comp_3km = {x : [y[0] for y in ls_y if y[1] <= 3]\
+                        for x, ls_y in dict_ls_comp.items()}
+ls_drop_3km = [x for x, ls_y in dict_ls_comp_3km.items()\
+                 if set(ls_y).intersection(set(ls_ids_margin_chge))]
+ls_drop_3km = list(set(ls_drop_3km).union(ls_ids_margin_chge))
+
 # for each market:
 # market desc: (max) nb firms, mean nb firms observed,
 # dispersion: mean- range / gfs / std / gfs
@@ -210,7 +221,7 @@ ls_loop_markets = [('3km_Raw_prices', df_prices_ttc, dict_markets['All_3km']),
 
 ls_df_market_stats, ls_se_disp_mean, ls_se_disp_std = [], [], []
 ls_df_mds = []
-for title, df_prices, ls_markets_temp in ls_loop_markets[10:11]:
+for title, df_prices, ls_markets_temp in ls_loop_markets[7:8]:
   
   print()
   print(title)
@@ -220,7 +231,7 @@ for title, df_prices, ls_markets_temp in ls_loop_markets[10:11]:
   df_prices = df_prices * 100
   
   ls_df_market_dispersion =\
-    [get_market_price_dispersion(market_ids, df_prices, ddof = 1.8)\
+    [get_market_price_dispersion(market_ids, df_prices, ddof = 1.5)\
           for market_ids in ls_markets_temp]
   
     # cv useless when using residual prices (div by almost 0)
@@ -260,11 +271,21 @@ for title, df_prices, ls_markets_temp in ls_loop_markets[10:11]:
   df_mds['cost'] =  df_cost['UFIP RT Diesel R5 EL'] * 100
   df_mds.reset_index(drop = False, inplace = True)
 
+  # Drop if margin chge around
+  df_mds = df_mds[~df_mds['id'].isin(ls_drop_3km)]
+  
+  # Restrict to one or two day(s) per week: robustness checks
+  df_md.set_index('date', inplace = True)
+  df_md['dow'] = df_md.index.dayofweek
+  df_md.reset_index(drop = False, inplace = True)
+  df_md = df_md[(df_md['dow'] == 2) | (df_md['dow'] == 4)] # Friday
   df_mds = df_mds[~df_mds['cost'].isnull()]
+  
+  # Prepare vars for clustering
   df_mds['str_date'] = df_mds['date'].apply(lambda x: x.strftime('%Y%m%d'))
   df_mds['int_date'] = df_mds['str_date'].astype(int)
   df_mds['int_id'] = df_mds['id'].astype(int)
-   
+  
   df_mds = pd.merge(df_mds,
                     df_nb_comp,
                     left_on = 'id',
@@ -278,42 +299,32 @@ for title, df_prices, ls_markets_temp in ls_loop_markets[10:11]:
   # ls_df_mds.append(df_mds)
   
   # REGRESSIONS
+  ls_res, ls_names = [], []
   for title_temp, df_temp in [['All', df_mds],
                               ['Before', df_mds[df_mds['date'] <= '2012-07-01']],
                               ['After', df_mds[df_mds['date'] >= '2013-02-01']]]:
-    print()
-    print('-'*60)
-    print(title_temp)
-    print()
-    print('Range')
-    res_range = smf.ols('range ~ price + nb_c_3km',
-                   data = df_temp).fit()
-    print(res_range.summary())
-    cov2g_range =\
-      sm.stats.sandwich_covariance.cov_cluster_2groups(res_range,
-                                                       df_temp['int_id'],
-                                                       group2 = df_temp['int_date'])
-    var_range = np.sqrt(np.diagonal(cov2g_range[0]))
-    tval_range = (res_range.params / var_range).values
-    pval_range = scipy.stats.t.sf(np.abs(tval_range), res_range.nobs - 1)*2
-    # todo: check computation of p values
-    print('var  : ' + ' '.join(['{:7.4f};'.format(x) for x in var_range]))
-    print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_range]))
-    print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_range]))
-    
-    print()
-    print('Std')
-    res_std = smf.ols('std ~ price + nb_c_3km',
-                   data = df_temp).fit()
-    print(res_std.summary())
-    cov2g_std =\
-      sm.stats.sandwich_covariance.cov_cluster_2groups(res_std,
-                                                       df_temp['int_id'],
-                                                       group2 = df_temp['int_date'])
-    var_std = np.sqrt(np.diagonal(cov2g_std[0]))
-    tval_std = (res_std.params / var_std).values
-    pval_std = scipy.stats.t.sf(np.abs(tval_std), res_std.nobs - 1)*2
-    # todo: check computation of p values
-    print('var  : ' +  ' '.join(['{:7.4f};'.format(x) for x in var_std]))
-    print('t-val: ' + ' '.join(['{:7.4f};'.format(x) for x in tval_std]))
-    print('p-val: ' + ' '.join(['{:7.4f};'.format(x) for x in pval_std]))
+    #print()
+    #print('-'*60)
+    #print(title_temp)
+    #print()
+    for disp_stat in ['range', 'std']:
+      formula = '{:s} ~ cost + nb_c_3km'.format(disp_stat)
+      res = smf.ols(formula,
+                     data = df_temp).fit()
+      res = res.get_robustcov_results(cov_type = 'cluster',
+                                      groups = df_temp[['int_id', 'int_date']].values,
+                                      use_correction = True)
+      #print(disp_stat)
+      #print(res.summary())
+      ls_res.append(res)
+      ls_names.append(title_temp[0:2] + '-' + disp_stat)
+  
+  su = summary_col(ls_res,
+                   model_names=ls_names,
+                   stars=True,
+                   float_format='%0.2f',
+                   info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                              'R2':lambda x: "{:.2f}".format(x.rsquared)})
+
+  print()
+  print(su)
