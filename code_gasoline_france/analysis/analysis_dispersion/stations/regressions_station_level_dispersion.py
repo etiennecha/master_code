@@ -207,48 +207,55 @@ df_prices_cl2 = df_prices_cl2.apply(lambda row: row - row.mean(), axis = 0)
 # #########################
 
 #df_prices = df_prices_cl2 * 100
-#df_prices = df_prices_cl * 100
-df_prices = df_prices_ttc * 100
-
-## Robustness check: use price only upon change
-#df_chges = df_prices_ttc - df_prices_ttc.shift(1)
-#df_prices = df_prices[df_chges.abs() > 1e-5]
+df_prices = df_prices_cl * 100
+#df_prices = df_prices_ttc * 100
 
 # Robustness check: restrict period
 df_prices = df_prices.ix['2013-02-01':'2014-08-30']
 df_prices = df_prices.ix['2013-02-01':]
 #df_prices = df_prices.ix[:'2012-07-01':]
 
+# Robustness check: use price only upon change
+df_chges = df_prices_ttc - df_prices_ttc.shift(1)
+df_prices_uc = df_prices[df_chges.abs() > 1e-5]
+
 ls_rows_disp, ls_ids = [], []
 for id_station in df_prices.columns:
+  se_prices_all = df_prices[id_station][~df_prices[id_station].isnull()]
+  price_mean = se_prices_all.mean()
+  # choose if keep only prices upon change or not (but then cv has no meaning?)
   se_prices = df_prices[id_station][~df_prices[id_station].isnull()]
-  se_prices_a = se_prices[(se_prices >= se_prices.quantile(q=0.025)) &\
-                          (se_prices <= se_prices.quantile(q=0.975))]
-  se_prices_b = se_prices[(se_prices >= se_prices.quantile(q=0.05)) &\
-                          (se_prices <= se_prices.quantile(q=0.95))]
-  price_std = se_prices.std()
-  try:
-    price_kurt = se_prices.kurtosis()
-  except:
-    price_kurt = np.nan
-  try:
-    price_skew = se_prices.skew()
-  except:
-    price_skew = np.nan
-  ls_station_disp = [len(se_prices), price_std, price_kurt, price_skew]
-  for se_prices_temp in [se_prices, se_prices_a, se_prices_b]:
-    price_range = se_prices_temp.max() - se_prices_temp.min()
-    ls_station_disp += [price_range]
-  ls_rows_disp.append(ls_station_disp)
-  ls_ids.append(id_station)
+  # keep only if observed every day (adhoc condition here... check nb missing)
+  if len(se_prices_all) == 532:
+    se_prices_a = se_prices[(se_prices >= se_prices.quantile(q=0.025)) &\
+                            (se_prices <= se_prices.quantile(q=0.975))]
+    se_prices_b = se_prices[(se_prices >= se_prices.quantile(q=0.05)) &\
+                            (se_prices <= se_prices.quantile(q=0.95))]
+    price_std = se_prices.std()
+    try:
+      price_kurt = se_prices.kurtosis()
+    except:
+      price_kurt = np.nan
+    try:
+      price_skew = se_prices.skew()
+    except:
+      price_skew = np.nan
+    ls_station_disp = [len(se_prices), price_mean, price_std, price_kurt, price_skew]
+    for se_prices_temp in [se_prices, se_prices_a, se_prices_b]:
+      price_range = se_prices_temp.max() - se_prices_temp.min()
+      ls_station_disp += [price_range]
+    ls_rows_disp.append(ls_station_disp)
+    ls_ids.append(id_station)
 
-ls_disp_cols = ['nb_obs', 
-                'std', 'kurtosis', 'skew',
+ls_disp_cols = ['nb_obs', 'mean', 'std',
+                'kurtosis', 'skew',
                 'range_0', 'range_1', 'range_2']
 
 df_disp = pd.DataFrame(ls_rows_disp,
                        columns = ls_disp_cols,
                        index = ls_ids)
+
+df_disp['cv'] = df_disp['std'] / df_disp['mean'] * 100
 
 df_disp = pd.merge(df_info,
                    df_disp,
@@ -261,7 +268,6 @@ df_disp = pd.merge(df_disp,
                    how = 'left',
                    left_index = True,
                    right_index = True)
-
 
 # Use nb competitors of same type => check impact
 df_disp.drop('nb_c_3km', axis = 1, inplace = True)
@@ -295,7 +301,6 @@ ls_ls_regs_0 = [[df_disp, ['nb_c_3km + C(group_type)']],
                 #[df_disp, ['dist_c * C(type)', 'C(reg)']],
                 [df_disp, ['nb_c_3km:C(group_type)', 'C(group_type)']],
                 [df_disp, ['nb_c_3km:C(group_type)', 'C(group_type)', 'C(reg)']]]
-              
 
 ls_ls_regs_1 = [[df_disp[df_disp['group_type'] == 'DIS'], ['nb_c_3km', 'C(reg)']],
                 [df_disp[df_disp['group_type'] == 'OIL'], ['nb_c_3km', 'C(reg)']],
@@ -312,7 +317,7 @@ for ls_ls_regs in [ls_ls_regs_0, ls_ls_regs_1]:
     #print(smf.ols('range_1 ~' + '+'.join(ls_idpt_vars),
     #      data = df_disp).fit().summary())
     
-    for idpt_var in ['std', 'range_1']:
+    for idpt_var in ['cv', 'std', 'range_1']:
       res = smf.ols('{:s} ~ {:s}'.format(idpt_var, '+'.join(ls_idpt_vars)),
                     data = df_temp).fit(cov_type='cluster',
                                         cov_kwds={'groups': df_temp['reg']})
