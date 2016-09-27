@@ -215,7 +215,7 @@ df_prices = df_prices_ttc * 100
 #df_prices = df_prices[df_chges.abs() > 1e-5]
 
 # Robustness check: restrict period
-#df_prices = df_prices.ix['2013-02-01':'2014-08-30']
+df_prices = df_prices.ix['2013-02-01':'2014-08-30']
 df_prices = df_prices.ix['2013-02-01':]
 #df_prices = df_prices.ix[:'2012-07-01':]
 
@@ -263,7 +263,7 @@ df_disp = pd.merge(df_disp,
                    right_index = True)
 
 
-# Use nb competitors of same type
+# Use nb competitors of same type => check impact
 df_disp.drop('nb_c_3km', axis = 1, inplace = True)
 df_disp['nb_c_3km'] = df_nb_comp['nb_c_3km']
 
@@ -293,6 +293,7 @@ ls_ls_regs_0 = [[df_disp, ['nb_c_3km + C(group_type)']],
                 #[df_disp, ['dist_c * C(type)']],
                 #[df_disp, ['dist_c * C(type)', 'C(reg)']],
                 #[df_disp, ['dist_c * C(type)', 'C(reg)']],
+                [df_disp, ['nb_c_3km:C(group_type)', 'C(group_type)']],
                 [df_disp, ['nb_c_3km:C(group_type)', 'C(group_type)', 'C(reg)']]]
               
 
