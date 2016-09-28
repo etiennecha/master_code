@@ -61,7 +61,6 @@ df_margin_chge = pd.read_csv(os.path.join(path_dir_built_csv,
 df_margin_chge.set_index('id_station', inplace = True)
 
 # DF COMP
-
 df_comp = pd.read_csv(os.path.join(path_dir_built_csv,
                                    'df_comp.csv'),
                                encoding = 'utf-8',
@@ -411,7 +410,8 @@ df_pairs['leader_pval'] = df_pairs[(~df_pairs['nb_1_lead'].isnull()) &\
 #                                                             alternative = 'greater'),
 #                            axis = 1)
 
-lsd_ld = ['pct_same', 'nb_same', 'nb_chge_to_same', 'nb_1_lead', 'nb_2_lead', 'leader_pval']
+lsd_ld = ['pct_same', 'nb_same', 'nb_chge_to_same',
+          'nb_1_lead', 'nb_2_lead', 'leader_pval']
 
 print()
 print(u'Inspect leaders:')

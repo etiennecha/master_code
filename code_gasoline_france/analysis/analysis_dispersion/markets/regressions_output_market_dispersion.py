@@ -210,7 +210,10 @@ for market_def in ls_loop_markets[1:2] + ls_loop_markets[6:]:
   
   # drop if margin chge around
   df_md = df_md[~df_md['id'].isin(ls_drop_3km)]
-  
+   
+  # restrict max nb_comp
+  df_md = df_md[df_md['nb_comp'] <= 10]
+
   # need to get rid of nan to be able to cluster
   df_md = df_md[~df_md['cost'].isnull()]
   df_md['str_date'] = df_md['date'].apply(lambda x: x.strftime('%Y%m%d'))

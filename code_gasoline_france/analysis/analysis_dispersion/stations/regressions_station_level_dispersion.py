@@ -292,7 +292,6 @@ df_disp.loc[df_disp['group_type'] == 'IND',
             'group_type'] = 'OIL'
 
 # get rid of obs with high nb comp count
-df_disp = df_disp[df_disp['nb_c_3km'] <= 10]
 
 ls_ls_regs_0 = [[df_disp, ['nb_c_3km + C(group_type)']],
                 [df_disp, ['nb_c_3km + C(group_type) + C(reg)']],
@@ -316,6 +315,9 @@ for ls_ls_regs in [ls_ls_regs_0, ls_ls_regs_1]:
     #print()
     #print(smf.ols('range_1 ~' + '+'.join(ls_idpt_vars),
     #      data = df_disp).fit().summary())
+    
+    df_temp = df_temp[df_temp['nb_c_3km'] >= 2]
+    df_temp = df_temp[df_temp['nb_c_3km'] <= 10]
     
     for idpt_var in ['cv', 'std', 'range_1']:
       res = smf.ols('{:s} ~ {:s}'.format(idpt_var, '+'.join(ls_idpt_vars)),

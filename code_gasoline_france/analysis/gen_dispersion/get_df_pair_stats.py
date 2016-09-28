@@ -285,29 +285,28 @@ df_pairs['nb_chges_min'] = df_pairs[['nb_chges_1', 'nb_chges_2']].min(axis=1)
 # Replace inf (div by 0)
 df_pairs.replace([np.inf, -np.inf], np.nan, inplace = True)
 
-df_pairs.to_csv(os.path.join(path_dir_built_dis_csv,
-                             'df_pair_stats.csv'),
-                encoding = 'utf-8',
-                float_format= '%.4f',
-                index = False)
+#df_pairs.to_csv(os.path.join(path_dir_built_dis_csv,
+#                             'df_pair_stats.csv'),
+#                encoding = 'utf-8',
+#                float_format= '%.4f',
+#                index = False)
 
 ## ################
 ## STATS DES
 ## ################
 #
 ## Filter out pairs with insufficient data
-#print u'\nNb observations filtered out for lack of data: {:.0f}'.format(\
+#print(u'Nb observations filtered out for lack of data: {:.0f}'.format(\
 #      len(df_pairs[~((df_pairs['nb_chges_min'] >= 20) &
 #                     (df_pairs['nb_spread'] >= 30) &\
-#                     (df_pairs['nb_ctd_both'] >= 30))]))
+#                     (df_pairs['nb_ctd_both'] >= 30))])))
 #
 #df_pairs = df_pairs[(df_pairs['nb_chges_min'] >= 20) &
 #                    (df_pairs['nb_spread'] >= 30) &\
 #                    (df_pairs['nb_ctd_both'] >= 30)]
 #
-#
-#print u'\Overview: pairs of stations:'
-#print df_pairs.describe()
+#print(u'Overview: pairs of stations:')
+#print(df_pairs.describe())
 #
 ### HISTOGRAM OF PCTAGE OF SIM CHANGES
 ##fig = plt.figure()
@@ -316,31 +315,6 @@ df_pairs.to_csv(os.path.join(path_dir_built_dis_csv,
 ##                              [~pd.isnull(df_pairs['pct_sim_max'])], 30)
 ##ax.set_title('Histogram of pctage of simultaneous changes')
 ##plt.show()
-#
-## CLOSE COMPETITION  / COLLUSION ?
-## todo: how many same brand / group?
-## todo: can be close competition and never have same price: followed + dispersion
-#
-#print u'\nPairs with same price 50%+ of time: {:.0f}'.format(\
-#      len(df_pairs[df_pairs['pct_same'] >= 0.5]))
-#
-#print u'\nPairs with same price 40%+ of time: {:.0f}'.format(\
-#      len(df_pairs[df_pairs['pct_same'] >= 0.4]))
-#
-#print u'\nPairs with same price 30%+ of time: {:.0f}'.format(\
-#      len(df_pairs[df_pairs['pct_same'] >= 0.3]))
-#
-#print u'\nPairs with same price 20%+ of time: {:.0f}'.format(\
-#      len(df_pairs[df_pairs['pct_same'] >= 0.2]))
-#
-## DETECT LEADERSHIP
-#ls_disp_cl = ['id_a', 'id_b', 'distance'] +\
-#             ['nb_ctd_both', 'nb_chges_1', 'nb_chges_2',
-#              'nb_1_lead', 'nb_2_lead', 'nb_chge_to_same',
-#              'pct_same', 'pct_lead_max', 'pct_lead_min']
-#
-#print u'\nCandidates for leadership:'
-#print df_pairs[df_pairs['pct_lead_max'] >= 0.5][ls_disp_cl][0:10].to_string()
 #
 ## QUESTIONS
 #
