@@ -317,9 +317,9 @@ for ls_ls_regs in [ls_ls_regs_0, ls_ls_regs_1]:
     #      data = df_disp).fit().summary())
     
     df_temp = df_temp[df_temp['nb_c_3km'] >= 2]
-    df_temp = df_temp[df_temp['nb_c_3km'] <= 10]
+    #df_temp = df_temp[df_temp['nb_c_3km'] <= 10]
     
-    for idpt_var in ['cv', 'std', 'range_1']:
+    for idpt_var in ['std', 'range_1']:
       res = smf.ols('{:s} ~ {:s}'.format(idpt_var, '+'.join(ls_idpt_vars)),
                     data = df_temp).fit(cov_type='cluster',
                                         cov_kwds={'groups': df_temp['reg']})
