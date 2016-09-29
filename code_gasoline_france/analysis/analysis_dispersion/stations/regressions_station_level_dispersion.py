@@ -275,13 +275,18 @@ df_disp['nb_c_3km'] = df_nb_comp['nb_c_3km']
 
 #df_disp = df_disp[df_disp['nb_c_3km'] <= 15]
 
-df_disp = df_disp[df_disp['nb_obs'] >= 100]
+df_disp = df_disp[df_disp['nb_obs'] >= 50] # relax if want price upon chges
 df_disp = df_disp[(~df_disp['std'].isnull()) &\
                   (~df_disp['range_1'].isnull()) &\
                   (~df_disp['nb_c_3km'].isnull()) &\
                   (~df_disp['dist_c'].isnull())]
 
-# todo: nb_comp of same type, dist comp same type
+# ##############
+# STATS DES
+# ##############
+
+ls_disp_cols = ls_disp_cols  + ['nb_c_3km']
+
 for price_type in ['LOW', 'HIGH']:
   print()
   print(price_type)
@@ -290,6 +295,15 @@ for price_type in ['LOW', 'HIGH']:
 # merge oil and ind
 df_disp.loc[df_disp['group_type'] == 'IND',
             'group_type'] = 'OIL'
+
+for group_type in ['DIS', 'OIL', 'SUP']:
+  print()
+  print(group_type)
+  print(df_disp[ls_disp_cols][df_disp['group_type'] == group_type].describe().to_string())
+
+# ##############
+# REGRESSIONS
+# ##############
 
 # get rid of obs with high nb comp count
 
@@ -316,7 +330,7 @@ for ls_ls_regs in [ls_ls_regs_0, ls_ls_regs_1]:
     #print(smf.ols('range_1 ~' + '+'.join(ls_idpt_vars),
     #      data = df_disp).fit().summary())
     
-    df_temp = df_temp[df_temp['nb_c_3km'] >= 2]
+    #df_temp = df_temp[df_temp['nb_c_3km'] >= 2]
     #df_temp = df_temp[df_temp['nb_c_3km'] <= 10]
     
     for idpt_var in ['std', 'range_1']:

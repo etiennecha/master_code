@@ -293,7 +293,7 @@ ls_high = ['OIL', 'IND']
 print()
 print(u'Overview of pair distances:')
 
-for nb_users in range(5, 11):
+for nb_users in range(3, 11):
   print()
   print('Nb users required for comp:', nb_users)
   df_comp_temp = df_comp[df_comp['nb_users'] >= nb_users]
@@ -333,4 +333,9 @@ for nb_users in range(5, 11):
 #for sg in d[0:10]:
 #  print(len(sg.nodes()))
 
-
+df_comp.to_csv(os.path.join(path_dir_built_zagaz,
+                            'data_csv',
+                            'df_zagaz_pairs.csv'),
+               index = False,
+               float_format='%.3f',
+               encoding='utf-8')

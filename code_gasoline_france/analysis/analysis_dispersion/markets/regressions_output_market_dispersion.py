@@ -202,20 +202,26 @@ for market_def in ls_loop_markets[1:2] + ls_loop_markets[6:]:
                       parse_dates = ['date'],
                       dtype = {'id' : str})
 
+  ## abs cost var (need to do before day restriction)
+  #df_md['ad_cost'] = np.abs(df_md['cost'] -\
+  #                            df_md['cost'].shift(1))
+  #df_md = df_md[~df_md['ad_cost'].isnull()]
+  
   # Restrict to one or two day(s) per week: robustness checks
   df_md.set_index('date', inplace = True)
   df_md['dow'] = df_md.index.dayofweek
   df_md.reset_index(drop = False, inplace = True)
-  #df_md = df_md[(df_md['dow'] == 2) | (df_md['dow'] == 4)] # Friday
+  df_md = df_md[(df_md['dow'] == 2) | (df_md['dow'] == 4)] # Friday
   
   # drop if margin chge around
   df_md = df_md[~df_md['id'].isin(ls_drop_3km)]
    
-  ## restrict max nb_comp
-  #df_md = df_md[df_md['nb_comp'] <= 10]
+  ### restrict max nb_comp
+  #df_md = df_md[df_md['nb_comp'] <= 15]
+  #df_md = df_md[df_md['nb_comp'] >= 5]
   
   # rescale cost to euro per litre
-  df_md['cost'] = df_md['cost'] / 100.0
+  df_md['cost'] = df_md['cost'] / 100
 
   # need to get rid of nan to be able to cluster
   df_md = df_md[~df_md['cost'].isnull()]
