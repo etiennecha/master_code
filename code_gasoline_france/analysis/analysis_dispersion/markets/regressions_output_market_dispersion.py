@@ -223,6 +223,10 @@ for market_def in ls_loop_markets[1:2] + ls_loop_markets[6:]:
   df_md['int_date'] = df_md['str_date'].astype(int)
   df_md['int_id'] = df_md['id'].astype(int)
 
+  # add trend
+  dict_date = dict(zip(df_prices_ttc.index, range(len(df_prices_ttc.index))))
+  df_md['trend'] = df_md['date'].apply(lambda x: dict_date[x])
+  
   # create dummy for Low/High if necessary
   if ('Low' in title):
     df_md['d_high'] = 0
@@ -265,7 +269,7 @@ for str_df in ['all_res',
     #print(title_temp)
     #print()
     for disp_stat in ['range', 'std']:
-      formula = '{:s} ~ cost + nb_comp'.format(disp_stat)
+      formula = '{:s} ~ trend + cost + nb_comp'.format(disp_stat)
       if 'd_high' in df_temp.columns:
         formula = formula + '+ d_high'
         # formula = formula + ' : C(d_high)'
