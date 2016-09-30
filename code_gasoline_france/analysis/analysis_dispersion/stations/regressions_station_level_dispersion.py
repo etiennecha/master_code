@@ -169,55 +169,61 @@ df_nb_comp = pd.DataFrame([[k, len(v)] for k,v in dict_nb_c_3km.items()],
                           columns = ['id_station', 'nb_c_3km'])
 df_nb_comp.set_index('id_station', inplace = True)
 
-# ###########################
-# ALTERNATIVE PRICE CLEANING
-# ###########################
-
-# - low / high series by region
-# - then station FE (mean)
-# - see if series look more like noise
-
-ind_drop = df_info[((df_info['reg'].isnull()) |\
-                    (df_info['type'].isnull())) |\
-                   (df_info['type_last'] != df_info['type'])].index
-print('Nb dropped', len(ind_drop))
-df_info = df_info.loc[~df_info.index.isin(ind_drop)]
-df_prices_ttc.drop(list(ind_drop), axis = 1, inplace = True)
-ls_cl_drop = list(set(df_prices_cl.columns).intersection(set(ind_drop)))
-df_prices_cl.drop(ls_cl_drop, axis = 1, inplace = True)
-
-dict_trends = {}
-for reg_type, df_reg_type in df_info.groupby(['reg', 'type']):
-  se_mp = df_prices_ttc[df_reg_type.index].mean(1)
-  dict_trends[reg_type] = se_mp
-
-ls_ids, ls_se_prices = [], []
-for id_station, se_prices_ttc in df_prices_ttc.iteritems():
-  reg_type = tuple(df_info.ix[id_station][['reg', 'type']].values)
-  se_prices = se_prices_ttc - dict_trends[reg_type]
-  ls_ids.append(id_station)
-  ls_se_prices.append(se_prices)
-df_prices_cl2 = pd.concat(ls_se_prices,
-                          keys  = ls_ids,
-                          axis = 1)
-df_prices_cl2 = df_prices_cl2.apply(lambda row: row - row.mean(), axis = 0)
+## ###########################
+## ALTERNATIVE PRICE CLEANING
+## ###########################
+#
+##df_prices_ttc = df_prices_ttc.ix['2013-02-01':]
+##df_prices_cl = df_prices_cl.ix['2013-02-01':]
+#
+## - low / high series by region
+## - then station FE (mean)
+## - see if series look more like noise
+#
+#ind_drop = df_info[((df_info['reg'].isnull()) |\
+#                    (df_info['type'].isnull())) |\
+#                   (df_info['type_last'] != df_info['type'])].index
+#print('Nb dropped', len(ind_drop))
+#df_info = df_info.loc[~df_info.index.isin(ind_drop)]
+#df_prices_ttc.drop(list(ind_drop), axis = 1, inplace = True)
+#ls_cl_drop = list(set(df_prices_cl.columns).intersection(set(ind_drop)))
+#df_prices_cl.drop(ls_cl_drop, axis = 1, inplace = True)
+#
+#dict_trends = {}
+#for reg_type, df_reg_type in df_info.groupby(['reg', 'type']):
+#  se_mp = df_prices_ttc[df_reg_type.index].mean(1)
+#  dict_trends[reg_type] = se_mp
+#
+#ls_ids, ls_se_prices = [], []
+#for id_station, se_prices_ttc in df_prices_ttc.iteritems():
+#  reg_type = tuple(df_info.ix[id_station][['reg', 'type']].values)
+#  se_prices = se_prices_ttc - dict_trends[reg_type]
+#  ls_ids.append(id_station)
+#  ls_se_prices.append(se_prices)
+#df_prices_cl2 = pd.concat(ls_se_prices,
+#                          keys  = ls_ids,
+#                          axis = 1)
+#df_prices_cl2 = df_prices_cl2.apply(lambda row: row - row.mean(), axis = 0)
 
 # #########################
 # STATION LEVEL DISPERSION
 # #########################
 
+#df_prices = df_prices_ttc * 100
 #df_prices = df_prices_cl2 * 100
 df_prices = df_prices_cl * 100
-#df_prices = df_prices_ttc * 100
 
 # Robustness check: restrict period
-df_prices = df_prices.ix['2013-02-01':'2014-08-30']
-df_prices = df_prices.ix['2013-02-01':]
-#df_prices = df_prices.ix[:'2012-07-01':]
+#df_prices = df_prices.ix[:'2012-07-01']
+#df_prices = df_prices.ix['2013-05-01':'2014-08-30']
+#df_prices = df_prices.ix['2013-02-01':]
 
 # Robustness check: use price only upon change
 df_chges = df_prices_ttc - df_prices_ttc.shift(1)
 df_prices_uc = df_prices[df_chges.abs() > 1e-5]
+
+# length requirement
+min_len = len(df_prices.mean(1)[~df_prices.mean(1).isnull()])
 
 ls_rows_disp, ls_ids = [], []
 for id_station in df_prices.columns:
@@ -226,7 +232,7 @@ for id_station in df_prices.columns:
   # choose if keep only prices upon change or not (but then cv has no meaning?)
   se_prices = df_prices[id_station][~df_prices[id_station].isnull()]
   # keep only if observed every day (adhoc condition here... check nb missing)
-  if len(se_prices_all) == 532:
+  if len(se_prices_all) >= min_len:
     se_prices_a = se_prices[(se_prices >= se_prices.quantile(q=0.025)) &\
                             (se_prices <= se_prices.quantile(q=0.975))]
     se_prices_b = se_prices[(se_prices >= se_prices.quantile(q=0.05)) &\
@@ -269,17 +275,21 @@ df_disp = pd.merge(df_disp,
                    left_index = True,
                    right_index = True)
 
-# Use nb competitors of same type => check impact
-df_disp.drop('nb_c_3km', axis = 1, inplace = True)
-df_disp['nb_c_3km'] = df_nb_comp['nb_c_3km']
+## Use nb competitors of same type => check impact
+#df_disp.drop('nb_c_3km', axis = 1, inplace = True)
+#df_disp['nb_c_3km'] = df_nb_comp['nb_c_3km']
 
 #df_disp = df_disp[df_disp['nb_c_3km'] <= 15]
 
-df_disp = df_disp[df_disp['nb_obs'] >= 50] # relax if want price upon chges
+df_disp = df_disp[df_disp['nb_obs'] >= 100] # relax if want price upon chges
 df_disp = df_disp[(~df_disp['std'].isnull()) &\
                   (~df_disp['range_1'].isnull()) &\
                   (~df_disp['nb_c_3km'].isnull()) &\
                   (~df_disp['dist_c'].isnull())]
+
+## robustness check: drop if mean too far off from 0
+#ls_drop_ids = df_prices.mean()[df_prices.mean().abs() >= 3.0].index.tolist()
+#df_disp = df_disp.loc[~df_disp.index.isin(ls_drop_ids)]
 
 # ##############
 # STATS DES
@@ -287,6 +297,8 @@ df_disp = df_disp[(~df_disp['std'].isnull()) &\
 
 ls_disp_cols = ls_disp_cols  + ['nb_c_3km']
 
+print()
+print('BY PRICE')
 for price_type in ['LOW', 'HIGH']:
   print()
   print(price_type)
@@ -296,7 +308,9 @@ for price_type in ['LOW', 'HIGH']:
 df_disp.loc[df_disp['group_type'] == 'IND',
             'group_type'] = 'OIL'
 
-for group_type in ['DIS', 'OIL', 'SUP']:
+print()
+print('BY TYPE')
+for group_type in ['OIL', 'DIS', 'SUP']:
   print()
   print(group_type)
   print(df_disp[ls_disp_cols][df_disp['group_type'] == group_type].describe().to_string())
@@ -315,8 +329,8 @@ ls_ls_regs_0 = [[df_disp, ['nb_c_3km + C(group_type)']],
                 [df_disp, ['nb_c_3km:C(group_type)', 'C(group_type)']],
                 [df_disp, ['nb_c_3km:C(group_type)', 'C(group_type)', 'C(reg)']]]
 
-ls_ls_regs_1 = [[df_disp[df_disp['group_type'] == 'DIS'], ['nb_c_3km', 'C(reg)']],
-                [df_disp[df_disp['group_type'] == 'OIL'], ['nb_c_3km', 'C(reg)']],
+ls_ls_regs_1 = [[df_disp[df_disp['group_type'] == 'OIL'], ['nb_c_3km', 'C(reg)']],
+                [df_disp[df_disp['group_type'] == 'DIS'], ['nb_c_3km', 'C(reg)']],
                 [df_disp[df_disp['group_type'] == 'SUP'], ['nb_c_3km', 'C(reg)']]]
 
 for ls_ls_regs in [ls_ls_regs_0, ls_ls_regs_1]:
@@ -333,7 +347,7 @@ for ls_ls_regs in [ls_ls_regs_0, ls_ls_regs_1]:
     #df_temp = df_temp[df_temp['nb_c_3km'] >= 2]
     #df_temp = df_temp[df_temp['nb_c_3km'] <= 10]
     
-    for idpt_var in ['std', 'range_1']:
+    for idpt_var in ['range_1', 'std']:
       res = smf.ols('{:s} ~ {:s}'.format(idpt_var, '+'.join(ls_idpt_vars)),
                     data = df_temp).fit(cov_type='cluster',
                                         cov_kwds={'groups': df_temp['reg']})

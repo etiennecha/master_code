@@ -269,13 +269,13 @@ for str_df in ['all_res',
   ls_res, ls_names = [], []
   for title_temp, df_temp in [['All', df_md],
                               ['Before', df_md[df_md['date'] <= '2012-07-01']],
-                              ['After', df_md[df_md['date'] >= '2013-02-01']]]:
+                              ['After', df_md[df_md['date'] >= '2013-05-01']]]:
     #print()
     #print('-'*60)
     #print(title_temp)
     #print()
     for disp_stat in ['range', 'std']:
-      formula = '{:s} ~ trend + cost + nb_comp'.format(disp_stat)
+      formula = '{:s} ~ trend + cost + nb_comp + C(region)'.format(disp_stat)
       if 'd_high' in df_temp.columns:
         formula = formula + '+ d_high'
         # formula = formula + ' : C(d_high)'

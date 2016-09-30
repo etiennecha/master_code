@@ -228,6 +228,7 @@ for title, df_prices, ls_markets_temp in ls_loop_markets:
                                     >= 2.0/3)].copy()
     if len(df_md) > 90:
       df_md['id'] = ls_market_ids[0]
+      df_md['region'] = df_info.ix[ls_market_ids[0]]['reg']
       df_md['price'] = se_mean_price # index pbm?
       df_md['date'] = df_md.index
       ls_df_md.append(df_md)

@@ -49,7 +49,7 @@
 \onehalfspacing
 
 \textbf{Abstract:}
-Using a large panel of daily French diesel prices, this paper finds support for a relation between price dispersion and imperfect consumer information. The volatility in price rankings between pairs of competitors is indeed found to be positively correlated with the distance that separates them, namely a measure of consumer search costs. Further, supermarket and oil discount gas stations, which operate at relatively low markups, are more likely to have competitors with which they often sell at the very same price. Among them, the study of price dynamics allows to distinguish gas stations which appear to act as leaders or followers. The chain affiliation of gas stations appears to largely determine their pricing strategies, consistently with existing literature. At the market level, a higher diesel cost is associated with lower dispersion, and a higher number of nearby competitors is associated with increased dispersion for high markup gas stations. All findings suggest that oil company and independent gas stations generally address the needs of customers characterized by relatively strong loyalty or high search costs, while supermarkets and oil discounters compete for a well informed and thus relatively highly price sensitive demand.
+Using a large panel of daily French diesel prices, this paper finds support for a relation between price dispersion and imperfect consumer information. The volatility in price rankings between pairs of competitors is indeed found to be positively correlated with the distance that separates them, namely a measure of consumer search costs. Furthermore, supermarket and oil discount gas stations, which operate at relatively low markups, are more likely than others to keep prices aligned with nearby competitors. Among them, the study of price dynamics allows to identify gas stations as leaders or followers in their market. The chain affiliation of sellers is found to largely determine their pricing strategies, consistently with existing literature. At the market level, a higher diesel cost is associated with lower dispersion, and a higher number of nearby competitors is associated with increased dispersion for high markup gas stations. Overall, findings suggest that oil company and independent gas stations generally address the needs of customers characterized by relatively strong loyalty or high search costs, while supermarkets and oil discounters compete for a well informed and thus relatively highly price sensitive demand.
 
 \strut
 
@@ -303,7 +303,7 @@ A clear ranking of empirical distribution functions of rank reversals can be obs
 
 \begin{figure}[H]
 \centering
-\caption{Empirical distribution functions of rank reversals (raw prices)}
+\caption{Empirical distribution functions of rank reversals}
 \label{tab:ecdf_rr_distance}
 \begin{subfigure}{.49\textwidth}
 \centering
@@ -329,7 +329,7 @@ Previous articles have illustrated the role of chain strategies in shaping marke
 
 \begin{table}[hbtp]
 \begin{threeparttable}
-\renewcommand{\arraystretch}{0.8} % too large by default...
+%\renewcommand{\arraystretch}{0.8} % too large by default...
 \caption{Regressions of pair price dispersion}
 \label{tab:regs_pairs}
 \begin{tabular}{llrrrrr} %{lrrrrrr}
@@ -365,8 +365,11 @@ Previous articles have illustrated the role of chain strategies in shaping marke
 \bottomrule
 \bottomrule
 \end{tabular}
-%\begin{tablenotes}
-%\end{tablenotes}
+\begin{tablenotes}
+      \small
+      \item Standard errors in parentheses. * p<.1, ** p<.05, *** p<.01.
+      \item Region fixed effects are included in all specifications.
+\end{tablenotes}
 \end{threeparttable}
 \end{table}
 
@@ -387,8 +390,10 @@ Results are aggregated for each gas station in order to distinguish those which 
 \caption{Overview of leadership test results by chain}
 \label{tab:stats_leadership}
     \begin{tabular}{llr|r|rr|rr|rr}
-          &       & \multicolumn{1}{l|}{Nb} & \multicolumn{1}{l|}{Similar} & \multicolumn{2}{c|}{Leader} & \multicolumn{2}{c|}{Follower} & \multicolumn{2}{c}{Uncertain} \\
-    Type  & Chain & \multicolumn{1}{l|}{stations} & \multicolumn{1}{l|}{prices} & \multicolumn{1}{l}{Rel.} & \multicolumn{1}{l|}{St.} & \multicolumn{1}{l}{Rel.} & \multicolumn{1}{l|}{St.} & \multicolumn{1}{l}{Rel.} & \multicolumn{1}{l}{St.} \\
+\toprule
+\toprule
+    Type   &  Chain     & \multicolumn{1}{l|}{Nb} & \multicolumn{1}{l|}{Similar} & \multicolumn{2}{c|}{Leader} & \multicolumn{2}{c|}{Follower} & \multicolumn{2}{c}{Uncertain} \\
+           &            & \multicolumn{1}{l|}{stations} & \multicolumn{1}{l|}{prices} & \multicolumn{1}{l}{Rel.} & \multicolumn{1}{l|}{St.} & \multicolumn{1}{l}{Rel.} & \multicolumn{1}{l|}{St.} & \multicolumn{1}{l}{Rel.} & \multicolumn{1}{l}{St.} \\
     \midrule
     \multicolumn{2}{l}{\textbf{Oil/Independent}}  &       &       &       &       &       &       &       &  \\
     Oil   & Total & 1 365 & 7     & 1     & 1     & 1     & 1     & 4     & 4 \\
@@ -431,142 +436,142 @@ Leclerc, which is widely acknowledged to be the most aggressive large retailer r
 
 \section{Price dispersion, cost and number of firms}
 
-The following section extends the analysis to markets, investigating how variations in cost and competition intensity impact market price dispersion. The first approach consists in adapting the method employed by \cite{TAP11} to obtain comparable results. The richness of the data is then used to evaluate how gas station price distributions are affected by the intensity of competition.
+The following section investigates how variations in cost and competition intensity relate to market price dispersion. The first approach closely follows the method employed by , which works with measures of price dispersion on each local market and day. The richness of the data is then used to measure price dispersion directly from each gas station price distribution, which allows to discuss the relation between competition and dispersion.
 
-The first approach in terms of market definition consists in considering each gas station successively as the center of a market delimited by a circle of a given radius. Price dispersion is then measured on each day as the range and the empirical standard deviation in prices. This allows to observe how price dispersion varies with cost variations over time (similar across all markets) and the intensity of competition (number of competitors within each market). Results on the latter must yet be analyzed with caution. First, it is clear that the number of gas stations within an area reflects demand and thus may not provide an accurate measure of the competitiveness of the market. Second, the empirical range and standard deviation are not unbiased estimators of the true range and standard deviation. Their downward bias is all the more pronounced as the size of the sample is small, such as in the gas of gas station local markets. In order to address these issues, dispersion is measured directly for each gas station, and regressed on its number of competitors.
+The first approach, which closely follows \cite{TAP11}, consists in considering each gas station successively as the center of a market delimited by a circle of a given radius. Price dispersion is then measured on each day as the empirical range and standard deviation in prices. This allows to investigate how price dispersion varies with cost variations over time on the one hand, and with the intensity of competition across markets on the other hand. As noted by \cite{TAP11}, results regarding competition must yet be analyzed with caution. It is indeed clear that the number of gas stations within an area reflects demand and thus may not provide an accurate measure of the competitiveness of the market. Also, considering each gas station as the center of a market leads to attribute a lot of weight to markets which exhibit high seller densities. A simple algorithm is used to obtain non overlapping markets.  For each gas station, the set of competitors (within 3 or 5 km) is compared to set of competitors from the competitors. If the latter is found to be included in the former, a market is identified. The final list of non overlapping market only includes markets which are obtained both with a 3 and 5 km distance. Pratically, this means that we obtain markets where all competitors compete directly or indirectly via one other seller (with a 3km distance), and no gas station outside the market is located within 5km of a gas station in the market.
 
-As noted by \cite{TAP11}, considering each gas station as the center of a market leads to attribute a lot of weight to markets which have a high gas station density. A simple algorithm is used to obtain non overlapping markets.  For each gas station, the set of competitors (within 3 or 5 km) is compared to set of competitors from the competitors. If the latter is found to be included in the former, a market is identified. The final list of non overlapping market only includes markets which are obtained both with a 3 and 5 km distance.
-
-Two treatments of differentiation are contemplated. In a first approach, all gas stations are considered to compete in the same market. Price dispersion is computed with price residuals in order to account for gas station specific characteristics. A scenario involving market segmentation is then investigated. Oil and independent gas stations compete in a "high price" market, while supermarket and discounter gas stations form a "low price" market. The analysis is then run both with raw prices and price residuals.
+Finally, we deal with persistent price differences by working with residual prices, consistently with the literature. However, besides following an approach according to which all gas stations actually compete in the same market, we contemplate a scenario involving market segmentation. Oil and independent gas stations are then considered to compete in a "high price" market, while supermarket and discounter gas stations form a "low price" market.
 
 Table~\ref{tab:stats_des_markets} reports descriptive statistics of price dispersion at the market level. All measures of price dispersion can be seen to drop significantly when residual prices are used and under the market segmentation scenario. For instance, under the simple 3 km radius market definition, gains from search, are estimated to be 1.25 euro cents per liter with residual prices while they were 3.93 euro cents per liter with raw prices. Under segmentation, dispersion is higher within "high price" gas station markets (2.90 vs. 0.97 euro cents per liter gains from search with raw prices). The variations observed between dispersion measures computed with raw and residual prices confirm than "high price" gas stations tend to be more differentiated than "low price" gas stations.
 
 \begin{table}[H]
   \caption{Market-level summary statistics}
-\begin{tabular}{lrrrrrrrr}
-\hline
-\hline
-      & \multicolumn{2}{c}{3km}    & \multicolumn{2}{c}{3km}       & \multicolumn{2}{c}{3km}        & \multicolumn{2}{c}{Non-} \\
-      & \multicolumn{2}{c}{all}    & \multicolumn{2}{c}{low price} & \multicolumn{2}{c}{high price} & \multicolumn{2}{c}{overlapping} \\
-\hline
-Nb sellers & 5.99  & (3.36) & 3.81  & (1.13) & 5.66  & (3.41) & 4.36  & (2.06) \\
-Nb sellers observed & 5.74  & (3.22) & 3.70  & (1.13) & 5.32  & (3.20) & 4.18  & (2.04) \\
-\hline
-\multicolumn{3}{l}{Raw prices (euro cents per liter)}          &       &       &       &       &       &  \\
-Range & 9.70  & (4.54) & 2.24  & (1.97) & 6.04  & (3.82) & 8.61  & (4.61) \\
-Standard deviation & 3.80  & (1.71) & 0.92  & (0.80) & 2.21  & (1.23) & 3.65  & (1.96) \\
-Gain from search & 3.93  & (2.27) & 0.97  & (0.88) & 2.90  & (1.74) & 3.39  & (2.07) \\
-\hline
-\multicolumn{3}{l}{Residual prices (euro cents per liter)}      &       &       &       &       &       &  \\
-Range & 2.50  & (1.75) & 1.60  & (1.37) & 2.91  & (1.86) & 2.01  & (1.55) \\
-Standard deviation & 0.88  & (0.57) & 0.64  & (0.55) & 1.01  & (0.61) & 0.79  & (0.59) \\
-Gain from search & 1.25  & (0.95) & 0.80  & (0.72) & 1.39  & (1.01) & 1.01  & (0.84) \\
-\hline
-Nb markets & \multicolumn{2}{c}{5,501} & \multicolumn{2}{c}{1,604} & \multicolumn{2}{c}{883} & \multicolumn{2}{c}{604} \\
-Nb obs     & \multicolumn{2}{c}{5,852,850} & \multicolumn{2}{c}{1,709,055} & \multicolumn{2}{c}{918,581} & \multicolumn{2}{c}{641,314} \\
-\hline
-\hline
+    \begin{tabular}{lrrrr}
+    \toprule
+    \toprule
+          & \multicolumn{1}{c}{All} & \multicolumn{1}{c}{Low} & \multicolumn{1}{c}{High} & \multicolumn{1}{c}{No overlap} \\
+    \midrule
+    Nb observations & \multicolumn{1}{c}{3 838 661} & \multicolumn{1}{c}{1 345 825} & \multicolumn{1}{c}{ 509 245} & \multicolumn{1}{c}{ 539 548} \\
+    Nb markets & \multicolumn{1}{c}{ 3 605} & \multicolumn{1}{c}{ 1 262} & \multicolumn{1}{c}{  492} & \multicolumn{1}{c}{  508} \\
+    \midrule
+    Nb sellers & 5.09 (2.61) & 3.96 (1.34) & 4.75 (2.43) & 4.17 (1.82) \\
+    Nb sellers observed & 4.88 (2.51) & 3.85 (1.35) & 4.47 (2.31) & 3.99 (1.80) \\
+    \midrule
+    \multicolumn{2}{l}{Raw prices (euro cents per liter)} &       &       &  \\
+    Range & 9.17 (4.44) & 2.14 (1.86) & 5.47 (3.31) & 8.54 (4.58) \\
+    Standard deviation & 3.71 (1.76) & 0.87 (0.75) & 2.11 (1.20) & 3.65 (1.96) \\
+    Gain from search & 3.68 (2.08) & 0.94 (0.85) & 2.71 (1.67) & 3.38 (2.02) \\
+    \midrule
+    \multicolumn{2}{l}{Residual prices (euro cents per litre)} &       &       &  \\
+    Range & 2.26 (1.62) & 1.60 (1.34) & 2.53 (1.68) & 1.96 (1.49) \\
+    Standard deviation & 0.84 (0.57) & 0.64 (0.53) & 0.96 (0.61) & 0.78 (0.58) \\
+    Gain from search & 1.13 (0.87) & 0.79 (0.70) & 1.25 (0.90) & 0.98 (0.81) \\
+\bottomrule
+\bottomrule
 \end{tabular}
 \label{tab:stats_des_markets}
 \end{table}
 
-The results of regressions of measured price dispersion on the number of firms and cost are reported in Table~\ref{tab:regs_markets}. Formally, with $\text{Market Dispersion}_{jt}$ a mesure of price dispersion on market $j$ at date $t$, $MC_t$ a measure of the marginal cost (wholesale diesel) on date $t$, $N_j$ the number of gas stations on market $j$, and $\mathbbm{1}{\text{HighPrice}_{j}}$ an indicator for whether the market is composed by high price gas stations (Oil and independent as opposed to Supermarkets and discounters), the regression writes:
+The results of regressions of measured price dispersion on the number of firms and cost are reported in Table~\ref{tab:regs_markets}. Formally, with $\text{Market Dispersion}_{jt}$ a measure of price dispersion on market $j$ at date $t$, $MC_t$ a measure of the marginal cost (wholesale diesel) on date $t$, $N_j$ the number of gas stations on market $j$, and $\mathbbm{1}{\text{HighPrice}_{j}}$ an indicator for whether the market is composed by high price gas stations (Oil and independent as opposed to Supermarkets and discounters), the regression writes:
 
 \begin{equation}
 \text{Market Dispersion}_{jt}= \beta_0 + \beta_1 MC_t + \beta_2 N_j + \mathbbm{1}{[\text{HighPrice}_{j}]} + \epsilon_{jt}
 \end{equation}
 
-Considering the government intervention between August 2012 and January 2013, estimation outputs are provided for the period starting February 1, 2013 (628 days) and their robustness is checked over the period ending on July 1, 2012 (302 days). They are consistent with results obtained by \cite{TAP11}: dispersion is found to increase with the number of firms and decrease with cost (cf. Table~\ref{tab:stats_des_markets}).
+Considering that the government intervention between August 2012 and January 2013 may have had a relatively strong temporary impact on dispersion, in a period of high oil prices, estimation outputs are provided for the period starting February 1, 2013 (628 days) and their robustness is checked over the period ending on July 1, 2012 (302 days), namely before the government intervention. They are consistent with results obtained by \cite{TAP11}: dispersion is found to increase with the number of firms and decrease with cost (cf. Table~\ref{tab:stats_des_markets}).
 
 \begin{table}[H]
 %\renewcommand{\arraystretch}{0.8} % too large by default...
-\centering
 \caption{Regressions of market dispersion}
-\begin{tabular}{l......} %{lrrrrrr}
-\hline
-\hline
-Markets          & \multicolumn{4}{c}{3 km radius} & \multicolumn{2}{c}{No-overlap} \\
-Prices           & \multicolumn{2}{c}{Raw prices} & \multicolumn{2}{c}{Residuals} & \multicolumn{2}{c}{Residuals} \\
-Dispersion stat. & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std}   & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std}   & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} \\
-\hline
-Cost        & -0.031^{**} & -0.014^{**} & -0.038^{**} & -0.015^{**} & -0.042^{**} & -0.016^{**}            \\
-            & [3.86]      & [4.76]      & [4.95]      & [5.04]      & [4.73]      & [4.68]                 \\
-Nb firms    & 0.560^{**}  & 0.093^{**}  & 0.265^{**}  & 0.046^{**}  & 0.208^{**}  & 0.033^{**}             \\
-            & [15.41]     & [9.40]      & [26.19]     & [15.75]     & [13.56]     & [7.08]                 \\
-High price  & 2.703^{**}  & 1.109^{**}  & 0.619^{**}  & 0.258^{**}  &             &                        \\
-            & [26.53]     & [26.78]     & [17.87]     & [18.63]     &             &                        \\
-Constant    & 1.854^{**}  & 1.386^{**}  & 2.670^{**}  & 1.294^{**}  & 3.370^{**}  & 1.535^{**}             \\
-            & [3.71]      & [7.56]      & [6.04]      & [7.48]      & [6.49]      & [7.44]                 \\
-\hline
-R2          & 0.42  & 0.31  & 0.26  & 0.12  & 0.09  & 0.02                                                 \\
-N           & \multicolumn{2}{c}{1,074,894} & \multicolumn{2}{c}{1,074,894} & \multicolumn{2}{c}{261,687}  \\
-\hline
-\hline
-\end{tabular}%
-\label{tab:regs_markets}
+\begin{threeparttable}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\toprule
+          & \multicolumn{2}{c}{All} & \multicolumn{2}{c}{Low} & \multicolumn{2}{c}{High} & \multicolumn{2}{c}{No overlap} \\
+          & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} \\
+\midrule
+    Constant & 3.19*** & 1.45*** & 1.55*** & 0.83*** & 3.26*** & 1.54*** & 2.99*** & 1.41*** \\
+          & (0.76) & (0.29) & (0.69) & (0.28) & (0.70) & (0.28) & (0.79) & (0.32) \\
+    Cost  & -0.04*** & -0.02*** & -0.02* & -0.01* & -0.04*** & -0.02*** & -0.04*** & -0.01*** \\
+          & (0.01) & (0.00) & (0.01) & (0.00) & (0.01) & (0.00) & (0.01) & (0.01) \\
+    Nb firms & 0.25*** & 0.04*** & 0.29*** & 0.06*** & 0.26*** & 0.05*** & 0.22*** & 0.04*** \\
+          & (0.01) & (0.00) & (0.01) & (0.00) & (0.02) & (0.01) & (0.02) & (0.01) \\
+\midrule
+    R2    & 0.18  & 0.05  & 0.09  & 0.03  & 0.17  & 0.05  & 0.09  & 0.02 \\
+    N     & 632 765 & 632 765 & 222 438 & 222 438 & 83 076 & 83 076 & 88 565 & 88 565 \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item Standard errors in parentheses. * p<.1, ** p<.05, *** p<.01.
+      \item Region fixed effects are included in all specifications.
+\end{tablenotes}
+\end{threeparttable}
 \end{table}
 
-Given the richness of price data, price dispersion can also be measured at the gas station level, using each residual price distribution. Measures of price dispersion thereby obtained are reported in Table~\ref{tab:station_price_support_stats_des}.
+This approach however has significant shortcomings. First, it leaves out gas stations which have no or few competitors around, and either tends to give much weight to large markets, or to restrict the analysis to a limited number of markets, the definition of which remains uncertain. The empirical range is a relatively volatile statistic, and the empirical standard deviation is generally a biased estimator (absent knowledge of the distribution), which typically leads to underestimate actual standard deviation when samples are small. As a consequence, we develop another approach which consists in measuring dispersion directly from the residual price distribution of each seller. An important merit lies in the fact that potential outliers can be dropped easily (either by trimming the price distribution, or by dropping seller dispersion statistics ex-post). Measures of price dispersion thereby obtained are reported in Table~\ref{tab:station_price_support_stats_des}.
 
 \begin{table}[H]
   \caption{Gas station residual price distributions}
 	\label{tab:station_price_support_stats_des}
-\begin{tabular}{rrrrr}
-\hline
-\hline
-      & \multicolumn{2}{c}{Low price} & \multicolumn{2}{c}{High price} \\
-\hline
-Nb stations & \multicolumn{2}{c}{5,603} & \multicolumn{2}{c}{3,044} \\
-Std   & 1.10  & (0.33) & 1.26  & (0.47) \\
-Kurtosis & 2.51  & (3.92) & 0.80  & (2.30) \\
-Skewness & -0.38 & (0.91) & 0.13  & (0.66) \\
-Range & 7.52  & (2.16) & 7.12  & (2.25) \\
-Trimmed range 5\% & 4.27  & (1.36) & 4.83  & (1.80) \\
-Trimmed range 10\% & 3.42  & (1.11) & 4.02  & (1.54) \\
-\hline
-\hline
+    \begin{tabular}{lrrr}
+    \toprule
+    \toprule
+          & \multicolumn{1}{c}{Oil/Ind} & \multicolumn{1}{c}{Discount} & \multicolumn{1}{c}{Supermarkets} \\
+    \midrule
+    Nb stations & \multicolumn{1}{c}{1 457} & \multicolumn{1}{c}{476} & \multicolumn{1}{c}{3 995} \\
+    Std   & 1.11 (0.39) & 1.00 (0.29) & 1.06 (0.28) \\
+    Kurtosis & 1.15 (3.79) & 1.43 (3.81) & 2.77 (3.91) \\
+    Skewness & 0.07 (0.69) & 0.20 (0.74) & -0.55 (0.87) \\
+    Range & 6.65 (2.04) & 6.24 (1.77) & 7.53 (2.03) \\
+    Trimmed range 5\% & 4.25 (1.43) & 3.87 (1.13) & 4.14 (1.16) \\
+    Trimmed range 10\% & 3.52 (1.23) & 3.18 (0.96) & 3.29 (0.93) \\
+    \bottomrule
+    \bottomrule
 \end{tabular}
 \end{table}
 
-Price distributions of low price gas station tend exhibit smaller standard deviations but fatter tails than these of high price gas stations. They are often left-skewed which reflects the use of occasional promotions, often implemented at the chain level. Conversely, no systematic skew is observed for high price gas stations.
+Price distributions of supermarket gas station exhibit smaller standard deviations but fatter tails than these of oil and independent gas stations. They are generally left-skewed, which reflects the use of occasional promotions, often implemented at the chain level. Conversely, no systematic skew is observed for oil and independent gas stations. In order to investigate the relation between price dispersion and seller density, the empirical standard deviation and the range are regressed on the number of competitors within 3 km.
 
 \begin{table}[H]
 %\renewcommand{\arraystretch}{0.8} % too large by default...
-\caption{Regressions of gas station price residual distributions}
+\caption{Regressions of price dispersion measured at the gas station level}
 \label{tab:station_price_support_regs}
-\centering
-\begin{tabular}{l....} %{lrrrrrr}
-\hline
-\hline
-      & \multicolumn{1}{c}{Tr. range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Tr. range} & \multicolumn{1}{c}{Std} \\
-\hline
-Constant        & 4.802^{**} & 1.243^{**}  & 4.266         & 1.106          \\
-                & [35.45]    & [33.58]     & [230.88]^{**} & [307.05]^{**}  \\
-Low type        & -0.507^{**}& -0.138^{**} &               &                \\
-                & [4.81]     & [5.31]      &               &                \\
-Nb competitors  & 0.021^{**} & 0.008^{**}  & 0.040^{**}    & 0.012^{**}     \\
-                & [2.64]     & [3.79]      & [2.75]        & [4.19]         \\
-Nb competiors * & -0.039^{*} & -0.014^{**} & -0.064^{**}   & -0.020^{**}    \\
-Low type        & [2.13]     & [3.08]      & [3.32]        & [4.90]         \\
-\hline
-Controls & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{2}{c}{Region*type} \\
-\hline
-R2    & \multicolumn{1}{c}{0.03} & \multicolumn{1}{c}{0.04} & \multicolumn{1}{c}{0.07} & \multicolumn{1}{c}{0.09} \\
-N     & \multicolumn{1}{c}{8,647} & \multicolumn{1}{c}{8,647} & \multicolumn{1}{c}{8,647} & \multicolumn{1}{c}{8,647} \\
-\hline
-\hline
-\end{tabular}%
+\begin{threeparttable}
+\begin{tabular}{lrrrrrr}
+    \toprule
+    \toprule
+          & \multicolumn{2}{c}{Oil} & \multicolumn{2}{c}{Discount} & \multicolumn{2}{c}{Supermarkets} \\
+          & \multicolumn{1}{c}{Tr. range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Tr. range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Tr. range} & \multicolumn{1}{c}{Std} \\
+    \midrule
+    Constant & 3.83*** & 1.00*** & 3.51*** & 0.92*** & 3.94*** & 1.03*** \\
+          & (0.03) & (0.01) & (0.11) & (0.03) & (0.02) & (0.01) \\
+    Nb firms & 0.05*** & 0.02*** & 0.04  & 0.01  & 0.01  & 0.00 \\
+          & (0.01) & (0.00) & (0.04) & (0.01) & (0.01) & (0.00) \\
+    \midrule
+    R2    & 0.11  & 0.13  & 0.11  & 0.12  & 0.04  & 0.08 \\
+    N     & 1 735 & 1 735 &  476  &  476  & 3 995 & 3 995 \\
+    \bottomrule
+    \bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item Standard errors in parentheses. * p<.1, ** p<.05, *** p<.01.
+      \item Region fixed effects are included in all specifications.
+\end{tablenotes}
+\end{threeparttable}
 \end{table}
 
-Regression results in Table~\ref{tab:station_price_support_regs} confirm the fact that dispersion is positively associated with the number of competitors for high price gas stations. It is yet not true regarding low price gas stations.
+Regression results in Table~\ref{tab:station_price_support_regs} lead to question the results obtained with the previous specification. Seller density is no more found to have an impact on price dispersion for supermarkets and discounters. A significant positive relationship is yet still found for oil and independent gas stations. Estimates do not significantly differ whether seller density is accounted for by the number of competitors of the same type or by all competitors. Such results are relatively consistent with previous findings on the link between consumer information and dispersion. Indeed, supermarkets were found to often be engaged in tough price competition, leaving little room for the extraction of an informational rent. Contrarily, consumer search seemed to play a bigger role in the case of oil and independent gas stations, so that a positive relationship between dispersion and competition intensity could be expected based on a model a la \cite{VAR80}.
 
 \section{Conclusion}
 
-This paper expands the methodology of \cite{TAP11} to measure and analyse price dispersion in the French retail gasoline market, taking into account the presence of significant differentiation and potential segmentation. Rank reversals are generally found to be less frequent for pairs gas stations separated by a short distance i.e. competitors whose prices are easy to compare for consumers. This result supports the hypothesis of a connection between consumer information and price dispersion. Pairs of competitors which operate at low prices exhibit less rank reversals than those which sell at higher prices, and many are actually observed to set the very same price on a regular basis. Conversely, among high price gas stations, all pairs tend to be characterized by significant static and/or dynamic price dispersion.
+This paper analyse price dispersion in the French retail gasoline market, taking into account the presence of significant differentiation and potential segmentation. Rank reversals are generally found to be less frequent for pairs gas stations separated by a short distance i.e. competitors whose prices are easy to compare for consumers. This result supports the hypothesis of a connection between consumer information and price dispersion. Pairs of competitors which operate at low markups, namely supermarkets and discounters, exhibit less rank reversals than those which sell at higher markups, and many are actually observed to set the very same price on a regular basis. Local leadership relationships can often be exhibited, which appear to be largely determined by seller chain affiliation. Conversely, among high price gas stations, pairs tend to be characterized by significant static and dynamic price dispersion.
 
-Due to large persistent differences in gas station price levels, working with raw prices leads to largely overestimate price dispersion potentially related to search costs in France. At the local market level, price dispersion is found to increase with the number of competitors, and decrease with cost (todo: add station level analysis results).
+At the market level, due to large persistent differences in gas station markups, working with raw prices leads to largely overestimate price dispersion potentially related to search costs. With price residuals, price dispersion is found to generally decrease with cost, and to increase with seller density for high markup gas stations, namely these for which competition a la \cite{VAR80} seems most relevant.
 
-Regarding the fit between \cite{VAR80} and the data, it is worth noting that an important aspect of the dynamics remains unexplained. In the model, while firms are ex-ante indifferent between all prices in the support of the equilibrium price distribution (also holds in terms of randomization over utilities), indifference obviously disappears once prices are posted on the market. The cheapest firm attracts shoppers but would be better off increasing its price to (almost) match the second cheapest price. Other firms would rather increase their price to consumers' reservation price, or undercut the cheapest firm. In the retail gasoline market, it is thus not clear why sellers would regularly wish to keep prices unchanged for a week or more, as can be observed in the data. A possible explanation may be that firms refrain from changing prices too often for fear of triggering more search by consumers and thus more intense competition. Whether this can be obtained in a fully competitive setting  or would require some kind of collusion (possibly at the retail chain level or at the local level) remains an open question.
+Regarding the fit between \cite{VAR80} and the data, it is worth noting that an important aspect of the dynamics remains unexplained. In the model, while firms are ex-ante indifferent between all prices in the support of the equilibrium price distribution (also holds in terms of randomization over utilities), indifference obviously disappears once prices are posted on the market. The cheapest firm attracts shoppers but would be better off increasing its price to (almost) match the second cheapest price. Other firms would rather increase their price to consumer reservation price, or undercut the cheapest firm. In the retail gasoline market, it is thus not clear why sellers would generally wish to keep prices unchanged for a week or more, as can be observed in the data. A possible explanation may be that firms refrain from changing prices too often for fear of triggering more search by consumers and thus more intense competition. Whether this can be obtained in a fully competitive setting  or would require some kind of collusion (possibly at the retail chain level or at the local level) remains an open question.
 
 \newpage
 
