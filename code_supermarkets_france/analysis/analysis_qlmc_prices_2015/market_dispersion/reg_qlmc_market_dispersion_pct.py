@@ -123,7 +123,7 @@ for col in ['price', 'surface', 'hhi_1025km', 'ac_hhi_1025km',
   df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
 
 # LOAD MARKET DISPERSION
-price_col = 'lpd' # or 'price' for log price dev to mean of raw prices
+price_col = 'price' # or 'price' for log price dev to mean of raw prices
 dict_df_disp = {}
 for price_col in ['lpd', 'price']: # 'price'
   
@@ -139,8 +139,8 @@ for price_col in ['lpd', 'price']: # 'price'
                                   'df_qlmc_dispersion_{:s}.csv'.format(price_col)),
                      encoding = 'utf-8')
 
-df_disp_agg_res = dict_df_disp['disp_agg_lpd']
-df_disp_res = dict_df_disp['disp_lpd']
+df_disp_agg_res = dict_df_disp['disp_agg_price']
+df_disp_res = dict_df_disp['disp_price']
 
 # ##############
 # REGRESSIONS
@@ -186,6 +186,8 @@ res_range = smf.ols('range ~ ac_hhi + ln_pop_cont_10 + C(STATUT_2010) + ac_nb_co
                     data = df_disp).fit()
 print(res_range.summary())
 
+# todo: exclude very large demand areas (check also revenue...)
+
 # PRODUCTS
 
 df_disp_prod = pd.merge(df_disp_res,
@@ -198,3 +200,8 @@ df_prod = df_disp_prod[df_disp_prod['product'] ==\
 df_prod.sort('mean', ascending = True, inplace = True)
 
 # not sure can use mean here... shoud not reflect how expensive market is here...
+
+# todo: control for products: FE + std?
+
+# seems that: high hhi or low population (?) => less dispersion
+# somehow consistent with Varian: more loyal hence less dispersion

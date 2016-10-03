@@ -256,3 +256,15 @@ for tup_chains in ls_tup_chains:
   print(u'Pct some draw agg: {:.2f}'.format(nb_some_draw_agg / float(len(df_cc)) *100))
   
   ls_df_cc.append(df_cc)
+
+df_cc_all = pd.concat(ls_df_cc)
+
+# ###########
+# OUTPUT
+# ###########
+
+df_cc_all.to_csv(os.path.join(path_built_201415_csv,
+                              'df_pair_dispersion_dynamic.csv'),
+                 encoding = 'utf-8',
+                 float_format='%.4f',
+                 index = False)

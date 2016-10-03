@@ -311,6 +311,11 @@ df_compa_ctrl = pd.merge(df_repro_compa,
 # OUTPUT
 # #########
 
+df_compa_ctrl.to_csv(os.path.join(path_built_201415_csv,
+                              'df_pair_dispersion_static.csv'),
+                 encoding = 'utf-8',
+                 float_format='%.4f',
+                 index = False)
 
 # ###############
 # REGRESSIONS
@@ -333,8 +338,8 @@ for d_dist, dist_var, dist_max in [['d_dist_5', 'dist', 10],
   # NO CONTROL
   ols_res = smf.ols('pct_rr ~ {:s}'.format(d_dist),
                     data = df_compa).fit()
-  print()
-  print(ols_res.summary())
+  #print()
+  #print(ols_res.summary())
   
   ls_res = []
   ls_quantiles = [0.25, 0.5, 0.75] # use 0.7501 if issue
@@ -345,27 +350,27 @@ for d_dist, dist_var, dist_max in [['d_dist_5', 'dist', 10],
     ls_res.append(smf.quantreg('pct_rr ~ {:s}'.format(d_dist),
                                data = df_compa[~df_compa[d_dist].isnull()]).fit(quantile))
   
-  print(summary_col(ls_res,
+  print(summary_col([ols_res] + ls_res,
                     stars=True,
                     float_format='%0.2f',
-                    model_names=[u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
+                    model_names=['OLS'] + [u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
                     info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                                'R2':lambda x: "{:.2f}".format(x.rsquared)}))
   
   # WITH CONTROLS
   ols_res_ctrl = smf.ols('pct_rr ~ {:s} + {:s}'.format(d_dist, str_ev),
                            data = df_compa).fit()
-  print()
-  print(ols_res_ctrl.summary())
+  #print()
+  #print(ols_res_ctrl.summary())
   
   ls_res_ctrl =[smf.quantreg('pct_rr ~ {:s} + {:s}'.format(d_dist, str_ev),
                              data = df_compa[~df_compa[d_dist].isnull()]).fit(quantile)\
                   for quantile in ls_quantiles]
   
-  print(summary_col(ls_res_ctrl,
+  print(summary_col([ols_res_ctrl] + ls_res_ctrl,
                     stars=True,
                     float_format='%0.2f',
-                    model_names=[u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
+                    model_names= ['OLS'] + [u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
                     info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                                'R2':lambda x: "{:.2f}".format(x.rsquared)}))
 

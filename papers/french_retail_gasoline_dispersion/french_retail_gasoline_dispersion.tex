@@ -472,32 +472,35 @@ Table~\ref{tab:stats_des_markets} reports descriptive statistics of price disper
 \label{tab:stats_des_markets}
 \end{table}
 
-The results of regressions of measured price dispersion on the number of firms and cost are reported in Table~\ref{tab:regs_markets}. Formally, with $\text{Market Dispersion}_{jt}$ a measure of price dispersion on market $j$ at date $t$, $MC_t$ a measure of the marginal cost (wholesale diesel) on date $t$, $N_j$ the number of gas stations on market $j$, and $\mathbbm{1}{\text{HighPrice}_{j}}$ an indicator for whether the market is composed by high price gas stations (Oil and independent as opposed to Supermarkets and discounters), the regression writes:
+With $\text{Market Dispersion}_{jt}$ a measure of price dispersion on market $j$ at date $t$, $Trend_t$ a trend variable, $MC_t$ a measure of the marginal cost (wholesale diesel in euro per liter) on date $t$, $N_j$ the number of gas stations on market $j$, we estimate the parameters of the following equation for each market definition:
 
 \begin{equation}
-\text{Market Dispersion}_{jt}= \beta_0 + \beta_1 MC_t + \beta_2 N_j + \mathbbm{1}{[\text{HighPrice}_{j}]} + \epsilon_{jt}
+\text{Market Dispersion}_{jt}= \beta_0 + \beta_1 Trend_t + \beta_2 MC_t + \beta_2 N_j + \epsilon_{jt}
 \end{equation}
 
-Considering that the government intervention between August 2012 and January 2013 may have had a relatively strong temporary impact on dispersion, in a period of high oil prices, estimation outputs are provided for the period starting February 1, 2013 (628 days) and their robustness is checked over the period ending on July 1, 2012 (302 days), namely before the government intervention. They are consistent with results obtained by \cite{TAP11}: dispersion is found to increase with the number of firms and decrease with cost (cf. Table~\ref{tab:stats_des_markets}).
+Considering that the government intervention between August 2012 and January 2013 may have had a relatively strong temporary impact on dispersion, in a period of high oil prices, estimation outputs are provided in Table~\ref{tab:regs_market_dispersion_after} for the period starting February 1, 2013 (628 days). They are consistent with results obtained by \cite{TAP11}: dispersion is found to increase with the number of firms and decrease with cost. Cost appears to have a stronger impact on dispersion displayed by high markup gas stations than low markup gas stations. When the whole period is considered (cf. Table~\ref{tab:regs_market_dispersion_after} in appendix), cost is estimated to have a significant impact only for high markup gas stations. This result is consistent with fierce price competition among low markup gas stations, and more relaxed competition, in a context of imperfect information, for oil company and independent gas stations.
 
 \begin{table}[H]
 %\renewcommand{\arraystretch}{0.8} % too large by default...
 \caption{Regressions of market dispersion}
+\label{tab:regs_market_dispersion_after}
 \begin{threeparttable}
-\begin{tabular}{lrrrrrrrr}
-\toprule
-\toprule
+    \begin{tabular}{lrrrrrrrr}
+    \toprule
+    \toprule
           & \multicolumn{2}{c}{All} & \multicolumn{2}{c}{Low} & \multicolumn{2}{c}{High} & \multicolumn{2}{c}{No overlap} \\
           & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} \\
-\midrule
-    Constant & 3.19*** & 1.45*** & 1.55*** & 0.83*** & 3.26*** & 1.54*** & 2.99*** & 1.41*** \\
-          & (0.76) & (0.29) & (0.69) & (0.28) & (0.70) & (0.28) & (0.79) & (0.32) \\
-    Cost  & -0.04*** & -0.02*** & -0.02* & -0.01* & -0.04*** & -0.02*** & -0.04*** & -0.01*** \\
-          & (0.01) & (0.00) & (0.01) & (0.00) & (0.01) & (0.00) & (0.01) & (0.01) \\
-    Nb firms & 0.25*** & 0.04*** & 0.29*** & 0.06*** & 0.26*** & 0.05*** & 0.22*** & 0.04*** \\
+    \midrule
+    Constant & 6.21*** & 2.49*** & 3.55*** & 1.62*** & 6.62*** & 2.77*** & 5.98*** & 2.54*** \\
+          & (1.51) & (0.58) & (1.38) & (0.56) & (1.20) & (0.49) & (1.57) & (0.64) \\
+    Trend & -0.00** & -0.00** & -0.00 & -0.00 & -0.00*** & -0.00*** & -0.00** & -0.00** \\
+          & (0.00) & (0.00) & (0.00) & (0.00) & (0.00) & (0.00) & (0.00) & (0.00) \\
+    Cost  & -7.94*** & -2.90*** & -4.38* & -1.76* & -8.50*** & -3.28*** & -7.55*** & -2.95*** \\
+          & (2.19) & (0.84) & (2.01) & (0.82) & (1.76) & (0.71) & (2.26) & (0.91) \\
+    Nb firms & 0.24*** & 0.04*** & 0.27*** & 0.06*** & 0.27*** & 0.05*** & 0.22*** & 0.04*** \\
           & (0.01) & (0.00) & (0.01) & (0.00) & (0.02) & (0.01) & (0.02) & (0.01) \\
-\midrule
-    R2    & 0.18  & 0.05  & 0.09  & 0.03  & 0.17  & 0.05  & 0.09  & 0.02 \\
+    \midrule
+    R2    & 0.19  & 0.07  & 0.12  & 0.06  & 0.21  & 0.09  & 0.10  & 0.04 \\
     N     & 632 765 & 632 765 & 222 438 & 222 438 & 83 076 & 83 076 & 88 565 & 88 565 \\
 \bottomrule
 \bottomrule
@@ -615,7 +618,7 @@ Regarding the fit between \cite{VAR80} and the data, it is worth noting that an 
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.8} % too large by default...
 \caption{Overview of pairs (distance $\le$ 5 km)}
-\label{tab:stats_pair_rank_reversals}
+\label{tab:stats_pair_rank_reversals_5km}
     \begin{tabular}{lrrrrr}
     \toprule
     \toprule
@@ -643,6 +646,41 @@ Regarding the fit between \cite{VAR80} and the data, it is worth noting that an 
 \begin{tablenotes}
 			\small
       \item Except for the first column, all figures are averages of statistics computed at the pair level (standard errors in parentheses). As regards the price spread, the average accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), and the standard deviation measures dispersion around the long term price difference (0 if both gas stations always set the same price).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\section{Robustness checks on market dispersion}
+
+\begin{table}[H]
+%\renewcommand{\arraystretch}{0.8} % too large by default...
+\caption{Regressions of market dispersion}
+\label{tab:regs_market_dispersion_all}
+\begin{threeparttable}
+    \begin{tabular}{lrrrrrrrr}
+    \toprule
+    \toprule
+          & \multicolumn{2}{c}{All} & \multicolumn{2}{c}{Low} & \multicolumn{2}{c}{High} & \multicolumn{2}{c}{No overlap} \\
+          & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} \\
+    \midrule
+    Constant & 6.21*** & 2.49*** & 3.55*** & 1.62*** & 6.62*** & 2.77*** & 5.98*** & 2.54*** \\
+          & (1.51) & (0.58) & (1.38) & (0.56) & (1.20) & (0.49) & (1.57) & (0.64) \\
+    Trend & -0.00** & -0.00** & -0.00 & -0.00 & -0.00*** & -0.00*** & -0.00** & -0.00** \\
+          & (0.00) & (0.00) & (0.00) & (0.00) & (0.00) & (0.00) & (0.00) & (0.00) \\
+    Cost  & -7.94*** & -2.90*** & -4.38* & -1.76* & -8.50*** & -3.28*** & -7.55*** & -2.95*** \\
+          & (2.19) & (0.84) & (2.01) & (0.82) & (1.76) & (0.71) & (2.26) & (0.91) \\
+    Nb firms & 0.24*** & 0.04*** & 0.27*** & 0.06*** & 0.27*** & 0.05*** & 0.22*** & 0.04*** \\
+          & (0.01) & (0.00) & (0.01) & (0.00) & (0.02) & (0.01) & (0.02) & (0.01) \\
+    \midrule
+    R2    & 0.19  & 0.07  & 0.12  & 0.06  & 0.21  & 0.09  & 0.10  & 0.04 \\
+    N     & 632 765 & 632 765 & 222 438 & 222 438 & 83 076 & 83 076 & 88 565 & 88 565 \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item Standard errors in parentheses. * p<.1, ** p<.05, *** p<.01.
+      \item Region fixed effects are included in all specifications.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}

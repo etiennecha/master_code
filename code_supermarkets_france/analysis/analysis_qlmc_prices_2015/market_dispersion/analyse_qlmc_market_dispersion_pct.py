@@ -12,9 +12,9 @@ import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
 import timeit
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.1f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_float = lambda x: '{:10,.1f}'.format(x)
 
 path_built_csv = os.path.join(path_data,
                               'data_supermarkets',
@@ -60,12 +60,16 @@ df_stores = pd.merge(df_stores,
 df_stores['price_rel'] = df_stores[['store_chain', 'price']].groupby('store_chain')\
                                                                .transform(lambda x: x / x.mean())
 
+
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
                                                'df_qlmc_competitors.csv'),
                                   encoding = 'utf-8')
 
-df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
+df_prices['res'] = (df_prices['ln_price'] - df_prices['ln_price_hat']) * 100 
+# * 100 to get stats in cents
 # res: epsilon from regression with store and product FEs
+df_prices['price'] = df_prices['price'] * 100
+df_stores['price_rel'] = df_stores['price_rel'] * 100
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
@@ -141,6 +145,7 @@ for lec_id, ls_comp_id in dict_markets.items():
 
 ls_market_rows = []
 ls_df_market_disp = []
+ls_df_market_res_disp = []
 for df_market, df_market_res in ls_df_markets:
   
   # Aggregate stats: basket with all products
@@ -150,9 +155,10 @@ for df_market, df_market_res in ls_df_markets:
   ls_cols_ascending = agg_sum.sort(ascending = True, inplace = False).index.tolist()
   ls_cols_descending = agg_sum.sort(ascending = False, inplace = False).index.tolist()
   agg_range = agg_sum.max() - agg_sum.min()
-  agg_range_pct = agg_range / agg_sum.mean()
+  agg_range_pct = agg_range / agg_sum.mean() * 100
   agg_gfs = agg_sum.mean() - agg_sum.min()
-  agg_gfs_pct = agg_gfs / agg_sum.mean()
+  agg_gfs_pct = agg_gfs / agg_sum.mean() * 100
+  agg_std = agg_sum.std()
   
   ls_cols = df_market.columns # keep cuz gona add columns
   ## Compute log price deviation to market for each store / product
@@ -167,7 +173,7 @@ for df_market, df_market_res in ls_df_markets:
   df_market['range'] = df_market[ls_cols].max(1) - df_market[ls_cols].min(1)
   df_market['gfs'] = df_market[ls_cols].mean(1) - df_market[ls_cols].min(1)
   df_market['std'] = df_market[ls_cols].std(1)
-  df_market['cv'] = df_market[ls_cols].std(1) / df_market[ls_cols].mean(1)
+  df_market['cv'] = df_market[ls_cols].std(1) / df_market[ls_cols].mean(1) * 100
   
   # Dispersion by product with price residuals
   ls_cols_res = df_market_res.columns # keep cuz gona add columns
@@ -186,10 +192,10 @@ for df_market, df_market_res in ls_df_markets:
   df_market['cheapest_2'] = df_market[ls_cols_descending].T.idxmin()
   df_market['priciest'] = df_market[ls_cols_descending].T.idxmax()
   df_market['priciest_2'] = df_market[ls_cols_ascending].T.idxmax()
-  se_cheapest_vc = df_market['cheapest'].value_counts(normalize = 1)
-  se_priciest_vc = df_market['priciest'].value_counts(normalize = 1)
-  se_cheapest_2_vc = df_market['cheapest_2'].value_counts(normalize = 1)
-  se_priciest_2_vc = df_market['priciest_2'].value_counts(normalize = 1)
+  se_cheapest_vc = df_market['cheapest'].value_counts(normalize = 1) * 100
+  se_priciest_vc = df_market['priciest'].value_counts(normalize = 1) * 100
+  se_cheapest_2_vc = df_market['cheapest_2'].value_counts(normalize = 1) * 100
+  se_priciest_2_vc = df_market['priciest_2'].value_counts(normalize = 1) * 100
 
   if se_priciest_vc.index[0] not in se_cheapest_2_vc.index:
     se_cheapest_2_vc.ix[se_priciest_vc.index[0]] = 0.0
@@ -209,12 +215,22 @@ for df_market, df_market_res in ls_df_markets:
                                       'nb_products',
                                       'mean', 'range', 'gfs', 'std', 'cv']])
 
+  # save market res (should merge?)
+  df_market_res['store_id'] = ls_cols[0]
+  df_market_res['nb_stores'] = nb_stores
+  df_market_res['nb_products'] = nb_prods
+  ls_df_market_res_disp.append(df_market_res[['store_id',
+                                              'nb_stores',
+                                              'nb_products',
+                                              'range', 'gfs', 'std']])
+
   # save aggregate market stats
   ls_market_rows.append([df_market.columns[0],
                          nb_stores,
                          nb_prods,
                          agg_range_pct,
                          agg_gfs_pct,
+                         agg_std,
                          df_market['range'].mean(),
                          df_market['gfs'].mean(),
                          df_market['std'].mean(),
@@ -233,6 +249,7 @@ for df_market, df_market_res in ls_df_markets:
 
 lsd1 = ['agg_range_pct',
         'agg_gfs_pct',
+        'agg_std',
         'range',
         'gfs',
         'std',
@@ -300,9 +317,12 @@ df_su[lsdo].to_csv(os.path.join(path_built_csv,
 df_disp = pd.concat(ls_df_market_disp)
 df_disp.reset_index(drop = False, inplace = True)
 
+df_disp_res = pd.concat(ls_df_market_res_disp)
+df_disp_res.reset_index(drop = False, inplace = True)
+
 # Save df of all market product dispersion stats
-df_disp.to_csv(os.path.join(path_built_csv,
-                            'df_qlmc_dispersion_{:s}.csv'.format(price_col)),
-               encoding = 'utf-8',
-               float_format='%.4f',
-               index = False)
+df_disp_res.to_csv(os.path.join(path_built_csv,
+                                'df_qlmc_dispersion_{:s}.csv'.format(price_col)),
+                   encoding = 'utf-8',
+                   float_format='%.4f',
+                   index = False)

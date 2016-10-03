@@ -254,13 +254,16 @@ dict_df_regs['3km_h_res'] = dict_df_mds['High_3km_Residuals'].copy()
 dict_df_regs['3km_l_res'].drop('d_high', axis = 1, inplace = True)
 dict_df_regs['3km_h_res'].drop('d_high', axis = 1, inplace = True)
 
-for str_df in ['all_res',
-               'no_overlap_res',
-               #'3km_lh_raw',
-               #'3km_lh_res',
-               '3km_l_res',
-               '3km_h_res']:
+dict_res_alt = {}
 
+ls_loop_str_dfs = ['all_res',
+                   #'3km_lh_raw',
+                   #'3km_lh_res',
+                   '3km_l_res',
+                   '3km_h_res',
+                   'no_overlap_res']
+
+for str_df in ls_loop_str_dfs:
   df_md = dict_df_regs[str_df]
   #df_md = dict_df_regs['no_overlap_res']
   #df_md = df_md[df_md['nb_comp'] >= 4]
@@ -269,7 +272,7 @@ for str_df in ['all_res',
   ls_res, ls_names = [], []
   for title_temp, df_temp in [['All', df_md],
                               ['Before', df_md[df_md['date'] <= '2012-07-01']],
-                              ['After', df_md[df_md['date'] >= '2013-05-01']]]:
+                              ['After', df_md[df_md['date'] >= '2013-02-01']]]:
     #print()
     #print('-'*60)
     #print(title_temp)
@@ -289,6 +292,9 @@ for str_df in ['all_res',
       ls_res.append(res)
       ls_names.append(title_temp[0:2] + '-' + disp_stat)
   
+      # store results by period
+      dict_res_alt.setdefault(title_temp, []).append(res)
+  
   su = summary_col(ls_res,
                    model_names=ls_names,
                    stars=True,
@@ -299,6 +305,21 @@ for str_df in ['all_res',
   print()
   print(str_df)
   print(su)
+
+import itertools
+ls_names_alt = ['{:s} {:s}'.format(x[0:5], y)\
+                   for x,y in itertools.product(ls_loop_str_dfs, ['rge', 'std'])]
+
+for period, ls_period_res in dict_res_alt.items():
+  su_alt = summary_col(ls_period_res,
+                       model_names=ls_names_alt,
+                       stars=True,
+                       float_format='%0.2f',
+                       info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                                  'R2':lambda x: "{:.2f}".format(x.rsquared)})
+  print()
+  print(period)
+  print(su_alt)
 
 # toco: check if loss of signif. on cost using friday only due to insuff vars in cost?
 # todo: check if there are markets with supermarkets / no supermarkets?
