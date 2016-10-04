@@ -197,7 +197,7 @@ df_disp_prod = pd.merge(df_disp_res,
 
 df_prod = df_disp_prod[df_disp_prod['product'] ==\
             df_disp_prod['product'].iloc[0]].copy()
-df_prod.sort('mean', ascending = True, inplace = True)
+#df_prod.sort('mean', ascending = True, inplace = True)
 
 # not sure can use mean here... shoud not reflect how expensive market is here...
 
@@ -205,3 +205,8 @@ df_prod.sort('mean', ascending = True, inplace = True)
 
 # seems that: high hhi or low population (?) => less dispersion
 # somehow consistent with Varian: more loyal hence less dispersion
+
+df_disp_prod['nb_prods_obs'] =\
+  df_disp_prod[['product', 'section']].groupby('product').agg('count')
+
+df_disp_prod[df_disp_prod['nb_prods_obs'] >= 150]['product'].value_counts()
