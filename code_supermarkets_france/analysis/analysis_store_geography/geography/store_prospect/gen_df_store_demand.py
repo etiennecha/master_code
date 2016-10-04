@@ -109,71 +109,46 @@ lsd0 = [u'enseigne',
 df_com.set_index('c_insee', inplace = True)
 df_com['pop'] = df_com_insee['P10_POP']
 
-# PARAMETERS FOR DEMAND PROXIES
-# - no weighting (ac stands for competition authority): 10, 20, 25 km
-# - weighting with different discount factors
-ls_ac_dist = [10, 20, 25]
-ls_cont_disct = [8, 10, 12]
+# ####################
+# COMPUTE STORE DEMAND
+# ####################
 
-ls_demand_cols = ['pop_ac_{:d}km'.format(ac_dist) for ac_dist in ls_ac_dist] +\
-                 ['pop_cont_{:d}'.format(cont_disct) for cont_disct in ls_cont_disct]
+# Each city population shared across:
+# - all stores (continuous) - several factors?
+# - nearby stores (discrete) - several distances?
 
-df_lsa_hs = df_lsa[df_lsa['type_alt'].isin(['H', 'S'])]
-ls_rows_demand = []
-for row_ind, row in df_lsa_hs.iterrows():
-  ## could actually keep reference store since using groupe surface only
-  #df_lsa_sub_temp = df_lsa_sub[df_lsa_sub.index != row_ind].copy()
-  df_com_temp = df_com.copy()
-  df_com_temp['lat_store'] = row['latitude']
-  df_com_temp['lng_store'] = row['longitude']
-  df_com_temp['dist'] = compute_distance_ar(df_com_temp['lat_store'],
-                                            df_com_temp['lng_store'],
-                                            df_com_temp['lat_cl'],
-                                            df_com_temp['lng_cl'])
-  # Population within radius (no weighting)
-  ls_ac_demand = [df_com_temp['pop'][df_com_temp['dist'] <= ac_dist].sum()\
-                    for ac_dist in ls_ac_dist]
-  
-  # Discounted population (all France)
-  ls_cont_demand = []
-  for cont_disct in ls_cont_disct:
-    df_com_temp['wgtd_pop'] = np.exp(-df_com_temp['dist']/ cont_disct) *\
-                                          df_com_temp['pop']
-    ls_cont_demand.append(df_com_temp['wgtd_pop'].sum())
+# Then sum for each store demand from each municipality:
+# => gives an index of store potential market
 
-  ls_rows_demand.append([row['id_lsa'], row['type_alt']] +\
-                        ls_ac_demand +\
-                        ls_cont_demand)
+# todo: check by group vs. group market shares? (+ large hypers?)
+# could adjust demand depending on groups to match it (price effect etc.)
 
-df_demand = pd.DataFrame(ls_rows_demand,
-                         columns = ['id_lsa', 'type_alt'] + ls_demand_cols)
+ls_rows_demand_cont = []
+ls_rows_demand_disc = []
+for row_ind, row in df_com.iterrows():
+  df_lsa_temp = df_lsa.copy()
+  df_lsa_temp['lat_com'] = row['lat_cl']
+  df_lsa_temp['lng_com'] = row['lng_cl']
+  df_lsa_temp['pop'] = row['pop']
+  df_lsa_temp['dist'] = compute_distance_ar(df_lsa_temp['latitude'],
+                                            df_lsa_temp['longitude'],
+                                            df_lsa_temp['lat_com'],
+                                            df_lsa_temp['lng_com'])
+  # continous method (could add max group share)
+  df_lsa_temp['wgtd_surface'] = np.exp(-df_lsa_temp['dist']/10) * df_lsa_temp['surface']
+  df_lsa_temp['wgtd_market_share'] = df_lsa_temp['wgtd_surface'] / df_lsa_temp['wgtd_surface'].sum()
+  df_lsa_temp['wgtd_pop'] = df_lsa_temp['wgtd_market_share'] * df_lsa_temp['pop']
+  ls_rows_demand_cont.append(df_lsa_temp['wgtd_pop'])
 
-df_demand['pop_ac_1025km'] = df_demand['pop_ac_10km']
-df_demand.loc[df_demand['type_alt'] == 'H',
-              'pop_ac_1025km'] = df_demand['pop_ac_25km']
-df_demand.drop(['type_alt'], axis = 1, inplace = True)
+  # discrete method (could add max group share)
+  df_lsa_temp_sub = df_lsa_temp[df_lsa_temp['dist'] <= 10].copy()
+  df_lsa_temp_sub['wgtd_market_share'] = df_lsa_temp_sub['surface'] /\
+                                           df_lsa_temp['surface'].sum()
+  df_lsa_temp_sub['wgtd_pop'] = df_lsa_temp_sub['wgtd_market_share'] * df_lsa_temp_sub['pop']
+  ls_rows_demand_disc.append(df_lsa_temp_sub['wgtd_pop'])
 
-# CHECK RESULTS
-df_lsa_hs_demand = pd.merge(df_lsa_hs,
-                            df_demand[['id_lsa'] + ls_demand_cols],
-                            how = 'left',
-                            left_on = 'id_lsa',
-                            right_on = 'id_lsa')
+df_demand_cont = pd.concat(ls_rows_demand_cont, axis = 1)
+se_store_demand_cont = df_demand_cont.sum(1)
 
-df_lsa_hs_demand.sort(['pop_ac_10km'], ascending = False, inplace = True)
-lsd_lsa_demand = ['id_lsa'] + lsd0 + ls_demand_cols
-
-print ''
-print df_lsa_hs_demand[lsd_lsa_demand][0:10].to_string()
-
-print ''
-print df_lsa_hs_demand[lsd_lsa_demand][-10:].to_string()
-
-
-# OUTPUT
-df_demand.to_csv(os.path.join(path_built_csv,
-                              '201407_competition',
-                              'df_store_prospect_demand.csv'),
-                 float_format ='%.3f',
-                 index = False,
-                 encoding = 'utf-8')
+df_demand_disc = pd.concat(ls_rows_demand_disc, axis = 1)
+se_store_demand_disc = df_demand_disc.sum(1)

@@ -92,13 +92,6 @@ df_com[['lng_cl', 'lat_cl']] = df_com[['x_cl', 'y_cl']].apply(\
 for col in ['lng_ct', 'lat_ct', 'lng_cl', 'lat_cl']:
   df_com[col] = np.round(df_com[col], 3)
 
-df_com_insee = pd.read_csv(os.path.join(path_insee_extracts,
-                                        'df_communes.csv'),
-                           dtype = {'DEP': str,
-                                    'CODGEO' : str},
-                           encoding = 'UTF-8')
-df_com_insee.set_index('CODGEO', inplace = True)
-
 # Check correspondence between INSEE and IGN
 df_com_insee_fm = df_com_insee[~df_com_insee['DEP'].isin(['2A', '2B', '97'])].copy()
 print df_com[~df_com['c_insee'].isin(df_com_insee_fm.index)].to_string()
