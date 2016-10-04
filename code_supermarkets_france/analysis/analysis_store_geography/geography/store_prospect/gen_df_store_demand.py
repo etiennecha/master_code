@@ -136,15 +136,18 @@ for row_ind, row in df_com.iterrows():
                                             df_lsa_temp['lng_com'])
   # continous method (could add max group share)
   df_lsa_temp['wgtd_surface'] = np.exp(-df_lsa_temp['dist']/10) * df_lsa_temp['surface']
-  df_lsa_temp['wgtd_market_share'] = df_lsa_temp['wgtd_surface'] / df_lsa_temp['wgtd_surface'].sum()
-  df_lsa_temp['wgtd_pop'] = df_lsa_temp['wgtd_market_share'] * df_lsa_temp['pop']
+  df_lsa_temp['wgtd_market_share'] = df_lsa_temp['wgtd_surface'] /\
+                                       df_lsa_temp['wgtd_surface'].sum()
+  df_lsa_temp['wgtd_pop'] = df_lsa_temp['wgtd_market_share'] *\
+                              df_lsa_temp['pop']
   ls_rows_demand_cont.append(df_lsa_temp['wgtd_pop'])
 
   # discrete method (could add max group share)
   df_lsa_temp_sub = df_lsa_temp[df_lsa_temp['dist'] <= 10].copy()
   df_lsa_temp_sub['wgtd_market_share'] = df_lsa_temp_sub['surface'] /\
                                            df_lsa_temp['surface'].sum()
-  df_lsa_temp_sub['wgtd_pop'] = df_lsa_temp_sub['wgtd_market_share'] * df_lsa_temp_sub['pop']
+  df_lsa_temp_sub['wgtd_pop'] = df_lsa_temp_sub['wgtd_market_share'] *\
+                                  df_lsa_temp_sub['pop']
   ls_rows_demand_disc.append(df_lsa_temp_sub['wgtd_pop'])
 
 df_demand_cont = pd.concat(ls_rows_demand_cont, axis = 1)
