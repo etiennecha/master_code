@@ -169,11 +169,10 @@ print df_lsa_hs_demand[lsd_lsa_demand][0:10].to_string()
 print ''
 print df_lsa_hs_demand[lsd_lsa_demand][-10:].to_string()
 
-
 # OUTPUT
 df_demand.to_csv(os.path.join(path_built_csv,
                               '201407_competition',
-                              'df_store_prospect_demand.csv'),
+                              'df_store_prospect_pop.csv'),
                  float_format ='%.3f',
                  index = False,
                  encoding = 'utf-8')

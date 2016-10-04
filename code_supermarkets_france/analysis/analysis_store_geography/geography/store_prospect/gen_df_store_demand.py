@@ -152,6 +152,26 @@ for row_ind, row in df_com.iterrows():
 
 df_demand_cont = pd.concat(ls_rows_demand_cont, axis = 1)
 se_store_demand_cont = df_demand_cont.sum(1)
+df_lsa['demand_cont_10'] = se_store_demand_cont
 
 df_demand_disc = pd.concat(ls_rows_demand_disc, axis = 1)
 se_store_demand_disc = df_demand_disc.sum(1)
+df_lsa['demand_disc_10'] = se_store_demand_disc
+
+df_lsa.sort('demand_cont_10', ascending = False, inplace = True)
+lsd1 = ['enseigne', 'adresse1', 'ville', 'surface', 'demand_cont_10']
+print(df_lsa[lsd1][0:20].to_string())
+
+# #######
+# OUTPUT
+# #######
+
+lsdo = ['id_lsa', 'demand_cont_10'] # 'demand_disc_10']
+
+df_lsa.reset_index(drop = False, inplace = True)
+df_lsa[lsdo].to_csv(os.path.join(path_built_csv,
+                                 '201407_competition',
+                                 'df_store_prospect_demand.csv'),
+                    float_format ='%.3f',
+                    index = False,
+                    encoding = 'utf-8')
