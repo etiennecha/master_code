@@ -209,18 +209,26 @@ for df_market, df_market_res in ls_df_markets:
   df_market['store_id'] = ls_cols[0]
   df_market['nb_stores'] = nb_stores
   df_market['nb_products'] = nb_prods
+  df_market['market_price'] = market_price
+  df_market['market_price_2'] = market_price_2
   ls_df_market_disp.append(df_market[['store_id',
                                       'nb_stores',
                                       'nb_products',
+                                      'market_price',
+                                      'market_price_2',
                                       'mean', 'range', 'gfs', 'std', 'cv']])
 
   # save market res (should merge?)
   df_market_res['store_id'] = ls_cols[0]
   df_market_res['nb_stores'] = nb_stores
   df_market_res['nb_products'] = nb_prods
+  df_market_res['market_price'] = market_price
+  df_market_res['market_price_2'] = market_price_2
   ls_df_market_res_disp.append(df_market_res[['store_id',
                                               'nb_stores',
                                               'nb_products',
+                                              'market_price',
+                                              'market_price_2',
                                               'range', 'gfs', 'std']])
 
   # save aggregate market stats

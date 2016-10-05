@@ -124,6 +124,9 @@ for col in ['price', 'surface', 'hhi_1025km', 'ac_hhi_1025km',
 #  df_qlmc['ln_{:s}'.format(col)] = np.log(df_qlmc[col])
   df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
 
+# rescale for regs
+df_stores['demand_cont_10'] = df_stores['demand_cont_10'] / 1000
+
 # LOAD MARKET DISPERSION
 price_col = 'price' # or 'price' for log price dev to mean of raw prices
 dict_df_disp = {}
@@ -177,17 +180,24 @@ plt.show()
 print(df_disp[['nb_stores', 'ac_hhi', 'hhi',
                'ln_demand_cont_10', 'ln_pop_cont_10',
                'ln_AU_med_rev', 'market_price']].corr().to_string())
+ 
+ls_ls_expl_vars = [['hhi', 'demand_cont_10'],
+                   ['hhi', 'market_price_2'],
+                   ['hhi', 'market_price_2', 'demand_cont_10'],
+                   ['hhi', 'market_price_2', 'C(STATUT_2010)']]
 
 ls_res = []
-for stat in ['std', 'range']:
-  res = smf.ols('std ~ hhi + market_price + C(STATUT_2010)', # nb_stores
-                    data = df_disp).fit()
-  ls_res.append(res)
+for ls_expl_vars in ls_ls_expl_vars:
+  str_expl_vars = '+'.join(ls_expl_vars)
+  df_disp = df_disp[df_disp['ac_nb_comp'] <= 100]
+  for stat in ['std_res', 'range_res']:
+    res = smf.ols('{:s} ~ {:s}'.format(stat, str_expl_vars), # nb_stores
+                      data = df_disp).fit()
+    ls_res.append(res)
 
 print(summary_col(ls_res,
                   stars=True,
                   float_format='%0.2f',
-                  model_names= ['std', 'range'],
                   info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                              'R2':lambda x: "{:.2f}".format(x.rsquared)}))
 
@@ -206,23 +216,54 @@ df_disp_prod['ac_nb_comp'] = df_disp_prod['ac_nb_comp_10km']
 df_disp_prod['hhi'] = df_disp_prod['hhi_10km']
 df_disp_prod['ac_hhi'] = df_disp_prod['ac_hhi_10km']
 
+## Overview
 #df_prod = df_disp_prod[df_disp_prod['product'] ==\
 #            df_disp_prod['product'].iloc[0]].copy()
 #df_prod.sort('mean', ascending = True, inplace = True)
 
-# not sure can use mean here... shoud not reflect how expensive market is here...
+# Create int indexes for 2 group clusters
+df_disp_prod['int_product'], prod_levels = pd.factorize(df_disp_prod['product'])
+df_disp_prod['int_store_id'], prod_levels = pd.factorize(df_disp_prod['store_id'])
 
-# todo: control for products: FE + std?
-
-# seems that: high hhi or low population (?) => less dispersion
-# somehow consistent with Varian: more loyal hence less dispersion
 
 df_disp_prod['nb_prods_obs'] =\
   df_disp_prod[['product', 'section']].groupby('product').transform('count')
 
 df_disp_prod[df_disp_prod['nb_prods_obs'] >= 150]['product'].value_counts()
 
-df_dp_sub = df_disp_prod[df_disp_prod['nb_prods_obs'] >= 150]
+df_dp_sub = df_disp_prod[df_disp_prod['nb_prods_obs'] >= 130]
 
-print(smf.ols('std ~ market_price + hhi + ln_demand_cont_10 + C(product)', # nb_stores
-              data = df_dp_sub).fit().summary())
+#ls_ls_expl_vars = [['C(product)', 'hhi', 'market_price', 'ln_demand_cont_10'],
+#                   ['C(product)', 'hhi', 'market_price_2', 'ln_demand_cont_10'],
+#                   ['C(product)', 'hhi', 'market_price_2'],
+#                   ['C(product)', 'hhi', 'market_price_2', 'C(STATUT_2010)']]
+
+ls_ls_expl_vars = [['C(product)'] + ls_expl_vars for ls_expl_vars in ls_ls_expl_vars]
+
+ls_res = []
+for ls_expl_vars in ls_ls_expl_vars:
+  str_expl_vars = '+'.join(ls_expl_vars)
+  for stat in ['std', 'range']:
+    #df_dp_sub = df_dp_sub[df_dp_sub['ac_nb_comp'] <= 100]
+    res = smf.ols('{:s} ~ {:s}'.format(stat, str_expl_vars), # nb_stores
+                      data = df_dp_sub).fit()
+    res = res.get_robustcov_results(cov_type = 'cluster',
+                                    groups = df_dp_sub[['int_store_id', 'int_product']].values,
+                                    use_correction = True)
+    ls_res.append(res)
+
+print(summary_col(ls_res,
+                  stars=True,
+                  float_format='%0.2f',
+                  info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                             'R2':lambda x: "{:.2f}".format(x.rsquared)}))
+
+print()
+print('Correlations (markets)')
+print(df_disp[['hhi', 'ln_demand_cont_10',
+               'market_price', 'market_price_2', 'ac_nb_comp']].corr().to_string())
+
+print()
+print('Correlations (markets/products)')
+print(df_disp_prod[['hhi', 'ln_demand_cont_10',
+                    'market_price', 'market_price_2', 'ac_nb_comp']].corr().to_string())
