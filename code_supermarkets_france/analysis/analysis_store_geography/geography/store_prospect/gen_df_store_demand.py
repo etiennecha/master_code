@@ -166,7 +166,7 @@ print(df_lsa[lsd1][0:20].to_string())
 # OUTPUT
 # #######
 
-lsdo = ['id_lsa', 'demand_cont_10'] # 'demand_disc_10']
+lsdo = ['id_lsa', 'demand_cont_10', 'demand_disc_10']
 
 df_lsa.reset_index(drop = False, inplace = True)
 df_lsa[lsdo].to_csv(os.path.join(path_built_csv,

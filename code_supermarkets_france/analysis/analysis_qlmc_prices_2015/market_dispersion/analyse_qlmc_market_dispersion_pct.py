@@ -96,7 +96,6 @@ merge_option = 'inner' # or 'outer'
 # - cheapest store cannot be cheapest on products it does not carry
 # ok to check robustness of cheapest being sometimes most expensive etc.
 
-
 # see if quick enough without using dict_chain_dfs
 ls_df_markets = []
 for lec_id, ls_comp_id in dict_markets.items():

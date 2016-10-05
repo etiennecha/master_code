@@ -88,22 +88,29 @@ df_comp = pd.merge(df_comp,
                    on = 'id_lsa',
                    how = 'left')
 
+# POP: STORE CENTERED
+df_pop = pd.read_csv(os.path.join(path_built_csv,
+                                     '201407_competition',
+                                     'df_store_prospect_pop.csv'),
+                        dtype = {'id_lsa' : str},
+                        encoding = 'utf-8')
+
+## temp?
+#df_pop.rename(columns = {'pop_ac_10km'   : '10km_ac_pop',
+#                         'pop_ac_20km'   : '20km_ac_pop',  
+#                         'pop_ac_25km'   : '25km_ac_pop',
+#                         'pop_ac_1025km' : '1025km_ac_pop',
+#                         'pop_cont_8'    : '8_pop',
+#                         'pop_cont_10'   : '10_pop',
+#                         'pop_cont_12'   : '12_pop'},
+#                 inplace = True)
+
 # DEMAND: STORE CENTERED
 df_demand = pd.read_csv(os.path.join(path_built_csv,
                                      '201407_competition',
                                      'df_store_prospect_demand.csv'),
                         dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
-
-## temp?
-#df_demand.rename(columns = {'pop_ac_10km'   : '10km_ac_pop',
-#                            'pop_ac_20km'   : '20km_ac_pop',  
-#                            'pop_ac_25km'   : '25km_ac_pop',
-#                            'pop_ac_1025km' : '1025km_ac_pop',
-#                            'pop_cont_8'    : '8_pop',
-#                            'pop_cont_10'   : '10_pop',
-#                            'pop_cont_12'   : '12_pop'},
-#                 inplace = True)
 
 # MARKETS: INSEE AREAS
 df_insee_markets = pd.read_csv(os.path.join(path_built_csv,
@@ -124,6 +131,11 @@ df_insee_markets = pd.read_csv(os.path.join(path_built_csv,
 # Got Info only for H & S... other null for now
 df_mc = pd.merge(df_lsa[['id_lsa', 'c_insee']],
                  df_comp,
+                 on = 'id_lsa',
+                 how = 'left')
+
+df_mc = pd.merge(df_mc,
+                 df_pop,
                  on = 'id_lsa',
                  how = 'left')
 

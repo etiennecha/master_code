@@ -11,6 +11,7 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
 import timeit
+from statsmodels.iolib.summary2 import summary_col
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -118,7 +119,8 @@ df_stores['surface'] = df_stores['surface'].apply(lambda x: x/1000.0)
 for col in ['price', 'surface', 'hhi_1025km', 'ac_hhi_1025km',
             'AU_med_rev', 'UU_med_rev', 'CO_med_rev',
             'pop_cont_10', 'pop_cont_12',
-            'pop_ac_1025km', 'pop_ac_20km']:
+            'pop_ac_1025km', 'pop_ac_20km',
+            'demand_cont_10', 'demand_disc_10']:
 #  df_qlmc['ln_{:s}'.format(col)] = np.log(df_qlmc[col])
   df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
 
@@ -142,11 +144,9 @@ for price_col in ['lpd', 'price']: # 'price'
 df_disp_agg_res = dict_df_disp['disp_agg_price']
 df_disp_res = dict_df_disp['disp_price']
 
-# ##############
-# REGRESSIONS
-# ##############
-
-# MARKETS
+# ##############################
+# REGS - AGG MARKET DISPERSION
+# ##############################
 
 df_disp = pd.merge(df_disp_agg_res,
                    df_stores,
@@ -175,28 +175,39 @@ df_disp.plot(kind = 'scatter', x = 'hhi', y = 'range')
 plt.show()
 
 print(df_disp[['nb_stores', 'ac_hhi', 'hhi',
-               'ln_pop_cont_10', 'ln_pop_cont_12',
-               'ln_AU_med_rev', 'ln_UU_med_rev']].corr().to_string())
+               'ln_demand_cont_10', 'ln_pop_cont_10',
+               'ln_AU_med_rev', 'market_price']].corr().to_string())
 
-res_std = smf.ols('std ~ ac_hhi + C(STATUT_2010) + ac_nb_comp', # nb_stores
-                  data = df_disp).fit()
-print(res_std.summary())
-
-res_range = smf.ols('range ~ ac_hhi + ln_pop_cont_10 + C(STATUT_2010) + ac_nb_comp', # nb_stores
+ls_res = []
+for stat in ['std', 'range']:
+  res = smf.ols('std ~ hhi + market_price + C(STATUT_2010)', # nb_stores
                     data = df_disp).fit()
-print(res_range.summary())
+  ls_res.append(res)
+
+print(summary_col(ls_res,
+                  stars=True,
+                  float_format='%0.2f',
+                  model_names= ['std', 'range'],
+                  info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                             'R2':lambda x: "{:.2f}".format(x.rsquared)}))
 
 # todo: exclude very large demand areas (check also revenue...)
 
-# PRODUCTS
+# ##############################
+# REGS - AGG PRODUCT DISPERSION
+# ##############################
 
 df_disp_prod = pd.merge(df_disp_res,
                         df_stores,
                         on = 'store_id',
                         how = 'left')
 
-df_prod = df_disp_prod[df_disp_prod['product'] ==\
-            df_disp_prod['product'].iloc[0]].copy()
+df_disp_prod['ac_nb_comp'] = df_disp_prod['ac_nb_comp_10km']
+df_disp_prod['hhi'] = df_disp_prod['hhi_10km']
+df_disp_prod['ac_hhi'] = df_disp_prod['ac_hhi_10km']
+
+#df_prod = df_disp_prod[df_disp_prod['product'] ==\
+#            df_disp_prod['product'].iloc[0]].copy()
 #df_prod.sort('mean', ascending = True, inplace = True)
 
 # not sure can use mean here... shoud not reflect how expensive market is here...
@@ -207,6 +218,11 @@ df_prod = df_disp_prod[df_disp_prod['product'] ==\
 # somehow consistent with Varian: more loyal hence less dispersion
 
 df_disp_prod['nb_prods_obs'] =\
-  df_disp_prod[['product', 'section']].groupby('product').agg('count')
+  df_disp_prod[['product', 'section']].groupby('product').transform('count')
 
 df_disp_prod[df_disp_prod['nb_prods_obs'] >= 150]['product'].value_counts()
+
+df_dp_sub = df_disp_prod[df_disp_prod['nb_prods_obs'] >= 150]
+
+print(smf.ols('std ~ market_price + hhi + ln_demand_cont_10 + C(product)', # nb_stores
+              data = df_dp_sub).fit().summary())
