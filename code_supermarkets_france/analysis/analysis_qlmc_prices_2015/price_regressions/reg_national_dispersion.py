@@ -23,7 +23,7 @@ path_lsa_csv = os.path.join(path_data,
                             'data_lsa',
                             'data_csv')
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
@@ -74,16 +74,25 @@ PD = PriceDispersion()
 ls_prod_cols = ['section', 'family', 'product']
 
 # Product price distributions
+
+#df_desc = pd.pivot_table(df_prices,
+#                         values = 'price',
+#                         index = ls_prod_cols,
+#                         aggfunc = 'describe').unstack()
+#df_desc['cv'] = df_desc['std'] / df_desc['mean']
+#df_desc['iq_rg'] = df_desc['75%'] - df_desc['25%']
+#df_desc['iq_pct'] = df_desc['75%'] / df_desc['25%']
+#df_desc.drop(['25%', '75%'], axis = 1, inplace = True)
+
+PD = PriceDispersion()
 df_desc = pd.pivot_table(df_prices,
                          values = 'price',
                          index = ls_prod_cols,
-                         aggfunc = 'describe').unstack()
-df_desc['cv'] = df_desc['std'] / df_desc['mean']
-df_desc['iq_rg'] = df_desc['75%'] - df_desc['25%']
-df_desc['iq_pct'] = df_desc['75%'] / df_desc['25%']
-df_desc.drop(['25%', '75%'], axis = 1, inplace = True)
-df_desc['count'] = df_desc['count'].astype(int)
+                         aggfunc = [len, np.mean, np.std, PD.cv,
+                                    PD.gfs, PD.iq_pct, PD.i595_pct])
+df_desc.rename(columns = {'len': 'count'}, inplace = True)
 
+df_desc['count'] = df_desc['count'].astype(int)
 df_desc['ch_count'] = df_prices[ls_prod_cols + ['store_chain']].groupby(ls_prod_cols)\
                                                                .agg(lambda x: len(x.unique()))
 
@@ -91,10 +100,15 @@ df_desc['ch_count'] = df_prices[ls_prod_cols + ['store_chain']].groupby(ls_prod_
 df_desc_2 = pd.pivot_table(df_prices,
                            values = 'res',
                            index = ls_prod_cols,
-                           aggfunc = 'describe').unstack()
-df_desc_2['iq_rg'] = df_desc_2['75%'] - df_desc_2['25%']
-df_desc_2['iq_pct'] = df_desc_2['75%'] / df_desc_2['25%']
+                           aggfunc = [len, np.mean, np.std, # PD.cv
+                                      PD.gfs, PD.iq_rg, PD.i595_rg])
+df_desc_2.rename(columns = {'len': 'count'}, inplace = True)
+df_desc['count'] = df_desc['count'].astype(int)
 
+# Caution: with residuals: range can be compared to ratio
+df_desc_2.rename(columns = {'iq_rg' : 'iq_pct',
+                            'i595_rg' : 'i595_pct'},
+                 inplace = True)
 # if Q25 null: inf
 df_desc_2.loc[~np.isfinite(df_desc_2['iq_pct']),
               'iq_pct'] = np.nan
@@ -124,7 +138,6 @@ print(df_overview.describe().to_string())
 print()
 print('Overview common product price distributions:')
 df_overview.sort('count', ascending = False, inplace = True)
-df_overview = df_overview[df_overview['count'] >= 200]
 print(df_overview[0:20].to_string())
 
 print()
@@ -132,7 +145,7 @@ print('Stats des national product price res distributions:')
 print(df_desc_2.describe().to_string())
 
 # Merge res price stats des
-df_desc_2.drop(['count', '25%', '75%'], axis = 1, inplace = True)
+df_desc_2.drop(['count'], axis = 1, inplace = True)
 df_overview = pd.merge(df_overview,
                        df_desc_2,
                        left_index = True,
@@ -147,7 +160,12 @@ df_overview.reset_index(drop = False, inplace = True)
 ##########################
 
 # FILTER OUT PRODUCTS FOR WHICH TOO FEW CHAINS
-df_sub = df_overview[df_overview['ch_count'] >= 4].copy()
+
+#df_sub = df_overview[(df_overview['ch_count'] >= 4) &\
+#                     (df_overview['count'] >= 100)].copy()
+
+df_sub = df_overview[(df_overview['count'] >= 100)].copy()
+
 
 ## a few outliers based on std (car batteries)
 #df_sub = df_sub[df_sub['std'] <= 2]
@@ -187,10 +205,10 @@ print(df_sub[['mean', 'section']].groupby('section').agg('describe').unstack())
 
 # REG OF STORE PRICE - NAIVE BRAND
 ls_formulas = ["std ~ C(section) + mean",
-               "cv ~ C(section) + mean",
-               "std_res ~ C(section) + mean",
                "iq_pct ~ C(section) + mean",
-               "iq_rg_res ~ C(section) + mean"]
+               "cv ~ C(section) + mean",
+               "iq_pct_res ~ C(section) + mean",
+               "std_res ~ C(section) + mean"]
 
 ls_res = [smf.ols(formula, data = df_sub).fit() for formula in ls_formulas]
 
@@ -207,40 +225,32 @@ print(summary_col(ls_res,
                   info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                              'R2':lambda x: "{:.2f}".format(x.rsquared)}))
 
-print()
-print(summary_col(ls_res,
-                  stars=True,
-                  float_format='%0.3f',
-                  model_names=['{:d}'.format(i) for i in range(len(ls_formulas))],
-                  info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
-                             'R2':lambda x: "{:.2f}".format(x.rsquared)}).as_latex())
-
 # todo: stats des by family (mean std)
 # (two tables + merge under excel?)
 # nb prods / price / std / cv / res std / iq / iq res ?
-ls_desc_cols = ['mean', 'std', 'cv', 'std_res', 'iq_pct', 'iq_rg_res']
+ls_desc_cols = ['mean', 'std', 'cv', 'std_res',
+                'iq_pct', 'i595_pct', 'iq_pct_res', 'i595_pct_res',
+                'price_1_fq', 'price_12_fq']
 
 pd.set_option('float_format', '{:,.2f}'.format)
 
 print()
 print('Desc mean table')
-print(df_sub[ls_desc_cols + ['section']].groupby('section')\
-                                        .agg('mean').to_string())
+df_desc_mean = df_sub[ls_desc_cols + ['section']].groupby('section')\
+                                                .agg('mean')
+df_desc_mean['count'] = df_sub[['section', 'count']].groupby('section')\
+                                                    .agg(len)['count'].astype(int)
+print(df_desc_mean[['count'] + ls_desc_cols].to_string())
 
+print()
 print('Desc std table')
-print(df_sub[ls_desc_cols + ['section']].groupby('section')\
-                                        .agg('std').to_string())
+df_desc_std = df_sub[ls_desc_cols + ['section']].groupby('section')\
+                                                .agg('std')
+df_desc_std['count'] = df_sub[['section', 'count']].groupby('section')\
+                                                   .agg(len)['count'].astype(int)
+
+print(df_desc_std[['count'] + ls_desc_cols].to_string())
 
 #print()
-#print('Overview top purchased (likely) products:')
-#print(df_sub[df_sub['dtp'] == 1].to_string())
-#
-#df_sub.drop(['dtp', 'dtb'], axis = 1, inplace = True)
-#for var, ascending in [('cv', True),
-#                       ('cv', False),
-#                       ('price_1_fq', True),
-#                       ('price_1_fq', False)]:
-#  print()
-#  print('Overview products with higher or lowest {:s}:'.format(var))
-#  df_sub.sort(var, ascending = ascending, inplace = True)
-#  print(df_sub[0:20].to_string(index = False))
+#print('Inspect high dispersion:')
+#print(df_overview[df_overview['std_res'] >= 0.14].to_string())

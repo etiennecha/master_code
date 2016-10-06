@@ -153,11 +153,10 @@ for df_market, df_market_res in ls_df_markets:
   agg_sum = df_market.sum() # dispersion in total sum
   ls_cols_ascending = agg_sum.sort(ascending = True, inplace = False).index.tolist()
   ls_cols_descending = agg_sum.sort(ascending = False, inplace = False).index.tolist()
-  agg_range = agg_sum.max() - agg_sum.min()
-  agg_range_pct = agg_range / agg_sum.mean() * 100
+  agg_range_pct = (agg_sum.max() / agg_sum.min() - 1) * 100
   agg_gfs = agg_sum.mean() - agg_sum.min()
   agg_gfs_pct = agg_gfs / agg_sum.mean() * 100
-  agg_std = agg_sum.std()
+  agg_cv = agg_sum.std() / agg_sum.mean() * 100
   
   ls_cols = df_market.columns # keep cuz gona add columns
   ## Compute log price deviation to market for each store / product
@@ -169,8 +168,9 @@ for df_market, df_market_res in ls_df_markets:
   #    ls_lpd_cols.append('lpd_{:s}'.format(col))
   #  ls_cols = ls_lpd_cols
   df_market['mean'] = df_market[ls_cols].mean(1)
-  df_market['range'] = df_market[ls_cols].max(1) - df_market[ls_cols].min(1)
+  df_market['range'] = (df_market[ls_cols].max(1) / df_market[ls_cols].min(1) - 1) * 100
   df_market['gfs'] = df_market[ls_cols].mean(1) - df_market[ls_cols].min(1)
+  df_market['gfs_pct'] = (df_market[ls_cols].mean(1) - df_market[ls_cols].min(1)) / df_market[ls_cols].mean(1) * 100
   df_market['std'] = df_market[ls_cols].std(1)
   df_market['cv'] = df_market[ls_cols].std(1) / df_market[ls_cols].mean(1) * 100
   
@@ -237,10 +237,9 @@ for df_market, df_market_res in ls_df_markets:
                          nb_prods,
                          agg_range_pct,
                          agg_gfs_pct,
-                         agg_std,
+                         agg_cv,
                          df_market['range'].mean(),
-                         df_market['gfs'].mean(),
-                         df_market['std'].mean(),
+                         df_market['gfs_pct'].mean(),
                          df_market['cv'].mean(),
                          df_market_res['range'].mean(),
                          df_market_res['gfs'].mean(),
@@ -256,7 +255,7 @@ for df_market, df_market_res in ls_df_markets:
 
 lsd1 = ['agg_range_pct',
         'agg_gfs_pct',
-        'agg_std',
+        'agg_cv',
         'range',
         'gfs',
         'std',

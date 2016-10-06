@@ -184,7 +184,7 @@ print(df_disp[['nb_stores', 'ac_hhi', 'hhi',
 ls_ls_expl_vars = [['hhi', 'demand_cont_10'],
                    ['hhi', 'market_price_2'],
                    ['hhi', 'market_price_2', 'demand_cont_10'],
-                   ['hhi', 'market_price_2', 'C(STATUT_2010)']]
+                   ['hhi', 'market_price_2', 'demand_cont_10', 'C(STATUT_2010)', 'ac_nb_comp']]
 
 ls_res = []
 for ls_expl_vars in ls_ls_expl_vars:

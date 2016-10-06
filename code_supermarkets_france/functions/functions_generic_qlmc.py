@@ -281,6 +281,12 @@ class PriceDispersion:
   def gfs(self, se_prices):
     return se_prices.mean() - se_prices.min()
   
+  def gfs_pct(self, se_prices):
+    return self.gfs(se_prices) / se_prices.mean()
+  
+  def minmax_pct(self, se_prices):
+    return self.minmax_rg(se_prices) / se_prices.mean()
+  
   def minmax_rg(self, se_prices):
     return se_prices.max() - se_prices.min()
   
@@ -290,17 +296,17 @@ class PriceDispersion:
   def id_rg(self, se_prices):
     return se_prices.quantile(0.90) - se_prices.quantile(0.10)
 
-  def gfs_pct(self, se_prices):
-    return self.gfs(se_prices) / se_prices.mean()
-  
-  def minmax_pct(self, se_prices):
-    return self.minmax_rg(se_prices) / se_prices.mean()
+  def i595_rg(self, se_prices):
+    return se_prices.quantile(0.95) - se_prices.quantile(0.05)
   
   def iq_pct(self, se_prices):
-    return self.iq_rg(se_prices) / se_prices.mean()
+    return se_prices.quantile(0.75) / se_prices.quantile(0.25)
 
   def id_pct(self, se_prices):
-    return self.id_rg(se_prices) / se_prices.mean()
+    return se_prices.quantile(0.90) / se_prices.quantile(0.10)
+  
+  def i595_pct(self, se_prices):
+    return se_prices.quantile(0.95) / se_prices.quantile(0.05)
 
   def price_1(self, se_prices):
     return se_prices.value_counts().index[0]

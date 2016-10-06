@@ -67,16 +67,25 @@ PD = PriceDispersion()
 ls_prod_cols = ['section', 'family', 'product']
 
 # Product price distributions
+
+#df_desc = pd.pivot_table(df_prices,
+#                         values = 'price',
+#                         index = ls_prod_cols,
+#                         aggfunc = 'describe').unstack()
+#df_desc['cv'] = df_desc['std'] / df_desc['mean']
+#df_desc['iq_rg'] = df_desc['75%'] - df_desc['25%']
+#df_desc['iq_pct'] = df_desc['75%'] / df_desc['25%']
+#df_desc.drop(['25%', '75%'], axis = 1, inplace = True)
+
+PD = PriceDispersion()
 df_desc = pd.pivot_table(df_prices,
                          values = 'price',
                          index = ls_prod_cols,
-                         aggfunc = 'describe').unstack()
-df_desc['cv'] = df_desc['std'] / df_desc['mean']
-df_desc['iq_rg'] = df_desc['75%'] - df_desc['25%']
-df_desc['iq_pct'] = df_desc['75%'] / df_desc['25%']
-df_desc.drop(['25%', '75%'], axis = 1, inplace = True)
-df_desc['count'] = df_desc['count'].astype(int)
+                         aggfunc = [len, np.mean, np.std, PD.cv,
+                                    PD.gfs, PD.iq_pct, PD.id_pct])
+df_desc.rename(columns = {'len': 'count'}, inplace = True)
 
+df_desc['count'] = df_desc['count'].astype(int)
 df_desc['ch_count'] = df_prices[ls_prod_cols + ['store_chain']].groupby(ls_prod_cols)\
                                                                .agg(lambda x: len(x.unique()))
 
