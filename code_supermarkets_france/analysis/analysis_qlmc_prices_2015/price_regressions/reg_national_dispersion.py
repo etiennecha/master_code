@@ -94,6 +94,7 @@ df_desc_2 = pd.pivot_table(df_prices,
                            aggfunc = 'describe').unstack()
 df_desc_2['iq_rg'] = df_desc_2['75%'] - df_desc_2['25%']
 df_desc_2['iq_pct'] = df_desc_2['75%'] / df_desc_2['25%']
+
 # if Q25 null: inf
 df_desc_2.loc[~np.isfinite(df_desc_2['iq_pct']),
               'iq_pct'] = np.nan
@@ -188,7 +189,7 @@ print(df_sub[['mean', 'section']].groupby('section').agg('describe').unstack())
 ls_formulas = ["std ~ C(section) + mean",
                "cv ~ C(section) + mean",
                "std_res ~ C(section) + mean",
-               "iq_rg ~ C(section) + mean",
+               "iq_pct ~ C(section) + mean",
                "iq_rg_res ~ C(section) + mean"]
 
 ls_res = [smf.ols(formula, data = df_sub).fit() for formula in ls_formulas]
@@ -217,16 +218,16 @@ print(summary_col(ls_res,
 # todo: stats des by family (mean std)
 # (two tables + merge under excel?)
 # nb prods / price / std / cv / res std / iq / iq res ?
-ls_desc_cols = ['mean', 'std', 'cv', 'std_res', 'iq_rg', 'iq_rg_res']
+ls_desc_cols = ['mean', 'std', 'cv', 'std_res', 'iq_pct', 'iq_rg_res']
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.2f}'.format)
 
 print()
 print('Desc mean table')
 print(df_sub[ls_desc_cols + ['section']].groupby('section')\
                                         .agg('mean').to_string())
 
-print('Desc mean table')
+print('Desc std table')
 print(df_sub[ls_desc_cols + ['section']].groupby('section')\
                                         .agg('std').to_string())
 
