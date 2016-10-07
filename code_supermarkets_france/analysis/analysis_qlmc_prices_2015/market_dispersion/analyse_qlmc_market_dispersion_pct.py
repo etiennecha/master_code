@@ -170,7 +170,8 @@ for df_market, df_market_res in ls_df_markets:
   df_market['mean'] = df_market[ls_cols].mean(1)
   df_market['range'] = (df_market[ls_cols].max(1) / df_market[ls_cols].min(1) - 1) * 100
   df_market['gfs'] = df_market[ls_cols].mean(1) - df_market[ls_cols].min(1)
-  df_market['gfs_pct'] = (df_market[ls_cols].mean(1) - df_market[ls_cols].min(1)) / df_market[ls_cols].mean(1) * 100
+  df_market['gfs_pct'] = (df_market[ls_cols].mean(1) - df_market[ls_cols].min(1)) /\
+                            df_market[ls_cols].mean(1) * 100
   df_market['std'] = df_market[ls_cols].std(1)
   df_market['cv'] = df_market[ls_cols].std(1) / df_market[ls_cols].mean(1) * 100
   

@@ -38,7 +38,7 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 #                        encoding = 'utf-8')
 
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                    'df_res_ln_prices_by_chain.csv'),
+                                    'df_res_ln_prices.csv'),
                         encoding = 'utf-8')
 df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 

@@ -88,9 +88,9 @@ for col in ['surface',
   df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
 
 # avoid error msg on condition number (regressions)
-df_stores['surface'] = df_stores['surface'].apply(lambda x: x/1000.0)
-df_stores['AU_med_rev'] = df_stores['AU_med_rev'].apply(lambda x: x/1000.0)
-df_stores['UU_med_rev'] = df_stores['UU_med_rev'].apply(lambda x: x/1000.0)
+for col_var in ['AU_med_rev', 'UU_med_rev', 'CO_med_rev',
+                'demand_cont_10', 'surface']:
+  df_stores[col_var] = df_stores[col_var].apply(lambda x: x/1000.0)
 df_stores['hhi'] = df_stores['hhi_1025km'] 
 
 # add id_lsa only (to be used later)
@@ -293,13 +293,16 @@ for dist in [5, 10, 12]:
                        'd_{:s}_{:d}'.format(dist_col, dist)] = 0
 
 # ADD CONTROL VARIABLES
-ls_ev = ['hhi', 'ln_pop_cont_10', 'ln_CO_med_rev']
+ls_ev = ['hhi', 'demand_cont_10', 'CO_med_rev']
 str_ev = " + ".join(ls_ev)
 df_compa_ctrl = pd.merge(df_repro_compa,
                          df_stores[['id_lsa'] + ls_ev],
                          left_on = 'id_lsa_A',
                          right_on = 'id_lsa',
                          how = 'left')
+
+for str_var in ['demand_cont_10', 'CO_med_rev']:
+  df_compa_ctrl[str_var] = df_compa_ctrl[str_var] / 1000
 
 ## ADD VARIABLE FOR PAIR CHAINS (CONTROL)
 #df_compa_ctrl['pair_chains'] =\
@@ -310,6 +313,8 @@ df_compa_ctrl = pd.merge(df_repro_compa,
 # #########
 # OUTPUT
 # #########
+
+df_compa_ctrl['abs_compa_pct'] = np.abs(df_compa_ctrl['compa_pct'])
 
 df_compa_ctrl.to_csv(os.path.join(path_built_201415_csv,
                               'df_pair_dispersion_static.csv'),
@@ -328,7 +333,7 @@ dict_res = {}
 for d_dist, dist_var, dist_max in [['d_dist_5', 'dist', 10],
                                    ['d_gg_dur_12', 'gg_dur', 20]]:
   # filter: not too differentiated, not too far
-  df_compa = df_compa_ctrl[(df_compa_ctrl['compa_pct'].abs() <= 2) &\
+  df_compa = df_compa_ctrl[(df_compa_ctrl['compa_pct'].abs() <= 3) &\
                            (df_compa_ctrl[dist_var] <= dist_max)]
   
   print()
