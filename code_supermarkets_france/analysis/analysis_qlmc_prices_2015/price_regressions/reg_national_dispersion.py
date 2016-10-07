@@ -38,7 +38,7 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 #                        encoding = 'utf-8')
 
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                    'df_res_ln_prices.csv'),
+                                    'df_res_ln_prices_by_chain.csv'),
                         encoding = 'utf-8')
 df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 
@@ -155,6 +155,13 @@ df_overview = pd.merge(df_overview,
 
 df_overview.reset_index(drop = False, inplace = True)
 
+# Rescale
+df_overview['iq_pct'] = df_overview['iq_pct'] - 1
+df_overview['i595_pct'] = df_overview['i595_pct'] - 1
+for col in ['cv', 'std_res', 'iq_pct', 'i595_pct',
+            'iq_pct_res', 'i595_pct_res', 'price_1_fq', 'price_12_fq']:
+  df_overview[col] = df_overview[col] * 100
+
 # ########################
 # STATS DES
 ##########################
@@ -205,10 +212,10 @@ print(df_sub[['mean', 'section']].groupby('section').agg('describe').unstack())
 
 # REG OF STORE PRICE - NAIVE BRAND
 ls_formulas = ["std ~ C(section) + mean",
-               "iq_pct ~ C(section) + mean",
                "cv ~ C(section) + mean",
-               "iq_pct_res ~ C(section) + mean",
-               "std_res ~ C(section) + mean"]
+               "iq_pct ~ C(section) + mean",
+               "std_res ~ C(section) + mean",
+               "iq_pct_res ~ C(section) + mean"]
 
 ls_res = [smf.ols(formula, data = df_sub).fit() for formula in ls_formulas]
 
@@ -220,10 +227,18 @@ from statsmodels.iolib.summary2 import summary_col
 print()
 print(summary_col(ls_res,
                   stars=True,
-                  float_format='%0.3f',
+                  float_format='%0.2f',
                   model_names=['{:d}'.format(i) for i in range(len(ls_formulas))],
                   info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                              'R2':lambda x: "{:.2f}".format(x.rsquared)}))
+
+print()
+print(summary_col(ls_res,
+                  stars=True,
+                  float_format='%0.2f',
+                  model_names=['{:d}'.format(i) for i in range(len(ls_formulas))],
+                  info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
+                             'R2':lambda x: "{:.2f}".format(x.rsquared)}).as_latex())
 
 # todo: stats des by family (mean std)
 # (two tables + merge under excel?)
@@ -232,7 +247,7 @@ ls_desc_cols = ['mean', 'std', 'cv', 'std_res',
                 'iq_pct', 'i595_pct', 'iq_pct_res', 'i595_pct_res',
                 'price_1_fq', 'price_12_fq']
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.1f}'.format)
 
 print()
 print('Desc mean table')

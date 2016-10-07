@@ -613,30 +613,31 @@ Product price dispersion is measured at the national level, with a view to get s
 \begin{table}[H]
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Overview of average product dispersion by category at the national level}
+\caption{Overview of average product dispersion by section at the national level}
 \label{tab:stats_nat_dispersion}
 \small
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lr|rrrr|rrr}
 \toprule
 \toprule
-Price                     & Raw   & Raw   & Raw   & Res   & Raw   & Res \\
-Dispersion measure        & Mean  & Std   & CV    & Std   & Q75-Q25 & Q75-Q25 \\
+      & \multicolumn{1}{c|}{} & \multicolumn{4}{c|}{Raw prices} & \multicolumn{3}{c}{Residuals} \\
+      & \multicolumn{1}{c|}{Count} & \multicolumn{1}{c}{Price} & \multicolumn{1}{c}{CV} & \multicolumn{1}{c}{$\frac{Q75}{Q25}-1$} & \multicolumn{1}{c|}{$\frac{Q95}{Q5}-1$} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Q75-Q25} & \multicolumn{1}{c}{Q95-Q5} \\
 \midrule
-    Baby food & 2.09 (1.12) & 0.16 (0.10) & 0.08 (0.02) & 0.04 (0.02) & 0.20 (0.14) & 0.04 (0.03) \\
-    Pets  & 4.14 (2.49) & 0.24 (0.14) & 0.06 (0.02) & 0.04 (0.01) & 0.34 (0.21) & 0.04 (0.02) \\
-    Drinks & 4.97 (5.60) & 0.25 (0.24) & 0.06 (0.02) & 0.05 (0.02) & 0.31 (0.35) & 0.05 (0.02) \\
-    Savoury grocery & 1.73 (0.87) & 0.12 (0.07) & 0.07 (0.02) & 0.05 (0.02) & 0.15 (0.11) & 0.05 (0.03) \\
-    Sweet grocery & 2.24 (1.03) & 0.16 (0.08) & 0.07 (0.03) & 0.05 (0.02) & 0.20 (0.15) & 0.06 (0.04) \\
-    Fresh & 2.29 (1.04) & 0.15 (0.07) & 0.07 (0.02) & 0.05 (0.01) & 0.17 (0.12) & 0.05 (0.03) \\
-    Health and Beauty & 3.06 (1.65) & 0.23 (0.14) & 0.08 (0.02) & 0.05 (0.02) & 0.28 (0.21) & 0.05 (0.03) \\
-    Household & 3.63 (2.45) & 0.25 (0.16) & 0.07 (0.02) & 0.05 (0.01) & 0.30 (0.22) & 0.06 (0.02) \\
-    Frozen food & 3.50 (1.64) & 0.24 (0.10) & 0.07 (0.02) & 0.05 (0.01) & 0.28 (0.17) & 0.06 (0.03) \\
+Baby food & 307   & 2.6 (2.4) & 6.8 (2.2) & 9.1 (4.9) & 21.2 (7.8) & 4.4 (1.6) & 4.5 (2.6) & 12.9 (5.2) \\
+Pets  & 185   & 4.7 (3.2) & 5.6 (1.7) & 7.6 (3.4) & 17.1 (5.6) & 3.7 (1.1) & 3.9 (1.6) & 11.0 (3.5) \\
+Drinks & 688   & 5.2 (5.8) & 5.9 (2.2) & 7.6 (4.6) & 17.9 (8.1) & 4.4 (1.5) & 4.6 (2.3) & 12.9 (5.1) \\
+Savoury grocery & 1358  & 1.9 (1.0) & 6.7 (2.3) & 8.4 (5.1) & 21.5 (8.3) & 4.8 (1.7) & 5.1 (2.9) & 14.0 (5.6) \\
+Sweet grocery & 1380  & 2.4 (1.2) & 7.0 (2.7) & 9.3 (6.9) & 22.1 (9.4) & 5.0 (2.1) & 5.5 (4.1) & 14.4 (6.2) \\
+Fresh & 1423  & 2.4 (1.1) & 6.5 (2.1) & 7.9 (5.1) & 20.5 (8.1) & 5.2 (1.6) & 5.4 (2.9) & 15.1 (5.5) \\
+Health \& Beauty & 993   & 3.9 (2.4) & 7.0 (2.2) & 9.1 (4.5) & 23.0 (8.8) & 5.1 (1.7) & 5.5 (2.8) & 15.2 (5.9) \\
+Household & 403   & 3.9 (2.7) & 6.9 (2.1) & 8.8 (5.0) & 22.0 (7.5) & 5.1 (1.5) & 5.4 (2.4) & 14.7 (5.1) \\
+Frozen food & 198   & 3.4 (1.6) & 6.9 (2.4) & 8.8 (5.6) & 22.3 (7.9) & 5.2 (1.5) & 5.6 (2.7) & 15.7 (5.3) \\
 \bottomrule
 \bottomrule
 \end{tabular}
 \begin{tablenotes}
       \small
-      \item First column is the mean product price (in euros) of all products within each category. All other columns are measures of dispersion. Standard error in parentheses.
+			\item Standard error in parentheses.
+      \item Column "Price" is the mean product price in euros within each section. All columns to its right are measures of dispersion to be read as percentages. The coefficient of variation ("CV") was indeed multiplied by 100, as were all variables describing quartile comparisons. 
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -658,38 +659,39 @@ Standard deviation and the spread between Q75 and Q25 can be seen to significant
 \begin{tabular}{lrrrrr}
 \toprule
 \toprule
-Prices                                   & Raw       & Raw       &  Res.     & Raw       & Res.       \\
-Dispersion measure                       & Std       & CV        &  Std      & Q75-Q25   & Q75-Q25    \\
+Prices                                   & Raw       & Raw     &  Raw       & Res.      & Res.   \\
+Dispersion measure                       & Std       & CV      &  Q75/Q25-1 & Std       & Q75-Q25    \\
+\midrule								
+Intercept                                & 0.05***  & 7.25***  & 9.80***  & 4.60***  & 4.63***   \\
+                                         & (0.00)   & (0.13)   & (0.31)   & (0.10)   & (0.18)    \\
+Price                                    & 0.05***  & -0.18*** & -0.28*** & -0.08*** & -0.06***  \\
+                                         & (0.00)   & (0.01)   & (0.03)   & (0.01)   & (0.02)    \\
+Section Pets                             & -0.01*   & -0.84*** & -0.87*   & -0.53*** & -0.47*    \\
+                                         & (0.01)   & (0.21)   & (0.50)   & (0.16)   & (0.28)    \\
+Section Drinks                           & -0.03*** & -0.47*** & -0.79**  & 0.19     & 0.32      \\
+                                         & (0.01)   & (0.16)   & (0.37)   & (0.12)   & (0.21)    \\
+Section Savoury grocery                  & -0.01*   & -0.23    & -0.89*** & 0.36***  & 0.59***   \\
+                                         & (0.01)   & (0.14)   & (0.34)   & (0.11)   & (0.19)    \\
+Section Sweet grocery                    & 0.01     & 0.14     & 0.20     & 0.54***  & 1.05***   \\
+                                         & (0.01)   & (0.14)   & (0.34)   & (0.11)   & (0.19)    \\
+Section Fresh food                       & -0.00    & -0.37*** & -1.27*** & 0.76***  & 0.88***   \\
+                                         & (0.01)   & (0.14)   & (0.34)   & (0.11)   & (0.19)    \\
+Section Health and Beauty                & 0.05***  & 0.43***  & 0.37     & 0.80***  & 1.08***   \\
+                                         & (0.01)   & (0.15)   & (0.35)   & (0.11)   & (0.20)    \\
+Section Household                        & 0.03***  & 0.32*    & 0.06     & 0.75***  & 1.03***   \\
+                                         & (0.01)   & (0.17)   & (0.41)   & (0.13)   & (0.23)    \\
+Section Frozen food                      & 0.02***  & 0.30     & -0.04    & 0.89***  & 1.17***   \\
+                                         & (0.01)   & (0.21)   & (0.49)   & (0.16)   & (0.28)    \\
 \midrule
-Intercept                                & 0.063***  & 0.080***  & 0.046***  & 0.090***  & 0.046***   \\
-                                         & (0.005)   & (0.002)   & (0.001)   & (0.011)   & (0.002)    \\
-Price                                    & 0.045***  & -0.002*** & -0.001*** & 0.054***  & -0.001***  \\
-                                         & (0.000)   & (0.000)   & (0.000)   & (0.001)   & (0.000)    \\
-Pets                                     & -0.006    & -0.010*** & -0.004*   & 0.028     & -0.002     \\
-                                         & (0.009)   & (0.003)   & (0.002)   & (0.018)   & (0.004)    \\
-Drinks                                   & -0.030*** & -0.007*** & 0.005***  & -0.042*** & 0.008***   \\
-                                         & (0.006)   & (0.002)   & (0.002)   & (0.013)   & (0.003)    \\
-Savoury grocery                          & -0.020*** & -0.005*** & 0.003*    & -0.033*** & 0.006**    \\
-                                         & (0.006)   & (0.002)   & (0.001)   & (0.012)   & (0.003)    \\
-Sweet grocery                            & -0.005    & -0.002    & 0.005***  & -0.007    & 0.012***   \\
-                                         & (0.006)   & (0.002)   & (0.001)   & (0.012)   & (0.003)    \\
-Fresh food                               & -0.018*** & -0.009*** & 0.008***  & -0.038*** & 0.010***   \\
-                                         & (0.006)   & (0.002)   & (0.001)   & (0.012)   & (0.003)    \\
-Health and Beauty                        & 0.029***  & 0.002     & 0.007***  & 0.029**   & 0.010***   \\
-                                         & (0.006)   & (0.002)   & (0.002)   & (0.012)   & (0.003)    \\
-Household                                & 0.024***  & 0.001     & 0.008***  & 0.020     & 0.014***   \\
-                                         & (0.007)   & (0.002)   & (0.002)   & (0.014)   & (0.003)    \\
-Frozen food                              & 0.020**   & -0.000    & 0.010***  & 0.006     & 0.013***   \\
-                                         & (0.008)   & (0.003)   & (0.002)   & (0.016)   & (0.004)    \\
-\midrule
-R2                                       & 0.72      & 0.08      & 0.05      & 0.49      & 0.02       \\
-N                                        & 4,190     & 4,190     & 4,190     & 4,190     & 4,190       \\
+R2                                       & 0.70     & 0.06     & 0.03     & 0.04     & 0.02      \\
+N                                        & 6935     & 6935     & 6935     & 6935     & 6935      \\
 \bottomrule
 \bottomrule
 \end{tabular}
 \begin{tablenotes}
       \small
-      \item Reference product category is Baby food. Standard errors in parentheses. * p<.1, ** p<.05, ***p<.01.
+      \item Reference product section is Baby food. 
+			\item Standard errors in parentheses. Significance thresholds: * p<.1, ** p<.05, ***p<.01.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}

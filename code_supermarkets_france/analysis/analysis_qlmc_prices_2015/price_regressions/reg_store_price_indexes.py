@@ -41,7 +41,7 @@ path_insee_extracts = os.path.join(path_data,
 
 # LOAD DF PRICES (by_chain: product FE is chain specific)
 df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_res_ln_prices_by_chain.csv'),
+                                     'df_res_ln_prices.csv'), # _by_chain
                         encoding = 'utf-8')
 df_prices['log_pd'] = np.log(df_prices['price'] /\
                                df_prices.groupby('product')['price'].transform('mean'))

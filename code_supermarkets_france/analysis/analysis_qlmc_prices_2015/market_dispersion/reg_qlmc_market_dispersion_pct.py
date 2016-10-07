@@ -165,13 +165,13 @@ df_disp = df_disp[~df_disp['region'].isin(['Corse'])]
 # if exclude 'Pays de la Loire', 'Poitou-Charentes', 'Bretagne' (low dispersion)
 # hhi has positive role
 
-df_disp.sort('std', ascending = True, inplace = True)
-lsd = ['store_id', 'std', 'range', 'nb_stores', 'hhi', 'region']
+df_disp.sort('cv', ascending = True, inplace = True)
+lsd = ['store_id', 'cv', 'range', 'nb_stores', 'hhi', 'region']
 print()
 print(df_disp[lsd][:20].to_string())
 print(df_disp[lsd][-20:].to_string())
 
-df_disp.plot(kind = 'scatter', x = 'hhi', y = 'std')
+df_disp.plot(kind = 'scatter', x = 'hhi', y = 'cv')
 plt.show()
 
 df_disp.plot(kind = 'scatter', x = 'hhi', y = 'range')
@@ -184,7 +184,8 @@ print(df_disp[['nb_stores', 'ac_hhi', 'hhi',
 ls_ls_expl_vars = [['hhi', 'demand_cont_10'],
                    ['hhi', 'market_price_2'],
                    ['hhi', 'market_price_2', 'demand_cont_10'],
-                   ['hhi', 'market_price_2', 'demand_cont_10', 'C(STATUT_2010)', 'ac_nb_comp']]
+                   ['hhi', 'market_price_2', 'demand_cont_10',
+                           'C(STATUT_2010)', 'ac_nb_comp', 'ln_CO_med_rev']]
 
 ls_res = []
 for ls_expl_vars in ls_ls_expl_vars:
@@ -225,6 +226,7 @@ df_disp_prod['ac_hhi'] = df_disp_prod['ac_hhi_10km']
 df_disp_prod['int_product'], prod_levels = pd.factorize(df_disp_prod['product'])
 df_disp_prod['int_store_id'], prod_levels = pd.factorize(df_disp_prod['store_id'])
 
+df_disp_prod = df_disp_prod[~df_disp_prod['ln_CO_med_rev'].isnull()]
 
 df_disp_prod['nb_prods_obs'] =\
   df_disp_prod[['product', 'section']].groupby('product').transform('count')
@@ -260,10 +262,10 @@ print(summary_col(ls_res,
 
 print()
 print('Correlations (markets)')
-print(df_disp[['hhi', 'ln_demand_cont_10',
+print(df_disp[['hhi', 'ln_demand_cont_10', 'ln_UU_med_rev',
                'market_price', 'market_price_2', 'ac_nb_comp']].corr().to_string())
 
 print()
 print('Correlations (markets/products)')
-print(df_disp_prod[['hhi', 'ln_demand_cont_10',
+print(df_disp_prod[['hhi', 'ln_demand_cont_10', 'ln_UU_med_rev',
                     'market_price', 'market_price_2', 'ac_nb_comp']].corr().to_string())

@@ -25,9 +25,9 @@ path_built_json_lsa = os.path.join(path_built_lsa, 'data_json')
 path_built_comp_csv_lsa = os.path.join(path_built_csv_lsa, '201407_competition')
 path_built_comp_json_lsa = os.path.join(path_built_json_lsa, '201407_competition')
 
-pd.set_option('float_format', '{:,.2f}'.format)
+pd.set_option('float_format', '{:,.1f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_float = lambda x: '{:10,.1f}'.format(x)
 
 # ##############
 # LOAD DATA
@@ -41,7 +41,7 @@ df_stores = pd.read_csv(os.path.join(path_built_csv,
                         encoding = 'utf-8')
 
 df_comp = pd.read_csv(os.path.join(path_built_csv,
-                                   'df_qlmc_competitors.csv'),
+                                   'df_qlmc_competitors_final.csv'),
                       encoding = 'utf-8')
 
 # LSA DATA
@@ -73,21 +73,21 @@ ls_disp_dist = ['lec_id', 'comp_id',
                 'comp_lat', 'comp_lng',
                 'dist']
 
-# Overview of pair distance distribution
-print(u'\nOverview pair dist (km):')
-print(df_comp['dist'].describe())
-
-# Overview of leclercs' competitors
-print()
-print(u'Overview of competition around leclerc stores:')
-df_leclerc_comp = df_comp[['lec_name', 'dist']]\
-                    .groupby(['lec_name']).agg([len,
-                                                min,
-                                                max,
-                                                np.mean,
-                                                np.median])['dist']
-ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
-print(df_leclerc_comp.describe(percentiles = ls_pctiles))
+for dist_var in ['dist', 'gg_dur_val']:
+  print()
+  print(u'Overview pair distance (var: {:s}):'.format(dist_var))
+  print(df_comp[dist_var].describe())
+  
+  print()
+  print(u'Overview of competition around leclerc stores:')
+  df_leclerc_comp = df_comp[['lec_name', dist_var]]\
+                      .groupby(['lec_name']).agg([len,
+                                                  np.mean,
+                                                  min,
+                                                  np.median
+                                                  max])[dist_var]
+  ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
+  print(df_leclerc_comp.describe(percentiles = ls_pctiles))
 
 ## Latex output
 #pd.set_option('float_format', '{:,.1f}'.format)
@@ -115,10 +115,12 @@ lsd0 = ['enseigne', 'adresse1', 'ville', 'surface']
 
 lec_lsa_id_ex = dict_lec_comp.keys()[0]
 
-print(u'\nCompetitors picked by Leclerc:')
+print()
+print(u'Competitors picked by Leclerc:')
 print(df_lsa.ix[[x[0] for x in dict_lec_comp[lec_lsa_id_ex]]][lsd0].to_string())
 
-print(u'\nAll competitors (25 km) LSA:')
+print()
+print(u'All competitors (25 km) LSA:')
 print(df_lsa.ix[[x[0] for x in dict_ls_comp[lec_lsa_id_ex]]][lsd0].to_string())
 
 # #################################
