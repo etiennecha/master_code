@@ -249,7 +249,7 @@ df_su_store_fes = df_stores[['store_price',
 print(df_su_store_fes.ix[ls_some_chains].to_string(float_format = format_float_int,
                                                    formatters = {'std': format_float_float}))
 print()
-print(df_stores['store_price'].describe().to_string())
+print(df_stores['store_price'].describe().to_string(float_format = format_float_int))
 
 pd.set_option('float_format', '{:,.1f}'.format)
 print()
