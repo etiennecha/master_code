@@ -535,7 +535,7 @@ Product price dispersion is measured at the national level, both with raw prices
 \begin{table}[H]
 \begin{threeparttable}
 \renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Overview of average product dispersion by section at the national level}
+\caption{National price dispersion by product section}
 \label{tab:stats_nat_dispersion}
 \small
 \begin{tabular}{lr|rrrr|rrr}
@@ -740,16 +740,83 @@ In a first specification, distance as the crow flies is used, with a threshold o
 
 Regression results provide support for a positive relation between separating distance and rank reversals.
 
-
 \subsection{Market price dispersion}
 
-While in the single product case, the main source of complexity attached to measuring market dispersion is the definition of markets, the presence of several products, in particular when their number is large as is the case with supermarkets, raises another major methodological issue. Absent quantity data, product choice is bound to be largely data dependent, and thus exposes results to various biases. Also, differentiation cannot be ignored by focusing on non differentiated pairs such as with competitor pair analysis, hence results are necessarily sensitive to potential misspecifications and must therefore be interpreted with great care.
+We now turn to the measure of price dispersion at the market level. Markets are defined according to the comparisons made available on Qlmc, namely around each Leclerc store. All products for which prices are available at 2/3 or more of retailers in the market are taken into account in the analysis. Markets for which less than 100 products satisfy this criterion are dropped. Measures of price dispersion are computed both with raw prices and with price residuals obtained from regression~(\ref{reg_product_prices}). Figures obtained with raw prices are likely to overestimate consumer search related price dispersion since price comparison results suggest that persistent price differences (across products and time) are non negligible. The method used to compute price residuals implies that the expected value of a large enough basket should be similar for each store in the market. Descriptive statistics are provided in Table~\ref{tab:stats_market_dispersion} for each product section. The second column indicates the number of observation with each observation being defined as dispersion of one product in a given local market. The average product has a coefficient of variation of 6.4\% and a range of 17.1\% which roughly means that the highest price of a product is typically around 17\% higher than the lowest price in the market. With residual prices, this gap drops to 10.5\%. Measures of price dispersion do not exhibit significant variations across product sections. The same can be observed with product families (available upon author request).
 
-The first approach followed in the paper consists in adopting markets as defined by the price comparison website. They are consequently all centered around one Leclerc store, and contain not other Leclerc store. Robustness checks are run to evaluate the impact of two potential issues: the absence of some supermarkets in the price data, and the presence of overlapping markets whenever two Leclerc are too close to each other. The first issue is addressed by narrowing the analysis to markets where virtually all active supermarkets are observed, and the second by considering that two Leclerc can be active in the same market, and alternatively by dropping overlapping markets. The second approach simply consists in considering radiuses around Leclerc stores as is standard in the literature. This typically excludes some competitors listed by Qlmc (and may include others?).
+\begin{table}[H]
+\caption{Market price dispersion by product section}
+\label{tab:stats_market_dispersion}
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\begin{tabular}{lrrrrr}
+\toprule
+      & \multicolumn{1}{c}{} & \multicolumn{2}{c}{Raw prices} & \multicolumn{2}{c}{Residuals} \\
+      & \multicolumn{1}{c}{Count} & \multicolumn{1}{c}{CV} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} \\
+\midrule
+Baby food & 2 798 & 7.2 (4.6) & 19.4 (13.2) & 4.3 (3.4) & 10.3 (8.1) \\
+Pets  & 2 858 & 6.1 (3.6) & 15.8 (10.3) & 3.9 (2.6) & 9.5 (6.7) \\
+Drinks & 16 759 & 5.7 (3.9) & 15.1 (11.3) & 4.1 (2.8) & 10.1 (7.0) \\
+Savoury grocery & 28 348 & 6.4 (4.1) & 17.0 (11.6) & 4.0 (2.8) & 9.8 (6.8) \\
+Sweet grocery & 29 332 & 6.8 (4.7) & 18.1 (13.4) & 4.3 (3.5) & 10.5 (8.3) \\
+Fresh & 24 889 & 6.3 (4.3) & 16.8 (12.2) & 4.5 (3.2) & 10.9 (7.8) \\
+Health and Beauty & 15 148 & 6.9 (4.4) & 18.3 (12.5) & 4.6 (3.0) & 11.4 (7.6) \\
+Household & 6 840 & 6.4 (4.3) & 16.9 (12.1) & 4.6 (3.0) & 11.3 (7.6) \\
+Frozen food & 2 258 & 6.7 (4.5) & 17.2 (12.0) & 4.6 (3.3) & 11.0 (7.9) \\
+\midrule
+All sections & 129 230 & 6.4 (4.3) & 17.1 (12.3) & 4.3 (3.1) & 10.5 (7.6) \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
 
-All products for which prices are available at 2/3 or more of observed supermarkets are taken into account in the analysis. Markets for which less than 100 products satisfy this criterion are dropped. Measures of price dispersion are computed both with raw prices and price residuals. Figures obtained with raw prices are likely to overestimate consumer search related price dispersion since price comparison results suggest that persistent price differences (across products and time) are non negligible. The method used to compute price residuals implies that the expected value of a large enough basket should be similar for each store in the market. As a consequence, price dispersion can be evaluated either by considering the distribution of all price residuals, or by studying separately each product distributions (which can then be aggregated to obtain a measure of price dispersion at the market level).
+We investigate how market price dispersion relates to market characteristics, in particular the intensity of competition. As previous results suggest that competition is imperfectly captured by available proxies, we introduce an index of market price among explanatory variables. Our hypothesis is that the presence of higher dispersion may reflect poorer consumer information, and thus be associated with higher prices. Two market price indexes are considered: the first is a simple average of store price indexes while the second is built by averaging the ratio of each store index to its average chain index.
 
-We investigate how market price dispersion varies with the number of sellers or the intensity of competition captured by HHI. We also investigate the link between market price dispersion and an index of market prices. The market index is built by considering how expensive each store operating in a given market is in comparison to all stores affiliated to the same chain. Alternatively, store surfaces are taken into account to weight prices indexes in the computation.
+
+\begin{table}[H]
+\caption{Regressions of market disperion}
+\label{tab:reg_market_dispersion}
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\begin{tabular}{rrrrr}
+\toprule
+\toprule
+      & Std   & Range & Std   & Range \\
+\midrule
+Intercept & -39.02*** & -89.3*** & -39.41*** & -105.65*** \\
+      & (3.38) & (9.59) & (3.60) & (8.72) \\
+Market price index & 0.45*** & 1.04*** & 0.43*** & 1.10*** \\
+      & (0.03) & (0.10) & (0.03) & (0.08) \\
+HHI   & -2.83** & -13.69*** & -0.97 & -4.16 \\
+      & (1.21) & (2.89) & (1.30) & (3.26) \\
+Demand &       &       & 0.02** & 0.05*** \\
+      &       &       & (0.01) & (0.02) \\
+Revenue &       &       & 0.07* & 0.16 \\
+      &       &       & (0.04) & (0.09) \\
+Nb stores &       &       & 0.05  & 0.99*** \\
+      &       &       & (0.04) & (0.10) \\
+Loc - City center &       &       & -0.26* & -0.79** \\
+      &       &       & (0.14) & (0.34) \\
+Loc - Isolated &       &       & -0.42*** & -1.05*** \\
+      &       &       & (0.16) & (0.40) \\
+Loc - Rural &       &       & -0.32 & -1.18** \\
+      &       &       & (0.24) & (0.50) \\
+R2    & 0.33  & 0.29  & 0.34  & 0.35 \\
+N     & 50 059 & 50 059 & 50 059 & 50 059 \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+	  \item Standard errors in parentheses. 
+		\item Significance thresholds: * p<.1, ** p<.05, ***p<.01.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
 
 \section{Conclusion}
 

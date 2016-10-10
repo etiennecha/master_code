@@ -71,6 +71,10 @@ df_prices['res'] = (df_prices['ln_price'] - df_prices['ln_price_hat']) * 100
 df_prices['price'] = df_prices['price'] * 100
 df_stores['price_rel'] = df_stores['price_rel'] * 100
 
+# FILTER OUT CATEGORIES WITH TOO FEW PRODUCTS
+df_prices = df_prices[~df_prices['section'].isin([u'Bazar et textile',
+                                                  u'Fruits et Légumes'])]
+
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
 dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
@@ -322,9 +326,11 @@ df_su[lsdo].to_csv(os.path.join(path_built_csv,
 
 df_disp = pd.concat(ls_df_market_disp)
 df_disp.reset_index(drop = False, inplace = True)
+df_disp = df_disp[df_disp['nb_stores'] >= 3]
 
 df_disp_res = pd.concat(ls_df_market_res_disp)
 df_disp_res.reset_index(drop = False, inplace = True)
+df_disp_res = df_disp_res[df_disp_res['nb_stores'] >= 3]
 
 # Save df of all market product dispersion stats
 df_disp_res.to_csv(os.path.join(path_built_csv,
@@ -332,3 +338,19 @@ df_disp_res.to_csv(os.path.join(path_built_csv,
                    encoding = 'utf-8',
                    float_format='%.4f',
                    index = False)
+
+# #########
+# STATS DES
+# #########
+
+print()
+print(df_disp[['product', 'section']].groupby('section').agg(len).to_string())
+df_disp['mean'] = df_disp['mean'] / 100
+print()
+print(df_disp[['mean', 'cv', 'range', 'section']].groupby('section').agg([np.mean, np.std]).to_string())
+print()
+print(df_disp[['mean', 'cv', 'range', 'section']].describe().ix[['mean', 'std']].to_string())
+print()
+print(df_disp_res[['std', 'range', 'section']].groupby('section').agg([np.mean, np.std]).to_string())
+print()
+print(df_disp_res[['std', 'range', 'section']].describe().ix[['mean', 'std']].to_string())

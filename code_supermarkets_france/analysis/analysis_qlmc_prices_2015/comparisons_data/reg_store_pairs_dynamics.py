@@ -180,7 +180,8 @@ for rr_var in ['pct_rr', 'pct_prod_rr_0', 'pct_prod_rr_2']:
     su = summary_col([ols_res] + ls_res,
                      stars=True,
                      float_format='%0.2f',
-                     model_names=['OLS'] + [u'Q{:2.0f}'.format(quantile*100) for quantile in ls_quantiles],
+                     model_names=['OLS'] + [u'Q{:2.0f}'.format(quantile*100)\
+                                             for quantile in ls_quantiles],
                      info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                                 'R2':lambda x: "{:.2f}".format(x.rsquared)})
 

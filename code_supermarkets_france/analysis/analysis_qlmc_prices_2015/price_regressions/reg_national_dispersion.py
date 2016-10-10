@@ -266,6 +266,10 @@ df_desc_std['count'] = df_sub[['section', 'count']].groupby('section')\
 
 print(df_desc_std[['count'] + ls_desc_cols].to_string())
 
+print()
+print('All')
+print(df_sub[ls_desc_cols].describe().ix[['mean', 'std']].to_string())
+
 #print()
 #print('Inspect high dispersion:')
 #print(df_overview[df_overview['std_res'] >= 0.14].to_string())

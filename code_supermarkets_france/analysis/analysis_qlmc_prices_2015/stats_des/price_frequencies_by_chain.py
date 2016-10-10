@@ -338,3 +338,24 @@ df_chain_stores.reset_index(drop = False, inplace = True)
 #                        encoding = 'utf-8',
 #                        float_format='%.3f',
 #                        index = False)
+
+# ##################
+# STATS ALL PRODUCTS
+# ##################
+
+df_sub_products = df_qlmc[ls_prod_cols + ['price']].groupby(ls_prod_cols)\
+                                                   .agg([len,
+                                                         PD.price_1,
+                                                         PD.price_1_fq,
+                                                         PD.price_2,
+                                                         PD.price_2_fq])['price']
+df_sub_products.rename(columns = {'len': 'nb_obs'}, inplace = True)
+df_sub_products['price_1_fq'] = df_sub_products['price_1_fq'] * 100
+df_sub_products['price_2_fq'] = df_sub_products['price_2_fq'] * 100
+df_sub_products['price_12_fq'] =\
+  df_sub_products[['price_1_fq', 'price_2_fq']].sum(axis = 1)
+# Pbm with kurtosis and skew: div by 0 (only one price)
+# fix (a priori highly degenerate hence not normal)
+df_sub_products.reset_index(drop = False, inplace = True)
+# Keep only products observed at enough stores
+print(df_sub_products[(df_sub_products['nb_obs'] >= 100)].describe().to_string())

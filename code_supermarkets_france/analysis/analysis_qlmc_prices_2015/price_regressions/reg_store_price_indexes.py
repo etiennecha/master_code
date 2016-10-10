@@ -12,9 +12,9 @@ import statsmodels.formula.api as smf
 from statsmodels.iolib.summary2 import summary_col
 import matplotlib.pyplot as plt
 
-pd.set_option('float_format', '{:,.3f}'.format)
+pd.set_option('float_format', '{:,.1f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
-format_float_float = lambda x: '{:10,.2f}'.format(x)
+format_float_float = lambda x: '{:10,.1f}'.format(x)
 
 path_built_csv = os.path.join(path_data,
                               'data_supermarkets',
@@ -135,13 +135,16 @@ for col in ['price', 'surface',
             'pop_cont_10', 'pop_ac_10km', 'pop_ac_20km']:
   df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
 
-# Avoid error msg on condition number
-df_stores['surface'] = df_stores['surface'].apply(lambda x: x/1000.0)
-df_stores['AU_med_rev'] = df_stores['AU_med_rev'].apply(lambda x: x/1000.0)
-df_stores['UU_med_rev'] = df_stores['UU_med_rev'].apply(lambda x: x/1000.0)
-df_stores['hhi'] = df_stores['hhi_1025km'] 
+# avoid error msg on condition number (regressions)
+for col_var in ['AU_med_rev', 'UU_med_rev', 'CO_med_rev',
+                'demand_cont_10', 'surface']:
+  df_stores[col_var] = df_stores[col_var].apply(lambda x: x/1000.0)
 
 # Create dummy high hhi
+df_stores['ac_nb_comp'] = df_stores['ac_nb_comp_10km']
+df_stores['hhi'] = df_stores['hhi_1025km']
+df_stores['ac_hhi'] = df_stores['ac_hhi_10km']
+
 df_stores['dum_high_hhi'] = 0
 df_stores.loc[df_stores['hhi'] >= 0.25, 'dum_high_hhi'] = 1
 df_stores['hhi'] = df_stores['hhi'] * 100
@@ -240,22 +243,26 @@ ls_some_chains.sort()
 
 print()
 print('Store FEs by chain')
-df_su_store_fes = df_stores[['store_price', 'qlmc_chain']].groupby('qlmc_chain')\
-                                              .describe().unstack()
-print(df_su_store_fes.ix[ls_some_chains].to_string(float_format = format_float_int))
+df_su_store_fes = df_stores[['store_price',
+                             'qlmc_chain']].groupby('qlmc_chain')\
+                                           .describe().unstack()['store_price']
+print(df_su_store_fes.ix[ls_some_chains].to_string(float_format = format_float_int,
+                                                   formatters = {'std': format_float_float}))
 print()
-print(df_stores['store_price'].describe().to_string(float_format = format_float_int))
+print(df_stores['store_price'].describe().to_string())
 
 pd.set_option('float_format', '{:,.1f}'.format)
 print()
 print('Dispersion by chain')
-df_su_disp = df_stores[['store_dispersion', 'qlmc_chain']].groupby('qlmc_chain')\
-                                                          .describe().unstack()
-print(df_su_disp.ix[ls_some_chains].to_string())
+df_su_disp = df_stores[['store_dispersion',
+                        'qlmc_chain']].groupby('qlmc_chain')\
+                                      .describe().unstack()['store_dispersion']
+print(df_su_disp.ix[ls_some_chains].to_string(float_format = format_float_float,
+                                              formatters = {'std': format_float_float}))
 print()
 print(df_stores['store_dispersion'].describe().to_string())
 
-ls_ev = ['surface', 'hhi', 'ln_pop_cont_10', 'ln_CO_med_rev']
+ls_ev = ['surface', 'hhi', 'demand_cont_10', 'AU_med_rev']
 str_ev = " + ".join(ls_ev)
 
 print()
@@ -263,7 +270,8 @@ print(u'Inspect main explanatory vars by chain:')
 for ev in ls_ev:
   print()
   print(ev)
-  print(df_stores[[ev, 'qlmc_chain']].groupby('qlmc_chain').describe()[ev].unstack().to_string())
+  print(df_stores[[ev, 'qlmc_chain']].groupby('qlmc_chain').describe()[ev]\
+                                                           .unstack().to_string())
 
 print()
 print(u'Inspect corr of main explanatory vars by chain:')
@@ -285,7 +293,8 @@ print(pd.pivot_table(df_stores,
 
 print()
 print(u'Inspect hhi by region:')
-print(df_stores[['hhi', 'region']].groupby('region').describe()['hhi'].unstack().to_string())
+print(df_stores[['hhi', 'region']].groupby('region').describe()['hhi']\
+                                                    .unstack().to_string())
 print()
 print(df_stores[ls_ev].corr())
 

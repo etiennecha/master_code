@@ -124,8 +124,10 @@ for col in ['price', 'surface', 'hhi_1025km', 'ac_hhi_1025km',
 #  df_qlmc['ln_{:s}'.format(col)] = np.log(df_qlmc[col])
   df_stores['ln_{:s}'.format(col)] = np.log(df_stores[col])
 
-# rescale for regs
-df_stores['demand_cont_10'] = df_stores['demand_cont_10'] / 1000
+# avoid error msg on condition number (regressions)
+for col_var in ['AU_med_rev', 'UU_med_rev', 'CO_med_rev',
+                'demand_cont_10', 'surface']:
+  df_stores[col_var] = df_stores[col_var].apply(lambda x: x/1000.0)
 
 # LOAD MARKET DISPERSION
 price_col = 'price' # or 'price' for log price dev to mean of raw prices
@@ -181,11 +183,12 @@ print(df_disp[['nb_stores', 'ac_hhi', 'hhi',
                'ln_demand_cont_10', 'ln_pop_cont_10',
                'ln_AU_med_rev', 'market_price']].corr().to_string())
  
-ls_ls_expl_vars = [['hhi', 'demand_cont_10'],
-                   ['hhi', 'market_price_2'],
+ls_ls_expl_vars = [['hhi', 'market_price_2'],
                    ['hhi', 'market_price_2', 'demand_cont_10'],
                    ['hhi', 'market_price_2', 'demand_cont_10',
-                           'C(STATUT_2010)', 'ac_nb_comp', 'ln_CO_med_rev']]
+                           'C(STATUT_2010)', 'ac_nb_comp', 'AU_med_rev'],
+                   ['hhi', 'market_price_2', 'demand_cont_10',
+                           'C(STATUT_2010)', 'nb_stores', 'AU_med_rev']]
 
 ls_res = []
 for ls_expl_vars in ls_ls_expl_vars:
@@ -226,7 +229,7 @@ df_disp_prod['ac_hhi'] = df_disp_prod['ac_hhi_10km']
 df_disp_prod['int_product'], prod_levels = pd.factorize(df_disp_prod['product'])
 df_disp_prod['int_store_id'], prod_levels = pd.factorize(df_disp_prod['store_id'])
 
-df_disp_prod = df_disp_prod[~df_disp_prod['ln_CO_med_rev'].isnull()]
+df_disp_prod = df_disp_prod[~df_disp_prod['AU_med_rev'].isnull()]
 
 df_disp_prod['nb_prods_obs'] =\
   df_disp_prod[['product', 'section']].groupby('product').transform('count')
@@ -234,6 +237,8 @@ df_disp_prod['nb_prods_obs'] =\
 df_disp_prod[df_disp_prod['nb_prods_obs'] >= 150]['product'].value_counts()
 
 df_dp_sub = df_disp_prod[df_disp_prod['nb_prods_obs'] >= 130]
+
+df_dp_sub = df_dp_sub[df_dp_sub['nb_stores'] >= 4]
 
 #ls_ls_expl_vars = [['C(product)', 'hhi', 'market_price', 'ln_demand_cont_10'],
 #                   ['C(product)', 'hhi', 'market_price_2', 'ln_demand_cont_10'],
@@ -262,10 +267,10 @@ print(summary_col(ls_res,
 
 print()
 print('Correlations (markets)')
-print(df_disp[['hhi', 'ln_demand_cont_10', 'ln_UU_med_rev',
+print(df_disp[['hhi', 'ln_demand_cont_10', 'CO_med_rev',
                'market_price', 'market_price_2', 'ac_nb_comp']].corr().to_string())
 
 print()
 print('Correlations (markets/products)')
-print(df_disp_prod[['hhi', 'ln_demand_cont_10', 'ln_UU_med_rev',
-                    'market_price', 'market_price_2', 'ac_nb_comp']].corr().to_string())
+print(df_disp_prod[['hhi', 'ln_demand_cont_10', 'AU_med_rev',
+                    'market_price', 'market_price_2', 'nb_stores']].corr().to_string())
