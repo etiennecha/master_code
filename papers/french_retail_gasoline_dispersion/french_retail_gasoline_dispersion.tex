@@ -15,6 +15,13 @@
 \usepackage{array}
 \usepackage{booktabs}
 \usepackage[section]{placeins} % keep tables within their section
+\makeatletter
+\AtBeginDocument{%
+  \expandafter\renewcommand\expandafter\subsection\expandafter{%
+    \expandafter\@fb@secFB\subsection
+  }%
+}
+\makeatother
 \usepackage{siunitx}
 \usepackage{dcolumn}
 \newcolumntype{.}{D{.}{.}{-1}}

@@ -84,7 +84,7 @@ for dist_var in ['dist', 'gg_dur_val']:
                       .groupby(['lec_name']).agg([len,
                                                   np.mean,
                                                   min,
-                                                  np.median
+                                                  np.median,
                                                   max])[dist_var]
   ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
   print(df_leclerc_comp.describe(percentiles = ls_pctiles))
