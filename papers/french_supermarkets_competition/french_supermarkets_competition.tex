@@ -526,9 +526,128 @@ Price dispersion is approximated at the store level by computing the standard de
 
 \section{Price Dispersion}
 
-We now turn to the measure and analysis of price dispersion in the French food retailing industry. From a consumer viewpoint, this addresses the question of the validity of aggregate comparisons at the store or chain level. From a regulator viewpoint,
+We now turn to the measure and analysis of price dispersion in the French food retailing industry. From a consumer viewpoint, this addresses the question of the validity of aggregate comparisons at the store or chain level. From a research prospect, price dispersion has been noted to typically reflect "consumer ignorance", namely a lack of information about prices which is likely to relax competition.
 
-The following section measures price dispersion at the national level, investigates its relation with consumer information and its heterogeneity across local markets.
+\subsection{Price dispersion and consumer information}
+
+We first measure price dispersion between pairs of competitors, following an approach introduced in \cite{TAP11} which aims at testing the relation between consumer information and price dispersion. Pairs of competitors which are separated by a very low distance are expected to compete fiercely, so that they constitute a population in which the "law of one price" is more likely to hold. On the other hand, a larger distance is expected to be associated with more limited consumer information. Model of search, often inducing mixed strategy equilibria, may then be more adequate to model competition. In the single product case, mixed strategy equilibria have been given a dynamic interpretation, corresponding to the changes in ranks that can be observed among sellers over time. In the multi-product case, \cite{MCA95} have shown that sellers can randomize margins on each product, either simply replicating the single product case in \cite{VAR80}, or in a way that involves a correlation between a seller's prices. \cite{TAP11}, with gasoline, measures rank reversals as the number of days during which the generally cheapest gas station is found to be more expensive. In this paper, rank reversals are measured in one period over products. Formally, considering the prices $p_{il}$ and $p_{jl}$ of two supermarkets $i$ and $j$ over $l \in L$ products, the rank reversals statistics between store $i$ and $j$ writes:
+
+\begin{align}
+r_{ij} = \min\left\{\frac{1}{L} \sum_{t=1}^{L} \mathbbm{1}_{p_{il} > p_{jl}}, \frac{1}{L} \sum_{t=1}^{L} \mathbbm{1}_{p_{jl} > p_{il}}\right\}
+\label{formula_rr_static}
+\end{align}
+
+% Todo: mention differentation to justify exposition by chain
+
+If one store is always more expensive than the other, or both always set the same price, rank reversals are equal to 0. Rank reversals can reach a maximum value of 50\% when half of the products are strictly cheaper at store $i$ while the other half are strictly cheaper at store $j$. Importantly, differentiation between stores tends to mechanically decrease rank reversals, hence it must be taken into account when comparing rank reversals across pairs of competitors. Table~\ref{tab:static_compa_15km} provides an overview of rank reversals of all comparisons between chains previously found to operate at relatively similar price levels. The Leclerc vs. Geant Casino confrontation is the most stable across competitor pairs, and within pairs across products. Over 215 pairs of competing stores, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the store confrontations. On average, regardless of the affiliation of the cheapest store in the Leclerc vs. Geant Casino confrontation, the most expensive store is cheaper on 20.4\% of the products available at both stores.
+
+\begin{table}[H]
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Static store level comparisons (15 km - 100 obs min)
+}\label{tab:static_compa_15km}
+\small
+\begin{tabular}{llrrrrrrr}
+\toprule
+\toprule
+    \textbf{} &       & Nb    & B vs A avg & Pairs won & \multicolumn{4}{c}{Share of products (avg \%)} \\
+    Chain A & Chain B & pairs & comparison & by A (\%) & A wins & B wins & Draw & Reversed \\
+\midrule
+    Leclerc & Geant Casino & 215   & +1.4\% & 85.1  & 61.8  & 22.4  & 15.8  & 20.4 \\
+    Leclerc & Carrefour & 555   & +9.1\% & 98.4  & 78.5  & 15.1  & 6.4   & 14.7 \\
+    Geant Casino & Carrefour & 89    & +7.6\% & 98.9  & 70.8  & 25.1  & 4.1   & 25.1 \\
+    Carrefour & Auchan & 191   & -0.3\% & 51.8  & 46.3  & 44.3  & 9.4   & 28.9 \\
+    Carrefour & Intermarche & 365   & -1.0\% & 38.6  & 45.8  & 51.2  & 3.0   & 34.0 \\
+    Carrefour & Systeme U & 196   & +2.6\% & 60.7  & 57.1  & 38.8  & 4.1   & 27.3 \\
+    Auchan & Intermarche & 212   & +0.8\% & 61.8  & 54.0  & 43.0  & 3.0   & 32.9 \\
+    Auchan & Systeme U & 145   & +3.1\% & 66.2  & 60.5  & 35.2  & 4.3   & 27.0 \\
+    Intermarche & Systeme U & 490   & +1.0\% & 51.2  & 51.5  & 41.3  & 7.3   & 25.3 \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item Among 215 pairs of Leclerc and Geant Casino competitors, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the pairs. On average, a Leclerc sells 61.8\% of products strictly cheaper than its Geant Casino competitor. Regardless of whether Leclerc or Geant Casino wins the overall comparison, on average, the loser i.e. most expensive store is strictly cheaper on 20.4\% of products.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+Descriptives statics of dynamic price dispersion are reported in Table~\ref{tab:dynamic_compa_15km}. Among 114 store comparisons involving a Leclerc and a Geant Casino, 4.4\% are won by a different store in the two periods. On average, 21.2\% of products taken into account in the comparison changed order between the two periods i.e were strictly cheaper at Leclerc in first period and became strictly cheaper at Geant Casino in second period or the reverse.
+
+\begin{table}[H]
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\caption{Dynamic store level comparisons (15 km - 100 obs min)}
+\label{tab:dynamic_compa_15km}
+\small
+\begin{tabular}{llrrr}
+\toprule
+\toprule
+    \textbf{} &       &       & \multicolumn{2}{c}{Dynamic "Rank reversals"} \\
+    Chain A & Chain B & Nb pairs & Pairs (\%) & Products (\%) \\
+\midrule
+    Leclerc & Geant Casino & 114   & 4.4   & 21.2 \\
+    Leclerc & Carrefour & 152   & 5.9   & 24.6 \\
+    Geant Casino & Carrefour & 46    & 71.7  & 42.5 \\
+    Carrefour & Auchan & 49    & 42.9  & 38.0 \\
+    Carrefour & Intermarche & 119   & 53.8  & 38.6 \\
+    Carrefour & Systeme U & 102   & 48.0  & 37.2 \\
+    Auchan & Intermarche & 86    & 22.1  & 32.4 \\
+    Auchan & Systeme U & 101   & 34.7  & 29.9 \\
+    Intermarche & Systeme U & 322   & 32.8  & 30.5 \\
+\bottomrule
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item Among 114 store comparisons involving a Leclerc and a Geant Casino, 4.4\% are won by a different store in the two periods (draws can be neglected as they virtually never happen). On average, 21.2\% of products taken into account in the comparison changed order between the two periods i.e were strictly cheaper at Leclerc in first period and became strictly cheaper at Geant Casino in second period or the reverse.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+ 
+Importantly, store differentiation leads to mechanically record relatively low rank reversals. This issue is addressed by examining subsamples of pairs exhibiting small aggregate price differences, and by running quantile regressions as in \cite{TAP11}. In order to test the link between distance, taken as a proxy for consumer search cost, and rank reversals, we denote $\text{Nearby}_{ij}$ a dummy which takes value 1 when supermarkets $i$ and $j$ are separated by a short distance and $X_{ij}$ a vector of controls which account for their market characteristics. We then run the following regression:
+\begin{equation}
+\text{r}_{ij}= \mu + \alpha {\text{ Nearby}_{ij}} + \beta_{l} X_{ijl} + \epsilon_{ij}
+\end{equation}
+
+In a first specification, distance as the crow flies is used, with a threshold of 5 km for the dummy variable $\text{Nearby}$. All pairs separated by less than 10 km are included in the regression. The second specification uses distances in minutes computed by Google, including all pairs for which the driving distance is below 20 minutes. The definition of the variable $\text{Nearby}$ is based on a 12 minute threshold, which is found to be roughly equivalent to a 5 km distance in the data, namely when running a simple regression of driving distance on distance as the crow flies.
+
+\begin{table}[H]
+\caption{Regressions of product price dispersion measured at the national level}
+\label{tab:reg_rank_reversals}
+\begin{threeparttable}
+\renewcommand{\arraystretch}{0.7}% Tighter
+\begin{tabular}{rrrrrr}
+    \toprule
+    \toprule
+    \multicolumn{1}{l}{Rank} & \multicolumn{1}{l}{Nearby} & \multicolumn{4}{c}{Regression} \\
+    \multicolumn{1}{l}{reversals} & \multicolumn{1}{l}{definition} & \multicolumn{1}{l}{OLS} & \multicolumn{1}{l}{Q25} & \multicolumn{1}{l}{Q50} & \multicolumn{1}{l}{Q75} \\
+    \midrule
+    \multicolumn{1}{l}{Temporal} & \multicolumn{1}{l}{Distance} & -4.62*** & -6.48*** & -4.19*** & -2.20* \\
+          &       & (0.90) & (1.08) & (0.98) & (1.16) \\
+          & \multicolumn{1}{l}{Time} & -4.73*** & -6.69*** & -3.90*** & -2.91** \\
+          &       & (0.97) & (1.11) & (1.08) & (1.28) \\
+    \midrule
+    \multicolumn{1}{l}{Period 0} & \multicolumn{1}{l}{Distance} & -5.31*** & -8.00*** & -4.19*** & -4.25*** \\
+          &       & (1.03) & (1.99) & (1.44) & (1.22) \\
+          & \multicolumn{1}{l}{Time} & -5.38*** & -8.18*** & -6.88*** & -4.79*** \\
+          &       & (1.19) & (1.77) & (1.98) & (1.49) \\
+    \midrule
+    \multicolumn{1}{l}{Period 1} & \multicolumn{1}{l}{Distance} & -4.71*** & -7.06*** & -5.63*** & -1.97 \\
+          &       & (1.04) & (1.58) & (1.45) & (1.36) \\
+          & \multicolumn{1}{l}{Time} & -5.85*** & -7.94*** & -7.11*** & -1.61 \\
+          &       & (1.07) & (1.54) & (1.38) & (1.42) \\
+    \bottomrule
+    \bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+	  \item Standard errors in parentheses. Significance thresholds: * p<.1, ** p<.05, ***p<.01.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+Rank reversals are found to be significantly less frequent for pairs which are separated by a short distance. Being separated by less than 5 km is associated with reductions of 5.31 and 4.71 points in rank reversals respectively in period 0 and 1 according to the OLS regressions. The same conclusion is reached with dynamics rank reversals between period 0 and period 1, with rank reversals being 4.62 and 4.73 point lower respectively with distance in km and time. Estimates for the Nearby dummies tend to be smaller or non significant for the Q75 quartile in the last column, which indicates that distance is less relevant for pairs of competitors which exhibit high rank reversals. This does not contradict the hypothesis of a link between consumer information and price dispersion. From a theory viewpoint, if consumer search cost prevent the existence of pure strategy equilibria, dispersion arises, hence rank reversals, but not with a frequency that depends on consumer information. Results from quantile regressions are thus consistent with the hypothesis that virtually all pairs exhibiting high rank reversals are good candidates for theoretical explanations involving mixed strategy equilbria.
 
 \subsection{National price dispersion}
 
@@ -619,128 +738,7 @@ N                                        & 6935     & 6935     & 6935     & 6935
 \end{threeparttable}
 \end{table}
 
-\subsection{Price dispersion and consumer information}
 
-%\cite{TAP11}, with retail gasoline price data, analyse price spreads of pairs of competitors based on the distance which separate them. They remark that the price ranking between two competitors tends to be noisier when distance increases, namely when consumer search costs are more likely to relax competition and therefore to create the tension between rent extraction and undercutting that leads to a mixed strategy equilibrium in \cite{VAR80}.
-
-Price dispersion is investigated at the pair level, based on the idea introduced in \cite{TAP11} that distance between sellers can be used as a proxy for consumer information. Pairs of competitors which are separated by a very low distance can indeed be expected to compete fiercely, so that they constitute a population in which the "law of one price" is the most likely to hold. On the other hand, a larger distance is likely to be tantamount to poorer consumer information, namely a competition setting which could be described by a model of search. A common feature of such models is the absence of pure strategy equilibria. In the single product case, mixed strategy equilibria have traditionally been given a dynamic interpretation, corresponding to the changes in ranks that can be observed among sellers over time. In the multi-product case, \cite{MCA95} have shown that sellers can randomize on each product, either in a way that simply replicates the single product case (i.e. \cite{VAR80}), or in a way that involves a correlation between a seller's prices). \cite{TAP11} remarks than rank reversals, namely changes in the ranking of competing retailer prices, are to be expected whenever a significant distance between sellers is likely to generate search costs. On the other hand, when two retailers operate very close from each other, the "law of one price" is more likely to hold i.e. one can expect price alignment to be the norm. \cite{TAP11} measures rank reversals as the number of days during which the generally cheapest store is found to be more expensive. In this paper, rank reversals are measured over products. Formally, considering the prices $p_{il}$ and $p_{jl}$ of two supermarkets $i$ and $j$ over $l \in L$ products, the rank reversals statistics between store $i$ and $j$ writes:
-
-\begin{align}
-r_{ij} = \min\left\{\frac{1}{L} \sum_{t=1}^{L} \mathbbm{1}_{p_{il} > p_{jl}}, \frac{1}{L} \sum_{t=1}^{L} \mathbbm{1}_{p_{jl} > p_{il}}\right\}
-\label{formula_rr_static}
-\end{align}
-
-% Todo: mention differentation to justify exposition by chain
-
-If one store is always more expensive than the other, or both always set the same price, rank reversals are equal to 0. Rank reversals can reach a maximum value of 50\% when half of the products are strictly cheaper at store $i$ while the other half are strictly cheaper at store $j$. Importantly, differentiation between stores tends to mechanically decrease rank reversals, hence it must be taken into account when comparing rank reversals across pairs of competitors. Table~\ref{tab:static_compa_15km} provides an overview of rank reversals of all comparisons between chains previously found to operate at relatively similar price levels. The Leclerc vs. Geant Casino confrontation is the most stable across competitor pairs, and within pairs across products. Over 215 pairs of competing stores, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the store confrontations. On average, regardless of the affiliation of the cheapest store in the Leclerc vs. Geant Casino confrontation, the most expensive store is cheaper on 20.4\% of the products available at both stores.
-
-\begin{table}[H]
-\begin{threeparttable}
-\renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Static store level comparisons (15 km - 100 obs min)
-}\label{tab:static_compa_15km}
-\small
-\begin{tabular}{llrrrrrrr}
-\toprule
-\toprule
-    \textbf{} &       & Nb    & B vs A avg & Pairs won & \multicolumn{4}{c}{Share of products (avg \%)} \\
-    Chain A & Chain B & pairs & comparison & by A (\%) & A wins & B wins & Draw & Reversed \\
-\midrule
-    Leclerc & Geant Casino & 215   & +1.4\% & 85.1  & 61.8  & 22.4  & 15.8  & 20.4 \\
-    Leclerc & Carrefour & 555   & +9.1\% & 98.4  & 78.5  & 15.1  & 6.4   & 14.7 \\
-    Geant Casino & Carrefour & 89    & +7.6\% & 98.9  & 70.8  & 25.1  & 4.1   & 25.1 \\
-    Carrefour & Auchan & 191   & -0.3\% & 51.8  & 46.3  & 44.3  & 9.4   & 28.9 \\
-    Carrefour & Intermarche & 365   & -1.0\% & 38.6  & 45.8  & 51.2  & 3.0   & 34.0 \\
-    Carrefour & Systeme U & 196   & +2.6\% & 60.7  & 57.1  & 38.8  & 4.1   & 27.3 \\
-    Auchan & Intermarche & 212   & +0.8\% & 61.8  & 54.0  & 43.0  & 3.0   & 32.9 \\
-    Auchan & Systeme U & 145   & +3.1\% & 66.2  & 60.5  & 35.2  & 4.3   & 27.0 \\
-    Intermarche & Systeme U & 490   & +1.0\% & 51.2  & 51.5  & 41.3  & 7.3   & 25.3 \\
-\bottomrule
-\bottomrule
-\end{tabular}
-\begin{tablenotes}
-      \small
-      \item Among 215 pairs of Leclerc and Geant Casino competitors, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the pairs. On average, a Leclerc sells 61.8\% of products strictly cheaper than its Geant Casino competitor. Regardless of whether Leclerc or Geant Casino wins the overall comparison, on average, the loser i.e. most expensive store is strictly cheaper on 20.4\% of products.
-\end{tablenotes}
-\end{threeparttable}
-\end{table}
-
-Descriptives statics of dynamic price dispersion are reported in Table~\ref{tab:dynamic_compa_15km}. Among 114 store comparisons involving a Leclerc and a Geant Casino, 4.4\% are won by a different store in the two periods. On average, 21.2\% of products taken into account in the comparison changed order between the two periods i.e were strictly cheaper at Leclerc in first period and became strictly cheaper at Geant Casino in second period or the reverse.
-
-\begin{table}[H]
-\begin{threeparttable}
-\renewcommand{\arraystretch}{0.7}% Tighter
-\caption{Dynamic store level comparisons (15 km - 100 obs min)}
-\label{tab:dynamic_compa_15km}
-\small
-\begin{tabular}{llrrr}
-\toprule
-\toprule
-    \textbf{} &       &       & \multicolumn{2}{c}{Dynamic "Rank reversals"} \\
-    Chain A & Chain B & Nb pairs & Pairs (\%) & Products (\%) \\
-\midrule
-    Leclerc & Geant Casino & 114   & 4.4   & 21.2 \\
-    Leclerc & Carrefour & 152   & 5.9   & 24.6 \\
-    Geant Casino & Carrefour & 46    & 71.7  & 42.5 \\
-    Carrefour & Auchan & 49    & 42.9  & 38.0 \\
-    Carrefour & Intermarche & 119   & 53.8  & 38.6 \\
-    Carrefour & Systeme U & 102   & 48.0  & 37.2 \\
-    Auchan & Intermarche & 86    & 22.1  & 32.4 \\
-    Auchan & Systeme U & 101   & 34.7  & 29.9 \\
-    Intermarche & Systeme U & 322   & 32.8  & 30.5 \\
-\bottomrule
-\bottomrule
-\end{tabular}
-\begin{tablenotes}
-      \small
-      \item Among 114 store comparisons involving a Leclerc and a Geant Casino, 4.4\% are won by a different store in the two periods (draws can be neglected as they virtually never happen). On average, 21.2\% of products taken into account in the comparison changed order between the two periods i.e were strictly cheaper at Leclerc in first period and became strictly cheaper at Geant Casino in second period or the reverse.
-\end{tablenotes}
-\end{threeparttable}
-\end{table}
- 
-Importantly, store differentiation leads to mechanically record relatively low rank reversals. This issue is addressed by examining subsamples of pairs exhibiting small aggregate price differences, and by running quantile regressions as in \cite{TAP11}. In order to test the link between distance, taken as a proxy for consumer search cost, and rank reversals, we denote $\text{Nearby}_{ij}$ a dummy which takes value 1 when supermarkets $i$ and $j$ are separated by a short distance and $X_{ij}$ a vector of controls which account for their market characteristics. We then run the following regression:
-\begin{equation}
-\text{r}_{ij}= \mu + \alpha {\text{ Nearby}_{ij}} + \beta_{l} X_{ijl} + \epsilon_{ij}
-\end{equation}
-
-In a first specification, distance as the crow flies is used, with a threshold of 5 km for the dummy variable. Only pairs separated by less than 10 km are included in the regression. The second specification uses distances in minutes computed by Google. The threshold is 12 minutes and pairs are only kept when the driving distance is below 20 minutes. Though 12 minutes may sound to be a relatively long trip criterion are roughly equivalent on aggregate.
-
-\begin{table}[H]
-\caption{Regressions of product price dispersion measured at the national level}
-\label{tab:reg_rank_reversals}
-\begin{threeparttable}
-\renewcommand{\arraystretch}{0.7}% Tighter
-\begin{tabular}{rrrrrr}
-    \toprule
-    \toprule
-    \multicolumn{1}{l}{Rank} & \multicolumn{1}{l}{Nearby} & \multicolumn{4}{c}{Regression} \\
-    \multicolumn{1}{l}{reversals} & \multicolumn{1}{l}{definition} & \multicolumn{1}{l}{OLS} & \multicolumn{1}{l}{Q25} & \multicolumn{1}{l}{Q50} & \multicolumn{1}{l}{Q75} \\
-    \midrule
-    \multicolumn{1}{l}{Temporal} & \multicolumn{1}{l}{Distance} & -4.62*** & -6.48*** & -4.19*** & -2.20* \\
-          &       & (0.90) & (1.08) & (0.98) & (1.16) \\
-          & \multicolumn{1}{l}{Time} & -4.73*** & -6.69*** & -3.90*** & -2.91** \\
-          &       & (0.97) & (1.11) & (1.08) & (1.28) \\
-    \midrule
-    \multicolumn{1}{l}{Period 0} & \multicolumn{1}{l}{Distance} & -5.31*** & -8.00*** & -4.19*** & -4.25*** \\
-          &       & (1.03) & (1.99) & (1.44) & (1.22) \\
-          & \multicolumn{1}{l}{Time} & -5.38*** & -8.18*** & -6.88*** & -4.79*** \\
-          &       & (1.19) & (1.77) & (1.98) & (1.49) \\
-    \midrule
-    \multicolumn{1}{l}{Period 1} & \multicolumn{1}{l}{Distance} & -4.71*** & -7.06*** & -5.63*** & -1.97 \\
-          &       & (1.04) & (1.58) & (1.45) & (1.36) \\
-          & \multicolumn{1}{l}{Time} & -5.85*** & -7.94*** & -7.11*** & -1.61 \\
-          &       & (1.07) & (1.54) & (1.38) & (1.42) \\
-    \bottomrule
-    \bottomrule
-\end{tabular}
-\begin{tablenotes}
-      \small
-	  \item Standard errors in parentheses. Significance thresholds: * p<.1, ** p<.05, ***p<.01.
-\end{tablenotes}
-\end{threeparttable}
-\end{table}
-
-Regression results provide support for a positive relation between separating distance and rank reversals.
 
 \subsection{Market price dispersion}
 
