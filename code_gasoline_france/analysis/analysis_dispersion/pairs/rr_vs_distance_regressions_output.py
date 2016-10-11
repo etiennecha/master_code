@@ -98,6 +98,8 @@ df_pairs = pd.read_csv(os.path.join(path_dir_built_dis_csv,
               encoding = 'utf-8',
               dtype = dict_dtype)
 
+df_pairs['freq_rr'] = df_pairs['nb_rr'] / df_pairs['nb_spread']* 100
+
 # basic pair filter (insufficient obs, biased rr measure)
 df_pairs = df_pairs[(~((df_pairs['nb_spread'] < 90) &\
                        (df_pairs['nb_ctd_both'] < 90))) &
