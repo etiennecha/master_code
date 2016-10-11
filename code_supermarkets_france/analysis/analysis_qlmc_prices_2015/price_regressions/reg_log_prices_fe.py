@@ -195,24 +195,23 @@ print(df_lec[0:150].to_string())
 df_lec['price_ind'] = (df_lec['coeff'] + 1) * 100
 print(df_lec[~df_lec['coeff'].isnull()]['coeff'].describe())
 
-## ######
-## OUTPUT
-## ######
-#
-## Prices
-#df_qlmc.to_csv(os.path.join(path_built_csv,
-#                            'df_res_{:s}s.csv'.format(price_col)),
-#               encoding = 'utf-8',
-#               float_format='%.3f',
-#               index = False)
-#
-## Fixed effects
-#df_reg.to_csv(os.path.join(path_built_csv,
-#                           'df_res_{:s}_fes.csv'.format(price_col)),
-#              encoding = 'utf-8',
-#              float_format='%.3f',
-#              index = False)
+# ######
+# OUTPUT
+# ######
 
+# Prices
+df_qlmc.to_csv(os.path.join(path_built_csv,
+                            'df_res_{:s}s.csv'.format(price_col)),
+               encoding = 'utf-8',
+               float_format='%.3f',
+               index = False)
+
+# Fixed effects
+df_reg.to_csv(os.path.join(path_built_csv,
+                           'df_res_{:s}_fes.csv'.format(price_col)),
+              encoding = 'utf-8',
+              float_format='%.3f',
+              index = False)
 
 ## ###############
 ## BU PATSY SYNTAX
