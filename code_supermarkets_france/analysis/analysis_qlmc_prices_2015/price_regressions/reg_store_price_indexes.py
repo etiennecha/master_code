@@ -262,7 +262,7 @@ print(df_su_disp.ix[ls_some_chains].to_string(float_format = format_float_float,
 print()
 print(df_stores['store_dispersion'].describe().to_string())
 
-ls_ev = ['surface', 'hhi', 'demand_cont_10', 'AU_med_rev']
+ls_ev = ['surface', 'hhi', 'demand_cont_10', 'CO_med_rev']
 str_ev = " + ".join(ls_ev)
 
 print()
@@ -304,13 +304,18 @@ print(df_stores[ls_ev].corr())
 # - store vars
 # - store vars + regions (useful?)
 
+## Manually add category vars
+#str_ev += ' + C(STATUT_2010)'
+
 # REG OF STORE PRICE - NAIVE BRAND
 ls_formulas = ["store_price ~ C(qlmc_chain, Treatment('LECLERC'))",
-               "store_price ~ C(qlmc_chain, Treatment('LECLERC'))" +\
-                            " + {:s} + C(region)".format(str_ev),
                "store_price ~ {:s}".format(str_ev),
-               "store_price ~ {:s} +  C(region)".format(str_ev)]
-
+               "store_price ~ C(qlmc_chain, Treatment('LECLERC'))" +\
+                            " + {:s}".format(str_ev),
+               "store_price ~ C(qlmc_chain, Treatment('LECLERC')) + C(region)",
+               "store_price ~ {:s} +  C(region)".format(str_ev),
+               "store_price ~ C(qlmc_chain, Treatment('LECLERC'))" +\
+                            " + {:s} + C(region)".format(str_ev)]
 ls_res = [smf.ols(formula, data = df_stores).fit() for formula in ls_formulas]
 
 #print(summary_col(ls_res,
@@ -320,7 +325,7 @@ ls_res = [smf.ols(formula, data = df_stores).fit() for formula in ls_formulas]
 print(summary_col(ls_res,
                   stars=True,
                   float_format='%0.2f',
-                  model_names=['(0)', '(1)', '(2)', '(3)'],
+                  model_names=['(0)', '(1)', '(2)', '(3)', '(4)', '(5)'],
                   info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                              'R2':lambda x: "{:.2f}".format(x.rsquared)}))
 

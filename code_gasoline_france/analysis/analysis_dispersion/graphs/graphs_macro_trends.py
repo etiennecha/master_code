@@ -39,7 +39,7 @@ rcParams['figure.figsize'] = 16, 6
 #locale.setlocale(locale.LC_ALL, 'fra_fra')
 
 dir_graphs = 'color'
-str_ylabel = 'Price (euro/litre)'
+str_ylabel = 'Price (euro/liter)'
 
 # #########
 # LOAD DATA
@@ -81,13 +81,34 @@ df_quotations = pd.read_csv(os.path.join(path_dir_built_other_csv,
                                  parse_dates = ['date'])
 df_quotations.set_index('date', inplace = True)
 
+# REFINE GROUP TYPE
+# beginning: ELF + need to use future info
+# (todo: add TA with no detected margin chge?)
+df_info.loc[((df_info['brand_0'] == 'ELF') |\
+             (df_info['brand_last'] == 'ESSO_EXPRESS')),
+            'group_type'] = 'DIS'
+df_info.loc[(df_info['brand_last'].isin(['ELF',
+                                         'ESSO_EXPRESS',
+                                         'TOTAL_ACCESS'])),
+            'group_type_last'] = 'DIS'
+## Further GMS refining
+#ls_hypers = ['AUCHAN', 'CARREFOUR', 'GEANT', 'LECLERC', 'CORA',
+#             'INTERMARCHE', 'SYSTEMEU']
+#df_info.loc[(df_info['brand_0'].isin(ls_hypers)),
+#            'group_type'] = 'HYP'
+#df_info.loc[(df_info['brand_last'].isin(ls_hypers)),
+#            'group_type_last'] = 'HYP'
+
 # ###############################
 # GRAPHS: MACRO TRENDS
 # ###############################
 
-# ls_oil_ids = df_info[df_info['group_type'] == 'OIL'].index
-ls_sup_ids = df_info[df_info['group_type'] == 'SUP'].index
-ls_other_ids = df_info[df_info['group_type'] != 'SUP'].index
+ls_sup_dis_ids = df_info[(df_info['group_type_last'] == 'SUP') |
+                         ((df_info['group_type'] == 'DIS') &\
+                          (df_info['group_type_last'] == 'DIS'))].index
+
+ls_oil_ind_ids = df_info[(df_info['group_type_last'] == 'OIL') |
+                         (df_info['group_type_last'] == 'IND')].index
 
 df_quotations['UFIP Brent R5 EL'] = df_quotations['UFIP Brent R5 EB'] / 158.987
 
@@ -95,16 +116,16 @@ df_quotations['UFIP Brent R5 EL'] = df_quotations['UFIP Brent R5 EB'] / 158.987
 #plt.show()
 
 df_macro = pd.DataFrame(df_prices_ht.mean(1).values,
-                        columns = [u'Retail avg excl. taxes'],
+                        columns = [u'All'],
                         index = df_prices_ht.index)
 df_macro['Brent'] = df_quotations['UFIP Brent R5 EL']
-df_macro[u'Retail avg excl. taxes - Supermarkets'] = df_prices_ht[ls_sup_ids].mean(1)
-df_macro[u'Retail avg excl. taxes - Others'] = df_prices_ht[ls_other_ids].mean(1)
+df_macro[u'Supermarket & Discounters'] = df_prices_ht[ls_sup_dis_ids].mean(1)
+df_macro[u'Oil & Independent'] = df_prices_ht[ls_oil_ind_ids].mean(1)
 # Column order determines legend
 df_macro = df_macro[[u'Brent',
-                     u'Retail avg excl. taxes',
-                     u'Retail avg excl. taxes - Supermarkets',
-                     u'Retail avg excl. taxes - Others']]
+                     u'All',
+                     u'Supermarket & Discounters',
+                     u'Oil & Independent']]
 
 df_macro['Brent'] = df_macro['Brent'].fillna(method = 'bfill')
 
