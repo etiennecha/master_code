@@ -116,14 +116,14 @@ df_quotations['UFIP Brent R5 EL'] = df_quotations['UFIP Brent R5 EB'] / 158.987
 #plt.show()
 
 df_macro = pd.DataFrame(df_prices_ht.mean(1).values,
-                        columns = [u'All'],
+                        columns = [u'All gas stations'],
                         index = df_prices_ht.index)
 df_macro['Brent'] = df_quotations['UFIP Brent R5 EL']
 df_macro[u'Supermarket & Discounters'] = df_prices_ht[ls_sup_dis_ids].mean(1)
 df_macro[u'Oil & Independent'] = df_prices_ht[ls_oil_ind_ids].mean(1)
 # Column order determines legend
 df_macro = df_macro[[u'Brent',
-                     u'All',
+                     u'All gas stations',
                      u'Supermarket & Discounters',
                      u'Oil & Independent']]
 
