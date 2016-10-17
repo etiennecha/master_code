@@ -48,7 +48,8 @@ ls_columns = ['id_physician', 'gender', 'name', 'surname',
               'street', 'zip_city', 'convention', 'carte_vitale', 'status',
               'injection_med', 'examen_mot', 'imagerie', 'traitement_las',
               'fond', 'examen_vis', 'chirurgie_cat', 'consultation', 'avis']
-df_physicians = pd.DataFrame(ls_ls_physicians, columns = ls_columns + ['x', 'y', 'z', 'lat', 'lng'])
+df_physicians = pd.DataFrame(ls_ls_physicians,
+                             columns = ls_columns + ['x', 'y', 'z', 'lat', 'lng'])
 df_physicians.index = df_physicians['id_physician']
 # do the following after geocoding?
 df_physicians.to_csv(os.path.join(path_built_csv,
