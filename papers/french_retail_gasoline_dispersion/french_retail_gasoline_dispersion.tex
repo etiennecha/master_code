@@ -71,7 +71,7 @@ Using a large panel of daily French diesel prices over three years, this paper f
 
 \section{Introduction}
 
-The understanding of retail gasoline prices has motivated a rich academic literature, marked by concerns of insufficient competition and collusion. The first widely cited paper of the literature, \cite{BAC91}, was meant to investigate an hypothesis of the British Monopolies and Mergers Commission, according to which gas stations might take advantage of crude oil price fluctuations to extract an informational rent. Retailers were indeed suspected of adjusting prices upward faster than downward, a phenomenon commonly called the "rocket and feather" effect. Using a partial adjustment model with fortnightly UK prices between 1982 and 1989, the paper found support for the existence of asymmetry. \cite{BOR97} made a significant methodological improvement by introducing the Error Correction Model\footnote{Cf. \cite{FRE07} for a survey on econometric models of asymmetric price transmission.} in the literature and also found evidence of asymmetry in the US, in particular between city branded terminal prices and retail prices. Meanwhile, empirical investigations on competition at the gas station-level have somewhat lagged behind, most likely due to data limitations. \cite{HAS04}, studying a merger in California, found that independent gas stations fostered competition, while an increase in the share of branded gas stations was associated with higher price levels. More closely connected to the "rocket and feather" literature, several papers have investigated price dynamics at the city or gas station level and found evidence of "Edgeworth cycles", namely cycles unrelated to cost variations (\cite{ECK02}, \cite{ECK03}, \cite{ECK04a}, \cite{ECK04b}, \cite{NOE07a}, \cite{NOE07b} and \cite{NOE08} in Canada, \cite{LEW09} and \cite{LEW11a} in the US)\footnote{Cf. \cite{ECK13} for a survey on Edgeworth cycles in retail gasoline markets}. The diversity of observed price patterns has led to question competition intensity and its determinants.
+The understanding of retail gasoline prices has motivated a rich academic literature, marked by concerns of insufficient competition and collusion. The first widely cited paper of the literature, \cite{BAC91}, was meant to investigate an hypothesis of the British Monopolies and Mergers Commission, according to which gas stations might take advantage of crude oil price fluctuations to extract an informational rent. Retailers were indeed suspected of adjusting prices upward faster than downward, a phenomenon commonly called the "rocket and feather" effect. Using a partial adjustment model with fortnightly UK prices between 1982 and 1989, the paper found support for the existence of asymmetry. \cite{BOR97} made a significant methodological improvement by introducing the Error Correction Model\footnote{Cf. \cite{FRE07} for a survey on econometric models of asymmetric price transmission.} in the literature and also found evidence of asymmetry in the US, in particular between city branded terminal prices and retail prices. Meanwhile, empirical investigations on competition at the gas station-level have somewhat lagged behind, most likely due to data limitations. \cite{HAS04}, studying a merger in California, found that independent gas stations fostered competition, while an increase in the share of branded gas stations was associated with higher price levels. More closely connected to the "rocket and feather" literature, several papers have investigated price dynamics at the city or gas station level and found evidence of "Edgeworth cycles", namely short cycles unrelated to cost variations (\cite{ECK02}, \cite{ECK03}, \cite{ECK04a}, \cite{ECK04b}, \cite{NOE07a}, \cite{NOE07b} and \cite{NOE08} in Canada, \cite{LEW09} and \cite{LEW11a} in the US)\footnote{Cf. \cite{ECK13} for a survey on Edgeworth cycles in retail gasoline markets}. The diversity of observed price patterns has led to question competition intensity and its determinants.
 
 \cite{STI61} has initiated a large body of literature by highlighting the link between the "ignorance in the market", namely a lack of consumer information, and price dispersion, which can be defined as the persistence over time of different prices for a homogeneous good. A major theoretical contribution was made by \cite{VAR80} through the modeling of price dispersion as a result of a Mixed Strategy Equilibrium (MSE), namely sellers drawing a price randomly from a distribution in equilibrium. Several papers had indeed previously shown how dispersion could arise a result of Pure Strategy Equilibria (PSE) with asymmetry. Such results were yet difficult to reconcile with the volatility observed in price dynamics. Conversely, \cite{VAR80} suggests that price dispersion modeled through a MSE could be interpreted as "temporal" price dispersion, typically comparable to "sales". The \cite{VAR80} paradigm provides a rationale for rank reversals, namely the fact that a seller can be cheaper or more expensive than a competitor depending on the time of the observation.
 
@@ -186,7 +186,7 @@ Market characteristics and pricing behaviors are also correlated with gas statio
 \end{figure}
 
 A crucial issue when it comes to studying competition between gas stations is the definition of catchment areas. It has been traditionally addressed in the literature by considering circles of various radiuses around gas stations, usually measuring distance as the crow flies. \cite{BAR04} use a radius of 1.5 miles (2.4 km) to study dispersion within four urban areas in California and Arizona. The average number of rivals varies from 8.3 to 10.6 depending on the area, while the distance to the closest rival respectively fluctuates from 0.3 to 0.5 miles (0.5 to 0.8 km). \cite{TAP11} analyses price dispersion across California, Florida, New Jersey and Texas using distances of 1 and 2 miles (respectively 1.6 and 3.2 km). Depending on the state, the average number of rivals varies from 4.3 to 4.6 with 1 mile and from 13.5 to 14.2 with 2 miles. \cite{HOU12}, uses travel times of 0.5, 1 and 1.5 minutes to study a merger in Quebec city. In the Netherlands, \cite{BRU15} use distances of 2 and 5 km to study the impact of conversions of manned to unmanned gas stations on prices. \cite{PEN15}, in Austria, combine a driving distance of 2 miles and commuting patterns to build markets.
-Though travel distance or time can be seen as an improvement over distance as the crow flies, their merits need to be kept in perspective in the case of gasoline. On small distances, they often magnify the usual small inaccuracies in retailer locations. On larger distances, they are more likely to make a difference, but still provide largely incomplete information absent data on commuting patterns or driving habits. This paper adopts a distance as the crow flies of 3 km as a baseline.
+Though travel distance or time can be seen as an improvement over distance as the crow flies, their merits must to be kept in perspective. On small distances, they can magnify the usual inaccuracies in retailer locations. On larger distances, they are more likely to make a difference, but still provide largely incomplete information absent data on commuting patterns or driving habits. Our analysis adopts a distance as the crow flies of 3 km as a baseline to define competition, and discusses the use of additional criteria such as the type or the price level of gas stations.
 
 \begin{table}
 \caption{Station-level summary statistics}
@@ -250,7 +250,7 @@ Though travel distance or time can be seen as an improvement over distance as th
 Most commonly used measures of market price dispersion are the range, namely the difference between the maximum and the minimum price, and the standard deviation of prices. In the case of French market, a naive use of these statistics is unlikely to be informative about search related price dispersion. Indeed, a standard consumer typically expects a Total gas station to be significantly more expensive than a Leclerc. The treatment of persistent price differences is a sensitive issue in the analysis of dispersion. It has been frequently addressed in the literature by working with price residuals, namely after controlling for seller (and occasionally time) fixed effects. However, beyond the practical errors inherent to the statistical treatment, this approach is only supported by theory to the extent that static price dispersion mirrors heterogeneity in offered utility, common to all consumers. In the case of French gasoline retailers, the large differences in prices, and the relatively low predictive power of seller characteristics, suggests that this would represent a very strong assumption. Our first approach thus consists in analysing competition between all pairs of sellers separated by a short distance. This allows to analyse differences in price patterns depending on the types of gas stations, or simply on price differences measured over the long run.
 
 \cite{TAP11} test the relevance of the link between price dispersion and consumer search by examining pairs of competing gas stations. The test relies on the assumption that distance between sellers can be used as a proxy for consumer information. Indeed, when a gas stations operates in the close vicinity of another, a higher share of consumers is likely to perfectly observe prices than when sellers are separated by a higher distance. If the share of uninformed consumers is negligible, sellers can be expected to compete a la Bertrand, or Hotelling, and retail prices should essentially match wholesale price fluctuations. Conversely, if consumers are largely uninformed, dynamic dispersion can arise following the intuition exposed in \cite{VAR80}. \cite{TAP11} measure temporal price dispersion between two stations as the probability that the gas station which is in general cheaper (in terms of day count) turns out to be more expensive. Formally, denoting two gas stations $i$ and $j$, and $t \in T$ each day on which price records $p_{it}$ and $p_{jt}$ are available, the rank reversals statistic $r_{ij}$%
-\footnote{All the statistics we use to account for price dispersion between pairs of gas stations are symmetric, in particular $r_{ij} = r_{ji}$}%
+\footnote{All the statistics we use to account for price dispersion between pairs of gas stations are symmetric (in particular $r_{ij} = r_{ji}$).}%
 writes:
 \begin{align*}
 r_{ij} = \min\left\{\frac{1}{T} \sum_{t=1}^{T} \mathbbm{1}_{p_{it} > p_{jt}}, \frac{1}{T} \sum_{t=1}^{T} \mathbbm{1}_{p_{jt} > p_{it}}\right\}
@@ -259,10 +259,11 @@ Rank reversals can reach a maximum value of 50\% when gas station $i$ is strictl
 \begin{align*}
 sp_{ij} = \frac{1}{T} \sum_{t=1}^{T} \mathbbm{1}_{p_{it} = p_{jt}}
 \end{align*}
-Figure~\ref{fig:rr_pair_example} provides an example of two gas stations displaying large rank reversals. The Esso gas station is indeed successively more expensive and cheaper than its BP competitor between January and July 2014. Alternatively, the standard deviation of the daily price spread can be used as a proxy for dispersion that is robust to persistent price differences. Standard deviation is however more sensitive to outliers that can result from extraordinary promotions or erroneous price records. Formally, denoting the spread $s_{ijt} = p_{it} - p_{jt}$ and $\bar{s}_{ij} = \frac{1}{T} \sum_{t=1}^{T} s_{ijt}$, the standard deviation over the period is computed as follows:
+Figure~\ref{fig:rr_pair_example} provides an example of two gas stations displaying large rank reversals. The Esso gas station is indeed successively more expensive and cheaper than its BP competitor between January and July 2014. The standard deviation of the daily price spread can be used as a proxy for dispersion that is robust to persistent price differences. Standard deviation is however more sensitive to outliers that can result from extraordinary promotions or erroneous price records. Formally, denoting $s_{ijt} = p_{it} - p_{jt}$ the price spread between gas station $i$ and $j$ on day $t$, and its average $\bar{s}_{ij} = \frac{1}{T} \sum_{t=1}^{T} s_{ijt}$, the standard deviation over the period is computed as follows:
 \begin{align*}
 \sigma_{ij} = \sqrt{\frac{1}{T} \sum_{t=1}^{T} [s_{ijt} - \bar{s}_{ij}]^2}
 \end{align*}
+We refer to $|\bar{s}_{ij}|$ as the mean price spread between two gas stations in order to have $|\bar{s}_{ij}|=|\bar{s}_{ji}|$ a proxy for their long term average price difference.
 
 \begin{figure}[htb!]
     \caption{Price series of two competing gas stations}
@@ -271,9 +272,9 @@ Figure~\ref{fig:rr_pair_example} provides an example of two gas stations display
 \label{fig:rr_pair_example}
 \end{figure}
 
-Two sources of large rank reversals unrelated to consumer information are identified in the data. The first is related to the conversion by Total SA of nearly 300 Total gas stations to its discount brand, Total Access, accompanied by a sharp change in the pricing policy. Converted gas stations decrease prices by approximately 10 euro cents per liter, which has been found to trigger very moderate adjustments by competitors (\cite{CHA16}). A converted Total gas station is thus often consistently more expensive than a competitor at the beginning of the period and becomes cheaper once the conversion has occurred. Figure~\ref{fig:rr_total_access} (in appendix) provides such an example, for which a naive measure of rank reversals over the whole period is equal to 47\%. More generally, such an issue may arise whenever a shock affects a gas station differently from the way it affects its closest competitors, so that relative competitive advantages change over time. In order to reduce the potential influence of this issue, gas stations which are found to implement a significant change in pricing policy over the period are excluded, and various constraints are imposed on the maximum length of rank reversals or their number to check the robustness of results. Another observed source of rank reversals is the occasional use by a few gas stations of dynamic price discrimination. The latter is detected by the regularity of successive inverse price changes at the gas station level. The most commonly observed pattern is a surge in prices during weekends. Such a pricing policy, whenever it is implemented unilaterally by a gas station in one market, can generate rank reversals which are unrelated to the use of mixed strategies. Figure~\ref{fig:rr_dynamic_price_discrimination} (in appendix) provides an illustration of the phenomenon. However, as very few observations are affected, excluding gas stations which implement dynamic price discrimination does not affect results obtained in the present analysis.
+Two sources of large rank reversals unrelated to consumer information are identified in the data. The first is related to the conversion by Total S.A. of nearly 300 Total gas stations to its discount brand, Total Access, accompanied by a sharp change in the pricing policy. Converted gas stations decrease prices by approximately 10 euro cents per liter, which has been found to trigger very moderate adjustments by competitors (\cite{CHA16}). A converted Total gas station is thus often consistently more expensive than a competitor at the beginning of the period and becomes cheaper once the conversion has occurred. Figure~\ref{fig:rr_total_access} (in appendix) provides such an example, for which a naive measure of rank reversals over the whole period is equal to 47\%. All Total gas stations converted to Total Access over the period are dropped from the analysis\footnote{More generally, a similar phenomenon may arise whenever a shock affects a gas station differently from the way it affects its nearby competitors. The robustness of our results is tested i) by dropping gas stations which are found to implement a significant change in pricing policy over the period ii) by dropping pairs which exhibit high rank reversals but the price series of which scarcely cross each other. Details are available upon author request}. Another observed source of rank reversals is the occasional use by a few gas stations of dynamic price discrimination. The latter is detected by the regularity of successive inverse price changes at the gas station level. The most commonly observed pattern is a surge in prices during weekends. Such a pricing policy, whenever it is implemented unilaterally by a gas station in one market, can generate rank reversals which are unrelated to the use of mixed strategies. Figure~\ref{fig:rr_dynamic_price_discrimination} (in appendix) provides an illustration of the phenomenon. However, as very few observations are affected, excluding gas stations which implement dynamic price discrimination does not affect results obtained in the present analysis.
 
-Rank reversals and standard deviation are computed for all pairs of competing gas stations in France with an upper distance limit as the crow flies of 3 km\footnote{Cf. Table~\ref{tab:stats_pairs_5km} in Appendix for replications with a distance of 5 km}. This yields a database accounting for price competition between 11,754 pairs of rival gas stations, which is described in Table~\ref{tab:stats_pairs_3km}. Regarding pairs of supermarket competitors, sellers are often found to set the very same price, which, given product homogeneity and the widely admitted  highly competitive nature of the market, suggests Bertrand competition. On the other hand, pairs of oil and independent gas station exhibit significant rank reversals. Remarkably, it is not trivial to classify pair price patterns as best understood as a PSE or a MSE. Theoretically, small rank reversals with frequent price alignment can be obtained in an extension of \cite{VAR80} that requires sellers to choose prices from a grid. Small rank reversals could also simply result from temporary frictions linked to wholesale cost variations, or short periods of price wars as observed in the literature.
+For each pair of competing gas stations separated by a maximum distance of 3 km, we compute the percentages of rank reversals, same price as well as the mean price spread and its standard deviation. This yields a database of 11,754 observations which are described in Table~\ref{tab:stats_pairs_3km}\footnote{Cf. Table~\ref{tab:stats_pairs_5km} in Appendix for replications with a distance of 5 km}. The average rank reversals is 7.1\% which is fairly small. However, when we consider only pairs in which both retailers are either independent or operated by an oil company, the average rank reversals increases to 10.5\%. If we further restrict to pairs which exhibit a maximum mean price spread of 2 cents per liter, we now observe 646 pairs which exhibit an average 22.2\% rank reversals. Furthermore, these pairs set the very same price on average 8.5\% of the time, while pairs of supermarket rivals (under the same spread restriction) respectively display a 32.2\% average probability to set the same price, and 14.6\% average rank reversals. Given the strong product homogeneity, the widely admitted competitive nature of the market, a reasonable baseline hypothesis for the strong price alignment displayed by many supermarket pairs is that involved sellers compete \`{a} la Betrand. Conversely, pairs of high markup retailers, namely oil company and independent gas stations, exhibit significant rank reversals, which make them better candidates offer for a theoretical representation in terms of MSE.
 
 \begin{table}
 \caption{Overview of pairs price dispersion (distance $\le$ 3 km)}
@@ -285,7 +286,7 @@ Rank reversals and standard deviation are computed for all pairs of competing ga
     \toprule
     \toprule
           & \multicolumn{1}{c}{Nb} & \multicolumn{1}{c}{Rank} & \multicolumn{1}{c}{Same} & \multicolumn{2}{c}{Price spread} \\
-          & \multicolumn{1}{c}{pairs} & \multicolumn{1}{c}{reversals} & \multicolumn{1}{c}{price} & \multicolumn{1}{c}{Abs. Mean} & \multicolumn{1}{c}{Std.} \\
+          & \multicolumn{1}{c}{pairs} & \multicolumn{1}{c}{reversals} & \multicolumn{1}{c}{price} & \multicolumn{1}{c}{Mean} & \multicolumn{1}{c}{Std.} \\
     \midrule
     No price spread restriction &       &       &       &       &  \\
     All types & 11 754 & 7.1 (10.8) & 7.8 (17.0) & 5.3 (4.3) & 1.6 (0.6) \\
@@ -315,7 +316,7 @@ Rank reversals and standard deviation are computed for all pairs of competing ga
 \end{tabular}
 \begin{tablenotes}
 			\small
-      \item Except for the first column, all figures are averages of statistics computed at the pair level (standard errors in parentheses). "Abs. Mean" refers to $|\bar{s}_{ij}|$ and accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), while the standard deviation, "Std.", measures dispersion around the long term price difference (0 if both gas stations always set the same price). "Rank reversals" and "Same price" are percentages.
+      \item Except for the first column, all figures are averages of statistics computed at the pair level (standard errors in parentheses). "Mean" refers to $|\bar{s}_{ij}|$ and accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), while the standard deviation, "Std.", measures dispersion around the long term price difference (0 if both gas stations always set the same price). "Rank reversals" and "Same price" are percentages.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -340,63 +341,62 @@ A clear ranking of empirical distribution functions of rank reversals can be obs
 \end{subfigure}
 \end{figure}
 
-The formal test introduced by \cite{TAP11} consists in regressing measures of price dispersion on a dummy variable which identifies competitor pairs for which a low separating distance implies low search costs. Denoting $\text{Pair dispersion}_{ij}$ the price dispersion indicator between two gas stations $i$ and $j$, $\mathbbm{1}{\text{[Short distance]}_{ij}}$ an indicator for whether the stations are separated by a short distance, and $X_{ij}$ a set of control variables, the estimated equation:
+The formal test introduced by \cite{TAP11} consists in regressing measures of price dispersion on a dummy variable which identifies competitor pairs for which a low separating distance implies low search costs. Denoting $\text{Pair dispersion}_{ij}$ the price dispersion indicator between two gas stations $i$ and $j$, $\mathbbm{1}{\text{[Short distance]}_{ij}}$ an indicator for whether the stations are separated by a short distance, and $X_{ij}$ a set of control variables\footnote{Accordingly, $\beta_2$ is a vector of coefficients.}, the estimated equation:
 
 \begin{equation}
-\text{Pair dispersion}_{ij}= \beta_0 + \beta_1 \mathbbm{1}{\text{[Short distance]}_{ij}} + X_{ij} + \epsilon_{ij}
+\text{Pair dispersion}_{ij}= \beta_0 + \beta_1 \mathbbm{1}{\text{[Short distance]}_{ij}} + \beta_2 X_{ij} + \epsilon_{ij}
 \end{equation}
 
-Results (Table~\ref{tab:regs_pairs}) support the hypothesis that limited consumer information is linked to price dispersion.
+Table~\ref{tab:regs_pairs} reports coefficients $\beta_1$ obtained with all competitor pairs as well as subsamples based on gas station types, using both rank reversals and standard deviation in spread as proxies for pair price dispersion. Overall, pairs of gas stations which are separated by a distance of 1 km or less exhibit rank reversals which are 2.3 points smaller than pairs which are separated by a distance comprised between 1 and 3 km. This result is close to the 2.7 point difference found by \cite{TAP11}. The average effect is stronger for pairs of oil and independent gas stations, and smaller for supermarkets. For the latter, no significant impact is found when standard deviation in spread is used to account for price dispersion. This is consistent with overall good consumer information, suggested by strong price alignment, and the presence of other sources of price dispersion such as occasional promotions implemented by chains. Overall, empirical findings provide support for the existence of price dispersion related to consumer search. On the other hand, the high percentages of price alignment exhibited by many pairs suggest that other markets may be characterized by virtually perfect consumer information or collusion\footnote{Theoretically, rank reversals with strong price alignment can be obtained in an extension of \cite{VAR80} that requires sellers to choose prices from a grid. Occasional rank reversals could also simply result from temporary frictions linked to wholesale cost variations, or short periods of price wars.}.
 
-Previous articles have illustrated the role of chain strategies in shaping market prices and dynamics. \cite{HOS08} remark that gas stations of a specific chain nearly always charge the lowest price of all nearby gas stations. \cite{LEW12}, working on markets which exhibit Edgeworth cycles, show that gas stations of two chains exhibit a much higher probability of jumping on the first day of the restoration than most of their competitors. They also show that cycles tend to be absent from almost every city in which these two chains have little or no market presence.
+Several papers in the literature have emphasized how chain specific strategies can shape market prices and dynamics. \cite{HOS08} remark that gas stations of a specific chain nearly always match the lowest price of their local market. \cite{LEW12}, working on markets which exhibit Edgeworth cycles, show that gas stations of two chains exhibit a much higher probability of jumping on the first day of the restoration than most of their competitors. They also show that cycles tend to be absent from almost every city in which these two chains have little or no market presence.
 
 \begin{table}%[hbtp]
-\caption{Regressions of pair price dispersion}
+\caption{Regressions of pair price dispersion (average price spread $\le$ 1 euro cent per liter)}
 \label{tab:regs_pairs}
 %\renewcommand{\arraystretch}{0.8} % too large by default...
 \begin{threeparttable}
-\begin{tabular}{llrrrrr} %{lrrrrrr}
-\toprule
-\toprule
+    \begin{tabular}{rrrrrrr}
+    \toprule
+    \toprule
           & \multicolumn{1}{l}{Dependent} &       & \multicolumn{4}{c}{Quantile regressions} \\
           & \multicolumn{1}{l}{Variable} & OLS   & 25\%  & 50\%  & 75\%  & 90\% \\
-\midrule
+    \midrule
     \multicolumn{1}{l}{All pairs} & \multicolumn{1}{l}{$r_{ij}$} & -2.28*** & -1.70*** & -3.60*** & -2.70*** & -2.10*** \\
-    \multicolumn{1}{l}{(N =  2 928)} &       & (0.25) & (0.32) & (0.42) & (0.39) & (0.39) \\
+    \multicolumn{1}{l}{(N =  2 928)} &       & (0.51) & (0.66) & (0.86) & (0.80) & (0.81) \\
           & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.04** & -0.05*** & -0.03 & -0.02 & -0.01 \\
           &       & (0.02) & (0.02) & (0.02) & (0.03) & (0.04) \\
-\midrule
+    \midrule
     \multicolumn{1}{l}{Oil \& Ind} & \multicolumn{1}{l}{$r_{ij}$} & -3.29** & -3.80** & -3.00* & -1.90 & -0.50 \\
     \multicolumn{1}{l}{ (N = 297)} &       & (1.34) & (1.82) & (1.74) & (1.84) & (1.84) \\
-          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.22*** & -0.25*** & -0.21*** & -0.17* & -0.1 \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.22*** & -0.25*** & -0.21*** & -0.17* & -0.10 \\
           &       & (0.05) & (0.06) & (0.06) & (0.09) & (0.12) \\
-\midrule
+    \midrule
     \multicolumn{1}{l}{Supermarkets} & \multicolumn{1}{l}{$r_{ij}$} & -2.12*** & -1.40** & -2.50*** & -2.30 & -1.90 \\
     \multicolumn{1}{l}{ (N = 1 404)} &       & (0.68) & (0.60) & (0.91) & (1.41) & (1.60) \\
           & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.01 & -0.02 & -0.01 & 0.04  & -0.02 \\
           &       & (0.02) & (0.03) & (0.03) & (0.04) & (0.05) \\
-\midrule
-    \multicolumn{1}{l}{Discounters} & \multicolumn{1}{l}{$r_{ij}$} & -2.29 & -2.80 & -1.10 & -3.10** & -2.80*** \\
+    \midrule
+    \multicolumn{1}{l}{Discounters} & \multicolumn{1}{l}{$r_{ij}$} & -2.29 & -2.80 & -1.10 & -3.10 & -2.80 \\
     \multicolumn{1}{l}{ (N = 140)} &       & (1.69) & (2.96) & (2.44) & (2.15) & (2.23) \\
           & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.28*** & -0.19*** & -0.24*** & -0.38*** & -0.52*** \\
           &       & (0.06) & (0.07) & (0.08) & (0.08) & (0.10) \\
-\midrule
+    \midrule
     \multicolumn{1}{l}{Supermarkets vs. Discounters} & \multicolumn{1}{l}{$r_{ij}$} & -2.70*** & -3.40** & -2.80** & -2.60** & -4.30*** \\
     \multicolumn{1}{l}{(N = 879)} &       & (0.91) & (1.49) & (1.34) & (1.32) & (1.31) \\
-          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.02 & -0.05* & -0.03 & -0.00 & 0.02 \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.02 & -0.05* & -0.03 & 0.00  & 0.02 \\
           &       & (0.03) & (0.03) & (0.03) & (0.04) & (0.07) \\
-\bottomrule
-\bottomrule
+    \bottomrule
+    \bottomrule
 \end{tabular}
 \begin{tablenotes}
       \small
       \item Standard errors in parentheses. Significance thresholds: * p<.1, ** p<.05, *** p<.01.
-      \item Region fixed effects are included in all specifications.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
 
-Pairs involving supermarkets and discounters often exhibit strong price alignment. Such observations raise the questions of the convergence to equilibrium prices, and of the presence of collusion. In order to capture potential leadership in price dynamics, we count, within each pair, the number of times each seller matches the price of its competitor. Formally, the number of times seller $i$ matches the price of seller $j$ writes:
+In order to capture potential leadership in price dynamics, we count, within each pair, the number of times each seller matches the price of its competitor. Formally, the number of times seller $i$ matches the price of seller $j$ writes:
 
  \begin{align*}
 \sum_{t=2}^{T}\mathbbm{1}_{p_{it} = p_{jt} \text{ with } p_{it-1} \neq p_{jt-1} \text{ and } p_{jt} = p_{jt-1}}
@@ -512,7 +512,6 @@ Table~\ref{tab:stats_des_markets} reports descriptive statistics of price disper
 \end{threeparttable}
 \end{table}
 
-
 With $\text{Market Dispersion}_{jt}$ a measure of price dispersion on market $j$ at date $t$, $Trend_t$ a trend variable, $MC_t$ a measure of the marginal cost (wholesale diesel in euro per liter) on date $t$, $N_j$ the number of gas stations on market $j$, we estimate the parameters of the following equation for each market definition:
 
 \begin{equation}
@@ -586,7 +585,7 @@ This approach however has significant shortcomings. First, it leaves out gas sta
 \end{threeparttable}
 \end{table}
 
-Price distributions of supermarket gas station exhibit smaller standard deviations but fatter tails than these of oil and independent gas stations. They are generally left-skewed, which reflects the use of occasional promotions, often implemented at the chain level. Conversely, no systematic skew is observed for oil and independent gas stations. In order to investigate the relation between price dispersion and seller density, the empirical standard deviation and the range are regressed on the number of competitors within 3 km.
+Price distributions of supermarket gas station exhibit smaller standard deviations but fatter tails than these of oil and independent gas stations. They are generally left-skewed, which reflects the (scarce) use of promotions, often implemented at the chain level. Conversely, no systematic skew is observed for oil and independent gas stations. In order to investigate the relation between price dispersion and seller density, the empirical standard deviation and the range are regressed on the number of competitors within 3 km.
 
 \begin{table}[H]
 \caption{Regressions of price dispersion measured at the gas station level}
@@ -707,6 +706,51 @@ Regarding the fit between \cite{VAR80} and the data, it is worth noting that an 
 \begin{tablenotes}
 			\small
       \item Except for the first column, all figures are averages of statistics computed at the pair level (standard errors in parentheses). Abs. Mean refers to $|\bar{s}_{ij}|$ and accounts for the existence of persistent price differences (0 if both gas stations are equally expensive over the long term), while the standard deviation, Std., measures dispersion around the long term price difference (0 if both gas stations always set the same price). Rank reversals and Same price are percentages.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\begin{table}%[hbtp]
+\caption{Regressions of pair price dispersion (average price spread $\le$ 2 euro cent per liter)}
+\label{tab:regs_pairs}
+%\renewcommand{\arraystretch}{0.8} % too large by default...
+\begin{threeparttable}
+    \begin{tabular}{rrrrrrr}
+    \toprule
+    \toprule
+          & \multicolumn{1}{l}{Dependent} &       & \multicolumn{4}{c}{Quantile regressions} \\
+          & \multicolumn{1}{l}{Variable} & OLS   & 25\%  & 50\%  & 75\%  & 90\% \\
+    \midrule
+    \multicolumn{1}{l}{All pairs} & \multicolumn{1}{l}{$r_{ij}$} & -1.32*** & -1.10** & -1.70*** & -1.50** & -2.00** \\
+    \multicolumn{1}{l}{(N =  4 171)} &       & (0.43) & (0.45) & (0.65) & (0.75) & (0.83) \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.08*** & -0.09*** & -0.09*** & -0.08*** & -0.06 \\
+          &       & (0.02) & (0.02) & (0.02) & (0.03) & (0.04) \\
+    \midrule
+    \multicolumn{1}{l}{Oil \& Ind} & \multicolumn{1}{l}{$r_{ij}$} & 0.00  & -2.10* & 0.50  & 1.00  & 0.90 \\
+    \multicolumn{1}{l}{ (N = 646)} &       & (1.02) & (1.25) & (1.44) & (1.65) & (2.10) \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.17*** & -0.20*** & -0.14*** & -0.09 & -0.16 \\
+          &       & (0.04) & (0.04) & (0.04) & (0.06) & (0.10) \\
+    \midrule
+    \multicolumn{1}{l}{Supermarkets} & \multicolumn{1}{l}{$r_{ij}$} & -1.30** & -1.10** & -1.60** & -1.60 & -0.40 \\
+    \multicolumn{1}{l}{ (N = 1 867)} &       & (0.59) & (0.47) & (0.74) & (1.08) & (1.56) \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.05** & -0.08*** & -0.06* & -0.04 & -0.07 \\
+          &       & (0.03) & (0.03) & (0.03) & (0.04) & (0.06) \\
+    \midrule
+    \multicolumn{1}{l}{Discounters} & \multicolumn{1}{l}{$r_{ij}$} & -0.11 & 2.40  & 0.50  & -2.20 & -2.70 \\
+    \multicolumn{1}{l}{ (N = 156)} &       & (1.92) & (3.67) & (2.83) & (2.36) & (2.51) \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.33*** & -0.20** & -0.31*** & -0.42*** & -0.59*** \\
+          &       & (0.06) & (0.08) & (0.09) & (0.09) & (0.10) \\
+    \midrule
+    \multicolumn{1}{l}{Supermarkets vs. Discounters} & \multicolumn{1}{l}{$r_{ij}$} & -2.18*** & -2.40** & -2.90** & -2.30* & -4.50*** \\
+    \multicolumn{1}{l}{(N = 1 153)} &       & (0.82) & (1.08) & (1.27) & (1.29) & (1.34) \\
+          & \multicolumn{1}{l}{$\sigma_{ij}$} & -0.05 & -0.07** & -0.06* & -0.04 & -0.01 \\
+          &       & (0.03) & (0.03) & (0.03) & (0.05) & (0.07) \\
+    \bottomrule
+    \bottomrule
+\end{tabular}
+\begin{tablenotes}
+      \small
+      \item Standard errors in parentheses. Significance thresholds: * p<.1, ** p<.05, *** p<.01.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}

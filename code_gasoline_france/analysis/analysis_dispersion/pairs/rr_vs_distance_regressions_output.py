@@ -196,7 +196,7 @@ col_sc = 'sc_{:d}'.format(dist_reg)
 
 ls_ctrls = ['C(reg_1)']
 str_ctrls = u'+ {:s}'.format(u' + '.join(ls_ctrls))
-str_ctrls = u''
+#str_ctrls = u''
 
 ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d} {:s}'.format(dist_reg, str_ctrls),
                       'pct_rr ~ sc_{:d} {:s}'.format(dist_reg, str_ctrls),
@@ -231,10 +231,10 @@ df_pair_comp.to_csv(os.path.join(path_dir_built_dis_csv,
 
 ls_loop_df_ppd_regs = [('Nd All', dict_pair_comp_nd['any']),
                        ('Nd Oil&Ind', dict_pair_comp_nd['oil&ind']),
-                       ('Nd Sup&Dis', dict_pair_comp_nd['sup&dis']),
+                       #('Nd Sup&Dis', dict_pair_comp_nd['sup&dis']),
                        ('Nd Sup', dict_pair_comp_nd['sup']),
-                       ('Nd Sup vs. Dis', dict_pair_comp_nd['sup_dis']),
-                       ('Nd Dis', dict_pair_comp_nd['dis'])]
+                       ('Nd Dis', dict_pair_comp_nd['dis']),
+                       ('Nd Sup vs. Dis', dict_pair_comp_nd['sup_dis'])]
 
 # Some issues with current implementation of quantreg => R
 # Work with dist 1000 until Oil Ind...
@@ -303,22 +303,53 @@ for df_ppd_title, df_ppd_reg in ls_loop_df_ppd_regs:
                         info_dict={'N':lambda x: "{0:d}".format(int(x.nobs)),
                                    'R2':lambda x: "{:.2f}".format(x.rsquared)})
 
-
-
   ls_res.append([df_ppd_title, nb_pairs, pct_close, su_rr, su_std, su_same])
 
+ls_cols_final = ['cat', 'N', 'y', 'OLS', 'Q25', 'Q50', 'Q75', 'Q90']
+ls_df_temp = []
 for [df_ppd_title, nb_pairs, pct_close, su_rr, su_std, su_same] in ls_res:
-  print()
-  print(u'-'*50)
-  print()
-  print(u'{:s} ({:d} pairs)'.format(df_ppd_title, nb_pairs).upper())
-  print(u'Pct same corner: {:3.1f}%'.format(pct_close).upper())
-  print()
-  print('Pct rank reversals:')
-  print(su_rr)
-  print()
-  print('Std. of price spread:')
-  print(su_std)
-  print()
-  print('Pct same:')
-  print(su_same)
+  #print()
+  #print(u'-'*50)
+  #print()
+  #print(u'{:s} ({:d} pairs)'.format(df_ppd_title, nb_pairs).upper())
+  #print(u'Pct same corner: {:3.1f}%'.format(pct_close).upper())
+  #print()
+  #print('Pct rank reversals:')
+  #print(su_rr)
+  #print()
+  #print('Std. of price spread:')
+  #print(su_std)
+  #print()
+  #print('Pct same:')
+  #print(su_same)
+  
+  # ['same', su_same]
+
+  for y_var, su_res_temp in [['rr', su_rr],
+                             ['std', su_std]]:
+    df_res_temp = su_res_temp.tables[0].copy()
+    # add column to distinguish coeff and std
+    df_res_temp['stat'] = ['co','se']*(len(df_res_temp.index)/2)
+    # add column with var name
+    df_res_temp['x_var'] = [i for sublist in [[j]*2\
+                              for j in df_res_temp.index[0::2]] for i in sublist]
+    # add column which concatenates (not valid for R2 & N...)
+    df_res_temp['x_var_stat'] = df_res_temp['x_var'] + '-' + df_res_temp['stat']
+    # add columns for y_var, group identity and nb obs (R2-se : N)
+    df_res_temp['y'] = y_var
+    df_res_temp['cat'] = df_ppd_title
+    df_res_temp.set_index('x_var_stat', inplace = True)
+    df_res_temp['N'] = df_res_temp.ix['R2-se'].iloc[0]
+    # select variables of interest 
+    ls_df_temp.append(df_res_temp.ix[['{:s}-co'.format(col_sc),
+                                      '{:s}-se'.format(col_sc)]][ls_cols_final])
+df_final = pd.concat(ls_df_temp, ignore_index = True)
+print(df_final.to_string(index = False))
+
+df_final.to_csv(os.path.join(path_dir_built_dis_csv,
+                                         'df_temp.csv'),
+                index = True,
+                encoding = 'latin-1',
+                sep = ';',
+                escapechar = '\\',
+                quoting = 1) 
