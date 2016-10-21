@@ -235,6 +235,74 @@ def get_stats_two_firm_same_prices(ar_price_1, ar_price_2):
   return [[len_spread, len_same, ls_chge_to_same, len(ls_1_lead), len(ls_2_lead)],
           [ls_1_lead, ls_2_lead, ls_ctd_1, ls_ctd_2]]
 
+def get_stats_two_firm_same_prices_ud(ar_price_1, ar_price_2):
+  """
+  Compare price series: rather for non differentiated sellers (same price level)
+  """
+  zero = np.float64(1e-10)
+  ar_spread = ar_price_1 - ar_price_2
+  len_spread = len(ar_spread[~np.isnan(ar_spread)])
+  len_same = len(ar_spread[np.abs(ar_spread) < zero])
+  ls_chge_to_same = 0
+  ls_1_lead, ls_2_lead = [], []
+  ls_1_lead_u, ls_2_lead_u = [], []
+  ls_chge_to_same_u, ls_chge_to_same_d = 0, 0
+  ctd, ctd_1, ls_ctd_1, ls_ctd_2 = 0, False, [], []
+  if len_spread and len_same:
+    for i, (price_1, price_2, spread) in enumerate(zip(ar_price_1,
+                                                       ar_price_2,
+                                                       ar_spread)[1:], start = 1):
+      # same today, not same yesterday (with change)
+      if (np.abs(spread) < zero) and (np.abs(ar_spread[i-1]) > zero):
+        if price_1 == ar_price_1[i-1]:
+          ls_1_lead.append(i)
+          if price_2 > ar_price_2[i-1]:
+            ls_1_lead_u.append(i)
+          ctd_1 = True
+          ctd = 1
+        elif price_2 == ar_price_2[i-1]:
+          ls_2_lead.append(i)
+          if price_1 > ar_price_1[i-1]:
+            ls_2_lead_u.append(i)
+          # print 'day', i
+          ctd = 1
+        else:
+          ls_chge_to_same += 1
+          if (price_1 > ar_price_1[i-1]) and (price_2 > ar_price_2[i-1]):
+            ls_chge_to_same_u += 1
+          elif (price_1 < ar_price_1[i-1]) and (price_2 < ar_price_2[i-1]):
+            pass
+          else:
+            ls_chge_to_same_d += 1
+      # same today, same yesterday (with change)
+      elif (np.abs(spread) < zero) and\
+           (np.abs(ar_spread[i-1]) < zero) and\
+           (price_1 != ar_price_1[i-1]):
+        ls_chge_to_same += 1
+        if price_1 > ar_price_1[i-1]:
+          ls_chge_to_same_u += 1
+      # same today (no change, continued)
+      elif (np.abs(spread) < zero) and (ctd > 0):
+        ctd += 1
+      elif (ctd > 0): #not np.isnan(np.abs(spread)) => cuts if nan
+        if ctd_1:
+          ls_ctd_1.append(ctd)
+        else:
+          ls_ctd_2.append(ctd)
+          # print 'length', ctd, i
+        ctd, ctd_1 = 0, False
+    # save ctd if series in progress on last day
+    if ctd != 0:
+      if ctd_1:
+        ls_ctd_1.append(ctd)
+      else:
+        ls_ctd_2.append(ctd)
+  return [[len_spread, len_same, ls_chge_to_same,
+           len(ls_1_lead), len(ls_2_lead),
+           len(ls_1_lead_u), len(ls_2_lead_u),
+           ls_chge_to_same_u, ls_chge_to_same_d],
+          [ls_1_lead, ls_2_lead, ls_ctd_1, ls_ctd_2, ls_1_lead_u, ls_2_lead_u]]
+
 # ANALYSIS OF PAIR PRICE DISPERSION
 
 def get_pair_price_dispersion(ar_prices_a, ar_prices_b, light = True):
