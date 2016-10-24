@@ -582,5 +582,5 @@ df_leader_brands_pct.to_csv(os.path.join(path_dir_built_dis_csv,
                                escapechar = '\\',
                                quoting = 1)
 
-# test = lol = get_stats_two_firm_same_prices_ud(df_prices_ttc['1700004'].values,
-#                                                df_prices_ttc['1120005'].values)
+test = get_stats_two_firm_same_prices_ud(df_prices_ttc['1700004'].values,
+                                         df_prices_ttc['1120005'].values)
