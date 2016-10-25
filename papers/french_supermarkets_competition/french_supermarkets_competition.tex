@@ -86,7 +86,7 @@ Since the seminal paper of \cite{STI61}, a large literature has investigated the
 
 \cite{PER15} analyse price dispersion in the French supermarket industry with four product categories (beer, cola, coffe and whisky) with data spanning 1999-2001. They find that stores frequently move across quartiles of the product price distributions that they observe over time, and estimate a structural model which accomodates sequential search, vertical product differentiation and heterogeneous consumer tastes. They find that search cost are high and that the majority of consumers is thus poorly informed about prices in equilibrium. Price elasticities differ significantly from the perfect information model.
 
-The French grocery store chain Leclerc operates a price comparison website which allows to compare each of its stores with a selection of competitors. The data collected from this website thus include precise product price records collected from more than 2,000 large supermarkets in France. This allows to investigate price dispersion across local markets in an unprecedented way. Prices are found to largely depend on store chain affiliation, and marginally on observable market characteristics such as the HHI. One chain virtually implements a uniform pricing policy. Store price comparisons yield more volatile results when stores are separated by a higher distance, which supports a relation between price dispersion and consumer search costs. Within an average local market, the lowest and the highest prices of a given product are separated by an average 17\% difference. Controlling for store fixed effects only reduces this gap to 10\%. Price dispersion is loosely related to observable market characteristics, but increases significantly with an index of market prices. These findings are consistent with stores generally using noisier price strategies to extract higher profits when consumer loyalty or search costs allow them to do so.
+The French grocery store chain Leclerc operates a price comparison website which allows to compare each of its stores with a selection of competitors. The data collected from this website thus include precise product price records collected from more than 2,000 large supermarkets in France. This allows to investigate price dispersion across local markets in an unprecedented way\footnote{\cite{LAC02} and \cite{ZHA06} are strongly limited both in terms of number of stores and product sample. \cite{PER15} use consumer scanned data in which the store is not precisely identified and price records are too sparse to measure dispersion within local markets.}. Prices are found to largely depend on store chain affiliation, and marginally on observable market characteristics such as the HHI. One chain virtually implements a uniform pricing policy. Store price comparisons yield more volatile results when stores are separated by a higher distance, which supports a relation between price dispersion and consumer search costs. Within an average local market, the lowest and the highest prices of a given product are separated by an average 17\% difference. Controlling for store fixed effects only reduces this gap to 10\%. Price dispersion is loosely related to observable market characteristics, but increases significantly with an index of market prices. These findings are consistent with stores generally using noisier price strategies to extract higher profits when consumer loyalty or search costs allow them to do so.
 
 \section{Price comparison on quiestlemoinscher.com}
 
@@ -447,9 +447,9 @@ HHI                                                     &           & 0.01     &
                                                         &           & (0.02)   & (0.03)    & (0.04)     \\
 Surface                                                 &           & -0.17*** & -0.11***  & -0.15***   \\
                                                         &           & (0.03)   & (0.04)    & (0.04)     \\
-Population revenue                                      &           & 0.06     & -1.35     & -0.32      \\
+Population revenue (th. euros)                          &           & 0.06     & -1.35     & -0.32      \\
                                                         &           & (0.46)   & (0.84)    & (0.87)     \\
-Population size                                         &           & 0.22**   & 0.89***   & 0.52**     \\
+Population size (th. inhab)                             &           & 0.22**   & 0.89***   & 0.52**     \\
                                                         &           & (0.11)   & (0.14)    & (0.21)     \\
 \midrule
 $R^2$                                                      & 0.70      & 0.75     & 0.03      & 0.09       \\
@@ -556,7 +556,7 @@ r_{ij} = \min\left\{\frac{1}{L} \sum_{t=1}^{L} \mathbbm{1}_{p_{il} > p_{jl}}, \f
 
 % Todo: mention differentiation to justify exposition by chain
 
-If one store is always more expensive than the other, or both always set the same price, rank reversals are equal to 0. Rank reversals can reach a maximum value of 50\% when half of the products are strictly cheaper at store $i$ while the other half are strictly cheaper at store $j$. Importantly, differentiation between stores tends to mechanically decrease rank reversals, hence it must be taken into account when comparing rank reversals across pairs of competitors. Table~\ref{tab:static_compa_15km} provides an overview of rank reversals of all comparisons between chains previously found to operate at relatively similar price levels. The Leclerc vs. Geant Casino confrontation is the most stable across competitor pairs, and within pairs across products. Over 215 pairs of competing stores, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the store confrontations. On average, regardless of the affiliation of the cheapest store in the Leclerc vs. Geant Casino confrontation, the most expensive store is cheaper on 20.4\% of the products available at both stores.
+If one store is always more expensive than the other, or both always set the same price, rank reversals are equal to 0. Rank reversals can reach a maximum value of 50\% when half of the products are strictly cheaper at store $i$ while the other half are strictly cheaper at store $j$. Importantly, differentiation between stores tends to mechanically decrease rank reversals, hence it must be taken into account when comparing rank reversals across pairs of competitors. Table~\ref{tab:static_compa_15km} provides an overview of rank reversals of all comparisons between chains previously found to operate at relatively similar price levels. The Leclerc vs. Geant Casino confrontation is the most stable across competitor pairs, and within pairs across products. Over 215 pairs of competing stores, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85\% of the store confrontations. On average, regardless of the affiliation of the cheapest store in the Leclerc vs. Geant Casino confrontation, the most expensive store is cheaper on 20.4\% of the products available at both stores.
 
 \begin{table}[htbp]
 \caption{Static store level comparisons}
@@ -567,7 +567,7 @@ If one store is always more expensive than the other, or both always set the sam
 \begin{tabular}{llr|rr|rr}
 \toprule
 \toprule
-    Chain A & Chain B & \multicolumn{1}{c|}{Nb} & \multicolumn{2}{c|}{Pair  (\%)} & \multicolumn{2}{c}{Product avg} \\
+    Chain A & Chain B & \multicolumn{1}{c|}{Nb} & \multicolumn{2}{c|}{Pairs  (\%)} & \multicolumn{2}{c}{Product avg} \\
           &       & \multicolumn{1}{c|}{pairs} & \multicolumn{1}{c}{B vs. A avg} & \multicolumn{1}{c|}{A cheaper } & \multicolumn{1}{c}{Same price} & \multicolumn{1}{c}{Rank reversals} \\
     \midrule
     Leclerc & Geant Casino & 215   & +1.4  & 85    & 15.8  & 20.4 \\
@@ -584,7 +584,7 @@ If one store is always more expensive than the other, or both always set the sam
 \end{tabular}
 \begin{tablenotes}
       \small
-      \item Among 215 pairs of Leclerc and Geant Casino competitors, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85.1\% of the pairs. On average, a Leclerc sells 61.8\% of products strictly cheaper than its Geant Casino competitor. Regardless of whether Leclerc or Geant Casino wins the overall comparison, on average, the loser i.e. most expensive store is strictly cheaper on 20.4\% of products.
+      \item Among 215 pairs of Leclerc and Geant Casino competitors, Geant Casino is +1.4\% more expensive on average, and Leclerc is less expensive in 85\% of the pairs. Regardless of whether Leclerc or Geant Casino wins the overall comparison, on average, the loser i.e. most expensive store is strictly cheaper on 20.4\% of products.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
@@ -795,7 +795,7 @@ All sections & 129 230 & 6.4 (4.3) & 17.1 (12.3) & 4.3 (3.1) & 10.5 (7.6) \\
 \end{threeparttable}
 \end{table}
 
-We investigate how market price dispersion relates to market characteristics, in particular the intensity of competition. As previous results suggest that competition is imperfectly captured by available proxies, we introduce an index of market price among explanatory variables\footnote{Two market price indexes are considered: the first is a simple average of store price indexes while the second is built by averaging the ratio of each store index on its average chain index.}. Our hypothesis is that the presence of higher dispersion may reflect poorer consumer information, and thus be associated with higher prices.
+We investigate how market price dispersion relates to market characteristics, in particular the intensity of competition. As previous results suggest that competition is imperfectly captured by available proxies, we introduce an index of market price among explanatory variables. Our hypothesis is that the presence of higher dispersion may reflect poorer consumer information, and thus be associated with higher prices.
 
 Denoting $\text{Product market dispersion}_{ij}$ a measure of price dispersion for product $i$ in a local market $j$, $\text{Product}_i$ a dummy variable which takes value $1$ for all local measures of price dispersion corresponding to product $i$, and $\text{Market characteristics}_{ij}$ a vector which accounts for various market characteristics\footnote{Accordingly, $\beta$ is a vector of coefficients.}, we run the following regression:
 
@@ -804,7 +804,7 @@ Denoting $\text{Product market dispersion}_{ij}$ a measure of price dispersion f
 \label{reg_store_dispersion}
 \end{align}
 
-Results are reported in Table~\ref{tab:reg_market_dispersion}, measuring price dispersion successively by the standard deviation in prices and the range, and considering various sets of market characteristics.
+Results are reported in Table~\ref{tab:reg_market_dispersion}. Price dispersion is computed with price residuals, successively by the standard deviation in prices and the range. Estimations in the third and fourth columns differ only through the introduction of the variable meant to account for the market price level. The latter is built by computing the mean of the ratios of each store price index to their average chain index\footnote{Alternatively, we considered a simple average of store price indexes and obtained similar results.}.
 
 \begin{table}[htbp]
 \caption{Regressions of market disperion}
@@ -817,42 +817,44 @@ Results are reported in Table~\ref{tab:reg_market_dispersion}, measuring price d
     \toprule
           & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} & \multicolumn{1}{c}{Std} & \multicolumn{1}{c}{Range} \\
     \midrule
-    Intercept & -39.02*** & -89.3*** & -39.41*** & -105.65*** \\
-          & (3.38) & (9.59) & (3.60) & (8.72) \\
-    Market price index & 0.45*** & 1.04*** & 0.43*** & 1.10*** \\
-          & (0.03) & (0.10) & (0.03) & (0.08) \\
-    HHI   & -2.83** & -13.69*** & -0.97 & -4.16 \\
-          & (1.21) & (2.89) & (1.30) & (3.26) \\
-    Demand &       &       & 0.02** & 0.05*** \\
-          &       &       & (0.01) & (0.02) \\
-    Revenue &       &       & 0.07* & 0.16 \\
-          &       &       & (0.04) & (0.09) \\
-    Nb stores &       &       & 0.05  & 0.99*** \\
-          &       &       & (0.04) & (0.10) \\
-    Loc - City center &       &       & -0.26* & -0.79** \\
-          &       &       & (0.14) & (0.34) \\
-    Loc - Isolated &       &       & -0.42*** & -1.05*** \\
-          &       &       & (0.16) & (0.40) \\
-    Loc - Rural &       &       & -0.32 & -1.18** \\
-          &       &       & (0.24) & (0.50) \\
-    \midrule
-    R2    & 0.33  & 0.29  & 0.34  & 0.35 \\
-    N     & 50 059 & 50 059 & 50 059 & 50 059 \\
+Intercept & 3.56*** & 4.41*** & -38.83*** & -106.60*** \\
+      & (0.83) & (2.19) & (3.60) & (9.67) \\
+Market price index &       &       & 0.43*** & 1.11*** \\
+      &       &       & (0.03) & (0.08) \\
+HHI   & -4.83*** & -13.52*** & -2.67*** & -7.86*** \\
+      & (1.73) & (4.66) & (1.34) & (3.65) \\
+Population size (th. inhab.) & 0.01* & 0.04** & 0.01* & 0.04*** \\
+      & (0.01) & (0.02) & (0.01) & (0.02) \\
+Population revenue (th. euros) & 0.14*** & 0.35*** & 0.10** & 0.23** \\
+      & (0.04) & (0.10) & (0.04) & (0.10) \\
+Nb stores & -0.03 & 0.74*** & 0.04  & 0.92*** \\
+      & (0.05) & (0.13) & (0.04) & (0.10) \\
+Loc - City center & -0.38** & -1.08** & -0.27** & -0.79** \\
+      & (0.16) & (0.41) & (0.13) & (0.34) \\
+Loc - Isolated & -0.61*** & -1.51*** & -0.40** & -0.97** \\
+      & (0.18) & (0.47) & (0.15) & (0.40) \\
+Loc - Rural & -0.16 & -0.63 & -0.45** & -1.29*** \\
+      & (0.37) & (0.90) & (0.22) & (0.52) \\
+\midrule
+$R^2$    & 0.30  & 0.29  & 0.36  & 0.35 \\
+N     & 47 113 & 47 113 & 47 113 & 47 113 \\
     \bottomrule
     \bottomrule
 \end{tabular}
 \begin{tablenotes}
       \small
 	  \item Standard errors (clustered at the product and market level) in parentheses.
-      \item Product fixed effects $\alpha_i$ are omitted in results.
+    \item Product fixed effects $\alpha_i$ are omitted in results.
 	  \item Significance thresholds: * p<.1, ** p<.05, ***p<.01.
 \end{tablenotes}
 \end{threeparttable}
 \end{table}
 
+While the HHI, the population size and the population revenue are all estimated to be significantly correlated with price dispersion, their impact remains relatively small compared to the relation with market price. For the latter, an increase of one standard deviation, namely 1.63 points, implies an increase in the range of approximately 1.8 points. This is consistent with firms using noisier price strategies to achieve higher prices and margins in contexts that allow them to do so.
+
 \section{Conclusion}
 
-Analysing competition between French supermarkets from different prospects leads to mixed conclusions regarding the competitiveness of the market. On the one hand, the presence of a maverick firm and the recent downward change of pricing strategy of a large supermarket chain in France suggest a significant degree of competitive pressure and a trend favorable to consumers. Meanwhile, evidence of price dispersion reveals that consumers generally face high search costs when it comes to comparing prices at supermarkets, and heterogeneity in supermarket price levels is not easily explained by proxies for competition intensity and socio-demographic variables.
+Analyzing competition between French supermarkets from different prospects leads to mixed conclusions regarding the competitiveness of the market. On the one hand, the presence of a maverick firm and the recent downward change of pricing strategy of a large supermarket chain in France suggest a significant degree of competitive pressure and a trend favorable to consumers. On the other hand, the significant dispersion in prices, even at the local level and controlling for store fixed effects, suggests that comparisons are extremely costly for consumers. Furthermore, we find evidence of a relation between consumer search costs and price dispersion at the rival pair level, and of a positive correlation between price levels and dispersion at the market level. While the role and measure of local competition are to be improved, evidence of price dispersion calls for measures favoring transparency.
 
 \newpage
 

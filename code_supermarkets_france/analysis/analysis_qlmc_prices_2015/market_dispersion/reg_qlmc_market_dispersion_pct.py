@@ -126,7 +126,7 @@ for col in ['price', 'surface', 'hhi_1025km', 'ac_hhi_1025km',
 
 # avoid error msg on condition number (regressions)
 for col_var in ['AU_med_rev', 'UU_med_rev', 'CO_med_rev',
-                'demand_cont_10', 'surface']:
+                'demand_cont_10']:
   df_stores[col_var] = df_stores[col_var].apply(lambda x: x/1000.0)
 
 # LOAD MARKET DISPERSION
@@ -183,10 +183,9 @@ print(df_disp[['nb_stores', 'ac_hhi', 'hhi',
                'ln_demand_cont_10', 'ln_pop_cont_10',
                'ln_AU_med_rev', 'market_price']].corr().to_string())
  
-ls_ls_expl_vars = [['hhi', 'market_price_2'],
-                   ['hhi', 'market_price_2', 'demand_cont_10'],
-                   ['hhi', 'market_price_2', 'demand_cont_10',
-                           'C(STATUT_2010)', 'ac_nb_comp', 'AU_med_rev'],
+ls_ls_expl_vars = [['hhi', 'demand_cont_10', 
+                    'C(STATUT_2010)', 'nb_stores', 'AU_med_rev'],
+                   #['hhi', 'market_price_2', 'demand_cont_10'],
                    ['hhi', 'market_price_2', 'demand_cont_10',
                            'C(STATUT_2010)', 'nb_stores', 'AU_med_rev']]
 
