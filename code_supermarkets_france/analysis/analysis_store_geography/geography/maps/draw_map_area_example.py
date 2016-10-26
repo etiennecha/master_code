@@ -62,18 +62,18 @@ lsd0 = [u'enseigne',
 df_comp = pd.read_csv(os.path.join(path_built_csv,
                                    '201407_competition',
                                    'df_km_vs_time_comp_ex.csv'),
-                      dtype = {u'Code INSEE' : str,
-                               u'Code INSEE ardt' : str,
-                               u'N°Siren' : str,
-                               u'N°Siret' : str},
-                      parse_dates = [u'DATE ouv', u'DATE ferm', u'DATE réouv',
-                                     u'DATE chg enseigne', u'DATE chgt surf'],
-                      encoding = 'latin-1')
+                      dtype = {u'c_insee' : str,
+                               u'c_insee_ardt' : str,
+                               u'c_siren' : str,
+                               u'c_siret' : str},
+                      parse_dates = [u'date_ouv', u'date_fer', u'date_reouv',
+                                     u'date_chg_enseigne', u'date_chg_surface'],
+                      encoding = 'utf-8')
 
-# temp
-df_comp.rename(columns = {'Latitude' : 'latitude',
-                          'Longitude' : 'longitude'},
-               inplace = True)
+## temp
+#df_comp.rename(columns = {'Latitude' : 'latitude',
+#                          'Longitude' : 'longitude'},
+#               inplace = True)
 
 # #####################
 # LOAD SUBSET COMMUNES
