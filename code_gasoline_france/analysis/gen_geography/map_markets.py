@@ -212,7 +212,7 @@ for nb_ids, ls_ls_market_ids in dict_robust_markets.items():
       scale[13].set_text(dref)
     
       plt.savefig(os.path.join(path_dir_built_graphs,
-                               'Market_{:d}_{:s}.png'.format(nb_ids, ls_market_ids[0])),
+                               'market_{:d}_{:s}.png'.format(nb_ids, ls_market_ids[0])),
                   dpi=90,
                   alpha=True,
                   bbox_inches = 'tight')
