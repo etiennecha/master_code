@@ -138,7 +138,7 @@ def get_stats_two_firm_price_spread(ar_prices_1, ar_prices_2, par_round):
                   tmc_spread, freq_tmc_spread,
                   med_spread, freq_med_spread]
   else:
-    ls_results = [nb_spread] + [np.nan for i in range(10)]
+    ls_results = [nb_spread] + [np.nan for i in range(12)]
   return ls_results
 
 def get_stats_two_firm_price_chges(ar_prices_1, ar_prices_2):

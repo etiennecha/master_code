@@ -119,11 +119,6 @@ df_prices_cl[ls_drop_ids_nhw] = np.nan
 # GET DF PAIR DISPERSION
 # ######################
 
-# Need to consider both raw prices and residuals
-km_bound = 10 # extend to 10 for robustness checks?
-margin_chge_bound = 0.03
-ls_pairs = ls_close_pairs
-
 # Scenarios:
 # Residuals
 # Raw prices no mc
@@ -239,7 +234,7 @@ for title_temp, ls_ls_pairs_rr_temp in dict_pairs_rr.items():
   ls_rows_temp = [[title_temp] + row for row in ls_ls_pairs_rr_temp]
   ls_rows_pairs_rr += ls_rows_temp
 
-ls_scalar_cols  = ['nb_spread', 'nb_same_price', 'nb_1_cheaper', 'nb_2_cheaper', 
+ls_scalar_cols  = ['nb_spread', 'nb_same_price', 'nb_cheaper_1', 'nb_cheaper_2', 
                    'nb_rr', 'pct_rr', 'avg_abs_spread_rr', 'med_abs_spread_rr',
                    'avg_abs_spread', 'avg_spread', 'std_spread', 'std_abs_spread']
 
@@ -316,7 +311,7 @@ df_pairs_rr.to_csv(os.path.join(path_dir_built_dis_csv,
 #                            'df_rank_reversals_{:s}.csv'.format(cat)),
 #                   float_format= '%.4f',
 #                   encoding = 'utf-8')
-#
+
 
 # JSON
 

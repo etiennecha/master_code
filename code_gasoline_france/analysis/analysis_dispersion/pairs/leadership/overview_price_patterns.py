@@ -136,15 +136,6 @@ df_pairs = df_pairs[(~((df_pairs['nb_spread'] < 90) &\
 ## filter on distance: 5 km
 #df_pairs = df_pairs[df_pairs['distance'] <= 5]
 
-# COMPETITORS VS. SAME GROUP
-
-df_pair_same =\
-  df_pairs[(df_pairs['group_1'] == df_pairs['group_2']) &\
-           (df_pairs['group_last_1'] == df_pairs['group_last_2'])].copy()
-df_pair_comp =\
-  df_pairs[(df_pairs['group_1'] != df_pairs['group_2']) &\
-           (df_pairs['group_last_1'] != df_pairs['group_last_2'])].copy()
-
 # LISTS FOR DISPLAY
 
 lsd = ['id_1', 'id_2', 'distance', 'group_last_1', 'group_last_2']
@@ -353,10 +344,10 @@ print(df_pairs[(df_pairs['mc_spread'] == 1.0) | (df_pairs['mc_spread'] == -1.0)]
 
 # LEADERSHIP TEST
 df_pairs['leader_pval'] = np.nan
-df_pairs['leader_pval'] = df_pairs[(~df_pairs['nb_1_lead'].isnull()) &\
-                                   (~df_pairs['nb_2_lead'].isnull())].apply(\
-                            lambda x: scipy.stats.binom_test(x[['nb_1_lead',
-                                                                'nb_2_lead']].values,
+df_pairs['leader_pval'] = df_pairs[(~df_pairs['nb_lead_1'].isnull()) &\
+                                   (~df_pairs['nb_lead_2'].isnull())].apply(\
+                            lambda x: scipy.stats.binom_test(x[['nb_lead_1',
+                                                                'nb_lead_2']].values,
                                                              p = 0.5),
                             axis = 1)
 
@@ -371,7 +362,7 @@ df_pairs['leader_pval'] = df_pairs[(~df_pairs['nb_1_lead'].isnull()) &\
 #                            axis = 1)
 
 lsd_ld = ['pct_same', 'nb_same', 'nb_chge_to_same',
-          'nb_1_lead', 'nb_2_lead', 'leader_pval']
+          'nb_lead_1', 'nb_lead_2', 'leader_pval']
 
 print()
 print(u'Inspect leaders:')
@@ -390,11 +381,11 @@ print(df_pairs[df_pairs['leader_pval'] <= 0.05]['pair_type'].value_counts() /\
 print()
 df_pairs['leader_brand'] = np.nan
 df_pairs.loc[(df_pairs['leader_pval'] <= 0.05) &\
-             (df_pairs['nb_1_lead'] > df_pairs['nb_2_lead']),
+             (df_pairs['nb_lead_1'] > df_pairs['nb_lead_2']),
              'leader_brand'] = df_pairs['brand_last_1']
                       
 df_pairs.loc[(df_pairs['leader_pval'] <= 0.05) &\
-             (df_pairs['nb_1_lead'] < df_pairs['nb_2_lead']),
+             (df_pairs['nb_lead_1'] < df_pairs['nb_lead_2']),
              'leader_brand'] = df_pairs['brand_last_2']
 
 # todo: leader brand only of stations which have:
@@ -427,15 +418,15 @@ ls_close_comp = list(set(\
 
 ls_rel_leader = list(set(\
   df_close_comp['id_1'][(df_close_comp['leader_pval'] <= 0.05) &\
-                        (df_pairs['nb_1_lead'] > df_pairs['nb_2_lead'])].values.tolist() +\
+                        (df_pairs['nb_lead_1'] > df_pairs['nb_lead_2'])].values.tolist() +\
   df_close_comp['id_2'][(df_close_comp['leader_pval'] <= 0.05) &\
-                        (df_pairs['nb_1_lead'] < df_pairs['nb_2_lead'])].values.tolist()))
+                        (df_pairs['nb_lead_1'] < df_pairs['nb_lead_2'])].values.tolist()))
 
 ls_rel_led = list(set(\
   df_close_comp['id_1'][(df_close_comp['leader_pval'] <= 0.05) &\
-                        (df_pairs['nb_1_lead'] < df_pairs['nb_2_lead'])].values.tolist() +\
+                        (df_pairs['nb_lead_1'] < df_pairs['nb_lead_2'])].values.tolist() +\
   df_close_comp['id_2'][(df_close_comp['leader_pval'] <= 0.05) &\
-                        (df_pairs['nb_1_lead'] > df_pairs['nb_2_lead'])].values.tolist()))
+                        (df_pairs['nb_lead_1'] > df_pairs['nb_lead_2'])].values.tolist()))
 
 ls_rel_unc = list(set(\
   df_close_comp['id_1'][(df_close_comp['leader_pval'] > 0.05)].values.tolist() +\
@@ -540,6 +531,56 @@ print(df_leader_brands_pct.to_string(float_format = '{:.0f}'.format))
 
 df_prices = df_prices_ttc
 
+## GRAHS: MATCHED PRICES (more robust but works only if no differentiation for now)
+#
+#pair_id_1, pair_id_2 = '1200003', '1200001'
+#
+#df_prices = df_prices_ttc.ix['2014-01-01':'2014-06-30'].copy()
+#
+#def plot_pair_matched_prices(pair_id_1, pair_id_2):
+#  ls_sim_prices = get_stats_two_firm_same_prices(df_prices[pair_id_1].values,
+#                                                 df_prices[pair_id_2].values)
+#  #ax = df_prices[[pair_id_1, pair_id_2]].plot()
+#  fig = plt.figure()
+#  ax = fig.add_subplot(111)
+#  l1 = ax.plot(df_prices.index,
+#               df_prices[pair_id_1].values, lw = 1,
+#               c = 'k', ls = '-', alpha = 0.4, zorder = 1, # lw = 1, marker = '+', markevery=5, #g
+#               label = '{:s}'.format(df_info.ix[pair_id_1]['brand_last']))
+#  l2 = ax.plot(df_prices.index,
+#               df_prices[pair_id_2].values, lw = 1,
+#               c = 'k', ls = '--', alpha = 1, zorder = 2, #b
+#               label = '{:s}'.format(df_info.ix[pair_id_2]['brand_last']))
+#  for day_ind in ls_sim_prices[1][0]:
+#  	ax.axvline(x=df_prices.index[day_ind], lw=1, ls='--', c='k', alpha = 1, zorder = 1)
+#  for day_ind in ls_sim_prices[1][1]:
+#  	ax.axvline(x=df_prices.index[day_ind], lw=1, ls='-', c='k', alpha = 0.4, zorder = 2)
+#  lns = l1 + l2
+#  labs = [l.get_label() for l in lns]
+#  ## id_2 is TA
+#  #ax1.axvline(x = df_info_ta.ix[id_2]['pp_chge_date'], color = 'k', ls = '-')
+#  ax.legend(lns, labs, loc=1)
+#  ax.grid()
+#  # Show ticks only on left and bottom axis, out of graph
+#  ax.yaxis.set_ticks_position('left')
+#  ax.xaxis.set_ticks_position('bottom')
+#  ax.get_yaxis().set_tick_params(which='both', direction='out')
+#  ax.get_xaxis().set_tick_params(which='both', direction='out')
+#
+#  str_ylabel = 'Price (euro/liter)'
+#  plt.ylabel(str_ylabel)
+#  fig.tight_layout()
+#  #plt.show()
+#  plt.savefig(os.path.join(path_dir_built_dis_graphs,
+#                           dir_graphs,
+#                           'example_leadership_{:s}_{:s}.png'.format(pair_id_1, pair_id_2)),
+#              dpi = 200)
+#  plt.close()
+#
+#plot_pair_matched_prices('1700004', '1120005')
+
+
+
 ## GRAPHS: FOLLOWED PRICE CHANGES (very sensitive)
 #
 #pair_id_1, pair_id_2 = '1500004', '1500006'
@@ -558,50 +599,65 @@ df_prices = df_prices_ttc
 #
 #plot_pair_followed_price_chges('1500004', '1500006')
 
-# GRAHS: MATCHED PRICES (more robust but works only if no differentiation for now)
+# ############################
+# EXAMINE LEADERS & FOLLOWERS
+# ############################
 
-pair_id_1, pair_id_2 = '1200003', '1200001'
+# detect asymmetry in leadership
+for i in (1, 2):
+  df_pairs['nb_lead_d_{:d}'.format(i)] =\
+      df_pairs['nb_lead_{:d}'.format(i)] - df_pairs['nb_lead_u_{:d}'.format(i)]
 
-df_prices = df_prices_ttc.ix['2014-01-01':'2014-06-30'].copy()
+# Leclerc / Auchan leaders - Carrefour / Geant leg
 
-def plot_pair_matched_prices(pair_id_1, pair_id_2):
-  ls_sim_prices = get_stats_two_firm_same_prices(df_prices[pair_id_1].values,
-                                                 df_prices[pair_id_2].values)
-  #ax = df_prices[[pair_id_1, pair_id_2]].plot()
-  fig = plt.figure()
-  ax = fig.add_subplot(111)
-  l1 = ax.plot(df_prices.index,
-               df_prices[pair_id_1].values, lw = 1,
-               c = 'k', ls = '-', alpha = 0.4, zorder = 1, # lw = 1, marker = '+', markevery=5, #g
-               label = '{:s}'.format(df_info.ix[pair_id_1]['brand_last']))
-  l2 = ax.plot(df_prices.index,
-               df_prices[pair_id_2].values, lw = 1,
-               c = 'k', ls = '--', alpha = 1, zorder = 2, #b
-               label = '{:s}'.format(df_info.ix[pair_id_2]['brand_last']))
-  for day_ind in ls_sim_prices[1][0]:
-  	ax.axvline(x=df_prices.index[day_ind], lw=1, ls='--', c='k', alpha = 1, zorder = 1)
-  for day_ind in ls_sim_prices[1][1]:
-  	ax.axvline(x=df_prices.index[day_ind], lw=1, ls='-', c='k', alpha = 0.4, zorder = 2)
-  lns = l1 + l2
-  labs = [l.get_label() for l in lns]
-  ## id_2 is TA
-  #ax1.axvline(x = df_info_ta.ix[id_2]['pp_chge_date'], color = 'k', ls = '-')
-  ax.legend(lns, labs, loc=1)
-  ax.grid()
-  # Show ticks only on left and bottom axis, out of graph
-  ax.yaxis.set_ticks_position('left')
-  ax.xaxis.set_ticks_position('bottom')
-  ax.get_yaxis().set_tick_params(which='both', direction='out')
-  ax.get_xaxis().set_tick_params(which='both', direction='out')
+# BUILD DF WHERE A = LEADER & B = OTHER (ALWAYS FOLLOWER HERE?)
+df_leaders = df_pairs[((df_pairs['id_1'].isin(ls_abs_leader)) |
+                       (df_pairs['id_2'].isin(ls_abs_leader))) &
+                      (df_pairs['leader_pval'] <= 0.05)].copy()
 
-  str_ylabel = 'Price (euro/liter)'
-  plt.ylabel(str_ylabel)
-  fig.tight_layout()
-  #plt.show()
-  plt.savefig(os.path.join(path_dir_built_dis_graphs,
-                           dir_graphs,
-                           'example_leadership_{:s}_{:s}.png'.format(pair_id_1, pair_id_2)),
-              dpi = 200)
-  plt.close()
+for var_name in ['id', 'dpt', 'reg', 'ci_ardt_1',
+                 'brand_0', 'brand_last',
+                 'group', 'group_last',
+                 'group_type', 'group_type_last',
+                 'nb_cheaper',
+                 'nb_lead', 'nb_lead_u', 'nb_lead_d', 'nb_ctd',
+                 'nb_chges', 'nb_fol']:
+  df_leaders['{:s}_a'.format(var_name)] = df_leaders['{:s}_1'.format(var_name)]
+  df_leaders['{:s}_b'.format(var_name)] = df_leaders['{:s}_2'.format(var_name)]
+  df_leaders.loc[df_leaders['id_2'].isin(ls_abs_leader),
+                 '{:s}_a'.format(var_name)] = df_leaders['{:s}_2'.format(var_name)]
+  df_leaders.loc[df_leaders['id_2'].isin(ls_abs_leader),
+                 '{:s}_b'.format(var_name)] = df_leaders['{:s}_1'.format(var_name)]
+  if var_name != 'id':
+    df_leaders.drop(['{:s}_1'.format(var_name), '{:s}_2'.format(var_name)],
+                    axis = 1, inplace = True)
+# also chge sign of mean_spread if order chged
+df_leaders.loc[~df_leaders['id_1'].isin(ls_abs_leader),
+               'mean_spread'] = -df_leaders['mean_spread']
 
-plot_pair_matched_prices('1700004', '1120005')
+## Check: long term compa by chain pair (do for all pairs)
+#df_subc = df_leaders[['brand_last_a', 'brand_last_b', 'mean_spread']]\
+#                    .groupby(['brand_last_a', 'brand_last_b'])\
+#                    .agg('describe')['mean_spread'].unstack()
+#df_subc.reset_index(inplace = True, drop = False)
+#
+#for br_a in ['LECLERC', 'AUCHAN', 'TOTAL_ACCESS']:
+#  print()
+#  print(df_subc[df_subc['brand_last_a'] == br_a].to_string())
+
+df_leaders['asym_pval'] = np.nan
+df_leaders['asym_pval'] = df_leaders[(~df_leaders['nb_lead_u_a'].isnull()) &\
+                                     (~df_leaders['nb_lead_d_b'].isnull())].apply(\
+                            lambda x: scipy.stats.binom_test(x[['nb_lead_u_a',
+                                                                'nb_lead_d_b']].values,
+                                                             p = 0.5),
+                            axis = 1)
+
+# For Leclerc
+len(df_leaders[(df_leaders['brand_last_a'] == 'LECLERC') &\
+               (df_leaders['asym_pval'] <= 0.05) &\
+               (df_leaders['nb_lead_u_a'] < df_leaders['nb_lead_d_a'])])
+
+len(df_leaders[(df_leaders['brand_last_a'] == 'LECLERC') &\
+               (df_leaders['asym_pval'] <= 0.05) &\
+               (df_leaders['nb_lead_u_a'] > df_leaders['nb_lead_d_a'])])

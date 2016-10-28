@@ -393,10 +393,10 @@ print(df_pairs[(df_pairs['mc_spread'] == 1.0) | (df_pairs['mc_spread'] == -1.0)]
 
 # LEADERSHIP TEST
 df_pairs['leader_pval'] = np.nan
-df_pairs['leader_pval'] = df_pairs[(~df_pairs['nb_1_lead'].isnull()) &\
-                                   (~df_pairs['nb_2_lead'].isnull())].apply(\
-                            lambda x: scipy.stats.binom_test(x[['nb_1_lead',
-                                                                'nb_2_lead']].values,
+df_pairs['leader_pval'] = df_pairs[(~df_pairs['nb_lead_1'].isnull()) &\
+                                   (~df_pairs['nb_lead_2'].isnull())].apply(\
+                            lambda x: scipy.stats.binom_test(x[['nb_lead_1',
+                                                                'nb_lead_2']].values,
                                                              p = 0.5),
                             axis = 1)
 
@@ -411,7 +411,7 @@ df_pairs['leader_pval'] = df_pairs[(~df_pairs['nb_1_lead'].isnull()) &\
 #                            axis = 1)
 
 lsd_ld = ['pct_same', 'nb_same', 'nb_chge_to_same',
-          'nb_1_lead', 'nb_2_lead', 'leader_pval']
+          'nb_lead_1', 'nb_lead_2', 'leader_pval']
 
 print()
 print(u'Inspect leaders:')
@@ -430,11 +430,11 @@ print(df_pairs[df_pairs['leader_pval'] <= 0.05]['pair_type'].value_counts() /\
 print()
 df_pairs['leader_brand'] = np.nan
 df_pairs.loc[(df_pairs['leader_pval'] <= 0.05) &\
-             (df_pairs['nb_1_lead'] > df_pairs['nb_2_lead']),
+             (df_pairs['nb_lead_1'] > df_pairs['nb_lead_2']),
              'leader_brand'] = df_pairs['brand_last_1']
                       
 df_pairs.loc[(df_pairs['leader_pval'] <= 0.05) &\
-             (df_pairs['nb_1_lead'] < df_pairs['nb_2_lead']),
+             (df_pairs['nb_lead_1'] < df_pairs['nb_lead_2']),
              'leader_brand'] = df_pairs['brand_last_2']
 
 # todo: leader brand only of stations which have:
@@ -467,15 +467,15 @@ ls_close_comp = list(set(\
 
 ls_rel_leader = list(set(\
   df_close_comp['id_1'][(df_close_comp['leader_pval'] <= 0.05) &\
-                        (df_pairs['nb_1_lead'] > df_pairs['nb_2_lead'])].values.tolist() +\
+                        (df_pairs['nb_lead_1'] > df_pairs['nb_lead_2'])].values.tolist() +\
   df_close_comp['id_2'][(df_close_comp['leader_pval'] <= 0.05) &\
-                        (df_pairs['nb_1_lead'] < df_pairs['nb_2_lead'])].values.tolist()))
+                        (df_pairs['nb_lead_1'] < df_pairs['nb_lead_2'])].values.tolist()))
 
 ls_rel_led = list(set(\
   df_close_comp['id_1'][(df_close_comp['leader_pval'] <= 0.05) &\
-                        (df_pairs['nb_1_lead'] < df_pairs['nb_2_lead'])].values.tolist() +\
+                        (df_pairs['nb_lead_1'] < df_pairs['nb_lead_2'])].values.tolist() +\
   df_close_comp['id_2'][(df_close_comp['leader_pval'] <= 0.05) &\
-                        (df_pairs['nb_1_lead'] > df_pairs['nb_2_lead'])].values.tolist()))
+                        (df_pairs['nb_lead_1'] > df_pairs['nb_lead_2'])].values.tolist()))
 
 ls_rel_unc = list(set(\
   df_close_comp['id_1'][(df_close_comp['leader_pval'] > 0.05)].values.tolist() +\
