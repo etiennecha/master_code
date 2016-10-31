@@ -179,7 +179,7 @@ dict_pair_comp['sup&dis'] = pd.concat([dict_pair_comp['sup'],
                                        dict_pair_comp['dis'],
                                        dict_pair_comp['sup_dis']])
 # Low spread pairs (limit on average long term price difference)
-diff_bound = 2.0 # euro cents
+diff_bound = 1.0 # euro cents
 dict_pair_comp_nd = {}
 for df_temp_title, df_temp in dict_pair_comp.items():
   dict_pair_comp_nd[df_temp_title] =\

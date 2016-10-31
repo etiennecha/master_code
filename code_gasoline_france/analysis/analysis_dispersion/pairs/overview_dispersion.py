@@ -293,6 +293,28 @@ for col in ls_col_overview:
   print(u'{:s} (various max mean spread):'.format(col))
   print(df_desc_temp.T.to_string(formatters = {'count' : format_float_int}))
 
+# OVERVIEW COMP & NON DIFF COMP BY STATION
+# overwrite type to have simplified categoeries
+df_info_temp = df_info.copy()
+df_info_temp.loc[df_info_temp['group_type_last'] == 'HYP', 'group_type_last'] = 'SUP'
+df_info_temp.loc[df_info_temp['group_type'] == 'HYP', 'group_type'] = 'SUP'
+df_info_temp.loc[df_info_temp['group_type_last'] == 'IND', 'group_type_last'] = 'OIL'
+df_info_temp.loc[df_info_temp['group_type'] == 'IND', 'group_type'] = 'OIL'
+print('Overview of non differentiated comp presence by type:')
+for max_distance in (5, 3):
+  for max_spread in (2, 1):
+    print()
+    print('Max dist: {:d} & max spread: {:d}'.format(max_distance, max_spread))
+    df_sub_0 =\
+      dict_pair_comp['any'][(dict_pair_comp['any']['distance'] <= max_distance) &\
+                            (dict_pair_comp['any']['abs_mean_spread'] <= max_spread)]
+    ls_nd_comp_0 = list(set(list(df_sub_0['id_1'].values) +\
+                              list(df_sub_0['id_2'].values)))
+    df_info_temp['nd_comp'] = 0
+    df_info_temp.ix[ls_nd_comp_0, 'nd_comp'] = 1
+    print(df_info_temp[df_info_temp['nd_comp'] == 1]['group_type_last'].value_counts() /\
+            df_info_temp['group_type_last'].value_counts()* 100)
+
 # #######################
 # STATS DES BY TYPE
 # #######################
