@@ -599,9 +599,9 @@ df_prices = df_prices_ttc
 #
 #plot_pair_followed_price_chges('1500004', '1500006')
 
-# ############################
-# EXAMINE LEADERS & FOLLOWERS
-# ############################
+# #################
+# EXAMINE LEADERS
+# #################
 
 # detect asymmetry in leadership
 for i in (1, 2):
@@ -613,7 +613,8 @@ for i in (1, 2):
 # BUILD DF WHERE A = LEADER & B = OTHER (ALWAYS FOLLOWER HERE?)
 df_leaders = df_pairs[((df_pairs['id_1'].isin(ls_abs_leader)) |
                        (df_pairs['id_2'].isin(ls_abs_leader))) &
-                      (df_pairs['leader_pval'] <= 0.05)].copy()
+                      (df_pairs['leader_pval'] <= 0.05) &\
+                      (df_pairs['pct_same'] >= 30)].copy()
 
 for var_name in ['id', 'dpt', 'reg', 'ci_ardt_1',
                  'brand_0', 'brand_last',
@@ -661,3 +662,46 @@ len(df_leaders[(df_leaders['brand_last_a'] == 'LECLERC') &\
 len(df_leaders[(df_leaders['brand_last_a'] == 'LECLERC') &\
                (df_leaders['asym_pval'] <= 0.05) &\
                (df_leaders['nb_lead_u_a'] > df_leaders['nb_lead_d_a'])])
+
+# if work with ld_abs_lead => todo: chge var name
+# LECLERC leaders initiate more decreases than increases
+# CARREFOUR led follow more decreases than increases
+
+# ##################
+# EXAMINE FOLLOWERS
+# ##################
+
+# BUILD DF WHERE A = LEADER & B = OTHER (ALWAYS FOLLOWER HERE?)
+df_followers = df_pairs[((df_pairs['id_1'].isin(ls_abs_led)) |
+                       (df_pairs['id_2'].isin(ls_abs_led))) &
+                      (df_pairs['leader_pval'] <= 0.05) &\
+                      (df_pairs['pct_same'] >= 30)].copy()
+
+for var_name in ['id', 'dpt', 'reg', 'ci_ardt_1',
+                 'brand_0', 'brand_last',
+                 'group', 'group_last',
+                 'group_type', 'group_type_last',
+                 'nb_cheaper',
+                 'nb_lead', 'nb_lead_u', 'nb_lead_d', 'nb_ctd',
+                 'nb_chges', 'nb_fol']:
+  df_followers['{:s}_a'.format(var_name)] = df_followers['{:s}_1'.format(var_name)]
+  df_followers['{:s}_b'.format(var_name)] = df_followers['{:s}_2'.format(var_name)]
+  df_followers.loc[df_followers['id_2'].isin(ls_abs_led),
+                 '{:s}_a'.format(var_name)] = df_followers['{:s}_2'.format(var_name)]
+  df_followers.loc[df_followers['id_2'].isin(ls_abs_led),
+                 '{:s}_b'.format(var_name)] = df_followers['{:s}_1'.format(var_name)]
+  if var_name != 'id':
+    df_followers.drop(['{:s}_1'.format(var_name), '{:s}_2'.format(var_name)],
+                    axis = 1, inplace = True)
+# also chge sign of mean_spread if order chged
+df_followers.loc[~df_followers['id_1'].isin(ls_abs_led),
+               'mean_spread'] = -df_followers['mean_spread']
+
+lsdl = ['id_a', 'id_b', 'brand_last_a', 'brand_last_b',
+        'pct_same', 'leader_pval',
+        'nb_lead_a', 'nb_lead_b',
+        'nb_lead_u_a', 'nb_lead_d_a',
+        'nb_lead_u_b', 'nb_lead_d_b',
+        'nb_chge_to_same_u', 'nb_chge_to_same_d']
+
+# caution: one gas station often led by several here...
