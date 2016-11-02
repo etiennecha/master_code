@@ -226,6 +226,7 @@ ls_sc_ols_formulas = ['abs_mean_spread ~ sc_{:d} {:s}'.format(dist_reg, str_ctrl
 
 # from statsmodels.regression.quantile_regression import QuantReg
 ls_quantiles = [0.2501, 0.501, 0.7501, 0.9001]
+#ls_quantiles = [0.25, 0.50, 0.75, 0.90]
 
 #mod = smf.quantreg('pct_rr~distance', df_ppd_reg[~pd.isnull(df_ppd_reg['pct_rr'])])
 #res = mod.fit(q=.5)
