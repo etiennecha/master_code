@@ -27,6 +27,13 @@
 \usepackage{geometry}
 \geometry{verbose,tmargin=3cm,bmargin=3cm,lmargin=2.5cm,rmargin=2.5cm}
 \usepackage[flushleft]{threeparttable}
+\usepackage[section]{placeins} % keep tables within their section
+\makeatletter
+\AtBeginDocument{%
+  \expandafter\renewcommand\expandafter\subsection\expandafter{%
+    \expandafter\@fb@secFB\subsection
+  }%
+}
 \bibliographystyle{chicago}
 
 
@@ -60,8 +67,6 @@ Email: etienne.chamayou@ensae.fr%
 
 Total S.A., the supermajor oil company, operates the largest gas station network in France. End of 2011, the company launched a new chain, ``Total Access'', with the stated goal of recapturing market shares lost to supermarkets. Within two years, 600 existing gas stations across France were thus rebranded to form the new chain. For half of them, the conversion was accompanied by an approximate 10 euro cent per liter drop in prices. The reaction of competitors is studied using difference in differences regressions with daily price data obtained from a comparison website. The measured aggregate response is a slight decrease, of less than one euro cent per liter. It yet conceals increases and decreases in equivalent proportions for the 40\% of the competitors which are found to change their pricing policy by one cent or more. Decreases are mainly implemented by supermarkets, whereas gas stations operated by oil groups and independent networks account for most of the increases. These reactions lead to highlight the role of market segmentation, beyond apparent product homogeneity.
 
-\medskip{}
-
 \date{\noindent \textbf{Codes JEL:} C20, C55, L81.}
 
 \newpage{}
@@ -77,13 +82,10 @@ This paper investigates competition on the French retail gasoline market, using 
 Following suspicions of asymmetries in upward and downward retail price adjustments to oil price fluctuations, a rich literature on retail gasoline markets has emerged (\cite{ECK13}). Several papers have sought to use merger and acquisition evaluations to shed light on market competitiveness%
 \footnote{\cite{EIN10} and \cite{ANG10}, regarding recent advances in applied industrial economics, express a disagreement as to which methodologies are most appropriate. \cite{EIN10} advocate structural approaches which allow to estimate the demand function and perform merger simulations. \cite{ANG10} criticize the overwhelming use of such approaches as they generally require strong hypotheses. They call for more evidence relying on ``simple, transparent empirical methods that trace a shorter route from facts to findings'', citing in particular \cite{HAS04}, to which our approach is very similar, as we do not have data on volumes.%
 }. Difference in differences analyses have yet yielded contrasted results. \cite{HAS04} and \cite{TAY10} studying the same concentration operation in California, albeit with different data samples, have reached significantly different conclusions: a 5 cent increase per gallon in the former, and only a 1 cent increase in the latter. \cite{HOU12} has simulated a merger between two retailers in Canada and evaluated its impact ex-post using a difference in differences approach. The paper stresses the importance of heterogeneity across stations and markets, which make results highly sensitive to biases in data sampling. Findings generally suggest weak price adjustment by competitors, conditioned by the structure of competition (presence of independent gas stations in \cite{HAS04}, road traffic and local market power in \cite{HOU12}).
-\medskip{}
 
 The data used in this paper allow to overcome the main problems raised by the literature. Price records have a daily frequency which ensure a reasonably fine observation of pricing strategies. In addition, sellers are observed in a virtually exhaustive way, including rebranded stations, other stations operated by Total SA, and competitors. We first estimate aggregate effects using difference in differences regressions by defining markets through radiuses of 1, 3 or 5 km around each rebranded gas station. We then estimate the reaction of each gas station, in order to measure heterogeneity and relax the constraints previously imposed by our market definition. We find that supermarkets have generally implemented small price decreases in reaction to a nearby rebranding, while oil companies and independent gas stations have rather slightly increased prices. The heterogeneity of reactions leads to stress the necessity to observe a large sample of gas stations. Focusing on the Paris metropolitan area, we observe that prices have been adjusted upwards within Paris and nearby, but downwards in gas stations located further away (and for France in general). This heterogeneity can be accounted for by the low penetration of supermarket gas stations in Paris. Besides contributing to the understanding of competition in the French retail gasoline market, our paper illustrates how results obtained through difference in difference regressions to evaluate a merger can diverge, depending on market structure and concentration in the observed sample.
-\medskip{}
 
 Regarding competition in the French retail gasoline market, the results support the idea of a significant market segmentation. On the one hand, the statistically significant yet small price decreases implemented by supermarkets are consistent with reinforced competition and low pre-existing gross margins. Other gas stations appear to have kept addressing a less price sensitive demand of loyal or captive customers, for whom the launch of Total Access may indirectly have led to an increase in prices.
-\medskip{}
 
 The first part of the paper describes the French retail gasoline market as well as the rebranding operation implemented by Total S.A. The second part provides an overview of the data with descriptive statistics. Finally, the last part details the estimation strategy and the main results.
 
@@ -92,13 +94,10 @@ The first part of the paper describes the French retail gasoline market as well 
 The data cover a three-year time span, from September 2011 to December 2014. Over the period, retail diesel price increases until April 2012 (approximately 20 cents to reach 1.40 euro per liter after tax), and decreases thereafter. Diesel accounts for 75\% of household gasoline consumption. Three main types of retailers operate on the market: supermarket chains, oil companies, and independent networks. The price difference between a supermarket gas station and a competitor from another type is generally close to 8 euro cents per liter. The data do not contain information about vertical relations, hence their potential impact is not taken into account in the analysis.
 
 Oil refining has undergone significant restructuring over the last years (acquisitions and shutdowns e.g. Petroplus in Normandy in 2012), and these changes could have had some impact on prices. Taxes account for nearly 60$\%$ of retail prices. They consist of fixed components (exhibiting slight variations across regions) and the VAT.
-\medskip{}
 
 The \cite{BEL12} report relies on the evolution of the gas station network as well as estimations of profitability (net margin of 0.2 to 2 euro cents per liter) to support the thesis of a highly competitive market. The total number of gas stations has indeed plummeted from roughly 40,000 to 12,000 between 1980 and 2012. Meanwhile, the market share of oil companies has kept decreasing, while supermarkets were expanding their networks. Gas stations operated by supermarkets account for approximately 50\% of the total number of gas stations over the studied period, while their market share is close to 60\%.
-\medskip{}
 
 Upon creating Total Access, Total S.A. has stated that its goal was to recapture market shares lost to supermarkets. The idea was to associate the development of a discount offer with a quality brand image. Before the creation, Total S.A. distributed gasoline through three chains: Total, Elf and Elan. The Elan chain is essentially to be found in areas where both demand and competition are low, typically in rural areas. It was not impacted by the rebranding operation. The Elf chain was inherited from a prior merger, and was until then the discount chain of Total S.A. The stations belonging to the Elf chain were rebranded Total Access and the pricing policy was left unchanged. Some minor modifications may have affected stations such as the addition of a premium gasoline. Finally, as regards former Total gas stations, the rebranding was accompanied by a significant decrease in prices, and occasionally some upgrades such as the the addition of some pumps. Gas station amenities may have been marginally reduced, for instance through a shrinkage in the number of products available at the gas station shop.
-\medskip{}
 
 While Total S.A. has largely advertised the creation of its new chain, the identity of affected gas stations was not disclosed until their respective rebranding. The pace of the development of the network has been fairly regular following the announcement. Required renovation works last one to two weeks and were reported to cost between one and two million euros for each gas station. Total S.A. has also mentioned that the magnitude of the price decreases was decided based on each gas station's market environment. At the end of the observed period, Total Access gas stations could be found across all regions of France.%
 \footnote{Philippe Callejon, in charge of the creation of the chain, has given several interviews to explain the choice to convert classic Total stations to Total Access. ``A test was implemented over 18 months within 45 cities. This test period was crucial. Prices, through a 9 cent decrease, were aligned on market prices. We have then examined at the impact of the price decrease on the economic model of gas stations. Conclusion: in order to make up for the price decrease, we must increase volumes. Very piratically, we need gas stations big enough to have several pumps. They must be located on highly frequently roads so that there are enough potential customers. As a matter of fact, within the Total network, some gas stations are located on roads were the traffic is low. We have no influence on such elements, as well as the fact that it is nearly impossible to obtain the authorization to open a new gas station. The test has thus confirmed the necessity to create a network with two offers: gas stations with competitive prices, in periphery, where higher volumes resulting from potential demand can make up for the decrease in price, and proximity gas stations, with classic prices.''%
@@ -111,11 +110,11 @@ Data come from the price comparison website www.prix-carburants.gouv.fr, on whic
 The analysis is based on daily price records spanning slightly more than three years, from September 4, 2011 to December 4, 2014. Some short periods are missing due to technical issues encountered during data collection (cf. Figure~\ref{fig:diesel_and_brent}). Gas stations located on the island of Corsica were excluded (130 gas stations) as well as gas stations located on highways (less than 500) since they are part of specific markets. Some gas stations for which observations were too short or price dynamics looked suspicious, mainly because of excessive rigidity, were also discarded. We also drop gas stations which already compete with a Total Access gas station as of September 2011 (i.e. when the rebranding occurred prior to the beginning of our study) or which compete with a gas station for which the observed price change is below 4 euro cents per liter (500 gas stations). Former Total stations for which the price change is small are likely gas stations which were used during the test phase, meaning that the price decrease has occurred before the rebranding (cf. comments on Figure~\ref{fig:price_dist_total_ba}). In order to estimate a potential effect of the rebranding on other gas stations operated by Total SA, we include them in the analysis. About 300 are located within a distance of 5 km of a Total-Total Access, and 100 within 5 km of an Elf-Total Access. Finally, we only keep gas stations which are located within 10 km from a rebranded gas station (cf. part 4 on the estimation strategy). About 4,700 gas stations are dropped based on this filter, leaving us with approximately 3,100 gas stations and 3 million price observations. About 1,300 are considered to compete with a Total-Total Access gas station and 400 with an Elf-Total Access. Other gas stations located within 5 to 10 km from a Total Access are used as a control group in our difference in differences analysis, as they are assumed to not directly compete with Total Access gas stations. Our data include gas station characteristics and locations. Census data and other publicly available data were added based on the municipality of each gas station. For each of them, we built several variables describing competition such as the distance to the closest competitor and the number of competitors located within a 1, 3 or 5 km distance.
 \medskip{}
 
-\begin{figure}[H]
+\begin{figure}[htb!]
     \caption{Evolution of diesel and Brent prices}
 		\label{fig:diesel_and_brent}
 %\begin{center}
-\includegraphics[scale=0.4]{graphs/ta_macro_trends.png}
+\includegraphics[width=\textwidth]{graphs/ta_macro_trends.png}
 %\end{center}
 \flushleft
 {\small{}\uline{Reading Note}}{\small{}:
@@ -126,13 +125,12 @@ Diesel prices are average retail prices excluding taxes. Some periods are missin
 Gas station chain changes are observed in the data, and were validated with publications of Total SA. A renovation work period is associated with a rebranding and lasts about 15 days, during which the gas station remains closed. The measure of the price effect via a difference in differences for Total-Total Access and Elf-Total Access gas stations as well as for other Total SA gas stations correspond to the direct effect, i.e. a decision by Total SA.%
 \footnote{Only difference in difference results obtained with a national control are presented. Robustness checks were performed with regional controls and at a series level (cf part 4.1) and provided similar results.%
 }. The direct effect analysis is meant to verify that price decreases were actually implemented together with the rebranding, and whether Total SA may have changed its pricing policy for other gas stations at the same time without communicating about it.
-\newpage{}
 
-\begin{figure}[H]
+\begin{figure}[htb!]
     \caption{Detection of a change in pricing policy for a Total Access gas station}
 		\label{fig:margin_change_detection}
 %\begin{center}
-\includegraphics[scale=0.4]{graphs/margin_change_detection.png}
+\includegraphics[width=\textwidth]{graphs/margin_change_detection.png}
 %\end{center}
 \flushleft
 {\small{}\uline{Reading Note}}{\small{}: } The grey line represents the prices $\mathrm{P}_{t}$ of a Total Access gas station. The black line represents the national average price $\overline{\mathrm{P}}_{t}$. The detected date for the change is represented by the vertical line.\medskip{}
@@ -143,78 +141,74 @@ stations (except for very few of them), we do not observe any adjustment in pric
 and Elf gas stations, as well as for nearby Total S.A. gas stations, are reported in Table 1. Rebranded Total gas station are found to drop prices by an average 10 cents. No substantial decrease is observed for former Elf gas stations and for nearby Total S.A. gas
 stations. Table 6 (cf. infra) details the distribution of price policy changes measured through an individual level analysis. The median price decrease for former Total stations is 10 cents, the ninth decile is 7 cents and the first decile 12 cents. Regarding former Elf gas stations, only one observation displays a price policy change above 2 cents (3 cent increase).
 
-\begin{table}[H]
+\begin{table}
 \caption{Total Access rebranding aggregate direct effets (euro cents) - DD regressions}
 \label{tab:ta_rebranding_direct_regs}
 \begin{threeparttable}
-\begin{footnotesize} %
+%\begin{footnotesize}
 \begin{tabular}{l|ccc}
 \hline
 \hline
- & \textbf{(1)}  & \textbf{(2)}  & \textbf{(3)}\tabularnewline
- & \textbf{Price}  & \textbf{Price}  & \textbf{Price}\tabularnewline
- & \textbf{5 km}  & \textbf{3 km}  & \textbf{1 km}\tabularnewline
+ & \textbf{(1)}  & \textbf{(2)}  & \textbf{(3)}\\
+ & \textbf{Price}  & \textbf{Price}  & \textbf{Price}\\
+ & \textbf{5 km}  & \textbf{3 km}  & \textbf{1 km}\\
 \hline
-\textbf{Total-Total Access}  & -9.89{*}{*}{*}  & -9.88{*}{*}{*}  & -9.87{*}{*}{*}\tabularnewline
- & (0.17)  & (0.17)  & (0.16) \tabularnewline
-\textbf{Total SA gas stations}  & -0.17  & -0.19{*}  & -0.09\tabularnewline
-\textbf{close to Total-Total Access}  & (0.10)  & (0.10)  & (0.25)\tabularnewline
+\textbf{Total-Total Access}  & -9.89{*}{*}{*}  & -9.88{*}{*}{*}  & -9.87{*}{*}{*}\\
+ & (0.17)  & (0.17)  & (0.16) \\
+\textbf{Total SA gas stations}  & -0.17  & -0.19{*}  & -0.09\\
+\textbf{close to Total-Total Access}  & (0.10)  & (0.10)  & (0.25)\\
 \hline
-\textbf{Elf-Total Access}  & -0.08{*}  & -0.08  & -0.07\tabularnewline
- & (0.05)  & (0.05)  & (0.05)\tabularnewline
-\textbf{Total SA gas stations}  & 0.08  & -0.01  & -0.14\tabularnewline
-\textbf{close to Elf-Total Access}  & (0.12)  & (0.13)  & (0.13)\tabularnewline
+\textbf{Elf-Total Access}  & -0.08{*}  & -0.08  & -0.07\\
+ & (0.05)  & (0.05)  & (0.05) \\
+\textbf{Total SA gas stations}  & 0.08  & -0.01  & -0.14 \\
+\textbf{close to Elf-Total Access}  & (0.12)  & (0.13)  & (0.13) \\
 \hline
-\textbf{Intercept}  & 136.10{*}{*}{*}  & 135.81{*}{*}{*}  & 135.15{*}{*}{*}\tabularnewline
- & (0.17)  & (0.17)  & (0.17)\tabularnewline
+\textbf{Intercept}  & 136.10{*}{*}{*}  & 135.81{*}{*}{*}  & 135.15{*}{*}{*} \\
+ & (0.17)  & (0.17)  & (0.17) \\
 \hline
-\textbf{Nb. Obs.}  & 301.500  & 282.231  & 249.040\tabularnewline
-\textbf{Adj. R2}  & 0.967  & 0.967  & 0.967\tabularnewline
+\textbf{Nb. Obs.}  & 301.500  & 282.231  & 249.040 \\
+\textbf{Adj. R2}  & 0.967  & 0.967  & 0.967 \\
 \hline
 \hline
 \end{tabular}
-\end{footnotesize}
+%\end{footnotesize}
 \end{threeparttable}
+\parbox{\textwidth}{\small%
+\vspace{2eX} % If wanted space after the bottomrule
+{\small{}\uline{Reading note}}{\small{}: } Prices include VAT. Columns 1, 2 and 3 correspond to the following regression: $\mathrm{P}_{it}=\mathrm{\gamma}\cdot Treatment_{it}+\mathrm{\mu}_{i}+\mathrm{\eta}_{t,c}+\mathrm{\varepsilon}_{it}$ with $\mathrm{\eta}_{t,c}$ the temporal effects of a control group $c$, $\mathrm{\mu}_{i}$ gas station fixed effects, $\mathrm{\gamma}$ the effect of the rebranding ($Treatment_{it}$ is a dummy which takes value 1 after the rebranding). The control group includes gas stations within a 5 to 10 km distance from Total Access gas stations. Errors are clustered at the regional level. Significance thresholds: {*}{*}{*} 1\%, {*}{*} 5\%, {*} 10\%.}
 \end{table}
 
-{\small{}\uline{Reading note}}{\small{}: } Prices include VAT. Columns 1, 2 and 3 correspond to the following regression: $\mathrm{P}_{it}=\mathrm{\gamma}\cdot Treatment_{it}+\mathrm{\mu}_{i}+\mathrm{\eta}_{t,c}+\mathrm{\varepsilon}_{it}$ with $\mathrm{\eta}_{t,c}$ the temporal effects of a control group $c$, $\mathrm{\mu}_{i}$ gas station fixed effects, $\mathrm{\gamma}$ the effect of the rebranding ($Treatment_{it}$ is a dummy which takes value 1 after the rebranding). The control group includes gas stations within a 5 to 10 km distance from Total Access gas stations. Errors are clustered at the regional level. Significance thresholds: {*}{*}{*} 1\%, {*}{*} 5\%, {*} 10\%.\medskip{}
-
-
-\begin{figure}[H]
+\begin{figure}[htb!]
 \centering
 \caption{Distributions of Total prices before and after rebranding}
 \label{fig:price_dist_total_ba}
-\begin{subfigure}[t]{.49\columnwidth}
+\begin{subfigure}{.49\textwidth}
 \centering
-\includegraphics[scale=0.43]{graphs/price_dist_total_before.png}
+\includegraphics[width=\textwidth]{graphs/price_dist_total_before.png}
 \caption[short]{September 4, 2011}
 \end{subfigure}
-\begin{subfigure}[t]{.49\columnwidth}
+\begin{subfigure}{.49\textwidth}
 \centering
-\includegraphics[scale=0.43]{graphs/price_dist_total_after.png}
+\includegraphics[width=\textwidth]{graphs/price_dist_total_after.png}
 \caption[short]{December 4, 2014}
 \end{subfigure}
 \flushleft
 {\small{}\uline{Reading Note}}{\small{}: In black, Total gas stations which are rebranded Total Access. In grey, Total gas stations which are not rebranded.}{\small \par}
 \end{figure}
 
-\medskip{}
-
 The main goal of this paper is to study the price reaction of competitors to the creation of Total Access. Such an analysis requires a definition of competition, which is a well known crucial issue in such a difference in differences analysis. Indeed, the compositions of the treatment and control groups depend on this definition. The usual procedure implemented in the literature consists in relying on a measure of distance, which can also be defined in several ways, and to check the robustness of results to changes in the definition. \cite{HAS04} uses a radius of one mile (1.8 km), based on interviews with retailers, to study the impact on prices of a merger between two chains in California. The robustness of results is checked with alternative radiuses of 0.5 and 1.5 miles. The control group is composed by non affected gas stations located within the urban area (San Diego or Los Angeles). \cite{BRU15} measure the price effect of the installation of automated gas stations in the Netherlands. The intensity of competition is captured by the number of gas stations within 2 and alternatively 5 km. In order to study a merger between two chains in Canada, \cite{HOU12} uses a structural approach based on a Hotelling model. The definition of markets essentially relies on commuting patterns. Results of the structural approach are compared with results obtained via a difference in differences analysis which use a distance based on time (30 seconds, 1 or 1.5 minute). Results are overall consistent but sensitive to the market structure and the analyzed sample.
 
 We therefore consider a 5 km radius to be a relatively consensual definition of competition and perform robustness checks with 1 and 3 km radiuses. We also perform a specific analysis for the Paris metropolitan area, where we can distinguish the city of Paris, its close surroundings, and the whole region.
 
 Market price variations over time are captured by daily fixed effects. Their estimates are almost perfectly correlated with wholesale diesel cost. We perform our analysis with prices including VAT in order to obtain the effect for consumers. Regressions with pre-tax prices yield similar results (closer to the gross margin of retailers), approximately 20\% smaller in value due to the VAT.
-\medskip{}
 
 Table 2 describes the competitive environment of Total-Total Access gas stations. Gas stations which are rebranded are generally located in markets exhibiting above-average competitive pressure. Their closest competitors are on average 1.2 km away, while they are 1.8 km away for those not rebranded. Their number of competitors is higher regardless of the size of the considered radius (1, 3 or 5 km). In ``Ile-de-France`'', the administrative region which contains Paris, the city and its close surroundings contrast sharply with the broader surroundings. On the one hand, the number of competitors within 5 km is more than twice higher and the distance to the closest competitor is about twice smaller in the former than in the latter. On the other hand, the distance to a supermarket gas station is greater, with respective 2.2 km and 1.6 km average distance. The market structure is therefore different in and close to Paris as it is characterized by a higher gas station density but less supermarket gas stations. The broader surroundings of Paris are rather similar to France as a whole in terms of market structure. The relevant definition of markets is therefore likely to depend on location, typically smaller for Paris. As a consequence, we develop an estimation strategy which provides flexibility regarding the definition of competition.
-\medskip{}
 
-\begin{table}[H]
+\begin{table}
 \caption{Competition in Total gas station markets}
 \label{tab:competitiveness_total_markets_stats}
 \begin{threeparttable}
-\begin{footnotesize}
+%\begin{footnotesize}
 \begin{tabular}{lccccccc}
 \hline
 \hline
@@ -227,25 +221,25 @@ Table 2 describes the competitive environment of Total-Total Access gas stations
 \hline
 \textbf{ELF}{ } & {269 } & {1.17 } & {1.60 } & {2.57 } & {0.86 } & {4.68 } & {10.28 }\tabularnewline
 \hline
-\textbf{Paris and closest surroundings}{ } & {137 } & {0.83 } & {2.22 } & {1.07 } & {1.11 } & {9.36 } & {24.76}\tabularnewline
-\textbf{Paris broader surroundings}{ } & {180 } & {1.64 } & {2.08 } & {3.00 } & {0.52 } & {3.51 } & {8.54}\tabularnewline
+\textbf{Paris \& close suburbs}{ } & {137 } & {0.83 } & {2.22 } & {1.07 } & {1.11 } & {9.36 } & {24.76}\tabularnewline
+\textbf{Other Paris suburbs}{ } & {180 } & {1.64 } & {2.08 } & {3.00 } & {0.52 } & {3.51 } & {8.54}\tabularnewline
 \hline
 \hline
 \end{tabular}
-\end{footnotesize}
+%\end{footnotesize}
 \end{threeparttable}
+\parbox{\textwidth}{\small%
+\vspace{2eX} % If wanted space after the bottomrule
+{\small{}\uline{Reading note}}{\small{}: }On average, the 1787 Total gas stations (whether rebranded or not) are located 1.64 km away from their closest competitor. Their average number of competitors whithin 3 km is 3.39. The 137 Elf and Total gas stations (whether rebranded or not) located in Paris and its closest surroundings are on average 2.22 km away from a supermarket.}
 \end{table}
-
-
-{\small{}\uline{Reading note}}{\small{}: }On average, the 1787 Total gas stations (whether rebranded or not) are located 1.64 km away from their closest competitor. Their average number of competitors whithin 3 km is 3.39. The 137 Elf and Total gas stations (whether rebranded or not) located in Paris and its closest surroundings are on average 2.22 km away from a supermarket.\medskip{}
 
 Table 3 describes price level determinants in level on a given day%
 \footnote{Retail prices are primarily determined by crude oil prices. Studying prices on a given day allows to shed lights on the influence of observable variables describing gas stations and their markets.%
 }. Supermarket gas stations are on average 5 to 7 cent cheaper than other gas stations and this single distinction accounts for 56\% of the price variance on a given day. The presence of a shop, car services (e.g. car wash) or the availability of premium gasoline generally imply a 0.5 to 1.5 cent higher price. On the other hand, the presence of automated pumps is associated with a 0.7 cent lower price. Prices are generally higher when the population density is lower but also in Paris and its close surroundings. Competition is found to have a significant impact (distance to the closest supermarket, number of competitors within 3 km), yet of low magnitude and therefore likely not noticeable for consumers. Prices are also slightly higher when concentration is higher. Results are consistent with \cite{HOS08}, who find gas station prices in Washington DC to be largely accounted for by gas station chains, characteristics, market demand structure, and to a lesser extent by competition. \cite{ZIM12} has studied the impact on prices of the development of supermarket gas stations in the US. However, the situation is yet different as these account for less than 10\% of gas stations in the US. Tables 3 accounts for the impact of observed gas station characteristics on the decision by Total S.A. to rebrand its Total gas stations Total Access or not. Findings allow to confirm part of the communication of Total S.A. Changes are more frequent in large urban areas (except for Paris), when the number of competitors is high and the distance to a supermarket is low. Changes are less likely inside Paris and in rural areas. On average, a gas station located in Paris or its close surroundings is 10\% less likely to be rebranded.
 
-The possibility to pay at the pump, generally associated with above average volumes, implies a 17\% increase in the probability of rebranding. Converted Elf gas stations are also generally located in urband areas, in particular around Paris, and are often equipped with pay at the pump systems. Their number of competitors is relatively normal compared to the overall Total gas station population. They however differ significantly as regards the presence of premium gasoline (26\% less likely in an Elf gas station). The switch from Elf to Total Access could therefore have meant an increase in perceived quality, if premium gasoline has been made available. All these characteristics do not allow to predict which stations were going to be rebranded (the sensitivity i.e. the percentage of changes correctly predicted is 10\%). This supports the hypothesis that competitors could not anticipate which gas stations were likely to be rebranded Total Access. \medskip{}
+The possibility to pay at the pump, generally associated with above average volumes, implies a 17\% increase in the probability of rebranding. Converted Elf gas stations are also generally located in urband areas, in particular around Paris, and are often equipped with pay at the pump systems. Their number of competitors is relatively normal compared to the overall Total gas station population. They however differ significantly as regards the presence of premium gasoline (26\% less likely in an Elf gas station). The switch from Elf to Total Access could therefore have meant an increase in perceived quality, if premium gasoline has been made available. All these characteristics do not allow to predict which stations were going to be rebranded (the sensitivity i.e. the percentage of changes correctly predicted is 10\%). This supports the hypothesis that competitors could not anticipate which gas stations were likely to be rebranded Total Access.
 
-\begin{table}[H]
+\begin{table}
 \caption{Key determinants of prices and Total gas station brands}
 \label{tab:price_and_total_brand_regs}
 \begin{threeparttable}
@@ -270,9 +264,9 @@ The possibility to pay at the pump, generally associated with above average volu
 \textbf{Rural area}  &  &  & 0.49{*}{*}{*}  & 0.53{*}{*}{*}  & -0.074{*}{*}  & -0.049{*}{*}\tabularnewline
 \textbf{\textit{(Ref. Other urban area)}}  &  &  & (0.08)  & (0.09)  & (0.032)  & (0.022)\tabularnewline
 \textbf{Urban area of more than}  &  &  & -0.47{*}{*}{*}  & -0.47{*}{*}{*}  & 0.084{*}{*}{*}  & 0.025{*}\tabularnewline
-\textbf{100,000 inhabitants (except for Paris)}  &  &  & (0.13)  & (0.13)  & (0.032)  & (0.015)\tabularnewline
-\textbf{Paris and surroundings}  &  &  & 1.11{*}{*}  & 1.13{*}{*}  & -0.106{*}{*}  & -0.056{*}{*}{*}\tabularnewline
- &  &  & (0.40)  & (0.41)  & (0.040)  & (0.014)\tabularnewline
+\textbf{100,000 inhabitants}  &  &  & (0.13)  & (0.13)  & (0.032)  & (0.015)\tabularnewline
+\textbf{(except for Paris)}  &  &  & 1.11{*}{*}  & 1.13{*}{*}  & -0.106{*}{*}  & -0.056{*}{*}{*}\tabularnewline
+\textbf{Paris and surroundings} &  &  & (0.40)  & (0.41)  & (0.040)  & (0.014)\tabularnewline
 \hline
 \textbf{Pay at the pump}  &  &  &  & -0.73{*}{*}{*}  & 0.171{*}{*}{*}  & 0.158{*}{*}{*}\tabularnewline
  &  &  &  & (0.12)  & (0.020)  & (0.011)\tabularnewline
@@ -295,9 +289,10 @@ The possibility to pay at the pump, generally associated with above average volu
 \end{tabular}
 \end{footnotesize}
 \end{threeparttable}
+\parbox{\textwidth}{\small%
+\vspace{2eX} % If wanted space after the bottomrule
+{\small{}\uline{Reading Note}}{\small{}: } Columns 1 to 4 account for the regressions of gasoline prices (cents, including taxes) on September 9, 2011. Column 5 describes the determinants of a Total-Total Access rebranding (marginal effects of a probit model run with all Total gas stations). Column 6 accounts for the specificities of gas stations belonging to the Elf network at the beginning of the period (marginal effects of a probit model run with all Total and Elf gas stations). Regional controls are included. Errors are clustered at the regional level. Significance threshold: {*}{*}{*} 1\%, {*}{*} 5\%, {*} 10\%.}
 \end{table}
-
-{\small{}\uline{Reading Note}}{\small{}: } Columns 1 to 4 account for the regressions of gasoline prices (cents, including taxes) on September 9, 2011. Column 5 describes the determinants of a Total-Total Access rebranding (marginal effects of a probit model run with all Total gas stations). Column 6 accounts for the specificities of gas stations belonging to the Elf network at the beginning of the period (marginal effects of a probit model run with all Total and Elf gas stations). Regional controls are included. Errors are clustered at the regional level. Significance threshold: {*}{*}{*} 1\%, {*}{*} 5\%, {*} 10\%.
 
 \section{Estimation and results}
 
@@ -332,8 +327,6 @@ A major shortcoming of the aggregate approach is the fact we obtain an average e
 \mathrm{P}_{it}=\mathrm{\gamma}_{i}\cdot Treatment_{it}+\mathrm{\mu}_{i}+\mathrm{\eta}_{t,c}+\mathrm{\varepsilon}_{it}\label{eq:2}
 \end{equation}
 
-\medskip{}
-
 The coefficient of interest $\mathrm{\gamma}_{i}$ is therefore estimated for each gas station, thanks to the richness of the date and the close relationship generally observed between gas station prices and their main determinant, the Rotterdam wholesale gasoline price. The individual approach allows to investigate heterogeneity in reactions and to discuss the robustness of results to our definition of market. In terms of methodology, it is close to a temporal discontinuity regression (\cite{AUF11}), for which the randomization hypothesis boils down to the necessity for the conversion not to have been expected by competitors. This hypothesis seems reasonable since Total has not announced specifically which gas stations were going to be rebranded.\medskip{}
 
 In order to deal with temporal and geographical correlation of difference in differences estimators, we allow the error terms to be correlated within each region and on each date  (\cite{BER04}), or simply within each region (\cite{CAM15}). We have also performed the analysis by running one regression for each gas station with the Newey-West estimator in order to allow for temporal autocorrelation. Results displayed come from the aggregate estimation, with correlation allowed within regions. They are robust to the previously mentioned variations in specification. Generally, all measured increases or decreases whose value is above 1 cent are found to be statistically significant.
@@ -344,13 +337,11 @@ The retail gasoline market has been the topic of a rich literature, motivated at
 
 The French market differs in a significant way from previously cited market due to the strong penetration of supermarkets. It is indeed composed, in virtually equal shares, of low price gas stations, often operated by a supermarkets and with few amenities, and high price gas stations offering more amenities and enjoying more brand awareness (except for few completely independent gas stations). The studied Total-Total Access conversions are accompanied by an 8 to 10 euro cent per liter decrease in price, which essentially corresponds to the difference in price observed between low and high price gas stations. At the time of the creation of Total Access, the Total group has stated that it had selected gas stations for which higher volumes resulting from price decreases were expected to make up for the loss of margin. Given the proximity of supermarket competitors, this leads to think that such gas stations were likely selling to loyal or captive customers, and are supposed, upon rebranding, to benefit from a larger demand, including more price sensitive customers.\medskip{}
 
-There are no significant elements which support the idea that Total Access has effectively reduced its operating costs within rebranded gas stations. It seems therefore reasonable to rather expect a change in demand to account for Total’s strategical choice. Consumers can indeed be expected to have become increasingly price sensitive. The three main differentiation dimensions of the market can be reminded to be location, brand and amenities (presence of a shop, car wash facility etc.).\medskip{}
+There are no significant elements which support the idea that Total Access has effectively reduced its operating costs within rebranded gas stations. It seems therefore reasonable to rather expect a change in demand to account for Total's strategical choice. Consumers can indeed be expected to have become increasingly price sensitive. The three main differentiation dimensions of the market can be reminded to be location, brand and amenities (presence of a shop, car wash facility etc.).\medskip{}
 
-Taking into account the characteristics and dynamics of the French market leads to forge several hypotheses regarding the reactions of competitors of converted gas stations. In a Hotelling model, supermarket gas stations, confronted to fiercer competition (reduced differentiation) can be expected to decrease prices. The relatively low estimated margins however do not allow for large price cuts. The case of oil company and independent gas stations is more ambiguous, depending on consumer preferences and the local market structure. On the one hand, increased competition may drive prices downwards. On the other hand, capacity constraints implied by the number of pumps, or an unfavorable location, may hamper the ability of a gas station to be profitable at prices set by supermarkets (resp. Total Access) gas stations. An affected gas station may thus be left with a demand composed virtually exclusively by captive or loyal customers, whereas it previously attracted some mildly price sensitive customers. In such a situation, an increase in prices could result from a nearby conversion. Regarding conversions from Elf to Total Access, even in the absence of change in the pricing policy, the creation of a new chain could imply an increase in perceived quality, in particular when premium gasoline is now available on top of basic gasoline. A decrease in prices could therefore be observed among competitors. However, the previous mentioned mechanism leading to an increase could also apply, in particular in areas where both Elf and Total operated. \medskip{}
+Taking into account the characteristics and dynamics of the French market leads to forge several hypotheses regarding the reactions of competitors of converted gas stations. In a Hotelling model, supermarket gas stations, confronted to fiercer competition (reduced differentiation) can be expected to decrease prices. The relatively low estimated margins however do not allow for large price cuts. The case of oil company and independent gas stations is more ambiguous, depending on consumer preferences and the local market structure. On the one hand, increased competition may drive prices downwards. On the other hand, capacity constraints implied by the number of pumps, or an unfavorable location, may hamper the ability of a gas station to be profitable at prices set by supermarkets (resp. Total Access) gas stations. An affected gas station may thus be left with a demand composed virtually exclusively by captive or loyal customers, whereas it previously attracted some mildly price sensitive customers. In such a situation, an increase in prices could result from a nearby conversion. Regarding conversions from Elf to Total Access, even in the absence of change in the pricing policy, the creation of a new chain could imply an increase in perceived quality, in particular when premium gasoline is now available on top of basic gasoline. A decrease in prices could therefore be observed among competitors. However, the previous mentioned mechanism leading to an increase could also apply, in particular in areas where both Elf and Total operated.
 
-\newpage
-
-\begin{table}[H]
+\begin{table}
 \caption{Aggregate reactions to Total Access rebranding (cents) - Difference in differences regressions}
 \label{tab:comp_reaction_dd_regs}
 \begin{threeparttable}
@@ -382,34 +373,35 @@ Taking into account the characteristics and dynamics of the French market leads 
 \end{tabular}
 \end{footnotesize}
 \end{threeparttable}
+\parbox{\textwidth}{\small%
+\vspace{2eX} % If wanted space after the bottomrule
+{\small{}\uline{Reading Note}}{\small{}: } Columns 1 to 6 provide the results of the regression $\mathrm{P}_{it}=\mathrm{\gamma}\cdot Treatment_{it}+\mathrm{\mu}_{i}+\mathrm{\eta}_{t,c}+\mathrm{\varepsilon}_{it}$
+with $\mathrm{\eta}_{t,c}$ temporal effects, function of a control group $c$, $\mathrm{\mu}_{i}$ gas station fixed effects, and $\mathrm{\gamma}$ the impact of a Total-Total Access or Elf-Total Access conversion on competitor prices (within a 1, 3 or 5 km distance). Treatment (equal to 1 after a nearby conversion has occurred) is crossed with retailer type in columns 2, 4 and 6. The control group is composed by gas stations located within 5 to 10 km of a Total- or Elf-Total Access gas station. Error terms are clustered at the regional level. Significance thresholds {*}{*}{*} 1\%, {*}{*} 5\%, {*} 10\%.}
 \end{table}
 
-{\small{}\uline{Reading Note}}{\small{}: } Columns 1 to 6 provide the results of the regression $\mathrm{P}_{it}=\mathrm{\gamma}\cdot Treatment_{it}+\mathrm{\mu}_{i}+\mathrm{\eta}_{t,c}+\mathrm{\varepsilon}_{it}$
-with $\mathrm{\eta}_{t,c}$ temporal effects, function of a control group $c$, $\mathrm{\mu}_{i}$ gas station fixed effects, and $\mathrm{\gamma}$ the impact of a Total-Total Access or Elf-Total Access conversion on competitor prices (within a 1, 3 or 5 km distance). Treatment (equal to 1 after a nearby conversion has occurred) is crossed with retailer type in columns 2, 4 and 6. The control group is composed by gas stations located within 5 to 10 km of a Total- or Elf-Total Access gas station. Error terms are clustered at the regional level. Significance thresholds {*}{*}{*} 1\%, {*}{*} 5\%, {*} 10\%.\medskip{}
+Difference in differences analysis performed at an aggregate level for competitors of Total-Total Access gas stations (Table 4) reveal a slight average decrease, of 0.2 euro cents per liter, for all competitors located within 5km (respectively 0.3 cents within 3km, and 0.4 cents within 1 km, which means 20 euro cents for a tank of 50 liter). The impact thus decreases with distance. Regressions performed with competitors of Elf-Total Access gas stations yield a null aggregated effect. The weakness of these aggregated effects is illustrated by the comparison of the distributions at the beginning and the end of the studied period (Figure 4). While a significant change can be observed for Total-Total Access gas stations (Figure 3), no similar bi-modality can be observed. This analysis nevertheless hides significant heterogeneity related to retailer types. Supermarket gas stations are indeed found to have decreased prices by 0.6 cents when they were affected by a Total-Total Access conversion, and 0.2 cents for an Elf-Total Access conversion (3km radius). Other gas stations, on the other hand, have slightly increased prices in both cases. Within a 5 km radius, only supermarkets are found to have reacted. This is consistent with supermarkets reaching consumers further than other gas stations.
 
-Difference in differences analysis performed at an aggregate level for competitors of Total-Total Access gas stations (Table 4) reveal a slight average decrease, of 0.2 euro cents per liter, for all competitors located within 5km (respectively 0.3 cents within 3km, and 0.4 cents within 1 km, which means 20 euro cents for a tank of 50 liter). The impact thus decreases with distance. Regressions performed with competitors of Elf-Total Access gas stations yield a null aggregated effect. The weakness of these aggregated effects is illustrated by the comparison of the distributions at the beginning and the end of the studied period (Figure 4). While a significant change can be observed for Total-Total Access gas stations (Figure 3), no similar bi-modality can be observed. This analysis nevertheless hides significant heterogeneity related to retailer types. Supermarket gas stations are indeed found to have decreased prices by 0.6 cents when they were affected by a Total-Total Access conversion, and 0.2 cents for an Elf-Total Access conversion (3km radius). Other gas stations, on the other hand, have slightly increased prices in both cases. Within a 5 km radius, only supermarkets are found to have reacted. This is consistent with supermarkets reaching consumers further than other gas stations \medskip{}
-
-\begin{figure}[H]
+\begin{figure}[htb!]
 \centering
 \caption{Distributions of Total Access competitor prices vs .others}
 \label{fig:price_dist_total_comp_ba}
-\begin{subfigure}[t]{.49\columnwidth}
+\begin{subfigure}{.49\textwidth}
 \centering
-\includegraphics[scale=0.43]{graphs/price_dist_treated_before.png}
+\includegraphics[width=\textwidth]{graphs/price_dist_treated_before.png}
 \caption[short]{September 4, 2011}
 \end{subfigure}
-\begin{subfigure}[t]{.49\columnwidth}
+\begin{subfigure}{.49\textwidth}
 \centering
-\includegraphics[scale=0.43]{graphs/price_dist_treated_after.png}
+\includegraphics[width=\textwidth]{graphs/price_dist_treated_after.png}
 \caption[short]{December 4, 2014}
 \end{subfigure}
 \flushleft
 {\small{}\uline{Reading Note}}{\small{}: In black, competitors (within 5 km) of gas stations converted from Total to Total Access. In grey, gas stations are not affected by such changes (distance above 5 km).}{\small \par}
 \end{figure}
 
-On top of the heterogeneity among retailer types, the location of gas station location is also correlated with prices and characteristics as shown in the descriptive statistics. Table 5 details the impact of the rebranding in Paris region, distinguishing Paris and is closest surroundings from the broader surroundings. A difference in reaction between supermarkets and other retailers is again observed. However, while results in broader Paris surrounding are similar to the ones obtained at the national level, Paris and its closest surroundings exhibit some differences. In these areas, the aggregate effect is an increase of 0.2 euro cents but supermarkets are found to decrease prices by 1.4 euro cents on average. Given the lower penetration of supermarkets, these results suggest that competitive pressure is lower in these areas. They also illustrate the need to measure and investigate the heterogeneity of reactions, in the light of local market characteristics.\medskip{}
+On top of the heterogeneity among retailer types, the location of gas station location is also correlated with prices and characteristics as shown in the descriptive statistics. Table 5 details the impact of the rebranding in Paris region, distinguishing Paris and is closest surroundings from the broader surroundings. A difference in reaction between supermarkets and other retailers is again observed. However, while results in broader Paris surrounding are similar to the ones obtained at the national level, Paris and its closest surroundings exhibit some differences. In these areas, the aggregate effect is an increase of 0.2 euro cents but supermarkets are found to decrease prices by 1.4 euro cents on average. Given the lower penetration of supermarkets, these results suggest that competitive pressure is lower in these areas. They also illustrate the need to measure and investigate the heterogeneity of reactions, in the light of local market characteristics.
 
-\begin{table}[H]
+\begin{table}
 \caption{Aggregate reactions to Total Access rebranding in Paris region (cents) - Difference in differences regressions}
 \label{tab:paris_comp_reaction_dd_regs}
 \begin{threeparttable}
@@ -444,16 +436,15 @@ On top of the heterogeneity among retailer types, the location of gas station lo
 \end{tabular}
 \end{footnotesize}
 \end{threeparttable}
+\parbox{\textwidth}{\small%
+\vspace{2eX} % If wanted space after the bottomrule
+{\small{}\uline{Reading Note}}{\small{}: } Columns 1 to 4 provide the results of the regression $\mathrm{P}_{it}=\mathrm{\gamma}\cdot Traitement_{it}+\mathrm{\mu}_{i}+\mathrm{\eta}_{t,c}+\mathrm{\varepsilon}_{it}$
+with $\mathrm{\eta}_{t,c}$ temporal effects, function of a control group $c$, $\mathrm{\mu}_{i}$ gas station fixed effects, and $\mathrm{\gamma}$ the impact of a Total-Total Access or Elf-Total Access conversion on competitor prices (within 3 km). Treatment (equal to 1 after a nearby conversion has occurred) is crossed with retailer type in columns 2 and 4. The control group is composed by gas stations located within 5 to 10 km of a Total- or Elf-Total Access gas station. Significance thresholds {*}{*}{*} 1\%, {*}{*} 5\%, {*} 10\%.}
 \end{table}
 
-{\small{}\uline{Reading Note}}{\small{}: } Columns 1 to 6 provide the results of the regression $\mathrm{P}_{it}=\mathrm{\gamma}\cdot Traitement_{it}+\mathrm{\mu}_{i}+\mathrm{\eta}_{t,c}+\mathrm{\varepsilon}_{it}$
-with $\mathrm{\eta}_{t,c}$ temporal effects, function of a control group $c$, $\mathrm{\mu}_{i}$ gas station fixed effects, and $\mathrm{\gamma}$ the impact of a Total-Total Access or Elf-Total Access conversion on competitor prices (within a 1, 3 or 5 km distance). Treatment (equal to 1 after a nearby conversion has occurred) is crossed with retailer type in columns 2 and 4. The control group is composed by gas stations located within 5 to 10 km of a Total- or Elf-Total Access gas station. Significance thresholds {*}{*}{*} 1\%, {*}{*} 5\%, {*} 10\%.\medskip{}
+Estimated individual treatment effects (Table 6) reveal a significant heterogeneity among reactions, and a limited number of large adjustments. Regarding competitors of Total - Total Access gas stations, 10\% are estimated to have decreased prices by 1.5 euro cents per liter or more, and another 10\% to have increased prices by a similar amount. The maximum estimated decrease and increase are respectively of 6 and 5 cents. Reacting to a decrease of 10 cents, 90\% of gas stations adjust by an amount which is smaller than 2 cents (upward or downward). Examples of price adjustments are provided in Figure~\ref{fig:price_reaction_examples}.
 
-Estimated individual treatment effects (Table 6) reveal a significant heterogeneity among reactions, and a limited number of large adjustments. Regarding competitors of Total - Total Access gas stations, 10\% are estimated to have decreased prices by 1.5 euro cents per liter or more, and another 10\% to have increased prices by a similar amount. The maximum estimated decrease and increase are respectively of 6 and 5 cents. Reacting to a decrease of 10 cents, 90\% of gas stations adjust by an amount which is smaller than 2 cents (upward or downward). Examples of price adjustments are provided in Figure~\ref{fig:price_reaction_examples}. \medskip{}
-
-\newpage{}
-
-\begin{table}[H]
+\begin{table}
 \caption{Gas station level price changes (cents) upon or in reaction to Total Access rebranding - Differences-in-differences estimations}
 \label{tab:gas_station_level_changes_dd_regs}
 \begin{threeparttable}
@@ -463,46 +454,47 @@ Estimated individual treatment effects (Table 6) reveal a significant heterogene
 \hline
  &  & \textbf{Nb. Obs.}  & \textbf{Avg.}  & \textbf{Std. Dev.}  & \textbf{Min.}  & \textbf{Q10}  & \textbf{Q50}  & \textbf{Q90}  & \textbf{Max.}\tabularnewline
 \hline
-\textbf{Total - Total Access}  &  & 325  & -9.92  & 1.83  & -14.37  & -12.22  & -9.88  & -7.30  & -5.47\tabularnewline
+\textbf{Total-Total Access (T-TA)}  &  & 325  & -9.92  & 1.83  & -14.37  & -12.22  & -9.88  & -7.30  & -5.47\tabularnewline
  &  &  &  &  &  &  &  &  & \tabularnewline
-\textbf{Total-Total Access competitors}  &  & 1332  & -0.19  & 1.27  & -6.34  & -1.53  & -0.31  & 1.45  & 5.28\tabularnewline
+\textbf{T-TA competitors}  &  & 1332  & -0.19  & 1.27  & -6.34  & -1.53  & -0.31  & 1.45  & 5.28\tabularnewline
  &  &  &  &  &  &  &  &  & \tabularnewline
 \hline
-\textbf{Elf - Total Access}  &  & 249  & -0.04  & 0.75  & -1.97  & -0.87  & -0.11  & 1.04  & 3.01\tabularnewline
+\textbf{Elf-Total Access (E-TA)}  &  & 249  & -0.04  & 0.75  & -1.97  & -0.87  & -0.11  & 1.04  & 3.01\tabularnewline
  &  &  &  &  &  &  &  &  & \tabularnewline
-\textbf{Elf-Total Access competitors}  &  & 395  & 0.21  & 1.51  & -13.37  & -1.21  & 0.14  & 1.67  & 8.96\tabularnewline
+\textbf{E-TA competitors}  &  & 395  & 0.21  & 1.51  & -13.37  & -1.21  & 0.14  & 1.67  & 8.96\tabularnewline
  &  &  &  &  &  &  &  &  & \tabularnewline
 \hline
 \hline
 \end{tabular}
 \end{scriptsize}
 \end{threeparttable}
+\parbox{\textwidth}{\small%
+\vspace{2eX} % If wanted space after the bottomrule
+{\small{}\uline{Reading Note}}{\small{}:} Results come from the regression $\mathrm{P}_{it}=\mathrm{\gamma}_{i}\cdot Treatment_{it}+\mathrm{\mu}_{i}+\mathrm{\eta}_{t,c}+\mathrm{\varepsilon}_{it}$ with $\mathrm{\eta}_{t,c}$ temporal effects, function of a control group $c$, $\mathrm{\mu}_{i}$ gas station fixed effects and $\mathrm{\gamma}_{i}$ the individual treatment effect of a nearby Total-Total Access or Elf-Total Access conversion (within 5km). The control group is composed by gas stations located within 5 to 10 km of a Total- or Elf-Total Access gas station. Significance thresholds {*}{*}{*} 1\%, {*}{*} 5\%, {*} 10\%.}
 \end{table}
 
-{\small{}\uline{Reading Note}}{\small{}:} Results come from the regression $\mathrm{P}_{it}=\mathrm{\gamma}_{i}\cdot Treatment_{it}+\mathrm{\mu}_{i}+\mathrm{\eta}_{t,c}+\mathrm{\varepsilon}_{it}$ with $\mathrm{\eta}_{t,c}$ temporal effects, function of a control group $c$, $\mathrm{\mu}_{i}$ gas station fixed effects and $\mathrm{\gamma}_{i}$ the individual treatment effect of a nearby Total-Total Access or Elf-Total Access conversion (within 5km). The control group is composed by gas stations located within 5 to 10 km of a Total- or Elf-Total Access gas station. Significance thresholds {*}{*}{*} 1\%, {*}{*} 5\%, {*} 10\%.\medskip{}
-
-\begin{figure}%[H]
+\begin{figure}[htb!]
 \centering
 \caption{Examples of price series of Total Access competitors}
 \label{fig:price_reaction_examples}
-\begin{subfigure}[b]{\columnwidth}
+\begin{subfigure}[b]{\textwidth}
 \centering
-\includegraphics[scale=0.4]{graphs/reaction_agip_increases_big.png}
+\includegraphics[width=\textwidth]{graphs/reaction_agip_increases_big.png}
 \caption[short]{Price increase}
 \end{subfigure}
-\begin{subfigure}[b]{\columnwidth}
+\begin{subfigure}[b]{\textwidth}
 \centering
-\includegraphics[scale=0.4]{graphs/reaction_esso_matches_decrease.png}
+\includegraphics[width=\textwidth]{graphs/reaction_esso_matches_decrease.png}
 \caption[short]{Price decrease}
 \end{subfigure}
 \flushleft
-{\small{}\uline{Reading Note}}{\small{}: } The continuous black line  represents the average national price, the dashed black line accounts for a Total Access gas station and the grey line illustrates the prices of one of its competitors. The date of the change in brand is marked by a vertical line. \medskip{}
+{\small{}\uline{Reading Note}}{\small{}: } The continuous black line represents the average national price, the dashed black line accounts for a Total Access gas station and the grey line illustrates the prices of one of its competitors. The date of the change in brand is marked by a vertical line.
 \end{figure}
 
 The distinction between supermarket gas stations and oil company and independent gas stations appears to be relevant (Table 7), as could be expected. Supermarket gas stations account for 86\% of the 298 gas stations which have decreased prices by 1 cent or more, and only 27\% of the 215 gas stations which have increase prices by 1 cent or more. Price decreases implemented by supermarkets are generally of low amplitude, as could be expected given the relatively low pre-existing prices and margins. A small number of oil company and independent gas station also decrease prices. Most of the gas stations which operated at a price level close to the competing Total gas station have not implemented a similar price cut in return upon
-the conversion. \medskip{}
+the conversion.
 
-\begin{table}[H]
+\begin{table}
 \caption{Distributions of Total Access competitor price reactions}
 \label{tab:competitor_price_reactions_stats}
 \begin{threeparttable}
@@ -528,18 +520,19 @@ the conversion. \medskip{}
 \end{tabular}
 \end{tiny}
 \end{threeparttable}
+\parbox{\textwidth}{\small%
+\vspace{2eX} % If wanted space after the bottomrule
+{\small{}\uline{Reading note}}{\small{}:} Among the 1,332 competitors of Total-Total Access gas stations (within 5 km), 298 (22\%) exhibit a significant price decrease of 1 cent or more. Among these 298 gas stations, 10 are found to cut price by 4 cents or more, and 256 are supermarket gas stations (86\%).}
 \end{table}
 
-{\small{}\uline{Reading note}}{\small{}:} Among the 1,332 competitors of Total-Total Access gas stations (within 5 km), 298 (22\%) exhibit a significant price decrease of 1 cent or more. Among these 298 gas stations, 10 are found to cut price by 4 cents or more, and 256 are supermarket gas stations (86\%).\medskip{}
-
-Significant reactions are also observed at the individual gas station level among competitors of rebranded Elf gas stations. Contrary to Total-Total Access conversions, the number of increases exceeds the number of decreases, which could be explained by an increase in differation linked to the disappearance of the Elf brand. Several instances of significant decreases nervertheless also suggest that the rebranding, even when it was not accompanied by a shock on prices, may have increased consumer attention and thus the intensity of competition. Consumers may also have perceived the rebranding as a quality improvement.\medskip{}
+Significant reactions are also observed at the individual gas station level among competitors of rebranded Elf gas stations. Contrary to Total-Total Access conversions, the number of increases exceeds the number of decreases, which could be explained by an increase in differation linked to the disappearance of the Elf brand. Several instances of significant decreases nervertheless also suggest that the rebranding, even when it was not accompanied by a shock on prices, may have increased consumer attention and thus the intensity of competition. Consumers may also have perceived the rebranding as a quality improvement.
 
 These results are consistent with the existence of segmentation in the market, between weakly differentiated gas stations addressing a large demand on the one hand, and oil company and independent gas stations focusing on loyal or captive consumers. For these consumers, the creation of Total Access may have actually resulted in an increase in price, depending on the market structure. The robustness of results has been confirmed by numerous specification variations regarding the treatment date (earliest change or closest competitor), the market definition (1, 3 or 5 km), the control group (national or regional), error term correlation, and data frequency (weekly, daily, day of week).
 
 \section{Conclusion}
 
 The analysis of the impact of the creation of the low price chain Total Access leads to stress heterogeneity in adjustments beyond the absence of a significant reaction at an aggregate level. Findings are consistent with a strong role of market segmentation. A major determinant of the decision by Total to develop its discount offer has been a relative decrease of the demand coming from loyal or captive customers, as a result of fierce competition leveled by developing supermarket gas station networks. Mild consumer reactions can reasonably be accounted for by the low pre-existing margins of supermarket gas stations on the one hand, and the fact that high price gas stations have generally stuck to their policy of focusing on loyal and captive customers.
-Beyond the period studied in the present paper, the overall share of captive of loyal customers, to which high price gas station cater, can be expected to further decrease. In the long term, the pro competitive effects may be offset by a decreasing gas station density, as a result of exits from non profitable gas stations. In this prospect, it seems desirable to monitor not only prices but also the evolution of the national gas station network.\medskip{}
+Beyond the period studied in the present paper, the overall share of captive of loyal customers, to which high price gas station cater, can be expected to further decrease. In the long term, the pro competitive effects may be offset by a decreasing gas station density, as a result of exits from non profitable gas stations. In this prospect, it seems desirable to monitor not only prices but also the evolution of the national gas station network.
 
 From a methodological point of a view, the paper leads to stress the limitations of an aggregate analysis of a shock on competition (e.g. merger) across local markets. Effects can indeed be strongly heterogeneous depending on local market structures (e.g. differentiation, demand segmentation), making the outcomes sensitive to the observed sample, as is the case with Paris in our study. Such heterogeneity has already been found to generate discrepancies in evaluations of concentrations in the literature, hence we strongly advocate the use of a flexible individual approach over the measurement of aggregate treatment effects.
 
