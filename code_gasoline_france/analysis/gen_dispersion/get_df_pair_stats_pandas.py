@@ -9,6 +9,7 @@ from generic_master_info import *
 from generic_competition_pandas import *
 import time
 
+# test
 path_dir_built = os.path.join(path_data,
                               u'data_gasoline',
                               u'data_built',
