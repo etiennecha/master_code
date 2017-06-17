@@ -1,22 +1,23 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+from add_to_path import path_data
 import os, sys
-import httplib, urllib2
-import urllib
-import cookielib
-from BeautifulSoup import BeautifulSoup
+import requests
+from bs4 import BeautifulSoup
 import re
+import pandas as pd
 from datetime import date
 import json
 
-def enc_json(database, chemin):
- with open(chemin, 'w') as fichier:
-  json.dump(database, fichier)
+def enc_json(data, path):
+  with open(path, 'w') as f:
+    json.dump(data, f)
 
-def dec_json(chemin):
-  with open(chemin, 'r') as fichier:
-    return json.loads(fichier.read())
+def dec_json(path):
+  with open(path, 'r') as f:
+    return json.loads(f.read())
 
 def clean_souptag(souptag):
   ls_clean = re.split(ur'<p class="hours">|<p>|<strong>|</strong>|'+\
@@ -28,67 +29,69 @@ def clean_souptag(souptag):
                      (elt.replace('\n', '').replace('</p>','').strip()  != '')]
   return ls_clean
 
-def get_station_info(id_gouv):
-  base_url = r'http://www.prix-carburants.economie.gouv.fr/itineraire/infos/'
-  response = urllib2.urlopen(base_url + id_gouv)
-  data = response.read()
-  soup = BeautifulSoup(data)
-  name_and_address_bloc = soup.find('p')
+def get_station_info(id_station):
+  r2 = s.post('https://www.prix-carburants.gouv.fr/itineraire/infos/{:s}'.format(id_station),
+              headers = {'Host' : 'www.prix-carburants.gouv.fr',
+                         'Origin': 'https://www.prix-carburants.gouv.fr',
+                         'Referer' : 'https://www.prix-carburants.gouv.fr/recherche/',
+                          'X-Prototype-Version' : '1.7',
+                          'X-Requested-With' : 'XMLHttpRequest'})
+  soup2 = BeautifulSoup(r2.text, 'lxml')
+  name_and_address_bloc = soup2.find('p')
   name_and_brand = re.findall('<strong>(.*?)</strong>', unicode(name_and_address_bloc))
   address = clean_souptag(re.search(ur'.*</strong><br\s?/>(.*?)</p>',
                                     unicode(name_and_address_bloc).replace('\n','')).group(1))
-  opening_hours_bloc = soup.findAll('p', {'class': 'hours'})
+  opening_hours_bloc = soup2.findAll('p', {'class': 'hours'})
   opening_hours = clean_souptag(opening_hours_bloc[0])
   if len(opening_hours_bloc) == 2:
     closed_days = clean_souptag(opening_hours_bloc[1])
   else:
     closed_days = None
   if len(opening_hours_bloc) > 2:
-    print id_gouv, opening_hours_bloc
-  services_bloc = soup.find('p', {'class': 'services'})
+    print(id_gouv, opening_hours_bloc)
+  services_bloc = soup2.find('p', {'class': 'services'})
   services = services_bloc.findAll('img',
                                    {'src': re.compile('/bundles/public/images/pictos/service_.*')})
-  list_services = [service['alt'] for service in services]
-  return [name_and_brand, address, opening_hours, closed_days, list_services]
+  ls_services = [service['alt'] for service in services]
+  return [name_and_brand, address, opening_hours, closed_days, ls_services]
 
-if __name__ == '__main__':
+path_temp = os.path.join(path_data,
+                         'data_gasoline',
+                         'data_built',
+                         'data_scraped_2017',
+                         'data_gouv_raw')
 
-  # path_data: default to CREST location, else try home location
-  path_data = os.path.join(u'W:\\', u'Bureau', u'Etienne_work', u'Data')
-  if not os.path.exists(path_data):
-    path_data = os.path.join(u'C:\\', u'Users', u'etna', u'Desktop',
-                             u'Etienne_work', u'Data')
-  
-  path_source_prices = os.path.join(path_data,
-                                    u'data_gasoline',
-                                    u'data_source',
-                                    u'data_prices')
-  
-  path_raw_info_stations = os.path.join(path_data,
-                                        u'data_gasoline',
-                                        u'data_raw',
-                                        u'data_stations',
-                                        u'data_gouv_stations')
-  
-  # use both latest (not automatic!) diesel and gas price files to get ids
-  diesel_price_file = dec_json(os.path.join(path_source_prices,
-                                            u'diesel_standardized_tuple_lists',
-                                            u'20141204_diesel'))
-  gas_price_file = dec_json(os.path.join(path_source_prices,
-                                            u'gas_standardized_tuple_lists',
-                                            u'20141204_gas'))
-  ls_ids = [row[0] for row in diesel_price_file] +\
-           [row[0] for row in gas_price_file]
-  ls_ids = list(set(ls_ids))
-  
-  # loop and scrap
-  dict_stations = {}
-  ls_field_keys = ['name', 'address', 'hours', 'closed_days', 'services']
-  for id_gouv in ls_ids:
-    try:
-      dict_stations[id_gouv] = dict(zip(ls_field_keys,
-                                        get_station_info(id_gouv)))
-    except:
-      print 'couldnt get info for', id_gouv
-  
-  # enc_json(dict_stations, os.path.join(path_raw_info_stations, u'20141206_gouv_stations.json'))
+df_diesel = pd.read_csv(os.path.join(path_temp, '20170501_diesel.csv'),
+                        dtype = {'id' : str})
+df_essence = pd.read_csv(os.path.join(path_temp, '20170501_essence.csv'),
+                         dtype = {'id' : str})
+
+ls_ids = list(set(df_diesel['id'].values)\
+               .union(set(df_essence['id'].values)))
+
+
+# Open connection
+s = requests.Session()
+website_url = 'http://www.prix-carburants.gouv.fr'
+r = s.get(website_url)
+soup = BeautifulSoup(r.text, 'lxml')
+
+# Loop and scrap
+#dict_stations = {}
+ls_field_keys = ['name', 'address', 'hours', 'closed_days', 'services']
+dict_stations = {}
+for id_station in ls_ids:
+  try:
+    dict_stations[id_station] = dict(zip(ls_field_keys,
+                                         get_station_info(id_station)))
+  except:
+    print('Couldnt get info for', id_station)
+
+## todo: finish it
+#str_today = date.today().strftime('%Y%m%d')
+enc_json(dict_stations,
+         os.path.join(path_temp,
+                      '{:s}_dict_info_stations.json'.format(str_today)))
+
+#dict_stations = dec_json(os.path.join(path_temp,
+#                                      '20170502_dict_info_stations.json'))

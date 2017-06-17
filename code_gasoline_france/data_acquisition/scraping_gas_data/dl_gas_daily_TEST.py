@@ -15,7 +15,7 @@ opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWe
 urllib2.install_opener(opener)
 
 # welcome page: get token
-website_url = 'http://www.prix-carburants.economie.gouv.fr'
+website_url = 'http://www.prix-carburants.gouv.fr'
 response = urllib2.urlopen(website_url)
 data = response.read()
 soup = BeautifulSoup(data)
@@ -28,11 +28,11 @@ for i in range(1, 3):
            '_recherche_recherchertype[localisation]' : '%02d' %i,
            '_recherche_recherchertype[_token]' : token}
   param = urllib.urlencode(query)
-  response_2 = urllib2.urlopen('http://www.prix-carburants.economie.gouv.fr', param)
+  response_2 = urllib2.urlopen('http://www.prix-carburants.gouv.fr', param)
   data_2 = response_2.read()
   soup_2 = BeautifulSoup(data_2)
   # get page with 100 results (still: can be several pages)
-  recherche_url = 'http://www.prix-carburants.economie.gouv.fr/recherche/?sort=commune&direction=asc&page=1&lettre=%23&limit='
+  recherche_url = 'http://www.prix-carburants.gouv.fr/recherche/?sort=commune&direction=asc&page=1&lettre=%23&limit='
   response_3 = urllib2.urlopen(recherche_url)
   data_3 = response_3.read()
   soup_3 = BeautifulSoup(data_3)
@@ -48,7 +48,7 @@ for i in range(1, 3):
   list_stations += list_dpt_stations
 
 """
-response_4 = urllib2.urlopen('http://www.prix-carburants.economie.gouv.fr/itineraire/infos/78400003')
+response_4 = urllib2.urlopen('http://www.prix-carburants.gouv.fr/itineraire/infos/78400003')
 data_4 = response_4.read()
 soup_4 = BeautifulSoup(data_4)
 
