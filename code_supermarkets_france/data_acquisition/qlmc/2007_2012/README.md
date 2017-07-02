@@ -8,9 +8,11 @@ This repository contains the code used to extract and clean supermarket price re
 
 #### Overview of pdf file data
 
+A (slightly edited) screenshot:
+
 ![qlmc_pdf_screenshot](qlmc_pdf_screenshot.jpg)
 
-The following table provides a brief overview of each pdf file, its structure (order of the product price records) and price range. Price ranges reveal some issues, on which a dedicated section below provides some more details.
+The following table provides a brief overview of each pdf file, its structure (order of the records: variable name translations are provided in the next section), number of rows an price range. Price ranges reveal some issues which are discussed in a following section.
 
 |P  | File name                 | Ordered by                    |  Nb rows | Price range   |
 |---|:--------------------------|-------------------------------|----------|---------------|
