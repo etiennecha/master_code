@@ -1,4 +1,4 @@
-# QLMC 2014-15 data acquisition and preparation
+# QLMC 2014-15 data prep
 
 This repository contains the code used to collect and clean price data from the price comparison website ([quiestlemoinscher.com](http://www.quiestlemoinscher.com/)) for the period 2014-2015.
 

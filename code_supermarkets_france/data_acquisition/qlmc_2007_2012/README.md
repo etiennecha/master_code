@@ -1,4 +1,4 @@
-## QLMC Data 2007-2012
+## QLMC 2007-2012 data prep
 
 This repository contains the code used to extract and clean supermarket price records from large pdf files made available by the comparison website quiestlemoinscher.com. Below are provided a description of the data and an overview of the scripts contained in this repository.
 
