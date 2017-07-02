@@ -10,7 +10,7 @@ This repository contains the code used to extract and clean supermarket price re
 
 Each file contains price records collected over a short period of time in order to perform aggregate price comparisons. A (slightly edited) screenshot:
 
-![qlmc_pdf_screenshot](qlmc_pdf_screenshot.jpg)
+![qlmc_pdf_201003_screenshot](qlmc_pdf_201003_screenshot.jpg)
 
 The following table lists the pdf files and provides some details such as the order of the records (variable name translations are provided in the next section), the number of rows an price range. Price ranges reveal some issues which are discussed in a following section.
 

@@ -8,7 +8,9 @@ This repository contains the code used to collect and clean price data from the 
 
 ### read_pdfs
 
-Two scripts which extact and clean price records from large pdf files, dating back to May and September 2014, downloaded from the website.
+Two scripts which extact and clean price records from large pdf files, dating back to May and September 2014, downloaded from the website. A (slightly edited) screenshot:
+
+![qlmc_pdf_201405_screenshot](qlmc_pdf_201405_screenshot.jpg)
 
 ### scraping_201503
 
