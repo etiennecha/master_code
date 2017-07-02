@@ -30,9 +30,9 @@ The following table lists the pdf files and provides some details such as the or
 |11 | 201201\_releves\_QLMC.pdf |  30/01/2011 |  22/02/2011 |  464,604 | [0.15; 34.99] | Rayon Famille Produit         |
 |12 | 201206\_releves\_QLMC.pdf |  12/05/2012 |  01/06/2012 |  607,185 | [0.16; 29.14] | Rayon Famille Produit         |
 
-#### Original variables
+#### Variables in pdf files
 
-All pdf files includes the following variables (in parenthesis is the variable name that will be used thereafter):
+Each pdf file includes the following variables (the variable name in english, that will be used thereafter, is indicated in parentheses):
 - "Magasin" (store\_id) is the name of the store, basically composed by the store chain and its municipality. It may include some information to all disambiguations for cities sheltering several stores of the same chain
 - "Produit" (product) is the full product name, including its brand and its format/size
 - "Rayon" (section) indicates the product section (e.g. Drinks)
