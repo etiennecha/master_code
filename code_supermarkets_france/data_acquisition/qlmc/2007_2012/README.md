@@ -85,8 +85,6 @@ Regarding products, product labels often exhibit slight wording differences acro
 
 -------------------
 
-### Scripts
+### Scripts (Coming soon)
 
-This section provides a brief overview of the code used to extract and clean the data.
-
-todo
+This section provides a brief overview of the code used to extract and clean the data

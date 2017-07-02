@@ -1,6 +1,9 @@
-## Drive data
+# Drive data
 
-This folder contains code used to scrap and clean price data from French supermarket chains Leclerc, Auchan and Carrefour. Such data allow to observe the price strategies, including promotions, of several (physical) stores over various time periods. 
+This folder contains code used to:
+
+- scrap and clean price data from French supermarket chains Leclerc, Auchan and Carrefour. Such data allow to observe the price strategies, including promotions, of several (physical) stores over various time periods. 
+- scrap store locations (and other available information) from all national supermarket chain websites
 
 Some general data issues:
 
