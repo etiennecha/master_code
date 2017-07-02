@@ -19,18 +19,8 @@ def enc_json(database, chemin):
     json.dump(database, fichier)
  
 def read_pdftotext(path_file, path_pdftotext):
-  temp_file = subprocess.Popen([path_pdftotext,
-                                '-layout',
-                                '-enc',
-                                'UTF-8',
-                                path_file,
-                                '-'], stdout=PIPE)
-  #temp_file = subprocess.Popen([path_pdftotext,
-  #                              '-layout',
-  #                              '-enc',
-  #                              'Latin1' ,
-  #                              path_file,
-  #                              '-'], stdout=PIPE)
+  temp_file = subprocess.Popen([path_pdftotext, '-layout', '-enc', 'UTF-8',
+                                path_file, '-'], stdout=PIPE)
   data = temp_file.communicate()[0] # .split('\r\n') change for linux
   return data
 
