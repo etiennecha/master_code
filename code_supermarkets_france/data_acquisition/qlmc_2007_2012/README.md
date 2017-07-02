@@ -1,12 +1,12 @@
-## QLMC 2007-2012 data prep
+# QLMC 2007-2012 data prep
 
 This repository contains the code used to extract and clean supermarket price records from large pdf files made available by the comparison website quiestlemoinscher.com. Below are provided a description of the data and an overview of the scripts contained in this repository.
 
 --------------------
 
-### Data
+## Data
 
-#### Overview of pdf files
+### Overview of pdf files
 
 Each file contains price records collected over a short period of time in order to perform aggregate price comparisons. A (slightly edited) screenshot:
 
@@ -30,7 +30,7 @@ The following table lists the pdf files and provides some details such as the or
 |11 | 201201\_releves\_QLMC.pdf |  30/01/2011 |  22/02/2011 |  464,604 | [0.15; 34.99] | Rayon Famille Produit         |
 |12 | 201206\_releves\_QLMC.pdf |  12/05/2012 |  01/06/2012 |  607,185 | [0.16; 29.14] | Rayon Famille Produit         |
 
-#### Variables in pdf files
+### Variables in pdf files
 
 Each pdf file includes the following variables (the variable name in english, that will be used thereafter, is indicated in parentheses):
 - "Magasin" (store\_id) is the name of the store, basically composed by the store chain and its municipality. It may include some information to all disambiguations for cities sheltering several stores of the same chain
@@ -42,14 +42,14 @@ Each pdf file includes the following variables (the variable name in english, th
 
 Within each period, a product is uniquely associated with a section and a family. Each family is a subcategory of a section.  There are some variations in the section/family labels across periods (todo: add more info).
 
-#### Added Variables
+### Added Variables
 
 - store\_id is used to generate two variables: store\_chain (retail grocery chain) and store municipality (which may not exactly correspond to a municipality name as previously explained)
 - store\_municipality is used to create the variable c\_insee which contains a code identifying the store municipality (used by the French National Institute of Statistics)
 - store\_chain and c\_insee are used to match stores with a database of french grocery stores produced by LSA. The variable id\_lsa indicates the id defined by LSA for each store successfully matched. It can be empty when no match was found (rare) or when there were several candidates (more frequent).
 - product is used to generate three variables: product\_brand, product\_label and product\_format.
 
-#### Overview of stores and products by period
+### Overview of stores and products by period
 
 The following table provides an overview of extracted data in terms of number of stores and number of products by period. Importantly, the sample of stores tends to vary significantly over time. There are less variations in products included but the same product can be labelled in slightly different ways across periods.
 
@@ -70,7 +70,7 @@ The following table provides an overview of extracted data in terms of number of
 | 11 | 201201\_releves\_QLMC.pdf |        617 |        1,657 |         753        | 
 | 12 | 201206\_releves\_QLMC.pdf |        605 |        1,805 |       1,004        | 
 
-#### Data issues and remedies
+### Data issues and remedies
 
 Regarding prices:
 
@@ -85,6 +85,6 @@ Regarding products, product labels often exhibit slight wording differences acro
 
 -------------------
 
-### Scripts (Coming soon)
+## Scripts (Coming soon)
 
 This section provides a brief overview of the code used to extract and clean the data
