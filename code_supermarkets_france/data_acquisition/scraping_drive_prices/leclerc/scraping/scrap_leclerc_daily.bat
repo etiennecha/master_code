@@ -1,1 +1,0 @@
- W:\Etienne\WinPython-64bit-2.7.6.4\python-2.7.6.amd64\python.exe  W:\Bureau\Etienne_work\Code\code_supermarkets_france\data_acquisition\scraping_drive_prices\leclerc\scraping\scrap_leclerc_daily.py >> W:\Bureau\Etienne_work\Data\data_supermarkets\data_drive\data_leclerc\data_source\data_json_leclerc\log.txt

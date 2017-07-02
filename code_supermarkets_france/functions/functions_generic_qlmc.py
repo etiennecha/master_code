@@ -7,6 +7,8 @@ import re
 import math
 import pandas as pd
 import numpy as np
+import subprocess
+from subprocess import PIPE, Popen
 
 ls_chain_brands = [u'HYPER CHAMPION',
                    u'CHAMPION',
@@ -45,13 +47,19 @@ ls_brand_patches = [u'Pepito',
                     u'Ethiquable', 
                     u'Bn']
 
-def dec_json(chemin):
-  with open(chemin, 'r') as fichier:
-    return json.loads(fichier.read())
+def read_pdftotext(path_file, path_pdftotext):
+  temp_file = subprocess.Popen([path_pdftotext, '-layout' ,
+                                path_file, '-'], stdout=PIPE)
+  data = temp_file.communicate()[0].split('\r\n')
+  return data
 
-def enc_json(database, chemin):
-  with open(chemin, 'w') as fichier:
-    json.dump(database, fichier)
+def dec_json(path_file):
+  with open(path_file, 'r') as f:
+    return json.loads(f.read())
+
+def enc_json(data, path_file):
+  with open(path_file, 'w') as f:
+    json.dump(data, f)
 
 def parse_kml(kml_str):
   ls_kml_data = []
@@ -68,8 +76,8 @@ def get_split_chain_city(string_to_split, ls_split_string):
   for split_string in ls_split_string:
     split_search = re.search('%s' %split_string, string_to_split)
     if split_search:
-      result = [string_to_split[:split_search.end()].strip(),\
-                  string_to_split[split_search.end():].strip()]
+      result = [string_to_split[:split_search.end()].strip(),
+                string_to_split[split_search.end():].strip()]
       break
   if not split_search:
     print 'Could not split on chain:', string_to_split
@@ -84,17 +92,17 @@ def get_split_brand_product(string_to_split, ls_brand_patches):
   """
   split_search = re.search('(\s-)|(-\s)|(-\s-)', string_to_split)
   if split_search:
-    result = [string_to_split[:split_search.start()].strip(),\
+    result = [string_to_split[:split_search.start()].strip(),
               string_to_split[split_search.end():].strip()]
   else:
     for brand_patch in ls_brand_patches:
       brand_patch_corr = brand_patch + u' - '
-      string_to_split = re.sub(ur'^%s\s?,\s?(.*)' %brand_patch,\
-                               ur'%s\1' %brand_patch_corr,\
+      string_to_split = re.sub(ur'^%s\s?,\s?(.*)' %brand_patch,
+                               ur'%s\1' %brand_patch_corr,
                                string_to_split)
     split_search = re.search('(\s-)|(-\s)|(-\s-)', string_to_split)
     if split_search:
-      result = [string_to_split[:split_search.start()].strip(),\
+      result = [string_to_split[:split_search.start()].strip(),
                 string_to_split[split_search.end():].strip()]
       # print 'Correction brand:', result
     else:
@@ -147,8 +155,8 @@ def get_marque_and_libelle(product, ls_brand_patches):
   else:
     for brand_patch in ls_brand_patches:
       brand_patch_corr = brand_patch + u' - '
-      product = re.sub(ur'^%s\s?,\s?(.*)' %brand_patch,\
-                       ur'%s\1' %brand_patch_corr,\
+      product = re.sub(ur'^%s\s?,\s?(.*)' %brand_patch,
+                       ur'%s\1' %brand_patch_corr,
                        product)
     split_search = re.search('(\s-)|(-\s)|(-\s-)', product)
     if split_search:
@@ -179,8 +187,8 @@ def compute_distance(coordinates_A, coordinates_B):
   d_lon = math.radians(float(coordinates_B[1]) - float(coordinates_A[1]))
   lat_1 = math.radians(float(coordinates_A[0]))
   lat_2 = math.radians(float(coordinates_B[0]))
-  a = math.sin(d_lat/2.0) * math.sin(d_lat/2.0) + \
-        math.sin(d_lon/2.0) * math.sin(d_lon/2.0) * math.cos(lat_1) * math.cos(lat_2)
+  a = (math.sin(d_lat/2.0) * math.sin(d_lat/2.0) +
+        math.sin(d_lon/2.0) * math.sin(d_lon/2.0) * math.cos(lat_1) * math.cos(lat_2))
   c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
   distance = 6371 * c
   return round(distance, 2)
@@ -190,8 +198,8 @@ def compute_distance_ar(ar_lat_A, ar_lng_A, ar_lat_B, ar_lng_B):
   d_lng = np.radians(ar_lng_B - ar_lng_A)
   lat_1 = np.radians(ar_lat_A)
   lat_2 = np.radians(ar_lat_B)
-  ar_a = np.sin(d_lat/2.0) * np.sin(d_lat/2.0) + \
-           np.sin(d_lng/2.0) * np.sin(d_lng/2.0) * np.cos(lat_1) * np.cos(lat_2)
+  ar_a = (np.sin(d_lat/2.0) * np.sin(d_lat/2.0) +
+            np.sin(d_lng/2.0) * np.sin(d_lng/2.0) * np.cos(lat_1) * np.cos(lat_2))
   ar_c = 2 * np.arctan2(np.sqrt(ar_a), np.sqrt(1-ar_a))
   ar_distance = 6371 * ar_c
   return np.round(ar_distance, 2)
@@ -221,11 +229,11 @@ def compare_stores_det(field_store, store_a, store_b, df_prices, category, perio
     df_prices_per = df_prices[df_prices['P'] == period_ind]
   else:
     df_prices_per = df_prices
-  df_store_a = df_prices_per[['Prix', 'Produit', 'Rayon', 'Famille']]\
-                           [(df_prices_per[field_store] == store_a)].copy()
+  df_store_a = (df_prices_per[['Prix', 'Produit', 'Rayon', 'Famille']]
+                             [(df_prices_per[field_store] == store_a)].copy())
   df_store_a.rename(columns = {'Prix' : 'Prix_a'}, inplace = True)
-  df_store_b = df_prices_per[['Prix','Produit']]\
-                            [(df_prices_per[field_store] == store_b)].copy()
+  df_store_b = (df_prices_per[['Prix','Produit']]
+                             [(df_prices_per[field_store] == store_b)].copy())
   df_store_b.rename(columns = {'Prix' : 'Prix_b'}, inplace = True)
   df_both = pd.merge(df_store_a, df_store_b,
                      on = 'Produit', how = 'inner')
@@ -240,11 +248,11 @@ def compare_stores_det(field_store, store_a, store_b, df_prices, category, perio
   return [ls_str_categories, ls_a_cheaper, ls_b_cheaper, ls_a_equal_b]
 
 def compare_stores(df_prices, field_id, id_0, id_1):
-  df_store_0 = df_prices[['Prix', 'Produit', 'Rayon', 'Famille']]\
-                           [(df_prices[field_id] == id_0)].copy()
+  df_store_0 = (df_prices[['Prix', 'Produit', 'Rayon', 'Famille']]
+                         [(df_prices[field_id] == id_0)].copy())
   df_store_0.rename(columns = {'Prix' : 'Prix_0'}, inplace = True)
-  df_store_1 = df_prices[['Prix','Produit']]\
-                            [(df_prices[field_id] == id_1)].copy()
+  df_store_1 = (df_prices[['Prix','Produit']]
+                         [(df_prices[field_id] == id_1)].copy())
   df_store_1.rename(columns = {'Prix' : 'Prix_1'}, inplace = True)
   df_both = pd.merge(df_store_0, df_store_1,
                      on = 'Produit', how = 'inner')
@@ -255,8 +263,8 @@ def compare_stores(df_prices, field_id, id_0, id_1):
   nb_cheaper_1 = len(df_both[df_both['Diff'] <= -1e-05])
   tot_sum_0 = df_both['Prix_0'].sum()
   tot_sum_1 = df_both['Prix_1'].sum()
-  abs_pct_tot_diff = np.abs(df_both['Diff'].sum()) /\
-                              df_both[['Prix_0', 'Prix_1']].sum(0).min() * 100
+  abs_pct_tot_diff = (np.abs(df_both['Diff'].sum()) /
+                               df_both[['Prix_0', 'Prix_1']].sum(0).min() * 100)
   avg_abs_pct_diff = (df_both['Diff'] / df_both[['Prix_0', 'Prix_1']].min(1)).abs().mean() * 100
   return [nb_products, nb_equal,
           nb_cheaper_0, nb_cheaper_1,

@@ -23,6 +23,7 @@ path_lsa_csv = os.path.join(path_data,
                             'data_lsa',
                             'data_csv')
 
+pd.set_option('display.max_colwidth', 40)
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
