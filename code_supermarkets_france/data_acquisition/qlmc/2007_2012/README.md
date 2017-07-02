@@ -8,23 +8,25 @@ This repository contains the code used to extract and clean supermarket price re
 
 #### Overview of pdf file data
 
+![qlmc_pdf_screenshot.jpg](qlmc_pdf_screenshot.jpg)
+
 The following table provides a brief overview of each pdf file, its structure (order of the product price records) and price range. Price ranges reveal some issues, on which a dedicated section below provides some more details.
 
-|P  | File name                 | Ordered by                    | Price range   |
-|---|:--------------------------|-------------------------------|---------------|
-|0  | 200705\_releves\_QLMC.pdf | Rayon Famille Produit Magasin | [0.28; 45.99] |
-|1  | 200708\_releves\_QLMC.pdf | Rayon Famille Produit Magasin | [0.25; 26.95] |
-|2  | 200801\_releves\_QLMC.pdf | Rayon Famille Produit Magasin | [0.15; 31.52] |
-|3  | 200804\_releves\_QLMC.pdf | Rayon Famille Produit Magasin | [0.16; 28.38] |
-|4  | 200903\_releves\_QLMC.pdf | No order                      | [0.36; 22.23] |
-|5  | 200909\_releves\_QLMC.pdf | Magasin Produit               | [0.30; 31.46] |
-|6  | 201003\_releves\_QLMC.pdf | Produit Magasin (Chaine)      | [0.30; 09.99] |
-|7  | 201010\_releves\_QLMC.pdf | Rayon Famille Produit Magasin | [1.00; 99.00] |
-|8  | 201101\_releves\_QLMC.pdf | Rayon                         | [0.37; 09.99] |
-|9  | 201104\_releves\_QLMC.pdf | Produit                       | [0.31; 09.99] |
-|10 | 201110\_releves\_QLMC.pdf | Rayon Famille Produit         | [0.16; 35.02] |
-|11 | 201201\_releves\_QLMC.pdf | Rayon Famille Produit         | [0.15; 34.99] |
-|12 | 201206\_releves\_QLMC.pdf | Rayon Famille Produit         | [0.16; 29.14] |
+|P  | File name                 | Ordered by                    |  Nb rows | Price range   |
+|---|:--------------------------|-------------------------------|----------|---------------|
+|0  | 200705\_releves\_QLMC.pdf | Rayon Famille Produit Magasin |  554,691 | [0.28; 45.99] |
+|1  | 200708\_releves\_QLMC.pdf | Rayon Famille Produit Magasin |  570,193 | [0.25; 26.95] |
+|2  | 200801\_releves\_QLMC.pdf | Rayon Famille Produit Magasin |  544,366 | [0.15; 31.52] |
+|3  | 200804\_releves\_QLMC.pdf | Rayon Famille Produit Magasin |  417,272 | [0.16; 28.38] |
+|4  | 200903\_releves\_QLMC.pdf | No order                      |  414,911 | [0.36; 22.23] |
+|5  | 200909\_releves\_QLMC.pdf | Magasin Produit               |  432,510 | [0.30; 31.46] |
+|6  | 201003\_releves\_QLMC.pdf | Produit Magasin (Chaine)      |  446,309 | [0.30; 09.99] |
+|7  | 201010\_releves\_QLMC.pdf | Rayon Famille Produit Magasin |  385,253 | [1.00; 99.00] |
+|8  | 201101\_releves\_QLMC.pdf | Rayon                         |  357,188 | [0.37; 09.99] |
+|9  | 201104\_releves\_QLMC.pdf | Produit                       |  240,710 | [0.31; 09.99] |
+|10 | 201110\_releves\_QLMC.pdf | Rayon Famille Produit         |  430,968 | [0.16; 35.02] |
+|11 | 201201\_releves\_QLMC.pdf | Rayon Famille Produit         |  464,604 | [0.15; 34.99] |
+|12 | 201206\_releves\_QLMC.pdf | Rayon Famille Produit         |  607,185 | [0.16; 29.14] |
 
 #### Original variables
 
@@ -47,24 +49,24 @@ Within each period, a product is uniquely associated with a section and a family
 
 #### Overview of stores and products by period
 
-The following table provides an overview of extracted data in terms of number of stores and number of products by period. Importantly, the sample of stores tends to vary significantly over time. There are less variations in products included but the same product can be labelled in slightly different ways across periods, hence
+The following table provides an overview of extracted data in terms of number of stores and number of products by period. Importantly, the sample of stores tends to vary significantly over time. There are less variations in products included but the same product can be labelled in slightly different ways across periods.
 
 
-|  P |  Date start |    Date end |  Nb rows |  Nb stores |  Nb products |  Avg nb prod/store |
-|----|-------------|-------------|----------|------------|--------------|--------------------|
-|  0 |  09/05/2007 |  25/05/2007 |  554,691 |        344 |        2,325 |       1,612        |
-|  1 |  10/08/2007 |  31/08/2007 |  570,193 |        335 |        2,384 |       1,702        | 
-|  2 |  21/01/2008 |  12/02/2008 |  544,366 |        318 |        2,374 |       1,712        | 
-|  3 |  04/04/2008 |  30/04/2008 |  417,272 |        246 |        2,443 |       1,696        | 
-|  4 |  01/04/2009 |  30/04/2009 |  414,911 |        701 |        1,471 |         592        | 
-|  5 |  01/09/2009 |  28/09/2009 |  432,510 |        726 |        1,463 |         596        | 
-|  6 |  05/03/2010 |  03/04/2010 |  446,309 |        739 |        1,466 |         604        | 
-|  7 |  18/10/2010 |  16/11/2010 |  385,253 |        624 |        1,479 |         617        | 
-|  8 |  28/01/2011 |  22/02/2011 |  357,188 |        634 |        1,383 |         563        | 
-|  9 |  28/04/2011 |  20/05/2011 |  240,710 |        637 |          954 |         378        | 
-| 10 |  17/10/2011 |  09/11/2011 |  430,968 |        640 |        1,674 |         673        | 
-| 11 |  30/01/2011 |  22/02/2011 |  464,604 |        617 |        1,657 |         753        | 
-| 12 |  12/05/2012 |  01/06/2012 |  607,185 |        605 |        1,805 |       1,004        | 
+|  P | File name                 |  Date start |    Date end |  Nb stores |  Nb products |  Avg nb prod/store |
+|----|:--------------------------|-------------|-------------|------------|--------------|--------------------|
+|  0 | 200705\_releves\_QLMC.pdf |  09/05/2007 |  25/05/2007 |        344 |        2,325 |       1,612        |
+|  1 | 200708\_releves\_QLMC.pdf |  10/08/2007 |  31/08/2007 |        335 |        2,384 |       1,702        | 
+|  2 | 200801\_releves\_QLMC.pdf |  21/01/2008 |  12/02/2008 |        318 |        2,374 |       1,712        | 
+|  3 | 200804\_releves\_QLMC.pdf |  04/04/2008 |  30/04/2008 |        246 |        2,443 |       1,696        | 
+|  4 | 200903\_releves\_QLMC.pdf |  01/04/2009 |  30/04/2009 |        701 |        1,471 |         592        | 
+|  5 | 200909\_releves\_QLMC.pdf |  01/09/2009 |  28/09/2009 |        726 |        1,463 |         596        | 
+|  6 | 201003\_releves\_QLMC.pdf |  05/03/2010 |  03/04/2010 |        739 |        1,466 |         604        | 
+|  7 | 201010\_releves\_QLMC.pdf |  18/10/2010 |  16/11/2010 |        624 |        1,479 |         617        | 
+|  8 | 201101\_releves\_QLMC.pdf |  28/01/2011 |  22/02/2011 |        634 |        1,383 |         563        | 
+|  9 | 201104\_releves\_QLMC.pdf |  28/04/2011 |  20/05/2011 |        637 |          954 |         378        | 
+| 10 | 201110\_releves\_QLMC.pdf |  17/10/2011 |  09/11/2011 |        640 |        1,674 |         673        | 
+| 11 | 201201\_releves\_QLMC.pdf |  30/01/2011 |  22/02/2011 |        617 |        1,657 |         753        | 
+| 12 | 201206\_releves\_QLMC.pdf |  12/05/2012 |  01/06/2012 |        605 |        1,805 |       1,004        | 
 
 #### Data issues and remedies
 
