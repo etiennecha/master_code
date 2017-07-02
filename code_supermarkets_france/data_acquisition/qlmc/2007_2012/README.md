@@ -8,11 +8,11 @@ This repository contains the code used to extract and clean supermarket price re
 
 #### Overview of pdf files
 
-Each pdf file contains price records collected over a relatively short period of tieme in order to perform aggregate price comparisons. A (slightly edited) screenshot:
+Each file contains price records collected over a short period of time in order to perform aggregate price comparisons. A (slightly edited) screenshot:
 
 ![qlmc_pdf_screenshot](qlmc_pdf_screenshot.jpg)
 
-The following table lists pdf files, detailing the order of the records (variable name translations are provided in the next section), the number of rows an price range. Price ranges reveal some issues which are discussed in a following section.
+The following table lists the pdf files and provides some details such as the order of the records (variable name translations are provided in the next section), the number of rows an price range. Price ranges reveal some issues which are discussed in a following section.
 
 |P  | File name                 |  Date start |    Date end |  Nb rows | Price range   | Ordered by                    |
 |---|:--------------------------|-------------|-------------|----------|---------------|-------------------------------|
