@@ -10,25 +10,20 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2007-12')
-
-path_built_csv = os.path.join(path_built,
-                              'data_csv')
-
 pd.set_option('float_format', '{:,.2f}'.format)
+
+path_built_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                              'data_qlmc_2007_2012', 'data_csv')
 
 # #######################
 # LOAD DATA
 # #######################
 
 # LOAD DF QLMC
-df_qlmc = pd.read_csv(os.path.join(path_built_csv,
-                                   'df_qlmc.csv'),
+df_qlmc = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc.csv'),
                       parse_dates = ['date'],
                       dayfirst = True,
+                      infer_datetime_format = True,
                       encoding = 'utf-8')
 
 # Fix Store_Chain for prelim stats des

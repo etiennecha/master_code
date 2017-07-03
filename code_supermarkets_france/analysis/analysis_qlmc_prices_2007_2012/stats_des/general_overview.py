@@ -8,85 +8,56 @@ from functions_generic_qlmc import *
 import numpy as np
 import pandas as pd
 
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2007-12')
+pd.set_option('float_format', '{:,.2f}'.format)
 
-path_built_csv = os.path.join(path_built,
-                              'data_csv')
+path_built_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                              'data_qlmc_2007_2012', 'data_csv')
+
+format_str = lambda x: u'{:}'.format(x[:20])
 
 # #######################
 # LOAD DF QLMC
 # #######################
 
-dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')
-df_qlmc = pd.read_csv(os.path.join(path_built_csv,
-                                   'df_qlmc.csv'),
+#dateparse = lambda x: pd.datetime.strptime(x, '%d/%m/%Y')*
+df_qlmc = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc.csv'),
                       dtype = {'id_lsa' : str},
                       parse_dates = ['date'],
+                      dayfirst = True,
+                      infer_datetime_format = True,
                       encoding = 'utf-8')
 
 # ################
 # GENERAL OVERVIEW
 # ################
 
-## BUILD DATETIME DATE COLUMN
-
-# DF DATES
-df_go_date = df_qlmc[['date', 'period']].groupby('period').agg([min, max])['date']
-df_go_date['spread'] = df_go_date['max'] - df_go_date['min']
-
-# DF ROWS
-df_go_rows = df_qlmc[['product', 'period']].groupby('period').agg(len)
-
-# DF UNIQUE STORES / PRODUCTS
-df_go_unique = df_qlmc[['product', 'store', 'period']]\
-                       .groupby('period').agg(lambda x: len(x.unique()))
-
-# DF GO
-df_go = pd.merge(df_go_date, df_go_unique, left_index = True, right_index = True)
-df_go['nb_rows'] = df_go_rows['product']
-for field in ['nb_rows', 'store', 'product']:
-  df_go[field] = df_go[field].astype(float) # to have thousand separator
-df_go['date_start'] = df_go['min'].apply(lambda x: x.strftime('%d/%m/%Y'))
-df_go['date_end'] = df_go['max'].apply(lambda x: x.strftime('%d/%m/%Y'))
-df_go['avg_nb_prods_by_store'] = df_go['nb_rows'] / df_go['store']
-df_go.rename(columns = {'store' : 'nb_stores',
-                        'product' : 'nb_prods'},
-             inplace = True)
-df_go.reset_index(inplace = True)
-
-lsd0 = ['period', 'date_start', 'date_end',
-        'nb_rows', 'nb_stores', 'nb_prods',
-        'avg_nb_prods_by_store']
-
-pd.set_option('float_format', '{:4,.0f}'.format)
+# General overview
+df_su = (df_qlmc.groupby('period')['date'].agg([min, max])
+                .rename(columns = {'min' : 'date_beg',
+                                   'max' : 'date_end'}))
+df_su['time_span'] = df_su['date_end'] - df_su['date_beg']
+df_su['nb_rows'] = df_qlmc.groupby('period')['product'].agg(len)
+df_su['nb_prods'] = df_qlmc.groupby('period')['product'].nunique()
+df_su['nb_stores'] = df_qlmc.groupby('period')['store'].nunique()
+df_su['avg_nb_prods_by_store'] = (df_su['nb_rows'] / df_su['nb_stores']).astype(int)
+df_su['price_min'] = df_qlmc.groupby('period')['price'].min()
+df_su['price_max'] = df_qlmc.groupby('period')['price'].max()
+#df_su['date_beg'] = df_su['date_beg'].apply(lambda x: x.strftime('%d/%m/%Y'))
+#df_su['date_end'] = df_su['date_end'].apply(lambda x: x.strftime('%d/%m/%Y'))
+df_su.reset_index(inplace = True)
 
 print()
 print('General overview of period records')
-
+print(df_su.to_string(index = False))
 print()
-print('String version:')
-print(df_go[lsd0].to_string(index = False))
+#print(df_su.to_latex(index = False))
 
-print()
-print('Latex version:')
-print(df_go[lsd0].to_latex(index = False))
-
-pd.set_option('float_format', '{:4,.2f}'.format)
-format_str = lambda x: u'{:}'.format(x[:20])
-
-print()
-print('Overview of period prices:')
-# To check consistency... else compute product avg price first?
-ls_se_per_prices_desc = []
-for per in range(13):
- se_per_prices = df_qlmc['price'][df_qlmc['period'] == per]
- ls_se_per_prices_desc.append(se_per_prices.describe())
-df_per_prices_desc = pd.concat(ls_se_per_prices_desc, axis = 1, keys = range(13)).T
-df_per_prices_desc['count'] = df_per_prices_desc.astype(int)
-print(df_per_prices_desc.to_string())
+#print()
+#print('Overview of period prices:')
+#df_su_prices = df_qlmc.groupby('period')['price'].agg('describe').unstack()
+#df_su_prices['count'] = df_su_prices.astype(int)
+#df_su_prices.reset_index(inplace = True)
+#print(df_su_prices.to_string())
 
 # ##########################
 # OVERVIEW OF EACH PERIOD

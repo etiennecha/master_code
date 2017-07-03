@@ -10,23 +10,14 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2007-12')
-path_built_csv = os.path.join(path_built,
-                              'data_csv')
+path_built_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                              'data_qlmc_2007_2012', 'data_csv')
 
-path_built_lsa = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_lsa')
+path_built_lsa = os.path.join(path_data, 'data_supermarkets', 'data_built', 'data_lsa')
 path_built_lsa_csv = os.path.join(path_built_lsa, 'data_csv')
 path_built_lsa_json = os.path.join(path_built_lsa, 'data_json')
-path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv,
-                                       '201407_competition')
-path_built_lsa_comp_json = os.path.join(path_built_lsa_json,
-                                        '201407_competition')
+path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv, '201407_competition')
+path_built_lsa_comp_json = os.path.join(path_built_lsa_json,'201407_competition')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -37,10 +28,11 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # ############
 
 # LOAD DF PRICES
-df_qlmc = pd.read_csv(os.path.join(path_built_csv,
-                                   'df_qlmc.csv'),
-                        encoding = 'utf-8')
-
+df_qlmc = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc.csv'),
+                      parse_dates = ['date'],
+                      dayfirst = True,
+                      infer_datetime_format = True)
+                      encoding = 'utf-8')
 
 # LOAD DF STORES (INCLUDING LSA INFO)
 df_stores = pd.read_csv(os.path.join(path_built_csv,

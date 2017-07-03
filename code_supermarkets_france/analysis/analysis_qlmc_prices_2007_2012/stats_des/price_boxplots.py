@@ -26,8 +26,7 @@ pd.set_option('float_format', '{:,.2f}'.format)
 # #######################
 
 # LOAD DF QLMC
-df_qlmc = pd.read_csv(os.path.join(path_built_csv,
-                                   'df_qlmc.csv'),
+df_qlmc = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc.csv'),
                       parse_dates = ['date'],
                       dayfirst = True,
                       encoding = 'utf-8')
