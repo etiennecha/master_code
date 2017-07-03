@@ -13,23 +13,14 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_qlmc_scraped = os.path.join(path_data,
-                                 'data_supermarkets',
-                                 'data_source',
-                                 'data_qlmc_2015',
-                                 'data_scraped_201503')
+path_qlmc_scraped = os.path.join(path_data, 'data_supermarkets', 'data_source',
+                                 'data_qlmc_2014_2015', 'data_scraped_201503')
 
-path_csv = os.path.join(path_data,
-                        'data_supermarkets',
-                        'data_built',
-                        'data_qlmc_2015',
-                        'data_csv_201503')
+path_built_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                              'data_qlmc_2014_2015', 'data_csv')
 
-dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scraped,
-                                         'dict_reg_leclerc_stores.json'))
-
-dict_leclerc_comp = dec_json(os.path.join(path_qlmc_scraped,
-                                          'dict_leclerc_comp.json'))
+dict_reg_leclerc = dec_json(os.path.join(path_qlmc_scraped, 'dict_reg_leclerc_stores.json'))
+dict_leclerc_comp = dec_json(os.path.join(path_qlmc_scraped, 'dict_leclerc_comp.json'))
 
 # dict_leclerc_comp should contain all stores including leclerc
 ls_rows_stores = []
@@ -77,8 +68,7 @@ df_stores['store_chain'] = df_stores['store_chain'].apply(lambda x: dict_chains[
 # unique stores listed
 df_stores.drop_duplicates('store_id', inplace = True)
 
-df_stores.to_csv(os.path.join(path_csv,
-                              'df_stores.csv'),
+df_stores.to_csv(os.path.join(path_built_csv, 'df_stores_201503.csv'),
                  encoding = 'utf-8',
                  float_format='%.4f',
                  index = False)

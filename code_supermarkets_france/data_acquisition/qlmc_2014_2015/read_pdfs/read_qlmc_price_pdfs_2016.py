@@ -9,10 +9,12 @@ import os, sys
 import re
 import pandas as pd
 
-path_source = os.path.join(path_data, 'data_supermarkets', 'data_source', 'data_qlmc_2016')
-path_source_pdf = os.path.join(path_source, 'data_pdf')
-path_source_csv = os.path.join(path_source, 'data_csv')
+path_source_pdf = os.path.join(path_data, 'data_supermarkets', 'data_source',
+                           'data_qlmc_2014_2015', 'data_pdf')
 path_exe_pdftotext = os.path.join(path_source_pdf, 'pdftotext.exe')
+
+path_built_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                              'data_qlmc_2014_2015', 'data_csv')
 
 ls_chains = ['AUCHAN',
              'MARKET',
@@ -29,7 +31,7 @@ ls_chains = ['AUCHAN',
              'INTERMARCHE SUPER',
              'SUPER U']
 
-path_folder = path_source_pdf
+path_folder = os.path.join(path_source_pdf, '201602_comparisons')
 ls_pdf_names = [x for x in os.listdir(path_folder) if x[-4:] == '.pdf']
 
 ls_columns = ['leclerc_date', 'product',

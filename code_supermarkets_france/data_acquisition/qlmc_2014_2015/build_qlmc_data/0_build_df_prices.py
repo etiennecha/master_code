@@ -14,17 +14,11 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_qlmc_scraped = os.path.join(path_data,
-                                 'data_supermarkets',
-                                 'data_source',
-                                 'data_qlmc_2015',
-                                 'data_scraped_201503')
+path_qlmc_scraped = os.path.join(path_data, 'data_supermarkets', 'data_source',
+                                 'data_qlmc_2014_2015', 'data_scraped_201503')
 
-path_csv = os.path.join(path_data,
-                        'data_supermarkets',
-                        'data_built',
-                        'data_qlmc_2015',
-                        'data_csv_201503')
+path_built_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                              'data_qlmc_2014_2015', 'data_csv')
 
 ls_fra_regions = [u'picardie',
                   u'franche-comte',
@@ -151,8 +145,7 @@ for region in ls_fra_regions:
   df_region.drop_duplicates(['store_id', 'section', 'family', 'product'],
                             inplace = True)
   
-  #df_region.to_csv(os.path.join(path_csv,
-  #                              'df_region_{:s}.csv'.format(region)),
+  #df_region.to_csv(os.path.join(path_built_csv, 'df_region_{:s}.csv'.format(region)),
   #                   encoding = 'utf-8',
   #                   float_format='%.3f',
   #                   index = False)
@@ -190,8 +183,7 @@ df_prices = df_prices[~df_prices['product'].isin(ls_suspicious_prods)]
 df_prices['product'] = (
   df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE')))
 
-df_prices.to_csv(os.path.join(path_csv,
-                              'df_prices.csv'),
-                   encoding = 'utf-8',
-                   float_format='%.3f',
-                   index = False)
+df_prices.to_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
+                 encoding = 'utf-8',
+                 float_format='%.3f',
+                 index = False)

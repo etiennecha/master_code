@@ -20,24 +20,16 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_qlmc_scraped = os.path.join(path_data,
-                                 'data_supermarkets',
-                                 'data_source',
-                                 'data_qlmc_2015',
-                                 'data_scraped_201503')
+path_qlmc_scraped = os.path.join(path_data, 'data_supermarkets', 'data_source',
+                                 'data_qlmc_2014_2015', 'data_scraped_201503')
 
-path_csv = os.path.join(path_data,
-                        'data_supermarkets',
-                        'data_built',
-                        'data_qlmc_2015',
-                        'data_csv_201503')
+path_built_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                              'data_qlmc_2014_2015', 'data_csv')
 
-path_dir_match_insee = os.path.join(path_data,
-                                    u'data_insee',
-                                    u'match_insee_codes')
+path_dir_match_insee = os.path.join(path_data, u'data_insee', u'match_insee_codes')
 
 df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'df_stores.csv'),
+                                     'df_stores_201503.csv'),
                         encoding = 'utf-8')
 
 # Fix some problematic store locations (found through competitor pair analysis)
@@ -176,8 +168,7 @@ for store_id, c_insee, insee_municipality in ls_fix_insee:
                 ['c_insee', 'insee_municipality']] = [c_insee, insee_municipality]
 
 # OUTPUT
-df_stores.to_csv(os.path.join(path_csv,
-                              'df_stores_final.csv'),
+df_stores.to_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                  encoding = 'utf-8',
                  float_format='%.4f',
                  index = False)

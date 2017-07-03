@@ -10,18 +10,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-path_built_2015 = os.path.join(path_data,
-                               'data_supermarkets',
-                               'data_built',
-                               'data_qlmc_2015')
-path_built_201415_csv = os.path.join(path_built_2015, 'data_csv_2014-2015')
-path_built_201415_json = os.path.join(path_built_2015, 'data_json_2014-2015')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built', 'data_qlmc_2014_2015')
+path_built_csv = os.path.join(path_built, 'data_csv')
+path_built_json = os.path.join(path_built, 'data_json')
 
-path_built_lsa = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_lsa')
-path_built_lsa_csv = os.path.join(path_built_lsa, 'data_csv')
+path_lsa_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                            'data_lsa', 'data_csv')
 
 path_api_keys = os.path.join(path_data, 'api_keys')
 with open(os.path.join(path_api_keys, 'key_google_api.txt'), 'r') as f:
@@ -38,12 +32,13 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # Need to have build df_qlmc_competitors already
 # Need to have df_stores including lsa_id (best gps coordinates)
 
-df_comp_pairs = pd.read_csv(os.path.join(path_built_201415_csv, 'df_comp_store_pairs.csv'),
+df_pairs = pd.read_csv(os.path.join(path_built_csv, 'df_pairs_2014_2015.csv'),
                             dtype = {'id_lsa_0' : str,
                                      'id_lsa_1' : str},
                             encoding = 'utf-8')
+df_comp_pairs = df_pairs[df_pairs['groupe_0'] != df_pairs['groupe_1']]
 
-df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv, 'df_lsa_active.csv'),
+df_lsa = pd.read_csv(os.path.join(path_lsa_csv, 'df_lsa_active.csv'),
                      dtype = {u'id_lsa' : str,
                               u'c_insee' : str,
                               u'c_insee_ardt' : str,
@@ -119,7 +114,7 @@ for suffix in ['0', '1']:
 # ###############################
 
 # ls_res done once => no check if consistent with df_comp_pairs
-path_res = os.path.join(path_built_201415_json,
+path_res = os.path.join(path_built_json,
                         'ls_comp_201415_directions.json')
 if os.path.exists(path_res):
   ls_res = dec_json(path_res)
@@ -183,8 +178,8 @@ df_comp_pairs = pd.merge(df_comp_pairs,
 df_comp_pairs['gg_dist_val'] = df_comp_pairs['gg_dist_val'] / 1000
 df_comp_pairs['gg_dur_val'] = df_comp_pairs['gg_dur_val'] / 60
 
-df_comp_pairs.to_csv(os.path.join(path_built_201415_csv,
-                                  'df_comp_store_pairs_final.csv'),
+df_comp_pairs.to_csv(os.path.join(path_built_csv,
+                                  'df_comp_pairs_2014_2015.csv'),
                            encoding = 'UTF-8',
                            float_format='%.3f',
                            index = False)

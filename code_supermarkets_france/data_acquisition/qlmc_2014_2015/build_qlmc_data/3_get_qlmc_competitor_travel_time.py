@@ -15,18 +15,12 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2015')
-path_built_csv = os.path.join(path_built, 'data_csv_201503')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built', 'data_qlmc_2014_2015')
+path_built_csv = os.path.join(path_built, 'data_csv')
 path_built_json = os.path.join(path_built, 'data_json')
 
-path_lsa_csv = os.path.join(path_data,
-                            'data_supermarkets',
-                            'data_built',
-                            'data_lsa',
-                            'data_csv')
+path_lsa_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                            'data_lsa', 'data_csv')
 
 path_api_keys = os.path.join(path_data, 'api_keys')
 with open(os.path.join(path_api_keys, 'key_google_api.txt'), 'r') as f:
@@ -40,11 +34,11 @@ with open(os.path.join(path_api_keys, 'key_google_api.txt'), 'r') as f:
 # Need to have df_stores including lsa_id (best gps coordinates)
 
 df_qlmc_competitors = pd.read_csv(os.path.join(path_built_csv,
-                                               'df_qlmc_competitors.csv'),
+                                               'df_qlmc_competitors_201503.csv'),
                                   encoding = 'utf-8')
 
 df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                    'df_stores_final.csv'),
+                                    'df_stores_final_201503.csv'),
                         dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 
@@ -192,7 +186,7 @@ df_qlmc_competitors['gg_dist_val'] = df_qlmc_competitors['gg_dist_val'] / 1000
 df_qlmc_competitors['gg_dur_val'] = df_qlmc_competitors['gg_dur_val'] / 60
 
 df_qlmc_competitors.to_csv(os.path.join(path_built_csv,
-                                        'df_qlmc_competitors_final.csv'),
+                                        'df_qlmc_competitors_final_201503.csv'),
                            encoding = 'UTF-8',
                            float_format='%.3f',
                            index = False)

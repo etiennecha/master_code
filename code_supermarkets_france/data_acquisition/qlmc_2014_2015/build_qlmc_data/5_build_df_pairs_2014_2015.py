@@ -7,30 +7,24 @@ from functions_generic_qlmc import *
 import numpy as np
 import pandas as pd
 
-path_built_2015 = os.path.join(path_data,
-                               'data_supermarkets',
-                               'data_built',
-                               'data_qlmc_2015')
-path_built_201415_csv = os.path.join(path_built_2015, 'data_csv_2014-2015')
-path_built_201415_json = os.path.join(path_built_2015, 'data_json_2014-2015')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built', 'data_qlmc_2014_2015')
+path_built_csv = os.path.join(path_built, 'data_csv')
+path_built_json = os.path.join(path_built, 'data_json')
 
-path_built_csv_lsa = os.path.join(path_data,
-                                  'data_supermarkets',
-                                  'data_built',
-                                  'data_lsa',
-                                  'data_csv')
+path_lsa_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                            'data_lsa', 'data_csv')
 
 # ################
 # LOAD DATA
 ##################
 
-df_qlmc = pd.read_csv(os.path.join(path_built_201415_csv, 'df_qlmc_2014-2015.csv'),
+df_qlmc = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc_2014_2015.csv'),
                       dtype = {'ean' : str,
                                'id_lsa' : str},
                       encoding = 'utf-8')
 df_stores = df_qlmc[['id_lsa', 'store_name', 'store_chain']].drop_duplicates()
 
-df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa, 'df_lsa.csv'),
+df_lsa = pd.read_csv(os.path.join(path_lsa_csv, 'df_lsa.csv'),
                      dtype = {u'id_lsa' : str,
                               u'c_insee' : str,
                               u'c_insee_ardt' : str,
@@ -113,15 +107,7 @@ df_same_pairs = df_close_pairs[df_close_pairs['groupe_0'] ==  df_close_pairs['gr
 
 # May wish to add surface
 
-df_close_pairs.to_csv(os.path.join(path_built_201415_csv, 'df_close_store_pairs.csv'),
-                      encoding = 'utf-8',
-                      index = False)
-
-df_comp_pairs.to_csv(os.path.join(path_built_201415_csv, 'df_comp_store_pairs.csv'),
-                      encoding = 'utf-8',
-                      index = False)
-
-df_same_pairs.to_csv(os.path.join(path_built_201415_csv, 'df_same_chain_store_pairs.csv'),
+df_close_pairs.to_csv(os.path.join(path_built_201415_csv, 'df_pairs_2014_2015.csv'),
                       encoding = 'utf-8',
                       index = False)
 

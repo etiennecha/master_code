@@ -9,10 +9,12 @@ import os, sys
 import re
 import pandas as pd
 
-path_source = os.path.join(path_data, 'data_supermarkets', 'data_source', 'data_qlmc_2014')
-path_source_pdf = os.path.join(path_source, 'data_pdf')
-path_source_csv = os.path.join(path_source, 'data_csv')
+path_source_pdf = os.path.join(path_data, 'data_supermarkets', 'data_source',
+                           'data_qlmc_2014_2015', 'data_pdf')
 path_exe_pdftotext = os.path.join(path_source_pdf, 'pdftotext.exe')
+
+path_built_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                              'data_qlmc_2014_2015', 'data_csv')
 
 ls_chains = ['AUCHAN',
              'MARKET',
@@ -72,9 +74,8 @@ df_qlmc = pd.concat(ls_df_chain)
 # ADD STORE CHAIN
 df_qlmc['Chaine'] = None
 for chain in ls_chains:
-  (df_qlmc.loc[(df_qlmc['Magasin'].str.match(u'^{:s}'.format(chain))) &\
-               (df_qlmc['Chaine'].isnull()),
-               'Chaine'] = chain)
+  df_qlmc.loc[(df_qlmc['Magasin'].str.match(u'^{:s}'.format(chain))) &
+              (df_qlmc['Chaine'].isnull()), 'Chaine'] = chain
 
 # Check unicity of LSA, EAN (/Produit) ?
 # Produit likely less precise than EAN (field too short to contain all info?)
@@ -96,8 +97,7 @@ df_qlmc.rename(columns = {'LSA'     : 'id_lsa',
 
 df_qlmc['date'] = pd.to_datetime(df_qlmc['date'], format = '%d/%m/%Y')
 
-df_qlmc.to_csv(os.path.join(path_source_csv,
-                            'df_qlmc_201405.csv'),
+df_qlmc.to_csv(os.path.join(path_built_csv, 'df_qlmc_201405.csv'),
                encoding = 'utf-8',
                float_format='%.2f',
                index = False,
@@ -167,9 +167,8 @@ print(len(df_qlmc_2[df_qlmc_2.duplicated(['LSA', 'EAN'])]))
 # ADD STORE CHAIN
 df_qlmc_2['Chaine'] = None
 for chain in ls_chains:
-  (df_qlmc_2.loc[(df_qlmc_2['Magasin'].str.match(u'^{:s}'.format(chain))) &
-                 (df_qlmc_2['Chaine'].isnull()),
-                 'Chaine'] = chain)
+  df_qlmc_2.loc[(df_qlmc_2['Magasin'].str.match(u'^{:s}'.format(chain))) &
+                (df_qlmc_2['Chaine'].isnull()), 'Chaine'] = chain
 
 ## Need to drop a few products if want to have unicity... else EAN
 #print df_qlmc[(df_qlmc.duplicated(['LSA', 'Produit'], take_last = True)) |\
@@ -187,8 +186,7 @@ df_qlmc_2.rename(columns = {'LSA'     : 'id_lsa',
 
 df_qlmc_2['date'] = pd.to_datetime(df_qlmc_2['date'], format = '%d/%m/%Y')
 
-df_qlmc_2.to_csv(os.path.join(path_source_csv,
-                              'df_qlmc_201409.csv'),
+df_qlmc_2.to_csv(os.path.join(path_built_csv, 'df_qlmc_201409.csv'),
                  encoding = 'utf-8',
                  float_format='%.2f',
                  index = False,

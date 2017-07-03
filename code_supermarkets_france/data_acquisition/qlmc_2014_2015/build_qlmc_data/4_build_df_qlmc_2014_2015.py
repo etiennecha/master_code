@@ -10,18 +10,8 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_source_2014 = os.path.join(path_data,
-                                'data_supermarkets',
-                                'data_source',
-                                'data_qlmc_2014')
-path_source_2014_csv = os.path.join(path_source_2014, 'data_csv')
-
-path_built_2015 = os.path.join(path_data,
-                               'data_supermarkets',
-                               'data_built',
-                               'data_qlmc_2015')
-path_built_2015_csv = os.path.join(path_built_2015, 'data_csv_201503')
-path_built_201415_csv = os.path.join(path_built_2015, 'data_csv_2014-2015')
+path_built_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                              'data_qlmc_2014_2015', 'data_csv')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -36,7 +26,7 @@ ls_periods = ['201405', '201409']
 dict_dfs = {}
 for period in ls_periods:
   dict_dfs['qlmc_{:s}'.format(period)] = (
-    pd.read_csv(os.path.join(path_source_2014_csv,
+    pd.read_csv(os.path.join(path_built_csv,
                              'df_qlmc_{:s}.csv'.format(period)),
                 dtype = {'ean' : str,
                          'id_lsa' : str}, # to update soon
@@ -45,8 +35,8 @@ ls_prod_cols = ['ean', 'product']
 ls_store_cols = ['id_lsa', 'store_name']
 
 # Load 2015 data
-df_qlmc_2015 = pd.read_csv(os.path.join(path_built_2015_csv,
-                                        'df_prices.csv'),
+df_qlmc_2015 = pd.read_csv(os.path.join(path_built_csv,
+                                        'df_prices_201503.csv'),
                            encoding = 'utf-8')
 ls_prod_cols_2015 = ['section', 'family', 'product']
 ls_store_cols_2015 = ['store_id'] # todo add id_lsa (and check it)
@@ -143,8 +133,8 @@ df_qlmc_2015 = pd.merge(df_qlmc_2015,
 # STORE RECONCILIATIONS
 # #####################
 
-df_stores_2015 = pd.read_csv(os.path.join(path_built_2015_csv,
-                                          'df_stores_final.csv'),
+df_stores_2015 = pd.read_csv(os.path.join(path_built_csv,
+                                          'df_stores_final_201503.csv'),
                              dtype = {'id_lsa' : str},
                              encoding = 'utf-8')
 
@@ -212,22 +202,22 @@ df_qlmc_all = df_qlmc_all[['id_lsa', 'store_name', 'store_chain',
 # OUTPUT
 # ######
 
-df_qlmc_all.to_csv(os.path.join(path_built_201415_csv, 'df_qlmc_2014-2015.csv'),
+df_qlmc_all.to_csv(os.path.join(path_built_csv, 'df_qlmc_2014_2015.csv'),
                     encoding = 'utf-8',
                     float_format='%.2f',
                     index = False)
 
-df_prod_all.to_csv(os.path.join(path_built_201415_csv, 'df_prod_2014-2015.csv'),
+df_prod_all.to_csv(os.path.join(path_built_csv, 'df_prod_2014_2015.csv'),
                    encoding = 'utf-8',
                    float_format='%.2f',
                    index = False)
 
-df_qlmc_201405.to_csv(os.path.join(path_built_201415_csv, 'df_qlmc_201405.csv'),
+df_qlmc_201405.to_csv(os.path.join(path_built_csv, 'df_qlmc_201405_final.csv'),
                       encoding = 'utf-8',
                       float_format='%.2f',
                       index = False)
 
-df_qlmc_201409.to_csv(os.path.join(path_built_201415_csv, 'df_qlmc_201409.csv'),
+df_qlmc_201409.to_csv(os.path.join(path_built_csv, 'df_qlmc_201409_final.csv'),
                       encoding = 'utf-8',
                       float_format='%.2f',
                       index = False)

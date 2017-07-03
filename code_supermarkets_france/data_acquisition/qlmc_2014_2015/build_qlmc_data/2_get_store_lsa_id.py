@@ -20,41 +20,24 @@ pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.3f}'.format(x)
 
-path_qlmc_scraped = os.path.join(path_data,
-                                 'data_supermarkets',
-                                 'data_source',
-                                 'data_qlmc_2015',
-                                 'data_scraped_201503')
+path_built_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                              'data_qlmc_2014_2015', 'data_csv')
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+path_lsa_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
+                            'data_lsa', 'data_csv')
 
-path_lsa_csv = os.path.join(path_data,
-                            'data_supermarkets',
-                            'data_built',
-                            'data_lsa',
-                            'data_csv')
-
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         encoding = 'utf-8',
                         dtype = {'ic' : str})
 
 # drop lsa_id if already exists
 if 'id_lsa' in df_stores.columns:
-  df_stores.drop(labels = ['id_lsa'],
-                 axis = 1,
-                 inplace = True)
+  df_stores.drop(labels = ['id_lsa'], axis = 1, inplace = True)
 
 # todo: move to dedicated script
-df_stores.loc[df_stores['store_id'] == 'centre-e-leclerc-clichy',
-              'c_insee'] = '92024'
+df_stores.loc[df_stores['store_id'] == 'centre-e-leclerc-clichy', 'c_insee'] = '92024'
 
-df_lsa = pd.read_csv(os.path.join(path_lsa_csv,
-                                  'df_lsa_active.csv'),
+df_lsa = pd.read_csv(os.path.join(path_lsa_csv, 'df_lsa_active.csv'),
                      dtype = {u'id_lsa' : str,
                               u'c_insee' : str,
                               u'c_insee_ardt' : str,
@@ -368,11 +351,9 @@ ls_final_gps = [['casino-prunelli-di-fiumorbo', 'qlmc'], # 4 and bad
 # #########
 
 # Drop LSA variables before output
-df_stores_final = df_stores_f.drop(labels = ls_lsa_cols[1:] + ['dist', 'Q'],
-                                   axis = 1)
+df_stores_final = df_stores_f.drop(labels = ls_lsa_cols[1:] + ['dist', 'Q'], axis = 1)
 
-df_stores_final.to_csv(os.path.join(path_built_csv,
-                                    'df_stores_final.csv'),
+df_stores_final.to_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                        encoding = 'utf-8',
                        float_format='%.4f',
                        index = False)
