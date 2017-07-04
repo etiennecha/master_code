@@ -14,10 +14,9 @@ import statsmodels.formula.api as smf
 path_built = os.path.join(path_data,
                           'data_supermarkets',
                           'data_built',
-                          'data_qlmc_2007-12')
+                          'data_qlmc_2007_12')
 
-path_built_csv = os.path.join(path_built,
-                              'data_csv')
+path_built_csv = os.path.join(path_built, 'data_csv')
 
 # ###########
 # LOAD DATA
