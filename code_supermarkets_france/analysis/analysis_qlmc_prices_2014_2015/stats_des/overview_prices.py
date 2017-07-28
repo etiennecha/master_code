@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 path_built_csv = os.path.join(path_data,
                               'data_supermarkets',
                               'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+                              'data_qlmc_2014_2015',
+                              'data_csv')
 
 path_lsa_csv = os.path.join(path_data,
                             'data_supermarkets',
@@ -33,8 +33,7 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # #######################
 
 # LOAD DF PRICES
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
 # store chain harmonization per qlmc
 ls_replace_chains = [['HYPER U', 'SUPER U'],
@@ -42,22 +41,16 @@ ls_replace_chains = [['HYPER U', 'SUPER U'],
                      ['HYPER CASINO', 'CASINO'],
                      ["LES HALLES D'AUCHAN", 'AUCHAN']]
 for old_chain, new_chain in ls_replace_chains:
-  df_prices.loc[df_prices['store_chain'] == old_chain,
-                'store_chain'] = new_chain
+  df_prices.loc[df_prices['store_chain'] == old_chain, 'store_chain'] = new_chain
 
 # drop small chains
-ls_drop_chains = [u'SIMPLY MARKET',
-                  u'SUPERMARCHE MATCH',
-                  u'ATAC',
-                  u'MIGROS',
-                  u'RECORD']
+ls_drop_chains = [u'SIMPLY MARKET', u'SUPERMARCHE MATCH', u'ATAC', u'MIGROS',  u'RECORD']
 df_prices = df_prices[~df_prices['store_chain'].isin(ls_drop_chains)]
 
 # adhoc fixes
 ls_suspicious_prods = [u'VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
 df_prices = df_prices[~df_prices['product'].isin(ls_suspicious_prods)]
-df_prices['product'] =\
-  df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
+df_prices['product'] = df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
 
 # ########################
 # BUILD DF OVERVIEW
@@ -87,17 +80,18 @@ df_desc = pd.pivot_table(df_prices,
 df_desc.rename(columns = {'len': 'count'}, inplace = True)
 
 df_desc['count'] = df_desc['count'].astype(int)
-df_desc['ch_count'] = df_prices[ls_prod_cols + ['store_chain']].groupby(ls_prod_cols)\
-                                                               .agg(lambda x: len(x.unique()))
+df_desc['ch_count'] = (
+  df_prices[ls_prod_cols + ['store_chain']].groupby(ls_prod_cols)
+                                           .agg(lambda x: len(x.unique())))
 
 # Most common prices (and kurtosis / skew)
-df_freq = df_prices[ls_prod_cols + ['price']]\
-                  .groupby(ls_prod_cols).agg([PD.kurtosis,
-                                              PD.skew,
-                                              PD.price_1,
-                                              PD.price_1_fq,
-                                              PD.price_2,
-                                              PD.price_2_fq])['price']
+df_freq = (df_prices[ls_prod_cols + ['price']]
+                    .groupby(ls_prod_cols).agg([PD.kurtosis,
+                                                PD.skew,
+                                                PD.price_1,
+                                                PD.price_1_fq,
+                                                PD.price_2,
+                                                PD.price_2_fq])['price'])
 df_freq.columns = [col.replace('PD.', '') for col in df_freq.columns]
 df_freq['price_12_fq'] = df_freq[['price_1_fq', 'price_2_fq']].sum(axis = 1)
 
@@ -109,6 +103,40 @@ df_overview = pd.merge(df_desc,
                        how = 'outer')
 df_overview.sort('count', ascending = False, inplace = True)
 df_overview = df_overview[df_overview['count'] >= 200]
+df_overview.reset_index(drop = False, inplace = True)
+
+lsd0 = df_overview.columns.tolist()
+
+# Buils dummies for most widely available products
+for n in [20, 50]:
+  df_overview['top_ct_{:d}'.format(n)] = 0
+  df_overview['top_ct_{:d}'.format(n)][:n] = 1
+
+# Build dummy for top sales (Nielsen)
+ls_top_products = [u'COCA COLA COCA-COLA PET 1.5L',
+                   u'COCA COLA COCA-COLA PET 2L',
+                   u'CRISTALINE EAU CRISTALINE BOUTEILLE 1.5 LITRE X6',
+                   u'CRISTALINE EAU CRISTALINE BOUTEILLE 1.5 LITRE',
+                   #u'VITTEL EAU MINÉRALE GRANDE SOURCE VITTEL 6X 1L', # too few6*1.5L..
+                   #u'VOLVIC EAU VOLVIC PET 6X0.5L', # tto few 6*1.5L...
+                   u'PRESIDENT BEURRE DOUX PRÉSIDENT GASTRONOMIQUE PLAQUETTE 82%MG 250G',
+                   u'RICARD RICARD 45° 1 LITRE',
+                   u'HEINEKEN BIÈRE HEINEKEN 5D PACK 20X25CL',
+                   u'WILLIAM PEEL WHISKY WILLIAM PEEL OLD 40 DEGRÉS 70CL',
+                   u'WILLIAM PEEL WHISKY WILLIAM PEEL OLD 40 DÉGRÉS 1 LITRE',
+                   u'NUTELLA PÂTE À TARTINER NUTELLA POT 1KG']
+df_overview['top_sales'] = 0
+df_overview.loc[df_overview['product'].isin(ls_top_products), 'top_sales'] = 1
+
+# Build dummy for top sale brands (Nielsen)
+ls_top_brands = ['coca cola', 'cristaline', 'vittel', 'volvic', 'president'
+                 'ricard', 'heineken', 'william peel', 'nutella']
+df_overview['top_brands'] = 0
+for brand in ls_top_brands:
+  df_overview.loc[df_overview['product'].str.contains(brand, case = False), 'top_brands'] = 1
+
+# FILTER OUT PRODUCTS FOR WHICH TOO FEW CHAINS
+df_sub = df_overview[df_overview['ch_count'] >= 4].copy()
 
 # ########################
 # STATS DES
@@ -120,41 +148,27 @@ print(df_overview.describe().to_string())
 
 print()
 print('Overview national product price distributions:')
-print(df_overview[0:20].to_string())
-
-ls_top_products = [u'COCA COLA COCA-COLA PET 1.5L',
-                   u'COCA COLA ZERO COCA-COLA ZERO PET CONTOUR 1,5L',
-                   u'CRISTALINE EAU CRISTALINE BOUTEILLE 1.5 LITRE X6',
-                   u'CRISTALINE EAU CRISTALINE BOUTEILLE 1.5 LITRE',
-                   u'PRESIDENT CAMEMBERT PRÉSIDENT ENTIER 20%MG 250G',
-                   u'PRESIDENT EMMENTAL PRESIDENT 28%MG 250G']
+print(df_overview[lsd0][0:50].to_string())
 
 ## High dispersion on ham?
 # u'HERTA JAMBON LE BON PARIS -25% DE SEL HERTA 4TRANCHES 120G',
 # u'FLEURY MICHON JAMBON S/COUENNE TENEUR SEL RÉDUIT OMEGA3 4TR.160G'
 
-df_overview.reset_index(drop = False, inplace = True)
-
-df_overview['dtp'] = 0
-df_overview.loc[df_overview['product'].isin(ls_top_products), 'dtp'] = 1
-
-ls_top_brands = ['Herta', 'Fleury', 'Coca', 'Cristaline', 'President']
-df_overview['dtb'] = 0
-for brand in ls_top_brands:
-  df_overview.loc[df_overview['product'].str.contains(brand, case = False), 'dtb'] = 1
-
-# FILTER OUT PRODUCTS FOR WHICH TOO FEW CHAINS
-df_sub = df_overview[df_overview['ch_count'] >= 4].copy()
-
 # a few outliers based on std (car batteries)
 df_sub = df_sub[df_sub['std'] <= 2]
+df_sub.plot(kind = 'scatter', x = 'mean', y = 'std', grid = True)
+plt.show()
+df_sub.plot(kind = 'scatter', x = 'mean', y = 'cv', grid = True)
+plt.show()
 
-df_sub.plot(kind = 'scatter', x = 'mean', y = 'std')
-df_sub.plot(kind = 'scatter', x = 'mean', y = 'cv')
-
+print()
 for ch_count in [4, 8]:
-  print()
-  print(df_sub[df_sub['ch_count'] >= ch_count].describe().to_string())
+  print('Overview of products with prices avail. at {:d} chains +'.format(ch_count))
+  print(df_sub[df_sub['ch_count'] >= ch_count][lsd0].describe().to_string())
+
+print()
+print('Overview of product prices by section')
+print(df_sub[['mean', 'section']].groupby('section').agg('describe').unstack())
 
 #df_prices[df_prices['product'] == u'TOTAL ACTIVA 5000 DIESEL 15W40']\
 #  [['store_chain', 'price']].groupby('store_chain').agg('describe').unstack()
@@ -167,16 +181,15 @@ for ch_count in [4, 8]:
 # todo: check product with only Bledina as name??? (+ short names?)
 
 print()
-print(df_sub[['mean', 'section']].groupby('section').agg('describe').unstack())
-
-print()
-print(smf.ols('std ~ C(section) + mean + dtp', data = df_sub).fit().summary())
-
-print()
-print(smf.ols('cv ~ C(section) + mean + dtp', data = df_sub).fit().summary())
-
-print()
-print(smf.ols('price_1_fq ~ C(section) + mean + dtp', data = df_sub).fit().summary())
+print('Regressions: price dispersion of "top" products')
+for dum in ['top_ct_20', 'top_ct_50', 'top_sales', 'top_brands']:
+  print()
+  print(smf.ols('cv ~ C(section) + mean + {:s}'.format(dum),
+                data = df_sub).fit().summary())
+  
+  print()
+  print(smf.ols('price_1_fq ~ C(section) + mean + {:s}'.format(dum),
+                data = df_sub).fit().summary())
 
 #print()
 #print('Overview top purchased (likely) products:')
