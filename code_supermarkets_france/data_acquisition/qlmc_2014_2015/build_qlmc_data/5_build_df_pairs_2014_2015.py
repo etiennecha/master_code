@@ -7,12 +7,10 @@ from functions_generic_qlmc import *
 import numpy as np
 import pandas as pd
 
-path_built = os.path.join(path_data, 'data_supermarkets', 'data_built', 'data_qlmc_2014_2015')
-path_built_csv = os.path.join(path_built, 'data_csv')
-path_built_json = os.path.join(path_built, 'data_json')
-
-path_lsa_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
-                            'data_lsa', 'data_csv')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built,'data_qlmc_2014_2015', 'data_csv')
+path_built_json = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_json')
+path_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
 
 # ################
 # LOAD DATA
@@ -36,10 +34,19 @@ df_lsa = pd.read_csv(os.path.join(path_lsa_csv, 'df_lsa.csv'),
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'utf-8')
 
+# FORMAT SOME STORE DETAILS
+
+# May wish to add surface (or format?)
+
+# actually always OUI ou NON...
+df_lsa['drive'] = df_lsa['drive'].apply(lambda x: 1 if x == 'OUI' else 0 if x == 'NON' else None)
+# nb_pompes is generally missing value if 0... 
+df_lsa['carburant'] = df_lsa['nb_pompes'].apply(lambda x: 1 if x > 0 else 0)
+
 # MERGE
 df_stores = pd.merge(df_stores,
-                     df_lsa[['id_lsa', 'enseigne_alt', 'groupe'
-                             'latitude', 'longitude']],
+                     df_lsa[['id_lsa', 'enseigne_alt', 'groupe',
+                             'latitude', 'longitude', 'drive', 'carburant']],
                      left_on = 'id_lsa',
                      right_on = 'id_lsa',
                      how = 'left')
@@ -72,14 +79,14 @@ for ident, ident_close, dist in ls_close_pairs:
   dict_close_pairs.setdefault(ident_close, []).append([ident, dist])
 
 # ################################
-# ADD Store AND Store_Chain IN DF
+# ADD SOME STORE INFO
 # ################################
 
 # todo: take enseigne_alt / groupe at the right period
 # suffix works only with redundant columns
 
 df_stores = df_stores[['store_name', 'store_chain',
-                       'id_lsa', 'enseigne_alt', 'groupe']]
+                       'id_lsa', 'enseigne_alt', 'groupe', 'drive', 'carburant']]
 df_stores.columns = ['{:s}_0'.format(x) for x in df_stores.columns]
 
 df_close_pairs = pd.merge(df_close_pairs,
@@ -105,9 +112,7 @@ df_same_pairs = df_close_pairs[df_close_pairs['groupe_0'] ==  df_close_pairs['gr
 # OUTPUT
 # #############
 
-# May wish to add surface
-
-df_close_pairs.to_csv(os.path.join(path_built_201415_csv, 'df_pairs_2014_2015.csv'),
+df_close_pairs.to_csv(os.path.join(path_built_csv, 'df_pairs_2014_2015.csv'),
                       encoding = 'utf-8',
                       index = False)
 

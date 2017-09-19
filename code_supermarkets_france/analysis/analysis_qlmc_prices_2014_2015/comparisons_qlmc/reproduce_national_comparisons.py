@@ -9,37 +9,22 @@ import numpy as np
 import pandas as pd
 import timeit
 
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
+
 pd.set_option('float_format', '{:,.1f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.1f}'.format(x)
 
-path_built_2015 = os.path.join(path_data,
-                               'data_supermarkets',
-                               'data_built',
-                               'data_qlmc_2015')
+# #########
+# LOAD DATA
+# #########
 
-path_built_201503_csv =  os.path.join(path_built_2015,
-                                      'data_csv_201503')
-
-path_built_201415_csv = os.path.join(path_built_2015,
-                                     'data_csv_2014-2015')
-
-#df_prices = pd.read_csv(os.path.join(path_built_201503_csv,
-#                                     'df_prices.csv'),
-#                        encoding = 'utf-8')
-#ls_prod_cols = ['section', 'family', 'product']
-#store_col = 'store_id'
-
-ls_qlmc_dates = ['201405',
-                 '201409',
-                 '201503']
-
+ls_qlmc_dates = ['201405', '201409', '201503']
 date_str = ls_qlmc_dates[0]
-
-df_prices = pd.read_csv(os.path.join(path_built_201415_csv,
-                                     'df_qlmc_{:s}.csv'.format(date_str)),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc_{:s}.csv'.format(date_str)),
                         encoding = 'utf-8')
-
 
 ls_prod_cols = ['ean', 'product']
 store_col = 'store_name'
@@ -50,8 +35,8 @@ if date_str == '201503':
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
-dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
-                    for chain in df_prices['store_chain'].unique()}
+dict_chain_dfs = ({chain: df_prices[df_prices['store_chain'] == chain]
+                            for chain in df_prices['store_chain'].unique()})
 
 # #########################
 # REPRODUCE QLMC COMPARISON
@@ -102,23 +87,22 @@ for chain_a, chain_b in ls_compare_chains:
   # Min 16 for CORA, Max 21 for Carrefour Market, Intermarche and Systeme U
   # Leclerc: 20, Auchan 19, Carrefour 19, Geant 18
   
-  df_duel_sub = df_duel[(df_duel['len_{:s}'.format(chain_a)] >= 20) &\
-                        (df_duel['len_{:s}'.format(chain_b)] >= 20)].copy()
+  df_duel_sub = (df_duel[(df_duel['len_{:s}'.format(chain_a)] >= 20) &
+                         (df_duel['len_{:s}'.format(chain_b)] >= 20)].copy())
   
-  df_duel_sub['diff'] = df_duel_sub['mean_{:s}'.format(chain_b)] -\
-                          df_duel_sub['mean_{:s}'.format(chain_a)]
+  df_duel_sub['diff'] = (df_duel_sub['mean_{:s}'.format(chain_b)] -
+                           df_duel_sub['mean_{:s}'.format(chain_a)])
   
-  df_duel_sub['pct_diff'] = (df_duel_sub['mean_{:s}'.format(chain_b)] /\
-                              df_duel_sub['mean_{:s}'.format(chain_a)] - 1)*100
+  df_duel_sub['pct_diff'] = ((df_duel_sub['mean_{:s}'.format(chain_b)] /
+                               df_duel_sub['mean_{:s}'.format(chain_a)] - 1)*100)
 
   print()
   print(u'Replicate QLMC comparison: {:s} vs {:s}'.format(chain_a, chain_b))
-  res = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
-           df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100
+  res = ((df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /
+            df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100)
   
   # Save both nb stores of chain b and res
-  nb_stores = len(df_prices[df_prices['store_chain'] ==\
-                                chain_b][store_col].drop_duplicates())
+  nb_stores = len(df_prices[df_prices['store_chain'] == chain_b][store_col].drop_duplicates())
   nb_prods = len(df_duel_sub)
   pct_a_wins = len(df_duel_sub[df_duel_sub['diff'] > 10e-3]) / float(nb_prods) * 100
   pct_b_wins = len(df_duel_sub[df_duel_sub['diff'] < -10e-3]) / float(nb_prods) * 100
@@ -138,8 +122,8 @@ for chain_a, chain_b in ls_compare_chains:
   # Manipulate or assume consumer is somewhat informed
   df_duel_sub.sort('pct_diff', ascending = False, inplace = True)
   df_duel_sub = df_duel_sub[len(df_duel_sub)/5:]
-  res_2 = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
-           df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100
+  res_2 = ((df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /
+              df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100)
   
   print()
   print(u'Aggregate comparison vs. Leclerc: {:.1f}%'.format(res))
@@ -211,9 +195,9 @@ df_res = pd.DataFrame(ls_res,
 df_res.set_index(u'Chain', inplace = True)
 df_res.rename(index = {u'SUPER U' : u'SYSTEME U'}, inplace = True)
 df_res[u'COMP vs. LEC (data)'].apply(lambda x: u'{:.1f}%'.format(x))
-df_res.loc[u'LECLERC', u'Nb stores (data)'] =\
-              len(df_prices[df_prices['store_chain'] ==\
-                              u'LECLERC'][store_col].drop_duplicates())
+df_res.loc[u'LECLERC', u'Nb stores (data)'] = (
+              len(df_prices[df_prices['store_chain'] ==
+                              u'LECLERC'][store_col].drop_duplicates()))
 
 df_recap = pd.merge(df_recap,
                     df_res,

@@ -11,17 +11,11 @@ import re
 import json
 import pandas as pd
 
-path_qlmc_scraped = os.path.join(path_data,
-                                 'data_supermarkets',
-                                 'data_qlmc_2015',
-                                 'data_source',
-                                 'data_scraped_201503')
-
 path_built_csv = os.path.join(path_data,
                               'data_supermarkets',
                               'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+                              'data_qlmc_2014_2015',
+                              'data_csv')
 
 path_lsa_csv = os.path.join(path_data,
                             'data_supermarkets',
@@ -37,14 +31,12 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # LOAD DATA
 # ##########
 
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         dtype = {'c_insee' : str,
                                  'id_lsa' : str},
                         encoding = 'utf-8')
 
-df_lsa = pd.read_csv(os.path.join(path_lsa_csv,
-                                  'df_lsa_active.csv'),
+df_lsa = pd.read_csv(os.path.join(path_lsa_csv, 'df_lsa_active.csv'),
                      dtype = {u'id_lsa' : str,
                               u'c_insee' : str,
                               u'c_insee_ardt' : str,

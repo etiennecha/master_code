@@ -9,44 +9,30 @@ import pandas as pd
 from functions_generic_qlmc import *
 import matplotlib.pyplot as plt
 
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
-
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2015')
-
-path_built_csv = os.path.join(path_built,
-                              'data_csv_201503')
 
 # ###########
 # LOAD DATA
 # ###########
 
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
 
-df_prices = df_prices[~((df_prices['family'] == u'Traiteur') &\
-                        (df_prices['product'] == u"DANIEL DESSAINT CRÊPES " +\
-                                                 u"MOELLEUSE SUCRÉES X8 400G " +\
-                                                 u"DANIEL DESSAINT"))]
-
-# todo: move to data building
-
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         encoding = 'utf-8')
 
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
-                                               'df_qlmc_competitors.csv'),
+                                               'df_qlmc_competitors_201503.csv'),
                                   encoding = 'utf-8')
 
 ls_prod_cols = ['section', 'family', 'product']
-df_products = df_prices[ls_prod_cols + ['price']].groupby(ls_prod_cols)\
-                                                 .agg([len, 'mean'])['price']
+df_products = (df_prices[ls_prod_cols + ['price']].groupby(ls_prod_cols)
+                                                  .agg([len, 'mean'])['price'])
 df_products.reset_index(drop = False, inplace = True)
 df_products.rename(columns = {'len': 'nb_obs'}, inplace = True)
 
@@ -78,9 +64,9 @@ ls_val_prods = []
 ls_se_section_len = []
 ls_se_section_sum = []
 for min_nb_obs in ls_min_nb_obs:
-  df_sections = df_products[df_products['nb_obs'] >= min_nb_obs]\
-                           [['section', 'mean']].groupby('section')\
-                                                .agg([len, sum])['mean']
+  df_sections = (df_products[df_products['nb_obs'] >= min_nb_obs]
+                            [['section', 'mean']].groupby('section')
+                                                 .agg([len, sum])['mean'])
   ls_se_section_len.append(df_sections['len'] / df_sections['len'].sum() * 100)
   ls_se_section_sum.append(df_sections['sum'] / df_sections['sum'].sum() * 100)
   ls_nb_prods.append(df_sections['len'].sum())
@@ -106,10 +92,10 @@ ls_val_prods = []
 ls_se_family_len = []
 ls_se_family_sum = []
 for min_nb_obs in ls_min_nb_obs:
-  df_families = df_products[df_products['nb_obs'] >= min_nb_obs]\
-                           [['section', 'family', 'mean']]\
-                           .groupby(['section', 'family'])\
-                           .agg([len, sum])['mean']
+  df_families = (df_products[df_products['nb_obs'] >= min_nb_obs]
+                            [['section', 'family', 'mean']]
+                            .groupby(['section', 'family'])
+                            .agg([len, sum])['mean'])
   ls_se_family_len.append(df_families['len'] / df_families['len'].sum() * 100)
   ls_se_family_sum.append(df_families['sum'] / df_families['sum'].sum() * 100)
   ls_nb_prods.append(df_families['len'].sum())

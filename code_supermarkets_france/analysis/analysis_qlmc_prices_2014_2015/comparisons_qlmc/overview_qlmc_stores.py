@@ -9,20 +9,9 @@ import pandas as pd
 from functions_generic_qlmc import *
 import matplotlib.pyplot as plt
 
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2015')
-
-path_built_csv = os.path.join(path_built,
-                              'data_csv_201503')
-
-path_built_lsa = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_lsa')
-
-path_built_csv_lsa = os.path.join(path_built_lsa, 'data_csv')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
 
 pd.set_option('float_format', '{:,.3f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -34,28 +23,19 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 # QLMC DATA
 
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 
-df_comp = pd.read_csv(os.path.join(path_built_csv,
-                                   'df_qlmc_competitors.csv'),
+df_comp = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc_competitors_201503.csv'),
                       encoding = 'utf-8')
 
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
-
-df_prices = df_prices[~((df_prices['family'] == u'Traiteur') &\
-                        (df_prices['product'] == u"DANIEL DESSAINT CRÊPES " +\
-                                                 u"MOELLEUSE SUCRÉES X8 400G " +\
-                                                 u"DANIEL DESSAINT"))]
 
 # LSA DATA
 
-df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
-                                  'df_lsa_active.csv'),
+df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv, 'df_lsa_active.csv'),
                      dtype = {u'id_lsa' : str,
                               u'c_insee' : str,
                               u'c_insee_ardt' : str,
@@ -121,8 +101,8 @@ ls_missing_leclerc_ids = list(set(ls_leclerc_ids).difference(set(ls_got_leclerc_
 ls_missing_comp_ids = list(set(ls_comp_ids).difference(set(ls_got_comp_ids)))
 # 51: missing
 
-ls_missing_lec_comp_ids =\
-  df_comp[df_comp['lec_id'].isin(ls_missing_leclerc_ids)]['comp_id'].unique()
+ls_missing_lec_comp_ids = (
+  df_comp[df_comp['lec_id'].isin(ls_missing_leclerc_ids)]['comp_id'].unique())
 # 52: some of them I still have because of other stores
 
 ls_really_comp = df_comp[df_comp['lec_id'].isin(ls_got_leclerc_ids)]['comp_id'].unique()
@@ -154,8 +134,8 @@ df_stores = pd.merge(df_stores,
 se_qlmc_chains = df_stores['enseigne_qlmc'].value_counts()
 # Exclude small nbs which correspond to small stores or small chains
 se_qlmc_chains = se_qlmc_chains[se_qlmc_chains > 12]
-se_lsa_chains = df_lsa[df_lsa['enseigne_qlmc'].isin(se_qlmc_chains.index)]\
-                      ['enseigne_qlmc'].value_counts()
+se_lsa_chains = (df_lsa[df_lsa['enseigne_qlmc'].isin(se_qlmc_chains.index)]
+                       ['enseigne_qlmc'].value_counts())
 se_coverage_chains = se_qlmc_chains / se_lsa_chains * 100
 
 print()
@@ -182,8 +162,8 @@ se_qlmc_reg_nb = df_lsa[df_lsa.index.isin(df_stores.index)]['region'].value_coun
 se_lsa_reg_nb = df_lsa['region'].value_counts()
 se_coverage_reg_nb = se_qlmc_reg_nb / se_lsa_reg_nb * 100
 # surface
-se_qlmc_reg_surface = df_lsa[df_lsa.index.isin(df_stores.index)][['region', 'surface']]\
-                .groupby('region').agg(sum)['surface']
+se_qlmc_reg_surface = (df_lsa[df_lsa.index.isin(df_stores.index)][['region', 'surface']]
+                             .groupby('region').agg(sum)['surface'])
 se_lsa_reg_surface = df_lsa[['region', 'surface']].groupby('region').agg(sum)['surface']
 se_coverage_reg_surface = se_qlmc_reg_surface / se_lsa_reg_surface * 100
 
@@ -218,7 +198,7 @@ lsd_lsa = ['enseigne', 'adresse1', 'ville', 'c_postal',
 
 print()
 print(u'Leclerc not covered in QLMC:')
-print(df_lsa[(df_lsa['enseigne'] == 'CENTRE E.LECLERC') &\
+print(df_lsa[(df_lsa['enseigne'] == 'CENTRE E.LECLERC') &
              (~df_lsa.index.isin(df_stores.index))][lsd_lsa].to_string())
 
 # Some are not present in my data but are now listed on website
@@ -235,13 +215,13 @@ print(u'Nb stores on website but not collected:', len(ls_not_collected_ids))
 
 print()
 print(u'Nb stores on website but not collected by chain:')
-print(df_stores[df_stores['store_id'].isin(ls_not_collected_ids)]\
+print(df_stores[df_stores['store_id'].isin(ls_not_collected_ids)]
                ['enseigne'].value_counts())
 
 print()
 print(u'Overview of Leclerc on website but not collected:')
-print(df_stores[(df_stores['store_id'].isin(ls_not_collected_ids)) &\
-                (df_stores['enseigne'] == 'CENTRE E.LECLERC')]\
+print(df_stores[(df_stores['store_id'].isin(ls_not_collected_ids)) &
+                (df_stores['enseigne'] == 'CENTRE E.LECLERC')]
                 [['store_id', 'store_name']].to_string())
 
 # ##########################
@@ -260,8 +240,7 @@ print(df_stores['nb_obs'][df_stores['nb_obs'] != 0].describe())
 
 print()
 print(u'Overview stores with few obs (<= 400):')
-print(df_stores[(df_stores['nb_obs'] < 400) &\
-                (df_stores['nb_obs'] != 0)]\
+print(df_stores[(df_stores['nb_obs'] < 400) & (df_stores['nb_obs'] != 0)]
                [['enseigne_qlmc', 'nb_obs']].to_string())
 
 print()
@@ -309,18 +288,18 @@ df_compa_prods = pd.concat(ls_se_chain,
                            keys = ls_chains)
 
 df_compa_prods = df_compa_prods.T
-df_compa_prods.sort('count', ascending = False, inplace = True)
+df_compa_prods.sort_values('count', ascending = False, inplace = True)
 print(df_compa_prods.fillna(0).astype(int).to_string())
 
 # check few obs store within large nb obs store
 lsdcomp = ['lec_name', 'comp_name', 'qlmc_nb_obs', 'qlmc_pct_compa', 'qlmc_winner']
 
 print(u'\nOverview comp hyper u w/ few products:')
-print(df_comp[(df_comp['comp_chain'] == 'HYPER U') &\
+print(df_comp[(df_comp['comp_chain'] == 'HYPER U') &
               (df_comp['qlmc_nb_obs'] <= 1000)][lsdcomp].to_string())
 
 # High diff w/ Carrefour
-print(df_comp[(df_comp['comp_chain'] == 'CARREFOUR') &\
+print(df_comp[(df_comp['comp_chain'] == 'CARREFOUR') &
               (df_comp['qlmc_pct_compa'] >= 30)][lsdcomp].to_string())
 
 df_comp[(df_comp['comp_chain'] == 'GEANT CASINO')].plot(kind = 'scatter',

@@ -10,12 +10,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-path_built = os.path.join(path_data, 'data_supermarkets', 'data_built', 'data_qlmc_2014_2015')
-path_built_csv = os.path.join(path_built, 'data_csv')
-path_built_json = os.path.join(path_built, 'data_json')
-
-path_lsa_csv = os.path.join(path_data, 'data_supermarkets', 'data_built',
-                            'data_lsa', 'data_csv')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built,'data_qlmc_2014_2015', 'data_csv')
+path_built_json = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_json')
+path_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
 
 path_api_keys = os.path.join(path_data, 'api_keys')
 with open(os.path.join(path_api_keys, 'key_google_api.txt'), 'r') as f:
@@ -129,7 +127,7 @@ else:
                        'lng_1']].values.tolist() +\
                   [None])
 
-# Query Google Direction for dist and duration
+# Query Google Direction for dist and duration (2500 at a time)
 for i, res in enumerate(ls_res[0:29000]):
   if (not res[6]) or (res[6]['status'] == 'OVER_QUERY_LIMIT'):
     try:
@@ -144,7 +142,7 @@ for i, res in enumerate(ls_res[0:29000]):
     # over write list while looping: bof bof
     ls_res[i][6] = gg
 enc_json(ls_res,
-         os.path.join(path_built_201415_json,
+         os.path.join(path_built_json,
                       'ls_comp_201415_directions.json'))
 
 ls_rows_direction = []

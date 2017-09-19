@@ -16,21 +16,17 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_csv_stats = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv_stats')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
 
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_res_ln_prices_by_chain.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv_stats, 'df_res_ln_prices_by_chain.csv'),
                         encoding = 'utf-8')
-
 df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 # res: epsilon from regression with store and product FEs
 
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         dtype = {'id_lsa' : str,
                                  'c_insee' : str},
                         encoding = 'utf-8')
@@ -46,8 +42,7 @@ for old_chain, new_chain in ls_replace_chains:
                 'store_chain'] = new_chain
 
 # add store fes
-df_fes = pd.read_csv(os.path.join(path_built_csv,
-                                  'df_res_ln_price_fes.csv'),
+df_fes = pd.read_csv(os.path.join(path_built_csv_stats, 'df_res_ln_price_fes.csv'),
                      encoding = 'utf-8')
 # add price (store fes)
 df_store_fes = df_fes[df_fes['name'].str.startswith('C(store_id)')].copy()
@@ -60,8 +55,8 @@ df_stores = pd.merge(df_stores,
                      how = 'left',
                      on = 'store_id')
 
-df_stores['price_rel'] = df_stores[['store_chain', 'price']].groupby('store_chain')\
-                                                               .transform(lambda x: x / x.mean())
+df_stores['price_rel'] = (df_stores[['store_chain', 'price']].groupby('store_chain')
+                                                             .transform(lambda x: x / x.mean()))
 
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
                                                'df_qlmc_competitors.csv'),
@@ -69,8 +64,8 @@ df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
-dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
-                    for chain in df_prices['store_chain'].unique()}
+dict_chain_dfs = ({chain: df_prices[df_prices['store_chain'] == chain]
+                            for chain in df_prices['store_chain'].unique()})
 
 # ###############
 # DEFINE MARKETS
@@ -95,12 +90,10 @@ price_col, res_col = 'price', 'res'
 ls_df_markets = []
 for lec_id, ls_comp_id in dict_markets.items():
   if ls_comp_id:
-    df_market = dict_chain_dfs['LECLERC']\
-                    [dict_chain_dfs['LECLERC']['store_id'] == lec_id]\
-                         [['section', 'family', 'product', price_col]]
-    df_market_res = dict_chain_dfs['LECLERC']\
-                        [dict_chain_dfs['LECLERC']['store_id'] == lec_id]\
-                             [['section', 'family', 'product', res_col]]
+    df_market = (dict_chain_dfs['LECLERC'][dict_chain_dfs['LECLERC']['store_id'] == lec_id]
+                                         [['section', 'family', 'product', price_col]])
+    df_market_res = (dict_chain_dfs['LECLERC'][dict_chain_dfs['LECLERC']['store_id'] == lec_id]
+                             [['section', 'family', 'product', res_col]])
     for comp_id in ls_comp_id:
       store_chain = df_stores[df_stores['store_id'] == comp_id]['store_chain'].iloc[0]
       df_comp = dict_chain_dfs[store_chain]\

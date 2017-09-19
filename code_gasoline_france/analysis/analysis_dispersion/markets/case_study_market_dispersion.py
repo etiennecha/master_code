@@ -127,12 +127,11 @@ se_mean_price = df_prices_ttc.mean(1)
 # GET MARKETS
 dict_markets = {}
 for km_bound in [1, 3, 5]:
-  dict_markets['All_{:d}km'.format(km_bound)] =\
-      get_ls_ls_market_ids(dict_ls_comp, km_bound)
-  dict_markets['Restricted_{:d}km'.format(km_bound)] =\
-      get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound)
-  dict_markets['Restricted_{:d}km_random'.format(km_bound)] =\
-      get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True)
+  dict_markets['All_{:d}km'.format(km_bound)] = get_ls_ls_market_ids(dict_ls_comp, km_bound)
+  dict_markets['Restricted_{:d}km'.format(km_bound)] = (
+      get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound))
+  dict_markets['Restricted_{:d}km_random'.format(km_bound)] = (
+      get_ls_ls_market_ids_restricted(dict_ls_comp, km_bound, True))
 
 # GET MARKET DISPERSION
 
@@ -150,7 +149,7 @@ ls_loop_markets = [('3 km - Raw prices', df_prices_ttc, dict_markets['All_3km'])
 # alternatively: Tappata approach : mean over all market-days, not markets
 
 ls_df_market_stats, ls_se_disp_mean, ls_se_disp_std = [], [], []
-for title, df_prices, ls_markets_temp in ls_loop_markets:
+for title, df_prices, ls_markets_temp in ls_loop_markets[-1:]:
   
   # Euros to cent
   df_prices = df_prices * 100

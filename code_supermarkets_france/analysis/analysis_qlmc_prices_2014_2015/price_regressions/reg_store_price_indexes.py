@@ -12,49 +12,35 @@ import statsmodels.formula.api as smf
 from statsmodels.iolib.summary2 import summary_col
 import matplotlib.pyplot as plt
 
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_csv_stats = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv_stats')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
+path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv, '201407_competition')
+path_insee_extracts = os.path.join(path_data, 'data_insee', 'data_extracts')
+
 pd.set_option('float_format', '{:,.1f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.1f}'.format(x)
-
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
-
-path_built_lsa_csv = os.path.join(path_data,
-                                  'data_supermarkets',
-                                  'data_built',
-                                  'data_lsa',
-                                  'data_csv')
-
-path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv,
-                                       '201407_competition')
-
-path_insee_extracts = os.path.join(path_data,
-                                   'data_insee',
-                                   'data_extracts')
 
 # ############
 # LOAD DATA
 # ############
 
 # LOAD DF PRICES (by_chain: product FE is chain specific)
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_res_ln_prices.csv'), # _by_chain
+df_prices = pd.read_csv(os.path.join(path_built_csv_stats, 'df_res_ln_prices.csv'),
                         encoding = 'utf-8')
-df_prices['log_pd'] = np.log(df_prices['price'] /\
-                               df_prices.groupby('product')['price'].transform('mean'))
+df_prices['log_pd'] = (np.log(df_prices['price'] /
+                         df_prices.groupby('product')['price'].transform('mean')))
 
 # LOAD DF FES
 price_col = 'ln_price'
-df_fes = pd.read_csv(os.path.join(path_built_csv,
-                     'df_res_{:s}_fes.csv'.format(price_col)),
+df_fes = pd.read_csv(os.path.join(path_built_csv_stats,
+                                  'df_res_{:s}_fes.csv'.format(price_col)),
                      encoding = 'utf-8')
 
 # LOAD QLMC STORE DATA
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 
@@ -78,11 +64,10 @@ ls_ls_enseigne_lsa_to_qlmc = [[['CENTRE E.LECLERC'], 'LECLERC'],
 df_stores['qlmc_chain'] = df_stores['store_chain']
 for ls_enseigne_lsa_to_qlmc in ls_ls_enseigne_lsa_to_qlmc:
   df_stores.loc[df_stores['store_chain'].isin(ls_enseigne_lsa_to_qlmc[0]),
-              'qlmc_chain'] = ls_enseigne_lsa_to_qlmc[1]
+                'qlmc_chain'] = ls_enseigne_lsa_to_qlmc[1]
 
 # LOAD LSA STORE DATA
-df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                  'df_lsa_active_hsx.csv'),
+df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv, 'df_lsa_active_hsx.csv'),
                      dtype = {u'id_lsa' : str,
                               u'c_insee' : str,
                               u'c_insee_ardt' : str,
@@ -95,9 +80,7 @@ df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
                      encoding = 'utf-8')
 
 # ADD STORE CHARS
-df_store_markets = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                            '201407_competition',
-                                            'df_store_market_chars.csv'),
+df_store_markets = pd.read_csv(os.path.join(path_built_lsa_comp_csv, 'df_store_market_chars.csv'),
                                dtype = {'id_lsa' : str},
                                encoding = 'utf-8')
 
@@ -169,7 +152,7 @@ for region, d_region in ls_tup_dum_reg:
 
 # QLMC COMP WITH TRAVEL DURATIONS
 df_qlmc_competitors = pd.read_csv(os.path.join(path_built_csv,
-                                               'df_qlmc_competitors_final.csv'),
+                                               'df_qlmc_competitors_final_201503.csv'),
                                   encoding = 'utf-8')
 
 # FILTER STORES
@@ -178,7 +161,7 @@ df_stores = df_stores[~df_stores['region'].isin(['Corse'])]
 df_stores = df_stores[df_stores['surface'] >= 2.5]
 
 # ADD STORE PRICE FREQUENCIES
-df_chain_store_price_fq = pd.read_csv(os.path.join(path_built_csv,
+df_chain_store_price_fq = pd.read_csv(os.path.join(path_built_csv_stats,
                                                    'df_chain_store_price_freq.csv'),
                                       encoding = 'utf-8')
 
@@ -190,7 +173,7 @@ df_stores = pd.merge(df_stores,
                      how = 'left')
 
 # ADD STORE PRICE FE
-df_fes = pd.read_csv(os.path.join(path_built_csv,
+df_fes = pd.read_csv(os.path.join(path_built_csv_stats,
                                   'df_res_ln_price_fes.csv'),
                      encoding = 'utf-8')
 

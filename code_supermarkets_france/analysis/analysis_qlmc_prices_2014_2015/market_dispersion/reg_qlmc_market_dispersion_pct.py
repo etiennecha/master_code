@@ -17,24 +17,12 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
-
-path_built_lsa_csv = os.path.join(path_data,
-                                  'data_supermarkets',
-                                  'data_built',
-                                  'data_lsa',
-                                  'data_csv')
-
-path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv,
-                                       '201407_competition')
-
-path_insee_extracts = os.path.join(path_data,
-                                   'data_insee',
-                                   'data_extracts')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_csv_stats = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv_stats')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
+path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv, '201407_competition')
+path_insee_extracts = os.path.join(path_data, 'data_insee', 'data_extracts')
 
 # ############
 # LOAD DATA
@@ -46,8 +34,7 @@ path_insee_extracts = os.path.join(path_data,
 #                        encoding = 'utf-8')
 
 # LOAD QLMC STORE DATA
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         dtype = {'id_lsa' : str,
                                  'c_insee' : str},
                         encoding = 'utf-8')
@@ -68,12 +55,12 @@ df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
 
 # LOAD FEs
 price_col = 'ln_price'
-df_fes = pd.read_csv(os.path.join(path_built_csv,
+df_fes = pd.read_csv(os.path.join(path_built_csv_stats,
                      'df_res_{:s}_fes.csv'.format(price_col)),
                      encoding = 'utf-8')
 # add price (store fes)
 df_store_fes = df_fes[df_fes['name'].str.startswith('C(store_id)')].copy()
-df_store_fes['store_id'] = df_store_fes['name'].apply(\
+df_store_fes['store_id'] = df_store_fes['name'].apply(
                              lambda x: x.replace('C(store_id)', '').strip())
 df_store_fes['price'] = (df_store_fes['coeff'] + 1) * 100
 
@@ -84,9 +71,7 @@ df_stores = pd.merge(df_stores,
 
 # ADD STORE CHARS
 
-df_store_markets = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                            '201407_competition',
-                                            'df_store_market_chars.csv'),
+df_store_markets = pd.read_csv(os.path.join(path_built_lsa_comp_csv, 'df_store_market_chars.csv'),
                                dtype = {'id_lsa' : str},
                                encoding = 'utf-8')
 
@@ -135,16 +120,16 @@ dict_df_disp = {}
 for price_col in ['lpd', 'price']: # 'price'
   
   # Save df of aggregate market dispersion stats
-  dict_df_disp['disp_agg_{:s}'.format(price_col)] =\
-      pd.read_csv(os.path.join(path_built_csv,
+  dict_df_disp['disp_agg_{:s}'.format(price_col)] = (
+      pd.read_csv(os.path.join(path_built_csv_stats,
                                'df_qlmc_dispersion_agg_{:s}.csv'.format(price_col)),
-                  encoding = 'utf-8')
+                  encoding = 'utf-8'))
   
   # Save df of all market product dispersion stats
-  dict_df_disp['disp_{:s}'.format(price_col)] =\
-      pd.read_csv(os.path.join(path_built_csv,
+  dict_df_disp['disp_{:s}'.format(price_col)] = (
+      pd.read_csv(os.path.join(path_built_csv_stats,
                                   'df_qlmc_dispersion_{:s}.csv'.format(price_col)),
-                     encoding = 'utf-8')
+                     encoding = 'utf-8'))
 
 df_disp_agg_res = dict_df_disp['disp_agg_price']
 df_disp_res = dict_df_disp['disp_price']
@@ -230,8 +215,8 @@ df_disp_prod['int_store_id'], prod_levels = pd.factorize(df_disp_prod['store_id'
 
 df_disp_prod = df_disp_prod[~df_disp_prod['AU_med_rev'].isnull()]
 
-df_disp_prod['nb_prods_obs'] =\
-  df_disp_prod[['product', 'section']].groupby('product').transform('count')
+df_disp_prod['nb_prods_obs'] = (
+  df_disp_prod[['product', 'section']].groupby('product').transform('count'))
 
 df_disp_prod[df_disp_prod['nb_prods_obs'] >= 150]['product'].value_counts()
 

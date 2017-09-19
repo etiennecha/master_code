@@ -10,12 +10,11 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2015')
-path_built_csv = os.path.join(path_built, 'data_csv_201503')
-path_built_csv_1415 = os.path.join(path_built, 'data_csv_2014-2015')
+path_built_csv = os.path.join(path_data,
+                              'data_supermarkets',
+                              'data_built',
+                              'data_qlmc_2014_2015',
+                              'data_csv')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -26,9 +25,7 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # #######################
 
 # DF PRICES (MARCH 2015)
-
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
 # store chain harmonization per qlmc
 # does not chge much to include only super-u or hyper-u
@@ -41,14 +38,10 @@ for old_chain, new_chain in ls_replace_chains:
                 'store_chain'] = new_chain
 
 # DF QLMC 2014
-
-df_qlmc_201405 = pd.read_csv(os.path.join(path_built_csv_1415,
-                                          'df_qlmc_201405.csv'),
+df_qlmc_201405 = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc_201405.csv'),
                              dtype = {'ean' : str},
                              encoding = 'utf-8')
-
-df_qlmc_201409 = pd.read_csv(os.path.join(path_built_csv_1415,
-                                          'df_qlmc_201409.csv'),
+df_qlmc_201409 = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc_201409.csv'),
                              dtype = {'ean' : str},
                              encoding = 'utf-8')
 
@@ -106,33 +99,30 @@ for store_chain in ls_loop_scs:
   print(store_chain)
   # Build df with product most common prices
   df_sub = df_qlmc[(df_qlmc['store_chain'] == store_chain)]
-  df_sub_products =  df_sub[ls_prod_cols + ['price']]\
-                       .groupby(ls_prod_cols)\
-                       .agg([len,
-                             'mean',
-                             PD.kurtosis,
-                             PD.skew,
-                             PD.price_1,
-                             PD.price_1_fq,
-                             PD.price_2,
-                             PD.price_2_fq])['price']
+  df_sub_products = (df_sub[ls_prod_cols + ['price']]
+                           .groupby(ls_prod_cols)
+                           .agg([len,
+                                 'mean',
+                                 PD.kurtosis,
+                                 PD.skew,
+                                 PD.price_1,
+                                 PD.price_1_fq,
+                                 PD.price_2,
+                                 PD.price_2_fq])['price'])
   df_sub_products.columns = [col.replace('PD.', '') for col in df_sub_products.columns]
   df_sub_products.rename(columns = {'len': 'nb_obs'}, inplace = True)
   df_sub_products['price_1_fq'] = df_sub_products['price_1_fq'] * 100
   df_sub_products['price_2_fq'] = df_sub_products['price_2_fq'] * 100
-  df_sub_products['price_12_fq'] =\
-    df_sub_products[['price_1_fq', 'price_2_fq']].sum(axis = 1)
+  df_sub_products['price_12_fq'] = df_sub_products[['price_1_fq', 'price_2_fq']].sum(axis = 1)
   # Pbm with kurtosis and skew: div by 0 (only one price)
   # fix (a priori highly degenerate hence not normal)
-  df_sub_products.loc[df_sub_products['kurtosis'].abs() >= 1000,
-                      'kurtosis'] = np.nan
-  df_sub_products.loc[df_sub_products['skew'].abs() >= 1000,
-                      'skew'] = np.nan
+  df_sub_products.loc[df_sub_products['kurtosis'].abs() >= 1000, 'kurtosis'] = np.nan
+  df_sub_products.loc[df_sub_products['skew'].abs() >= 1000, 'skew'] = np.nan
   df_sub_products.reset_index(drop = False, inplace = True)
   # Keep only products observed at enough stores
   df_enough_obs = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min)]
-  df_ref_price = df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min) &\
-                                 (df_sub_products['price_1_fq'] >= pct_min)]
+  df_ref_price = (df_sub_products[(df_sub_products['nb_obs'] >= nb_obs_min) &
+                                  (df_sub_products['price_1_fq'] >= pct_min)])
   # Save chain product stats
   dict_df_chain_product_stats[store_chain] = df_enough_obs
   
@@ -140,7 +130,7 @@ for store_chain in ls_loop_scs:
   if len(df_enough_obs) >= 100:
     print()
     print(u'Overview at product level')
-    print(df_enough_obs.describe()\
+    print(df_enough_obs.describe()
                        .to_string(formatters={'price_1_fq' : format_float_int,
                                               'price_2_fq' : format_float_int,
                                               'price_12_fq' : format_float_int}))
@@ -150,11 +140,11 @@ for store_chain in ls_loop_scs:
     dict_ls_se_desc['freq_prods'].append(df_enough_obs_desc['price_1_fq'])
     
     print()
-    print(u'Nb prod w/ >= {:d} obs: {:d}'.format(\
+    print(u'Nb prod w/ >= {:d} obs: {:d}'.format(
             nb_obs_min,
             len(df_enough_obs)))
     
-    print(u'Nb prod w/ >= {:d} obs and ref price ({:.0f}%+): {:d} ({:.0f}%)'.format(\
+    print(u'Nb prod w/ >= {:d} obs and ref price ({:.0f}%+): {:d} ({:.0f}%)'.format(
             nb_obs_min,
             pct_min,
             len(df_ref_price), 
@@ -167,13 +157,10 @@ for store_chain in ls_loop_scs:
     
     # Build df stores accounting for match with ref prices
     df_sub['ref_price'] = 'diff'
-    df_sub.loc[df_sub['price'] == df_sub['price_1'],
-               'ref_price'] = 'price_1'
-    df_sub.loc[(df_sub['price'] != df_sub['price_1']) &\
-               (df_sub['price'] == df_sub['price_2']),
-               'ref_price'] = 'price_2'
-    df_sub.loc[(df_sub['price_1_fq'] <= pct_min),
-               'ref_price'] = 'no_ref'
+    df_sub.loc[df_sub['price'] == df_sub['price_1'], 'ref_price'] = 'price_1'
+    df_sub.loc[((df_sub['price'] != df_sub['price_1']) &
+                (df_sub['price'] == df_sub['price_2'])), 'ref_price'] = 'price_2'
+    df_sub.loc[(df_sub['price_1_fq'] <= pct_min), 'ref_price'] = 'no_ref'
     
     df_ref = pd.pivot_table(data = df_sub[ls_store_id_cols + ['ref_price']],
                             index = ls_store_id_cols,
@@ -195,7 +182,7 @@ for store_chain in ls_loop_scs:
                         'no_ref',
                         'diff',
                         'price_1',
-                        'price_2']].describe()\
+                        'price_2']].describe()
                                    .to_string(formatters={'price_1' : format_float_int,
                                                           'price_2' : format_float_int,
                                                           'no_ref' : format_float_int,
@@ -207,7 +194,7 @@ for store_chain in ls_loop_scs:
       dict_ls_se_desc['freq_stores'].append(df_ref_pct_desc['price_1'])
       
       # also save store stats for each chain
-      df_ref_pct.sort('price_1', ascending = False, inplace = True)
+      df_ref_pct.sort_values('price_1', ascending = False, inplace = True)
       dict_df_chain_store_desc[store_chain] = df_ref_pct
 
     except:
@@ -220,8 +207,8 @@ for store_chain in ls_loop_scs:
                 'nb_prods_by_store', 'no_ref', 'freq_stores']:
       dict_ls_se_desc[col].append(None)
 
-dict_df_desc = {k: pd.concat(v, axis = 1, keys = ls_loop_scs)\
-                   for k, v in dict_ls_se_desc.items()}
+dict_df_desc = ({k: pd.concat(v, axis = 1, keys = ls_loop_scs)
+                    for k, v in dict_ls_se_desc.items()})
 
 dict_ens_alt_replace = {'CENTRE E.LECLERC' : 'LECLERC',
                         'INTERMARCHE SUPER' : 'ITM SUP',
@@ -229,8 +216,8 @@ dict_ens_alt_replace = {'CENTRE E.LECLERC' : 'LECLERC',
                         'CARREFOUR MARKET' : 'CAR. MARKET',
                         'SIMPLY MARKET' : 'SIMPLY'}
 
-dict_df_desc = {k: v.rename(columns = dict_ens_alt_replace)\
-                   for k,v in dict_df_desc.items()}
+dict_df_desc = ({k: v.rename(columns = dict_ens_alt_replace)
+                    for k,v in dict_df_desc.items()})
 
 # ###########################
 # STATS DES BY RETAIL CHAIN
@@ -259,7 +246,7 @@ for x in ['nb_prods_by_store', 'nb_stores_by_prod', 'no_ref', 'freq_prods', 'fre
 # check ITM and LECLERC: freq_stores == 1 !!! which ones?
 
 #df_chain_store_su = dict_df_chain_store_desc['SUPER U'].copy()
-#df_chain_store_su.sort('price_1', ascending = False, inplace = True)
+#df_chain_store_su.sort_values('price_1', ascending = False, inplace = True)
 
 ## ##############################################
 ## CHECK PRODUCT WITH TOP CONCENTRATION BY CHAIN
@@ -288,8 +275,8 @@ df_compa = pd.merge(df_gc,
                     suffixes = ('_gc', '_lec'),
                     how = 'inner')
 df_compa['diff'] = df_compa['price_1_gc'] - df_compa['price_1_lec']
-df_compa['diff_pct'] = (df_compa['price_1_gc'] - df_compa['price_1_lec'])\
-                          * 100 / df_compa['price_1_lec']
+df_compa['diff_pct'] = ((df_compa['price_1_gc'] - df_compa['price_1_lec'])
+                           * 100 / df_compa['price_1_lec'])
 
 lsd_compa = ls_prod_cols + ['price_1_gc', 'price_1_lec',
                             'price_1_fq_gc', 'price_1_fq_lec',
@@ -343,12 +330,12 @@ df_chain_stores.reset_index(drop = False, inplace = True)
 # STATS ALL PRODUCTS
 # ##################
 
-df_sub_products = df_qlmc[ls_prod_cols + ['price']].groupby(ls_prod_cols)\
-                                                   .agg([len,
-                                                         PD.price_1,
-                                                         PD.price_1_fq,
-                                                         PD.price_2,
-                                                         PD.price_2_fq])['price']
+df_sub_products = (df_qlmc[ls_prod_cols + ['price']].groupby(ls_prod_cols)\
+                                                    .agg([len,
+                                                          PD.price_1,
+                                                          PD.price_1_fq,
+                                                          PD.price_2,
+                                                          PD.price_2_fq])['price'])
 df_sub_products.rename(columns = {'len': 'nb_obs'}, inplace = True)
 df_sub_products['price_1_fq'] = df_sub_products['price_1_fq'] * 100
 df_sub_products['price_2_fq'] = df_sub_products['price_2_fq'] * 100

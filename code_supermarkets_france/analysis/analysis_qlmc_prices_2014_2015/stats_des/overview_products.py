@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 path_built_csv = os.path.join(path_data,
                               'data_supermarkets',
                               'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+                              'data_qlmc_2014_2015',
+                              'data_csv')
 
 path_lsa_csv = os.path.join(path_data,
                             'data_supermarkets',
@@ -33,12 +33,8 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # ##########
 
 # LOAD DF PRICES
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
-
-# todo: move
-df_prices['product'] = df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
 
 # ###############
 # STATS DES
@@ -57,46 +53,42 @@ df_prices.reset_index(drop = False, inplace = True)
 #df_prices = df_prices[df_prices['nb_obs'] >= 200]
 
 PD = PriceDispersion()
-
-df_stats = df_prices[ls_prod_cols + ['price']]\
-             .groupby(ls_prod_cols).agg([len,
-                                         np.mean,
-                                         np.std,
-                                         min,
-                                         np.median,
-                                         max,
-                                         PD.cv,
-                                         PD.iq_rg,
-                                         PD.id_rg,
-                                         PD.minmax_rg])['price']
+df_stats = pd.pivot_table(df_prices,
+                          values = 'price',
+                          index = ls_prod_cols,
+                          aggfunc = [len, np.mean, np.std,
+                                     min, np.median, max,
+                                     PD.cv, PD.iq_rg, PD.id_rg, PD.minmax_rg])
 df_stats.rename(columns = {'len': 'nb_obs',
                            'median' : 'med'},
                 inplace = True)
 df_stats['nb_obs'] = df_stats['nb_obs'].astype(int)
 
+#df_stats = df_prices[ls_prod_cols + ['price']]\
+#             .groupby(ls_prod_cols).agg([len,
+#                                         np.mean,
+#                                         np.std,
+#                                         min,
+#                                         np.median,
+#                                         max,
+#                                         PD.cv,
+#                                         PD.iq_rg,
+#                                         PD.id_rg,
+#                                         PD.minmax_rg])['price']
+#df_stats.rename(columns = {'len': 'nb_obs',
+#                           'median' : 'med'},
+#                inplace = True)
+#df_stats['nb_obs'] = df_stats['nb_obs'].astype(int)
+
 print()
 print(u'General overview')
 print(df_stats.describe().to_string())
 
-print()
-print(u'Inspect large minmax ranges')
-df_stats.sort('minmax_rg', ascending = False, inplace = True)
-print(df_stats[0:30].to_string())
-
-print()
-print(u'Inspect large id ranges')
-df_stats.sort('id_rg', ascending = False, inplace = True)
-print(df_stats[0:30].to_string())
-
-print()
-print(u'Inspect large cvs')
-df_stats.sort('cv', ascending = False, inplace = True)
-print(df_stats[0:30].to_string())
-
-print()
-print(u'Inspect top nb_obs')
-df_stats.sort('nb_obs', ascending = False, inplace = True)
-print(df_stats[0:30].to_string())
+for col in ['minmax_rg', 'id_rg', 'cv', 'nb_obs']:
+  print()
+  print(u'Inspect products with largest {:s}'.format(col))
+  df_stats.sort_values(col, ascending = False, inplace = True)
+  print(df_stats[0:30].to_string())
 
 # PRODUCT SECTIONS
 df_prods = df_prices[ls_prod_cols + ['nb_obs']].drop_duplicates(ls_prod_cols)

@@ -11,34 +11,33 @@ import timeit
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
+
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+# #########
+# LOAD DATA
+# #########
 
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
 
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
-                        dtype = {'id_lsa' : str,
-                                 'c_insee' : str},
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
+                        dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
-                                               'df_qlmc_competitors_final.csv'),
+                                               'df_qlmc_competitors_final_201503.csv'),
                                   encoding = 'utf-8')
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
-dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
-                    for chain in df_prices['store_chain'].unique()}
+dict_chain_dfs = ({chain: df_prices[df_prices['store_chain'] == chain]
+                          for chain in df_prices['store_chain'].unique()})
 
 # #########################
 # REPRODUCE QLMC COMPARISON
@@ -52,15 +51,15 @@ print(df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()].iloc[0])
 # Replicate comparison
 
 lec_chain = 'LECLERC'
-lec_id, comp_id, comp_chain =\
-   df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()]\
-                      .iloc[2][['lec_id', 'comp_id', 'comp_chain']].values
+lec_id, comp_id, comp_chain = (
+   df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()]
+                      .iloc[2][['lec_id', 'comp_id', 'comp_chain']].values)
 
 start = timeit.default_timer()
-df_lec  = dict_chain_dfs[lec_chain]\
-                        [dict_chain_dfs[lec_chain]['store_id'] == lec_id].copy()
-df_comp = dict_chain_dfs[comp_chain]\
-                        [dict_chain_dfs[comp_chain]['store_id'] == comp_id].copy()
+df_lec  = (dict_chain_dfs[lec_chain]
+                         [dict_chain_dfs[lec_chain]['store_id'] == lec_id].copy())
+df_comp = (dict_chain_dfs[comp_chain]
+                         [dict_chain_dfs[comp_chain]['store_id'] == comp_id].copy())
 print(u'Time to select', timeit.default_timer() - start)
 
 start = timeit.default_timer()
@@ -103,9 +102,9 @@ start = timeit.default_timer()
 ls_rows_compa = []
 lec_chain = 'LECLERC'
 lec_id_save = None
-for lec_id, comp_id, comp_chain\
-  in df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()]\
-       [['lec_id', 'comp_id', 'comp_chain']].values:
+for lec_id, comp_id, comp_chain in (
+  df_qlmc_comparisons[~df_qlmc_comparisons['qlmc_nb_obs'].isnull()]
+                     [['lec_id', 'comp_id', 'comp_chain']].values):
   
   ##before split of df_prices       
   #df_lec  = df_prices[df_prices['store_id'] == lec_id].copy()
@@ -117,11 +116,11 @@ for lec_id, comp_id, comp_chain\
   
   # taking advantage of order requires caution on first loop
   if lec_id != lec_id_save:
-    df_lec  = dict_chain_dfs[lec_chain]\
-                            [dict_chain_dfs[lec_chain]['store_id'] == lec_id]
+    df_lec  = (dict_chain_dfs[lec_chain]
+                             [dict_chain_dfs[lec_chain]['store_id'] == lec_id])
     lec_id_save = df_lec['store_id'].iloc[0]
-  df_comp = dict_chain_dfs[comp_chain]\
-                          [dict_chain_dfs[comp_chain]['store_id'] == comp_id]
+  df_comp = (dict_chain_dfs[comp_chain]
+                           [dict_chain_dfs[comp_chain]['store_id'] == comp_id])
   
   # todo: see if need family and subfamily for matching (not much chge)
   df_duel = pd.merge(df_lec,
@@ -157,15 +156,10 @@ df_repro_compa = pd.DataFrame(ls_rows_compa,
                                          'mean_compa'])
 print(u'Time for loop', timeit.default_timer() - start)
 
+df_repro_compa['rr'] = (df_repro_compa['nb_comp_wins'] / df_repro_compa['nb_obs'] * 100)
 
-
-df_repro_compa['rr'] = df_repro_compa['nb_comp_wins'] /\
-                         df_repro_compa['nb_obs'] * 100
-
-df_repro_compa.loc[df_repro_compa['nb_comp_wins'] >\
-                     df_repro_compa['nb_lec_wins'],
-                   'rr'] = df_repro_compa['nb_lec_wins'] /\
-                             df_repro_compa['nb_obs'] * 100
+df_repro_compa.loc[df_repro_compa['nb_comp_wins'] > df_repro_compa['nb_lec_wins'],
+                   'rr'] = df_repro_compa['nb_lec_wins'] / df_repro_compa['nb_obs'] * 100
 
 df_repro_compa['pct_draws'] = df_repro_compa['nb_draws'] / df_repro_compa['nb_obs']* 100
 
@@ -226,10 +220,10 @@ ls_scs = ['AUCHAN',
           'SIMPLY MARKET',
           'SUPER U']
 
-ls_se_chain_desc =\
-  [df_repro_compa[(df_repro_compa['comp_chain'] == store_chain) &\
-                  (df_repro_compa['nb_obs'] >= 400)]['pct_compa'].describe()\
-                      for store_chain in ls_scs]
+ls_se_chain_desc = (
+  [df_repro_compa[(df_repro_compa['comp_chain'] == store_chain) &
+                  (df_repro_compa['nb_obs'] >= 400)]['pct_compa'].describe()
+                      for store_chain in ls_scs])
 df_su_chains = pd.concat(ls_se_chain_desc,
                          axis = 1,
                          keys = ls_scs)
@@ -239,9 +233,9 @@ print(u'Summary by chain: comparison results:')
 print(df_su_chains.T.to_string())
 
 # Summary by chain: rr
-ls_se_chain_rr = [df_repro_compa[df_repro_compa['comp_chain']\
-                                     == store_chain]['rr'].describe()\
-                        for store_chain in ls_scs]
+ls_se_chain_rr = (
+  [df_repro_compa[df_repro_compa['comp_chain']== store_chain]['rr'].describe()
+     for store_chain in ls_scs])
 df_chain_rr = pd.concat(ls_se_chain_rr,
                         axis = 1,
                         keys = ls_scs)
@@ -252,9 +246,9 @@ print(df_chain_rr.T.to_string())
 # Summary by chain / stats
 dict_df_chain_stat = {}
 for stat in ['rr', 'pct_draws']:
-  ls_se_chain_stat = [df_repro_compa[df_repro_compa['comp_chain']\
-                                         == store_chain][stat].describe()\
-                            for store_chain in ls_scs]
+  ls_se_chain_stat = (
+    [df_repro_compa[df_repro_compa['comp_chain'] == store_chain][stat].describe()
+       for store_chain in ls_scs])
   df_chain_stat = pd.concat(ls_se_chain_stat,
                             axis = 1,
                             keys = ls_scs)
@@ -275,17 +269,17 @@ df_repro_2 = pd.merge(df_qlmc_comparisons[['lec_id', 'comp_id',
                       how = 'left')
 
 print()
-print(df_repro_2[['lec_id', 'gg_dur_val']].groupby('lec_id')\
-                                          .agg('describe')\
-                                          .unstack()\
+print(df_repro_2[['lec_id', 'gg_dur_val']].groupby('lec_id')
+                                          .agg('describe')
+                                          .unstack()
                                           .describe(percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]))
 
 df_repro_2[df_repro_2['dist'] <= 30].plot(kind = 'scatter', x = 'dist', y = 'gg_dur_val')
 plt.show()
 
 chain = 'AUCHAN'
-df_chain = df_repro_2[(df_repro_2['comp_chain'] == 'AUCHAN') &\
-                      (df_repro_2['gg_dur_val'] <= 20)]
+df_chain = (df_repro_2[(df_repro_2['comp_chain'] == 'AUCHAN') &
+                       (df_repro_2['gg_dur_val'] <= 20)])
 df_chain.plot(kind = 'scatter', x = 'gg_dur_val', y = 'rr')
 plt.show()
 

@@ -8,22 +8,13 @@ import numpy as np
 import pandas as pd
 from functions_generic_qlmc import *
 
-path_built = os.path.join(path_data,
-                          'data_supermarkets',
-                          'data_built',
-                          'data_qlmc_2015')
-
-path_built_csv = os.path.join(path_built,
-                              'data_csv_201503')
-
-path_built_lsa = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_lsa')
-path_built_csv_lsa = os.path.join(path_built_lsa, 'data_csv')
-path_built_json_lsa = os.path.join(path_built_lsa, 'data_json')
-path_built_comp_csv_lsa = os.path.join(path_built_csv_lsa, '201407_competition')
-path_built_comp_json_lsa = os.path.join(path_built_json_lsa, '201407_competition')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_csv_stats = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv_stats')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
+path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv, '201407_competition')
+path_built_lsa_json = os.path.join(path_built, 'data_lsa', 'data_json')
+path_built_lsa_comp_json = os.path.join(path_built_lsa_json, '201407_competition')
 
 pd.set_option('float_format', '{:,.1f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -35,19 +26,16 @@ format_float_float = lambda x: '{:10,.1f}'.format(x)
 
 # QLMC DATA
 
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         dtype = {'id_lsa' : str},
                         encoding = 'utf-8')
 
-df_comp = pd.read_csv(os.path.join(path_built_csv,
-                                   'df_qlmc_competitors_final.csv'),
+df_comp = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc_competitors_final_201503.csv'),
                       encoding = 'utf-8')
 
 # LSA DATA
 
-df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
-                                  'df_lsa_active.csv'),
+df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv, 'df_lsa_active.csv'),
                      dtype = {u'id_lsa' : str,
                               u'c_insee' : str,
                               u'c_insee_ardt' : str,
@@ -61,8 +49,7 @@ df_lsa = pd.read_csv(os.path.join(path_built_csv_lsa,
 # drop hard discount
 df_lsa = df_lsa[df_lsa['type_alt'].isin(['H', 'S'])]
 
-dict_ls_comp = dec_json(os.path.join(path_built_comp_json_lsa,
-                                     'dict_ls_comp_hs.json'))
+dict_ls_comp = dec_json(os.path.join(path_built_lsa_comp_json, 'dict_ls_comp_hs.json'))
 
 # ###################
 # OVERVIEW DISTANCES
@@ -80,12 +67,12 @@ for dist_var in ['dist', 'gg_dur_val']:
   
   print()
   print(u'Overview of competition around leclerc stores:')
-  df_leclerc_comp = df_comp[['lec_name', dist_var]]\
-                      .groupby(['lec_name']).agg([len,
-                                                  np.mean,
-                                                  min,
-                                                  np.median,
-                                                  max])[dist_var]
+  df_leclerc_comp = (df_comp[['lec_name', dist_var]]
+                       .groupby(['lec_name']).agg([len,
+                                                   np.mean,
+                                                   min,
+                                                   np.median,
+                                                   max])[dist_var])
   ls_pctiles = [0.1, 0.25, 0.5, 0.75, 0.9]
   print(df_leclerc_comp.describe(percentiles = ls_pctiles))
 
@@ -157,10 +144,10 @@ ls_discard_enseigne = [u'ALDI',
 
 ls_keep_ids = list(df_stores['id_lsa'])
 
-df_lsa = df_lsa[(~df_lsa['enseigne'].isin(ls_discard_enseigne)) &\
-                (~((df_lsa['surface'] <= 1000) &\
-                   (df_lsa['groupe'] != 'LECLERC') &\
-                   (~df_lsa.index.isin(ls_keep_ids))))]
+df_lsa = (df_lsa[(~df_lsa['enseigne'].isin(ls_discard_enseigne)) &
+                 (~((df_lsa['surface'] <= 1000) &
+                    (df_lsa['groupe'] != 'LECLERC') &
+                    (~df_lsa.index.isin(ls_keep_ids))))])
 
 ls_lsa_comp_ids_d25, ls_lsa_comp_ids_dqlmc = [], []
 for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
@@ -169,12 +156,12 @@ for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
   lec_surface = df_lsa.ix[lec_lsa_id]['surface']
   
   ls_qlmc_comp_lsa_ids = [x[0] for x in ls_lec_comp]
-  ls_qlmc_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])\
-                    for x in ls_qlmc_comp_lsa_ids]
+  ls_qlmc_temp = ([(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])
+                    for x in ls_qlmc_comp_lsa_ids])
   
   ls_lsa_comp_lsa_ids = [x[0] for x in dict_ls_comp[lec_lsa_id] if x[0] in df_lsa.index]
-  ls_lsa_comp_lsa_ids_dist = [x[0] for x in dict_ls_comp[lec_lsa_id]\
-                               if (x[1] <= qlmc_max_dist) and (x[0] in df_lsa.index)]
+  ls_lsa_comp_lsa_ids_dist = ([x[0] for x in dict_ls_comp[lec_lsa_id]
+                                    if (x[1] <= qlmc_max_dist) and (x[0] in df_lsa.index)])
   #ls_lsa_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])\
   #                 for x in ls_lsa_comp_lsa_ids_dist if x in df_lsa.index]
   ls_lsa_comp_ids_d25 += ls_lsa_comp_lsa_ids # todo: add check df_lsa.index
@@ -215,14 +202,13 @@ for lec_lsa_id, ls_lec_comp in dict_lec_comp.items():
   lec_surface = df_lsa.ix[lec_lsa_id]['surface']
   
   ls_qlmc_comp_lsa_ids = [x[0] for x in ls_lec_comp]
-  ls_qlmc_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])\
+  ls_qlmc_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])
                     for x in ls_qlmc_comp_lsa_ids]
   
   ls_lsa_comp_lsa_ids = [x[0] for x in dict_ls_comp[lec_lsa_id]]
-  ls_lsa_comp_lsa_ids_dist = [x[0] for x in dict_ls_comp[lec_lsa_id]\
-                               if x[1] <= qlmc_max_dist]
-  ls_lsa_temp = [(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])\
-                   for x in ls_lsa_comp_lsa_ids_dist if x in df_lsa.index]
+  ls_lsa_comp_lsa_ids_dist = [x[0] for x in dict_ls_comp[lec_lsa_id] if x[1] <= qlmc_max_dist]
+  ls_lsa_temp = ([(x, df_lsa.ix[x]['enseigne'], df_lsa.ix[x]['groupe'], df_lsa.ix[x]['surface'])
+                    for x in ls_lsa_comp_lsa_ids_dist if x in df_lsa.index])
   # need to add check that stores still here when restricting df_lsa
   dict_lec_comp_2[lec_lsa_id] = ls_lsa_temp
   # loop with groupe and sizer criteria
@@ -249,9 +235,9 @@ print()
 print(u'Check nb Leclerc store with missing stores:')
 
 for x in ['missing_comp', 'missing_store', 'missing_store_larger']:
-  ls_concerned = [lec_lsa_id for lec_lsa_id, ls_missing\
-                     in dict_dict_missing[x].items()\
-                       if ls_missing]
+  ls_concerned = ([lec_lsa_id for lec_lsa_id, ls_missing
+                     in dict_dict_missing[x].items()
+                       if ls_missing])
   print(u'Nb lec w/ {:s}: {:d}'.format(x, len(ls_concerned)))
 
 # Example

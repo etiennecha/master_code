@@ -11,36 +11,32 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
 
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_csv_stats = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv_stats')
+
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
-
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
 
 # ##########
 # LOAD DATA
 # ##########
 
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_res_ln_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv_stats, 'df_res_ln_prices.csv'),
                         encoding = 'utf-8')
 
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         dtype = {'id_lsa' : str,
                                  'c_insee' : str},
                         encoding = 'utf-8')
 
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
-                                               'df_qlmc_competitors_final.csv'),
+                                               'df_qlmc_competitors_final_201503.csv'),
                                   encoding = 'utf-8')
 
 # ADD STORE PRICE FE IN DF STORES
-df_fes = pd.read_csv(os.path.join(path_built_csv,
+df_fes = pd.read_csv(os.path.join(path_built_csv_stats,
                                   'df_res_ln_price_fes.csv'),
                      encoding = 'utf-8')
 
@@ -60,10 +56,10 @@ df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 # robustness: reject residuals if beyond 40%
 df_prices = df_prices[df_prices['res'].abs() < 0.4]
 
-#se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
-#                                              .agg(lambda x: (x**2).mean())
-se_store_disp = df_prices[['store_id', 'res']].groupby('store_id')\
-                                              .agg(lambda x: x.abs().mean())
+#se_store_disp = (df_prices[['store_id', 'res']].groupby('store_id')
+#                                              .agg(lambda x: (x**2).mean()))
+se_store_disp = (df_prices[['store_id', 'res']].groupby('store_id')
+                                               .agg(lambda x: x.abs().mean()))
 df_stores.set_index('store_id', inplace = True)
 df_stores['store_disp'] = se_store_disp
 
@@ -91,10 +87,10 @@ df_qlmc_comparisons.rename(columns = {'store_id' : 'comp_id',
 # #####################################
 
 for chain in ['GEANT CASINO', 'CARREFOUR', 'INTERMARCHE', 'SUPER U', 'CORA']:
-  df_chain = df_qlmc_comparisons[(df_qlmc_comparisons['comp_chain'] == chain) &\
-                                 (df_qlmc_comparisons['gg_dur_val'] <= 20) &\
-                                 (df_qlmc_comparisons['lec_price'] >= 92) &\
-                                 (df_qlmc_comparisons['lec_price'] <= 100)]
+  df_chain = (df_qlmc_comparisons[(df_qlmc_comparisons['comp_chain'] == chain) &
+                                  (df_qlmc_comparisons['gg_dur_val'] <= 20) &
+                                  (df_qlmc_comparisons['lec_price'] >= 92) &
+                                  (df_qlmc_comparisons['lec_price'] <= 100)])
   
   res_chain = smf.ols('comp_price ~ lec_price', data = df_chain).fit()
   print()

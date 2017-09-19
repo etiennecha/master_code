@@ -16,18 +16,15 @@ pd.set_option('float_format', '{:,.1f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.1f}'.format(x)
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_csv_stats = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv_stats')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
 
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_res_ln_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv_stats, 'df_res_ln_prices.csv'),
                         encoding = 'utf-8')
 
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         dtype = {'id_lsa' : str,
                                  'c_insee' : str},
                         encoding = 'utf-8')
@@ -43,8 +40,7 @@ for old_chain, new_chain in ls_replace_chains:
                 'store_chain'] = new_chain
 
 # add store fes
-df_fes = pd.read_csv(os.path.join(path_built_csv,
-                                  'df_res_ln_price_fes.csv'),
+df_fes = pd.read_csv(os.path.join(path_built_csv_stats, 'df_res_ln_price_fes.csv'),
                      encoding = 'utf-8')
 # add price (store fes)
 df_store_fes = df_fes[df_fes['name'].str.startswith('C(store_id)')].copy()
@@ -57,9 +53,8 @@ df_stores = pd.merge(df_stores,
                      how = 'left',
                      on = 'store_id')
 
-df_stores['price_rel'] = df_stores[['store_chain', 'price']].groupby('store_chain')\
-                                                               .transform(lambda x: x / x.mean())
-
+df_stores['price_rel'] = (df_stores[['store_chain', 'price']].groupby('store_chain')
+                                                             .transform(lambda x: x / x.mean()))
 
 df_qlmc_comparisons = pd.read_csv(os.path.join(path_built_csv,
                                                'df_qlmc_competitors.csv'),
@@ -77,8 +72,8 @@ df_prices = df_prices[~df_prices['section'].isin([u'Bazar et textile',
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
-dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
-                    for chain in df_prices['store_chain'].unique()}
+dict_chain_dfs = ({chain: df_prices[df_prices['store_chain'] == chain]
+                            for chain in df_prices['store_chain'].unique()})
 
 price_col, res_col = 'price', 'res'
 
@@ -90,8 +85,8 @@ ls_keep_stores = df_prices['store_id'].unique()
 
 dict_markets = {}
 for i, row in df_qlmc_comparisons.iterrows():
-  if (row['lec_id'] in ls_keep_stores) and\
-     (row['comp_id'] in ls_keep_stores):
+  if ((row['lec_id'] in ls_keep_stores) and
+      (row['comp_id'] in ls_keep_stores)):
     dict_markets.setdefault(row['lec_id'], []).append(row['comp_id'])
 
 merge_option = 'inner' # or 'outer'
@@ -104,12 +99,10 @@ merge_option = 'inner' # or 'outer'
 ls_df_markets = []
 for lec_id, ls_comp_id in dict_markets.items():
   if ls_comp_id:
-    df_market = dict_chain_dfs['LECLERC']\
-                    [dict_chain_dfs['LECLERC']['store_id'] == lec_id]\
-                         [['section', 'family', 'product', price_col]]
-    df_market_res = dict_chain_dfs['LECLERC']\
-                        [dict_chain_dfs['LECLERC']['store_id'] == lec_id]\
-                             [['section', 'family', 'product', res_col]]
+    df_market = (dict_chain_dfs['LECLERC'][dict_chain_dfs['LECLERC']['store_id'] == lec_id]
+                                          [['section', 'family', 'product', price_col]])
+    df_market_res = (dict_chain_dfs['LECLERC'][dict_chain_dfs['LECLERC']['store_id'] == lec_id]
+                                              [['section', 'family', 'product', res_col]])
     for comp_id in ls_comp_id:
       store_chain = df_stores[df_stores['store_id'] == comp_id]['store_chain'].iloc[0]
       df_comp = dict_chain_dfs[store_chain]\
@@ -207,8 +200,8 @@ for df_market, df_market_res in ls_df_markets:
     se_priciest_2_vc.ix[se_cheapest_vc.index[0]] = 0.0
   
   # Index of market price
-  market_price, market_price_2 = df_stores[df_stores['store_id'].isin(ls_cols)]\
-                                          [['price', 'price_rel']].mean()
+  market_price, market_price_2 = (df_stores[df_stores['store_id'].isin(ls_cols)]
+                                           [['price', 'price_rel']].mean())
   
   # save market
   df_market['store_id'] = ls_cols[0]
@@ -282,8 +275,7 @@ df_su = pd.DataFrame(ls_market_rows,
                                 'nb_stores',
                                 'nb_prods'] + lsd1 + lsd2)
 
-df_su = df_su[(df_su['nb_prods'] >= 50) &\
-              (df_su['nb_stores'] >= 3)]
+df_su = df_su[(df_su['nb_prods'] >= 50) & (df_su['nb_stores'] >= 3)]
 
 lsdf = df_su.columns
 if price_col in ['price_res', 'lpd']:
@@ -299,8 +291,8 @@ print(df_su[df_su['nb_prods'] >= 100][lsdf].describe().to_string())
 
 print()
 print('Stats des: markets with more than 100 products and 4 stores:')
-print(df_su[(df_su['nb_prods'] >= 100) &\
-            (df_su['nb_stores'] >= 4)][lsdf].describe().to_string())
+print(df_su[(df_su['nb_prods'] >= 100) & (df_su['nb_stores'] >= 4)]
+           [lsdf].describe().to_string())
 
 #print()
 #print('Markets with high dispersion')
@@ -318,7 +310,7 @@ for df_market, df_market_res in ls_df_markets:
 
 # Save df of aggregate market dispersion stats
 lsdo = ['store_id'] + list(lsdf)
-df_su[lsdo].to_csv(os.path.join(path_built_csv,
+df_su[lsdo].to_csv(os.path.join(path_built_csv_stats,
                                 'df_qlmc_dispersion_agg_{:s}.csv'.format(price_col)),
                    encoding = 'utf-8',
                    float_format='%.4f',
@@ -333,7 +325,7 @@ df_disp_res.reset_index(drop = False, inplace = True)
 df_disp_res = df_disp_res[df_disp_res['nb_stores'] >= 3]
 
 # Save df of all market product dispersion stats
-df_disp_res.to_csv(os.path.join(path_built_csv,
+df_disp_res.to_csv(os.path.join(path_built_csv_stats,
                                 'df_qlmc_dispersion_{:s}.csv'.format(price_col)),
                    encoding = 'utf-8',
                    float_format='%.4f',

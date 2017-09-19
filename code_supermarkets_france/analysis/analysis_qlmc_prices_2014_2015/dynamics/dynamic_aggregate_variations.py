@@ -10,14 +10,8 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
-path_built_2015 = os.path.join(path_data,
-                               'data_supermarkets',
-                               'data_built',
-                               'data_qlmc_2015')
-path_built_201415_csv = os.path.join(path_built_2015,
-                                     'data_csv_2014-2015')
-path_built_201415_json = os.path.join(path_built_2015,
-                                     'data_json_2014-2015')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -27,8 +21,7 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # LOAD DATA
 # ###########
 
-df_qlmc = pd.read_csv(os.path.join(path_built_201415_csv,
-                                   'df_qlmc_2014-2015.csv'),
+df_qlmc = pd.read_csv(os.path.join(path_built_csv, 'df_qlmc_2014_2015.csv'),
                       dtype = {'ean' : str,
                                'id_lsa' : str},
                       encoding = 'utf-8')
@@ -36,28 +29,24 @@ df_qlmc = pd.read_csv(os.path.join(path_built_201415_csv,
 # ADD COLUMNS FOR PRODUCT PRICE VARIATIONS
 ls_tup_pers = [('0', '1'), ('1', '2'), ('0', '2')]
 for tup_per in ls_tup_pers:
-  df_qlmc['pct_var_{:s}{:s}'.format(*tup_per)] =\
-    (df_qlmc['price_{:s}'.format(tup_per[1])] /\
-      df_qlmc['price_{:s}'.format(tup_per[0])] - 1) * 100
+  df_qlmc['pct_var_{:s}{:s}'.format(*tup_per)] = (
+    (df_qlmc['price_{:s}'.format(tup_per[1])] /
+       df_qlmc['price_{:s}'.format(tup_per[0])] - 1) * 100)
 
-ls_pct_var_cols = ['pct_var_{:s}{:s}'.format(*tup_per)\
-                      for tup_per in ls_tup_pers]
+ls_pct_var_cols = ['pct_var_{:s}{:s}'.format(*tup_per) for tup_per in ls_tup_pers]
 
 # DROP SUSPECT PRICE VARIATIONS
-df_qlmc = df_qlmc[(~((df_qlmc['pct_var_01'] >= 100) &\
-                     (df_qlmc['pct_var_02'].isnull()))) &\
-                  (~((df_qlmc['pct_var_01'] >= 100) &\
-                     (df_qlmc['pct_var_02'] <= 100))) &\
-                  (~(df_qlmc['pct_var_12'] >= 100))]
+df_qlmc = (df_qlmc[(~((df_qlmc['pct_var_01'] >= 100) & (df_qlmc['pct_var_02'].isnull()))) &
+                   (~((df_qlmc['pct_var_01'] >= 100) & (df_qlmc['pct_var_02'] <= 100))) &
+                   (~(df_qlmc['pct_var_12'] >= 100))])
 
 # All periods observed? 670 stores with 158 to 1599 obs
-df_full = df_qlmc[(~df_qlmc['price_0'].isnull()) &\
-                  (~df_qlmc['price_1'].isnull()) &\
-                  (~df_qlmc['price_2'].isnull())]
+df_full = (df_qlmc[(~df_qlmc['price_0'].isnull()) &
+                   (~df_qlmc['price_1'].isnull()) &
+                   (~df_qlmc['price_2'].isnull())])
 
 # Could also consider 0 to 2
-df_02 = df_qlmc[(~df_qlmc['price_0'].isnull()) &\
-                (~df_qlmc['price_2'].isnull())]
+df_02 = df_qlmc[(~df_qlmc['price_0'].isnull()) & (~df_qlmc['price_2'].isnull())]
 
 # Check indiv price vars for suspicious changes
 # Quite a few pbms to fix... should check price distributions in static
@@ -73,8 +62,7 @@ print(u'Distrs of store/product variations over time')
 for chain in ['LECLERC', 'GEANT CASINO', 'CARREFOUR']:
   print()
   print(chain)
-  print(df_qlmc[df_qlmc['store_chain'] == chain]\
-               [ls_pct_var_cols].describe().to_string())
+  print(df_qlmc[df_qlmc['store_chain'] == chain][ls_pct_var_cols].describe().to_string())
 
 # #########################################
 # VARIATIONS OF PRODUCT MEAN PRICE BY CHAIN
@@ -93,8 +81,7 @@ dict_df_mcp = {}
 for price_col in ls_price_cols:
   ls_col_gb = ['store_chain'] + ls_prod_cols
   df_mcp = df_qlmc.groupby(ls_col_gb).agg([len, 'mean'])[price_col]
-  df_mcp = df_mcp[(~df_mcp['mean'].isnull()) &\
-                  (df_mcp['len'] >= 20)]
+  df_mcp = df_mcp[(~df_mcp['mean'].isnull()) & (df_mcp['len'] >= 20)]
   df_mcp.reset_index(drop = False, inplace = True)
   dict_df_mcp[price_col] = df_mcp
 
@@ -154,12 +141,12 @@ ls_evo_loop_2 = [[['201405', '201409'], (0, 1)],
 dict_df_evo_2 = {}
 dict_df_evo_2_stores = {}
 for tup_date_str, tup_price_ind in ls_evo_loop_2:
-  df_temp = df_qlmc[(~df_qlmc['price_{:d}'.format(tup_price_ind[0])].isnull()) &\
-                    (~df_qlmc['price_{:d}'.format(tup_price_ind[1])].isnull())]
+  df_temp = (df_qlmc[(~df_qlmc['price_{:d}'.format(tup_price_ind[0])].isnull()) &
+                     (~df_qlmc['price_{:d}'.format(tup_price_ind[1])].isnull())])
   gbcs = df_temp.groupby(ls_col_gb)
   def comp_var(df):
-    return (df['price_{:d}'.format(tup_price_ind[1])].sum() /\
-              df['price_{:d}'.format(tup_price_ind[0])].sum() - 1) * 100
+    return ((df['price_{:d}'.format(tup_price_ind[1])].sum() /
+               df['price_{:d}'.format(tup_price_ind[0])].sum() - 1) * 100)
   df_cs = gbcs.apply(comp_var)
   df_cs = df_cs.reset_index(drop = False)
   df_su_cs = df_cs.groupby('store_chain').agg('describe').unstack()[0]

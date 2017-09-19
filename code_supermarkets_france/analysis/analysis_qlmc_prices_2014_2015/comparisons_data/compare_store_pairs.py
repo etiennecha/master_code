@@ -18,19 +18,11 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015')
-
-path_built_201503_csv = os.path.join(path_built_csv, 'data_csv_201503')
-path_built_201415_csv = os.path.join(path_built_csv, 'data_csv_2014-2015')
-
-path_built_lsa_csv = os.path.join(path_data,
-                                  'data_supermarkets',
-                                  'data_built',
-                                  'data_lsa',
-                                  'data_csv')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_csv_stats = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv_stats')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
+path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv, '201407_competition')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 
@@ -38,18 +30,15 @@ pd.set_option('float_format', '{:,.2f}'.format)
 # LOAD DATA
 # #############
 
-df_prices = pd.read_csv(os.path.join(path_built_201503_csv,
-                                     'df_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
 
-df_stores = pd.read_csv(os.path.join(path_built_201503_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         dtype = {'id_lsa' : str,
                                  'c_insee' : str},
                         encoding = 'utf-8')
 
-df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                  'df_lsa_active_hsx.csv'),
+df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv, 'df_lsa_active_hsx.csv'),
                      dtype = {u'id_lsa' : str,
                               u'c_insee' : str,
                               u'c_insee_ardt' : str,
@@ -61,8 +50,7 @@ df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
                                     u'date_chg_enseigne', u'date_chg_surface'],
                      encoding = 'utf-8')
 
-df_store_markets = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                            '201407_competition',
+df_store_markets = pd.read_csv(os.path.join(path_built_lsa_comp_csv,
                                             'df_store_market_chars.csv'),
                                dtype = {'id_lsa' : str},
                                encoding = 'utf-8')
@@ -99,8 +87,8 @@ df_qlmc = pd.merge(df_prices,
                    on = 'store_id',
                    how = 'left')
 
-df_comp_pairs = pd.read_csv(os.path.join(path_built_201415_csv,
-                                         'df_comp_store_pairs_final.csv'),
+df_comp_pairs = pd.read_csv(os.path.join(path_built_csv,
+                                         'df_comp_pairs_2014_2015.csv'),
                             dtype = {'id_lsa_0' : str,
                                      'id_lsa_1' : str},
                             encoding = 'utf-8')
@@ -133,20 +121,18 @@ ls_copy_cols = ['id_lsa', 'store_name',
 
 ls_df_cp = []
 for tup_chains in ls_tup_chains:
-  df_cp = df_pairs[(df_pairs['store_chain_0'].isin(tup_chains)) &\
-                   (df_pairs['store_chain_1'].isin(tup_chains))].copy()
+  df_cp = (df_pairs[(df_pairs['store_chain_0'].isin(tup_chains)) &
+                    (df_pairs['store_chain_1'].isin(tup_chains))].copy())
   tup_sufs = ['A', 'B']
   for brand, suf in zip(tup_chains, tup_sufs):
     for col in ls_copy_cols:
       df_cp[u'{:s}_{:s}'.format(col, suf)] = 0
       df_cp.loc[df_cp['store_chain_0'] == brand,
-                     u'{:s}_{:s}'.format(col, suf)] =\
-        df_cp[u'{:s}_0'.format(col)]
+                     u'{:s}_{:s}'.format(col, suf)] = df_cp[u'{:s}_0'.format(col)]
       df_cp.loc[df_cp['store_chain_1'] == brand,
-                     u'{:s}_{:s}'.format(col, suf)] =\
-        df_cp[u'{:s}_1'.format(col)]
-  ls_drop_cols = [u'{:s}_0'.format(x) for x in ls_copy_cols] +\
-                 [u'{:s}_1'.format(x) for x in ls_copy_cols]
+                u'{:s}_{:s}'.format(col, suf)] = df_cp[u'{:s}_1'.format(col)]
+  ls_drop_cols = ([u'{:s}_0'.format(x) for x in ls_copy_cols] +
+                  [u'{:s}_1'.format(x) for x in ls_copy_cols])
   df_cp.drop(ls_drop_cols, axis = 1, inplace = True)
   ls_df_cp.append(df_cp)
 
@@ -158,13 +144,13 @@ df_cp_all = pd.concat(ls_df_cp)
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
-dict_chain_dfs = {store_chain: df_qlmc[df_qlmc['store_chain'] == store_chain]\
-                    for store_chain in df_qlmc['store_chain'].unique()}
+dict_chain_dfs = ({store_chain: df_qlmc[df_qlmc['store_chain'] == store_chain]
+                                for store_chain in df_qlmc['store_chain'].unique()})
 
 ls_rows_compa = []
 for sc_0, sc_1 in ls_tup_chains:
-  df_cp = df_cp_all[(df_cp_all['store_chain_A'] == sc_0) &\
-                    (df_cp_all['store_chain_B'] == sc_1)]
+  df_cp = (df_cp_all[(df_cp_all['store_chain_A'] == sc_0) &
+                     (df_cp_all['store_chain_B'] == sc_1)])
   df_chain_0 = dict_chain_dfs[sc_0]
   df_chain_1 = dict_chain_dfs[sc_1]
   for row_i, row in df_cp.iterrows():
@@ -255,25 +241,25 @@ df_repro_compa = pd.DataFrame(ls_rows_compa,
 
 # Convert product counts to percentages
 for var in ['win_A', 'win_B', 'draws', 'lost', 'won']:
-  df_repro_compa['pct_{:s}'.format(var)] =\
-      df_repro_compa['nb_{:s}'.format(var)] * 100 / df_repro_compa['nb_obs'].astype(float)
+  df_repro_compa['pct_{:s}'.format(var)] = (
+     df_repro_compa['nb_{:s}'.format(var)] * 100 / df_repro_compa['nb_obs'].astype(float))
 df_repro_compa.drop(['nb_draws', 'nb_lost', 'nb_won'],
                     axis = 1,
                     inplace = True)
 
 for tup_chain in ls_tup_chains:
-  df_tc_compa = df_repro_compa[(df_repro_compa['store_chain_A'] == tup_chain[0]) &\
-                               (df_repro_compa['store_chain_B'] == tup_chain[1]) &\
-                               (df_repro_compa['dist'] <= 15) &\
-                               (df_repro_compa['nb_obs'] >= 100)]
+  df_tc_compa = (df_repro_compa[(df_repro_compa['store_chain_A'] == tup_chain[0]) &
+                                (df_repro_compa['store_chain_B'] == tup_chain[1]) &
+                                (df_repro_compa['dist'] <= 15) &
+                                (df_repro_compa['nb_obs'] >= 100)])
   print()
   print(tup_chain)
   print(df_tc_compa.describe().to_string())
-  print('Pct pairs won by A: {:.2f}'.format(\
-        len(df_tc_compa[df_tc_compa['compa_pct_o'] > 0]) /\
+  print('Pct pairs won by A: {:.2f}'.format(
+        len(df_tc_compa[df_tc_compa['compa_pct_o'] > 0]) /
             float(len(df_tc_compa)) * 100))
-  print('Pct pairs draw: {:.2f}'.format(\
-        len(df_tc_compa[df_tc_compa['compa_pct_o'] == 0]) /\
+  print('Pct pairs draw: {:.2f}'.format(
+        len(df_tc_compa[df_tc_compa['compa_pct_o'] == 0]) /
             float(len(df_tc_compa)) * 100))
 
 df_repro_compa['pct_rr'] = df_repro_compa['pct_win_A']
@@ -305,8 +291,8 @@ for str_var in ['demand_cont_10', 'CO_med_rev']:
   df_compa_ctrl[str_var] = df_compa_ctrl[str_var] / 1000
 
 ## ADD VARIABLE FOR PAIR CHAINS (CONTROL)
-#df_compa_ctrl['pair_chains'] =\
-#  df_compa_ctrl['store_chain_A'] + ' - ' + df_compa_ctrl['store_chain_B']
+#df_compa_ctrl['pair_chains'] = (
+#  df_compa_ctrl['store_chain_A'] + ' - ' + df_compa_ctrl['store_chain_B'])
 #ls_ev += ['pair_chains']
 #str_ev += u" + C(pair_chains, Treatment('CARREFOUR - AUCHAN'))"
 
@@ -316,7 +302,7 @@ for str_var in ['demand_cont_10', 'CO_med_rev']:
 
 df_compa_ctrl['abs_compa_pct'] = np.abs(df_compa_ctrl['compa_pct'])
 
-df_compa_ctrl.to_csv(os.path.join(path_built_201415_csv,
+df_compa_ctrl.to_csv(os.path.join(path_built_csv_stats,
                               'df_pair_dispersion_static.csv'),
                  encoding = 'utf-8',
                  float_format='%.4f',
@@ -333,16 +319,15 @@ dict_res = {}
 for d_dist, dist_var, dist_max in [['d_dist_5', 'dist', 10],
                                    ['d_gg_dur_12', 'gg_dur', 20]]:
   # filter: not too differentiated, not too far
-  df_compa = df_compa_ctrl[(df_compa_ctrl['compa_pct'].abs() <= 3) &\
-                           (df_compa_ctrl[dist_var] <= dist_max)]
+  df_compa = (df_compa_ctrl[(df_compa_ctrl['compa_pct'].abs() <= 3) &
+                            (df_compa_ctrl[dist_var] <= dist_max)])
   
   print()
   print(u'-'*30)
   print(u'Variable for close distance:', d_dist)
   
   # NO CONTROL
-  ols_res = smf.ols('pct_rr ~ {:s}'.format(d_dist),
-                    data = df_compa).fit()
+  ols_res = smf.ols('pct_rr ~ {:s}'.format(d_dist), data = df_compa).fit()
   #print()
   #print(ols_res.summary())
   
@@ -368,9 +353,9 @@ for d_dist, dist_var, dist_max in [['d_dist_5', 'dist', 10],
   #print()
   #print(ols_res_ctrl.summary())
   
-  ls_res_ctrl =[smf.quantreg('pct_rr ~ {:s} + {:s}'.format(d_dist, str_ev),
-                             data = df_compa[~df_compa[d_dist].isnull()]).fit(quantile)\
-                  for quantile in ls_quantiles]
+  ls_res_ctrl = ([smf.quantreg('pct_rr ~ {:s} + {:s}'.format(d_dist, str_ev),
+                               data = df_compa[~df_compa[d_dist].isnull()]).fit(quantile)
+                   for quantile in ls_quantiles])
   
   print(summary_col([ols_res_ctrl] + ls_res_ctrl,
                     stars=True,

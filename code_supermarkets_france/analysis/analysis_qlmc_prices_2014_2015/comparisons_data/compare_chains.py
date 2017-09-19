@@ -13,24 +13,21 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
 
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
+
 pd.set_option('float_format', '{:,.1f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.1f}'.format(x)
 
-path_built_2015 = os.path.join(path_data,
-                               'data_supermarkets',
-                               'data_built',
-                               'data_qlmc_2015')
+# #########
+# LOAD DATA
+# #########
 
-path_built_201503_csv =  os.path.join(path_built_2015,
-                                      'data_csv_201503')
-
-path_built_201415_csv = os.path.join(path_built_2015,
-                                     'data_csv_2014-2015')
-
-df_prices = pd.read_csv(os.path.join(path_built_201503_csv,
-                                     'df_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
+
 ls_prod_cols = ['section', 'family', 'product']
 store_col = 'store_id'
 
@@ -49,8 +46,8 @@ store_col = 'store_id'
 
 # Costly to search by store_id within df_prices
 # hence first split df_prices in chain dataframes
-dict_chain_dfs = {chain: df_prices[df_prices['store_chain'] == chain]\
-                    for chain in df_prices['store_chain'].unique()}
+dict_chain_dfs = ({chain: df_prices[df_prices['store_chain'] == chain]
+                          for chain in df_prices['store_chain'].unique()})
 
 # #########################
 # REPRODUCE QLMC COMPARISON
@@ -102,25 +99,25 @@ for chain_a, chain_b in ls_tup_chains:
                      how = 'inner',
                      suffixes = (u'_{:s}'.format(chain_a), u'_{:s}'.format(chain_b)))
   
-  df_duel_sub = df_duel[(df_duel['len_{:s}'.format(chain_a)] >= 20) &\
-                        (df_duel['len_{:s}'.format(chain_b)] >= 20)].copy()
+  df_duel_sub = (df_duel[(df_duel['len_{:s}'.format(chain_a)] >= 20) &
+                         (df_duel['len_{:s}'.format(chain_b)] >= 20)].copy())
   
-  df_duel_sub['diff'] = df_duel_sub['mean_{:s}'.format(chain_b)] -\
-                          df_duel_sub['mean_{:s}'.format(chain_a)]
+  df_duel_sub['diff'] = (df_duel_sub['mean_{:s}'.format(chain_b)] -
+                           df_duel_sub['mean_{:s}'.format(chain_a)])
   
-  df_duel_sub['pct_diff'] = (df_duel_sub['mean_{:s}'.format(chain_b)] /\
-                              df_duel_sub['mean_{:s}'.format(chain_a)] - 1)*100
+  df_duel_sub['pct_diff'] = ((df_duel_sub['mean_{:s}'.format(chain_b)] /
+                               df_duel_sub['mean_{:s}'.format(chain_a)] - 1) * 100)
 
   print()
   print(u'Replicate QLMC comparison: {:s} vs {:s}'.format(chain_a, chain_b))
-  res = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
-           df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100
+  res = ((np.round(df_duel_sub['mean_{:s}'.format(chain_b)].mean(), 2) /
+            np.round(df_duel_sub['mean_{:s}'.format(chain_a)].mean(), 2) - 1) * 100)
   
   # Save both nb stores of chain b and res
-  nb_stores_a = len(df_prices[df_prices['store_chain'] ==\
-                                chain_a][store_col].drop_duplicates())
-  nb_stores_b = len(df_prices[df_prices['store_chain'] ==\
-                                chain_b][store_col].drop_duplicates())
+  nb_stores_a = (len(df_prices[df_prices['store_chain'] ==
+                                 chain_a][store_col].drop_duplicates()))
+  nb_stores_b = (len(df_prices[df_prices['store_chain'] ==
+                                 chain_b][store_col].drop_duplicates()))
   nb_prods = len(df_duel_sub)
   pct_a_wins = len(df_duel_sub[df_duel_sub['diff'] > 10e-3]) / float(nb_prods) * 100
   pct_b_wins = len(df_duel_sub[df_duel_sub['diff'] < -10e-3]) / float(nb_prods) * 100
@@ -142,8 +139,8 @@ for chain_a, chain_b in ls_tup_chains:
   # Manipulate or assume consumer is somewhat informed
   df_duel_sub.sort('pct_diff', ascending = False, inplace = True)
   df_duel_sub = df_duel_sub[len(df_duel_sub)/5:]
-  res_2 = (df_duel_sub['mean_{:s}'.format(chain_b)].mean().round(2) /\
-           df_duel_sub['mean_{:s}'.format(chain_a)].mean().round(2) - 1) * 100
+  res_2 = ((np.round(df_duel_sub['mean_{:s}'.format(chain_b)].mean(), 2) /
+            np.round(df_duel_sub['mean_{:s}'.format(chain_a)].mean(), 2) - 1) * 100)
   
   print()
   print(u'Aggregate comparison vs. Leclerc: {:.1f}%'.format(res))

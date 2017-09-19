@@ -11,17 +11,12 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
-
-path_lsa_csv = os.path.join(path_data,
-                            'data_supermarkets',
-                            'data_built',
-                            'data_lsa',
-                            'data_csv')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_csv_stats = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv_stats')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
+path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv, '201407_competition')
+path_insee_extracts = os.path.join(path_data, 'data_insee', 'data_extracts')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -33,12 +28,9 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 
 # LOAD DF PRICES
 
-#df_prices = pd.read_csv(os.path.join(path_built_csv,
-#                                     'df_prices.csv'),
+#df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices.csv'),
 #                        encoding = 'utf-8')
-
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                    'df_res_ln_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv_stats, 'df_res_ln_prices.csv'),
                         encoding = 'utf-8')
 df_prices['res'] = df_prices['ln_price'] - df_prices['ln_price_hat']
 
@@ -59,31 +51,11 @@ ls_drop_chains = [u'SIMPLY MARKET',
                   u'RECORD']
 df_prices = df_prices[~df_prices['store_chain'].isin(ls_drop_chains)]
 
-# adhoc fixes
-ls_suspicious_prods = [u'VIVA LAIT TGV 1/2 ÉCRÉMÉ VIVA BP 6X50CL']
-df_prices = df_prices[~df_prices['product'].isin(ls_suspicious_prods)]
-df_prices['product'] =\
-  df_prices['product'].apply(lambda x: x.replace(u'\x8c', u'OE'))
-
 # ########################
 # BUILD DF OVERVIEW
 ##########################
 
-PD = PriceDispersion()
-
 ls_prod_cols = ['section', 'family', 'product']
-
-# Product price distributions
-
-#df_desc = pd.pivot_table(df_prices,
-#                         values = 'price',
-#                         index = ls_prod_cols,
-#                         aggfunc = 'describe').unstack()
-#df_desc['cv'] = df_desc['std'] / df_desc['mean']
-#df_desc['iq_rg'] = df_desc['75%'] - df_desc['25%']
-#df_desc['iq_pct'] = df_desc['75%'] / df_desc['25%']
-#df_desc.drop(['25%', '75%'], axis = 1, inplace = True)
-
 PD = PriceDispersion()
 df_desc = pd.pivot_table(df_prices,
                          values = 'price',
@@ -251,18 +223,16 @@ pd.set_option('float_format', '{:,.1f}'.format)
 
 print()
 print('Desc mean table')
-df_desc_mean = df_sub[ls_desc_cols + ['section']].groupby('section')\
-                                                .agg('mean')
-df_desc_mean['count'] = df_sub[['section', 'count']].groupby('section')\
-                                                    .agg(len)['count'].astype(int)
+df_desc_mean = df_sub[ls_desc_cols + ['section']].groupby('section').agg('mean')
+df_desc_mean['count'] = (df_sub[['section', 'count']].groupby('section')
+                                                     .agg(len)['count'].astype(int))
 print(df_desc_mean[['count'] + ls_desc_cols].to_string())
 
 print()
 print('Desc std table')
-df_desc_std = df_sub[ls_desc_cols + ['section']].groupby('section')\
-                                                .agg('std')
-df_desc_std['count'] = df_sub[['section', 'count']].groupby('section')\
-                                                   .agg(len)['count'].astype(int)
+df_desc_std = df_sub[ls_desc_cols + ['section']].groupby('section').agg('std')
+df_desc_std['count'] = (df_sub[['section', 'count']].groupby('section')
+                                                    .agg(len)['count'].astype(int))
 
 print(df_desc_std[['count'] + ls_desc_cols].to_string())
 

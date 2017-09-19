@@ -13,8 +13,8 @@ import statsmodels.formula.api as smf
 path_built_csv = os.path.join(path_data,
                               'data_supermarkets',
                               'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
+                              'data_qlmc_2014_2015',
+                              'data_csv')
 
 path_built_lsa = os.path.join(path_data,
                               'data_supermarkets',
@@ -22,10 +22,8 @@ path_built_lsa = os.path.join(path_data,
                               'data_lsa')
 path_built_lsa_csv = os.path.join(path_built_lsa, 'data_csv')
 path_built_lsa_json = os.path.join(path_built_lsa, 'data_json')
-path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv,
-                                       '201407_competition')
-path_built_lsa_comp_json = os.path.join(path_built_lsa_json,
-                                        '201407_competition')
+path_built_lsa_comp_csv = os.path.join(path_built_lsa_csv, '201407_competition')
+path_built_lsa_comp_json = os.path.join(path_built_lsa_json, '201407_competition')
 
 pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
@@ -36,13 +34,11 @@ format_float_float = lambda x: '{:10,.2f}'.format(x)
 # ############
 
 # LOAD DF PRICES
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
 
 # LOAD DF STORES (INCLUDING LSA INFO)
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final.csv'),
                         dtype = {'c_insee' : str,
                                  'id_lsa' : str},
                         encoding = 'utf-8')
@@ -72,8 +68,7 @@ df_stores = df_stores[~((df_stores.duplicated(['id_lsa'], take_last = False)) |\
                         (df_stores.duplicated(['id_lsa'], take_last = True)))]
 
 # LOAD LSA STORE DATA
-df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv,
-                                  'df_lsa_active_hsx.csv'),
+df_lsa = pd.read_csv(os.path.join(path_built_lsa_csv, 'df_lsa_active_hsx.csv'),
                      dtype = {u'id_lsa' : str,
                               u'c_insee' : str,
                               u'c_insee_ardt' : str,

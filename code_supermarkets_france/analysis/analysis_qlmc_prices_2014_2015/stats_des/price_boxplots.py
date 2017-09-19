@@ -15,18 +15,17 @@ pd.set_option('float_format', '{:,.2f}'.format)
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_csv = os.path.join(path_data,
-                        'data_supermarkets',
-                        'data_built',
-                        'data_qlmc_2015',
-                        'data_csv_201503')
+path_built_csv = os.path.join(path_data,
+                              'data_supermarkets',
+                              'data_built',
+                              'data_qlmc_2014_2015',
+                              'data_csv')
 
-df_prices = pd.read_csv(os.path.join(path_csv,
-                                     'df_prices.csv'),
-                        encoding = 'utf-8')
+# ##########
+# LOAD DATA
+# ##########
 
-df_stores = pd.read_csv(os.path.join(path_csv,
-                                     'df_stores_final.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
 
 # Unique products with nb obs
@@ -35,7 +34,7 @@ df_prices['nb_obs'] = df_prices[ls_cols_u_prod + ['store_chain']]\
                         .groupby(ls_cols_u_prod).transform(len)
 df_u_prod = df_prices[ls_cols_u_prod + ['nb_obs']]\
               .drop_duplicates(ls_cols_u_prod)
-df_u_prod.sort('nb_obs', ascending = False, inplace = True)
+df_u_prod.sort_values('nb_obs', ascending = False, inplace = True)
 
 ## Check most common products of most famous brands
 #for brand in ['Herta', 'Fleury', 'Coca', 'Cristaline', 'President']:

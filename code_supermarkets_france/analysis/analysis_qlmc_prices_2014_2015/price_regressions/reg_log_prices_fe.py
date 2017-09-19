@@ -16,33 +16,23 @@ from patsy import dmatrix, dmatrices
 from scipy.sparse import csr_matrix
 
 pd.set_option('float_format', '{:,.3f}'.format)
-
 format_float_int = lambda x: '{:10,.0f}'.format(x)
 format_float_float = lambda x: '{:10,.2f}'.format(x)
 
-path_built_csv = os.path.join(path_data,
-                              'data_supermarkets',
-                              'data_built',
-                              'data_qlmc_2015',
-                              'data_csv_201503')
-
-path_built_lsa_csv = os.path.join(path_data,
-                                  'data_supermarkets',
-                                  'data_built',
-                                  'data_lsa',
-                                  'data_csv')
+path_built = os.path.join(path_data, 'data_supermarkets', 'data_built')
+path_built_csv = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv')
+path_built_csv_stats = os.path.join(path_built, 'data_qlmc_2014_2015', 'data_csv_stats')
+path_built_lsa_csv = os.path.join(path_built, 'data_lsa', 'data_csv')
 
 # #############
 # LOAD DATA
 # #############
 
-df_prices = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_prices.csv'),
+df_prices = pd.read_csv(os.path.join(path_built_csv, 'df_prices_201503.csv'),
                         encoding = 'utf-8')
 
 # Add store chars / environement
-df_stores = pd.read_csv(os.path.join(path_built_csv,
-                                     'df_stores_final.csv'),
+df_stores = pd.read_csv(os.path.join(path_built_csv, 'df_stores_final_201503.csv'),
                         encoding = 'utf-8')
 
 # Rename chains to have similar chains as on qlmc
@@ -175,8 +165,7 @@ df_reg['tstat'] = df_reg['coeff'] / df_reg['bse']
 
 # compute rsquare
 y_hat = A * res[0]
-rsquare = 1 - ((y - y_hat)**2).sum() /\
-                ((y - y.mean())**2).sum()
+rsquare = 1 - ((y - y_hat)**2).sum() / ((y - y.mean())**2).sum()
 
 # goodness of fit (to compare with log)
 if price_col == 'ln_price':
@@ -200,14 +189,14 @@ print(df_lec[~df_lec['coeff'].isnull()]['coeff'].describe())
 # ######
 
 # Prices
-df_qlmc.to_csv(os.path.join(path_built_csv,
+df_qlmc.to_csv(os.path.join(path_built_csv_stats,
                             'df_res_{:s}s.csv'.format(price_col)),
                encoding = 'utf-8',
                float_format='%.3f',
                index = False)
 
 # Fixed effects
-df_reg.to_csv(os.path.join(path_built_csv,
+df_reg.to_csv(os.path.join(path_built_csv_stats,
                            'df_res_{:s}_fes.csv'.format(price_col)),
               encoding = 'utf-8',
               float_format='%.3f',
