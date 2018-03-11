@@ -291,14 +291,13 @@ print(df_stores[ls_ev].corr())
 #str_ev += ' + C(STATUT_2010)'
 
 # REG OF STORE PRICE - NAIVE BRAND
-ls_formulas = ["store_price ~ C(qlmc_chain, Treatment('LECLERC'))",
-               "store_price ~ {:s}".format(str_ev),
+ls_formulas = ["store_price ~ C(qlmc_chain, Treatment('LECLERC'))", # marques seult
                "store_price ~ C(qlmc_chain, Treatment('LECLERC'))" +\
-                            " + {:s}".format(str_ev),
-               "store_price ~ C(qlmc_chain, Treatment('LECLERC')) + C(region)",
-               "store_price ~ {:s} +  C(region)".format(str_ev),
-               "store_price ~ C(qlmc_chain, Treatment('LECLERC'))" +\
-                            " + {:s} + C(region)".format(str_ev)]
+                            " + {:s} + C(region)".format(str_ev), # marques et ctrl
+               "store_price ~ {:s} +  C(region)".format(str_ev)] # ctrls seulement
+#               "store_price ~ C(qlmc_chain, Treatment('LECLERC'))" +\
+#                            " + {:s}".format(str_ev), # seulement ctrls
+#               "store_price ~ C(qlmc_chain, Treatment('LECLERC')) + C(region)"]
 ls_res = [smf.ols(formula, data = df_stores).fit() for formula in ls_formulas]
 
 #print(summary_col(ls_res,
